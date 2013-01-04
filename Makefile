@@ -4,9 +4,6 @@
 # GNU Make required
 #
 
-# ioquake3 svn version that this is based on
-IOQ3_REVISION = 2398
-
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
 COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/i386/)
@@ -291,26 +288,15 @@ ifneq ($(BUILD_CLIENT),0)
 endif
 
 ifneq ($(BUILD_FINAL),1)
-	# Add svn version info
-	USE_SVN=
-	ifeq ($(wildcard .svn),.svn)
-	  SVN_REV=$(shell LANG=C svnversion .)
-	  ifneq ($(SVN_REV),)
-		VERSION:=$(VERSION)_SVN$(SVN_REV)
-		USE_SVN=1
-	  endif
-	else
-	ifeq ($(wildcard .git/svn/.metadata),.git/svn/.metadata)
-	  SVN_REV=$(shell LANG=C git svn info | awk '$$1 == "Revision:" {print $$2; exit 0}')
-	  ifneq ($(SVN_REV),)
-		VERSION:=$(VERSION)_SVN$(SVN_REV)
-	  endif
-	endif
-	endif
-
-	ifdef IOQ3_REVISION
-	  VERSION:=$(VERSION)_IOQ3r$(IOQ3_REVISION)
-	endif
+  # Add svn version info
+  USE_GIT=
+  ifeq ($(wildcard .git),.git)
+    GIT_REV=$(shell git show -s --pretty=format:%h-%ad --date=short)
+    ifneq ($(GIT_REV),)
+      VERSION:=$(VERSION)_GIT_$(GIT_REV)
+      USE_GIT=1
+    endif
+  endif
 endif
 
 
@@ -2641,11 +2627,11 @@ $(B)/ded/%.o: $(SYSDIR)/%.rc
 $(B)/ded/%.o: $(NDIR)/%.c
 	$(DO_DED_CC)
 
-# Extra dependencies to ensure the SVN version is incorporated
-ifeq ($(USE_SVN),1)
-  $(B)/client/cl_console.o : .svn/entries
-  $(B)/client/common.o : .svn/entries
-  $(B)/ded/common.o : .svn/entries
+# Extra dependencies to ensure the git version is incorporated
+ifeq ($(USE_GIT),1)
+  $(B)/client/cl_console.o : .git/index
+  $(B)/client/common.o : .git/index
+  $(B)/ded/common.o : .git/index
 endif
 
 
