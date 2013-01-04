@@ -6,7 +6,7 @@
 !define RELEASE "1"
 !define MODDIR "q3ctc"
 !define PUBLISHER "The Spearmint Team"
-!define URL "http://ioq3ztm.googlecode.com/"
+!define URL "http://github.com/zturtleman/spearmint/"
 ; uncomment if the mod works without baseq3
 ;!define STANDALONE
 

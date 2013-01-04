@@ -6,7 +6,7 @@
            /        \| |_)   ___// () \|  | '/  | |  \ |  ||  \  |
           /_________/|  __/\____/__/\__\__|  |__|_|__/_|__||__/__|
                |     |_|                                       |
-               `------ http://code.google.com/p/ioq3ztm -------'
+               `--- https://github.com/zturtleman/spearmint ---'
 
 The intent of this project is to provide a version of ioquake3 which may be used
 for further development of standalone games.
@@ -620,10 +620,11 @@ Building with MinGW for pre Windows XP
 
 ------------------------------------------------------------- Contributing -----
 
-Please submit all patches to the issue tracker (http://ioq3ztm.googlecode.com),
-or join the mailing list (http://groups.google.com/group/spearmint-engine) and 
-submit your patch there.  The best case scenario is that you submit your patch 
-to the issue tracker, and then post the URL to the mailing list.
+Please submit all patches to the issue tracker
+(http://github.com/zturtleman/spearmint/issues), or join the mailing list
+(http://groups.google.com/group/spearmint-engine) and submit your patch there.
+The best case scenario is that you submit your patch to the issue tracker, and
+then post the URL to the mailing list.
 
 The focus for Spearmint is to develop a stable base suitable for further
 development and provide players with the same Quake 3 game play experience

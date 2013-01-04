@@ -8,7 +8,7 @@
 !define MODDIR "baseq3"
 !define MODDIR2 "missionpack"
 !define PUBLISHER "The Spearmint Team"
-!define URL "http://ioq3ztm.googlecode.com/"
+!define URL "http://github.com/zturtleman/spearmint/"
 
 !define GAMENAME "Spearmint"
 !define CLIENT "spearmint.x86.exe"
