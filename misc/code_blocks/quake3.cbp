@@ -1,0 +1,1308 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Spearmint" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release Win32">
+				<Option platforms="Windows;" />
+				<Option output="../../build/spearmint_release/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_release" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-DWIN32" />
+					<Add option="-DWIN32_MISC_ICON_PATH" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_WINDOWS" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DBOTLIB" />
+					<Add option="-DUSE_ICON" />
+					<Add option="-DUSE_CURL" />
+					<Add option="-DUSE_CURL_DLOPEN" />
+					<Add option="-DUSE_LOCAL_HEADERS" />
+					<Add option="-DUSE_VOIP" />
+					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DFLOATING_POINT" />
+					<Add option="-DUSE_ALLOCA" />
+					<Add option="-DFT2_BUILD_LIBRARY" />
+					<Add directory="../../code/libs/win32/include" />
+				</Compiler>
+				<Linker>
+					<Add library="mingw32" />
+					<Add library="user32" />
+					<Add library="advapi32" />
+					<Add library="winmm" />
+					<Add library="ws2_32" />
+					<Add library="SDLmain" />
+					<Add library="SDL" />
+					<Add library="OpenGL32" />
+					<Add directory="../../code/libs/win32" />
+				</Linker>
+			</Target>
+			<Target title="Debug Win32">
+				<Option platforms="Windows;" />
+				<Option output="../../build/spearmint_debug/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_debug" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-DWIN32" />
+					<Add option="-DWIN32_MISC_ICON_PATH" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_WINDOWS" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DBOTLIB" />
+					<Add option="-DUSE_ICON" />
+					<Add option="-DUSE_CURL" />
+					<Add option="-DUSE_CURL_DLOPEN" />
+					<Add option="-DUSE_LOCAL_HEADERS" />
+					<Add option="-DUSE_VOIP" />
+					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DFLOATING_POINT" />
+					<Add option="-DUSE_ALLOCA" />
+					<Add option="-DFT2_BUILD_LIBRARY" />
+					<Add directory="../../code/libs/win32/include" />
+				</Compiler>
+				<Linker>
+					<Add library="mingw32" />
+					<Add library="user32" />
+					<Add library="advapi32" />
+					<Add library="winmm" />
+					<Add library="ws2_32" />
+					<Add library="SDLmain" />
+					<Add library="SDL" />
+					<Add library="OpenGL32" />
+					<Add directory="../../code/libs/win32" />
+				</Linker>
+			</Target>
+			<Target title="Release Linux i386">
+				<Option platforms="Unix;" />
+				<Option output="../../build/spearmint_release/spearmint.i386" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_release" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DBOTLIB" />
+					<Add option="-DUSE_ICON" />
+					<Add option="-DUSE_CURL" />
+					<Add option="-DUSE_CURL_DLOPEN" />
+					<Add option="-DUSE_LOCAL_HEADERS" />
+					<Add option="-DUSE_VOIP" />
+					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DFLOATING_POINT" />
+					<Add option="-DUSE_ALLOCA" />
+					<Add option="-DFT2_BUILD_LIBRARY" />
+				</Compiler>
+				<Linker>
+					<Add library="GL" />
+				</Linker>
+			</Target>
+			<Target title="Debug Linux i386">
+				<Option platforms="Unix;" />
+				<Option output="../../build/spearmint_debug/spearmint.i386" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_debug" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DBOTLIB" />
+					<Add option="-DUSE_ICON" />
+					<Add option="-DUSE_CURL" />
+					<Add option="-DUSE_CURL_DLOPEN" />
+					<Add option="-DUSE_LOCAL_HEADERS" />
+					<Add option="-DUSE_VOIP" />
+					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DFLOATING_POINT" />
+					<Add option="-DUSE_ALLOCA" />
+					<Add option="-DFT2_BUILD_LIBRARY" />
+				</Compiler>
+				<Linker>
+					<Add library="GL" />
+				</Linker>
+			</Target>
+			<Target title="Release Linux x86_64">
+				<Option platforms="Unix;" />
+				<Option output="../../build/spearmint_release/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_release" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DBOTLIB" />
+					<Add option="-DUSE_ICON" />
+					<Add option="-DUSE_CURL" />
+					<Add option="-DUSE_CURL_DLOPEN" />
+					<Add option="-DUSE_LOCAL_HEADERS" />
+					<Add option="-DUSE_VOIP" />
+					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DFLOATING_POINT" />
+					<Add option="-DUSE_ALLOCA" />
+					<Add option="-DFT2_BUILD_LIBRARY" />
+				</Compiler>
+				<Linker>
+					<Add library="GL" />
+				</Linker>
+			</Target>
+			<Target title="Debug Linux x86_64">
+				<Option platforms="Unix;" />
+				<Option output="../../build/spearmint_debug/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_debug" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DBOTLIB" />
+					<Add option="-DUSE_ICON" />
+					<Add option="-DUSE_CURL" />
+					<Add option="-DUSE_CURL_DLOPEN" />
+					<Add option="-DUSE_LOCAL_HEADERS" />
+					<Add option="-DUSE_VOIP" />
+					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DFLOATING_POINT" />
+					<Add option="-DUSE_ALLOCA" />
+					<Add option="-DFT2_BUILD_LIBRARY" />
+				</Compiler>
+				<Linker>
+					<Add library="GL" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-static" />
+			<Add option="-DRELATIVE_WIN32_ICON_PATH" />
+			<Add option="-DUSE_INTERNAL_JPEG" />
+			<Add directory="../../code/SDL12/include" />
+			<Add directory="../../code/libcurl" />
+			<Add directory="../../code/AL" />
+			<Add directory="../../code/libspeex/include" />
+			<Add directory="../../code/freetype-2.4.9/include" />
+			<Add directory="../../code/libvorbis/include" />
+			<Add directory="../../code/libvorbis/lib" />
+			<Add directory="../../code/libogg/include" />
+			<Add directory="../../code/jpeg-8c" />
+		</Compiler>
+		<Linker>
+			<Add library="SDLmain" />
+			<Add library="SDL" />
+			<Add directory="../../code/SDL12" />
+			<Add directory="../../code/libcurl" />
+			<Add directory="../../code/AL" />
+			<Add directory="../../code/libspeex" />
+		</Linker>
+		<Unit filename="../../code/asm/ftola.asm">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="../../code/asm/ftola.c">
+			<Option compilerVar="CC" />
+			<Option compiler="gcc" use="1" buildCommand="$compiler $options $includes -c $file -o $object -march=k8" />
+		</Unit>
+		<Unit filename="../../code/asm/matha.s">
+			<Option compilerVar="CC" />
+			<Option compiler="gcc" use="1" buildCommand="$compiler -g $options -x assembler-with-cpp $includes -c $file -o $object" />
+			<Option target="Release Win32" />
+			<Option target="Debug Win32" />
+			<Option target="Release Linux i386" />
+			<Option target="Debug Linux i386" />
+		</Unit>
+		<Unit filename="../../code/asm/qasm-inline.h" />
+		<Unit filename="../../code/asm/qasm.h" />
+		<Unit filename="../../code/asm/snapvector.asm">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="../../code/asm/snapvector.c">
+			<Option compilerVar="CC" />
+			<Option compiler="gcc" use="1" buildCommand="$compiler $options $includes -c $file -o $object -march=k8" />
+		</Unit>
+		<Unit filename="../../code/asm/snd_mixa.s">
+			<Option compilerVar="CC" />
+			<Option compiler="gcc" use="1" buildCommand="$compiler -g $options -x assembler-with-cpp $includes -c $file -o $object" />
+			<Option target="Release Win32" />
+			<Option target="Debug Win32" />
+			<Option target="Release Linux i386" />
+			<Option target="Debug Linux i386" />
+		</Unit>
+		<Unit filename="../../code/asm/vm_x86_64.asm">
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="../../code/botlib/aasfile.h" />
+		<Unit filename="../../code/botlib/be_aas.h" />
+		<Unit filename="../../code/botlib/be_aas_bsp.h" />
+		<Unit filename="../../code/botlib/be_aas_bspq3.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_cluster.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_cluster.h" />
+		<Unit filename="../../code/botlib/be_aas_debug.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_debug.h" />
+		<Unit filename="../../code/botlib/be_aas_def.h" />
+		<Unit filename="../../code/botlib/be_aas_entity.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_entity.h" />
+		<Unit filename="../../code/botlib/be_aas_file.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_file.h" />
+		<Unit filename="../../code/botlib/be_aas_funcs.h" />
+		<Unit filename="../../code/botlib/be_aas_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_main.h" />
+		<Unit filename="../../code/botlib/be_aas_move.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_move.h" />
+		<Unit filename="../../code/botlib/be_aas_optimize.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_optimize.h" />
+		<Unit filename="../../code/botlib/be_aas_reach.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_reach.h" />
+		<Unit filename="../../code/botlib/be_aas_route.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_route.h" />
+		<Unit filename="../../code/botlib/be_aas_routealt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_routealt.h" />
+		<Unit filename="../../code/botlib/be_aas_sample.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_sample.h" />
+		<Unit filename="../../code/botlib/be_ai_char.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_ai_char.h" />
+		<Unit filename="../../code/botlib/be_ai_chat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_ai_chat.h" />
+		<Unit filename="../../code/botlib/be_ai_gen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_ai_gen.h" />
+		<Unit filename="../../code/botlib/be_ai_goal.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_ai_goal.h" />
+		<Unit filename="../../code/botlib/be_ai_move.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_ai_move.h" />
+		<Unit filename="../../code/botlib/be_ai_weap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_ai_weap.h" />
+		<Unit filename="../../code/botlib/be_ai_weight.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_ai_weight.h" />
+		<Unit filename="../../code/botlib/be_ea.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_ea.h" />
+		<Unit filename="../../code/botlib/be_interface.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_interface.h" />
+		<Unit filename="../../code/botlib/botlib.h" />
+		<Unit filename="../../code/botlib/l_crc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/l_crc.h" />
+		<Unit filename="../../code/botlib/l_libvar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/l_libvar.h" />
+		<Unit filename="../../code/botlib/l_log.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/l_log.h" />
+		<Unit filename="../../code/botlib/l_memory.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/l_memory.h" />
+		<Unit filename="../../code/botlib/l_precomp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/l_precomp.h" />
+		<Unit filename="../../code/botlib/l_script.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/l_script.h" />
+		<Unit filename="../../code/botlib/l_struct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/l_struct.h" />
+		<Unit filename="../../code/botlib/l_utils.h" />
+		<Unit filename="../../code/cgame/cg_public.h" />
+		<Unit filename="../../code/client/cl_avi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_cgame.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_cin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_console.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_curl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_curl.h" />
+		<Unit filename="../../code/client/cl_input.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_keys.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_net_chan.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_parse.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_scrn.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_ui.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/client.h" />
+		<Unit filename="../../code/client/keycodes.h" />
+		<Unit filename="../../code/client/keys.h" />
+		<Unit filename="../../code/client/qal.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/qal.h" />
+		<Unit filename="../../code/client/snd_adpcm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/snd_codec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/snd_codec.h" />
+		<Unit filename="../../code/client/snd_codec_ogg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/snd_codec_wav.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/snd_dma.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/snd_local.h" />
+		<Unit filename="../../code/client/snd_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/snd_mem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/snd_mix.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/snd_openal.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/snd_public.h" />
+		<Unit filename="../../code/client/snd_wavelet.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/config/ftconfig.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/config/ftheader.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/config/ftmodule.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/config/ftoption.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/config/ftstdlib.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/freetype.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftadvanc.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftbbox.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftbdf.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftbitmap.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftbzip2.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftcache.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftchapters.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftcid.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/fterrdef.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/fterrors.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftgasp.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftglyph.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftgxval.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftgzip.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftimage.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftincrem.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftlcdfil.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftlist.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftlzw.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftmac.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftmm.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftmodapi.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftmoderr.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftotval.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftoutln.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftpfr.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftrender.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftsizes.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftsnames.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftstroke.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftsynth.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftsystem.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/fttrigon.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/fttypes.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftwinfnt.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ftxf86.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/autohint.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/ftcalc.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/ftdebug.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/ftdriver.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/ftgloadr.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/ftmemory.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/ftobjs.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/ftpic.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/ftrfork.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/ftserv.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/ftstream.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/fttrace.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/ftvalid.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/internal.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/psaux.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/pshints.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svbdf.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svcid.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svgldict.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svgxval.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svkern.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svmm.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svotval.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svpfr.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svpostnm.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svpscmap.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svpsinfo.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svsfnt.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svttcmap.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svtteng.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svttglyf.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svwinfnt.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/services/svxf86nm.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/sfnt.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/t1types.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/internal/tttypes.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/t1tables.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ttnameid.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/tttables.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/tttags.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/freetype/ttunpat.h" />
+		<Unit filename="../../code/freetype-2.4.9/include/ft2build.h" />
+		<Unit filename="../../code/freetype-2.4.9/src/autofit/autofit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/base/ftbase.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/base/ftinit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/base/ftsystem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/bdf/bdf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/bzip2/ftbzip2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/cff/cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/cid/type1cid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/gzip/ftgzip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/lzw/ftlzw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/pcf/pcf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/pfr/pfr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/psaux/psaux.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/pshinter/pshinter.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/psnames/psnames.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/raster/raster.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/sfnt/sfnt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/smooth/smooth.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/truetype/truetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/type1/type1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/type42/type42.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/freetype-2.4.9/src/winfonts/winfnt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/bg_public.h" />
+		<Unit filename="../../code/game/g_public.h" />
+		<Unit filename="../../code/jpeg-8c/README" />
+		<Unit filename="../../code/jpeg-8c/jaricom.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jcapimin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jcapistd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jcarith.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jccoefct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jccolor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jcdctmgr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jchuff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jcinit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jcmainct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jcmarker.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jcmaster.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jcomapi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jconfig.h" />
+		<Unit filename="../../code/jpeg-8c/jcparam.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jcprepct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jcsample.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jctrans.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdapimin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdapistd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdarith.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdatadst.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdatasrc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdcoefct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdcolor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdct.h" />
+		<Unit filename="../../code/jpeg-8c/jddctmgr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdhuff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdinput.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdmainct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdmarker.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdmaster.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdmerge.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdpostct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdsample.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jdtrans.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jerror.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jerror.h" />
+		<Unit filename="../../code/jpeg-8c/jfdctflt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jfdctfst.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jfdctint.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jidctflt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jidctfst.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jidctint.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jinclude.h" />
+		<Unit filename="../../code/jpeg-8c/jmemmgr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jmemnobs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jmemsys.h" />
+		<Unit filename="../../code/jpeg-8c/jmorecfg.h" />
+		<Unit filename="../../code/jpeg-8c/jpegint.h" />
+		<Unit filename="../../code/jpeg-8c/jpeglib.h" />
+		<Unit filename="../../code/jpeg-8c/jquant1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jquant2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jutils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/jpeg-8c/jversion.h" />
+		<Unit filename="../../code/libogg/include/ogg/ogg.h" />
+		<Unit filename="../../code/libogg/include/ogg/os_types.h" />
+		<Unit filename="../../code/libogg/src/bitwise.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libogg/src/framing.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/_kiss_fft_guts.h" />
+		<Unit filename="../../code/libspeex/arch.h" />
+		<Unit filename="../../code/libspeex/bits.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/buffer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/cb_search.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/cb_search.h" />
+		<Unit filename="../../code/libspeex/cb_search_arm4.h" />
+		<Unit filename="../../code/libspeex/cb_search_bfin.h" />
+		<Unit filename="../../code/libspeex/cb_search_sse.h" />
+		<Unit filename="../../code/libspeex/exc_10_16_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/exc_10_32_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/exc_20_32_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/exc_5_256_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/exc_5_64_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/exc_8_128_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/fftwrap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/fftwrap.h" />
+		<Unit filename="../../code/libspeex/filterbank.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/filterbank.h" />
+		<Unit filename="../../code/libspeex/filters.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/filters.h" />
+		<Unit filename="../../code/libspeex/filters_arm4.h" />
+		<Unit filename="../../code/libspeex/filters_bfin.h" />
+		<Unit filename="../../code/libspeex/filters_sse.h" />
+		<Unit filename="../../code/libspeex/fixed_arm4.h" />
+		<Unit filename="../../code/libspeex/fixed_arm5e.h" />
+		<Unit filename="../../code/libspeex/fixed_bfin.h" />
+		<Unit filename="../../code/libspeex/fixed_debug.h" />
+		<Unit filename="../../code/libspeex/fixed_generic.h" />
+		<Unit filename="../../code/libspeex/gain_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/gain_table_lbr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/hexc_10_32_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/hexc_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/high_lsp_tables.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/jitter.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/kiss_fft.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/kiss_fft.h" />
+		<Unit filename="../../code/libspeex/kiss_fftr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/kiss_fftr.h" />
+		<Unit filename="../../code/libspeex/lpc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/lpc.h" />
+		<Unit filename="../../code/libspeex/lpc_bfin.h" />
+		<Unit filename="../../code/libspeex/lsp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/lsp.h" />
+		<Unit filename="../../code/libspeex/lsp_bfin.h" />
+		<Unit filename="../../code/libspeex/lsp_tables_nb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/ltp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/ltp.h" />
+		<Unit filename="../../code/libspeex/ltp_arm4.h" />
+		<Unit filename="../../code/libspeex/ltp_bfin.h" />
+		<Unit filename="../../code/libspeex/ltp_sse.h" />
+		<Unit filename="../../code/libspeex/math_approx.h" />
+		<Unit filename="../../code/libspeex/mdf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/misc_bfin.h" />
+		<Unit filename="../../code/libspeex/modes.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/modes.h" />
+		<Unit filename="../../code/libspeex/modes_wb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/nb_celp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/nb_celp.h" />
+		<Unit filename="../../code/libspeex/os_support.h" />
+		<Unit filename="../../code/libspeex/preprocess.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/pseudofloat.h" />
+		<Unit filename="../../code/libspeex/quant_lsp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/quant_lsp.h" />
+		<Unit filename="../../code/libspeex/quant_lsp_bfin.h" />
+		<Unit filename="../../code/libspeex/resample.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/sb_celp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/sb_celp.h" />
+		<Unit filename="../../code/libspeex/smallft.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/smallft.h" />
+		<Unit filename="../../code/libspeex/speex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/speex_callbacks.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/speex_header.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/stack_alloc.h" />
+		<Unit filename="../../code/libspeex/stereo.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/vbr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/vbr.h" />
+		<Unit filename="../../code/libspeex/vorbis_psy.h" />
+		<Unit filename="../../code/libspeex/vq.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libspeex/vq.h" />
+		<Unit filename="../../code/libspeex/vq_arm4.h" />
+		<Unit filename="../../code/libspeex/vq_bfin.h" />
+		<Unit filename="../../code/libspeex/vq_sse.h" />
+		<Unit filename="../../code/libspeex/window.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/analysis.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/backends.h" />
+		<Unit filename="../../code/libvorbis/lib/bitrate.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/bitrate.h" />
+		<Unit filename="../../code/libvorbis/lib/block.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/codebook.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/codebook.h" />
+		<Unit filename="../../code/libvorbis/lib/codec_internal.h" />
+		<Unit filename="../../code/libvorbis/lib/envelope.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/envelope.h" />
+		<Unit filename="../../code/libvorbis/lib/floor0.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/floor1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/highlevel.h" />
+		<Unit filename="../../code/libvorbis/lib/info.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/lookup.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/lookup.h" />
+		<Unit filename="../../code/libvorbis/lib/lookup_data.h" />
+		<Unit filename="../../code/libvorbis/lib/lpc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/lpc.h" />
+		<Unit filename="../../code/libvorbis/lib/lsp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/lsp.h" />
+		<Unit filename="../../code/libvorbis/lib/mapping0.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/masking.h" />
+		<Unit filename="../../code/libvorbis/lib/mdct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/mdct.h" />
+		<Unit filename="../../code/libvorbis/lib/misc.h" />
+		<Unit filename="../../code/libvorbis/lib/os.h" />
+		<Unit filename="../../code/libvorbis/lib/psy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/psy.h" />
+		<Unit filename="../../code/libvorbis/lib/registry.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/registry.h" />
+		<Unit filename="../../code/libvorbis/lib/res0.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/scales.h" />
+		<Unit filename="../../code/libvorbis/lib/sharedbook.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/smallft.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/smallft.h" />
+		<Unit filename="../../code/libvorbis/lib/synthesis.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/vorbisenc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/vorbisfile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/window.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/libvorbis/lib/window.h" />
+		<Unit filename="../../code/qcommon/cm_load.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/cm_local.h" />
+		<Unit filename="../../code/qcommon/cm_patch.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/cm_patch.h" />
+		<Unit filename="../../code/qcommon/cm_polylib.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/cm_polylib.h" />
+		<Unit filename="../../code/qcommon/cm_public.h" />
+		<Unit filename="../../code/qcommon/cm_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/cm_trace.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/cmd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/common.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/cvar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/files.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/huffman.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/ioapi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/ioapi.h" />
+		<Unit filename="../../code/qcommon/md4.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/md5.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/msg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/net_chan.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/net_ip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/puff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/puff.h" />
+		<Unit filename="../../code/qcommon/q_math.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/q_platform.h" />
+		<Unit filename="../../code/qcommon/q_shared.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/q_shared.h" />
+		<Unit filename="../../code/qcommon/qcommon.h" />
+		<Unit filename="../../code/qcommon/qfiles.h" />
+		<Unit filename="../../code/qcommon/surfaceflags.h" />
+		<Unit filename="../../code/qcommon/unzip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/unzip.h" />
+		<Unit filename="../../code/qcommon/vm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/vm_interpreted.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/vm_local.h" />
+		<Unit filename="../../code/qcommon/vm_x86.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/vm_x86_64.c">
+			<Option compilerVar="CC" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Release Linux x86_64" />
+			<Option target="Debug Linux x86_64" />
+		</Unit>
+		<Unit filename="../../code/qcommon/vm_x86_64_assembler.c">
+			<Option compilerVar="CC" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Release Linux x86_64" />
+			<Option target="Debug Linux x86_64" />
+		</Unit>
+		<Unit filename="../../code/renderer/iqm.h" />
+		<Unit filename="../../code/renderer/qgl.h" />
+		<Unit filename="../../code/renderer/tr_animation.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_backend.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_bsp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_cmds.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_curve.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_flares.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_font.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_image.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_image_bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_image_jpg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_image_pcx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_image_png.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_image_tga.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_init.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_light.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_local.h" />
+		<Unit filename="../../code/renderer/tr_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_marks.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_mesh.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_model.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_model_iqm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_noise.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_public.h" />
+		<Unit filename="../../code/renderer/tr_scene.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_shade.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_shade_calc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_shader.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_shadows.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_sky.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_surface.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderer/tr_types.h" />
+		<Unit filename="../../code/renderer/tr_world.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/sdl/sdl_gamma.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/sdl/sdl_glimp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/sdl/sdl_icon.h" />
+		<Unit filename="../../code/sdl/sdl_input.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/sdl/sdl_snd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/server/server.h" />
+		<Unit filename="../../code/server/sv_bot.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/server/sv_ccmds.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/server/sv_client.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/server/sv_game.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/server/sv_init.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/server/sv_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/server/sv_net_chan.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/server/sv_snapshot.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/server/sv_world.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/sys/con_log.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/sys/con_passive.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/sys/con_tty.c">
+			<Option compilerVar="CC" />
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="../../code/sys/sys_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/sys/sys_unix.c">
+			<Option compilerVar="CC" />
+			<Option target="Release Linux i386" />
+			<Option target="Debug Linux i386" />
+			<Option target="Release Linux x86_64" />
+			<Option target="Debug Linux x86_64" />
+		</Unit>
+		<Unit filename="../../code/sys/sys_win32.c">
+			<Option compilerVar="CC" />
+			<Option target="Release Win32" />
+			<Option target="Debug Win32" />
+		</Unit>
+		<Unit filename="../../code/sys/win_resource.h" />
+		<Unit filename="../../code/sys/win_resource.rc">
+			<Option compilerVar="WINDRES" />
+			<Option target="Release Win32" />
+			<Option target="Debug Win32" />
+		</Unit>
+		<Unit filename="../../code/ui/ui_public.h" />
+		<Unit filename="../../code/zlib/adler32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/crc32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/crc32.h" />
+		<Unit filename="../../code/zlib/inffast.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/inffast.h" />
+		<Unit filename="../../code/zlib/inffixed.h" />
+		<Unit filename="../../code/zlib/inflate.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/inflate.h" />
+		<Unit filename="../../code/zlib/inftrees.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/inftrees.h" />
+		<Unit filename="../../code/zlib/zconf.h" />
+		<Unit filename="../../code/zlib/zlib.h" />
+		<Unit filename="../../code/zlib/zutil.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/zutil.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -43,11 +51,10 @@ SETUP MENU
 #define ID_CUSTOMIZECONTROLS	11
 #define ID_SYSTEMCONFIG			12
 #define ID_GAME					13
-#define ID_CDKEY				14
-#define ID_LOAD					15
-#define ID_SAVE					16
-#define ID_DEFAULTS				17
-#define ID_BACK					18
+#define ID_LOAD					14
+#define ID_SAVE					15
+#define ID_DEFAULTS				16
+#define ID_BACK					17
 
 
 typedef struct {
@@ -56,11 +63,10 @@ typedef struct {
 	menutext_s		banner;
 	menubitmap_s	framel;
 	menubitmap_s	framer;
-	menutext_s		setupplayer;
+	menutext_s		setupplayers;
 	menutext_s		setupcontrols;
 	menutext_s		setupsystem;
 	menutext_s		game;
-	menutext_s		cdkey;
 //	menutext_s		load;
 //	menutext_s		save;
 	menutext_s		defaults;
@@ -108,11 +114,11 @@ static void UI_SetupMenu_Event( void *ptr, int event ) {
 
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_CUSTOMIZEPLAYER:
-		UI_PlayerSettingsMenu();
+		UI_SelectPlayerMenu(UI_PlayerSettingsMenu, "PLAYER SETTINGS");
 		break;
 
 	case ID_CUSTOMIZECONTROLS:
-		UI_ControlsMenu();
+		UI_SelectPlayerMenu(UI_ControlsMenu, "CONTROLS");
 		break;
 
 	case ID_SYSTEMCONFIG:
@@ -121,10 +127,6 @@ static void UI_SetupMenu_Event( void *ptr, int event ) {
 
 	case ID_GAME:
 		UI_PreferencesMenu();
-		break;
-
-	case ID_CDKEY:
-		UI_CDKeyMenu();
 		break;
 
 //	case ID_LOAD:
@@ -153,6 +155,7 @@ UI_SetupMenu_Init
 */
 static void UI_SetupMenu_Init( void ) {
 	int				y;
+	int				numItems;
 
 	UI_SetupMenu_Cache();
 
@@ -183,16 +186,22 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.framer.width  					= 256;
 	setupMenuInfo.framer.height  					= 334;
 
-	y = 134;
-	setupMenuInfo.setupplayer.generic.type			= MTYPE_PTEXT;
-	setupMenuInfo.setupplayer.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
-	setupMenuInfo.setupplayer.generic.x				= 320;
-	setupMenuInfo.setupplayer.generic.y				= y;
-	setupMenuInfo.setupplayer.generic.id			= ID_CUSTOMIZEPLAYER;
-	setupMenuInfo.setupplayer.generic.callback		= UI_SetupMenu_Event; 
-	setupMenuInfo.setupplayer.string				= "PLAYER";
-	setupMenuInfo.setupplayer.color					= color_red;
-	setupMenuInfo.setupplayer.style					= UI_CENTER;
+	if( !trap_Cvar_VariableValue( "cl_paused" ) ) {
+		numItems = 5; // 7
+	} else {
+		numItems = 4;
+	}
+
+	y = (SCREEN_HEIGHT - numItems*SETUP_MENU_VERTICAL_SPACING) / 2;
+	setupMenuInfo.setupplayers.generic.type			= MTYPE_PTEXT;
+	setupMenuInfo.setupplayers.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+	setupMenuInfo.setupplayers.generic.x				= 320;
+	setupMenuInfo.setupplayers.generic.y				= y;
+	setupMenuInfo.setupplayers.generic.id			= ID_CUSTOMIZEPLAYER;
+	setupMenuInfo.setupplayers.generic.callback		= UI_SetupMenu_Event; 
+	setupMenuInfo.setupplayers.string				= (UI_MaxSplitView() == 1) ? "PLAYER": "PLAYERS";
+	setupMenuInfo.setupplayers.color					= color_red;
+	setupMenuInfo.setupplayers.style					= UI_CENTER;
 
 	y += SETUP_MENU_VERTICAL_SPACING;
 	setupMenuInfo.setupcontrols.generic.type		= MTYPE_PTEXT;
@@ -226,17 +235,6 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.game.string						= "GAME OPTIONS";
 	setupMenuInfo.game.color						= color_red;
 	setupMenuInfo.game.style						= UI_CENTER;
-
-	y += SETUP_MENU_VERTICAL_SPACING;
-	setupMenuInfo.cdkey.generic.type				= MTYPE_PTEXT;
-	setupMenuInfo.cdkey.generic.flags				= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
-	setupMenuInfo.cdkey.generic.x					= 320;
-	setupMenuInfo.cdkey.generic.y					= y;
-	setupMenuInfo.cdkey.generic.id					= ID_CDKEY;
-	setupMenuInfo.cdkey.generic.callback			= UI_SetupMenu_Event; 
-	setupMenuInfo.cdkey.string						= "CD Key";
-	setupMenuInfo.cdkey.color						= color_red;
-	setupMenuInfo.cdkey.style						= UI_CENTER;
 
 	if( !trap_Cvar_VariableValue( "cl_paused" ) ) {
 #if 0
@@ -289,14 +287,13 @@ static void UI_SetupMenu_Init( void ) {
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.banner );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.framel );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.framer );
-	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupplayer );
+	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupplayers );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupcontrols );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupsystem );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.game );
-	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.cdkey );
-//	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.load );
-//	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.save );
 	if( !trap_Cvar_VariableValue( "cl_paused" ) ) {
+//		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.load );
+//		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.save );
 		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.defaults );
 	}
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.back );

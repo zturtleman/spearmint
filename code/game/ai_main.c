@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -670,7 +678,7 @@ void BotInterbreeding(void) {
 	trap_BotLibVarSet("bot_reloadcharacters", "1");
 	//add a number of bots using the desired bot character
 	for (i = 0; i < bot_interbreedbots.integer; i++) {
-		trap_SendConsoleCommand( EXEC_INSERT, va("addbot %s 4 free %i %s%d\n",
+		trap_Cmd_ExecuteText( EXEC_INSERT, va("addbot %s 4 free %i %s%d\n",
 						bot_interbreedchar.string, i * 50, bot_interbreedchar.string, i) );
 	}
 	//
@@ -1011,7 +1019,7 @@ int BotAI(int client, float thinktime) {
 			args[strlen(args)-1] = '\0';
 			trap_BotQueueConsoleMessage(bs->cs, CMS_NORMAL, args);
 		}
-		else if (!Q_stricmp(buf, "chat")) {
+		else if (!Q_stricmp(buf, "chat") || !Q_stricmp(buf, "tell")) {
 			//remove first and last quote from the chat message
 			memmove(args, args+1, strlen(args));
 			args[strlen(args)-1] = '\0';
@@ -1501,7 +1509,7 @@ int BotAIStartFrame(int time) {
 			}
 #ifdef MISSIONPACK
 			// never link prox mine triggers
-			if (ent->r.contents == CONTENTS_TRIGGER) {
+			if (ent->s.contents == CONTENTS_TRIGGER) {
 				if (ent->touch == ProximityMine_Trigger) {
 					trap_BotLibUpdateEntity(i, NULL);
 					continue;
@@ -1518,11 +1526,11 @@ int BotAIStartFrame(int time) {
 				VectorCopy(ent->r.currentAngles, state.angles);
 			}
 			VectorCopy(ent->s.origin2, state.old_origin);
-			VectorCopy(ent->r.mins, state.mins);
-			VectorCopy(ent->r.maxs, state.maxs);
+			VectorCopy(ent->s.mins, state.mins);
+			VectorCopy(ent->s.maxs, state.maxs);
 			state.type = ent->s.eType;
 			state.flags = ent->s.eFlags;
-			if (ent->r.bmodel) state.solid = SOLID_BSP;
+			if (ent->s.bmodel) state.solid = SOLID_BSP;
 			else state.solid = SOLID_BBOX;
 			state.groundent = ent->s.groundEntityNum;
 			state.modelindex = ent->s.modelindex;
@@ -1602,10 +1610,18 @@ int BotInitLibrary(void) {
 	//maximum number of items in a level
 	trap_Cvar_VariableStringBuffer("max_levelitems", buf, sizeof(buf));
 	if (strlen(buf)) trap_BotLibVarSet("max_levelitems", buf);
-	//game type
-	trap_Cvar_VariableStringBuffer("g_gametype", buf, sizeof(buf));
-	if (!strlen(buf)) strcpy(buf, "0");
-	trap_BotLibVarSet("g_gametype", buf);
+	//single player entities
+	if (g_gametype.integer == GT_SINGLE_PLAYER) {
+		trap_BotLibVarSet("singleplayerentities", "1");
+	} else {
+		trap_BotLibVarSet("singleplayerentities", "0");
+	}
+	//team play entities
+	if (g_gametype.integer > GT_TEAM) {
+		trap_BotLibVarSet("teamplayentities", "1");
+	} else {
+		trap_BotLibVarSet("teamplayentities", "0");
+	}
 	//bot developer mode and log file
 	trap_BotLibVarSet("bot_developer", bot_developer.string);
 	trap_Cvar_VariableStringBuffer("logfile", buf, sizeof(buf));
@@ -1646,7 +1662,7 @@ int BotInitLibrary(void) {
 	if (strlen(buf)) trap_BotLibVarSet("homedir", buf);
 	//
 #ifdef MISSIONPACK
-	trap_BotLibDefine("MISSIONPACK");
+	trap_PC_AddGlobalDefine("MISSIONPACK");
 #endif
 	//setup the bot library
 	return trap_BotLibSetup();

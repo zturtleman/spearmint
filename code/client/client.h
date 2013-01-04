@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // client.h -- primary header for client
@@ -39,6 +47,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "speex/speex_preprocess.h"
 #endif
 
+// Lower this define to change max supported local clients for client/renderer,
+// cgame/ui get max from client when they are initialized.
+#ifndef CL_MAX_SPLITVIEW
+#define CL_MAX_SPLITVIEW MAX_SPLITVIEW
+#endif
+
 // file full of random crap that gets used to create cl_guid
 #define QKEY_FILE "qkey"
 #define QKEY_SIZE 2048
@@ -58,7 +72,10 @@ typedef struct {
 	byte			areamask[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 
 	int				cmdNum;			// the next cmdNum the server is expecting
-	playerState_t	ps;						// complete information about the current player at this time
+
+	int				numPSs;
+	playerState_t	pss[MAX_SPLITVIEW];		// complete information about the current players at this time
+	int				lcIndex[MAX_SPLITVIEW];
 
 	int				numEntities;			// all of the entities that need to be presented
 	int				parseEntitiesNum;		// at the time of this snapshot
@@ -91,6 +108,25 @@ typedef struct {
 
 extern int g_console_field_width;
 
+// Client Active Local Client
+typedef struct {
+	int			mouseDx[2], mouseDy[2];	// added to by mouse events
+	int			mouseIndex;
+	int			joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
+
+	// cgame communicates a few values to the client system
+	int			cgameUserCmdValue;	// current weapon to add to usercmd_t
+	float		cgameSensitivity;
+
+	// the client maintains its own idea of view angles, which are
+	// sent to the server each frame.  It is cleared to 0 upon entering each level.
+	// the server sends a delta each frame which is added to the locally
+	// tracked view angles to account for standing on rotating objects,
+	// and teleport direction changes
+	vec3_t		viewangles;
+
+} calc_t;
+
 typedef struct {
 	int			timeoutcount;		// it requres several frames in a timeout condition
 									// to disconnect, preventing debugging breaks from
@@ -111,28 +147,15 @@ typedef struct {
 
 	int			parseEntitiesNum;	// index (not anded off) into cl_parse_entities[]
 
-	int			mouseDx[2], mouseDy[2];	// added to by mouse events
-	int			mouseIndex;
-	int			joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
-
-	// cgame communicates a few values to the client system
-	int			cgameUserCmdValue;	// current weapon to add to usercmd_t
-	float		cgameSensitivity;
+	calc_t		localClients[CL_MAX_SPLITVIEW];
 
 	// cmds[cmdNumber] is the predicted command, [cmdNumber-1] is the last
 	// properly generated command
-	usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
+	usercmd_t	cmdss[CL_MAX_SPLITVIEW][CMD_BACKUP];	// each mesage will send several old cmds
 	int			cmdNumber;			// incremented each frame, because multiple
 									// frames may need to be packed into a single packet
 
 	outPacket_t	outPackets[PACKET_BACKUP];	// information about each packet we have sent out
-
-	// the client maintains its own idea of view angles, which are
-	// sent to the server each frame.  It is cleared to 0 upon entering each level.
-	// the server sends a delta each frame which is added to the locally
-	// tracked view angles to account for standing on rotating objects,
-	// and teleport direction changes
-	vec3_t		viewangles;
 
 	int			serverId;			// included in each client message so the server
 												// can tell if it is for a prior map_restart
@@ -164,7 +187,7 @@ typedef struct {
 
 	connstate_t	state;				// connection status
 
-	int			clientNum;
+	int			clientNums[MAX_SPLITVIEW];
 	int			lastPacketSentTime;			// for retransmits during connection
 	int			lastPacketTime;				// for timeouts
 
@@ -175,7 +198,6 @@ typedef struct {
 	char		serverMessage[MAX_STRING_TOKENS];	// for display on connection dialog
 
 	int			challenge;					// from the server to use for connecting
-	int			checksumFeed;				// from the server for checksum calculations
 
 	// these are our reliable messages that go to the server
 	int			reliableSequence;
@@ -247,6 +269,8 @@ typedef struct {
 	int voipIncomingSequence[MAX_CLIENTS];
 	float voipGain[MAX_CLIENTS];
 	qboolean voipIgnore[MAX_CLIENTS];
+	int voipLastPacketTime[MAX_CLIENTS];
+	float voipPower[MAX_CLIENTS];
 	qboolean voipMuteAll;
 
 	// outgoing data...
@@ -262,7 +286,6 @@ typedef struct {
 	int voipOutgoingSequence;
 	byte voipOutgoingGeneration;
 	byte voipOutgoingData[1024];
-	float voipPower;
 #endif
 
 #ifdef LEGACY_PROTOCOL
@@ -305,14 +328,11 @@ typedef struct {
 	int			maxPing;
 	int			ping;
 	qboolean	visible;
-	int			punkbuster;
 	int			g_humanplayers;
 	int			g_needpass;
 } serverInfo_t;
 
 typedef struct {
-	qboolean	cddialog;			// bring up the cd needed dialog next frame
-
 	// when the server clears the hunk, all of these must be restarted
 	qboolean	rendererStarted;
 	qboolean	soundStarted;
@@ -345,10 +365,9 @@ typedef struct {
 	char		updateChallenge[MAX_TOKEN_CHARS];
 	char		updateInfoString[MAX_INFO_STRING];
 
-	netadr_t	authorizeServer;
-
 	// rendering info
 	glconfig_t	glconfig;
+	qboolean	drawnLoadingScreen;
 	qhandle_t	charSetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
@@ -381,10 +400,10 @@ extern	cvar_t	*cl_timeNudge;
 extern	cvar_t	*cl_showTimeDelta;
 extern	cvar_t	*cl_freezeDemo;
 
-extern	cvar_t	*cl_yawspeed;
-extern	cvar_t	*cl_pitchspeed;
-extern	cvar_t	*cl_run;
-extern	cvar_t	*cl_anglespeedkey;
+extern	cvar_t	*cl_yawspeed[CL_MAX_SPLITVIEW];
+extern	cvar_t	*cl_pitchspeed[CL_MAX_SPLITVIEW];
+extern	cvar_t	*cl_anglespeedkey[CL_MAX_SPLITVIEW];
+extern	cvar_t	*cl_run[CL_MAX_SPLITVIEW];
 
 extern	cvar_t	*cl_sensitivity;
 extern	cvar_t	*cl_freelook;
@@ -400,16 +419,16 @@ extern	cvar_t	*m_forward;
 extern	cvar_t	*m_side;
 extern	cvar_t	*m_filter;
 
-extern	cvar_t	*j_pitch;
-extern	cvar_t	*j_yaw;
-extern	cvar_t	*j_forward;
-extern	cvar_t	*j_side;
-extern	cvar_t	*j_up;
-extern	cvar_t	*j_pitch_axis;
-extern	cvar_t	*j_yaw_axis;
-extern	cvar_t	*j_forward_axis;
-extern	cvar_t	*j_side_axis;
-extern	cvar_t	*j_up_axis;
+extern	cvar_t	*j_pitch[CL_MAX_SPLITVIEW];
+extern	cvar_t	*j_yaw[CL_MAX_SPLITVIEW];
+extern	cvar_t	*j_forward[CL_MAX_SPLITVIEW];
+extern	cvar_t	*j_side[CL_MAX_SPLITVIEW];
+extern	cvar_t	*j_up[CL_MAX_SPLITVIEW];
+extern	cvar_t	*j_pitch_axis[CL_MAX_SPLITVIEW];
+extern	cvar_t	*j_yaw_axis[CL_MAX_SPLITVIEW];
+extern	cvar_t	*j_forward_axis[CL_MAX_SPLITVIEW];
+extern	cvar_t	*j_side_axis[CL_MAX_SPLITVIEW];
+extern	cvar_t	*j_up_axis[CL_MAX_SPLITVIEW];
 
 extern	cvar_t	*cl_timedemo;
 extern	cvar_t	*cl_aviFrameRate;
@@ -442,7 +461,6 @@ extern	cvar_t	*cl_voipSend;
 extern	cvar_t	*cl_voipSendTarget;
 extern	cvar_t	*cl_voipGainDuringCapture;
 extern	cvar_t	*cl_voipCaptureMult;
-extern	cvar_t	*cl_voipShowMeter;
 extern	cvar_t	*cl_voip;
 #endif
 
@@ -476,7 +494,6 @@ int CL_GetPingQueueCount( void );
 
 void CL_ShutdownRef( void );
 void CL_InitRef( void );
-qboolean CL_CDKeyValidate( const char *key, const char *checksum );
 int CL_ServerStatus( char *serverAddress, char *serverStatusString, int maxLen );
 
 qboolean CL_CheckPaused(void);
@@ -496,6 +513,7 @@ void CL_InitInput(void);
 void CL_ShutdownInput(void);
 void CL_SendCmd (void);
 void CL_ClearState (void);
+void CL_InitConnection (qboolean clear);
 void CL_ReadPackets (void);
 
 void CL_WritePacket( void );
@@ -510,11 +528,15 @@ char *Key_KeynumToString (int keynum);
 //
 // cl_parse.c
 //
-extern int cl_connectedToPureServer;
 extern int cl_connectedToCheatServer;
 
 #ifdef USE_VOIP
 void CL_Voip_f( void );
+int CL_GetVoipTime( int clientNum );
+float CL_GetVoipPower( int clientNum );
+float CL_GetVoipGain( int clientNum );
+qboolean CL_GetVoipMuteClient( int clientNum );
+qboolean CL_GetVoipMuteAll( void );
 #endif
 
 void CL_SystemInfoChanged( void );

@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="game" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release Win32">
+				<Option platforms="Windows;" />
+				<Option output="../../build/game_release/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_release" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-DGAME" />
+					<Add option="-DWIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_WINDOWS" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+			<Target title="Debug Win32">
+				<Option platforms="Windows;" />
+				<Option output="../../build/game_debug/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_debug" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-DGAME" />
+					<Add option="-DWIN32" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_WINDOWS" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+			<Target title="Release TA Win32">
+				<Option platforms="Windows;" />
+				<Option output="../../build/game_release/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_release" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-DGAME" />
+					<Add option="-DWIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_WINDOWS" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+				</Compiler>
+			</Target>
+			<Target title="Debug TA Win32">
+				<Option platforms="Windows;" />
+				<Option output="../../build/game_debug/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_debug" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-DGAME" />
+					<Add option="-DWIN32" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_WINDOWS" />
+					<Add option="-DBUILDING_REF_GL" />
+					<Add option="-DDEBUG" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+				</Compiler>
+			</Target>
+			<Target title="Release Linux i386">
+				<Option platforms="Unix;" />
+				<Option output="../../build/game_release/gamei386.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_release" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-fPIC" />
+					<Add option="-DGAME" />
+					<Add option="-DNDEBUG" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+			<Target title="Debug Linux i386">
+				<Option platforms="Unix;" />
+				<Option output="../../build/game_debug/gamei386.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_debug" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-fPIC" />
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-DGAME" />
+					<Add option="-D_DEBUG" />
+					<Add option="-DBUILDING_REF_GL" />
+					<Add option="-DDEBUG" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+			<Target title="Release TA Linux i386">
+				<Option platforms="Unix;" />
+				<Option output="../../build/game_release/gamei386.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_release" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-fPIC" />
+					<Add option="-DGAME" />
+					<Add option="-DNDEBUG" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+				</Compiler>
+			</Target>
+			<Target title="Debug TA Linux i386">
+				<Option platforms="Unix;" />
+				<Option output="../../build/game_debug/gamei386.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_debug" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-fPIC" />
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-DGAME" />
+					<Add option="-D_DEBUG" />
+					<Add option="-DBUILDING_REF_GL" />
+					<Add option="-DDEBUG" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+				</Compiler>
+			</Target>
+			<Target title="Release Linux x86_64">
+				<Option platforms="Unix;" />
+				<Option output="../../build/game_release/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_release" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-fPIC" />
+					<Add option="-DGAME" />
+					<Add option="-DNDEBUG" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+			<Target title="Debug Linux x86_64">
+				<Option platforms="Unix;" />
+				<Option output="../../build/game_debug/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_debug" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-fPIC" />
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-DGAME" />
+					<Add option="-D_DEBUG" />
+					<Add option="-DBUILDING_REF_GL" />
+					<Add option="-DDEBUG" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+			<Target title="Release TA Linux x86_64">
+				<Option platforms="Unix;" />
+				<Option output="../../build/game_release/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_release" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-fPIC" />
+					<Add option="-DGAME" />
+					<Add option="-DNDEBUG" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+				</Compiler>
+			</Target>
+			<Target title="Debug TA Linux x86_64">
+				<Option platforms="Unix;" />
+				<Option output="../../build/game_debug/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/game_debug" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-fPIC" />
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-DGAME" />
+					<Add option="-D_DEBUG" />
+					<Add option="-DBUILDING_REF_GL" />
+					<Add option="-DDEBUG" />
+					<Add option="-DGLOBALRANK" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Unit filename="../../code/game/ai_chat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_chat.h" />
+		<Unit filename="../../code/game/ai_cmd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_cmd.h" />
+		<Unit filename="../../code/game/ai_dmnet.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_dmnet.h" />
+		<Unit filename="../../code/game/ai_dmq3.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_dmq3.h" />
+		<Unit filename="../../code/game/ai_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_main.h" />
+		<Unit filename="../../code/game/ai_team.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_team.h" />
+		<Unit filename="../../code/game/ai_vcmd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_vcmd.h" />
+		<Unit filename="../../code/game/bg_lib.c">
+			<Option compilerVar="CC" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="../../code/game/bg_local.h" />
+		<Unit filename="../../code/game/bg_misc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/bg_misc.h" />
+		<Unit filename="../../code/game/bg_pmove.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/bg_slidemove.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/chars.h" />
+		<Unit filename="../../code/game/g_active.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_arenas.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_bot.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_client.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_cmds.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_combat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_items.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_local.h" />
+		<Unit filename="../../code/game/g_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_mem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_misc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_missile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_mover.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_public.h" />
+		<Unit filename="../../code/game/g_session.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_spawn.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_svcmds.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_syscalls.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_target.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_team.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_team.h" />
+		<Unit filename="../../code/game/g_trigger.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/g_weapon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/inv.h" />
+		<Unit filename="../../code/game/match.h" />
+		<Unit filename="../../code/game/syn.h" />
+		<Unit filename="../../code/qcommon/q_math.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/q_shared.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/q_shared.h" />
+		<Unit filename="../../code/qcommon/surfaceflags.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

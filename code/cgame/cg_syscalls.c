@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -46,8 +54,7 @@ void	trap_Print( const char *fmt ) {
 	syscall( CG_PRINT, fmt );
 }
 
-void trap_Error(const char *fmt)
-{
+void	trap_Error(const char *fmt) {
 	syscall(CG_ERROR, fmt);
 	// shut up GCC warning about returning functions, because we know better
 	exit(1);
@@ -69,8 +76,34 @@ void	trap_Cvar_Set( const char *var_name, const char *value ) {
 	syscall( CG_CVAR_SET, var_name, value );
 }
 
-void trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize ) {
-	syscall( CG_CVAR_VARIABLESTRINGBUFFER, var_name, buffer, bufsize );
+void	trap_Cvar_SetValue( const char *var_name, float value ) {
+	syscall( CG_CVAR_SET_VALUE, var_name, PASSFLOAT( value ) );
+}
+
+void	trap_Cvar_Reset( const char *name ) {
+	syscall( CG_CVAR_RESET, name );
+}
+
+float	trap_Cvar_VariableValue( const char *var_name ) {
+	floatint_t fi;
+	fi.i = syscall( CG_CVAR_VARIABLE_VALUE, var_name );
+	return fi.f;
+}
+
+int		trap_Cvar_VariableIntegerValue( const char *var_name ) {
+	return syscall( CG_CVAR_VARIABLE_INTEGER_VALUE, var_name );
+}
+
+void	trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize ) {
+	syscall( CG_CVAR_VARIABLE_STRING_BUFFER, var_name, buffer, bufsize );
+}
+
+void trap_Cvar_LatchedVariableStringBuffer( const char *var_name, char *buffer, int bufsize ) {
+	syscall( CG_CVAR_LATCHED_VARIABLE_STRING_BUFFER, var_name, buffer, bufsize );
+}
+
+void	trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize ) {
+	syscall( CG_CVAR_INFO_STRING_BUFFER, bit, buffer, bufsize );
 }
 
 int		trap_Argc( void ) {
@@ -85,6 +118,10 @@ void	trap_Args( char *buffer, int bufferLength ) {
 	syscall( CG_ARGS, buffer, bufferLength );
 }
 
+void	trap_LiteralArgs( char *buffer, int bufferLength ) {
+	syscall( CG_LITERAL_ARGS, buffer, bufferLength );
+}
+
 int		trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	return syscall( CG_FS_FOPENFILE, qpath, f, mode );
 }
@@ -97,16 +134,28 @@ void	trap_FS_Write( const void *buffer, int len, fileHandle_t f ) {
 	syscall( CG_FS_WRITE, buffer, len, f );
 }
 
+int		trap_FS_Seek( fileHandle_t f, long offset, int origin ) {
+	return syscall( CG_FS_SEEK, f, offset, origin );
+}
+
 void	trap_FS_FCloseFile( fileHandle_t f ) {
 	syscall( CG_FS_FCLOSEFILE, f );
 }
 
-int trap_FS_Seek( fileHandle_t f, long offset, int origin ) {
-	return syscall( CG_FS_SEEK, f, offset, origin );
+int trap_FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize ) {
+	return syscall( CG_FS_GETFILELIST, path, extension, listbuf, bufsize );
 }
 
-void	trap_SendConsoleCommand( const char *text ) {
-	syscall( CG_SENDCONSOLECOMMAND, text );
+int trap_FS_Delete( const char *path ) {
+	return syscall( CG_FS_DELETE, path );
+}
+
+int trap_FS_Rename( const char *from, const char *to ) {
+	return syscall( CG_FS_RENAME, from, to );
+}
+
+void	trap_Cmd_ExecuteText( int exec_when, const char *text ) {
+	syscall( CG_CMD_EXECUTETEXT, exec_when, text );
 }
 
 void	trap_AddCommand( const char *cmdName ) {
@@ -137,12 +186,12 @@ clipHandle_t trap_CM_InlineModel( int index ) {
 	return syscall( CG_CM_INLINEMODEL, index );
 }
 
-clipHandle_t trap_CM_TempBoxModel( const vec3_t mins, const vec3_t maxs ) {
-	return syscall( CG_CM_TEMPBOXMODEL, mins, maxs );
+clipHandle_t trap_CM_TempBoxModel( const vec3_t mins, const vec3_t maxs, int contents ) {
+	return syscall( CG_CM_TEMPBOXMODEL, mins, maxs, contents );
 }
 
-clipHandle_t trap_CM_TempCapsuleModel( const vec3_t mins, const vec3_t maxs ) {
-	return syscall( CG_CM_TEMPCAPSULEMODEL, mins, maxs );
+clipHandle_t trap_CM_TempCapsuleModel( const vec3_t mins, const vec3_t maxs, int contents ) {
+	return syscall( CG_CM_TEMPCAPSULEMODEL, mins, maxs, contents );
 }
 
 int		trap_CM_PointContents( const vec3_t p, clipHandle_t model ) {
@@ -179,6 +228,21 @@ void	trap_CM_TransformedCapsuleTrace( trace_t *results, const vec3_t start, cons
 	syscall( CG_CM_TRANSFORMEDCAPSULETRACE, results, start, end, mins, maxs, model, brushmask, origin, angles );
 }
 
+void trap_CM_BiSphereTrace( trace_t *results, const vec3_t start,
+             const vec3_t end, float startRad, float endRad,
+             clipHandle_t model, int mask ) {
+  syscall( CG_CM_BISPHERETRACE, results, start, end,
+      PASSFLOAT( startRad ), PASSFLOAT( endRad ), model, mask );
+}
+
+void trap_CM_TransformedBiSphereTrace( trace_t *results, const vec3_t start,
+             const vec3_t end, float startRad, float endRad,
+             clipHandle_t model, int mask,
+             const vec3_t origin ) {
+  syscall( CG_CM_TRANSFORMEDBISPHERETRACE, results, start, end, PASSFLOAT( startRad ),
+      PASSFLOAT( endRad ), model, mask, origin );
+}
+
 int		trap_CM_MarkFragments( int numPoints, const vec3_t *points, 
 				const vec3_t projection,
 				int maxPoints, vec3_t pointBuffer,
@@ -194,6 +258,10 @@ void	trap_S_StartLocalSound( sfxHandle_t sfx, int channelNum ) {
 	syscall( CG_S_STARTLOCALSOUND, sfx, channelNum );
 }
 
+void	trap_S_StopLoopingSound( int entityNum ) {
+	syscall( CG_S_STOPLOOPINGSOUND, entityNum );
+}
+
 void	trap_S_ClearLoopingSounds( qboolean killall ) {
 	syscall( CG_S_CLEARLOOPINGSOUNDS, killall );
 }
@@ -206,28 +274,36 @@ void	trap_S_AddRealLoopingSound( int entityNum, const vec3_t origin, const vec3_
 	syscall( CG_S_ADDREALLOOPINGSOUND, entityNum, origin, velocity, sfx );
 }
 
-void	trap_S_StopLoopingSound( int entityNum ) {
-	syscall( CG_S_STOPLOOPINGSOUND, entityNum );
-}
-
 void	trap_S_UpdateEntityPosition( int entityNum, const vec3_t origin ) {
 	syscall( CG_S_UPDATEENTITYPOSITION, entityNum, origin );
 }
 
-void	trap_S_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater ) {
-	syscall( CG_S_RESPATIALIZE, entityNum, origin, axis, inwater );
+void	trap_S_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater, qboolean firstPerson ) {
+	syscall( CG_S_RESPATIALIZE, entityNum, origin, axis, inwater, firstPerson );
 }
 
 sfxHandle_t	trap_S_RegisterSound( const char *sample, qboolean compressed ) {
 	return syscall( CG_S_REGISTERSOUND, sample, compressed );
 }
 
+int trap_S_SoundDuration( sfxHandle_t handle ) {
+	return syscall( CG_S_SOUNDDURATION, handle );
+}
+
 void	trap_S_StartBackgroundTrack( const char *intro, const char *loop ) {
 	syscall( CG_S_STARTBACKGROUNDTRACK, intro, loop );
 }
 
+void	trap_S_StopBackgroundTrack( void ) {
+	syscall( CG_S_STOPBACKGROUNDTRACK );
+}
+
 void	trap_R_LoadWorldMap( const char *mapname ) {
 	syscall( CG_R_LOADWORLDMAP, mapname );
+}
+
+qboolean trap_GetEntityToken( char *buffer, int bufferSize ) {
+	return syscall( CG_GET_ENTITY_TOKEN, buffer, bufferSize );
 }
 
 qhandle_t trap_R_RegisterModel( const char *name ) {
@@ -266,8 +342,8 @@ void	trap_R_AddPolysToScene( qhandle_t hShader , int numVerts, const polyVert_t 
 	syscall( CG_R_ADDPOLYSTOSCENE, hShader, numVerts, verts, num );
 }
 
-int		trap_R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir ) {
-	return syscall( CG_R_LIGHTFORPOINT, point, ambientLight, directedLight, lightDir );
+void    trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
+	syscall( CG_R_ADDPOLYBUFFERTOSCENE, pPolyBuffer );
 }
 
 void	trap_R_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b ) {
@@ -278,6 +354,10 @@ void	trap_R_AddAdditiveLightToScene( const vec3_t org, float intensity, float r,
 	syscall( CG_R_ADDADDITIVELIGHTTOSCENE, org, PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
 }
 
+int		trap_R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir ) {
+	return syscall( CG_R_LIGHTFORPOINT, point, ambientLight, directedLight, lightDir );
+}
+
 void	trap_R_RenderScene( const refdef_t *fd ) {
 	syscall( CG_R_RENDERSCENE, fd );
 }
@@ -286,9 +366,26 @@ void	trap_R_SetColor( const float *rgba ) {
 	syscall( CG_R_SETCOLOR, rgba );
 }
 
+void  trap_R_SetClipRegion( const float *region ) {
+	syscall( CG_R_SETCLIPREGION, region );
+}
+
 void	trap_R_DrawStretchPic( float x, float y, float w, float h, 
 							   float s1, float t1, float s2, float t2, qhandle_t hShader ) {
 	syscall( CG_R_DRAWSTRETCHPIC, PASSFLOAT(x), PASSFLOAT(y), PASSFLOAT(w), PASSFLOAT(h), PASSFLOAT(s1), PASSFLOAT(t1), PASSFLOAT(s2), PASSFLOAT(t2), hShader );
+}
+
+void	trap_R_DrawRotatedPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader, float angle ) {
+	syscall( CG_R_DRAWROTATEDPIC, PASSFLOAT( x ), PASSFLOAT( y ), PASSFLOAT( w ), PASSFLOAT( h ), PASSFLOAT( s1 ), PASSFLOAT( t1 ), PASSFLOAT( s2 ), PASSFLOAT( t2 ), hShader, PASSFLOAT( angle ) );
+}
+
+void	trap_R_DrawStretchPicGradient(  float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader,
+										const float *gradientColor, int gradientType ) {
+	syscall( CG_R_DRAWSTRETCHPIC_GRADIENT, PASSFLOAT( x ), PASSFLOAT( y ), PASSFLOAT( w ), PASSFLOAT( h ), PASSFLOAT( s1 ), PASSFLOAT( t1 ), PASSFLOAT( s2 ), PASSFLOAT( t2 ), hShader, gradientColor, gradientType  );
+}
+
+void	trap_R_Add2dPolys( polyVert_t *verts, int numverts, qhandle_t hShader ) {
+	syscall( CG_R_DRAW2DPOLYS, verts, numverts, hShader );
 }
 
 void	trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs ) {
@@ -304,8 +401,48 @@ void	trap_R_RemapShader( const char *oldShader, const char *newShader, const cha
 	syscall( CG_R_REMAP_SHADER, oldShader, newShader, timeOffset );
 }
 
+qboolean trap_R_inPVS( const vec3_t p1, const vec3_t p2 ) {
+	return syscall( CG_R_INPVS, p1, p2 );
+}
+
+void trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
+	syscall( CG_R_GET_GLOBAL_FOG, type, color, depthForOpaque, density );
+}
+
+void trap_R_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
+	syscall( CG_R_GET_WATER_FOG, origin, type, color, depthForOpaque, density );
+}
+
+void		trap_GetClipboardData( char *buf, int bufsize ) {
+	syscall( CG_GETCLIPBOARDDATA, buf, bufsize );
+}
+
 void		trap_GetGlconfig( glconfig_t *glconfig ) {
 	syscall( CG_GETGLCONFIG, glconfig );
+}
+
+int trap_GetVoipTime( int clientNum ) {
+	return syscall( CG_GET_VOIP_TIME, clientNum );
+}
+
+float trap_GetVoipPower( int clientNum ) {
+	floatint_t fi;
+	fi.i = syscall( CG_GET_VOIP_POWER, clientNum );
+	return fi.f;
+}
+
+float trap_GetVoipGain( int clientNum ) {
+	floatint_t fi;
+	fi.i = syscall( CG_GET_VOIP_GAIN, clientNum );
+	return fi.f;
+}
+
+qboolean trap_GetVoipMute( int clientNum ) {
+	return syscall( CG_GET_VOIP_MUTE_CLIENT, clientNum );
+}
+
+qboolean trap_GetVoipMuteAll( void ) {
+	return syscall(	CG_GET_VOIP_MUTE_ALL );
 }
 
 void		trap_GetGameState( gameState_t *gamestate ) {
@@ -328,20 +465,12 @@ int			trap_GetCurrentCmdNumber( void ) {
 	return syscall( CG_GETCURRENTCMDNUMBER );
 }
 
-qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd ) {
-	return syscall( CG_GETUSERCMD, cmdNumber, ucmd );
+qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum ) {
+	return syscall( CG_GETUSERCMD, cmdNumber, ucmd, localClientNum );
 }
 
-void		trap_SetUserCmdValue( int stateValue, float sensitivityScale ) {
-	syscall( CG_SETUSERCMDVALUE, stateValue, PASSFLOAT(sensitivityScale) );
-}
-
-void		testPrintInt( char *string, int i ) {
-	syscall( CG_TESTPRINTINT, string, i );
-}
-
-void		testPrintFloat( char *string, float f ) {
-	syscall( CG_TESTPRINTFLOAT, string, PASSFLOAT(f) );
+void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int localClientNum ) {
+	syscall( CG_SETUSERCMDVALUE, stateValue, PASSFLOAT(sensitivityScale), localClientNum );
 }
 
 int trap_MemoryRemaining( void ) {
@@ -352,6 +481,10 @@ qboolean trap_Key_IsDown( int keynum ) {
 	return syscall( CG_KEY_ISDOWN, keynum );
 }
 
+void trap_Key_ClearStates( void ) {
+	syscall( CG_KEY_CLEARSTATES );
+}
+
 int trap_Key_GetCatcher( void ) {
 	return syscall( CG_KEY_GETCATCHER );
 }
@@ -360,12 +493,36 @@ void trap_Key_SetCatcher( int catcher ) {
 	syscall( CG_KEY_SETCATCHER, catcher );
 }
 
-int trap_Key_GetKey( const char *binding ) {
-	return syscall( CG_KEY_GETKEY, binding );
+int trap_Key_GetKey( const char *binding, int startKey ) {
+	return syscall( CG_KEY_GETKEY, binding, startKey );
+}
+
+void trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen ) {
+  syscall( CG_KEY_KEYNUMTOSTRINGBUF, keynum, buf, buflen );
+}
+
+void trap_Key_GetBindingBuf( int keynum, char *buf, int buflen ) {
+  syscall( CG_KEY_GETBINDINGBUF, keynum, buf, buflen );
+}
+
+void trap_Key_SetBinding( int keynum, const char *binding ) {
+  syscall( CG_KEY_SETBINDING, keynum, binding );
+}
+
+void trap_Key_SetOverstrikeMode( qboolean state ) {
+  syscall( CG_KEY_SETOVERSTRIKEMODE, state );
+}
+
+qboolean trap_Key_GetOverstrikeMode( void ) {
+  return syscall( CG_KEY_GETOVERSTRIKEMODE );
 }
 
 int trap_PC_AddGlobalDefine( char *define ) {
 	return syscall( CG_PC_ADD_GLOBAL_DEFINE, define );
+}
+
+void trap_PC_RemoveAllGlobalDefines( void ) {
+	syscall( CG_PC_REMOVE_ALL_GLOBAL_DEFINES );
 }
 
 int trap_PC_LoadSource( const char *filename ) {
@@ -380,12 +537,12 @@ int trap_PC_ReadToken( int handle, pc_token_t *pc_token ) {
 	return syscall( CG_PC_READ_TOKEN, handle, pc_token );
 }
 
-int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
-	return syscall( CG_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
+void trap_PC_UnreadToken( int handle ) {
+	syscall( CG_PC_UNREAD_TOKEN, handle );
 }
 
-void	trap_S_StopBackgroundTrack( void ) {
-	syscall( CG_S_STOPBACKGROUNDTRACK );
+int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
+	return syscall( CG_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
 }
 
 int trap_RealTime(qtime_t *qtime) {
@@ -396,31 +553,22 @@ void trap_SnapVector( float *v ) {
 	syscall( CG_SNAPVECTOR, v );
 }
 
-// this returns a handle.  arg0 is the name in the format "idlogo.roq", set arg1 to NULL, alteredstates to qfalse (do not alter gamestate)
 int trap_CIN_PlayCinematic( const char *arg0, int xpos, int ypos, int width, int height, int bits) {
   return syscall(CG_CIN_PLAYCINEMATIC, arg0, xpos, ypos, width, height, bits);
 }
- 
-// stops playing the cinematic and ends it.  should always return FMV_EOF
-// cinematics must be stopped in reverse order of when they are started
+
 e_status trap_CIN_StopCinematic(int handle) {
   return syscall(CG_CIN_STOPCINEMATIC, handle);
 }
 
-
-// will run a frame of the cinematic but will not draw it.  Will return FMV_EOF if the end of the cinematic has been reached.
 e_status trap_CIN_RunCinematic (int handle) {
   return syscall(CG_CIN_RUNCINEMATIC, handle);
 }
- 
 
-// draws the current frame
 void trap_CIN_DrawCinematic (int handle) {
   syscall(CG_CIN_DRAWCINEMATIC, handle);
 }
- 
 
-// allows you to resize the animation dynamically
 void trap_CIN_SetExtents (int handle, int x, int y, int w, int h) {
   syscall(CG_CIN_SETEXTENTS, handle, x, y, w, h);
 }
@@ -439,10 +587,3 @@ qboolean trap_getCameraInfo( int time, vec3_t *origin, vec3_t *angles) {
 }
 */
 
-qboolean trap_GetEntityToken( char *buffer, int bufferSize ) {
-	return syscall( CG_GET_ENTITY_TOKEN, buffer, bufferSize );
-}
-
-qboolean trap_R_inPVS( const vec3_t p1, const vec3_t p2 ) {
-	return syscall( CG_R_INPVS, p1, p2 );
-}

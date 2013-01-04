@@ -1,29 +1,38 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
 
 // g_public.h -- game module information visible to server
 
-#define	GAME_API_VERSION	8
+#define	GAME_API_MAJOR_VERSION	0xdead
+#define	GAME_API_MINOR_VERSION	0xbeef
 
 // entity->svFlags
 // the server does not know how to interpret most of the values
@@ -41,11 +50,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define	SVF_USE_CURRENT_ORIGIN	0x00000080	// entity->r.currentOrigin instead of entity->s.origin
 											// for link position (missiles and movers)
 #define SVF_SINGLECLIENT		0x00000100	// only send to a single client (entityShared_t->singleClient)
-#define SVF_NOSERVERINFO		0x00000200	// don't send CS_SERVERINFO updates to this client
-											// so that it can be updated for ping tools without
-											// lagging clients
-#define SVF_CAPSULE				0x00000400	// use capsule for collision detection instead of bbox
-#define SVF_NOTSINGLECLIENT		0x00000800	// send entity to everyone but one client
+#define SVF_NOTSINGLECLIENT		0x00000200	// send entity to everyone but one client
 											// (entityShared_t->singleClient)
 
 
@@ -54,9 +59,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 typedef struct {
-	entityState_t	unused;			// apparently this field was put here accidentally
-									//  (and is kept only for compatibility, as a struct pad)
-
 	qboolean	linked;				// qfalse if not in any good cluster
 	int			linkcount;
 
@@ -65,12 +67,6 @@ typedef struct {
 	// only send to this client when SVF_SINGLECLIENT is set	
 	// if SVF_CLIENTMASK is set, use bitmask for clients to send to (maxclients must be <= 32, up to the mod to enforce this)
 	int			singleClient;		
-
-	qboolean	bmodel;				// if false, assume an explicit mins / maxs bounding box
-									// only set by trap_SetBrushModel
-	vec3_t		mins, maxs;
-	int			contents;			// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
-									// a non-solid entity should set to 0
 
 	vec3_t		absmin, absmax;		// derived from mins/maxs and origin + rotation
 
@@ -107,7 +103,9 @@ typedef struct {
 typedef enum {
 	//============== general Quake services ==================
 
-	G_PRINT,		// ( const char *string );
+	// See sharedTraps_t in qcommon.h for TRAP_MEMSET=0, etc
+
+	G_PRINT = 20,	// ( const char *string );
 	// print message on the local console
 
 	G_ERROR,		// ( const char *string );
@@ -118,32 +116,55 @@ typedef enum {
 	// this should NOT be used for any game related tasks,
 	// because it is not journaled
 
-	// console variable interaction
-	G_CVAR_REGISTER,	// ( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags );
-	G_CVAR_UPDATE,	// ( vmCvar_t *vmCvar );
-	G_CVAR_SET,		// ( const char *var_name, const char *value );
-	G_CVAR_VARIABLE_INTEGER_VALUE,	// ( const char *var_name );
+	G_REAL_TIME,	// ( qtime_t *qtime );
 
-	G_CVAR_VARIABLE_STRING_BUFFER,	// ( const char *var_name, char *buffer, int bufsize );
+	G_SNAPVECTOR,	// ( float *v );
 
-	G_ARGC,			// ( void );
 	// ClientCommand and ServerCommand parameter access
-
+	G_ARGC,			// ( void );
 	G_ARGV,			// ( int n, char *buffer, int bufferLength );
+	G_ARGS,			// ( char *buffer, int bufferLength );
+	G_LITERAL_ARGS,	// ( char *buffer, int bufferLength );
 
-	G_FS_FOPEN_FILE,	// ( const char *qpath, fileHandle_t *file, fsMode_t mode );
-	G_FS_READ,		// ( void *buffer, int len, fileHandle_t f );
-	G_FS_WRITE,		// ( const void *buffer, int len, fileHandle_t f );
-	G_FS_FCLOSE_FILE,		// ( fileHandle_t f );
+	G_ADDCOMMAND,	// ( const char *cmdName );
+	G_REMOVECOMMAND,// ( const char *cmdName );
 
-	G_SEND_CONSOLE_COMMAND,	// ( const char *text );
+	G_CMD_EXECUTETEXT,	// ( int exec_when, const char *text );
 	// add commands to the console as if they were typed in
 	// for map changing, etc
 
+	// console variable interaction
+	G_CVAR_REGISTER,	// ( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags );
+	G_CVAR_UPDATE,		// ( vmCvar_t *vmCvar );
+	G_CVAR_SET,			// ( const char *var_name, const char *value );
+	G_CVAR_SET_VALUE,	// ( const char *var_name, float value );
+	G_CVAR_RESET,		// ( const char *var_name );
+	G_CVAR_VARIABLE_VALUE,					// ( const char *var_name );
+	G_CVAR_VARIABLE_INTEGER_VALUE,			// ( const char *var_name );
+	G_CVAR_VARIABLE_STRING_BUFFER,			// ( const char *var_name, char *buffer, int bufsize );
+	G_CVAR_LATCHED_VARIABLE_STRING_BUFFER,	// ( const char *var_name, char *buffer, int bufsize );
+	G_CVAR_INFO_STRING_BUFFER,				// ( int bit, char *buffer, int bufsize );
+
+	G_FS_FOPEN_FILE,	// ( const char *qpath, fileHandle_t *file, fsMode_t mode );
+	G_FS_READ,			// ( void *buffer, int len, fileHandle_t f );
+	G_FS_WRITE,			// ( const void *buffer, int len, fileHandle_t f );
+	G_FS_SEEK,
+	G_FS_FCLOSE_FILE,	// ( fileHandle_t f );
+	G_FS_GETFILELIST,
+	G_FS_DELETE,		// ( const void *path );
+	G_FS_RENAME,		// ( const void *from, const void *to );
+
+	G_PC_ADD_GLOBAL_DEFINE,
+	G_PC_REMOVE_ALL_GLOBAL_DEFINES,
+	G_PC_LOAD_SOURCE,
+	G_PC_FREE_SOURCE,
+	G_PC_READ_TOKEN,
+	G_PC_UNREAD_TOKEN,
+	G_PC_SOURCE_FILE_AND_LINE,
 
 	//=========== server specific functionality =============
 
-	G_LOCATE_GAME_DATA,		// ( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t,
+	G_LOCATE_GAME_DATA = 100,		// ( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t,
 	//							playerState_t *clients, int sizeofGameClient );
 	// the game needs to let the server system know where and how big the gentities
 	// are, so it can look at them directly without going through an interface
@@ -151,7 +172,7 @@ typedef enum {
 	G_DROP_CLIENT,		// ( int clientNum, const char *reason );
 	// kick a client off the server with a message
 
-	G_SEND_SERVER_COMMAND,	// ( int clientNum, const char *fmt, ... );
+	G_SEND_SERVER_COMMAND,	// ( int connectionNum, int localPlayerNum, const char *text );
 	// reliably sends a command string to be interpreted by the given
 	// client.  If clientNum is -1, it will be sent to all clients
 
@@ -218,23 +239,16 @@ typedef enum {
 	// false when all tokens have been parsed.
 	// This should only be done at GAME_INIT time.
 
-	G_FS_GETFILELIST,
 	G_DEBUG_POLYGON_CREATE,
 	G_DEBUG_POLYGON_DELETE,
-	G_REAL_TIME,
-	G_SNAPVECTOR,
 
 	G_TRACECAPSULE,	// ( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 	G_ENTITY_CONTACTCAPSULE,	// ( const vec3_t mins, const vec3_t maxs, const gentity_t *ent );
-	
-	// 1.32
-	G_FS_SEEK,
 
 	BOTLIB_SETUP = 200,				// ( void );
 	BOTLIB_SHUTDOWN,				// ( void );
 	BOTLIB_LIBVAR_SET,
 	BOTLIB_LIBVAR_GET,
-	BOTLIB_PC_ADD_GLOBAL_DEFINE,
 	BOTLIB_START_FRAME,
 	BOTLIB_LOAD_MAP,
 	BOTLIB_UPDATENTITY,
@@ -269,6 +283,8 @@ typedef enum {
 
 	BOTLIB_AAS_SWIMMING,
 	BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT,
+
+	BOTLIB_AAS_BEST_REACHABLE_AREA,
 
 	BOTLIB_EA_SAY = 400,
 	BOTLIB_EA_SAY_TEAM,
@@ -384,11 +400,6 @@ typedef enum {
 	BOTLIB_AAS_PREDICT_ROUTE,
 	BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX,
 
-	BOTLIB_PC_LOAD_SOURCE,
-	BOTLIB_PC_FREE_SOURCE,
-	BOTLIB_PC_READ_TOKEN,
-	BOTLIB_PC_SOURCE_FILE_AND_LINE
-
 } gameImport_t;
 
 
@@ -396,6 +407,8 @@ typedef enum {
 // functions exported by the game subsystem
 //
 typedef enum {
+	GAME_GETAPIVERSION = 0,	// system reserved
+
 	GAME_INIT,	// ( int levelTime, int randomSeed, int restart );
 	// init and shutdown will be called every single level
 	// The game should call G_GET_ENTITY_TOKEN to parse through all the
@@ -403,7 +416,7 @@ typedef enum {
 
 	GAME_SHUTDOWN,	// (void);
 
-	GAME_CLIENT_CONNECT,	// ( int clientNum, qboolean firstTime, qboolean isBot );
+	GAME_CLIENT_CONNECT,	// ( int clientNum, qboolean firstTime, qboolean isBot, int connectionNum, int localPlayerNum );
 	// return NULL if the client is allowed to connect, otherwise return
 	// a text string with the reason for denial
 
@@ -413,7 +426,7 @@ typedef enum {
 
 	GAME_CLIENT_DISCONNECT,			// ( int clientNum );
 
-	GAME_CLIENT_COMMAND,			// ( int clientNum );
+	GAME_CLIENT_COMMAND,			// ( int connectionNum );
 
 	GAME_CLIENT_THINK,				// ( int clientNum );
 
@@ -425,6 +438,9 @@ typedef enum {
 	// The game can issue trap_argc() / trap_argv() commands to get the command
 	// and parameters.  Return qfalse if the game doesn't recognize it as a command.
 
-	BOTAI_START_FRAME				// ( int time );
+	BOTAI_START_FRAME,				// ( int time );
+
+	GAME_SNAPSHOT_CALLBACK,         // ( int entityNum, int clientNum );
+	// return qfalse if you don't want it to be added
 } gameExport_t;
 

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -24,7 +32,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // not necessarily every single rendered frame
 
 #include "cg_local.h"
-
 
 
 /*
@@ -90,7 +97,9 @@ void CG_SetInitialSnapshot( snapshot_t *snap ) {
 
 	cg.snap = snap;
 
-	BG_PlayerStateToEntityState( &snap->ps, &cg_entities[ snap->ps.clientNum ].currentState, qfalse );
+	for (i = 0; i < cg.snap->numPSs; i++) {
+		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
+	}
 
 	// sort out solid entities
 	CG_BuildSolidList();
@@ -99,7 +108,7 @@ void CG_SetInitialSnapshot( snapshot_t *snap ) {
 
 	// set our local weapon selection pointer to
 	// what the server has indicated the current weapon is
-	CG_Respawn();
+	CG_Respawn(-1);
 
 	for ( i = 0 ; i < cg.snap->numEntities ; i++ ) {
 		state = &cg.snap->entities[ i ];
@@ -154,8 +163,23 @@ static void CG_TransitionSnapshot( void ) {
 	oldFrame = cg.snap;
 	cg.snap = cg.nextSnap;
 
-	BG_PlayerStateToEntityState( &cg.snap->ps, &cg_entities[ cg.snap->ps.clientNum ].currentState, qfalse );
-	cg_entities[ cg.snap->ps.clientNum ].interpolate = qfalse;
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		// Server added local client
+		if (oldFrame && oldFrame->lcIndex[i] == -1 && cg.snap->lcIndex[i] != -1) {
+			// ZTM: FIXME: Not the most reliable way to get clientNum, ps could be a followed client.
+			CG_LocalClientAdded(i, cg.snap->pss[cg.snap->lcIndex[i]].clientNum);
+		}
+
+		// Server removed local client
+		if (oldFrame && oldFrame->lcIndex[i] != -1 && cg.snap->lcIndex[i] == -1) {
+			CG_LocalClientRemoved(i);
+		}
+	}
+
+	for (i = 0; i < cg.snap->numPSs; i++) {
+		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
+		cg_entities[ cg.snap->pss[i].clientNum ].interpolate = qfalse;
+	}
 
 	for ( i = 0 ; i < cg.snap->numEntities ; i++ ) {
 		cent = &cg_entities[ cg.snap->entities[ i ].number ];
@@ -171,18 +195,29 @@ static void CG_TransitionSnapshot( void ) {
 	if ( oldFrame ) {
 		playerState_t	*ops, *ps;
 
-		ops = &oldFrame->ps;
-		ps = &cg.snap->ps;
-		// teleporting checks are irrespective of prediction
-		if ( ( ps->eFlags ^ ops->eFlags ) & EF_TELEPORT_BIT ) {
-			cg.thisFrameTeleport = qtrue;	// will be cleared by prediction code
-		}
+		for (i = 0; i < CG_MaxSplitView(); i++) {
+			if (oldFrame->lcIndex[i] == -1 || cg.snap->lcIndex[i] == -1) {
+				continue;
+			}
 
-		// if we are not doing client side movement prediction for any
-		// reason, then the client events and view changes will be issued now
-		if ( cg.demoPlayback || (cg.snap->ps.pm_flags & PMF_FOLLOW)
-			|| cg_nopredict.integer || cg_synchronousClients.integer ) {
-			CG_TransitionPlayerState( ps, ops );
+			cg.cur_localClientNum = i;
+			cg.cur_lc = &cg.localClients[i];
+			cg.cur_ps = &cg.snap->pss[cg.snap->lcIndex[i]];
+
+			ops = &oldFrame->pss[oldFrame->lcIndex[i]];
+			ps = &cg.snap->pss[cg.snap->lcIndex[i]];
+
+			// teleporting checks are irrespective of prediction
+			if ( ( ps->eFlags ^ ops->eFlags ) & EF_TELEPORT_BIT ) {
+				cg.thisFrameTeleport = qtrue;	// will be cleared by prediction code
+			}
+
+			// if we are not doing client side movement prediction for any
+			// reason, then the client events and view changes will be issued now
+			if ( cg.demoPlayback || (ps->pm_flags & PMF_FOLLOW)
+				|| cg_nopredict.integer || cg_synchronousClients.integer ) {
+				CG_TransitionPlayerState( ps, ops );
+			}
 		}
 	}
 
@@ -200,11 +235,14 @@ static void CG_SetNextSnap( snapshot_t *snap ) {
 	int					num;
 	entityState_t		*es;
 	centity_t			*cent;
+	int					i;
 
 	cg.nextSnap = snap;
 
-	BG_PlayerStateToEntityState( &snap->ps, &cg_entities[ snap->ps.clientNum ].nextState, qfalse );
-	cg_entities[ cg.snap->ps.clientNum ].interpolate = qtrue;
+	for (i = 0; i < cg.snap->numPSs; i++) {
+		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].nextState, qfalse );
+		cg_entities[ cg.snap->pss[i].clientNum ].interpolate = qtrue;
+	}
 
 	// check for extrapolation errors
 	for ( num = 0 ; num < snap->numEntities ; num++ ) {
@@ -223,17 +261,18 @@ static void CG_SetNextSnap( snapshot_t *snap ) {
 		}
 	}
 
-	// if the next frame is a teleport for the playerstate, we
-	// can't interpolate during demos
-	if ( cg.snap && ( ( snap->ps.eFlags ^ cg.snap->ps.eFlags ) & EF_TELEPORT_BIT ) ) {
-		cg.nextFrameTeleport = qtrue;
-	} else {
-		cg.nextFrameTeleport = qfalse;
-	}
+	cg.nextFrameTeleport = qfalse;
+	for (i = 0; i < cg.snap->numPSs; i++) {
+		// if the next frame is a teleport for the playerstate, we
+		// can't interpolate during demos
+		if ( cg.snap && ( ( snap->pss[i].eFlags ^ cg.snap->pss[i].eFlags ) & EF_TELEPORT_BIT ) ) {
+			cg.nextFrameTeleport = qtrue;
+		}
 
-	// if changing follow mode, don't interpolate
-	if ( cg.nextSnap->ps.clientNum != cg.snap->ps.clientNum ) {
-		cg.nextFrameTeleport = qtrue;
+		// if changing follow mode, don't interpolate
+		if ( cg.nextSnap->pss[i].clientNum != cg.snap->pss[i].clientNum ) {
+			cg.nextFrameTeleport = qtrue;
+		}
 	}
 
 	// if changing server restarts, don't interpolate
@@ -399,5 +438,22 @@ void CG_ProcessSnapshots( void ) {
 		CG_Error( "CG_ProcessSnapshots: cg.nextSnap->serverTime <= cg.time" );
 	}
 
+}
+
+/*
+=============
+CG_LocalClientPlayerStateForClientNum
+=============
+*/
+playerState_t *CG_LocalClientPlayerStateForClientNum(int clientNum) {
+	int i;
+
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+		if (cg.snap->lcIndex[i] != -1 && cg.snap->pss[cg.snap->lcIndex[i]].clientNum == clientNum) {
+			return &cg.snap->pss[cg.snap->lcIndex[i]];
+		}
+	}
+
+	return NULL;
 }
 

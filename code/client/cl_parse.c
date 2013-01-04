@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // cl_parse.c  -- parse a message received from the server
@@ -43,7 +51,6 @@ void SHOWNET( msg_t *msg, char *s) {
 	}
 }
 
-
 /*
 =========================================================================
 
@@ -51,6 +58,30 @@ MESSAGE PARSING
 
 =========================================================================
 */
+
+/*
+==================
+CL_LocalClientAdded
+==================
+*/
+void CL_LocalClientAdded(int localClientNum, int clientNum) {
+	if (clientNum < 0 || clientNum >= MAX_CLIENTS)
+		return;
+
+	clc.clientNums[localClientNum] = clientNum;
+}
+
+/*
+==================
+CL_LocalClientRemoved
+==================
+*/
+void CL_LocalClientRemoved(int localClientNum) {
+	if (clc.clientNums[localClientNum] == -1)
+		return;
+
+	clc.clientNums[localClientNum] = -1;
+}
 
 /*
 ==================
@@ -272,10 +303,48 @@ void CL_ParseSnapshot( msg_t *msg ) {
 
 	// read playerinfo
 	SHOWNET( msg, "playerstate" );
-	if ( old ) {
-		MSG_ReadDeltaPlayerstate( msg, &old->ps, &newSnap.ps );
+	if (newSnap.snapFlags & SNAPFLAG_MULTIPLE_PSS) {
+		newSnap.numPSs = MSG_ReadByte( msg );
+		if (newSnap.numPSs > MAX_SPLITVIEW) {
+			Com_DPrintf(S_COLOR_YELLOW "Warning: Got numPSs as %d (max=%d)\n", newSnap.numPSs, MAX_SPLITVIEW);
+			newSnap.numPSs = MAX_SPLITVIEW;
+		}
+		for (i = 0; i < MAX_SPLITVIEW; i++) {
+			newSnap.lcIndex[i] = MSG_ReadByte( msg );
+
+			// -1 gets converted to 255 should be set to -1 (and so should all invalid values)
+			if (newSnap.lcIndex[i] >= newSnap.numPSs) {
+				newSnap.lcIndex[i] = -1;
+			}
+		}
 	} else {
-		MSG_ReadDeltaPlayerstate( msg, NULL, &newSnap.ps );
+		newSnap.numPSs = 1;
+		newSnap.lcIndex[0] = 0;
+		for (i = 1; i < MAX_SPLITVIEW; i++) {
+			newSnap.lcIndex[i] = -1;
+		}
+	}
+
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		// Read player states
+		if (newSnap.lcIndex[i] != -1) {
+			if (old && old->lcIndex[i] != -1) {
+				MSG_ReadDeltaPlayerstate( msg, &old->pss[old->lcIndex[i]], &newSnap.pss[newSnap.lcIndex[i]] );
+			} else {
+				MSG_ReadDeltaPlayerstate( msg, NULL, &newSnap.pss[newSnap.lcIndex[i]] );
+			}
+		}
+
+		// Server added local client
+		if (old && old->lcIndex[i] == -1 && newSnap.lcIndex[i] != -1) {
+			// ZTM: FIXME: Not the most reliable way to get clientNum, ps could be a followed client.
+			CL_LocalClientAdded(i, newSnap.pss[newSnap.lcIndex[i]].clientNum);
+		}
+
+		// Server removed local client
+		if (old && old->lcIndex[i] != -1 && newSnap.lcIndex[i] == -1) {
+			CL_LocalClientRemoved(i);
+		}
 	}
 
 	// read packet entities
@@ -307,7 +376,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	// calculate ping time
 	for ( i = 0 ; i < PACKET_BACKUP ; i++ ) {
 		packetNum = ( clc.netchan.outgoingSequence - 1 - i ) & PACKET_MASK;
-		if ( cl.snap.ps.commandTime >= cl.outPackets[ packetNum ].p_serverTime ) {
+		if ( cl.snap.pss[0].commandTime >= cl.outPackets[ packetNum ].p_serverTime ) {
 			cl.snap.ping = cls.realtime - cl.outPackets[ packetNum ].p_realtime;
 			break;
 		}
@@ -326,7 +395,6 @@ void CL_ParseSnapshot( msg_t *msg ) {
 
 //=====================================================================
 
-int cl_connectedToPureServer;
 int cl_connectedToCheatServer;
 
 /*
@@ -365,7 +433,7 @@ void CL_SystemInfoChanged( void ) {
 #endif
 	{
 		s = Info_ValueForKey( systemInfo, "sv_voip" );
-		if ( Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableValue("ui_singlePlayerActive"))
+		if ( Com_GameIsSinglePlayer() )
 			clc.voipEnabled = qfalse;
 		else
 			clc.voipEnabled = atoi(s);
@@ -417,14 +485,8 @@ void CL_SystemInfoChanged( void ) {
 			// If this cvar may not be modified by a server discard the value.
 			if(!(cvar_flags & (CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED)))
 			{
-#ifndef STANDALONE
-				if(Q_stricmp(key, "g_synchronousClients") && Q_stricmp(key, "pmove_fixed") &&
-				   Q_stricmp(key, "pmove_msec"))
-#endif
-				{
-					Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", key, value);
-					continue;
-				}
+				Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", key, value);
+				continue;
 			}
 
 			Cvar_SetSafe(key, value);
@@ -434,7 +496,6 @@ void CL_SystemInfoChanged( void ) {
 	if ( !gameSet && *Cvar_VariableString("fs_game") ) {
 		Cvar_Set( "fs_game", "" );
 	}
-	cl_connectedToPureServer = Cvar_VariableValue( "sv_pure" );
 }
 
 /*
@@ -520,9 +581,14 @@ void CL_ParseGamestate( msg_t *msg ) {
 		}
 	}
 
-	clc.clientNum = MSG_ReadLong(msg);
-	// read the checksum feed
-	clc.checksumFeed = MSG_ReadLong( msg );
+	// read clientNums
+	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
+		newnum = MSG_ReadLong(msg);
+		if (newnum >= 0 && newnum < MAX_CLIENTS)
+			CL_LocalClientAdded(i, newnum);
+		else
+			CL_LocalClientRemoved(i);
+	}
 
 	// save old gamedir
 	Cvar_VariableStringBuffer("fs_game", oldGame, sizeof(oldGame));
@@ -544,7 +610,7 @@ void CL_ParseGamestate( msg_t *msg ) {
 		Q_strncpyz(cl_oldGame, oldGame, sizeof(cl_oldGame));
 	}
 
-	FS_ConditionalRestart(clc.checksumFeed, qfalse);
+	FS_ConditionalRestart(qfalse);
 
 	// This used to call CL_StartHunkUsers, but now we enter the download state before loading the
 	// cgame
@@ -657,16 +723,23 @@ void CL_ParseDownload ( msg_t *msg ) {
 static
 qboolean CL_ShouldIgnoreVoipSender(int sender)
 {
+	int i;
+
 	if (!cl_voip->integer)
 		return qtrue;  // VoIP is disabled.
-	else if ((sender == clc.clientNum) && (!clc.demoplaying))
-		return qtrue;  // ignore own voice (unless playing back a demo).
 	else if (clc.voipMuteAll)
 		return qtrue;  // all channels are muted with extreme prejudice.
 	else if (clc.voipIgnore[sender])
 		return qtrue;  // just ignoring this guy.
 	else if (clc.voipGain[sender] == 0.0f)
 		return qtrue;  // too quiet to play.
+
+	if (!clc.demoplaying) {
+		for ( i = 0; i < CL_MAX_SPLITVIEW; i++ ) {
+			if (sender == clc.clientNums[i])
+				return qtrue;  // ignore own voice (unless playing back a demo).
+		}
+	}
 
 	return qfalse;
 }
@@ -714,7 +787,8 @@ void CL_ParseVoip ( msg_t *msg ) {
 	char encoded[1024];
 	int seqdiff = sequence - clc.voipIncomingSequence[sender];
 	int written = 0;
-	int i;
+	float voipPower = 0.0f;
+	int i, j;
 
 	Com_DPrintf("VoIP: %d-byte packet from client %d\n", packetsize, sender);
 
@@ -819,6 +893,15 @@ void CL_ParseVoip ( msg_t *msg ) {
 		if (decio != NULL) { fwrite(decoded+written, clc.speexFrameSize*2, 1, decio); fflush(decio); }
 		#endif
 
+		const int16_t *sampptr = (const int16_t *)decoded + written;
+
+		// calculate the "power" of this packet...
+		for (j = 0; j < clc.speexFrameSize; j++) {
+			const float flsamp = (float) sampptr[j];
+			const float s = fabs(flsamp);
+			voipPower += s * s;
+		}
+
 		written += clc.speexFrameSize;
 	}
 
@@ -828,7 +911,12 @@ void CL_ParseVoip ( msg_t *msg ) {
 	if(written > 0)
 		CL_PlayVoip(sender, written, (const byte *) decoded, flags);
 
+	clc.voipPower[sender] = (voipPower / (32768.0f * 32768.0f *
+			                 ((float) (clc.speexFrameSize * i)))) *
+			                 100.0f;
+
 	clc.voipIncomingSequence[sender] = sequence + frames;
+	clc.voipLastPacketTime[sender] = cl.serverTime;
 }
 #endif
 

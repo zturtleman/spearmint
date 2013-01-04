@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // common.c -- misc functions used in client and server
@@ -31,8 +39,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <winsock.h>
 #endif
 
+// List of demo protocols that are supported for playback.
+// Also plays protocol com_protocol
 int demo_protocols[] =
-{ 67, 66, 0 };
+{ PROTOCOL_VERSION, 0 };
 
 #define MAX_NUM_ARGVS	50
 
@@ -55,6 +65,7 @@ static fileHandle_t logfile;
 fileHandle_t	com_journalFile;			// events are written here
 fileHandle_t	com_journalDataFile;		// config files are written here
 
+cvar_t	*com_fs_pure;
 cvar_t	*com_speeds;
 cvar_t	*com_developer;
 cvar_t	*com_dedicated;
@@ -71,6 +82,7 @@ cvar_t	*com_pipefile;
 cvar_t	*com_showtrace;
 cvar_t	*com_version;
 cvar_t	*com_blood;
+cvar_t	*com_singlePlayerActive;
 cvar_t	*com_buildScript;	// for automated data building scripts
 cvar_t	*com_introPlayed;
 cvar_t	*cl_paused;
@@ -84,7 +96,6 @@ cvar_t	*com_maxfpsUnfocused;
 cvar_t	*com_minimized;
 cvar_t	*com_maxfpsMinimized;
 cvar_t	*com_abnormalExit;
-cvar_t	*com_standalone;
 cvar_t	*com_gamename;
 cvar_t	*com_protocol;
 #ifdef LEGACY_PROTOCOL
@@ -199,7 +210,7 @@ void QDECL Com_Printf( const char *fmt, ... ) {
 			time( &aclock );
 			newtime = localtime( &aclock );
 
-			logfile = FS_FOpenFileWrite( "qconsole.log" );
+			logfile = FS_FOpenFileWrite( "console.log" );
 			
 			if(logfile)
 			{
@@ -291,7 +302,7 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	Q_vsnprintf (com_errorMessage, sizeof(com_errorMessage),fmt,argptr);
 	va_end (argptr);
 
-	if (code != ERR_DISCONNECT && code != ERR_NEED_CD)
+	if (code != ERR_DISCONNECT)
 		Cvar_Set("com_errorMessage", com_errorMessage);
 
 	if (code == ERR_DISCONNECT || code == ERR_SERVERDISCONNECT) {
@@ -312,23 +323,6 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 		CL_FlushMemory( );
 		VM_Forced_Unload_Done();
 		FS_PureServerSetLoadedPaks("", "");
-		com_errorEntered = qfalse;
-		longjmp (abortframe, -1);
-	} else if ( code == ERR_NEED_CD ) {
-		VM_Forced_Unload_Start();
-		SV_Shutdown( "Server didn't have CD" );
-		if ( com_cl_running && com_cl_running->integer ) {
-			CL_Disconnect( qtrue );
-			CL_FlushMemory( );
-			VM_Forced_Unload_Done();
-			CL_CDDialog();
-		} else {
-			Com_Printf("Server didn't have CD\n" );
-			VM_Forced_Unload_Done();
-		}
-
-		FS_PureServerSetLoadedPaks("", "");
-
 		com_errorEntered = qfalse;
 		longjmp (abortframe, -1);
 	} else {
@@ -1397,7 +1391,7 @@ void Com_TouchMemory( void ) {
 
 	end = Sys_Milliseconds();
 
-	Com_Printf( "Com_TouchMemory: %i msec\n", end - start );
+	Com_DPrintf( "Com_TouchMemory: %i msec\n", end - start );
 }
 
 
@@ -1662,7 +1656,7 @@ void Hunk_Clear( void ) {
 	hunk_permanent = &hunk_low;
 	hunk_temp = &hunk_high;
 
-	Com_Printf( "Hunk_Clear: reset the hunk ok\n" );
+	Com_DPrintf( "Hunk_Clear: reset the hunk ok\n" );
 	VM_Clear();
 #ifdef HUNK_DEBUG
 	hunkblocks = NULL;
@@ -2186,28 +2180,28 @@ int Com_EventLoop( void ) {
 			return ev.evTime;
 		}
 
-
-		switch(ev.evType)
+		if (ev.evType >= SE_MOUSE && ev.evType <= SE_MOUSE_LAST)
+			CL_MouseEvent( ev.evType - SE_MOUSE, ev.evValue, ev.evValue2, ev.evTime );
+		else if (ev.evType >= SE_JOYSTICK_AXIS && ev.evType <= SE_JOYSTICK_AXIS_LAST)
+			CL_JoystickEvent( ev.evType - SE_JOYSTICK_AXIS, ev.evValue, ev.evValue2, ev.evTime );
+		else
 		{
-			case SE_KEY:
-				CL_KeyEvent( ev.evValue, ev.evValue2, ev.evTime );
-			break;
-			case SE_CHAR:
-				CL_CharEvent( ev.evValue );
-			break;
-			case SE_MOUSE:
-				CL_MouseEvent( ev.evValue, ev.evValue2, ev.evTime );
-			break;
-			case SE_JOYSTICK_AXIS:
-				CL_JoystickEvent( ev.evValue, ev.evValue2, ev.evTime );
-			break;
-			case SE_CONSOLE:
-				Cbuf_AddText( (char *)ev.evPtr );
-				Cbuf_AddText( "\n" );
-			break;
-			default:
-				Com_Error( ERR_FATAL, "Com_EventLoop: bad event type %i", ev.evType );
-			break;
+			switch(ev.evType)
+			{
+				case SE_KEY:
+					CL_KeyEvent( ev.evValue, ev.evValue2, ev.evTime );
+				break;
+				case SE_CHAR:
+					CL_CharEvent( ev.evValue );
+				break;
+				case SE_CONSOLE:
+					Cbuf_AddText( (char *)ev.evPtr );
+					Cbuf_AddText( "\n" );
+				break;
+				default:
+					Com_Error( ERR_FATAL, "Com_EventLoop: bad event type %i", ev.evType );
+				break;
+			}
 		}
 
 		// free any block data
@@ -2359,7 +2353,7 @@ Change to a new mod properly with cleaning up cvars before switching.
 ==================
 */
 
-void Com_GameRestart(int checksumFeed, qboolean disconnect)
+void Com_GameRestart(qboolean disconnect)
 {
 	// make sure no recursion can be triggered
 	if(!com_gameRestarting && com_fullyInitialized)
@@ -2381,7 +2375,7 @@ void Com_GameRestart(int checksumFeed, qboolean disconnect)
 			CL_Shutdown("Game directory changed", disconnect, qfalse);
 		}
 
-		FS_Restart(checksumFeed);
+		FS_Restart();
 	
 		// Clean out any user and VM created cvars
 		Cvar_Restart(qtrue);
@@ -2426,130 +2420,8 @@ void Com_GameRestart_f(void)
 	else
 		Cvar_Set("fs_game", Cmd_Argv(1));
 
-	Com_GameRestart(0, qtrue);
+	Com_GameRestart(qtrue);
 }
-
-#ifndef STANDALONE
-
-// TTimo: centralizing the cl_cdkey stuff after I discovered a buffer overflow problem with the dedicated server version
-//   not sure it's necessary to have different defaults for regular and dedicated, but I don't want to risk it
-//   https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=470
-#ifndef DEDICATED
-char	cl_cdkey[34] = "                                ";
-#else
-char	cl_cdkey[34] = "123456789";
-#endif
-
-/*
-=================
-Com_ReadCDKey
-=================
-*/
-qboolean CL_CDKeyValidate( const char *key, const char *checksum );
-void Com_ReadCDKey( const char *filename ) {
-	fileHandle_t	f;
-	char			buffer[33];
-	char			fbuffer[MAX_OSPATH];
-
-	Com_sprintf(fbuffer, sizeof(fbuffer), "%s/q3key", filename);
-
-	FS_SV_FOpenFileRead( fbuffer, &f );
-	if ( !f ) {
-		Q_strncpyz( cl_cdkey, "                ", 17 );
-		return;
-	}
-
-	Com_Memset( buffer, 0, sizeof(buffer) );
-
-	FS_Read( buffer, 16, f );
-	FS_FCloseFile( f );
-
-	if (CL_CDKeyValidate(buffer, NULL)) {
-		Q_strncpyz( cl_cdkey, buffer, 17 );
-	} else {
-		Q_strncpyz( cl_cdkey, "                ", 17 );
-	}
-}
-
-/*
-=================
-Com_AppendCDKey
-=================
-*/
-void Com_AppendCDKey( const char *filename ) {
-	fileHandle_t	f;
-	char			buffer[33];
-	char			fbuffer[MAX_OSPATH];
-
-	Com_sprintf(fbuffer, sizeof(fbuffer), "%s/q3key", filename);
-
-	FS_SV_FOpenFileRead( fbuffer, &f );
-	if (!f) {
-		Q_strncpyz( &cl_cdkey[16], "                ", 17 );
-		return;
-	}
-
-	Com_Memset( buffer, 0, sizeof(buffer) );
-
-	FS_Read( buffer, 16, f );
-	FS_FCloseFile( f );
-
-	if (CL_CDKeyValidate(buffer, NULL)) {
-		strcat( &cl_cdkey[16], buffer );
-	} else {
-		Q_strncpyz( &cl_cdkey[16], "                ", 17 );
-	}
-}
-
-#ifndef DEDICATED
-/*
-=================
-Com_WriteCDKey
-=================
-*/
-static void Com_WriteCDKey( const char *filename, const char *ikey ) {
-	fileHandle_t	f;
-	char			fbuffer[MAX_OSPATH];
-	char			key[17];
-#ifndef _WIN32
-	mode_t			savedumask;
-#endif
-
-
-	Com_sprintf(fbuffer, sizeof(fbuffer), "%s/q3key", filename);
-
-
-	Q_strncpyz( key, ikey, 17 );
-
-	if(!CL_CDKeyValidate(key, NULL) ) {
-		return;
-	}
-
-#ifndef _WIN32
-	savedumask = umask(0077);
-#endif
-	f = FS_SV_FOpenFileWrite( fbuffer );
-	if ( !f ) {
-		Com_Printf ("Couldn't write CD key to %s.\n", fbuffer );
-		goto out;
-	}
-
-	FS_Write( key, 16, f );
-
-	FS_Printf( f, "\n// generated by quake, do not modify\r\n" );
-	FS_Printf( f, "// Do not give this file to ANYONE.\r\n" );
-	FS_Printf( f, "// id Software and Activision will NOT ask you to send this file to them.\r\n");
-
-	FS_FCloseFile( f );
-out:
-#ifndef _WIN32
-	umask(savedumask);
-#endif
-	return;
-}
-#endif
-
-#endif // STANDALONE
 
 static void Com_DetectAltivec(void)
 {
@@ -2679,7 +2551,8 @@ void Com_Init( char *commandLine ) {
 	// done early so bind command exists
 	CL_InitKeyCommands();
 
-	com_standalone = Cvar_Get("com_standalone", "0", CVAR_ROM);
+	com_fs_pure = Cvar_Get ("fs_pure", "1", CVAR_ROM);
+
 	com_basegame = Cvar_Get("com_basegame", BASEGAME, CVAR_INIT);
 	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT);
 	
@@ -2730,6 +2603,7 @@ void Com_Init( char *commandLine ) {
 	com_altivec = Cvar_Get ("com_altivec", "1", CVAR_ARCHIVE);
 	com_maxfps = Cvar_Get ("com_maxfps", "85", CVAR_ARCHIVE);
 	com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE);
+	com_singlePlayerActive = Cvar_Get ("ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM);
 
 	com_logfile = Cvar_Get ("logfile", "0", CVAR_TEMP );
 
@@ -2903,7 +2777,7 @@ void Com_WriteConfigToFile( const char *filename ) {
 		return;
 	}
 
-	FS_Printf (f, "// generated by quake, do not modify\n");
+	FS_Printf (f, "// Generated by " PRODUCT_NAME ", do not modify\n");
 	Key_WriteBindings (f);
 	Cvar_WriteVariables (f);
 	FS_FCloseFile( f );
@@ -2918,9 +2792,6 @@ Writes key bindings and archived cvars to config file if modified
 ===============
 */
 void Com_WriteConfiguration( void ) {
-#if !defined(DEDICATED) && !defined(STANDALONE)
-	cvar_t	*fs;
-#endif
 	// if we are quiting without fully initializing, make sure
 	// we don't write out anything
 	if ( !com_fullyInitialized ) {
@@ -2933,20 +2804,6 @@ void Com_WriteConfiguration( void ) {
 	cvar_modifiedFlags &= ~CVAR_ARCHIVE;
 
 	Com_WriteConfigToFile( Q3CONFIG_CFG );
-
-	// not needed for dedicated or standalone
-#if !defined(DEDICATED) && !defined(STANDALONE)
-	fs = Cvar_Get ("fs_game", "", CVAR_INIT|CVAR_SYSTEMINFO );
-
-	if(!com_standalone->integer)
-	{
-		if (UI_usesUniqueCDKey() && fs && fs->string[0] != 0) {
-			Com_WriteCDKey( fs->string, &cl_cdkey[16] );
-		} else {
-			Com_WriteCDKey( BASEGAME, cl_cdkey );
-		}
-	}
-#endif
 }
 
 
@@ -3587,4 +3444,13 @@ qboolean Com_IsVoipTarget(uint8_t *voipTargets, int voipTargetsSize, int clientN
 		return (voipTargets[index] & (1 << (clientNum & 0x07)));
 
 	return qfalse;
+}
+
+/*
+====================
+Com_GameIsSinglePlayer
+====================
+*/
+qboolean Com_GameIsSinglePlayer( void ) {
+	return ( com_singlePlayerActive->integer );
 }

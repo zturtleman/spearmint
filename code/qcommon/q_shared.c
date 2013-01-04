@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -300,7 +308,12 @@ int COM_GetCurrentParseLine( void )
 
 char *COM_Parse( char **data_p )
 {
-	return COM_ParseExt( data_p, qtrue );
+	return COM_ParseExt2(data_p, qtrue, 0);
+}
+
+char *COM_ParseExt( char **data_p, qboolean allowLineBreaks )
+{
+	return COM_ParseExt2(data_p, allowLineBreaks, 0);
 }
 
 void COM_ParseError( char *format, ... )
@@ -425,7 +438,7 @@ int COM_Compress( char *data_p ) {
 	return out - data_p;
 }
 
-char *COM_ParseExt( char **data_p, qboolean allowLineBreaks )
+char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 {
 	int c = 0, len;
 	qboolean hasNewLines = qfalse;
@@ -519,7 +532,7 @@ char *COM_ParseExt( char **data_p, qboolean allowLineBreaks )
 		c = *data;
 		if ( c == '\n' )
 			com_lines++;
-	} while (c>32);
+	} while (c>32 && c != delimiter);
 
 	com_token[len] = 0;
 
@@ -1412,3 +1425,53 @@ char *Com_SkipTokens( char *s, int numTokens, char *sep )
 	else
 		return s;
 }
+
+#ifndef GAME
+/*
+=================
+Com_LocalClientCvarName
+
+Used by client, cgame, and q3_ui. (In the future ui will probably use it too.)
+=================
+*/
+char *Com_LocalClientCvarName(int localClient, const char *in_cvarName) {
+	static char localClientCvarName[MAX_CVAR_VALUE_STRING];
+
+	if (localClient == 0) {
+		Q_strncpyz(localClientCvarName, in_cvarName, MAX_CVAR_VALUE_STRING);
+	} else {
+		char prefix[2];
+		const char *cvarName;
+
+		prefix[1] = '\0';
+
+		cvarName = in_cvarName;
+
+		if (cvarName[0] == '+' || cvarName[0] == '-') {
+			prefix[0] = cvarName[0];
+			cvarName++;
+		} else {
+			prefix[0] = '\0';
+		}
+
+		Com_sprintf(localClientCvarName, MAX_CVAR_VALUE_STRING, "%s%d%s", prefix, localClient+1, cvarName);
+	}
+
+	return localClientCvarName;
+}
+
+int Com_LocalClientForCvarName(const char *in_cvarName) {
+	const char *p = in_cvarName;
+	
+	if (p && (*p == '-' || *p == '+')) {
+		p++;
+	}
+
+	if (p && *p && *p >= '2' && *p < '2'+MAX_SPLITVIEW-1) {
+		return *p-'1';
+	}
+
+	return 0;
+}
+#endif
+

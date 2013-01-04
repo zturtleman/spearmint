@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -33,13 +41,14 @@ Modifies the entities position and axis by the given
 tag location
 ======================
 */
-void CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent, 
+qboolean CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
 							qhandle_t parentModel, char *tagName ) {
 	int				i;
 	orientation_t	lerped;
+	qboolean		returnValue;
 	
 	// lerp the tag
-	trap_R_LerpTag( &lerped, parentModel, parent->oldframe, parent->frame,
+	returnValue = trap_R_LerpTag( &lerped, parentModel, parent->oldframe, parent->frame,
 		1.0 - parent->backlerp, tagName );
 
 	// FIXME: allow origin offsets along tag?
@@ -51,6 +60,8 @@ void CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
 	// had to cast away the const to avoid compiler problems...
 	MatrixMultiply( lerped.axis, ((refEntity_t *)parent)->axis, entity->axis );
 	entity->backlerp = parent->backlerp;
+
+	return returnValue;
 }
 
 
@@ -62,15 +73,16 @@ Modifies the entities position and axis by the given
 tag location
 ======================
 */
-void CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *parent, 
+qboolean CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
 							qhandle_t parentModel, char *tagName ) {
 	int				i;
 	orientation_t	lerped;
 	vec3_t			tempAxis[3];
+	qboolean		returnValue;
 
 //AxisClear( entity->axis );
 	// lerp the tag
-	trap_R_LerpTag( &lerped, parentModel, parent->oldframe, parent->frame,
+	returnValue = trap_R_LerpTag( &lerped, parentModel, parent->oldframe, parent->frame,
 		1.0 - parent->backlerp, tagName );
 
 	// FIXME: allow origin offsets along tag?
@@ -82,6 +94,8 @@ void CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *pare
 	// had to cast away the const to avoid compiler problems...
 	MatrixMultiply( entity->axis, lerped.axis, tempAxis );
 	MatrixMultiply( tempAxis, ((refEntity_t *)parent)->axis, entity->axis );
+
+	return returnValue;
 }
 
 
@@ -102,7 +116,7 @@ Also called by event processing code
 ======================
 */
 void CG_SetEntitySoundPosition( centity_t *cent ) {
-	if ( cent->currentState.solid == SOLID_BMODEL ) {
+	if ( cent->currentState.bmodel ) {
 		vec3_t	origin;
 		float	*v;
 
@@ -185,8 +199,8 @@ static void CG_General( centity_t *cent ) {
 	ent.hModel = cgs.gameModels[s1->modelindex];
 
 	// player model
-	if (s1->number == cg.snap->ps.clientNum) {
-		ent.renderfx |= RF_THIRD_PERSON;	// only draw from mirrors
+	if (s1->number == cg.cur_ps->clientNum) {
+		ent.renderfx |= RF_ONLY_MIRROR;
 	}
 
 	// convert angles to axis
@@ -296,7 +310,7 @@ static void CG_Item( centity_t *cent ) {
 	}
 	
 	if( item->giType == IT_WEAPON && item->giTag == WP_RAILGUN ) {
-		clientInfo_t *ci = &cgs.clientinfo[cg.snap->ps.clientNum];
+		clientInfo_t *ci = &cgs.clientinfo[cg.cur_ps->clientNum];
 		Byte4Copy( ci->c1RGBA, ent.shaderRGBA );
 	}
 
@@ -583,7 +597,7 @@ static void CG_Mover( centity_t *cent ) {
 	ent.skinNum = ( cg.time >> 6 ) & 1;
 
 	// get the model, either as a bmodel or a modelindex
-	if ( s1->solid == SOLID_BMODEL ) {
+	if ( s1->bmodel ) {
 		ent.hModel = cgs.inlineDrawModel[s1->modelindex];
 	} else {
 		ent.hModel = cgs.gameModels[s1->modelindex];
@@ -743,6 +757,7 @@ CG_CalcEntityLerpPositions
 ===============
 */
 static void CG_CalcEntityLerpPositions( centity_t *cent ) {
+	int		i;
 
 	// if this player does not want to see extrapolated players
 	if ( !cg_smoothClients.integer ) {
@@ -772,7 +787,13 @@ static void CG_CalcEntityLerpPositions( centity_t *cent ) {
 
 	// adjust for riding a mover if it wasn't rolled into the predicted
 	// player state
-	if ( cent != &cg.predictedPlayerEntity ) {
+	for (i = 0; i < CG_MaxSplitView(); ++i) {
+		if (cent == &cg.localClients[i].predictedPlayerEntity) {
+			break;
+		}
+	}
+
+	if ( i == CG_MaxSplitView() ) {
 		CG_AdjustPositionForMover( cent->lerpOrigin, cent->currentState.groundEntityNum, 
 		cg.snap->serverTime, cg.time, cent->lerpOrigin, cent->lerpAngles, cent->lerpAngles);
 	}
@@ -868,7 +889,7 @@ static void CG_TeamBase( centity_t *cent ) {
 					cent->muzzleFlashTime = 1;
 				}
 				VectorCopy(cent->currentState.angles, angles);
-				angles[YAW] += (float) 16 * acos(1-c) * 180 / M_PI;
+				angles[YAW] += (float) 16 * Q_acos(1-c) * 180 / M_PI;
 				AnglesToAxis( angles, model.axis );
 
 				VectorScale( model.axis[0], c, model.axis[0]);
@@ -1029,12 +1050,17 @@ void CG_AddPacketEntities( void ) {
 	AnglesToAxis( cg.autoAnglesFast, cg.autoAxisFast );
 
 	// generate and add the entity from the playerstate
-	ps = &cg.predictedPlayerState;
-	BG_PlayerStateToEntityState( ps, &cg.predictedPlayerEntity.currentState, qfalse );
-	CG_AddCEntity( &cg.predictedPlayerEntity );
+	for ( num = 0 ; num < CG_MaxSplitView() ; num++ ) {
+		if (cg.snap->lcIndex[num] == -1) {
+			continue;
+		}
+		ps = &cg.localClients[num].predictedPlayerState;
+		BG_PlayerStateToEntityState( ps, &cg.localClients[num].predictedPlayerEntity.currentState, qfalse );
+		CG_AddCEntity( &cg.localClients[num].predictedPlayerEntity );
 
-	// lerp the non-predicted value for lightning gun origins
-	CG_CalcEntityLerpPositions( &cg_entities[ cg.snap->ps.clientNum ] );
+		// lerp the non-predicted value for lightning gun origins
+		CG_CalcEntityLerpPositions( &cg_entities[ cg.snap->pss[cg.snap->lcIndex[num]].clientNum ] );
+	}
 
 	// add each entity sent over by the server
 	for ( num = 0 ; num < cg.snap->numEntities ; num++ ) {

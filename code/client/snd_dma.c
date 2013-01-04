@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
@@ -60,9 +68,7 @@ static		qboolean	s_soundMuted;
 
 dma_t		dma;
 
-static int			listener_number;
-static vec3_t		listener_origin;
-static vec3_t		listener_axis[3];
+static qboolean respatialize;
 
 int			s_soundtime;		// sample PAIRS
 int   		s_paintedtime; 		// sample PAIRS
@@ -381,6 +387,21 @@ sfxHandle_t	S_Base_RegisterSound( const char *name, qboolean compressed ) {
 }
 
 /*
+==================
+S_Base_SoundDuration
+==================
+*/
+static int S_Base_SoundDuration( sfxHandle_t handle ) {
+	if ( handle < 0 || handle >= s_numSfx ) {
+		Com_Printf( S_COLOR_YELLOW "S_Base_SoundDuration: handle %i out of range\n", handle );
+		return 0;
+	}
+	return s_knownSfx[ handle ].duration;
+}
+
+
+
+/*
 =====================
 S_BeginRegistration
 
@@ -424,92 +445,63 @@ void S_SpatializeOrigin (vec3_t origin, int master_vol, int *left_vol, int *righ
     vec_t		lscale, rscale, scale;
     vec3_t		source_vec;
     vec3_t		vec;
+	int i;
 
 	const float dist_mult = SOUND_ATTENUATE;
 	
-	// calculate stereo seperation and distance attenuation
-	VectorSubtract(origin, listener_origin, source_vec);
+	*right_vol = 0;
+	*left_vol = 0;
 
-	dist = VectorNormalize(source_vec);
-	dist -= SOUND_FULLVOLUME;
-	if (dist < 0)
-		dist = 0;			// close enough to be at full volume
-	dist *= dist_mult;		// different attenuation levels
+	for (i = 0; i < MAX_LISTENERS; i++) {
+		if (!listeners[i].valid || !listeners[i].updated)
+			continue;
+
+		// calculate stereo seperation and distance attenuation
+		VectorSubtract(origin, listeners[i].origin, source_vec);
+
+		dist = VectorNormalize(source_vec);
+		dist -= SOUND_FULLVOLUME;
+		if (dist < 0)
+			dist = 0;			// close enough to be at full volume
+		dist *= dist_mult;		// different attenuation levels
 	
-	VectorRotate( source_vec, listener_axis, vec );
+		VectorRotate( source_vec, listeners[i].axis, vec );
 
-	dot = -vec[1];
+		dot = -vec[1];
 
-	if (dma.channels == 1)
-	{ // no attenuation = no spatialization
-		rscale = 1.0;
-		lscale = 1.0;
-	}
-	else
-	{
-		rscale = 0.5 * (1.0 + dot);
-		lscale = 0.5 * (1.0 - dot);
-		if ( rscale < 0 ) {
-			rscale = 0;
+		if (dma.channels == 1)
+		{ // no attenuation = no spatialization
+			rscale = 1.0;
+			lscale = 1.0;
 		}
-		if ( lscale < 0 ) {
-			lscale = 0;
+		else
+		{
+			rscale = 0.5 * (1.0 + dot);
+			lscale = 0.5 * (1.0 - dot);
+			if ( rscale < 0 ) {
+				rscale = 0;
+			}
+			if ( lscale < 0 ) {
+				lscale = 0;
+			}
 		}
+
+		// add in distance effect
+		scale = (1.0 - dist) * rscale;
+		*right_vol += (master_vol * scale);
+		if (*right_vol < 0)
+			*right_vol = 0;
+
+		scale = (1.0 - dist) * lscale;
+		*left_vol += (master_vol * scale);
+		if (*left_vol < 0)
+			*left_vol = 0;
 	}
-
-	// add in distance effect
-	scale = (1.0 - dist) * rscale;
-	*right_vol = (master_vol * scale);
-	if (*right_vol < 0)
-		*right_vol = 0;
-
-	scale = (1.0 - dist) * lscale;
-	*left_vol = (master_vol * scale);
-	if (*left_vol < 0)
-		*left_vol = 0;
 }
 
 // =======================================================================
 // Start a sound effect
 // =======================================================================
-
-/*
-=================
-S_Base_HearingThroughEntity
-
-Also see S_AL_HearingThroughEntity
-=================
-*/
-static qboolean S_Base_HearingThroughEntity( int entityNum, vec3_t origin )
-{
-	float	distanceSq;
-	vec3_t	sorigin;
-
-	if (origin)
-		VectorCopy(origin, sorigin);
-	else
-		VectorCopy(loopSounds[entityNum].origin, sorigin);
-
-	if( listener_number == entityNum )
-	{
-		// FIXME: <tim@ngus.net> 28/02/06 This is an outrageous hack to detect
-		// whether or not the player is rendering in third person or not. We can't
-		// ask the renderer because the renderer has no notion of entities and we
-		// can't ask cgame since that would involve changing the API and hence mod
-		// compatibility. I don't think there is any way around this, but I'll leave
-		// the FIXME just in case anyone has a bright idea.
-		distanceSq = DistanceSquared(
-				sorigin,
-				listener_origin );
-
-		if( distanceSq > THIRD_PERSON_THRESHOLD_SQ )
-			return qfalse; //we're the player, but third person
-		else
-			return qtrue;  //we're the player
-	}
-	else
-		return qfalse; //not the player
-}
 
 /*
 ====================
@@ -523,8 +515,8 @@ Entchannel 0 will never override a playing sound
 static void S_Base_StartSoundEx( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle, qboolean localSound ) {
 	channel_t	*ch;
 	sfx_t		*sfx;
-  int i, oldest, chosen, time;
-  int	inplay, allowed;
+	int			i, oldest, chosen, time;
+	int			inplay, allowed;
 	qboolean	fullVolume;
 
 	if ( !s_soundStarted || s_soundMuted ) {
@@ -555,14 +547,19 @@ static void S_Base_StartSoundEx( vec3_t origin, int entityNum, int entchannel, s
 //	Com_Printf("playing %s\n", sfx->soundName);
 	// pick a channel to play on
 
-	allowed = 4;
-	if (entityNum == listener_number) {
+	if (localSound) {
+		allowed = 4 * CL_MAX_SPLITVIEW;
+		entityNum = MAX_GENTITIES;
+	} else if (S_EntityIsListener(entityNum)) {
 		allowed = 8;
+	} else {
+		allowed = 4;
 	}
 
-	fullVolume = qfalse;
-	if (localSound || S_Base_HearingThroughEntity(entityNum, origin)) {
+	if (localSound || (!origin && S_HearingThroughEntity(entityNum))) {
 		fullVolume = qtrue;
+	} else {
+		fullVolume = qfalse;
 	}
 
 	ch = s_channels;
@@ -592,7 +589,7 @@ static void S_Base_StartSoundEx( vec3_t origin, int entityNum, int entchannel, s
 		oldest = sfx->lastTimeUsed;
 		chosen = -1;
 		for ( i = 0 ; i < MAX_CHANNELS ; i++, ch++ ) {
-			if (ch->entnum != listener_number && ch->entnum == entityNum && ch->allocTime<oldest && ch->entchannel != CHAN_ANNOUNCER) {
+			if (!S_EntityIsListener(ch->entnum) && ch->entnum == entityNum && ch->allocTime<oldest && ch->entchannel != CHAN_ANNOUNCER) {
 				oldest = ch->allocTime;
 				chosen = i;
 			}
@@ -600,14 +597,14 @@ static void S_Base_StartSoundEx( vec3_t origin, int entityNum, int entchannel, s
 		if (chosen == -1) {
 			ch = s_channels;
 			for ( i = 0 ; i < MAX_CHANNELS ; i++, ch++ ) {
-				if (ch->entnum != listener_number && ch->allocTime<oldest && ch->entchannel != CHAN_ANNOUNCER) {
+				if (!S_EntityIsListener(ch->entnum) && ch->allocTime<oldest && ch->entchannel != CHAN_ANNOUNCER) {
 					oldest = ch->allocTime;
 					chosen = i;
 				}
 			}
 			if (chosen == -1) {
 				ch = s_channels;
-				if (ch->entnum == listener_number) {
+				if (S_EntityIsListener(ch->entnum)) {
 					for ( i = 0 ; i < MAX_CHANNELS ; i++, ch++ ) {
 						if (ch->allocTime<oldest) {
 							oldest = ch->allocTime;
@@ -669,7 +666,7 @@ void S_Base_StartLocalSound( sfxHandle_t sfxHandle, int channelNum ) {
 		return;
 	}
 
-	S_Base_StartSoundEx( NULL, listener_number, channelNum, sfxHandle, qtrue );
+	S_Base_StartSoundEx( NULL, 0, channelNum, sfxHandle, qtrue );
 }
 
 
@@ -763,6 +760,7 @@ Include velocity in case I get around to doing doppler...
 */
 void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle ) {
 	sfx_t *sfx;
+	int listener;
 
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
@@ -792,14 +790,16 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 	loopSounds[entityNum].dopplerScale = 1.0;
 	loopSounds[entityNum].sfx = sfx;
 
-	if (s_doppler->integer && VectorLengthSquared(velocity)>0.0) {
+	listener = S_ClosestListener(loopSounds[entityNum].origin);
+
+	if (listener >= 0 && listener < MAX_LISTENERS && s_doppler->integer && VectorLengthSquared(velocity)>0.0) {
 		vec3_t	out;
 		float	lena, lenb;
 
 		loopSounds[entityNum].doppler = qtrue;
-		lena = DistanceSquared(loopSounds[listener_number].origin, loopSounds[entityNum].origin);
+		lena = DistanceSquared(listeners[listener].origin, loopSounds[entityNum].origin);
 		VectorAdd(loopSounds[entityNum].origin, loopSounds[entityNum].velocity, out);
-		lenb = DistanceSquared(loopSounds[listener_number].origin, out);
+		lenb = DistanceSquared(listeners[listener].origin, out);
 		if ((loopSounds[entityNum].framenum+1) != cls.framecount) {
 			loopSounds[entityNum].oldDopplerScale = 1.0;
 		} else {
@@ -1108,44 +1108,13 @@ S_Respatialize
 Change the volumes of all the playing sounds for changes in their positions
 ============
 */
-void S_Base_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int inwater ) {
-	int			i;
-	channel_t	*ch;
-	vec3_t		origin;
-
+void S_Base_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater, qboolean firstPerson ) {
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
 
-	listener_number = entityNum;
-	VectorCopy(head, listener_origin);
-	VectorCopy(axis[0], listener_axis[0]);
-	VectorCopy(axis[1], listener_axis[1]);
-	VectorCopy(axis[2], listener_axis[2]);
-
-	// update spatialization for dynamic sounds	
-	ch = s_channels;
-	for ( i = 0 ; i < MAX_CHANNELS ; i++, ch++ ) {
-		if ( !ch->thesfx ) {
-			continue;
-		}
-		// local and first person sounds will always be full volume
-		if (ch->fullVolume) {
-			ch->leftvol = ch->master_vol;
-			ch->rightvol = ch->master_vol;
-		} else {
-			if (ch->fixed_origin) {
-				VectorCopy( ch->origin, origin );
-			} else {
-				VectorCopy( loopSounds[ ch->entnum ].origin, origin );
-			}
-
-			S_SpatializeOrigin (origin, ch->master_vol, &ch->leftvol, &ch->rightvol);
-		}
-	}
-
-	// add loopsounds
-	S_AddLoopSounds ();
+	S_UpdateListener(entityNum, origin, (const vec3_t *)axis, inwater, firstPerson);
+	respatialize = qtrue;
 }
 
 
@@ -1195,12 +1164,42 @@ Called once each time through the main loop
 */
 void S_Base_Update( void ) {
 	int			i;
+	vec3_t		origin;
 	int			total;
 	channel_t	*ch;
 
 	if ( !s_soundStarted || s_soundMuted ) {
 //		Com_DPrintf ("not started or muted\n");
 		return;
+	}
+
+	// update spatialization for dynamic sounds
+	if (respatialize) {
+		respatialize = qfalse;
+
+		ch = s_channels;
+		for ( i = 0 ; i < MAX_CHANNELS ; i++, ch++ ) {
+			if ( !ch->thesfx ) {
+				continue;
+			}
+
+			// local and first person sounds will always be full volume
+			if (ch->fullVolume) {
+				ch->leftvol = ch->master_vol;
+				ch->rightvol = ch->master_vol;
+			} else {
+				if (ch->fixed_origin) {
+					VectorCopy( ch->origin, origin );
+				} else {
+					VectorCopy( loopSounds[ ch->entnum ].origin, origin );
+				}
+
+				S_SpatializeOrigin (origin, ch->master_vol, &ch->leftvol, &ch->rightvol);
+			}
+		}
+
+		// add loopsounds
+		S_AddLoopSounds ();
 	}
 
 	//
@@ -1401,8 +1400,8 @@ void S_Base_StartBackgroundTrack( const char *intro, const char *loop ){
 		return;
 	}
 
-	if(s_backgroundStream->info.channels != 2 || s_backgroundStream->info.rate != 22050) {
-		Com_Printf(S_COLOR_YELLOW "WARNING: music file %s is not 22k stereo\n", intro );
+	if(s_backgroundStream->info.channels != 2 || (s_backgroundStream->info.rate != 22050 && s_backgroundStream->info.rate != 44100)) {
+		Com_Printf(S_COLOR_YELLOW "WARNING: music file %s is not 22kHz or 44.1kHz stereo\n", intro );
 	}
 }
 
@@ -1567,6 +1566,8 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 		s_soundtime = 0;
 		s_paintedtime = 0;
 
+		respatialize = 0;
+
 		S_Base_StopAllSounds( );
 	} else {
 		return qfalse;
@@ -1589,6 +1590,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	si->DisableSounds = S_Base_DisableSounds;
 	si->BeginRegistration = S_Base_BeginRegistration;
 	si->RegisterSound = S_Base_RegisterSound;
+	si->SoundDuration = S_Base_SoundDuration;
 	si->ClearSoundBuffer = S_Base_ClearSoundBuffer;
 	si->SoundInfo = S_Base_SoundInfo;
 	si->SoundList = S_Base_SoundList;

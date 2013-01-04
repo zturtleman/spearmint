@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -256,8 +264,8 @@ void	G_TouchTriggers( gentity_t *ent ) {
 	num = trap_EntitiesInBox( mins, maxs, touch, MAX_GENTITIES );
 
 	// can't use ent->absmin, because that has a one unit pad
-	VectorAdd( ent->client->ps.origin, ent->r.mins, mins );
-	VectorAdd( ent->client->ps.origin, ent->r.maxs, maxs );
+	VectorAdd( ent->client->ps.origin, ent->s.mins, mins );
+	VectorAdd( ent->client->ps.origin, ent->s.maxs, maxs );
 
 	for ( i=0 ; i<num ; i++ ) {
 		hit = &g_entities[touch[i]];
@@ -265,7 +273,7 @@ void	G_TouchTriggers( gentity_t *ent ) {
 		if ( !hit->touch && !ent->touch ) {
 			continue;
 		}
-		if ( !( hit->r.contents & CONTENTS_TRIGGER ) ) {
+		if ( !( hit->s.contents & CONTENTS_TRIGGER ) ) {
 			continue;
 		}
 
@@ -329,7 +337,11 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 		pm.ps = &client->ps;
 		pm.cmd = *ucmd;
 		pm.tracemask = MASK_PLAYERSOLID & ~CONTENTS_BODY;	// spectators can fly through bodies
-		pm.trace = trap_Trace;
+		if (client->ps.capsule) {
+			pm.trace = trap_TraceCapsule;
+		} else {
+			pm.trace = trap_Trace;
+		}
 		pm.pointcontents = trap_PointContents;
 
 		// perform a pmove
@@ -723,6 +735,7 @@ void SendPendingPredictableEvents( playerState_t *ps ) {
 		t->s.eType = ET_EVENTS + event;
 		t->s.eFlags |= EF_PLAYER_EVENT;
 		t->s.otherEntityNum = ps->clientNum;
+		t->s.contents = 0;
 		// send to everyone except the client who generated the event
 		t->r.svFlags |= SVF_NOTSINGLECLIENT;
 		t->r.singleClient = ps->clientNum;
@@ -872,11 +885,11 @@ void ClientThink_real( gentity_t *ent ) {
 			vec3_t maxs = { 42, 42, 42 };
 			vec3_t oldmins, oldmaxs;
 
-			VectorCopy (ent->r.mins, oldmins);
-			VectorCopy (ent->r.maxs, oldmaxs);
+			VectorCopy (ent->s.mins, oldmins);
+			VectorCopy (ent->s.maxs, oldmaxs);
 			// expand
-			VectorCopy (mins, ent->r.mins);
-			VectorCopy (maxs, ent->r.maxs);
+			VectorCopy (mins, ent->s.mins);
+			VectorCopy (maxs, ent->s.maxs);
 			trap_LinkEntity(ent);
 			// check if this would get anyone stuck in this player
 			if ( !StuckInOtherClient(ent) ) {
@@ -884,8 +897,8 @@ void ClientThink_real( gentity_t *ent ) {
 				client->ps.pm_flags |= PMF_INVULEXPAND;
 			}
 			// set back
-			VectorCopy (oldmins, ent->r.mins);
-			VectorCopy (oldmaxs, ent->r.maxs);
+			VectorCopy (oldmins, ent->s.mins);
+			VectorCopy (oldmaxs, ent->s.maxs);
 			trap_LinkEntity(ent);
 		}
 	}
@@ -902,7 +915,11 @@ void ClientThink_real( gentity_t *ent ) {
 	else {
 		pm.tracemask = MASK_PLAYERSOLID;
 	}
-	pm.trace = trap_Trace;
+	if (client->ps.capsule) {
+		pm.trace = trap_TraceCapsule;
+	} else {
+		pm.trace = trap_Trace;
+	}
 	pm.pointcontents = trap_PointContents;
 	pm.debugLevel = g_debugMove.integer;
 	pm.noFootsteps = ( g_dmflags.integer & DF_NO_FOOTSTEPS ) > 0;
@@ -920,7 +937,7 @@ void ClientThink_real( gentity_t *ent ) {
 				pm.cmd.rightmove = 0;
 				pm.cmd.upmove = 0;
 				if ( level.time - level.intermissionQueued >= 2000 && level.time - level.intermissionQueued <= 2500 ) {
-					trap_SendConsoleCommand( EXEC_APPEND, "centerview\n");
+					trap_Cmd_ExecuteText( EXEC_APPEND, "centerview\n");
 				}
 				ent->client->ps.pm_type = PM_SPINTERMISSION;
 			}
@@ -948,9 +965,6 @@ void ClientThink_real( gentity_t *ent ) {
 
 	// use the snapped origin for linking so it matches client predicted versions
 	VectorCopy( ent->s.pos.trBase, ent->r.currentOrigin );
-
-	VectorCopy (pm.mins, ent->r.mins);
-	VectorCopy (pm.maxs, ent->r.maxs);
 
 	ent->waterlevel = pm.waterlevel;
 	ent->watertype = pm.watertype;

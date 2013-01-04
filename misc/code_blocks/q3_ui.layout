@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Release Win32" />
+	<File name="../../code/q3_ui/ui_addbots.c" open="0" top="0" tabpos="0">
+		<Cursor position="9575" topLine="336" />
+	</File>
+	<File name="../../code/q3_ui/ui_atoms.c" open="0" top="0" tabpos="0">
+		<Cursor position="21385" topLine="1041" />
+	</File>
+	<File name="../../code/q3_ui/ui_ingame.c" open="0" top="0" tabpos="0">
+		<Cursor position="7567" topLine="259" />
+	</File>
+	<File name="../../code/q3_ui/ui_ingame_selectplayer.c" open="0" top="0" tabpos="0">
+		<Cursor position="3400" topLine="115" />
+	</File>
+	<File name="../../code/q3_ui/ui_local.h" open="0" top="0" tabpos="0">
+		<Cursor position="17828" topLine="653" />
+	</File>
+	<File name="../../code/q3_ui/ui_network.c" open="0" top="0" tabpos="1">
+		<Cursor position="6832" topLine="210" />
+	</File>
+	<File name="../../code/q3_ui/ui_playermodel.c" open="0" top="0" tabpos="0">
+		<Cursor position="5870" topLine="191" />
+	</File>
+	<File name="../../code/q3_ui/ui_preferences.c" open="0" top="0" tabpos="0">
+		<Cursor position="6226" topLine="172" />
+	</File>
+	<File name="../../code/q3_ui/ui_servers2.c" open="0" top="0" tabpos="0">
+		<Cursor position="8498" topLine="372" />
+	</File>
+	<File name="../../code/q3_ui/ui_setup.c" open="0" top="0" tabpos="0">
+		<Cursor position="9920" topLine="278" />
+	</File>
+	<File name="../../code/q3_ui/ui_startserver.c" open="0" top="0" tabpos="0">
+		<Cursor position="3312" topLine="96" />
+	</File>
+	<File name="../../code/q3_ui/ui_team.c" open="0" top="0" tabpos="0">
+		<Cursor position="5402" topLine="159" />
+	</File>
+	<File name="../../code/q3_ui/ui_teamorders.c" open="0" top="0" tabpos="0">
+		<Cursor position="12863" topLine="499" />
+	</File>
+	<File name="../../code/ui/ui_syscalls.c" open="0" top="0" tabpos="0">
+		<Cursor position="10029" topLine="305" />
+	</File>
+</CodeBlocks_layout_file>

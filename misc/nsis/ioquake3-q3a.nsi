@@ -1,20 +1,25 @@
 ; NSIS description file for quake3 data file installer
 
-SetCompressor lzma
-
 !define NAME "Quake III Arena"
-!define FSNAME "ioquake3-q3a"
+!define FSNAME "spearmint-q3a"
 !define VERSION "1.32"
 !define RELEASE "1"
+
+!define GAMENAME "Spearmint"
+!define CLIENT "spearmint.x86.exe"
+!define GAMEDIR "Spearmint"
+!define GAMEKEY "spearmint"
+
+SetCompressor lzma
 
 !define MULTIUSER_MUI
 !define MULTIUSER_EXECUTIONLEVEL Highest
 !define MULTIUSER_INSTALLMODE_COMMANDLINE
-!define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_KEY "Software\ioquake3"
+!define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_KEY "Software\${GAMEKEY}"
 !define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_VALUENAME "Install_Mode"
-!define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_KEY "Software\ioquake3"
+!define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_KEY "Software\${GAMEKEY}"
 !define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME "Install_Dir"
-!define MULTIUSER_INSTALLMODE_INSTDIR "ioquake3"
+!define MULTIUSER_INSTALLMODE_INSTDIR "${GAMEDIR}"
 !include MultiUser.nsh
 
 !include "FileFunc.nsh"
@@ -25,7 +30,7 @@ Var q3ta_pak0
 !define MUI_ICON "../quake3.ico"
 
 ; The name of the installer
-Name "${NAME}-${VERSION} for ioquake3"
+Name "${NAME}-${VERSION} for ${GAMENAME}"
 
 ; The file to write
 OutFile "${FSNAME}-${VERSION}-${RELEASE}.x86.exe"
@@ -59,9 +64,9 @@ OutFile "${FSNAME}-${VERSION}-${RELEASE}.x86.exe"
 Function .onInit
   !insertmacro MULTIUSER_INIT
   StrCpy $q3a_pak0 "notfound"
-  ReadRegStr $0 SHCTX "Software\ioquake3" ${MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME}
+  ReadRegStr $0 SHCTX "Software\${GAMEKEY}" ${MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME}
   IfErrors 0 oninitdone
-    MessageBox MB_OK "You need to install the ioquake3 engine first"
+    MessageBox MB_OK "You need to install ${GAMENAME} first"
     Abort
   oninitdone:
 FunctionEnd
@@ -90,10 +95,13 @@ Section "${NAME}" sec_q3a
 
   ; Write the uninstall keys for Windows
   WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${FSNAME}" "DisplayName" "${NAME}"
+  WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${FSNAME}" "DisplayVersion" "${VERSION}-${RELEASE}"
   WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${FSNAME}" "UninstallString" '"$INSTDIR\uninstall-${FSNAME}.exe"'
   WriteRegDWORD SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${FSNAME}" "NoModify" 1
   WriteRegDWORD SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${FSNAME}" "NoRepair" 1
   WriteUninstaller "uninstall-${FSNAME}.exe"
+
+  CreateShortCut "$SMPROGRAMS\${GAMENAME}\Quake III Arena.lnk" "$INSTDIR\${CLIENT}" "+set com_basegame baseq3" "$INSTDIR\${CLIENT}" 0 "" "" "Quake III Arena"
 
 SectionEnd
 
@@ -139,7 +147,7 @@ Section "Quake III Team Arena" sec_q3ta
   File "missionpack/pak2.pk3"
   File "missionpack/pak3.pk3"
 
-  CreateShortCut "$SMPROGRAMS\ioquake3\Team Arena.lnk" "$INSTDIR\ioquake3.x86.exe" "+set fs_game missionpack" "$INSTDIR\ioquake3.x86.exe" 0 "" "" "Team Arena"
+  CreateShortCut "$SMPROGRAMS\${GAMENAME}\Team Arena.lnk" "$INSTDIR\${CLIENT}" "+set com_basegame baseq3 +set fs_game missionpack" "$INSTDIR\${CLIENT}" 0 "" "" "Team Arena"
 
 SectionEnd
 
@@ -203,10 +211,11 @@ Section "un.Quake III Arena and Team Arena" sec_un_q3a
   Delete "$INSTDIR\id_patch_pk3s_Q3A_EULA.txt"
 
   ; Remove shortcuts, if any
-  Delete "$SMPROGRAMS\ioquake3\Team Arena.lnk"
+  Delete "$SMPROGRAMS\${GAMENAME}\Quake III Arena.lnk"
+  Delete "$SMPROGRAMS\${GAMENAME}\Team Arena.lnk"
 
   ; Remove directories used
-  RMDir "$SMPROGRAMS\ioquake3"
+  RMDir "$SMPROGRAMS\${GAMENAME}"
   RMDir "$INSTDIR\baseq3"
   RMDir "$INSTDIR\missionpack"
   RMDir "$INSTDIR"

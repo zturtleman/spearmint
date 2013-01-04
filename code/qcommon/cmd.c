@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // cmd.c -- Quake script command processing module
@@ -162,6 +170,25 @@ void Cbuf_ExecuteText (int exec_when, const char *text)
 	default:
 		Com_Error (ERR_FATAL, "Cbuf_ExecuteText: bad exec_when");
 	}
+}
+
+/*
+============
+Cbuf_ExecuteTextSafe
+============
+*/
+void Cbuf_ExecuteTextSafe( int exec_when, const char *text )
+{
+	if (exec_when == EXEC_NOW
+		&& (!strncmp(text, "snd_restart", 11)
+		|| !strncmp(text, "vid_restart", 11)
+		|| !strncmp(text, "quit", 5)))
+	{
+		Com_Printf( S_COLOR_YELLOW "turning EXEC_NOW '%.11s' into EXEC_INSERT\n", text );
+		exec_when = EXEC_INSERT;
+	}
+
+	Cbuf_ExecuteText( exec_when, text );
 }
 
 /*
@@ -346,12 +373,35 @@ typedef struct cmd_function_s
 } cmd_function_t;
 
 
-static	int			cmd_argc;
-static	char		*cmd_argv[MAX_STRING_TOKENS];		// points into cmd_tokenized
-static	char		cmd_tokenized[BIG_INFO_STRING+MAX_STRING_TOKENS];	// will have 0 bytes inserted
-static	char		cmd_cmd[BIG_INFO_STRING]; // the original command we received (no token processing)
+typedef struct cmdContext_s
+{
+	int		argc;
+	char	*argv[ MAX_STRING_TOKENS ];	// points into cmd.tokenized
+	char	tokenized[ BIG_INFO_STRING + MAX_STRING_TOKENS ];	// will have 0 bytes inserted
+	char	cmd[ BIG_INFO_STRING ]; // the original command we received (no token processing)
+} cmdContext_t;
 
+static cmdContext_t		cmd;
+static cmdContext_t		savedCmd;
 static	cmd_function_t	*cmd_functions;		// possible commands to execute
+
+/*
+============
+Cmd_SaveCmdContext
+============
+*/
+void Cmd_SaveCmdContext( void ) {
+	Com_Memcpy( &savedCmd, &cmd, sizeof( cmdContext_t ) );
+}
+
+/*
+============
+Cmd_RestoreCmdContext
+============
+*/
+void Cmd_RestoreCmdContext( void ) {
+	Com_Memcpy( &cmd, &savedCmd, sizeof( cmdContext_t ) );
+}
 
 /*
 ============
@@ -359,7 +409,7 @@ Cmd_Argc
 ============
 */
 int		Cmd_Argc( void ) {
-	return cmd_argc;
+	return cmd.argc;
 }
 
 /*
@@ -368,10 +418,10 @@ Cmd_Argv
 ============
 */
 char	*Cmd_Argv( int arg ) {
-	if ( (unsigned)arg >= cmd_argc ) {
+	if ( (unsigned)arg >= cmd.argc ) {
 		return "";
 	}
-	return cmd_argv[arg];	
+	return cmd.argv[arg];	
 }
 
 /*
@@ -399,9 +449,9 @@ char	*Cmd_Args( void ) {
 	int		i;
 
 	cmd_args[0] = 0;
-	for ( i = 1 ; i < cmd_argc ; i++ ) {
-		strcat( cmd_args, cmd_argv[i] );
-		if ( i != cmd_argc-1 ) {
+	for ( i = 1 ; i < cmd.argc ; i++ ) {
+		strcat( cmd_args, cmd.argv[i] );
+		if ( i != cmd.argc-1 ) {
 			strcat( cmd_args, " " );
 		}
 	}
@@ -423,9 +473,9 @@ char *Cmd_ArgsFrom( int arg ) {
 	cmd_args[0] = 0;
 	if (arg < 0)
 		arg = 0;
-	for ( i = arg ; i < cmd_argc ; i++ ) {
-		strcat( cmd_args, cmd_argv[i] );
-		if ( i != cmd_argc-1 ) {
+	for ( i = arg ; i < cmd.argc ; i++ ) {
+		strcat( cmd_args, cmd.argv[i] );
+		if ( i != cmd.argc-1 ) {
 			strcat( cmd_args, " " );
 		}
 	}
@@ -447,6 +497,18 @@ void	Cmd_ArgsBuffer( char *buffer, int bufferLength ) {
 
 /*
 ============
+Cmd_LiteralArgsBuffer
+
+The interpreted versions use this because
+they can't have pointers returned to them
+============
+*/
+void	Cmd_LiteralArgsBuffer( char *buffer, int bufferLength ) {
+	Q_strncpyz( buffer, cmd.cmd, bufferLength );
+}
+
+/*
+============
 Cmd_Cmd
 
 Retrieve the unmodified command string
@@ -456,7 +518,7 @@ https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=543
 */
 char *Cmd_Cmd(void)
 {
-	return cmd_cmd;
+	return cmd.cmd;
 }
 
 /*
@@ -470,9 +532,9 @@ void Cmd_Args_Sanitize(void)
 {
 	int i;
 
-	for(i = 1; i < cmd_argc; i++)
+	for(i = 1; i < cmd.argc; i++)
 	{
-		char *c = cmd_argv[i];
+		char *c = cmd.argv[i];
 		
 		if(strlen(c) > MAX_CVAR_VALUE_STRING - 1)
 			c[MAX_CVAR_VALUE_STRING - 1] = '\0';
@@ -506,19 +568,20 @@ static void Cmd_TokenizeString2( const char *text_in, qboolean ignoreQuotes ) {
 #endif
 
 	// clear previous args
-	cmd_argc = 0;
+	cmd.argc = 0;
+	cmd.cmd[ 0 ] = '\0';
 
 	if ( !text_in ) {
 		return;
 	}
 	
-	Q_strncpyz( cmd_cmd, text_in, sizeof(cmd_cmd) );
+	Q_strncpyz( cmd.cmd, text_in, sizeof(cmd.cmd) );
 
 	text = text_in;
-	textOut = cmd_tokenized;
+	textOut = cmd.tokenized;
 
 	while ( 1 ) {
-		if ( cmd_argc == MAX_STRING_TOKENS ) {
+		if ( cmd.argc == MAX_STRING_TOKENS ) {
 			return;			// this is usually something malicious
 		}
 
@@ -553,8 +616,8 @@ static void Cmd_TokenizeString2( const char *text_in, qboolean ignoreQuotes ) {
 		// handle quoted strings
     // NOTE TTimo this doesn't handle \" escaping
 		if ( !ignoreQuotes && *text == '"' ) {
-			cmd_argv[cmd_argc] = textOut;
-			cmd_argc++;
+			cmd.argv[cmd.argc] = textOut;
+			cmd.argc++;
 			text++;
 			while ( *text && *text != '"' ) {
 				*textOut++ = *text++;
@@ -568,8 +631,8 @@ static void Cmd_TokenizeString2( const char *text_in, qboolean ignoreQuotes ) {
 		}
 
 		// regular token
-		cmd_argv[cmd_argc] = textOut;
-		cmd_argc++;
+		cmd.argv[cmd.argc] = textOut;
+		cmd.argc++;
 
 		// skip until whitespace, quote, or command
 		while ( *text > ' ' ) {
@@ -758,7 +821,7 @@ A complete command line has been parsed, so try to execute it
 ============
 */
 void	Cmd_ExecuteString( const char *text ) {	
-	cmd_function_t	*cmd, **prev;
+	cmd_function_t	*cmdFunc, **prev;
 
 	// execute the command line
 	Cmd_TokenizeString( text );		
@@ -767,21 +830,21 @@ void	Cmd_ExecuteString( const char *text ) {
 	}
 
 	// check registered command functions	
-	for ( prev = &cmd_functions ; *prev ; prev = &cmd->next ) {
-		cmd = *prev;
-		if ( !Q_stricmp( cmd_argv[0],cmd->name ) ) {
+	for ( prev = &cmd_functions ; *prev ; prev = &cmdFunc->next ) {
+		cmdFunc = *prev;
+		if ( !Q_stricmp( cmd.argv[0], cmdFunc->name ) ) {
 			// rearrange the links so that the command will be
 			// near the head of the list next time it is used
-			*prev = cmd->next;
-			cmd->next = cmd_functions;
-			cmd_functions = cmd;
+			*prev = cmdFunc->next;
+			cmdFunc->next = cmd_functions;
+			cmd_functions = cmdFunc;
 
 			// perform the action
-			if ( !cmd->function ) {
+			if ( !cmdFunc->function ) {
 				// let the cgame or game handle it
 				break;
 			} else {
-				cmd->function ();
+				cmdFunc->function ();
 			}
 			return;
 		}

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // tr_surf.c
@@ -1628,6 +1636,34 @@ static void RB_SurfaceFlare(srfFlare_t *surf)
 		RB_AddFlare(surf, tess.fogNum, surf->origin, surf->color, surf->normal);
 }
 
+void RB_SurfacePolyBuffer( srfPolyBuffer_t *surf ) {
+	int i;
+
+	tess.numIndexes =   surf->pPolyBuffer->numIndicies;
+	tess.numVertexes =  surf->pPolyBuffer->numVerts;
+
+	for (i = 0; i < tess.numVertexes; i++)
+	{
+		tess.xyz[i][0] = surf->pPolyBuffer->xyz[i][0];
+		tess.xyz[i][1] = surf->pPolyBuffer->xyz[i][1];
+		tess.xyz[i][2] = surf->pPolyBuffer->xyz[i][2];
+		tess.xyz[i][3] = surf->pPolyBuffer->xyz[i][3];
+
+		tess.texCoords[i][0][0] = surf->pPolyBuffer->st[i][0];
+		tess.texCoords[i][0][1] = surf->pPolyBuffer->st[i][1];
+		
+		tess.vertexColors[i][0] = surf->pPolyBuffer->color[i][0] / 255.0f;
+		tess.vertexColors[i][1] = surf->pPolyBuffer->color[i][1] / 255.0f;
+		tess.vertexColors[i][2] = surf->pPolyBuffer->color[i][2] / 255.0f;
+		tess.vertexColors[i][3] = surf->pPolyBuffer->color[i][3] / 255.0f;
+	}
+
+	for (i = 0; i < tess.numIndexes; i++)
+	{
+		tess.indexes[i] = (glIndex_t)surf->pPolyBuffer->indicies[i];
+	}
+}
+
 static void RB_SurfaceVBOMesh(srfVBOMesh_t * srf)
 {
 	RB_SurfaceHelperVBO (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes, srf->firstIndex, srf->minIndex, srf->maxIndex, srf->dlightBits[backEnd.smpFrame], srf->pshadowBits[backEnd.smpFrame], qfalse );
@@ -1698,6 +1734,7 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_SurfaceGrid,			// SF_GRID,
 	(void(*)(void*))RB_SurfaceTriangles,		// SF_TRIANGLES,
 	(void(*)(void*))RB_SurfacePolychain,		// SF_POLY,
+	(void(*)(void*))RB_SurfacePolyBuffer,		// SF_POLYBUFFER,
 	(void(*)(void*))RB_SurfaceMesh,			// SF_MDV,
 	(void(*)(void*))RB_SurfaceAnim,			// SF_MD4,
 #ifdef RAVENMD4

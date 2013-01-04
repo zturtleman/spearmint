@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // world.c -- world query functions
@@ -29,21 +37,17 @@ SV_ClipHandleForEntity
 
 Returns a headnode that can be used for testing or clipping to a
 given entity.  If the entity is a bsp model, the headnode will
-be returned, otherwise a custom box tree will be constructed.
+be returned, otherwise a custom box tree or capsule will be constructed.
 ================
 */
 clipHandle_t SV_ClipHandleForEntity( const sharedEntity_t *ent ) {
-	if ( ent->r.bmodel ) {
+	if ( ent->s.bmodel ) {
 		// explicit hulls in the BSP model
 		return CM_InlineModel( ent->s.modelindex );
 	}
-	if ( ent->r.svFlags & SVF_CAPSULE ) {
-		// create a temp capsule from bounding box sizes
-		return CM_TempBoxModel( ent->r.mins, ent->r.maxs, qtrue );
-	}
 
-	// create a temp tree from bounding box sizes
-	return CM_TempBoxModel( ent->r.mins, ent->r.maxs, qfalse );
+	// create a temp tree or capsule from bounding box sizes
+	return CM_TempBoxModel( ent->s.mins, ent->s.maxs, ent->s.capsule, ent->s.contents );
 }
 
 
@@ -168,10 +172,15 @@ void SV_UnlinkEntity( sharedEntity_t *gEnt ) {
 	svEntity_t		*ent;
 	svEntity_t		*scan;
 	worldSector_t	*ws;
+	playerState_t	*ps;
 
 	ent = SV_SvEntityForGentity( gEnt );
 
 	gEnt->r.linked = qfalse;
+	if (gEnt->s.number < MAX_CLIENTS) {
+		ps = SV_GameClientNum(gEnt->s.number);
+		ps->linked = qfalse;
+	}
 
 	ws = ent->worldSector;
 	if ( !ws ) {
@@ -207,11 +216,12 @@ void SV_LinkEntity( sharedEntity_t *gEnt ) {
 	int			leafs[MAX_TOTAL_ENT_LEAFS];
 	int			cluster;
 	int			num_leafs;
-	int			i, j, k;
+	int			i;
 	int			area;
 	int			lastLeaf;
 	float		*origin, *angles;
 	svEntity_t	*ent;
+	playerState_t	*ps;
 
 	ent = SV_SvEntityForGentity( gEnt );
 
@@ -219,55 +229,25 @@ void SV_LinkEntity( sharedEntity_t *gEnt ) {
 		SV_UnlinkEntity( gEnt );	// unlink from old position
 	}
 
-	// encode the size into the entityState_t for client prediction
-	if ( gEnt->r.bmodel ) {
-		gEnt->s.solid = SOLID_BMODEL;		// a solid_box will never create this value
-	} else if ( gEnt->r.contents & ( CONTENTS_SOLID | CONTENTS_BODY ) ) {
-		// assume that x/y are equal and symetric
-		i = gEnt->r.maxs[0];
-		if (i<1)
-			i = 1;
-		if (i>255)
-			i = 255;
-
-		// z is not symetric
-		j = (-gEnt->r.mins[2]);
-		if (j<1)
-			j = 1;
-		if (j>255)
-			j = 255;
-
-		// and z maxs can be negative...
-		k = (gEnt->r.maxs[2]+32);
-		if (k<1)
-			k = 1;
-		if (k>255)
-			k = 255;
-
-		gEnt->s.solid = (k<<16) | (j<<8) | i;
-	} else {
-		gEnt->s.solid = 0;
-	}
-
 	// get the position
 	origin = gEnt->r.currentOrigin;
 	angles = gEnt->r.currentAngles;
 
 	// set the abs box
-	if ( gEnt->r.bmodel && (angles[0] || angles[1] || angles[2]) ) {
+	if ( gEnt->s.bmodel && (angles[0] || angles[1] || angles[2]) ) {
 		// expand for rotation
 		float		max;
 		int			i;
 
-		max = RadiusFromBounds( gEnt->r.mins, gEnt->r.maxs );
+		max = RadiusFromBounds( gEnt->s.mins, gEnt->s.maxs );
 		for (i=0 ; i<3 ; i++) {
 			gEnt->r.absmin[i] = origin[i] - max;
 			gEnt->r.absmax[i] = origin[i] + max;
 		}
 	} else {
 		// normal
-		VectorAdd (origin, gEnt->r.mins, gEnt->r.absmin);	
-		VectorAdd (origin, gEnt->r.maxs, gEnt->r.absmax);
+		VectorAdd (origin, gEnt->s.mins, gEnt->r.absmin);
+		VectorAdd (origin, gEnt->s.maxs, gEnt->r.absmax);
 	}
 
 	// because movement is clipped an epsilon away from an actual edge,
@@ -353,6 +333,10 @@ void SV_LinkEntity( sharedEntity_t *gEnt ) {
 	node->entities = ent;
 
 	gEnt->r.linked = qtrue;
+	if (gEnt->s.number < MAX_CLIENTS) {
+		ps = SV_GameClientNum(gEnt->s.number);
+		ps->linked = qtrue;
+	}
 }
 
 /*
@@ -387,6 +371,10 @@ static void SV_AreaEntities_r( worldSector_t *node, areaParms_t *ap ) {
 		next = check->nextEntityInWorldSector;
 
 		gcheck = SV_GEntityForSvEntity( check );
+
+		if ( !gcheck->r.linked ) {
+			continue;
+		}
 
 		if ( gcheck->r.absmin[0] > ap->maxs[0]
 		|| gcheck->r.absmin[1] > ap->maxs[1]
@@ -452,7 +440,7 @@ typedef struct {
 	trace_t		trace;
 	int			passEntityNum;
 	int			contentmask;
-	int			capsule;
+	traceType_t	collisionType;
 } moveclip_t;
 
 
@@ -462,7 +450,7 @@ SV_ClipToEntity
 
 ====================
 */
-void SV_ClipToEntity( trace_t *trace, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int entityNum, int contentmask, int capsule ) {
+void SV_ClipToEntity( trace_t *trace, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int entityNum, int contentmask, traceType_t type ) {
 	sharedEntity_t	*touch;
 	clipHandle_t	clipHandle;
 	float			*origin, *angles;
@@ -473,7 +461,7 @@ void SV_ClipToEntity( trace_t *trace, const vec3_t start, const vec3_t mins, con
 
 	// if it doesn't have any brushes of a type we
 	// are looking for, ignore it
-	if ( ! ( contentmask & touch->r.contents ) ) {
+	if ( ! ( contentmask & touch->s.contents ) ) {
 		trace->fraction = 1.0;
 		return;
 	}
@@ -484,13 +472,13 @@ void SV_ClipToEntity( trace_t *trace, const vec3_t start, const vec3_t mins, con
 	origin = touch->r.currentOrigin;
 	angles = touch->r.currentAngles;
 
-	if ( !touch->r.bmodel ) {
+	if ( !touch->s.bmodel ) {
 		angles = vec3_origin;	// boxes don't rotate
 	}
 
-	CM_TransformedBoxTrace ( trace, (float *)start, (float *)end,
-		(float *)mins, (float *)maxs, clipHandle,  contentmask,
-		origin, angles, capsule);
+	CM_TransformedBoxTrace ( trace, start, end,
+		mins, maxs, clipHandle,  contentmask,
+		origin, angles, type);
 
 	if ( trace->fraction < 1 ) {
 		trace->entityNum = touch->s.number;
@@ -545,31 +533,36 @@ static void SV_ClipMoveToEntities( moveclip_t *clip ) {
 
 		// if it doesn't have any brushes of a type we
 		// are looking for, ignore it
-		if ( ! ( clip->contentmask & touch->r.contents ) ) {
+		if ( ! ( clip->contentmask & touch->s.contents ) ) {
 			continue;
 		}
 
 		// might intersect, so do an exact clip
 		clipHandle = SV_ClipHandleForEntity (touch);
 
+		// non-worldspawn entities must not use world as clip model!
+		if ( clipHandle == 0 ) {
+			continue;
+		}
+
 		origin = touch->r.currentOrigin;
 		angles = touch->r.currentAngles;
 
 
-		if ( !touch->r.bmodel ) {
+		if ( !touch->s.bmodel ) {
 			angles = vec3_origin;	// boxes don't rotate
 		}
 
 		CM_TransformedBoxTrace ( &trace, (float *)clip->start, (float *)clip->end,
 			(float *)clip->mins, (float *)clip->maxs, clipHandle,  clip->contentmask,
-			origin, angles, clip->capsule);
+			origin, angles, clip->collisionType);
 
 		if ( trace.allsolid ) {
 			clip->trace.allsolid = qtrue;
-			trace.entityNum = touch->s.number;
+			clip->trace.entityNum = touch->s.number;
 		} else if ( trace.startsolid ) {
 			clip->trace.startsolid = qtrue;
-			trace.entityNum = touch->s.number;
+			clip->trace.entityNum = touch->s.number;
 		}
 
 		if ( trace.fraction < clip->trace.fraction ) {
@@ -594,7 +587,7 @@ Moves the given mins/maxs volume through the world from start to end.
 passEntityNum and entities owned by passEntityNum are explicitly not checked.
 ==================
 */
-void SV_Trace( trace_t *results, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, int capsule ) {
+void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, traceType_t type ) {
 	moveclip_t	clip;
 	int			i;
 
@@ -608,7 +601,7 @@ void SV_Trace( trace_t *results, const vec3_t start, vec3_t mins, vec3_t maxs, c
 	Com_Memset ( &clip, 0, sizeof ( moveclip_t ) );
 
 	// clip to world
-	CM_BoxTrace( &clip.trace, start, end, mins, maxs, 0, contentmask, capsule );
+	CM_BoxTrace( &clip.trace, start, end, mins, maxs, 0, contentmask, type );
 	clip.trace.entityNum = clip.trace.fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 	if ( clip.trace.fraction == 0 ) {
 		*results = clip.trace;
@@ -622,7 +615,7 @@ void SV_Trace( trace_t *results, const vec3_t start, vec3_t mins, vec3_t maxs, c
 	clip.mins = mins;
 	clip.maxs = maxs;
 	clip.passEntityNum = passEntityNum;
-	clip.capsule = capsule;
+	clip.collisionType = type;
 
 	// create the bounding box of the entire move
 	// we can limit it to the part of the move not
@@ -672,8 +665,14 @@ int SV_PointContents( const vec3_t p, int passEntityNum ) {
 		hit = SV_GentityNum( touch[i] );
 		// might intersect, so do an exact clip
 		clipHandle = SV_ClipHandleForEntity( hit );
+
+		// non-worldspawn entities must not use world as clip model!
+		if ( clipHandle == 0 ) {
+			continue;
+		}
+
 		angles = hit->r.currentAngles;
-		if ( !hit->r.bmodel ) {
+		if ( !hit->s.bmodel ) {
 			angles = vec3_origin;	// boxes don't rotate
 		}
 

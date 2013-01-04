@@ -1,29 +1,27 @@
-ioquake3 VoIP support documentation.
-Last updated 6/25/2008 by Ryan C. Gordon.
+Spearmint VoIP support documentation.
+Updated 6/25/2008 by Ryan C. Gordon.
+Updated for Spearmint 12/14/2012 by Zack Middleton.
 
-There are two ways to use VoIP in ioquake3. You can either use Mumble as an
- external program, for which ioq3 now supplies some basic hooks, or you can
+There are two ways to use VoIP in Spearmint. You can either use Mumble as an
+ external program, for which Spearmint now supplies some basic hooks, or you can
  use the new built-in VoIP support.
 
-Mumble is here: http://mumble.sourceforge.net/  ... ioquake3 can supply it
+Mumble is here: http://mumble.sourceforge.net/  ... Spearmint can supply it
  with your in-game position, but everything else is whatever features Mumble
- offers outside of the game. To use it, start Mumble before you start ioq3,
+ offers outside of the game. To use it, start Mumble before you start Spearmint,
  and run the game with +set cl_useMumble 1. This should work on at least
  Linux, Mac OS X, and Windows, and probably other platforms Mumble supports
  in the future.
 
-The built-in stuff offers tighter in-game integration, works on any platform
- that ioquake3 supports, and doesn't require anything more than a recent build
- of the game. The rest of this document is concerned with the built-in VoIP
- support.
+The built-in stuff offers tighter in-game integration and works on any platform
+ that Spearmint supports. The rest of this document is concerned with the
+ built-in VoIP support.
 
 
 Quick start for servers:
-    - run a recent build of ioquake3.
     - Make sure your network settings are set to broadband.
 
 Quick start for clients:
-    - run a recent build of ioquake3.
     - Make sure your network settings are set to broadband.
     - +set s_useOpenAL 1
     - \bind q "+voiprecord"
@@ -46,8 +44,9 @@ s_alCapture: set to "1" (the default) to have the audio layer open an OpenAL
              get bits from the microphone. This means you won't transmit, but
              you can still hear other people.
 
-cl_voipSendTarget: a string: "all" to broadcast to everyone, "none" to send
-                   to no one, "attacker" to send to the last person that hit
+cl_voipSendTarget: a string: "all" to broadcast to everyone, "team" to broadcast
+                   to everyone on your team, "none" to send to no one,
+                   "attacker" to send to the last person that hit
                    you, "crosshair" to send to the people currently in your
                    crosshair, "spatial" to talk to all people in hearing
                    range or a comma-separated list of client numbers, like
@@ -57,8 +56,8 @@ cl_voipSendTarget: a string: "all" to broadcast to everyone, "none" to send
                    This is reset to "spatial" when connecting to a new server.
                    Presumably mods will manage this cvar, not people, but
                    keybind could be useful for the general cases. To send to
-                   just your team, or the opposing team, or a buddy list, you
-                   have to set a list of numbers.
+                   just the opposing team, or a buddy list, you have to set a
+                   list of numbers.
 
 cl_voipUseVAD: set to "1" to automatically send audio when the game thinks you
                are talking, "0" (the default) to require the user to manually
@@ -92,16 +91,22 @@ cl_voipGainDuringCapture: This is the volume ("gain") of audio coming out of
                           ABSOLUTELY want to make your speakers quiet when you
                           record, if the microphone might pick it up!
 
-cl_voipShowMeter: Set to "1" (the default) to show a volume meter as you are
-                  recording from the microphone, so you can see how well the
-                  game can "hear" you. Set to "0" to disable the display of
-                  the meter.
-
 cl_voipCaptureMult: Multiply recorded audio by this value after denoising.
                     Defaults to 2.0 to _double_ the volume of your voice.
                     This is to make you more audible if denoising eats away
                     too much data. Set this to 1.0 to get no change, less to
                     be quieter.
+
+cg_voipShowMeter: Set to "1" (the default) to show a volume meter as you are
+                  recording from the microphone, so you can see how well the
+                  game can "hear" you. Set to "0" to disable the display of
+                  the meter.
+
+cg_voipShowCrosshairMeter: Set to "1" (the default) to show a volume meter for
+                  clients when you point your crosshair at them. Set to "0" to
+                  disable the display of the meter.
+
+    The cg_* variables are part of cgame, mods may opt to change or remove them.
 
 
 
@@ -160,17 +165,8 @@ There is no in-game UI to speak of: we encourage mods to add some. Largely
  they will just need to set cvars and run console commands for choosing
  voice targets and ignoring people, etc.
 
-This requires patched builds to be useful, but remains network compatible with
- legacy quake3 clients and servers. Clients and servers both report in their
- info strings whether they support VoIP, and won't send VoIP data to those not
- reporting support. If a stray VoIP packet makes it to a legacy build, it will
- be ignored without incident.
-
 VoIP packets are saved in demo files! You will be able to playback what you
- heard and what you said on VoIP-compatible clients. Legacy clients can also
- play demo files with VoIP packets in them, but just won't play the voice
- track. For VoIP-supported builds, it's nice to have a record of the
- trash-talk.
+ heard and what you said on VoIP-compatible clients.
 
 Data is processed using the Speex narrowband codec, and is cross-platform.
  Bigendian and littleendian systems can speak to each other, as can 32 and
@@ -193,8 +189,9 @@ Bandwidth: VoIP data is broken up into 20 millisecond frames (this is a Speex
  your network settings lower than "Cable/xDSL/LAN", just in case.
 
 The initial VoIP work was done by Ryan C. Gordon <icculus@icculus.org>, and
- he can be contacted with technical questions, if the ioq3 mailing list or
- forums aren't helpful.
+ he can be contacted with technical questions, if the Spearmint mailing list
+ isn't helpful. Please note that Ryan's work was done for ioquake3, not
+ Spearmint.
 
 // end of voip-README.txt ...
 

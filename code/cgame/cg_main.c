@@ -1,38 +1,51 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
 // cg_main.c -- initialization and primary entry point for cgame
 #include "cg_local.h"
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 #include "../ui/ui_shared.h"
 // display context for new ui stuff
 displayContextDef_t cgDC;
 #endif
 
 int forceModelModificationCount = -1;
+#ifdef MISSIONPACK
+int redTeamNameModificationCount = -1;
+int blueTeamNameModificationCount = -1;
+#endif
 
-void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum );
+void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
 void CG_Shutdown( void );
+static char *CG_VoIPString( int localClientNum );
 
 
 /*
@@ -46,8 +59,10 @@ This must be the very first function compiled into the .q3vm file
 Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11  ) {
 
 	switch ( command ) {
+	case CG_GETAPIVERSION:
+		return ( CG_API_MAJOR_VERSION << 16) | ( CG_API_MINOR_VERSION & 0xFFFF );
 	case CG_INIT:
-		CG_Init( arg0, arg1, arg2 );
+		CG_Init( arg0, arg1, arg2, arg3, arg4, arg5, arg6 );
 		return 0;
 	case CG_SHUTDOWN:
 		CG_Shutdown();
@@ -58,22 +73,29 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		CG_DrawActiveFrame( arg0, arg1, arg2 );
 		return 0;
 	case CG_CROSSHAIR_PLAYER:
-		return CG_CrosshairPlayer();
+		return CG_CrosshairPlayer(arg0);
 	case CG_LAST_ATTACKER:
-		return CG_LastAttacker();
+		return CG_LastAttacker(arg0);
+    case CG_VOIP_STRING:
+      return (intptr_t)CG_VoIPString(arg0);
 	case CG_KEY_EVENT:
 		CG_KeyEvent(arg0, arg1);
 		return 0;
 	case CG_MOUSE_EVENT:
-#ifdef MISSIONPACK
-		cgDC.cursorx = cgs.cursorX;
-		cgDC.cursory = cgs.cursorY;
-#endif
-		CG_MouseEvent(arg0, arg1);
+		CG_MouseEvent(arg0, arg1, arg2);
 		return 0;
 	case CG_EVENT_HANDLING:
 		CG_EventHandling(arg0);
 		return 0;
+    case CG_CONSOLE_TEXT:
+		CG_AddNotifyText();
+		return 0;
+	case CG_WANTSBINDKEYS:
+#ifdef MISSIONPACK_HUD
+		return Display_WantsBindKeys();
+#else
+		return qfalse;
+#endif
 	default:
 		CG_Error( "vmMain: unknown command %i", command );
 		break;
@@ -126,7 +148,7 @@ vmCvar_t	cg_footsteps;
 vmCvar_t	cg_addMarks;
 vmCvar_t	cg_brassTime;
 vmCvar_t	cg_viewsize;
-vmCvar_t	cg_drawGun;
+vmCvar_t	cg_drawGun[MAX_SPLITVIEW];
 vmCvar_t	cg_gun_frame;
 vmCvar_t	cg_gun_x;
 vmCvar_t	cg_gun_y;
@@ -134,14 +156,15 @@ vmCvar_t	cg_gun_z;
 vmCvar_t	cg_tracerChance;
 vmCvar_t	cg_tracerWidth;
 vmCvar_t	cg_tracerLength;
-vmCvar_t	cg_autoswitch;
+vmCvar_t	cg_autoswitch[MAX_SPLITVIEW];
 vmCvar_t	cg_ignore;
 vmCvar_t	cg_simpleItems;
 vmCvar_t	cg_fov;
 vmCvar_t	cg_zoomFov;
-vmCvar_t	cg_thirdPerson;
-vmCvar_t	cg_thirdPersonRange;
-vmCvar_t	cg_thirdPersonAngle;
+vmCvar_t	cg_thirdPerson[MAX_SPLITVIEW];
+vmCvar_t	cg_thirdPersonRange[MAX_SPLITVIEW];
+vmCvar_t	cg_thirdPersonAngle[MAX_SPLITVIEW];
+vmCvar_t	cg_splitviewVertical;
 vmCvar_t	cg_lagometer;
 vmCvar_t	cg_drawAttacker;
 vmCvar_t	cg_synchronousClients;
@@ -183,6 +206,11 @@ vmCvar_t	cg_oldRail;
 vmCvar_t	cg_oldRocket;
 vmCvar_t	cg_oldPlasma;
 vmCvar_t	cg_trueLightning;
+vmCvar_t	cg_atmosphericEffects;
+vmCvar_t	cg_teamDmLeadAnnouncements;
+vmCvar_t	cg_voipShowMeter;
+vmCvar_t	cg_voipShowCrosshairMeter;
+vmCvar_t	cg_consoleLatency;
 
 #ifdef MISSIONPACK
 vmCvar_t 	cg_redTeamName;
@@ -207,8 +235,14 @@ typedef struct {
 
 static cvarTable_t cvarTable[] = {
 	{ &cg_ignore, "cg_ignore", "0", 0 },	// used for debugging
-	{ &cg_autoswitch, "cg_autoswitch", "1", CVAR_ARCHIVE },
-	{ &cg_drawGun, "cg_drawGun", "1", CVAR_ARCHIVE },
+	{ &cg_autoswitch[0], "cg_autoswitch", "1", CVAR_ARCHIVE },
+	{ &cg_autoswitch[1], "2cg_autoswitch", "1", CVAR_ARCHIVE },
+	{ &cg_autoswitch[2], "3cg_autoswitch", "1", CVAR_ARCHIVE },
+	{ &cg_autoswitch[3], "4cg_autoswitch", "1", CVAR_ARCHIVE },
+	{ &cg_drawGun[0], "cg_drawGun", "1", CVAR_ARCHIVE },
+	{ &cg_drawGun[1], "2cg_drawGun", "1", CVAR_ARCHIVE },
+	{ &cg_drawGun[2], "3cg_drawGun", "1", CVAR_ARCHIVE },
+	{ &cg_drawGun[3], "4cg_drawGun", "1", CVAR_ARCHIVE },
 	{ &cg_zoomFov, "cg_zoomfov", "22.5", CVAR_ARCHIVE },
 	{ &cg_fov, "cg_fov", "90", CVAR_ARCHIVE },
 	{ &cg_viewsize, "cg_viewsize", "100", CVAR_ARCHIVE },
@@ -257,9 +291,19 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_tracerChance, "cg_tracerchance", "0.4", CVAR_CHEAT },
 	{ &cg_tracerWidth, "cg_tracerwidth", "1", CVAR_CHEAT },
 	{ &cg_tracerLength, "cg_tracerlength", "100", CVAR_CHEAT },
-	{ &cg_thirdPersonRange, "cg_thirdPersonRange", "40", CVAR_CHEAT },
-	{ &cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", CVAR_CHEAT },
-	{ &cg_thirdPerson, "cg_thirdPerson", "0", 0 },
+	{ &cg_thirdPersonRange[0], "cg_thirdPersonRange", "40", CVAR_CHEAT },
+	{ &cg_thirdPersonAngle[0], "cg_thirdPersonAngle", "0", CVAR_CHEAT },
+	{ &cg_thirdPersonRange[1], "2cg_thirdPersonRange", "40", CVAR_CHEAT },
+	{ &cg_thirdPersonAngle[1], "2cg_thirdPersonAngle", "0", CVAR_CHEAT },
+	{ &cg_thirdPersonRange[2], "3cg_thirdPersonRange", "40", CVAR_CHEAT },
+	{ &cg_thirdPersonAngle[2], "3cg_thirdPersonAngle", "0", CVAR_CHEAT },
+	{ &cg_thirdPersonRange[3], "4cg_thirdPersonRange", "40", CVAR_CHEAT },
+	{ &cg_thirdPersonAngle[3], "4cg_thirdPersonAngle", "0", CVAR_CHEAT },
+	{ &cg_thirdPerson[0], "cg_thirdPerson", "0", 0 },
+	{ &cg_thirdPerson[1], "2cg_thirdPerson", "0", 0 },
+	{ &cg_thirdPerson[2], "3cg_thirdPerson", "0", 0 },
+	{ &cg_thirdPerson[3], "4cg_thirdPerson", "0", 0 },
+	{ &cg_splitviewVertical, "cg_splitviewVertical", "0", CVAR_ARCHIVE },
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE  },
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE  },
 	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE  },
@@ -270,7 +314,7 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_deferPlayers, "cg_deferPlayers", "1", CVAR_ARCHIVE },
 #endif
 	{ &cg_drawTeamOverlay, "cg_drawTeamOverlay", "0", CVAR_ARCHIVE },
-	{ &cg_teamOverlayUserinfo, "teamoverlay", "0", CVAR_ROM | CVAR_USERINFO },
+	{ &cg_teamOverlayUserinfo, "teamoverlay", "0", CVAR_ROM | CVAR_USERINFO_ALL },
 	{ &cg_stats, "cg_stats", "0", 0 },
 	{ &cg_drawFriend, "cg_drawFriend", "1", CVAR_ARCHIVE },
 	{ &cg_teamChatsOnly, "cg_teamChatsOnly", "0", CVAR_ARCHIVE },
@@ -285,18 +329,20 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_blood, "com_blood", "1", CVAR_ARCHIVE },
 	{ &cg_synchronousClients, "g_synchronousClients", "0", CVAR_SYSTEMINFO },
 #ifdef MISSIONPACK
-	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_USERINFO },
-	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_USERINFO },
+	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO },
+	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO },
 	{ &cg_currentSelectedPlayer, "cg_currentSelectedPlayer", "0", CVAR_ARCHIVE},
 	{ &cg_currentSelectedPlayerName, "cg_currentSelectedPlayerName", "", CVAR_ARCHIVE},
-	{ &cg_singlePlayer, "ui_singlePlayerActive", "0", CVAR_USERINFO},
+	{ &cg_singlePlayer, "ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM},
 	{ &cg_enableDust, "g_enableDust", "0", CVAR_SERVERINFO},
 	{ &cg_enableBreath, "g_enableBreath", "0", CVAR_SERVERINFO},
-	{ &cg_singlePlayerActive, "ui_singlePlayerActive", "0", CVAR_USERINFO},
+	{ &cg_singlePlayerActive, "ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM},
 	{ &cg_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE},
 	{ &cg_recordSPDemoName, "ui_recordSPDemoName", "", CVAR_ARCHIVE},
 	{ &cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SERVERINFO},
+#ifdef MISSIONPACK_HUD
 	{ &cg_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE},
+#endif
 #endif
 	{ &cg_cameraOrbit, "cg_cameraOrbit", "0", CVAR_CHEAT},
 	{ &cg_cameraOrbitDelay, "cg_cameraOrbitDelay", "50", CVAR_ARCHIVE},
@@ -316,7 +362,12 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_oldRail, "cg_oldRail", "1", CVAR_ARCHIVE},
 	{ &cg_oldRocket, "cg_oldRocket", "1", CVAR_ARCHIVE},
 	{ &cg_oldPlasma, "cg_oldPlasma", "1", CVAR_ARCHIVE},
-	{ &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE}
+	{ &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE},
+	{ &cg_atmosphericEffects, "cg_atmosphericEffects", "1", CVAR_ARCHIVE },
+	{ &cg_teamDmLeadAnnouncements, "cg_teamDmLeadAnnouncements", "1", CVAR_ARCHIVE },
+	{ &cg_voipShowMeter, "cg_voipShowMeter", "1", CVAR_ARCHIVE },
+	{ &cg_voipShowCrosshairMeter, "cg_voipShowCrosshairMeter", "1", CVAR_ARCHIVE },
+	{ &cg_consoleLatency, "cg_consoleLatency", "3000", CVAR_ARCHIVE },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE }
 };
 
@@ -333,20 +384,25 @@ void CG_RegisterCvars( void ) {
 	char		var[MAX_TOKEN_CHARS];
 
 	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
+		if (Com_LocalClientForCvarName(cv->cvarName) >= CG_MaxSplitView()) {
+			continue;
+		}
+
 		trap_Cvar_Register( cv->vmCvar, cv->cvarName,
 			cv->defaultString, cv->cvarFlags );
 	}
+
+	BG_RegisterClientCvars(CG_MaxSplitView());
 
 	// see if we are also running the server on this machine
 	trap_Cvar_VariableStringBuffer( "sv_running", var, sizeof( var ) );
 	cgs.localServer = atoi( var );
 
 	forceModelModificationCount = cg_forceModel.modificationCount;
-
-	trap_Cvar_Register(NULL, "model", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
-	trap_Cvar_Register(NULL, "headmodel", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
-	trap_Cvar_Register(NULL, "team_model", DEFAULT_TEAM_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
-	trap_Cvar_Register(NULL, "team_headmodel", DEFAULT_TEAM_HEAD, CVAR_USERINFO | CVAR_ARCHIVE );
+#ifdef MISSIONPACK
+	redTeamNameModificationCount = cg_redTeamName.modificationCount;
+	blueTeamNameModificationCount = cg_blueTeamName.modificationCount;
+#endif
 }
 
 /*																																			
@@ -378,6 +434,10 @@ void CG_UpdateCvars( void ) {
 	cvarTable_t	*cv;
 
 	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
+		if (Com_LocalClientForCvarName(cv->cvarName) >= CG_MaxSplitView()) {
+			continue;
+		}
+
 		trap_Cvar_Update( cv->vmCvar );
 	}
 
@@ -395,25 +455,190 @@ void CG_UpdateCvars( void ) {
 		}
 	}
 
+#ifdef MISSIONPACK
+	// if force model or a team name changed
+	if ( forceModelModificationCount != cg_forceModel.modificationCount
+		|| redTeamNameModificationCount != cg_redTeamName.modificationCount
+		|| blueTeamNameModificationCount != cg_blueTeamName.modificationCount )
+	{
+		forceModelModificationCount = cg_forceModel.modificationCount;
+		redTeamNameModificationCount = cg_redTeamName.modificationCount;
+		blueTeamNameModificationCount = cg_blueTeamName.modificationCount;
+		CG_ForceModelChange();
+	}
+#else
 	// if force model changed
-	if ( forceModelModificationCount != cg_forceModel.modificationCount ) {
+	if ( forceModelModificationCount != cg_forceModel.modificationCount )
+	{
 		forceModelModificationCount = cg_forceModel.modificationCount;
 		CG_ForceModelChange();
 	}
+#endif
 }
 
-int CG_CrosshairPlayer( void ) {
-	if ( cg.time > ( cg.crosshairClientTime + 1000 ) ) {
+int CG_CrosshairPlayer( int localClientNum ) {
+	if (localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
 		return -1;
 	}
-	return cg.crosshairClientNum;
+
+	if ( cg.time > ( cg.localClients[localClientNum].crosshairClientTime + 1000 ) ) {
+		return -1;
+	}
+
+	return cg.localClients[localClientNum].crosshairClientNum;
 }
 
-int CG_LastAttacker( void ) {
-	if ( !cg.attackerTime ) {
+int CG_LastAttacker( int localClientNum ) {
+	if (localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
 		return -1;
 	}
-	return cg.snap->ps.persistant[PERS_ATTACKER];
+
+	if ( !cg.localClients[localClientNum].attackerTime ) {
+		return -1;
+	}
+
+	return cg.snap->pss[cg.snap->lcIndex[localClientNum]].persistant[PERS_ATTACKER];
+}
+
+/*
+=================
+CG_RemoveNotifyLine
+=================
+*/
+void CG_RemoveNotifyLine( cglc_t *localClient )
+{
+  int i, offset, totalLength;
+
+  if( !localClient || localClient->numConsoleLines == 0 )
+    return;
+
+  offset = localClient->consoleLines[ 0 ].length;
+  totalLength = strlen( localClient->consoleText ) - offset;
+
+  //slide up consoleText
+  for( i = 0; i <= totalLength; i++ )
+    localClient->consoleText[ i ] = localClient->consoleText[ i + offset ];
+
+  //pop up the first consoleLine
+  for( i = 0; i < localClient->numConsoleLines; i++ )
+    localClient->consoleLines[ i ] = localClient->consoleLines[ i + 1 ];
+
+  localClient->numConsoleLines--;
+}
+
+/*
+=================
+CG_AddNotifyText
+=================
+*/
+void CG_AddNotifyText( void ) {
+	char text[ BIG_INFO_STRING ];
+	char *buffer;
+	int bufferLen;
+	int lc;
+	cglc_t *localClient;
+	int localClientBits;
+
+	trap_LiteralArgs( text, sizeof ( text ) );
+
+	if( !text[ 0 ] ) {
+		for ( lc = 0; lc < CG_MaxSplitView(); lc++ ) {
+			cg.localClients[lc].consoleText[ 0 ] = '\0';
+			cg.localClients[lc].numConsoleLines = 0;
+		}
+		return;
+	}
+
+	buffer = text;
+	bufferLen = strlen( buffer );
+
+	// [player #] perfix for text that only shows up in notify area for one local client
+	if ( bufferLen > 4 && !Q_strncmp( buffer, "[player ", 8 ) && isdigit(buffer[8]) && buffer[9] == ']' ) {
+		localClientBits = 1 << ( atoi( &buffer[8] ) - 1 );
+
+		buffer += 10;
+		bufferLen = strlen( buffer );
+	} else {
+		localClientBits = ~0;
+	}
+
+	for ( lc = 0; lc < CG_MaxSplitView(); lc++ ) {
+		if ( !( localClientBits & ( 1 << lc ) ) ) {
+			continue;
+		}
+
+		localClient = &cg.localClients[lc];
+
+		if( localClient->numConsoleLines == MAX_CONSOLE_LINES )
+			CG_RemoveNotifyLine( localClient );
+
+		Q_strcat( localClient->consoleText, MAX_CONSOLE_TEXT, buffer );
+		localClient->consoleLines[ localClient->numConsoleLines ].time = cg.time;
+		localClient->consoleLines[ localClient->numConsoleLines ].length = bufferLen;
+		localClient->numConsoleLines++;
+	}
+}
+
+/*
+=================
+CG_NotifyPrintf
+
+Only printed in notify area for localClientNum (and client console)
+=================
+*/
+void QDECL CG_NotifyPrintf( int localClientNum, const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+	int			prefixLen;
+
+	Com_sprintf( text, sizeof(text), "[player %d]", localClientNum + 1 );
+	prefixLen = strlen(text);
+
+	va_start (argptr, msg);
+	Q_vsnprintf (text+prefixLen, sizeof(text)-prefixLen, msg, argptr);
+	va_end (argptr);
+
+	trap_Print( text );
+}
+
+/*
+=================
+CG_NotifyBitsPrintf
+
+Only printed in notify area for players specified in localClientBits (and client console)
+=================
+*/
+void QDECL CG_NotifyBitsPrintf( int localClientBits, const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+	int i;
+
+	va_start (argptr, msg);
+	Q_vsnprintf (text, sizeof(text), msg, argptr);
+	va_end (argptr);
+
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		if ( localClientBits & ( 1 << i ) ) {
+			CG_NotifyPrintf( i, "%s", text );
+		}
+	}
+}
+
+void QDECL CG_DPrintf( const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+	char		var[MAX_TOKEN_CHARS];
+
+	trap_Cvar_VariableStringBuffer( "developer", var, sizeof( var ) );
+	if ( !atoi(var) ) {
+		return;
+	}
+
+	va_start (argptr, msg);
+	Q_vsnprintf (text, sizeof(text), msg, argptr);
+	va_end (argptr);
+
+	trap_Print( text );
 }
 
 void QDECL CG_Printf( const char *msg, ... ) {
@@ -460,6 +685,17 @@ void QDECL Com_Printf( const char *msg, ... ) {
 	trap_Print( text );
 }
 
+void QDECL Com_DPrintf( const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	va_start (argptr, msg);
+	Q_vsnprintf (text, sizeof(text), msg, argptr);
+	va_end (argptr);
+
+	CG_DPrintf ("%s", text);
+}
+
 /*
 ================
 CG_Argv
@@ -473,6 +709,14 @@ const char *CG_Argv( int arg ) {
 	return buffer;
 }
 
+/*
+================
+CG_MaxSplitView
+================
+*/
+int CG_MaxSplitView(void) {
+	return cgs.maxSplitView;
+}
 
 //========================================================================
 
@@ -822,6 +1066,10 @@ static void CG_RegisterGraphics( void ) {
 
 	trap_R_LoadWorldMap( cgs.mapname );
 
+	CG_LoadingString( "entities" );
+
+	CG_ParseEntitiesFromString();
+
 	// precache status bar pics
 	CG_LoadingString( "game media" );
 
@@ -1094,7 +1342,31 @@ static void CG_RegisterGraphics( void ) {
 }
 
 
+/*
+==================
+CG_LocalClientAdded
+==================
+*/
+void CG_LocalClientAdded(int localClientNum, int clientNum) {
+	if (clientNum < 0 || clientNum >= MAX_CLIENTS)
+		return;
 
+	cg.localClients[localClientNum].clientNum = clientNum;
+}
+
+/*
+==================
+CG_LocalClientRemoved
+==================
+*/
+void CG_LocalClientRemoved(int localClientNum) {
+	if (cg.localClients[localClientNum].clientNum == -1)
+		return;
+
+	cg.localClients[localClientNum].clientNum = -1;
+}
+
+#ifdef MISSIONPACK
 /*																																			
 =======================
 CG_BuildSpectatorString
@@ -1109,12 +1381,8 @@ void CG_BuildSpectatorString(void) {
 			Q_strcat(cg.spectatorList, sizeof(cg.spectatorList), va("%s     ", cgs.clientinfo[i].name));
 		}
 	}
-	i = strlen(cg.spectatorList);
-	if (i != cg.spectatorLen) {
-		cg.spectatorLen = i;
-		cg.spectatorWidth = -1;
-	}
 }
+#endif
 
 
 /*																																			
@@ -1124,14 +1392,25 @@ CG_RegisterClients
 */
 static void CG_RegisterClients( void ) {
 	int		i;
+	int		j;
 
-	CG_LoadingClient(cg.clientNum);
-	CG_NewClientInfo(cg.clientNum);
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+		if (cg.localClients[i].clientNum == -1) {
+			continue;
+		}
+		CG_LoadingClient(cg.localClients[i].clientNum);
+		CG_NewClientInfo(cg.localClients[i].clientNum);
+	}
 
 	for (i=0 ; i<MAX_CLIENTS ; i++) {
 		const char		*clientInfo;
 
-		if (cg.clientNum == i) {
+		for (j = 0; j < CG_MaxSplitView(); j++) {
+			if (cg.localClients[j].clientNum == i) {
+				break;
+			}
+		}
+		if (j != CG_MaxSplitView()) {
 			continue;
 		}
 
@@ -1142,7 +1421,9 @@ static void CG_RegisterClients( void ) {
 		CG_LoadingClient( i );
 		CG_NewClientInfo( i );
 	}
+#ifdef MISSIONPACK
 	CG_BuildSpectatorString();
+#endif
 }
 
 //===========================================================================
@@ -1178,7 +1459,7 @@ void CG_StartMusic( void ) {
 
 	trap_S_StartBackgroundTrack( parm1, parm2 );
 }
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 char *CG_GetMenuBuffer(const char *filename) {
 	int	len;
 	fileHandle_t	f;
@@ -1491,8 +1772,7 @@ void CG_LoadMenus(const char *menuFile) {
 		}
 	}
 
-	Com_Printf("UI menu load time = %d milli seconds\n", trap_Milliseconds() - start);
-
+	Com_DPrintf("UI menu load time = %d milli seconds\n", trap_Milliseconds() - start);
 }
 
 
@@ -1526,7 +1806,7 @@ static int CG_FeederCount(float feederID) {
 
 void CG_SetScoreSelection(void *p) {
 	menuDef_t *menu = (menuDef_t*)p;
-	playerState_t *ps = &cg.snap->ps;
+	playerState_t *ps = cg.cur_ps;
 	int i, red, blue;
 	red = blue = 0;
 	for (i = 0; i < cg.numScores; i++) {
@@ -1535,7 +1815,7 @@ void CG_SetScoreSelection(void *p) {
 		} else if (cg.scores[i].team == TEAM_BLUE) {
 			blue++;
 		}
-		if (ps->clientNum == cg.scores[i].client) {
+		if (ps && ps->clientNum == cg.scores[i].client) {
 			cg.selectedScore = i;
 		}
 	}
@@ -1623,7 +1903,7 @@ static const char *CG_FeederItemText(float feederID, int index, int column, qhan
 				}
 		  break;
 			case 2:
-				if ( cg.snap->ps.stats[ STAT_CLIENTS_READY ] & ( 1 << sp->client ) ) {
+				if ( cg.snap->pss[0].stats[ STAT_CLIENTS_READY ] & ( 1 << sp->client ) ) {
 					return "Ready";
 				}
 				if (team == -1) {
@@ -1682,18 +1962,14 @@ static void CG_FeederSelection(float feederID, int index) {
 		cg.selectedScore = index;
 	}
 }
-#endif
 
-#ifdef MISSIONPACK
 static float CG_Cvar_Get(const char *cvar) {
 	char buff[128];
 	memset(buff, 0, sizeof(buff));
 	trap_Cvar_VariableStringBuffer(cvar, buff, sizeof(buff));
 	return atof(buff);
 }
-#endif
 
-#ifdef MISSIONPACK
 void CG_Text_PaintWithCursor(float x, float y, float scale, vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style) {
 	CG_Text_Paint(x, y, scale, color, text, 0, limit, style);
 }
@@ -1773,18 +2049,19 @@ void CG_LoadHudMenu( void ) {
 	cgDC.getCVarString = trap_Cvar_VariableStringBuffer;
 	cgDC.getCVarValue = CG_Cvar_Get;
 	cgDC.drawTextWithCursor = &CG_Text_PaintWithCursor;
-	//cgDC.setOverstrikeMode = &trap_Key_SetOverstrikeMode;
-	//cgDC.getOverstrikeMode = &trap_Key_GetOverstrikeMode;
+	cgDC.setOverstrikeMode = &trap_Key_SetOverstrikeMode;
+	cgDC.getOverstrikeMode = &trap_Key_GetOverstrikeMode;
 	cgDC.startLocalSound = &trap_S_StartLocalSound;
 	cgDC.ownerDrawHandleKey = &CG_OwnerDrawHandleKey;
 	cgDC.feederCount = &CG_FeederCount;
 	cgDC.feederItemImage = &CG_FeederItemImage;
 	cgDC.feederItemText = &CG_FeederItemText;
 	cgDC.feederSelection = &CG_FeederSelection;
-	//cgDC.setBinding = &trap_Key_SetBinding;
-	//cgDC.getBindingBuf = &trap_Key_GetBindingBuf;
-	//cgDC.keynumToStringBuf = &trap_Key_KeynumToStringBuf;
-	//cgDC.executeText = &trap_Cmd_ExecuteText;
+	cgDC.setBinding = &trap_Key_SetBinding;
+	cgDC.getBindingBuf = &trap_Key_GetBindingBuf;
+	cgDC.keynumToStringBuf = &trap_Key_KeynumToStringBuf;
+	cgDC.getKey = &trap_Key_GetKey;
+	cgDC.executeText = &trap_Cmd_ExecuteText;
 	cgDC.Error = &Com_Error; 
 	cgDC.Print = &Com_Printf; 
 	cgDC.ownerDrawWidth = &CG_OwnerDrawWidth;
@@ -1843,8 +2120,10 @@ Called after every level change or subsystem restart
 Will perform callbacks to make the loading info screen update.
 =================
 */
-void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
+void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 ) {
+	int	clientNums[MAX_SPLITVIEW];
 	const char	*s;
+	int			i;
 
 	// clear everything
 	memset( &cgs, 0, sizeof( cgs ) );
@@ -1853,7 +2132,22 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	memset( cg_weapons, 0, sizeof(cg_weapons) );
 	memset( cg_items, 0, sizeof(cg_items) );
 
-	cg.clientNum = clientNum;
+	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
+	cg.numViewports = 1;
+
+	clientNums[0] = clientNum0;
+	clientNums[1] = clientNum1;
+	clientNums[2] = clientNum2;
+	clientNums[3] = clientNum3;
+
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+		if (clientNums[i] < 0 || clientNums[i] >= MAX_CLIENTS) {
+			cg.localClients[i].clientNum = -1;
+			continue;
+		}
+
+		CG_LocalClientAdded(i, clientNums[i]);
+	}
 
 	cgs.processedSnapshotNum = serverMessageNum;
 	cgs.serverCommandSequence = serverCommandSequence;
@@ -1869,7 +2163,9 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	CG_InitConsoleCommands();
 
-	cg.weaponSelect = WP_MACHINEGUN;
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+		cg.localClients[i].weaponSelect = WP_MACHINEGUN;
+	}
 
 	cgs.redflag = cgs.blueflag = -1; // For compatibily, default to unset for
 	cgs.flagStatus = -1;
@@ -1877,8 +2173,28 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	// get the rendering configuration from the client system
 	trap_GetGlconfig( &cgs.glconfig );
-	cgs.screenXScale = cgs.glconfig.vidWidth / 640.0;
-	cgs.screenYScale = cgs.glconfig.vidHeight / 480.0;
+
+	// Viewport scale and offset
+	cgs.screenXScaleStretch = cgs.glconfig.vidWidth * (1.0/640.0);
+	cgs.screenYScaleStretch = cgs.glconfig.vidHeight * (1.0/480.0);
+	if ( cgs.glconfig.vidWidth * 480 > cgs.glconfig.vidHeight * 640 ) {
+		cgs.screenXScale = cgs.glconfig.vidWidth * (1.0/640.0);
+		cgs.screenYScale = cgs.glconfig.vidHeight * (1.0/480.0);
+		// wide screen
+		cgs.screenXBias = 0.5 * ( cgs.glconfig.vidWidth - ( cgs.glconfig.vidHeight * (640.0/480.0) ) );
+		cgs.screenXScale = cgs.screenYScale;
+		// no narrow screen
+		cgs.screenYBias = 0;
+	}
+	else {
+		cgs.screenXScale = cgs.glconfig.vidWidth * (1.0/640.0);
+		cgs.screenYScale = cgs.glconfig.vidHeight * (1.0/480.0);
+		// narrow screen
+		cgs.screenYBias = 0.5 * ( cgs.glconfig.vidHeight - ( cgs.glconfig.vidWidth * (480.0/640.0) ) );
+		cgs.screenYScale = cgs.screenXScale;
+		// no wide screen
+		cgs.screenXBias = 0;
+	}
 
 	// get the gamestate from the client system
 	trap_GetGameState( &cgs.gameState );
@@ -1899,7 +2215,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	trap_CM_LoadMap( cgs.mapname );
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	String_Init();
 #endif
 
@@ -1917,7 +2233,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	CG_RegisterClients();		// if low on memory, some clients will be deferred
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	CG_AssetCache();
 	CG_LoadHudMenu();      // load new hud stuff
 #endif
@@ -1969,7 +2285,7 @@ CG_EventHandling
       2 - hud editor
 
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 void CG_EventHandling(int type) {
 }
 
@@ -1978,7 +2294,59 @@ void CG_EventHandling(int type) {
 void CG_KeyEvent(int key, qboolean down) {
 }
 
-void CG_MouseEvent(int x, int y) {
+void CG_MouseEvent(int localClientNum, int x, int y) {
 }
 #endif
 
+/*
+================
+CG_VoIPString
+================
+*/
+static char *CG_VoIPString( int localClientNum ) {
+	// a generous overestimate of the space needed for 0,1,2...61,62,63
+	static char voipString[ MAX_CLIENTS * 4 ];
+	char voipSendTarget[ MAX_CVAR_VALUE_STRING ];
+
+	if ( localClientNum < 0 || localClientNum > CG_MaxSplitView() || cg.localClients[localClientNum].clientNum == -1 ) {
+		return NULL;
+	}
+
+	trap_Argv( 0, voipSendTarget, sizeof( voipSendTarget ) );
+
+	if( Q_stricmpn( voipSendTarget, "team", 4 ) == 0 )
+	{
+		int i, slen, nlen;
+		for( slen = i = 0; i < cgs.maxclients; i++ )
+		{
+			if( !cgs.clientinfo[ i ].infoValid || i == cg.localClients[ localClientNum ].clientNum )
+				continue;
+			if( cgs.clientinfo[ i ].team != cgs.clientinfo[ cg.localClients[ localClientNum ].clientNum ].team )
+				continue;
+
+			nlen = Com_sprintf( &voipString[ slen ], sizeof( voipString ) - slen,
+					"%s%d", ( slen > 0 ) ? "," : "", i );
+			if( slen + nlen + 1 >= sizeof( voipString ) )
+			{
+				CG_Printf( S_COLOR_YELLOW "WARNING: voipString overflowed\n" );
+				break;
+			}
+
+			slen += nlen;
+		}
+
+		// Notice that if the Com_sprintf was truncated, slen was not updated
+		// so this will remove any trailing commas or partially-completed numbers
+		voipString[ slen ] = '\0';
+	}
+	else if( Q_stricmpn( voipSendTarget, "crosshair", 9 ) == 0 )
+		Com_sprintf( voipString, sizeof( voipString ), "%d",
+				CG_CrosshairPlayer( localClientNum ) );
+	else if( Q_stricmpn( voipSendTarget, "attacker", 8 ) == 0 )
+		Com_sprintf( voipString, sizeof( voipString ), "%d",
+				CG_LastAttacker( localClientNum ) );
+	else
+		return NULL;
+
+	return voipString;
+}

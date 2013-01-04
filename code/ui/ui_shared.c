@@ -1,27 +1,37 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // 
 // string allocation/managment
 
+#include "../qcommon/q_shared.h"
+#include "../game/bg_misc.h"
 #include "ui_shared.h"
 
 #define SCROLL_TIME_START					500
@@ -241,7 +251,7 @@ void String_Init(void) {
 	UI_InitMemory();
 	Item_SetupKeywordHash();
 	Menu_SetupKeywordHash();
-	if (DC && DC->getBindingBuf) {
+	if (DC && DC->getKey) {
 		Controls_GetConfig();
 	}
 }
@@ -2700,6 +2710,18 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 		case K_JOY2:
 		case K_JOY3:
 		case K_JOY4:
+		case K_2JOY1:
+		case K_2JOY2:
+		case K_2JOY3:
+		case K_2JOY4:
+		case K_3JOY1:
+		case K_3JOY2:
+		case K_3JOY3:
+		case K_3JOY4:
+		case K_4JOY1:
+		case K_4JOY2:
+		case K_4JOY3:
+		case K_4JOY4:
 		case K_AUX1:
 		case K_AUX2:
 		case K_AUX3:
@@ -3197,26 +3219,21 @@ Controls_GetKeyAssignment
 */
 static void Controls_GetKeyAssignment (char *command, int *twokeys)
 {
-	int		count;
-	int		j;
-	char	b[256];
+	int		key;
+	int		i;
 
 	twokeys[0] = twokeys[1] = -1;
-	count = 0;
+	key = 0;
 
-	for ( j = 0; j < 256; j++ )
+	for ( i = 0; i < 2; i++ )
 	{
-		DC->getBindingBuf( j, b, 256 );
-		if ( *b == 0 ) {
-			continue;
+		key = DC->getKey( command, key );
+		if ( key == -1 ) {
+			break;
 		}
-		if ( !Q_stricmp( b, command ) ) {
-			twokeys[count] = j;
-			count++;
-			if (count == 2) {
-				break;
-			}
-		}
+
+		twokeys[i] = key;
+		key++;
 	}
 }
 
@@ -3422,6 +3439,10 @@ void Item_Bind_Paint(itemDef_t *item) {
 
 qboolean Display_KeyBindPending(void) {
 	return g_waitingForKey;
+}
+
+qboolean Display_WantsBindKeys( void ) {
+	return ( g_waitingForKey && g_bindItem );
 }
 
 qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down) {

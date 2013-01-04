@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
@@ -176,6 +184,7 @@ int		errorCount;
 typedef struct options_s {
 	qboolean verbose;
 	qboolean writeMapFile;
+	qboolean ioquake3Compatibility;
 	qboolean vanillaQ3Compatibility;
 } options_t;
 
@@ -1370,7 +1379,10 @@ static void WriteVmFile( void ) {
 		return;
 	}
 
-	if( !options.vanillaQ3Compatibility ) {
+	if( !options.ioquake3Compatibility && !options.vanillaQ3Compatibility ) {
+		header.vmMagic = VM_MAGIC_VER2_NEO;
+		headerSize = sizeof( header );
+	} else if ( !options.vanillaQ3Compatibility ) {
 		header.vmMagic = VM_MAGIC_VER2;
 		headerSize = sizeof( header );
 	} else {
@@ -1412,7 +1424,7 @@ static void WriteVmFile( void ) {
 	SafeWrite( f, &segment[DATASEG].image, segment[DATASEG].imageUsed );
 	SafeWrite( f, &segment[LITSEG].image, segment[LITSEG].imageUsed );
 
-	if( !options.vanillaQ3Compatibility ) {
+	if( header.vmMagic != VM_MAGIC ) {
 		SafeWrite( f, &segment[JTRGSEG].image, segment[JTRGSEG].imageUsed );
 	}
 
@@ -1609,6 +1621,11 @@ Motivation: not wanting to scrollback for pages to find asm error.
 
 		if( !strcmp( argv[ i ], "-vq3" ) ) {
 			options.vanillaQ3Compatibility = qtrue;
+			continue;
+		}
+
+		if( !strcmp( argv[ i ], "-ioq3" ) ) {
+			options.ioquake3Compatibility = qtrue;
 			continue;
 		}
 

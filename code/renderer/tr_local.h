@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
@@ -143,7 +151,8 @@ typedef enum {
 	GF_SAWTOOTH, 
 	GF_INVERSE_SAWTOOTH, 
 
-	GF_NOISE
+	GF_NOISE,
+	GF_RANDOM
 
 } genFunc_t;
 
@@ -312,6 +321,7 @@ typedef struct {
 	acff_t			adjustColorsForFog;
 
 	qboolean		isDetail;
+	qboolean		isFogged;					// used only for shaders that have fog disabled, so we can enable it for individual stages
 } shaderStage_t;
 
 struct shaderCommands_s;
@@ -341,8 +351,10 @@ typedef struct {
 } skyParms_t;
 
 typedef struct {
-	vec3_t	color;
-	float	depthForOpaque;
+	fogType_t	fogType;
+	vec3_t		color;
+	float		depthForOpaque;
+	float		density;
 } fogParms_t;
 
 
@@ -374,6 +386,8 @@ typedef struct shader_s {
 
 	float		portalRange;			// distance to fog out at
 
+	vec4_t distanceCull;				// opaque alpha range for foliage (inner, outer, alpha threshold, 1/(outer-inner))
+
 	int			multitextureEnv;		// 0, GL_MODULATE, GL_ADD (FIXME: put in stage)
 
 	cullType_t	cullType;				// CT_FRONT_SIDED, CT_BACK_SIDED, or CT_TWO_SIDED
@@ -387,6 +401,8 @@ typedef struct shader_s {
 	qboolean	needsST1;
 	qboolean	needsST2;
 	qboolean	needsColor;
+
+	qboolean	noFog;
 
 	int			numDeforms;
 	deformStage_t	deforms[MAX_SHADER_DEFORMS];
@@ -443,6 +459,14 @@ typedef struct {
 	// text messages for deform text shaders
 	char		text[MAX_RENDER_STRINGS][MAX_RENDER_STRING_LENGTH];
 
+	// fog
+	fogType_t	fogType;
+	vec3_t		fogColor;
+	unsigned	fogColorInt;
+	float		fogDepthForOpaque;
+	float		fogDensity;
+	float		fogTcScale;
+
 	int			num_entities;
 	trRefEntity_t	*entities;
 
@@ -451,6 +475,9 @@ typedef struct {
 
 	int			numPolys;
 	struct srfPoly_s	*polys;
+
+	int			numPolyBuffers;
+	struct srfPolyBuffer_s	*polybuffers;
 
 	int			numDrawSurfs;
 	struct drawSurf_s	*drawSurfs;
@@ -475,12 +502,13 @@ typedef struct skin_s {
 
 
 typedef struct {
+	int			modelNum;				// bsp model the fog belongs to
 	int			originalBrushNumber;
 	vec3_t		bounds[2];
 
+	shader_t	*shader;				// fog shader to get fogParms from
 	unsigned	colorInt;				// in packed byte format
 	float		tcScale;				// texture coordinate vector scales
-	fogParms_t	parms;
 
 	// for clipping distance in fog when outside
 	qboolean	hasSurface;
@@ -499,7 +527,7 @@ typedef struct {
 	int			viewportX, viewportY, viewportWidth, viewportHeight;
 	float		fovX, fovY;
 	float		projectionMatrix[16];
-	cplane_t	frustum[4];
+	cplane_t	frustum[5];			// ydnar: added farplane
 	vec3_t		visBounds[2];
 	float		zFar;
 	stereoFrame_t	stereoFrame;
@@ -521,7 +549,9 @@ typedef enum {
 	SF_FACE,
 	SF_GRID,
 	SF_TRIANGLES,
+	SF_FOLIAGE,
 	SF_POLY,
+	SF_POLYBUFFER,
 	SF_MD3,
 	SF_MD4,
 #ifdef RAVENMD4
@@ -537,7 +567,7 @@ typedef enum {
 } surfaceType_t;
 
 typedef struct drawSurf_s {
-	unsigned			sort;			// bit combination for fast compares
+	uint64_t			sort;			// bit combination for fast compares
 	surfaceType_t		*surface;		// any of surface*_t
 } drawSurf_t;
 
@@ -556,6 +586,12 @@ typedef struct srfPoly_s {
 	polyVert_t		*verts;
 } srfPoly_t;
 
+typedef struct srfPolyBuffer_s {
+	surfaceType_t surfaceType;
+	int fogIndex;
+	polyBuffer_t *pPolyBuffer;
+} srfPolyBuffer_t;
+
 typedef struct srfDisplayList_s {
 	surfaceType_t	surfaceType;
 	int				listNum;
@@ -569,16 +605,36 @@ typedef struct srfFlare_s {
 	vec3_t			color;
 } srfFlare_t;
 
-typedef struct srfGridMesh_s {
+
+// map drawsurfaces must match this header
+typedef struct srfGeneric_s
+{
 	surfaceType_t	surfaceType;
+
+	// culling information
+	vec3_t bounds[ 2 ];
+	vec3_t origin;
+	float radius;
+	cplane_t plane;
 
 	// dynamic lighting information
 	int				dlightBits[SMP_FRAMES];
+}
+srfGeneric_t;
+
+
+typedef struct srfGridMesh_s
+{
+	surfaceType_t surfaceType;
 
 	// culling information
-	vec3_t			meshBounds[2];
-	vec3_t			localOrigin;
-	float			meshRadius;
+	vec3_t bounds[ 2 ];
+	vec3_t origin;
+	float radius;
+	cplane_t plane;
+
+	// dynamic lighting information
+	int dlightBits[ SMP_FRAMES ];
 
 	// lod information, which may be different
 	// than the culling information to allow for
@@ -598,8 +654,15 @@ typedef struct srfGridMesh_s {
 
 
 #define	VERTEXSIZE	8
-typedef struct {
+
+typedef struct srfSurfaceFace_s
+{
 	surfaceType_t	surfaceType;
+
+	// culling information
+	vec3_t bounds[ 2 ];
+	vec3_t origin;
+	float radius;
 	cplane_t	plane;
 
 	// dynamic lighting information
@@ -614,25 +677,65 @@ typedef struct {
 } srfSurfaceFace_t;
 
 
-// misc_models in maps are turned into direct geometry by q3map
-typedef struct {
+// misc_models in maps are turned into direct geometry by q3map2 ;D
+typedef struct srfTriangles_s
+{
 	surfaceType_t	surfaceType;
+
+	// culling information
+	vec3_t bounds[ 2 ];
+	vec3_t origin;
+	float radius;
+	cplane_t plane;
 
 	// dynamic lighting information
 	int				dlightBits[SMP_FRAMES];
 
-	// culling information (FIXME: use this!)
-	vec3_t			bounds[2];
-	vec3_t			localOrigin;
-	float			radius;
+	// triangle definitions
+	int numIndexes;
+	int             *indexes;
+
+	int numVerts;
+	drawVert_t      *verts;
+} srfTriangles_t;
+
+// foliage surfaces are autogenerated from models into geometry lists by q3map2
+typedef byte fcolor4ub_t[4];
+
+typedef struct
+{
+	vec3_t origin;
+	fcolor4ub_t color;
+} foliageInstance_t;
+
+typedef struct
+{
+	surfaceType_t surfaceType;
+
+	// culling information
+	vec3_t bounds[ 2 ];
+	vec3_t origin;
+	float radius;
+	cplane_t plane;
+
+	// dynamic lighting information
+	int dlightBits[ SMP_FRAMES ];
 
 	// triangle definitions
-	int				numIndexes;
-	int				*indexes;
+	int numIndexes;
+	glIndex_t       *indexes;
 
-	int				numVerts;
-	drawVert_t		*verts;
-} srfTriangles_t;
+	int numVerts;
+	vec4_t          *xyz;
+	vec4_t          *normal;
+	vec2_t          *texCoords;
+	vec2_t          *lmTexCoords;
+
+	// origins
+	int numInstances;
+	foliageInstance_t   *instances;
+} srfFoliage_t;
+
 
 // inter-quake-model
 typedef struct {
@@ -704,6 +807,7 @@ typedef struct mnode_s {
 	int			contents;		// -1 for nodes, to differentiate from leafs
 	int			visframe;		// node needs to be traversed if current
 	vec3_t		mins, maxs;		// for bounding box culling
+	vec3_t		surfMins, surfMaxs; // bounding box including surfaces
 	struct mnode_s	*parent;
 
 	// node specific
@@ -722,6 +826,13 @@ typedef struct {
 	vec3_t		bounds[2];		// for culling
 	msurface_t	*firstSurface;
 	int			numSurfaces;
+
+	// ydnar: for fog volumes
+	int firstBrush;
+	int numBrushes;
+	orientation_t orientation[ SMP_FRAMES ];
+	qboolean visible[ SMP_FRAMES ];
+	int entityNum[ SMP_FRAMES ];
 } bmodel_t;
 
 typedef struct {
@@ -733,6 +844,7 @@ typedef struct {
 	int			numShaders;
 	dshader_t	*shaders;
 
+	int			numBModels;
 	bmodel_t	*bmodels;
 
 	int			numplanes;
@@ -750,6 +862,8 @@ typedef struct {
 
 	int			numfogs;
 	fog_t		*fogs;
+
+	int			globalFog;				// index of global fog in bsp
 
 	vec3_t		lightGridOrigin;
 	vec3_t		lightGridSize;
@@ -833,11 +947,20 @@ the bits are allocated as follows:
 2-6   : fog index
 7-16  : entity index
 17-30 : sorted shader index
+
+	ZTM - increased entity bits (for splitscreen), made sort 64 bit
+0-1   : dlightmap index (2 bits)
+2-6   : fog index (5 bits)
+7-18  : entity index (12 bits)
+19-23 : sorted order value (5 bits)
+24-37 : sorted shader index (14 bits)
 */
-#define	QSORT_FOGNUM_SHIFT	2
+
+#define	QSORT_FOGNUM_SHIFT		2
 #define	QSORT_REFENTITYNUM_SHIFT	7
-#define	QSORT_SHADERNUM_SHIFT	(QSORT_REFENTITYNUM_SHIFT+REFENTITYNUM_BITS)
-#if (QSORT_SHADERNUM_SHIFT+SHADERNUM_BITS) > 32
+#define	QSORT_ORDER_SHIFT		(QSORT_REFENTITYNUM_SHIFT+REFENTITYNUM_BITS)
+#define	QSORT_SHADERNUM_SHIFT	(QSORT_ORDER_SHIFT+5) // sort order is 5 bit
+#if (QSORT_SHADERNUM_SHIFT+SHADERNUM_BITS) > 64
 	#error "Need to update sorting, too many bits."
 #endif
 
@@ -929,12 +1052,14 @@ typedef struct {
 
 	qboolean				worldMapLoaded;
 	world_t					*world;
+	char                    *worldDir;      // ydnar: for referencing external lightmaps
 
 	const byte				*externalVisData;	// from RE_SetWorldVisData, shared with CM_Load
 
 	image_t					*defaultImage;
 	image_t					*scratchImage[32];
 	image_t					*fogImage;
+	image_t					*linearFogImage;
 	image_t					*dlightImage;	// inverse-quare highlight for projective adding
 	image_t					*flareImage;
 	image_t					*whiteImage;			// full of 0xff
@@ -948,6 +1073,7 @@ typedef struct {
 	shader_t				*sunShader;
 
 	int						numLightmaps;
+	int						maxLightmaps;
 	image_t					**lightmaps;
 
 	trRefEntity_t			*currentEntity;
@@ -955,6 +1081,7 @@ typedef struct {
 	int						currentEntityNum;
 	int						shiftedEntityNum;	// currentEntityNum << QSORT_REFENTITYNUM_SHIFT
 	model_t					*currentModel;
+	bmodel_t				*currentBModel;     // only valid when rendering brush models
 
 	viewParms_t				viewParms;
 
@@ -973,6 +1100,26 @@ typedef struct {
 
 	frontEndCounters_t		pc;
 	int						frontEndMsec;		// not in pc due to clearing issue
+
+	vec4_t					clipRegion;			// 2D clipping region
+
+	// set by BSP or fogvars in a shader
+	fogType_t	globalFogType;
+	vec3_t		globalFogColor;
+	float		globalFogDepthForOpaque;
+	float		globalFogDensity;
+
+	// set by skyfogvars in a shader
+	fogType_t	skyFogType;
+	vec3_t		skyFogColor;
+	float		skyFogDepthForOpaque;
+	float		skyFogDensity;
+
+	// set by waterfogvars in a shader
+	fogType_t	waterFogType;
+	vec3_t		waterFogColor;
+	float		waterFogDepthForOpaque;
+	float		waterFogDensity;
 
 	//
 	// put large tables at the end, so most elements will be
@@ -999,6 +1146,7 @@ typedef struct {
 	float					triangleTable[FUNCTABLE_SIZE];
 	float					sawToothTable[FUNCTABLE_SIZE];
 	float					inverseSawToothTable[FUNCTABLE_SIZE];
+	float					noiseTable[FUNCTABLE_SIZE];
 	float					fogTable[FOG_TABLE_SIZE];
 } trGlobals_t;
 
@@ -1006,13 +1154,6 @@ extern backEndState_t	backEnd;
 extern trGlobals_t	tr;
 extern glconfig_t	glConfig;		// outside of TR since it shouldn't be cleared during ref re-init
 extern glstate_t	glState;		// outside of TR since it shouldn't be cleared during ref re-init
-
-// These two variables should live inside glConfig but can't because of compatibility issues to the original ID vms.
-// If you release a stand-alone game and your mod uses tr_types.h from this build you can safely move them to
-// the glconfig_t struct.
-extern qboolean  textureFilterAnisotropic;
-extern int       maxAnisotropy;
-extern float     displayAspect;
 
 
 //
@@ -1032,6 +1173,7 @@ extern cvar_t	*r_ignore;				// used for debugging anything
 extern cvar_t	*r_verbose;				// used for verbose debug spew
 extern cvar_t	*r_ignoreFastPath;		// allows us to ignore our Tess fast paths
 
+extern cvar_t	*r_zfar;
 extern cvar_t	*r_znear;				// near Z clip plane
 extern cvar_t	*r_zproj;				// z distance of projection plane
 extern cvar_t	*r_stereoSeparation;			// separation of cameras for stereo rendering
@@ -1065,6 +1207,7 @@ extern cvar_t	*r_dlightBacks;			// dlight non-facing surfaces for continuity
 extern	cvar_t	*r_norefresh;			// bypasses the ref rendering
 extern	cvar_t	*r_drawentities;		// disable/enable entity rendering
 extern	cvar_t	*r_drawworld;			// disable/enable world rendering
+extern	cvar_t  *r_drawfoliage;			// disable/enable foliage rendering
 extern	cvar_t	*r_speeds;				// various levels of information display
 extern  cvar_t	*r_detailTextures;		// enables/disables detail texturing stages
 extern	cvar_t	*r_novis;				// disable/enable usage of PVS
@@ -1147,9 +1290,12 @@ extern	cvar_t	*r_saveFontData;
 
 extern cvar_t	*r_marksOnTriangleMeshes;
 
+extern cvar_t	*r_useGlFog;
+
 //====================================================================
 
 float R_NoiseGet4f( float x, float y, float z, float t );
+int R_RandomOn( float t );
 void  R_NoiseInit( void );
 
 void R_SwapBuffers( int );
@@ -1163,9 +1309,12 @@ void R_AddRailSurfaces( trRefEntity_t *e, qboolean isUnderwater );
 void R_AddLightningBoltSurfaces( trRefEntity_t *e );
 
 void R_AddPolygonSurfaces( void );
+void R_AddPolygonBufferSurfaces( void );
 
-void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader, 
-					 int *fogNum, int *dlightMap );
+void R_ComposeSort( drawSurf_t *drawSurf, int sortedShaderIndex, int sortOrder,
+					 int shiftedEntityNum, int fogIndex, int dlightMap );
+void R_DecomposeSort( const drawSurf_t *drawSurf, shader_t **shader, int *sortOrder,
+					 int *entityNum, int *fogNum, int *dlightMap );
 
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap );
 
@@ -1242,10 +1391,12 @@ void		RE_Shutdown( qboolean destroyWindow );
 
 qboolean	R_GetEntityToken( char *buffer, int size );
 
+float       R_ProcessLightmap( byte **pic, int in_padding, int width, int height, byte **pic_out );
+
 model_t		*R_AllocModel( void );
 
 void    	R_Init( void );
-image_t		*R_FindImageFile( const char *name, qboolean mipmap, qboolean allowPicmip, int glWrapClampMode );
+image_t		*R_FindImageFile( const char *name, qboolean mipmap, qboolean allowPicmip, int glWrapClampMode, qboolean lightmap );
 
 image_t		*R_CreateImage( const char *name, const byte *pic, int width, int height, qboolean mipmap
 					, qboolean allowPicmip, int wrapClampMode );
@@ -1260,8 +1411,12 @@ void	R_SkinList_f( void );
 const void *RB_TakeScreenshotCmd( const void *data );
 void	R_ScreenShot_f( void );
 
+#define DEFAULT_FOG_EXP_DENSITY			0.5f
+#define DEFAULT_FOG_LINEAR_DENSITY		1.1f
+
 void	R_InitFogTable( void );
 float	R_FogFactor( float s, float t );
+float	R_FogTcScale( fogType_t fogType, float depthForOpaque, float density );
 void	R_InitImages( void );
 void	R_DeleteTextures( void );
 int		R_SumOfUsedImages( void );
@@ -1485,6 +1640,7 @@ void R_ToggleSmpFrame( void );
 void RE_ClearScene( void );
 void RE_AddRefEntityToScene( const refEntity_t *ent );
 void RE_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
+void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b );
 void RE_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, float g, float b );
 void RE_RenderScene( const refdef_t *fd );
@@ -1636,7 +1792,18 @@ typedef struct {
 	float	w, h;
 	float	s1, t1;
 	float	s2, t2;
+
+	byte gradientColor[4];      // color values 0-255
+	int gradientType;
+	float angle;
 } stretchPicCommand_t;
+
+typedef struct {
+	int commandId;
+	polyVert_t* verts;
+	int numverts;
+	shader_t*   shader;
+} poly2dCommand_t;
 
 typedef struct {
 	int		commandId;
@@ -1681,6 +1848,9 @@ typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
 	RC_STRETCH_PIC,
+	RC_ROTATED_PIC,
+	RC_STRETCH_PIC_GRADIENT,
+	RC_2DPOLYS,
 	RC_DRAW_SURFS,
 	RC_DRAW_BUFFER,
 	RC_SWAP_BUFFERS,
@@ -1707,11 +1877,13 @@ typedef struct {
 	trRefEntity_t	entities[MAX_REFENTITIES];
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
+	srfPolyBuffer_t *polybuffers;//[MAX_POLYS];
 	renderCommandList_t	commands;
 } backEndData_t;
 
 extern	int		max_polys;
 extern	int		max_polyverts;
+extern	int		max_polybuffers;
 
 extern	backEndData_t	*backEndData[SMP_FRAMES];	// the second one may not be allocated
 
@@ -1731,8 +1903,14 @@ void R_SyncRenderThread( void );
 void R_AddDrawSurfCmd( drawSurf_t *drawSurfs, int numDrawSurfs );
 
 void RE_SetColor( const float *rgba );
+void RE_SetClipRegion( const float *region );
 void RE_StretchPic ( float x, float y, float w, float h, 
 					  float s1, float t1, float s2, float t2, qhandle_t hShader );
+void RE_RotatedPic( float x, float y, float w, float h,
+					float s1, float t1, float s2, float t2, qhandle_t hShader, float angle );       // NERVE - SMF
+void RE_StretchPicGradient( float x, float y, float w, float h,
+							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
+void RE_2DPolyies( polyVert_t* verts, int numverts, qhandle_t hShader );
 void RE_BeginFrame( stereoFrame_t stereoFrame );
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec );
 void RE_SaveJPG(char * filename, int quality, int image_width, int image_height,
@@ -1741,11 +1919,19 @@ size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 		          int image_width, int image_height, byte *image_buffer, int padding);
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
+void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
+void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
 
 // font stuff
 void R_InitFreeType( void );
 void R_DoneFreeType( void );
 void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font);
+
+// fog stuff
+int R_DefaultFogNum( void );
+void R_FogOff( void );
+void RB_FogOn( void );
+void RB_Fog( int fogNum );
 
 
 #endif //TR_LOCAL_H

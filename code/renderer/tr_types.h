@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -26,7 +34,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define	MAX_DLIGHTS		32		// can't be increased, because bit flags are used on surfaces
 
-#define	REFENTITYNUM_BITS	10		// can't be increased without changing drawsurf bit packing
+#define	REFENTITYNUM_BITS	12		// can't be increased without changing drawsurf bit packing
 #define	REFENTITYNUM_MASK	((1<<REFENTITYNUM_BITS) - 1)
 // the last N-bit number (2^REFENTITYNUM_BITS - 1) is reserved for the special world refentity,
 //  and this is reflected by the value of MAX_REFENTITIES (which therefore is not a power-of-2)
@@ -35,8 +43,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // renderfx flags
 #define	RF_MINLIGHT		0x0001		// allways have some light (viewmodel, some items)
-#define	RF_THIRD_PERSON		0x0002		// don't draw through eyes, only mirrors (player bodies, chat sprites)
-#define	RF_FIRST_PERSON		0x0004		// only draw through eyes (view weapon, damage blood blob)
+#define	RF_ONLY_MIRROR		0x0002		// only draw in mirrors and portals
+#define	RF_NO_MIRROR		0x0004		// do not draw in mirrors or portals
 #define	RF_DEPTHHACK		0x0008		// for view weapon Z crunching
 
 #define RF_CROSSHAIR		0x0010		// This item is a cross hair and will draw over everything similar to
@@ -57,6 +65,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // refdef flags
 #define RDF_NOWORLDMODEL	0x0001		// used for player configuration screen
 #define RDF_HYPERSPACE		0x0004		// teleportation effect
+#define RDF_UNDERWATER		0x0008		// underwater
 
 typedef struct {
 	vec3_t		xyz;
@@ -69,6 +78,25 @@ typedef struct poly_s {
 	int					numVerts;
 	polyVert_t			*verts;
 } poly_t;
+
+// =========================================
+// Gordon, these MUST NOT exceed the values for SHADER_MAX_VERTEXES/SHADER_MAX_INDEXES
+// ZTM: NOTE: WolfET's SHADER_MAX_VERTEXES is 1025, quake3's is only 1000.
+#define MAX_PB_VERTS    1000 // SHADER_MAX_VERTEXES
+#define MAX_PB_INDICIES ( MAX_PB_VERTS * 6 )
+
+typedef struct polyBuffer_s {
+	vec4_t xyz[MAX_PB_VERTS];
+	vec2_t st[MAX_PB_VERTS];
+	byte color[MAX_PB_VERTS][4];
+	int numVerts;
+
+	int indicies[MAX_PB_INDICIES];
+	int numIndicies;
+
+	qhandle_t shader;
+} polyBuffer_t;
+// =========================================
 
 typedef enum {
 	RT_MODEL,
@@ -122,6 +150,14 @@ typedef struct {
 #define	MAX_RENDER_STRINGS			8
 #define	MAX_RENDER_STRING_LENGTH	32
 
+typedef enum {
+	FT_NONE,
+	FT_EXP,
+	FT_LINEAR,
+
+	FT_MAX_FOG_TYPE
+} fogType_t;
+
 typedef struct {
 	int			x, y, width, height;
 	float		fov_x, fov_y;
@@ -138,6 +174,12 @@ typedef struct {
 
 	// text messages for deform text shaders
 	char		text[MAX_RENDER_STRINGS][MAX_RENDER_STRING_LENGTH];
+
+	// fog
+	fogType_t	fogType;
+	vec3_t		fogColor;
+	float		fogDepthForOpaque;
+	float		fogDensity;
 } refdef_t;
 
 
@@ -185,7 +227,7 @@ typedef struct {
 	char					renderer_string[MAX_STRING_CHARS];
 	char					vendor_string[MAX_STRING_CHARS];
 	char					version_string[MAX_STRING_CHARS];
-	char					extensions_string[BIG_INFO_STRING];
+	char					extensions_string[BIG_INFO_STRING * 4];
 
 	int						maxTextureSize;			// queried from GL
 	int						numTextureUnits;		// multitexture ability
@@ -198,13 +240,18 @@ typedef struct {
 	qboolean				deviceSupportsGamma;
 	textureCompression_t	textureCompression;
 	qboolean				textureEnvAddAvailable;
+	qboolean				textureFilterAnisotropic;
+	int						maxAnisotropy;
 
-	int						vidWidth, vidHeight;
-	// aspect is the screen's physical width / height, which may be different
-	// than scrWidth / scrHeight if the pixels are non-square
-	// normal screens should be 4/3, but wide aspect monitors may be 16/9
+	// Game resolution, aspect, and refresh rate.
+	int						vidWidth;
+	int						vidHeight;
 	float					windowAspect;
 
+	// Display (desktop) resolution, aspect, and refresh rate.
+	int						displayWidth;
+	int						displayHeight;
+	float					displayAspect;
 	int						displayFrequency;
 
 	// synonymous with "does rendering consume the entire screen?", therefore

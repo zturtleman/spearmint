@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // vm.c -- virtual machine
@@ -70,9 +78,9 @@ VM_Init
 ==============
 */
 void VM_Init( void ) {
-	Cvar_Get( "vm_cgame", "2", CVAR_ARCHIVE );	// !@# SHIP WITH SET TO 2
-	Cvar_Get( "vm_game", "2", CVAR_ARCHIVE );	// !@# SHIP WITH SET TO 2
-	Cvar_Get( "vm_ui", "2", CVAR_ARCHIVE );		// !@# SHIP WITH SET TO 2
+	Cvar_Get( "vm_cgame", "0", CVAR_ARCHIVE );
+	Cvar_Get( "vm_game", "0", CVAR_ARCHIVE );
+	Cvar_Get( "vm_ui", "0", CVAR_ARCHIVE );
 
 	Cmd_AddCommand ("vmprofile", VM_VmProfile_f );
 	Cmd_AddCommand ("vminfo", VM_VmInfo_f );
@@ -375,12 +383,12 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 
 	// load the image
 	Com_sprintf( filename, sizeof(filename), "vm/%s.qvm", vm->name );
-	Com_Printf( "Loading vm file %s...\n", filename );
+	Com_DPrintf( "Loading vm file %s...\n", filename );
 
 	FS_ReadFileDir(filename, vm->searchPath, unpure, &header.v);
 
 	if ( !header.h ) {
-		Com_Printf( "Failed.\n" );
+		Com_Printf("Loading vm file %s failed.\n", filename);
 		VM_Free( vm );
 
 		Com_Printf(S_COLOR_YELLOW "Warning: Couldn't open VM file %s\n", filename);
@@ -388,12 +396,12 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 		return NULL;
 	}
 
-	// show where the qvm was loaded from
-	FS_Which(filename, vm->searchPath);
+	if (com_developer->integer) {
+		// show where the qvm was loaded from
+		FS_Which(filename, vm->searchPath);
+	}
 
-	if( LittleLong( header.h->vmMagic ) == VM_MAGIC_VER2 ) {
-		Com_Printf( "...which has vmMagic VM_MAGIC_VER2\n" );
-
+	if( LittleLong( header.h->vmMagic ) == VM_MAGIC_VER2_NEO ) {
 		// byte swap the header
 		for ( i = 0 ; i < sizeof( vmHeader_t ) / 4 ; i++ ) {
 			((int *)header.h)[i] = LittleLong( ((int *)header.h)[i] );
@@ -412,25 +420,16 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 			Com_Printf(S_COLOR_YELLOW "Warning: %s has bad header\n", filename);
 			return NULL;
 		}
-	} else if( LittleLong( header.h->vmMagic ) == VM_MAGIC ) {
-		// byte swap the header
-		// sizeof( vmHeader_t ) - sizeof( int ) is the 1.32b vm header size
-		for ( i = 0 ; i < ( sizeof( vmHeader_t ) - sizeof( int ) ) / 4 ; i++ ) {
-			((int *)header.h)[i] = LittleLong( ((int *)header.h)[i] );
-		}
+	} else if( LittleLong( header.h->vmMagic ) == VM_MAGIC || LittleLong( header.h->vmMagic ) == VM_MAGIC_VER2 ) {
+		Com_Printf( S_COLOR_YELLOW "Warning: Ignoring unsupported legacy qvm: " );
 
-		// validate
-		if ( header.h->bssLength < 0
-			|| header.h->dataLength < 0
-			|| header.h->litLength < 0
-			|| header.h->codeLength <= 0 )
-		{
-			VM_Free(vm);
-			FS_FreeFile(header.v);
+		// show where the qvm was loaded from
+		FS_Which(filename, vm->searchPath);
 
-			Com_Printf(S_COLOR_YELLOW "Warning: %s has bad header\n", filename);
-			return NULL;
-		}
+		VM_Free( vm );
+		FS_FreeFile( header.v );
+
+		return NULL;
 	} else {
 		VM_Free( vm );
 		FS_FreeFile(header.v);
@@ -479,14 +478,14 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 		*(int *)(vm->dataBase + i) = LittleLong( *(int *)(vm->dataBase + i ) );
 	}
 
-	if(header.h->vmMagic == VM_MAGIC_VER2)
+	if(header.h->vmMagic == VM_MAGIC_VER2_NEO)
 	{
 		int previousNumJumpTableTargets = vm->numJumpTableTargets;
 
 		header.h->jtrgLength &= ~0x03;
 
 		vm->numJumpTableTargets = header.h->jtrgLength >> 2;
-		Com_Printf("Loading %d jump table targets\n", vm->numJumpTableTargets);
+		Com_DPrintf("Loading %d jump table targets\n", vm->numJumpTableTargets);
 
 		if(alloc)
 		{
@@ -614,7 +613,7 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 		
 		if(retval == VMI_NATIVE)
 		{
-			Com_Printf("Try loading dll file %s\n", filename);
+			Com_DPrintf("Try loading dll file %s\n", filename);
 
 			vm->dllHandle = Sys_LoadGameDll(filename, &vm->entryPoint, VM_DllSyscall);
 			
@@ -629,7 +628,7 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 		else if(retval == VMI_COMPILED)
 		{
 			vm->searchPath = startSearch;
-			if((header = VM_LoadQVM(vm, qtrue, qfalse)))
+			if((header = VM_LoadQVM(vm, qtrue, qtrue)))
 				break;
 
 			// VM_Free overwrites the name on failed load
@@ -679,7 +678,7 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 	vm->programStack = vm->dataMask + 1;
 	vm->stackBottom = vm->programStack - PROGRAM_STACK_SIZE;
 
-	Com_Printf("%s loaded in %d bytes on the hunk\n", module, remaining - Hunk_MemoryRemaining());
+	Com_DPrintf("%s loaded in %d bytes on the hunk\n", module, remaining - Hunk_MemoryRemaining());
 
 	return vm;
 }
@@ -868,6 +867,38 @@ intptr_t QDECL VM_Call( vm_t *vm, int callnum, ... )
 	if ( oldVM != NULL )
 	  currentVM = oldVM;
 	return r;
+}
+
+//=================================================================
+
+vm_t *safeVM = NULL;
+
+intptr_t VM_APISafeSystemCalls( intptr_t *args ) {
+	Com_Error(ERR_FATAL, "%s vm tried to make an unsafe syscall, it may be an incompatible quake3 vm", safeVM ? safeVM->name : "unknown");
+	return 0;
+}
+
+// Makes a VM_Call where the vm cannot make any system calls.
+// If vm tries to make a system call, it errors.
+// Probably only useful for getting api version.
+int QDECL VM_SafeCall( vm_t *vm, int callnum )
+{
+	intptr_t	(*savedSystemCall)( intptr_t *parms );
+	int			value;
+
+	safeVM = vm;
+	savedSystemCall = vm->systemCall;
+
+	// Use API safe system call function.
+	vm->systemCall = VM_APISafeSystemCalls;
+
+	// Make the call.
+	value = (int)VM_Call(vm, callnum);
+
+	// Restore systemCall pointer
+	vm->systemCall = savedSystemCall;
+
+	return value;
 }
 
 //=================================================================

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -43,6 +51,8 @@ typedef struct
 	menutext_s		joinblue;
 	menutext_s		joingame;
 	menutext_s		spectate;
+
+	int				localClient;
 } teammain_t;
 
 static teammain_t	s_teammain;
@@ -53,28 +63,32 @@ TeamMain_MenuEvent
 ===============
 */
 static void TeamMain_MenuEvent( void* ptr, int event ) {
+	char *teamCmd;
+
 	if( event != QM_ACTIVATED ) {
 		return;
 	}
 
+	teamCmd = Com_LocalClientCvarName(s_teammain.localClient, "team");
+
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_JOINRED:
-		trap_Cmd_ExecuteText( EXEC_APPEND, "cmd team red\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("cmd %s red\n", teamCmd) );
 		UI_ForceMenuOff();
 		break;
 
 	case ID_JOINBLUE:
-		trap_Cmd_ExecuteText( EXEC_APPEND, "cmd team blue\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("cmd %s blue\n", teamCmd) );
 		UI_ForceMenuOff();
 		break;
 
 	case ID_JOINGAME:
-		trap_Cmd_ExecuteText( EXEC_APPEND, "cmd team free\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("cmd %s free\n", teamCmd) );
 		UI_ForceMenuOff();
 		break;
 
 	case ID_SPECTATE:
-		trap_Cmd_ExecuteText( EXEC_APPEND, "cmd team spectator\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("cmd %s spectator\n", teamCmd) );
 		UI_ForceMenuOff();
 		break;
 	}
@@ -86,12 +100,14 @@ static void TeamMain_MenuEvent( void* ptr, int event ) {
 TeamMain_MenuInit
 ===============
 */
-void TeamMain_MenuInit( void ) {
+void TeamMain_MenuInit( int localClient ) {
 	int		y;
 	int		gametype;
 	char	info[MAX_INFO_STRING];
 
 	memset( &s_teammain, 0, sizeof(s_teammain) );
+
+	s_teammain.localClient = localClient;
 
 	TeamMain_Cache();
 
@@ -194,7 +210,7 @@ void TeamMain_Cache( void ) {
 UI_TeamMainMenu
 ===============
 */
-void UI_TeamMainMenu( void ) {
-	TeamMain_MenuInit();
+void UI_TeamMainMenu( int localClient ) {
+	TeamMain_MenuInit(localClient);
 	UI_PushMenu ( &s_teammain.menu );
 }

@@ -1,8 +1,8 @@
 #!/bin/sh
 CC=gcc-4.0
-APPBUNDLE=ioquake3.app
-BINARY=ioquake3.ub
-DEDBIN=ioq3ded.ub
+APPBUNDLE=spearmint.app
+BINARY=spearmint.ub
+DEDBIN=spearmint-server.ub
 PKGINFO=APPLIOQ3
 ICNS=misc/quake3.icns
 DESTDIR=build/release-darwin-ub
@@ -10,14 +10,14 @@ BASEDIR=baseq3
 MPACKDIR=missionpack
 
 BIN_OBJ="
-	build/release-darwin-x86_64/ioquake3.x86_64
-	build/release-darwin-i386/ioquake3.i386
-	build/release-darwin-ppc/ioquake3.ppc
+	build/release-darwin-x86_64/spearmint.x86_64
+	build/release-darwin-i386/spearmint.i386
+	build/release-darwin-ppc/spearmint.ppc
 "
 BIN_DEDOBJ="
-	build/release-darwin-x86_64/ioq3ded.x86_64
-	build/release-darwin-i386/ioq3ded.i386
-	build/release-darwin-ppc/ioq3ded.ppc
+	build/release-darwin-x86_64/spearmint-server.x86_64
+	build/release-darwin-i386/spearmint-server.i386
+	build/release-darwin-ppc/spearmint-server.ppc
 "
 BASE_OBJ="
 	build/release-darwin-x86_64/$BASEDIR/cgamex86_64.dylib
@@ -26,9 +26,9 @@ BASE_OBJ="
 	build/release-darwin-x86_64/$BASEDIR/uix86_64.dylib
 	build/release-darwin-i386/$BASEDIR/uii386.dylib
 	build/release-darwin-ppc/$BASEDIR/uippc.dylib
-	build/release-darwin-x86_64/$BASEDIR/qagamex86_64.dylib
-	build/release-darwin-i386/$BASEDIR/qagamei386.dylib
-	build/release-darwin-ppc/$BASEDIR/qagameppc.dylib
+	build/release-darwin-x86_64/$BASEDIR/gamex86_64.dylib
+	build/release-darwin-i386/$BASEDIR/gamei386.dylib
+	build/release-darwin-ppc/$BASEDIR/gameppc.dylib
 "
 MPACK_OBJ="
 	build/release-darwin-x86_64/$MPACKDIR/cgamex86_64.dylib
@@ -37,9 +37,9 @@ MPACK_OBJ="
 	build/release-darwin-x86_64/$MPACKDIR/uix86_64.dylib
 	build/release-darwin-i386/$MPACKDIR/uii386.dylib
 	build/release-darwin-ppc/$MPACKDIR/uippc.dylib
-	build/release-darwin-x86_64/$MPACKDIR/qagamex86_64.dylib
-	build/release-darwin-i386/$MPACKDIR/qagamei386.dylib
-	build/release-darwin-ppc/$MPACKDIR/qagameppc.dylib
+	build/release-darwin-x86_64/$MPACKDIR/gamex86_64.dylib
+	build/release-darwin-i386/$MPACKDIR/gamei386.dylib
+	build/release-darwin-ppc/$MPACKDIR/gameppc.dylib
 "
 RENDER_OBJ="
 	build/release-darwin-x86_64/renderer_opengl1_smp_x86_64.dylib
@@ -58,7 +58,7 @@ RENDER_OBJ="
 
 cd `dirname $0`
 if [ ! -f Makefile ]; then
-	echo "This script must be run from the ioquake3 build directory"
+	echo "This script must be run from the Spearmint build directory"
 	exit 1
 fi
 
@@ -165,7 +165,7 @@ fi
 if [ ! -d $DESTDIR/$APPBUNDLE/Contents/Resources ]; then
 	mkdir -p $DESTDIR/$APPBUNDLE/Contents/Resources
 fi
-cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/ioquake3.icns || exit 1;
+cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/spearmint.icns || exit 1;
 echo $PKGINFO > $DESTDIR/$APPBUNDLE/Contents/PkgInfo
 echo "
 	<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -179,15 +179,15 @@ echo "
 		<key>CFBundleExecutable</key>
 		<string>$BINARY</string>
 		<key>CFBundleGetInfoString</key>
-		<string>ioquake3 $Q3_VERSION</string>
+		<string>Spearmint $Q3_VERSION</string>
 		<key>CFBundleIconFile</key>
-		<string>ioquake3.icns</string>
+		<string>spearmint.icns</string>
 		<key>CFBundleIdentifier</key>
 		<string>org.ioquake.ioquake3</string>
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>ioquake3</string>
+		<string>Spearmint</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>

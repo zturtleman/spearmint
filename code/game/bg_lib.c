@@ -696,9 +696,9 @@ float acostable[] = {
 0.30739505,0.30087304,0.29421096,0.28739907,0.28042645,0.27328078,0.26594810,0.25841250,
 0.25065566,0.24265636,0.23438976,0.22582651,0.21693146,0.20766198,0.19796546,0.18777575,
 0.17700769,0.16554844,0.15324301,0.13986823,0.12508152,0.10830610,0.08841715,0.06251018,
-}
+};
 
-double acos( double x ) {
+float Q_acos( float x ) {
 	int index;
 
 	if (x < -1)
@@ -767,6 +767,19 @@ double atan2( double y, double x ) {
 
 
 #endif
+
+/*
+===============
+rint
+===============
+*/
+double rint( double v )
+{
+  if( v >= 0.5f )
+    return ceil( v );
+  else
+    return floor( v );
+}
 
 /*
 ===============
@@ -2114,6 +2127,28 @@ int sscanf( const char *buffer, const char *fmt, ... ) {
 
 	va_end (ap);
 	return count;
+}
+
+void *bsearch( const void *key, const void *base, size_t nmemb, size_t size,
+               cmp_t *compar )
+{
+	size_t low = 0, high = nmemb, mid;
+	int    comp;
+	void   *ptr;
+
+	while( low < high )
+	{
+		mid = low + (high - low) / 2;
+		ptr = (void *)((char *)base + ( mid * size ));
+		comp = compar (key, ptr);
+		if( comp < 0 )
+			high = mid;
+		else if( comp > 0 )
+			low = mid + 1;
+		else
+			return ptr;
+	}
+	return NULL;
 }
 
 #endif

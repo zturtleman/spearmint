@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -50,7 +58,9 @@ GAME OPTIONS MENU
 #define ID_FORCEMODEL			135
 #define ID_DRAWTEAMOVERLAY		136
 #define ID_ALLOWDOWNLOAD			137
-#define ID_BACK					138
+#define ID_SPLITVERTICAL		138
+#define ID_ATMEFFECTS			139
+#define ID_BACK					140
 
 #define	NUM_CROSSHAIRS			10
 
@@ -73,6 +83,8 @@ typedef struct {
 	menuradiobutton_s	forcemodel;
 	menulist_s			drawteamoverlay;
 	menuradiobutton_s	allowdownload;
+	menulist_s			splitvertical;
+	menulist_s			atmeffects;
 	menubitmap_s		back;
 
 	qhandle_t			crosshairShader[NUM_CROSSHAIRS];
@@ -89,6 +101,21 @@ static const char *teamoverlay_names[] =
 	NULL
 };
 
+static const char *splitvertical_names[] =
+{
+	"horizontal",
+	"vertical",
+	NULL
+};
+
+static const char *atmeffects_names[] =
+{
+	"off",
+	"low",
+	"high",
+	NULL
+};
+
 static void Preferences_SetMenuItems( void ) {
 	s_preferences.crosshair.curvalue		= (int)trap_Cvar_VariableValue( "cg_drawCrosshair" ) % NUM_CROSSHAIRS;
 	s_preferences.simpleitems.curvalue		= trap_Cvar_VariableValue( "cg_simpleItems" ) != 0;
@@ -101,6 +128,13 @@ static void Preferences_SetMenuItems( void ) {
 	s_preferences.forcemodel.curvalue		= trap_Cvar_VariableValue( "cg_forcemodel" ) != 0;
 	s_preferences.drawteamoverlay.curvalue	= Com_Clamp( 0, 3, trap_Cvar_VariableValue( "cg_drawTeamOverlay" ) );
 	s_preferences.allowdownload.curvalue	= trap_Cvar_VariableValue( "cl_allowDownload" ) != 0;
+	s_preferences.splitvertical.curvalue	= trap_Cvar_VariableValue( "cg_splitviewVertical" ) != 0;
+
+	s_preferences.atmeffects.curvalue		= 2*trap_Cvar_VariableValue( "cg_atmosphericEffects" );
+	if (s_preferences.atmeffects.curvalue < 0)
+		s_preferences.atmeffects.curvalue = 0;
+	else if (s_preferences.atmeffects.curvalue > 2)
+		s_preferences.atmeffects.curvalue = 2;
 }
 
 
@@ -156,6 +190,14 @@ static void Preferences_Event( void* ptr, int notification ) {
 	case ID_ALLOWDOWNLOAD:
 		trap_Cvar_SetValue( "cl_allowDownload", s_preferences.allowdownload.curvalue );
 		trap_Cvar_SetValue( "sv_allowDownload", s_preferences.allowdownload.curvalue );
+		break;
+
+	case ID_SPLITVERTICAL:
+		trap_Cvar_SetValue( "cg_splitviewVertical", s_preferences.splitvertical.curvalue );
+		break;
+
+	case ID_ATMEFFECTS:
+		trap_Cvar_SetValue( "cg_atmosphericEffects", (float)s_preferences.atmeffects.curvalue/2.0f );
 		break;
 
 	case ID_BACK:
@@ -354,6 +396,26 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.allowdownload.generic.y	       = y;
 
 	y += BIGCHAR_HEIGHT+2;
+	s_preferences.splitvertical.generic.type		= MTYPE_SPINCONTROL;
+	s_preferences.splitvertical.generic.name		= "Splitscreen Mode:";
+	s_preferences.splitvertical.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_preferences.splitvertical.generic.callback	= Preferences_Event;
+	s_preferences.splitvertical.generic.id			= ID_SPLITVERTICAL;
+	s_preferences.splitvertical.generic.x			= PREFERENCES_X_POS;
+	s_preferences.splitvertical.generic.y			= y;
+	s_preferences.splitvertical.itemnames			= splitvertical_names;
+
+	y += BIGCHAR_HEIGHT+2;
+	s_preferences.atmeffects.generic.type		= MTYPE_SPINCONTROL;
+	s_preferences.atmeffects.generic.name		= "Snow/Rain:";
+	s_preferences.atmeffects.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_preferences.atmeffects.generic.callback	= Preferences_Event;
+	s_preferences.atmeffects.generic.id			= ID_ATMEFFECTS;
+	s_preferences.atmeffects.generic.x			= PREFERENCES_X_POS;
+	s_preferences.atmeffects.generic.y			= y;
+	s_preferences.atmeffects.itemnames			= atmeffects_names;
+
+	y += BIGCHAR_HEIGHT+2;
 	s_preferences.back.generic.type	    = MTYPE_BITMAP;
 	s_preferences.back.generic.name     = ART_BACK0;
 	s_preferences.back.generic.flags    = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -380,6 +442,8 @@ static void Preferences_MenuInit( void ) {
 	Menu_AddItem( &s_preferences.menu, &s_preferences.forcemodel );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.drawteamoverlay );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.allowdownload );
+	Menu_AddItem( &s_preferences.menu, &s_preferences.splitvertical );
+	Menu_AddItem( &s_preferences.menu, &s_preferences.atmeffects );
 
 	Menu_AddItem( &s_preferences.menu, &s_preferences.back );
 

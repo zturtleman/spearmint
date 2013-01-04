@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
@@ -39,8 +47,8 @@ SV_GetPlayerByHandle
 Returns the player with player id or name from Cmd_Argv(1)
 ==================
 */
-static client_t *SV_GetPlayerByHandle( void ) {
-	client_t	*cl;
+static player_t *SV_GetPlayerByHandle( void ) {
+	player_t	*player;
 	int			i;
 	char		*s;
 	char		cleanName[64];
@@ -67,26 +75,26 @@ static client_t *SV_GetPlayerByHandle( void ) {
 		// Check for numeric playerid match
 		if(plid >= 0 && plid < sv_maxclients->integer)
 		{
-			cl = &svs.clients[plid];
+			player = &svs.players[plid];
 			
-			if(cl->state)
-				return cl;
+			if(player->inUse)
+				return player;
 		}
 	}
 
 	// check for a name match
-	for ( i=0, cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++ ) {
-		if ( !cl->state ) {
+	for ( i=0, player=svs.players ; i < sv_maxclients->integer ; i++,player++ ) {
+		if ( !player->inUse ) {
 			continue;
 		}
-		if ( !Q_stricmp( cl->name, s ) ) {
-			return cl;
+		if ( !Q_stricmp( player->name, s ) ) {
+			return player;
 		}
 
-		Q_strncpyz( cleanName, cl->name, sizeof(cleanName) );
+		Q_strncpyz( cleanName, player->name, sizeof(cleanName) );
 		Q_CleanStr( cleanName );
 		if ( !Q_stricmp( cleanName, s ) ) {
-			return cl;
+			return player;
 		}
 	}
 
@@ -102,8 +110,8 @@ SV_GetPlayerByNum
 Returns the player with idnum from Cmd_Argv(1)
 ==================
 */
-static client_t *SV_GetPlayerByNum( void ) {
-	client_t	*cl;
+static player_t *SV_GetPlayerByNum( void ) {
+	player_t	*player;
 	int			i;
 	int			idnum;
 	char		*s;
@@ -132,12 +140,12 @@ static client_t *SV_GetPlayerByNum( void ) {
 		return NULL;
 	}
 
-	cl = &svs.clients[idnum];
-	if ( !cl->state ) {
+	player = &svs.players[idnum];
+	if ( !player->inUse ) {
 		Com_Printf( "Client %i is not active\n", idnum );
 		return NULL;
 	}
-	return cl;
+	return player;
 }
 
 //=========================================================
@@ -174,30 +182,12 @@ static void SV_Map_f( void ) {
 	Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH );
 
 	cmd = Cmd_Argv(0);
-	if( Q_stricmpn( cmd, "sp", 2 ) == 0 ) {
-		Cvar_SetValue( "g_gametype", GT_SINGLE_PLAYER );
-		Cvar_SetValue( "g_doWarmup", 0 );
-		// may not set sv_maxclients directly, always set latched
-		Cvar_SetLatched( "sv_maxclients", "8" );
-		cmd += 2;
-		if (!Q_stricmp( cmd, "devmap" ) ) {
-			cheat = qtrue;
-		} else {
-			cheat = qfalse;
-		}
+	if ( !Q_stricmp( cmd, "devmap" ) ) {
+		cheat = qtrue;
 		killBots = qtrue;
-	}
-	else {
-		if ( !Q_stricmp( cmd, "devmap" ) ) {
-			cheat = qtrue;
-			killBots = qtrue;
-		} else {
-			cheat = qfalse;
-			killBots = qfalse;
-		}
-		if( sv_gametype->integer == GT_SINGLE_PLAYER ) {
-			Cvar_SetValue( "g_gametype", GT_FFA );
-		}
+	} else {
+		cheat = qfalse;
+		killBots = Com_GameIsSinglePlayer();
 	}
 
 	// save the map name here cause on a map restart we reload the q3config.cfg
@@ -227,8 +217,9 @@ This allows fair starts with variable load times.
 ================
 */
 static void SV_MapRestart_f( void ) {
-	int			i;
+	int			i, j;
 	client_t	*client;
+	player_t	*player;
 	char		*denied;
 	qboolean	isBot;
 	int			delay;
@@ -326,28 +317,38 @@ static void SV_MapRestart_f( void ) {
 		}
 
 		// add the map_restart command
-		SV_AddServerCommand( client, "map_restart\n" );
+		SV_AddServerCommand( client, -1, "map_restart\n" );
 
-		// connect the client again, without the firstTime flag
-		denied = VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );
-		if ( denied ) {
-			// this generally shouldn't happen, because the client
-			// was connected before the level change
-			SV_DropClient( client, denied );
-			Com_Printf( "SV_MapRestart_f(%d): dropped client %i - denied!\n", delay, i );
-			continue;
-		}
+		for ( j = 0; j < MAX_SPLITVIEW; j++ ) {
+			player = client->localPlayers[j];
 
-		if(client->state == CS_ACTIVE)
-			SV_ClientEnterWorld(client, &client->lastUsercmd);
-		else
-		{
-			// If we don't reset client->lastUsercmd and are restarting during map load,
-			// the client will hang because we'll use the last Usercmd from the previous map,
-			// which is wrong obviously.
-			SV_ClientEnterWorld(client, NULL);
+			if ( !player )
+				continue;
+
+			// setup entity before connecting
+			SV_SetupPlayerEntity( player );
+
+			// connect the client again, without the firstTime flag
+			denied = VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_CLIENT_CONNECT, player - svs.players, qfalse, isBot, client - svs.clients, j ) );
+			if ( denied ) {
+				// this generally shouldn't happen, because the player
+				// was connected before the level change
+				SV_DropPlayer( player, denied );
+				Com_Printf( "SV_MapRestart_f(%d): dropped client %i - denied!\n", delay, i );
+				continue;
+			}
+
+			if(client->state == CS_ACTIVE)
+				SV_PlayerEnterWorld( player, &player->lastUsercmd );
+			else
+			{
+				// If we don't reset player->lastUsercmd and are restarting during map load,
+				// the client will hang because we'll use the last Usercmd from the previous map,
+				// which is wrong obviously.
+				SV_PlayerEnterWorld( player, NULL );
+			}
 		}
-	}	
+	}
 
 	// run another frame to allow things to look at all the players
 	VM_Call (gvm, GAME_RUN_FRAME, sv.time);
@@ -365,8 +366,7 @@ Kick a user off of the server
 ==================
 */
 static void SV_Kick_f( void ) {
-	client_t	*cl;
-	int			i;
+	player_t	*player;
 
 	// make sure server is running
 	if ( !com_sv_running->integer ) {
@@ -375,45 +375,21 @@ static void SV_Kick_f( void ) {
 	}
 
 	if ( Cmd_Argc() != 2 ) {
-		Com_Printf ("Usage: kick <player name>\nkick all = kick everyone\nkick allbots = kick all bots\n");
+		Com_Printf ("Usage: kick <player name>\n");
 		return;
 	}
 
-	cl = SV_GetPlayerByHandle();
-	if ( !cl ) {
-		if ( !Q_stricmp(Cmd_Argv(1), "all") ) {
-			for ( i=0, cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++ ) {
-				if ( !cl->state ) {
-					continue;
-				}
-				if( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
-					continue;
-				}
-				SV_DropClient( cl, "was kicked" );
-				cl->lastPacketTime = svs.time;	// in case there is a funny zombie
-			}
-		}
-		else if ( !Q_stricmp(Cmd_Argv(1), "allbots") ) {
-			for ( i=0, cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++ ) {
-				if ( !cl->state ) {
-					continue;
-				}
-				if( cl->netchan.remoteAddress.type != NA_BOT ) {
-					continue;
-				}
-				SV_DropClient( cl, "was kicked" );
-				cl->lastPacketTime = svs.time;	// in case there is a funny zombie
-			}
-		}
+	player = SV_GetPlayerByHandle();
+	if ( !player ) {
 		return;
 	}
-	if( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
+	if( player->client->netchan.remoteAddress.type == NA_LOOPBACK ) {
 		Com_Printf("Cannot kick host player\n");
 		return;
 	}
 
-	SV_DropClient( cl, "was kicked" );
-	cl->lastPacketTime = svs.time;	// in case there is a funny zombie
+	SV_DropPlayer( player, "was kicked" );
+	player->client->lastPacketTime = svs.time;	// in case there is a funny zombie
 }
 
 /*
@@ -485,7 +461,7 @@ Kick a user off of the server
 ==================
 */
 static void SV_KickNum_f( void ) {
-	client_t	*cl;
+	player_t	*player;
 
 	// make sure server is running
 	if ( !com_sv_running->integer ) {
@@ -498,132 +474,18 @@ static void SV_KickNum_f( void ) {
 		return;
 	}
 
-	cl = SV_GetPlayerByNum();
-	if ( !cl ) {
+	player = SV_GetPlayerByNum();
+	if ( !player ) {
 		return;
 	}
-	if( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
+	if( player->client->netchan.remoteAddress.type == NA_LOOPBACK ) {
 		Com_Printf("Cannot kick host player\n");
 		return;
 	}
 
-	SV_DropClient( cl, "was kicked" );
-	cl->lastPacketTime = svs.time;	// in case there is a funny zombie
+	SV_DropPlayer( player, "was kicked" );
+	player->client->lastPacketTime = svs.time;	// in case there is a funny zombie
 }
-
-#ifndef STANDALONE
-// these functions require the auth server which of course is not available anymore for stand-alone games.
-
-/*
-==================
-SV_Ban_f
-
-Ban a user from being able to play on this server through the auth
-server
-==================
-*/
-static void SV_Ban_f( void ) {
-	client_t	*cl;
-
-	// make sure server is running
-	if ( !com_sv_running->integer ) {
-		Com_Printf( "Server is not running.\n" );
-		return;
-	}
-
-	if ( Cmd_Argc() != 2 ) {
-		Com_Printf ("Usage: banUser <player name>\n");
-		return;
-	}
-
-	cl = SV_GetPlayerByHandle();
-
-	if (!cl) {
-		return;
-	}
-
-	if( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
-		Com_Printf("Cannot kick host player\n");
-		return;
-	}
-
-	// look up the authorize server's IP
-	if ( !svs.authorizeAddress.ip[0] && svs.authorizeAddress.type != NA_BAD ) {
-		Com_Printf( "Resolving %s\n", AUTHORIZE_SERVER_NAME );
-		if ( !NET_StringToAdr( AUTHORIZE_SERVER_NAME, &svs.authorizeAddress, NA_IP ) ) {
-			Com_Printf( "Couldn't resolve address\n" );
-			return;
-		}
-		svs.authorizeAddress.port = BigShort( PORT_AUTHORIZE );
-		Com_Printf( "%s resolved to %i.%i.%i.%i:%i\n", AUTHORIZE_SERVER_NAME,
-			svs.authorizeAddress.ip[0], svs.authorizeAddress.ip[1],
-			svs.authorizeAddress.ip[2], svs.authorizeAddress.ip[3],
-			BigShort( svs.authorizeAddress.port ) );
-	}
-
-	// otherwise send their ip to the authorize server
-	if ( svs.authorizeAddress.type != NA_BAD ) {
-		NET_OutOfBandPrint( NS_SERVER, svs.authorizeAddress,
-			"banUser %i.%i.%i.%i", cl->netchan.remoteAddress.ip[0], cl->netchan.remoteAddress.ip[1], 
-								   cl->netchan.remoteAddress.ip[2], cl->netchan.remoteAddress.ip[3] );
-		Com_Printf("%s was banned from coming back\n", cl->name);
-	}
-}
-
-/*
-==================
-SV_BanNum_f
-
-Ban a user from being able to play on this server through the auth
-server
-==================
-*/
-static void SV_BanNum_f( void ) {
-	client_t	*cl;
-
-	// make sure server is running
-	if ( !com_sv_running->integer ) {
-		Com_Printf( "Server is not running.\n" );
-		return;
-	}
-
-	if ( Cmd_Argc() != 2 ) {
-		Com_Printf ("Usage: banClient <client number>\n");
-		return;
-	}
-
-	cl = SV_GetPlayerByNum();
-	if ( !cl ) {
-		return;
-	}
-	if( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
-		Com_Printf("Cannot kick host player\n");
-		return;
-	}
-
-	// look up the authorize server's IP
-	if ( !svs.authorizeAddress.ip[0] && svs.authorizeAddress.type != NA_BAD ) {
-		Com_Printf( "Resolving %s\n", AUTHORIZE_SERVER_NAME );
-		if ( !NET_StringToAdr( AUTHORIZE_SERVER_NAME, &svs.authorizeAddress, NA_IP ) ) {
-			Com_Printf( "Couldn't resolve address\n" );
-			return;
-		}
-		svs.authorizeAddress.port = BigShort( PORT_AUTHORIZE );
-		Com_Printf( "%s resolved to %i.%i.%i.%i:%i\n", AUTHORIZE_SERVER_NAME,
-			svs.authorizeAddress.ip[0], svs.authorizeAddress.ip[1],
-			svs.authorizeAddress.ip[2], svs.authorizeAddress.ip[3],
-			BigShort( svs.authorizeAddress.port ) );
-	}
-
-	// otherwise send their ip to the authorize server
-	if ( svs.authorizeAddress.type != NA_BAD ) {
-		NET_OutOfBandPrint( NS_SERVER, svs.authorizeAddress,
-			"banUser %i.%i.%i.%i", cl->netchan.remoteAddress.ip[0], cl->netchan.remoteAddress.ip[1], 
-								   cl->netchan.remoteAddress.ip[2], cl->netchan.remoteAddress.ip[3] );
-		Com_Printf("%s was banned from coming back\n", cl->name);
-	}
-}
-#endif
 
 /*
 ==================
@@ -866,19 +728,19 @@ static void SV_AddBanToList(qboolean isexception)
 	}
 	else
 	{
-		client_t *cl;
+		player_t *player;
 		
 		// client num.
 		
-		cl = SV_GetPlayerByNum();
+		player = SV_GetPlayerByNum();
 
-		if(!cl)
+		if(!player)
 		{
 			Com_Printf("Error: Playernum %s does not exist.\n", Cmd_Argv(1));
 			return;
 		}
 		
-		ip = cl->netchan.remoteAddress;
+		ip = player->client->netchan.remoteAddress;
 		
 		if(argc == 3)
 		{
@@ -1148,6 +1010,7 @@ SV_Status_f
 */
 static void SV_Status_f( void ) {
 	int			i, j, l;
+	player_t	*player;
 	client_t	*cl;
 	playerState_t	*ps;
 	const char		*s;
@@ -1163,8 +1026,11 @@ static void SV_Status_f( void ) {
 
 	Com_Printf ("num score ping name            lastmsg address               qport rate\n");
 	Com_Printf ("--- ----- ---- --------------- ------- --------------------- ----- -----\n");
-	for (i=0,cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++)
+	for (i=0,player=svs.players ; i < sv_maxclients->integer ; i++,player++)
 	{
+		if (!player->inUse)
+			continue;
+		cl = player->client;
 		if (!cl->state)
 			continue;
 		Com_Printf ("%3i ", i);
@@ -1181,12 +1047,12 @@ static void SV_Status_f( void ) {
 			Com_Printf ("%4i ", ping);
 		}
 
-		Com_Printf ("%s", cl->name);
+		Com_Printf ("%s", player->name);
 		
 		// TTimo adding a ^7 to reset the color
 		// NOTE: colored names in status breaks the padding (WONTFIX)
 		Com_Printf ("^7");
-		l = 14 - strlen(cl->name);
+		l = 14 - strlen(player->name);
 		j = 0;
 		
 		do
@@ -1246,7 +1112,7 @@ static void SV_ConSay_f(void) {
 
 	strcat(text, p);
 
-	SV_SendServerCommand(NULL, "chat \"%s\"", text);
+	SV_SendServerCommand(NULL, -1, "chat \"%s\"", text);
 }
 
 /*
@@ -1257,7 +1123,7 @@ SV_ConTell_f
 static void SV_ConTell_f(void) {
 	char	*p;
 	char	text[1024];
-	client_t	*cl;
+	player_t	*player;
 
 	// make sure server is running
 	if ( !com_sv_running->integer ) {
@@ -1270,8 +1136,8 @@ static void SV_ConTell_f(void) {
 		return;
 	}
 
-	cl = SV_GetPlayerByNum();
-	if ( !cl ) {
+	player = SV_GetPlayerByNum();
+	if ( !player ) {
 		return;
 	}
 
@@ -1285,7 +1151,7 @@ static void SV_ConTell_f(void) {
 
 	strcat(text, p);
 
-	SV_SendServerCommand(cl, "chat \"%s\"", text);
+	SV_SendServerCommand( player->client, SV_LocalPlayerNum( player ), "chat \"%s\"", text );
 }
 
 
@@ -1347,7 +1213,7 @@ Examine all a users info strings
 ===========
 */
 static void SV_DumpUser_f( void ) {
-	client_t	*cl;
+	player_t	*player;
 
 	// make sure server is running
 	if ( !com_sv_running->integer ) {
@@ -1360,14 +1226,14 @@ static void SV_DumpUser_f( void ) {
 		return;
 	}
 
-	cl = SV_GetPlayerByHandle();
-	if ( !cl ) {
+	player = SV_GetPlayerByHandle();
+	if ( !player ) {
 		return;
 	}
 
 	Com_Printf( "userinfo\n" );
 	Com_Printf( "--------\n" );
-	Info_Print( cl->userinfo );
+	Info_Print( player->userinfo );
 }
 
 
@@ -1408,17 +1274,9 @@ void SV_AddOperatorCommands( void ) {
 
 	Cmd_AddCommand ("heartbeat", SV_Heartbeat_f);
 	Cmd_AddCommand ("kick", SV_Kick_f);
-#ifndef STANDALONE
-	if(!com_standalone->integer)
-	{
-		Cmd_AddCommand ("banUser", SV_Ban_f);
-		Cmd_AddCommand ("banClient", SV_BanNum_f);
-	}
-#endif
 	Cmd_AddCommand ("kickbots", SV_KickBots_f);
 	Cmd_AddCommand ("kickall", SV_KickAll_f);
 	Cmd_AddCommand ("kicknum", SV_KickNum_f);
-	Cmd_AddCommand ("clientkick", SV_KickNum_f); // Legacy command
 	Cmd_AddCommand ("status", SV_Status_f);
 	Cmd_AddCommand ("serverinfo", SV_Serverinfo_f);
 	Cmd_AddCommand ("systeminfo", SV_Systeminfo_f);
@@ -1430,10 +1288,6 @@ void SV_AddOperatorCommands( void ) {
 #ifndef PRE_RELEASE_DEMO
 	Cmd_AddCommand ("devmap", SV_Map_f);
 	Cmd_SetCommandCompletionFunc( "devmap", SV_CompleteMapName );
-	Cmd_AddCommand ("spmap", SV_Map_f);
-	Cmd_SetCommandCompletionFunc( "spmap", SV_CompleteMapName );
-	Cmd_AddCommand ("spdevmap", SV_Map_f);
-	Cmd_SetCommandCompletionFunc( "spdevmap", SV_CompleteMapName );
 #endif
 	Cmd_AddCommand ("killserver", SV_KillServer_f);
 	if( com_dedicated->integer ) {
@@ -1461,7 +1315,6 @@ void SV_RemoveOperatorCommands( void ) {
 	Cmd_RemoveCommand ("heartbeat");
 	Cmd_RemoveCommand ("kick");
 	Cmd_RemoveCommand ("kicknum");
-	Cmd_RemoveCommand ("clientkick");
 	Cmd_RemoveCommand ("kickall");
 	Cmd_RemoveCommand ("kickbots");
 	Cmd_RemoveCommand ("banUser");

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 #include "tr_local.h"
@@ -323,13 +331,13 @@ static int R_PshadowSurface( msurface_t *surf, int pshadowBits ) {
 R_AddWorldSurface
 ======================
 */
-static void R_AddWorldSurface( msurface_t *surf, int dlightBits, int pshadowBits ) {
-	// FIXME: bmodel fog?
-
+static void R_AddWorldSurface( msurface_t *surf, shader_t *shader, int fogNum, int dlightBits, int pshadowBits ) {
 	// try to cull before dlighting or adding
 	if ( R_CullSurface( surf ) ) {
 		return;
 	}
+
+	surf->fogIndex = fogNum;
 
 	// check for dlighting
 	if ( dlightBits ) {
@@ -343,7 +351,7 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits, int pshadowBits
 		pshadowBits = ( pshadowBits != 0 );
 	}
 
-	R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, dlightBits, pshadowBits );
+	R_AddDrawSurf( surf->data, shader, surf->fogIndex, dlightBits, pshadowBits );
 }
 
 /*
@@ -356,6 +364,38 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits, int pshadowBits
 
 /*
 =================
+R_BmodelFogNum
+
+See if a sprite is inside a fog volume
+Return positive with /any part/ of the brush falling within a fog volume
+=================
+*/
+int R_BmodelFogNum( trRefEntity_t *re, bmodel_t *bmodel ) {
+	int i, j;
+	fog_t *fog;
+
+	for ( i = 1; i < tr.world->numfogs; i++ )
+	{
+		fog = &tr.world->fogs[ i ];
+		for ( j = 0; j < 3; j++ )
+		{
+			if ( re->e.origin[ j ] + bmodel->bounds[ 0 ][ j ] >= fog->bounds[ 1 ][ j ] ) {
+				break;
+			}
+			if ( re->e.origin[ j ] + bmodel->bounds[ 1 ][ j ] <= fog->bounds[ 0 ][ j ] ) {
+				break;
+			}
+		}
+		if ( j == 3 ) {
+			return i;
+		}
+	}
+
+	return R_DefaultFogNum();
+}
+
+/*
+=================
 R_AddBrushModelSurfaces
 =================
 */
@@ -364,6 +404,8 @@ void R_AddBrushModelSurfaces ( trRefEntity_t *ent ) {
 	int			clip;
 	model_t		*pModel;
 	int			i;
+	int			fognum;
+	msurface_t	*surf;
 
 	pModel = R_GetModelByHandle( ent->e.hModel );
 
@@ -373,19 +415,45 @@ void R_AddBrushModelSurfaces ( trRefEntity_t *ent ) {
 	if ( clip == CULL_OUT ) {
 		return;
 	}
-	
+
+	// set current brush model to world
+	tr.currentBModel = bmodel;
+
+	// set model state for decals and dynamic fog
+	VectorCopy( ent->e.origin, bmodel->orientation[ tr.smpFrame ].origin );
+	VectorCopy( ent->e.axis[ 0 ], bmodel->orientation[ tr.smpFrame ].axis[ 0 ] );
+	VectorCopy( ent->e.axis[ 1 ], bmodel->orientation[ tr.smpFrame ].axis[ 1 ] );
+	VectorCopy( ent->e.axis[ 2 ], bmodel->orientation[ tr.smpFrame ].axis[ 2 ] );
+	bmodel->visible[ tr.smpFrame ] = qtrue;
+	bmodel->entityNum[ tr.smpFrame ] = tr.currentEntityNum;
+
 	R_SetupEntityLighting( &tr.refdef, ent );
 	R_DlightBmodel( bmodel );
 
-	for ( i = 0 ; i < bmodel->numSurfaces ; i++ ) {
-		int surf = bmodel->firstSurface + i;
+	// determine if in fog
+	fognum = R_BmodelFogNum( ent, bmodel );
 
-		if (tr.world->surfacesViewCount[surf] != tr.viewCount)
+	// add model surfaces
+	for ( i = 0; i < bmodel->numSurfaces; i++ ) {
+		int surfNum = bmodel->firstSurface + i;
+
+		if (tr.world->surfacesViewCount[surfNum] != tr.viewCount)
 		{
-			tr.world->surfacesViewCount[surf] = tr.viewCount;
-			R_AddWorldSurface( tr.world->surfaces + surf, tr.currentEntity->needDlights, 0 );
+			tr.world->surfacesViewCount[surfNum] = tr.viewCount;
+
+			surf = ( msurface_t * )( tr.world->surfaces + bmodel->firstSurface + i );
+
+			// custom shader support for brushmodels
+			if ( ent->e.customShader ) {
+				R_AddWorldSurface( surf, R_GetShaderByHandle( ent->e.customShader ), fognum, tr.currentEntity->needDlights, 0 );
+			} else {
+				R_AddWorldSurface( surf, surf->shader, fognum, tr.currentEntity->needDlights, 0 );
+			}
 		}
 	}
+
+	// clear current brush model
+	tr.currentBModel = NULL;
 }
 
 
@@ -396,6 +464,89 @@ void R_AddBrushModelSurfaces ( trRefEntity_t *ent ) {
 
 =============================================================
 */
+
+/*
+=================
+R_LeafFogNum
+
+See if leaf is inside a fog volume
+Return positive with /any part/ of the leaf falling within a fog volume
+=================
+*/
+int R_LeafFogNum( mnode_t *node ) {
+	int i, j;
+	fog_t *fog;
+
+	for ( i = 1; i < tr.world->numfogs; i++ )
+	{
+		fog = &tr.world->fogs[ i ];
+		for ( j = 0; j < 3; j++ )
+		{
+			if ( node->mins[ j ] >= fog->bounds[ 1 ][ j ] ) {
+				break;
+			}
+			if ( node->maxs[ j ] <= fog->bounds[ 0 ][ j ] ) {
+				break;
+			}
+		}
+		if ( j == 3 ) {
+			return i;
+		}
+	}
+
+	return R_DefaultFogNum();
+}
+
+#if 0
+/*
+================
+R_AddLeafSurfaces
+
+Adds a leaf's drawsurfaces
+================
+*/
+static void R_AddLeafSurfaces( mnode_t *node, int dlightBits ) {
+	int c, fogNum;
+	msurface_t  *surf, **mark;
+
+	// add to count
+	tr.pc.c_leafs++;
+
+	// add to z buffer bounds
+	if ( node->mins[0] < tr.viewParms.visBounds[0][0] ) {
+		tr.viewParms.visBounds[0][0] = node->mins[0];
+	}
+	if ( node->mins[1] < tr.viewParms.visBounds[0][1] ) {
+		tr.viewParms.visBounds[0][1] = node->mins[1];
+	}
+	if ( node->mins[2] < tr.viewParms.visBounds[0][2] ) {
+		tr.viewParms.visBounds[0][2] = node->mins[2];
+	}
+
+	if ( node->maxs[0] > tr.viewParms.visBounds[1][0] ) {
+		tr.viewParms.visBounds[1][0] = node->maxs[0];
+	}
+	if ( node->maxs[1] > tr.viewParms.visBounds[1][1] ) {
+		tr.viewParms.visBounds[1][1] = node->maxs[1];
+	}
+	if ( node->maxs[2] > tr.viewParms.visBounds[1][2] ) {
+		tr.viewParms.visBounds[1][2] = node->maxs[2];
+	}
+
+	fogNum = R_LeafFogNum( node );
+
+	// add the individual surfaces
+	mark = node->firstmarksurface;
+	c = node->nummarksurfaces;
+	while ( c-- ) {
+		// the surface may have already been added if it
+		// spans multiple leafs
+		surf = *mark;
+		R_AddWorldSurface( surf, surf->shader, fogNum, dlightBits, 0 );
+		mark++;
+	}
+}
+#endif
 
 
 /*
@@ -539,6 +690,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 		// leaf node, so add mark surfaces
 		int			c;
 		int surf, *view;
+		int fogNum;
 
 		tr.pc.c_leafs++;
 
@@ -563,6 +715,8 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			tr.viewParms.visBounds[1][2] = node->maxs[2];
 		}
 
+		fogNum = R_LeafFogNum( node );
+
 		// add merged and unmerged surfaces
 		if (tr.world->viewSurfaces)
 			view = tr.world->viewSurfaces + node->firstmarksurface;
@@ -578,6 +732,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 				if (tr.world->mergedSurfacesViewCount[-surf - 1] != tr.viewCount)
 				{
 					tr.world->mergedSurfacesViewCount[-surf - 1]  = tr.viewCount;
+					tr.world->mergedSurfacesFogNum[-surf - 1] = fogNum;
 					tr.world->mergedSurfacesDlightBits[-surf - 1] = dlightBits;
 					tr.world->mergedSurfacesPshadowBits[-surf - 1] = pshadowBits;
 				}
@@ -592,6 +747,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 				if (tr.world->surfacesViewCount[surf] != tr.viewCount)
 				{
 					tr.world->surfacesViewCount[surf] = tr.viewCount;
+					tr.world->surfacesFogNum[surf] = fogNum;
 					tr.world->surfacesDlightBits[surf] = dlightBits;
 					tr.world->surfacesPshadowBits[surf] = pshadowBits;
 				}
@@ -793,6 +949,9 @@ void R_AddWorldSurfaces (void) {
 	tr.currentEntityNum = REFENTITYNUM_WORLD;
 	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
 
+	// set current brush model to world
+	tr.currentBModel = &tr.world->bmodels[ 0 ];
+
 	// determine which leaves are in the PVS / areamask
 	if (!(tr.viewParms.flags & VPF_DEPTHSHADOW))
 		R_MarkLeaves ();
@@ -826,6 +985,7 @@ void R_AddWorldSurfaces (void) {
 	// also mask invisible dlights for next frame
 	{
 		int i;
+		msurface_t *surf;
 
 		tr.refdef.dlightMask = 0;
 
@@ -834,7 +994,9 @@ void R_AddWorldSurfaces (void) {
 			if (tr.world->surfacesViewCount[i] != tr.viewCount)
 				continue;
 
-			R_AddWorldSurface( tr.world->surfaces + i, tr.world->surfacesDlightBits[i], tr.world->surfacesPshadowBits[i] );
+			surf = (msurface_t*)tr.world->surfaces + i;
+
+			R_AddWorldSurface( surf, surf->shader, tr.world->surfacesFogNum[i], tr.world->surfacesDlightBits[i], tr.world->surfacesPshadowBits[i] );
 			tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
 		}
 		for (i = 0; i < tr.world->numMergedSurfaces; i++)
@@ -842,10 +1004,15 @@ void R_AddWorldSurfaces (void) {
 			if (tr.world->mergedSurfacesViewCount[i] != tr.viewCount)
 				continue;
 
-			R_AddWorldSurface( tr.world->mergedSurfaces + i, tr.world->mergedSurfacesDlightBits[i], tr.world->mergedSurfacesPshadowBits[i] );
+			surf = (msurface_t*)tr.world->mergedSurfaces + i;
+
+			R_AddWorldSurface( surf, surf->shader, tr.world->mergedSurfacesFogNum[i], tr.world->mergedSurfacesDlightBits[i], tr.world->mergedSurfacesPshadowBits[i] );
 			tr.refdef.dlightMask |= tr.world->mergedSurfacesDlightBits[i];
 		}
 
 		tr.refdef.dlightMask = ~tr.refdef.dlightMask;
 	}
+
+	// clear brush model
+	tr.currentBModel = NULL;
 }

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
@@ -30,6 +38,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *****************************************************************************/
 
 #include "../qcommon/q_shared.h"
+#include "../game/bg_public.h"
 #include "l_utils.h"
 #include "l_libvar.h"
 #include "l_memory.h"
@@ -87,24 +96,6 @@ typedef struct campspot_s
 	float random;
 	struct campspot_s *next;
 } campspot_t;
-
-//FIXME: these are game specific
-typedef enum {
-	GT_FFA,				// free for all
-	GT_TOURNAMENT,		// one on one tournament
-	GT_SINGLE_PLAYER,	// single player tournament
-
-	//-- team games go after this --
-
-	GT_TEAM,			// team deathmatch
-	GT_CTF,				// capture the flag
-#ifdef MISSIONPACK
-	GT_1FCTF,
-	GT_OBELISK,
-	GT_HARVESTER,
-#endif
-	GT_MAX_GAME_TYPE
-} gametype_t;
 
 typedef struct levelitem_s
 {
@@ -188,8 +179,10 @@ int numlevelitems = 0;
 maplocation_t *maplocations = NULL;
 //camp spots
 campspot_t *campspots = NULL;
-//the game type
-int g_gametype = 0;
+//use single player entities
+qboolean g_singlePlayerEntities = qfalse;
+//use team gametype entities
+qboolean g_teamplayEntities = qfalse;
 //additional dropped item weight
 libvar_t *droppedweight = NULL;
 
@@ -335,7 +328,7 @@ itemconfig_t *LoadItemConfig(char *filename)
 	FreeSource(source);
 	//
 	if (!ic->numiteminfo) botimport.Print(PRT_WARNING, "no item info loaded\n");
-	botimport.Print(PRT_MESSAGE, "loaded %s\n", path);
+	botimport.Print(PRT_DEVELOPER, "loaded %s\n", path);
 	return ic;
 } //end of the function LoadItemConfig
 //===========================================================================
@@ -522,11 +515,8 @@ void BotInitInfoEntities(void)
 			numcampspots++;
 		} //end else if
 	} //end for
-	if (botDeveloper)
-	{
-		botimport.Print(PRT_MESSAGE, "%d map locations\n", numlocations);
-		botimport.Print(PRT_MESSAGE, "%d camp spots\n", numcampspots);
-	} //end if
+	botimport.Print(PRT_DEVELOPER, "%d map locations\n", numlocations);
+	botimport.Print(PRT_DEVELOPER, "%d camp spots\n", numcampspots);
 } //end of the function BotInitInfoEntities
 //===========================================================================
 //
@@ -668,7 +658,7 @@ void BotInitLevelItems(void)
 		//
 		AddLevelItemToList(li);
 	} //end for
-	botimport.Print(PRT_MESSAGE, "found %d level items\n", numlevelitems);
+	botimport.Print(PRT_DEVELOPER, "found %d level items\n", numlevelitems);
 } //end of the function BotInitLevelItems
 //===========================================================================
 //
@@ -876,10 +866,10 @@ int BotGetLevelItemGoal(int index, char *name, bot_goal_t *goal)
 	for (; li; li = li->next)
 	{
 		//
-		if (g_gametype == GT_SINGLE_PLAYER) {
+		if (g_singlePlayerEntities) {
 			if (li->flags & IFL_NOTSINGLE) continue;
 		}
-		else if (g_gametype >= GT_TEAM) {
+		if (g_teamplayEntities) {
 			if (li->flags & IFL_NOTTEAM) continue;
 		}
 		else {
@@ -1002,10 +992,6 @@ void BotFindEntityForLevelItem(levelitem_t *li)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-
-//NOTE: enum entityType_t in bg_public.h
-#define ET_ITEM			2
-
 void BotUpdateEntityItems(void)
 {
 	int ent, i, modelindex;
@@ -1087,10 +1073,10 @@ void BotUpdateEntityItems(void)
 			//if this level item is already linked
 			if (li->entitynum) continue;
 			//
-			if (g_gametype == GT_SINGLE_PLAYER) {
+			if (g_singlePlayerEntities) {
 				if (li->flags & IFL_NOTSINGLE) continue;
 			}
-			else if (g_gametype >= GT_TEAM) {
+			if (g_teamplayEntities) {
 				if (li->flags & IFL_NOTTEAM) continue;
 			}
 			else {
@@ -1320,11 +1306,11 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 	//go through the items in the level
 	for (li = levelitems; li; li = li->next)
 	{
-		if (g_gametype == GT_SINGLE_PLAYER) {
+		if (g_singlePlayerEntities) {
 			if (li->flags & IFL_NOTSINGLE)
 				continue;
 		}
-		else if (g_gametype >= GT_TEAM) {
+		if (g_teamplayEntities) {
 			if (li->flags & IFL_NOTTEAM)
 				continue;
 		}
@@ -1491,11 +1477,11 @@ int BotChooseNBGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 	//go through the items in the level
 	for (li = levelitems; li; li = li->next)
 	{
-		if (g_gametype == GT_SINGLE_PLAYER) {
+		if (g_singlePlayerEntities) {
 			if (li->flags & IFL_NOTSINGLE)
 				continue;
 		}
-		else if (g_gametype >= GT_TEAM) {
+		if (g_teamplayEntities) {
 			if (li->flags & IFL_NOTTEAM)
 				continue;
 		}
@@ -1775,8 +1761,10 @@ int BotSetupGoalAI(void)
 {
 	char *filename;
 
+	//check if single player
+	g_singlePlayerEntities = LibVarValue("singleplayerentities", "0");
 	//check if teamplay is on
-	g_gametype = LibVarValue("g_gametype", "0");
+	g_teamplayEntities = LibVarValue("teamplayentities", "0");
 	//item configuration file
 	filename = LibVarString("itemconfig", "items.c");
 	//load the item configuration

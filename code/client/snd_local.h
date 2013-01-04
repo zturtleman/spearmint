@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // snd_local.h -- private sound definations
@@ -58,6 +66,7 @@ typedef struct sfx_s {
 	int 			soundLength;
 	char 			soundName[MAX_QPATH];
 	int				lastTimeUsed;
+	int				duration;
 	struct sfx_s	*next;
 } sfx_t;
 
@@ -73,8 +82,6 @@ typedef struct {
 #define START_SAMPLE_IMMEDIATE	0x7fffffff
 
 #define MAX_DOPPLER_SCALE 50.0f //arbitrary
-
-#define THIRD_PERSON_THRESHOLD_SQ (48.0f*48.0f)
 
 typedef struct loopSound_s {
 	vec3_t		origin;
@@ -134,12 +141,13 @@ typedef struct
 	void (*AddLoopingSound)( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx );
 	void (*AddRealLoopingSound)( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx );
 	void (*StopLoopingSound)(int entityNum );
-	void (*Respatialize)( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater );
+	void (*Respatialize)( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater, qboolean firstPerson );
 	void (*UpdateEntityPosition)( int entityNum, const vec3_t origin );
 	void (*Update)( void );
 	void (*DisableSounds)( void );
 	void (*BeginRegistration)( void );
 	sfxHandle_t (*RegisterSound)( const char *sample, qboolean compressed );
+	int  (*SoundDuration)( sfxHandle_t handle );
 	void (*ClearSoundBuffer)( void );
 	void (*SoundInfo)( void );
 	void (*SoundList)( void );
@@ -152,6 +160,33 @@ typedef struct
 #endif
 } soundInterface_t;
 
+// Listener data
+typedef struct
+{
+	qboolean	valid;		// qtrue if setup.
+	qboolean	updated;	// qtrue if updated this frame.
+
+	int			number; // entity number
+	vec3_t		origin;
+	vec3_t		axis[3];
+	int			inwater;
+	qboolean	firstPerson;
+} listener_t;
+
+// Currently the only listeners are local clients, but add a few extra if someone wants to add listening through portals.
+#define MAX_LISTENERS		(MAX_SPLITVIEW+4)
+
+extern listener_t listeners[MAX_LISTENERS];
+
+void S_ListenersInit(void);
+void S_ListenersEndFrame(void);
+qboolean S_HearingThroughEntity( int entityNum );
+qboolean S_EntityIsListener(int entityNum);
+int S_ClosestListener(const vec3_t origin);
+float S_ListenersClosestDistance(const vec3_t origin);
+float S_ListenersClosestDistanceSquared(const vec3_t origin);
+int S_ListenerNumForEntity(int entityNum, qboolean create);
+void S_UpdateListener(int entityNum, const vec3_t origin, const vec3_t axis[3], int inwater, qboolean firstPerson);
 
 /*
 ====================================================================

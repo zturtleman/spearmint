@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="Spearmint workspace">
+		<Project filename="bspc.cbp" />
+		<Project filename="quake3.cbp" active="1" />
+		<Project filename="game.cbp" />
+		<Project filename="cgame.cbp" />
+		<Project filename="q3_ui.cbp" />
+		<Project filename="ui.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>

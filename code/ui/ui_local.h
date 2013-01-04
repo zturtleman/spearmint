@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -27,7 +35,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../renderer/tr_types.h"
 #include "ui_public.h"
 #include "../client/keycodes.h"
-#include "../game/bg_public.h"
+#include "../game/bg_misc.h"
 #include "ui_shared.h"
 
 // global display context
@@ -85,9 +93,6 @@ extern vmCvar_t	ui_server13;
 extern vmCvar_t	ui_server14;
 extern vmCvar_t	ui_server15;
 extern vmCvar_t	ui_server16;
-
-extern vmCvar_t	ui_cdkey;
-extern vmCvar_t	ui_cdkeychecked;
 
 extern vmCvar_t	ui_captureLimit;
 extern vmCvar_t	ui_fragLimit;
@@ -428,13 +433,6 @@ extern void UI_ModsMenu( void );
 extern void UI_ModsMenu_Cache( void );
 
 //
-// ui_cdkey.c
-//
-extern void UI_CDKeyMenu( void );
-extern void UI_CDKeyMenu_Cache( void );
-extern void UI_CDKeyMenu_f( void );
-
-//
 // ui_playermodel.c
 //
 extern void UI_PlayerModelMenu( void );
@@ -716,11 +714,7 @@ typedef struct serverStatus_s {
 	int		nextSortTime;
 	qhandle_t currentServerPreview;
 	int		currentServerCinematic;
-	int		motdLen;
-	int		motdWidth;
-	int		motdPaintX;
-	int		motdPaintX2;
-	int		motdOffset;
+	float	motdOffset;
 	int		motdTime;
 	char	motd[MAX_STRING_CHARS];
 } serverStatus_t;
@@ -787,6 +781,7 @@ typedef struct {
 	int playerNumber; 
 	qboolean teamLeader;
 	char playerNames[MAX_CLIENTS][MAX_NAME_LENGTH];
+	int playerClientNums[MAX_CLIENTS];
 	char teamNames[MAX_CLIENTS][MAX_NAME_LENGTH];
 	int teamClientNums[MAX_CLIENTS];
 
@@ -840,6 +835,7 @@ typedef struct {
 	int effectsColor;
 
 	qboolean inGameLoad;
+	int		maxSplitView;
 
 }	uiInfo_t;
 
@@ -849,7 +845,7 @@ extern uiInfo_t uiInfo;
 extern void			UI_Init( void );
 extern void			UI_Shutdown( void );
 extern void			UI_KeyEvent( int key );
-extern void			UI_MouseEvent( int dx, int dy );
+extern void			UI_MouseEvent( int localClientNum, int dx, int dy );
 extern void			UI_Refresh( int realtime );
 extern qboolean		UI_ConsoleCommand( int realTime );
 extern float		UI_ClampCvar( float min, float max, float value );
@@ -913,63 +909,31 @@ void UI_SPSkillMenu_Cache( void );
 //
 // ui_syscalls.c
 //
-void			trap_Print( const char *string );
-void			trap_Error(const char *string) __attribute__((noreturn));
-int				trap_Milliseconds( void );
-void			trap_Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags );
-void			trap_Cvar_Update( vmCvar_t *vmCvar );
-void			trap_Cvar_Set( const char *var_name, const char *value );
-float			trap_Cvar_VariableValue( const char *var_name );
-void			trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
-void			trap_Cvar_SetValue( const char *var_name, float value );
-void			trap_Cvar_Reset( const char *name );
-void			trap_Cvar_Create( const char *var_name, const char *var_value, int flags );
-void			trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize );
-int				trap_Argc( void );
-void			trap_Argv( int n, char *buffer, int bufferLength );
-void			trap_Cmd_ExecuteText( int exec_when, const char *text );	// don't use EXEC_NOW!
-int				trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
-void			trap_FS_Read( void *buffer, int len, fileHandle_t f );
-void			trap_FS_Write( const void *buffer, int len, fileHandle_t f );
-void			trap_FS_FCloseFile( fileHandle_t f );
-int				trap_FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
-int				trap_FS_Seek( fileHandle_t f, long offset, int origin ); // fsOrigin_t
-qhandle_t		trap_R_RegisterModel( const char *name );
-qhandle_t		trap_R_RegisterSkin( const char *name );
-qhandle_t		trap_R_RegisterShaderNoMip( const char *name );
-void			trap_R_ClearScene( void );
-void			trap_R_AddRefEntityToScene( const refEntity_t *re );
-void			trap_R_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts );
-void			trap_R_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b );
-void			trap_R_RenderScene( const refdef_t *fd );
-void			trap_R_SetColor( const float *rgba );
-void			trap_R_DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader );
-void			trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs );
-void			trap_UpdateScreen( void );
-int				trap_CM_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int endFrame, float frac, const char *tagName );
-void			trap_S_StartLocalSound( sfxHandle_t sfx, int channelNum );
-sfxHandle_t		trap_S_RegisterSound( const char *sample, qboolean compressed );
-void			trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen );
-void			trap_Key_GetBindingBuf( int keynum, char *buf, int buflen );
-void			trap_Key_SetBinding( int keynum, const char *binding );
-qboolean		trap_Key_IsDown( int keynum );
-qboolean		trap_Key_GetOverstrikeMode( void );
-void			trap_Key_SetOverstrikeMode( qboolean state );
-void			trap_Key_ClearStates( void );
-int				trap_Key_GetCatcher( void );
-void			trap_Key_SetCatcher( int catcher );
+
+// Additional shared traps in ../game/bg_misc.h
+
 void			trap_GetClipboardData( char *buf, int bufsize );
-void			trap_GetClientState( uiClientState_t *state );
 void			trap_GetGlconfig( glconfig_t *glconfig );
+void			trap_UpdateScreen( void );
+int				trap_MemoryRemaining( void );
+int				trap_GetVoipTime( int clientNum );
+float			trap_GetVoipPower( int clientNum );
+float			trap_GetVoipGain( int clientNum );
+qboolean		trap_GetVoipMute( int clientNum );
+qboolean		trap_GetVoipMuteAll( void );
+
+void			trap_GetClientState( uiClientState_t *state );
 int				trap_GetConfigString( int index, char* buff, int buffsize );
-int				trap_LAN_GetServerCount( int source );
-void			trap_LAN_GetServerAddressString( int source, int n, char *buf, int buflen );
-void			trap_LAN_GetServerInfo( int source, int n, char *buf, int buflen );
-int				trap_LAN_GetServerPing( int source, int n );
+
 int				trap_LAN_GetPingQueueCount( void );
 void			trap_LAN_ClearPing( int n );
 void			trap_LAN_GetPing( int n, char *buf, int buflen, int *pingtime );
 void			trap_LAN_GetPingInfo( int n, char *buf, int buflen );
+
+int				trap_LAN_GetServerCount( int source );
+void			trap_LAN_GetServerAddressString( int source, int n, char *buf, int buflen );
+void			trap_LAN_GetServerInfo( int source, int n, char *buf, int buflen );
+int				trap_LAN_GetServerPing( int source, int n );
 void			trap_LAN_LoadCachedServers( void );
 void			trap_LAN_SaveCachedServers( void );
 void			trap_LAN_MarkServerVisible(int source, int n, qboolean visible);
@@ -980,22 +944,63 @@ void			trap_LAN_RemoveServer(int source, const char *addr);
 void			trap_LAN_ResetPings(int n);
 int				trap_LAN_ServerStatus( const char *serverAddress, char *serverStatus, int maxLen );
 int				trap_LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int s2 );
-int				trap_MemoryRemaining( void );
-void			trap_GetCDKey( char *buf, int buflen );
-void			trap_SetCDKey( char *buf );
+
+qhandle_t		trap_R_RegisterModel( const char *name );
+qhandle_t		trap_R_RegisterSkin( const char *name );
+qhandle_t		trap_R_RegisterShader( const char *name );
+qhandle_t		trap_R_RegisterShaderNoMip( const char *name );
 void			trap_R_RegisterFont(const char *pFontname, int pointSize, fontInfo_t *font);
+void			trap_R_ClearScene( void );
+void			trap_R_AddRefEntityToScene( const refEntity_t *re );
+void			trap_R_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts );
+void			trap_R_AddPolysToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int numPolys );
+void			trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
+void			trap_R_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b );
+void			trap_R_RenderScene( const refdef_t *fd );
+void			trap_R_SetColor( const float *rgba );
+void			trap_R_SetClipRegion( const float *region );
+void			trap_R_DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader );
+void			trap_R_DrawRotatedPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader, float angle );
+void			trap_R_DrawStretchPicGradient( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader,
+					const float *gradientColor, int gradientType );
+void			trap_R_Add2dPolys( polyVert_t* verts, int numverts, qhandle_t hShader );
+void			trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs );
+int				trap_R_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int endFrame, float frac, const char *tagName );
+void			trap_R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset );
+
+sfxHandle_t		trap_S_RegisterSound( const char *sample, qboolean compressed );
+int				trap_S_SoundDuration( sfxHandle_t handle );
+void			trap_S_StartLocalSound( sfxHandle_t sfx, int channelNum );
 void			trap_S_StopBackgroundTrack( void );
 void			trap_S_StartBackgroundTrack( const char *intro, const char *loop);
-int				trap_CIN_PlayCinematic( const char *arg0, int xpos, int ypos, int width, int height, int bits);
-e_status		trap_CIN_StopCinematic(int handle);
-e_status		trap_CIN_RunCinematic (int handle);
-void			trap_CIN_DrawCinematic (int handle);
-void			trap_CIN_SetExtents (int handle, int x, int y, int w, int h);
-int				trap_RealTime(qtime_t *qtime);
-void			trap_R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset );
-qboolean		trap_VerifyCDKey( const char *key, const char *chksum);
 
-void			trap_SetPbClStatus( int status );
+void			trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen );
+void			trap_Key_GetBindingBuf( int keynum, char *buf, int buflen );
+void			trap_Key_SetBinding( int keynum, const char *binding );
+qboolean		trap_Key_IsDown( int keynum );
+qboolean		trap_Key_GetOverstrikeMode( void );
+void			trap_Key_SetOverstrikeMode( qboolean state );
+void			trap_Key_ClearStates( void );
+int				trap_Key_GetCatcher( void );
+void			trap_Key_SetCatcher( int catcher );
+int				trap_Key_GetKey( const char *binding, int startKey );
+
+// this returns a handle.  arg0 is the name in the format "idlogo.roq", set arg1 to NULL, alteredstates to qfalse (do not alter gamestate)
+int				trap_CIN_PlayCinematic( const char *arg0, int xpos, int ypos, int width, int height, int bits);
+
+// stops playing the cinematic and ends it.  should always return FMV_EOF
+// cinematics must be stopped in reverse order of when they are started
+e_status		trap_CIN_StopCinematic(int handle);
+
+// will run a frame of the cinematic but will not draw it.  Will return FMV_EOF if the end of the cinematic has been reached.
+e_status		trap_CIN_RunCinematic (int handle);
+
+// draws the current frame
+void			trap_CIN_DrawCinematic (int handle);
+
+// allows you to resize the animation dynamically
+void			trap_CIN_SetExtents (int handle, int x, int y, int w, int h);
+
 
 //
 // ui_addbots.c

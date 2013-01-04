@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // tr_image.c
@@ -741,16 +749,16 @@ done:
 
 	if (mipmap)
 	{
-		if ( textureFilterAnisotropic )
+		if ( glConfig.textureFilterAnisotropic )
 			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-					(GLint)Com_Clamp( 1, maxAnisotropy, r_ext_max_anisotropy->integer ) );
+					(GLint)Com_Clamp( 1, glConfig.maxAnisotropy, r_ext_max_anisotropy->integer ) );
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 	}
 	else
 	{
-		if ( textureFilterAnisotropic )
+		if ( glConfig.textureFilterAnisotropic )
 			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1 );
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -953,7 +961,7 @@ Finds or loads the given image.
 Returns NULL if it fails, not a default image.
 ==============
 */
-image_t	*R_FindImageFile( const char *name, qboolean mipmap, qboolean allowPicmip, int glWrapClampMode ) {
+image_t	*R_FindImageFile( const char *name, qboolean mipmap, qboolean allowPicmip, int glWrapClampMode, qboolean lightmap ) {
 	image_t	*image;
 	int		width, height;
 	byte	*pic;
@@ -992,6 +1000,11 @@ image_t	*R_FindImageFile( const char *name, qboolean mipmap, qboolean allowPicmi
 	R_LoadImage( name, &pic, &width, &height );
 	if ( pic == NULL ) {
 		return NULL;
+	}
+
+	// apply lightmap coloring
+	if ( lightmap ) {
+		R_ProcessLightmap( &pic, 4, width, height, &pic );
 	}
 
 	image = R_CreateImage( ( char * ) name, pic, width, height, mipmap, allowPicmip, glWrapClampMode );
@@ -1042,12 +1055,9 @@ R_InitFogTable
 void R_InitFogTable( void ) {
 	int		i;
 	float	d;
-	float	exp;
-	
-	exp = 0.5;
 
 	for ( i = 0 ; i < FOG_TABLE_SIZE ; i++ ) {
-		d = pow ( (float)i/(FOG_TABLE_SIZE-1), exp );
+		d = pow ( (float)i/(FOG_TABLE_SIZE-1), DEFAULT_FOG_EXP_DENSITY );
 
 		tr.fogTable[i] = d;
 	}
@@ -1090,36 +1100,105 @@ float	R_FogFactor( float s, float t ) {
 
 /*
 ================
-R_CreateFogImage
+R_FogTcScale
 ================
 */
-#define	FOG_S	256
-#define	FOG_T	32
-static void R_CreateFogImage( void ) {
-	int		x,y;
+float R_FogTcScale( fogType_t fogType, float depthForOpaque, float density ) {
+	float scale;
+
+	if ( fogType == FT_LINEAR ) {
+		scale = DEFAULT_FOG_LINEAR_DENSITY / density;
+		return ( 1.0f / ( depthForOpaque * scale ) );
+	}
+
+	// exponential fog
+	scale = DEFAULT_FOG_EXP_DENSITY / density;
+	return ( 1.0f / ( depthForOpaque * 8 * scale ) );
+}
+
+/*
+================
+R_CreateFogImages
+
+Create fog images for exponential and linear fog.
+================
+*/
+static void R_CreateFogImages( void ) {
+	int		x, y, alpha;
 	byte	*data;
 	float	d;
 	float	borderColor[4];
+	int		fog_s, fog_t;
 
-	data = ri.Hunk_AllocateTempMemory( FOG_S * FOG_T * 4 );
+	// Create exponential fog image
+	fog_s = 256;
+	fog_t = 32;
+	data = ri.Hunk_AllocateTempMemory( fog_s * fog_t * 4 );
 
 	// S is distance, T is depth
-	for (x=0 ; x<FOG_S ; x++) {
-		for (y=0 ; y<FOG_T ; y++) {
-			d = R_FogFactor( ( x + 0.5f ) / FOG_S, ( y + 0.5f ) / FOG_T );
+	for (x=0 ; x<fog_s ; x++) {
+		for (y=0 ; y<fog_t ; y++) {
+			d = R_FogFactor( ( x + 0.5f ) / fog_s, ( y + 0.5f ) / fog_t );
 
-			data[(y*FOG_S+x)*4+0] = 
-			data[(y*FOG_S+x)*4+1] = 
-			data[(y*FOG_S+x)*4+2] = 255;
-			data[(y*FOG_S+x)*4+3] = 255*d;
+			data[(y*fog_s+x)*4+0] = 
+			data[(y*fog_s+x)*4+1] = 
+			data[(y*fog_s+x)*4+2] = 255;
+			data[(y*fog_s+x)*4+3] = 255*d;
 		}
 	}
+
 	// standard openGL clamping doesn't really do what we want -- it includes
 	// the border color at the edges.  OpenGL 1.2 has clamp-to-edge, which does
 	// what we want.
-	tr.fogImage = R_CreateImage("*fog", (byte *)data, FOG_S, FOG_T, qfalse, qfalse, GL_CLAMP_TO_EDGE );
+	tr.fogImage = R_CreateImage("*fog", (byte *)data, fog_s, fog_t, qfalse, qfalse, GL_CLAMP_TO_EDGE );
 	ri.Hunk_FreeTempMemory( data );
 
+	borderColor[0] = 1.0;
+	borderColor[1] = 1.0;
+	borderColor[2] = 1.0;
+	borderColor[3] = 1;
+
+	qglTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
+
+
+	// Create linear fog image
+	fog_s = 16;
+	fog_t = 16;
+	data = ri.Hunk_AllocateTempMemory( fog_s * fog_t * 4 );
+
+	// ydnar: new, linear fog texture generating algo for GL_CLAMP_TO_EDGE (OpenGL 1.2+)
+
+	// S is distance, T is depth
+	for ( x = 0 ; x < fog_s ; x++ ) {
+		for ( y = 0 ; y < fog_t ; y++ ) {
+			alpha = 270 * ( (float) x / fog_s ) * ( (float) y / fog_t );    // need slop room for fp round to 0
+			if ( alpha < 0 ) {
+				alpha = 0;
+			} else if ( alpha > 255 ) {
+				alpha = 255;
+			}
+
+			// ensure edge/corner cases are fully transparent (at 0,0) or fully opaque (at 1,N where N is 0-1.0)
+			if ( x == 0 ) {
+				alpha = 0;
+			} else if ( x == ( fog_s - 1 ) ) {
+				alpha = 255;
+			}
+
+			data[( y * fog_s + x ) * 4 + 0] =
+			data[( y * fog_s + x ) * 4 + 1] =
+			data[( y * fog_s + x ) * 4 + 2] = 255;
+			data[( y * fog_s + x ) * 4 + 3] = alpha;
+		}
+	}
+
+	// standard openGL clamping doesn't really do what we want -- it includes
+	// the border color at the edges.  OpenGL 1.2 has clamp-to-edge, which does
+	// what we want.
+	tr.linearFogImage = R_CreateImage("*linearfog", (byte *)data, fog_s, fog_t, qfalse, qfalse, GL_CLAMP_TO_EDGE );
+	ri.Hunk_FreeTempMemory( data );
+
+	// ydnar: the following lines are unecessary for new GL_CLAMP_TO_EDGE fog
 	borderColor[0] = 1.0;
 	borderColor[1] = 1.0;
 	borderColor[2] = 1.0;
@@ -1199,7 +1278,7 @@ void R_CreateBuiltinImages( void ) {
 	}
 
 	R_CreateDlightImage();
-	R_CreateFogImage();
+	R_CreateFogImages();
 }
 
 
@@ -1337,114 +1416,6 @@ SKINS
 */
 
 /*
-==================
-CommaParse
-
-This is unfortunate, but the skin files aren't
-compatable with our normal parsing rules.
-==================
-*/
-static char *CommaParse( char **data_p ) {
-	int c = 0, len;
-	char *data;
-	static	char	com_token[MAX_TOKEN_CHARS];
-
-	data = *data_p;
-	len = 0;
-	com_token[0] = 0;
-
-	// make sure incoming data is valid
-	if ( !data ) {
-		*data_p = NULL;
-		return com_token;
-	}
-
-	while ( 1 ) {
-		// skip whitespace
-		while( (c = *data) <= ' ') {
-			if( !c ) {
-				break;
-			}
-			data++;
-		}
-
-
-		c = *data;
-
-		// skip double slash comments
-		if ( c == '/' && data[1] == '/' )
-		{
-			while (*data && *data != '\n')
-				data++;
-		}
-		// skip /* */ comments
-		else if ( c=='/' && data[1] == '*' ) 
-		{
-			while ( *data && ( *data != '*' || data[1] != '/' ) ) 
-			{
-				data++;
-			}
-			if ( *data ) 
-			{
-				data += 2;
-			}
-		}
-		else
-		{
-			break;
-		}
-	}
-
-	if ( c == 0 ) {
-		return "";
-	}
-
-	// handle quoted strings
-	if (c == '\"')
-	{
-		data++;
-		while (1)
-		{
-			c = *data++;
-			if (c=='\"' || !c)
-			{
-				com_token[len] = 0;
-				*data_p = ( char * ) data;
-				return com_token;
-			}
-			if (len < MAX_TOKEN_CHARS)
-			{
-				com_token[len] = c;
-				len++;
-			}
-		}
-	}
-
-	// parse a regular word
-	do
-	{
-		if (len < MAX_TOKEN_CHARS)
-		{
-			com_token[len] = c;
-			len++;
-		}
-		data++;
-		c = *data;
-	} while (c>32 && c != ',' );
-
-	if (len == MAX_TOKEN_CHARS)
-	{
-//		ri.Printf (PRINT_DEVELOPER, "Token exceeded %i chars, discarded.\n", MAX_TOKEN_CHARS);
-		len = 0;
-	}
-	com_token[len] = 0;
-
-	*data_p = ( char * ) data;
-	return com_token;
-}
-
-
-/*
 ===============
 RE_RegisterSkin
 
@@ -1461,6 +1432,7 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 	char		*text_p;
 	char		*token;
 	char		surfName[MAX_QPATH];
+	char		shaderName[MAX_QPATH];
 
 	if ( !name || !name[0] ) {
 		ri.Printf( PRINT_DEVELOPER, "Empty name passed to RE_RegisterSkin\n" );
@@ -1515,7 +1487,7 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 	text_p = text.c;
 	while ( text_p && *text_p ) {
 		// get surface name
-		token = CommaParse( &text_p );
+		token = COM_ParseExt2( &text_p, qtrue, ',' );
 		Q_strncpyz( surfName, token, sizeof( surfName ) );
 
 		if ( !token[0] ) {
@@ -1533,11 +1505,12 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 		}
 		
 		// parse the shader name
-		token = CommaParse( &text_p );
+		token = COM_ParseExt2( &text_p, qfalse, ',' );
+		Q_strncpyz( shaderName, token, sizeof( shaderName ) );
 
 		surf = skin->surfaces[ skin->numSurfaces ] = ri.Hunk_Alloc( sizeof( *skin->surfaces[0] ), h_low );
 		Q_strncpyz( surf->name, surfName, sizeof( surf->name ) );
-		surf->shader = R_FindShader( token, LIGHTMAP_NONE, qtrue );
+		surf->shader = R_FindShader( shaderName, LIGHTMAP_NONE, qtrue );
 		skin->numSurfaces++;
 	}
 

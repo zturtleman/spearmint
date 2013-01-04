@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -131,7 +139,7 @@ void UpdateTournamentInfo( void ) {
 		}
 		strcat( msg, buf );
 	}
-	trap_SendConsoleCommand( EXEC_APPEND, msg );
+	trap_Cmd_ExecuteText( EXEC_APPEND, msg );
 }
 
 
@@ -170,12 +178,12 @@ static gentity_t *SpawnModelOnVictoryPad( gentity_t *pad, vec3_t offset, gentity
 	}
 	body->s.event = 0;
 	body->r.svFlags = ent->r.svFlags;
-	VectorCopy (ent->r.mins, body->r.mins);
-	VectorCopy (ent->r.maxs, body->r.maxs);
+	VectorCopy (ent->s.mins, body->s.mins);
+	VectorCopy (ent->s.maxs, body->s.maxs);
 	VectorCopy (ent->r.absmin, body->r.absmin);
 	VectorCopy (ent->r.absmax, body->r.absmax);
 	body->clipmask = CONTENTS_SOLID | CONTENTS_PLAYERCLIP;
-	body->r.contents = CONTENTS_BODY;
+	body->s.contents = CONTENTS_BODY;
 	body->r.ownerNum = ent->r.ownerNum;
 	body->takedamage = qfalse;
 
@@ -301,7 +309,7 @@ static gentity_t *SpawnPodium( void ) {
 	podium->s.eType = ET_GENERAL;
 	podium->s.number = podium - g_entities;
 	podium->clipmask = CONTENTS_SOLID;
-	podium->r.contents = CONTENTS_SOLID;
+	podium->s.contents = CONTENTS_SOLID;
 	podium->s.modelindex = G_ModelIndex( SP_PODIUM_MODEL );
 
 	AngleVectors( level.intermission_angle, vec, NULL, NULL );

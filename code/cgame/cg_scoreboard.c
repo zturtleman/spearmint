@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -83,6 +91,7 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 	vec3_t	headAngles;
 	clientInfo_t	*ci;
 	int iconx, headx;
+	playerState_t *ps;
 
 	if ( score->client < 0 || score->client >= cgs.maxclients ) {
 		Com_Printf( "Bad score->client: %i\n", score->client );
@@ -180,18 +189,27 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 			"%5i %4i %4i %s", score->score, score->ping, score->time, ci->name);
 	}
 
+	if (cg.cur_ps) {
+		if (score->client == cg.cur_ps->clientNum) {
+			ps = cg.cur_ps;
+		} else {
+			ps = NULL;
+		}
+	} else {
+		ps = CG_LocalClientPlayerStateForClientNum(score->client);
+	}
+
 	// highlight your position
-	if ( score->client == cg.snap->ps.clientNum ) {
+	if ( ps ) {
 		float	hcolor[4];
 		int		rank;
 
 		localClient = qtrue;
 
-		if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR 
-			|| cgs.gametype >= GT_TEAM ) {
+		if ( ps->persistant[PERS_TEAM] == TEAM_SPECTATOR || cgs.gametype >= GT_TEAM ) {
 			rank = -1;
 		} else {
-			rank = cg.snap->ps.persistant[PERS_RANK] & ~RANK_TIED_FLAG;
+			rank = ps->persistant[PERS_RANK] & ~RANK_TIED_FLAG;
 		}
 		if ( rank == 0 ) {
 			hcolor[0] = 0;
@@ -219,7 +237,7 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 	CG_DrawBigString( SB_SCORELINE_X + (SB_RATING_WIDTH / 2), y, string, fade );
 
 	// add the "ready" marker for intermission exiting
-	if ( cg.snap->ps.stats[ STAT_CLIENTS_READY ] & ( 1 << score->client ) ) {
+	if ( cg.snap->pss[0].stats[ STAT_CLIENTS_READY ] & ( 1 << score->client ) ) {
 		CG_DrawBigStringColor( iconx, y, "READY", color );
 	}
 }
@@ -272,33 +290,32 @@ qboolean CG_DrawOldScoreboard( void ) {
 	int lineHeight;
 	int topBorderSize, bottomBorderSize;
 
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+
 	// don't draw amuthing if the menu or console is up
 	if ( cg_paused.integer ) {
-		cg.deferredPlayerLoading = 0;
 		return qfalse;
 	}
 
-	if ( cgs.gametype == GT_SINGLE_PLAYER && cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
-		cg.deferredPlayerLoading = 0;
+	if ( cgs.gametype == GT_SINGLE_PLAYER && cg.cur_lc && cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		return qfalse;
 	}
 
 	// don't draw scoreboard during death while warmup up
-	if ( cg.warmup && !cg.showScores ) {
+	if ( cg.warmup && cg.cur_lc && !cg.cur_lc->showScores ) {
 		return qfalse;
 	}
 
-	if ( cg.showScores || cg.predictedPlayerState.pm_type == PM_DEAD ||
-		 cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
+	if ( !cg.cur_lc || cg.cur_lc->showScores || cg.cur_lc->predictedPlayerState.pm_type == PM_DEAD ||
+		 cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		fade = 1.0;
 		fadeColor = colorWhite;
 	} else {
-		fadeColor = CG_FadeColor( cg.scoreFadeTime, FADE_TIME );
+		fadeColor = CG_FadeColor( cg.cur_lc->scoreFadeTime, FADE_TIME );
 		
 		if ( !fadeColor ) {
 			// next time scoreboard comes up, don't print killer
-			cg.deferredPlayerLoading = 0;
-			cg.killerName[0] = 0;
+			cg.cur_lc->killerName[0] = 0;
 			return qfalse;
 		}
 		fade = *fadeColor;
@@ -306,8 +323,8 @@ qboolean CG_DrawOldScoreboard( void ) {
 
 
 	// fragged by ... line
-	if ( cg.killerName[0] ) {
-		s = va("Fragged by %s", cg.killerName );
+	if ( cg.cur_lc && cg.cur_lc->killerName[0] ) {
+		s = va("Fragged by %s", cg.cur_lc->killerName );
 		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
 		x = ( SCREEN_WIDTH - w ) / 2;
 		y = 40;
@@ -316,10 +333,10 @@ qboolean CG_DrawOldScoreboard( void ) {
 
 	// current rank
 	if ( cgs.gametype < GT_TEAM) {
-		if (cg.snap->ps.persistant[PERS_TEAM] != TEAM_SPECTATOR ) {
+		if (cg.cur_ps && cg.cur_ps->persistant[PERS_TEAM] != TEAM_SPECTATOR ) {
 			s = va("%s place with %i",
-				CG_PlaceString( cg.snap->ps.persistant[PERS_RANK] + 1 ),
-				cg.snap->ps.persistant[PERS_SCORE] );
+				CG_PlaceString( cg.cur_ps->persistant[PERS_RANK] + 1 ),
+				cg.cur_ps->persistant[PERS_SCORE] );
 			w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
 			x = ( SCREEN_WIDTH - w ) / 2;
 			y = 60;
@@ -403,19 +420,14 @@ qboolean CG_DrawOldScoreboard( void ) {
 		y += (n2 * lineHeight) + BIGCHAR_HEIGHT;
 	}
 
-	if (!localClient) {
+	if (cg.cur_ps && !localClient) {
 		// draw local client at the bottom
 		for ( i = 0 ; i < cg.numScores ; i++ ) {
-			if ( cg.scores[i].client == cg.snap->ps.clientNum ) {
+			if ( cg.scores[i].client == cg.cur_ps->clientNum ) {
 				CG_DrawClientScore( y, &cg.scores[i], fadeColor, fade, lineHeight == SB_NORMAL_HEIGHT );
 				break;
 			}
 		}
-	}
-
-	// load any models that have been deferred
-	if ( ++cg.deferredPlayerLoading > 10 ) {
-		CG_LoadDeferredPlayers();
 	}
 
 	return qtrue;
@@ -457,6 +469,8 @@ void CG_DrawOldTourneyScoreboard( void ) {
 	int				y;
 	int				i;
 
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+
 	// request more scores regularly
 	if ( cg.scoresRequestTime + 2000 < cg.time ) {
 		cg.scoresRequestTime = cg.time;
@@ -466,7 +480,9 @@ void CG_DrawOldTourneyScoreboard( void ) {
 	// draw the dialog background
 	color[0] = color[1] = color[2] = 0;
 	color[3] = 1;
+	CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
 	CG_FillRect( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, color );
+	CG_PopScreenPlacement();
 
 	color[0] = 1;
 	color[1] = 1;

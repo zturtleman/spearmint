@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -26,17 +34,21 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
-#ifdef STANDALONE
-  #define PRODUCT_NAME			"iofoo3"
-  #define BASEGAME			"foobar"
-  #define CLIENT_WINDOW_TITLE     	"changeme"
-  #define CLIENT_WINDOW_MIN_TITLE 	"changeme2"
-  #define HOMEPATH_NAME_UNIX		".foo"
-  #define HOMEPATH_NAME_WIN		"FooBar"
+#if 1 // Change these for your standalone game
+  #define PRODUCT_NAME			"Spearmint"
+  #define BASEGAME			"baseq3"
+  #define CLIENT_WINDOW_TITLE     	"Spearmint"
+  #define CLIENT_WINDOW_MIN_TITLE 	"Spearmint"
+  #define HOMEPATH_NAME_UNIX		".spearmint"
+  #define HOMEPATH_NAME_WIN		"Spearmint"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
-  #define GAMENAME_FOR_MASTER		"foobar"	// must NOT contain whitespace
+  #define GAMENAME_FOR_MASTER		"Spearmint"	// must NOT contain whitespace
 //  #define LEGACY_PROTOCOL	// You probably don't need this for your standalone game
-#else
+
+  #ifndef PRODUCT_VERSION
+    #define PRODUCT_VERSION "1.36"
+  #endif
+#else // ioquake3 defaults
   #define PRODUCT_NAME			"ioq3"
   #define BASEGAME			"baseq3"
   #define CLIENT_WINDOW_TITLE     	"ioquake3"
@@ -46,16 +58,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
   #define GAMENAME_FOR_MASTER		"Quake3Arena"
   #define LEGACY_PROTOCOL
+
+  #ifndef PRODUCT_VERSION
+    #define PRODUCT_VERSION "1.36"
+  #endif
 #endif
 
 // Heartbeat for dpmaster protocol. You shouldn't change this unless you know what you're doing
 #define HEARTBEAT_FOR_MASTER		"DarkPlaces"
+#define FLATLINE_FOR_MASTER			HEARTBEAT_FOR_MASTER
 
+// id Software games to not auto download
+#define BASEQ3				"baseq3"
 #define BASETA				"missionpack"
-
-#ifndef PRODUCT_VERSION
-  #define PRODUCT_VERSION "1.36"
-#endif
 
 #define Q3_VERSION PRODUCT_NAME " " PRODUCT_VERSION
 
@@ -280,7 +295,6 @@ typedef enum {
 	ERR_DROP,					// print to console and disconnect from game
 	ERR_SERVERDISCONNECT,		// don't kill server
 	ERR_DISCONNECT,				// client disconnected from the server
-	ERR_NEED_CD					// pop up the need-cd dialog
 } errorParm_t;
 
 
@@ -353,6 +367,10 @@ typedef	int	fixed16_t;
 
 #ifndef M_PI
 #define M_PI		3.14159265358979323846f	// matches value in gcc v2 math.h
+#endif
+
+#ifndef M_PI_2
+#define M_PI_2		1.57079632679489661923f	/* pi/2 */
 #endif
 
 #define NUMVERTEXNORMALS	162
@@ -582,6 +600,22 @@ static ID_INLINE int VectorCompare( const vec3_t v1, const vec3_t v2 ) {
 	return 1;
 }
 
+static ID_INLINE int VectorCompareEpsilon(
+		const vec3_t v1, const vec3_t v2, float epsilon )
+{
+	vec3_t d;
+
+	VectorSubtract( v1, v2, d );
+	d[ 0 ] = fabs( d[ 0 ] );
+	d[ 1 ] = fabs( d[ 1 ] );
+	d[ 2 ] = fabs( d[ 2 ] );
+
+	if( d[ 0 ] > epsilon || d[ 1 ] > epsilon || d[ 2 ] > epsilon )
+		return 0;
+
+	return 1;
+}
+
 static ID_INLINE vec_t VectorLength( const vec3_t v ) {
 	return (vec_t)sqrt (v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 }
@@ -632,6 +666,8 @@ static ID_INLINE void CrossProduct( const vec3_t v1, const vec3_t v2, vec3_t cro
 #else
 int VectorCompare( const vec3_t v1, const vec3_t v2 );
 
+// VectorCompareEpsilon
+
 vec_t VectorLength( const vec3_t v );
 
 vec_t VectorLengthSquared( const vec3_t v );
@@ -653,8 +689,6 @@ vec_t VectorNormalize2( const vec3_t v, vec3_t out );
 void Vector4Scale( const vec4_t in, vec_t scale, vec4_t out );
 void VectorRotate( vec3_t in, vec3_t matrix[3], vec3_t out );
 int Q_log2(int val);
-
-float Q_acos(float c);
 
 int		Q_rand( int *seed );
 float	Q_random( int *seed );
@@ -692,6 +726,8 @@ qboolean PlaneFromPoints( vec4_t plane, const vec3_t a, const vec3_t b, const ve
 void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal );
 void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees );
 void RotateAroundDirection( vec3_t axis[3], float yaw );
+float Q_acos(float c);
+float Q_asin(float c);
 void MakeNormalVectors( const vec3_t forward, vec3_t right, vec3_t up );
 // perpendicular vector could be replaced by this
 
@@ -700,6 +736,11 @@ void MakeNormalVectors( const vec3_t forward, vec3_t right, vec3_t up );
 void MatrixMultiply(float in1[3][3], float in2[3][3], float out[3][3]);
 void AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
 void PerpendicularVector( vec3_t dst, const vec3_t src );
+
+vec_t DistanceBetweenLineSegmentsSquared(
+	const vec3_t sP0, const vec3_t sP1,
+	const vec3_t tP0, const vec3_t tP1,
+	float *s, float *t );
 
 #ifndef MAX
 #define MAX(x,y) ((x)>(y)?(x):(y))
@@ -722,7 +763,8 @@ void	COM_DefaultExtension( char *path, int maxSize, const char *extension );
 void	COM_BeginParseSession( const char *name );
 int		COM_GetCurrentParseLine( void );
 char	*COM_Parse( char **data_p );
-char	*COM_ParseExt( char **data_p, qboolean allowLineBreak );
+char	*COM_ParseExt( char **data_p, qboolean allowLineBreaks );
+char	*COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter );
 int		COM_Compress( char *data_p );
 void	COM_ParseError( char *format, ... ) __attribute__ ((format (printf, 1, 2)));
 void	COM_ParseWarning( char *format, ... ) __attribute__ ((format (printf, 1, 2)));
@@ -859,6 +901,7 @@ void Info_NextPair( const char **s, char *key, char *value );
 // this is only here so the functions in q_shared.c and bg_*.c can link
 void	QDECL Com_Error( int level, const char *error, ... ) __attribute__ ((noreturn, format(printf, 2, 3)));
 void	QDECL Com_Printf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
+void	QDECL Com_DPrintf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 
 
 /*
@@ -894,9 +937,14 @@ default values.
 #define CVAR_SERVER_CREATED	0x0800	// cvar was created by a server the client connected to.
 #define CVAR_VM_CREATED		0x1000	// cvar was created exclusively in one of the VMs.
 #define CVAR_PROTECTED		0x2000	// prevent modifying this var from VMs or the server
+#define CVAR_USERINFO2		0x4000 // userinfo for second local player
+#define CVAR_USERINFO3		0x8000 // userinfo for third local player
+#define CVAR_USERINFO4		0x10000 // userinfo for fourth local player
 // These flags are only returned by the Cvar_Flags() function
 #define CVAR_MODIFIED		0x40000000	// Cvar was modified
 #define CVAR_NONEXISTENT	0x80000000	// Cvar doesn't exist.
+
+#define CVAR_USERINFO_ALL	(CVAR_USERINFO|CVAR_USERINFO2|CVAR_USERINFO3|CVAR_USERINFO4)
 
 // nothing outside the Cvar_*() functions should modify these fields!
 typedef struct cvar_s cvar_t;
@@ -966,10 +1014,11 @@ COLLISION DETECTION
 
 // plane types are used to speed some tests
 // 0-2 are axial planes
-#define	PLANE_X			0
-#define	PLANE_Y			1
-#define	PLANE_Z			2
-#define	PLANE_NON_AXIAL	3
+#define	PLANE_X				0
+#define	PLANE_Y				1
+#define	PLANE_Z				2
+#define	PLANE_NON_AXIAL		3
+#define PLANE_NON_PLANAR	4
 
 
 /*
@@ -978,7 +1027,7 @@ PlaneTypeForNormal
 =================
 */
 
-#define PlaneTypeForNormal(x) (x[0] == 1.0 ? PLANE_X : (x[1] == 1.0 ? PLANE_Y : (x[2] == 1.0 ? PLANE_Z : PLANE_NON_AXIAL) ) )
+#define PlaneTypeForNormal( x ) ( x[0] == 1.0 ? PLANE_X : ( x[1] == 1.0 ? PLANE_Y : ( x[2] == 1.0 ? PLANE_Z : ( x[0] == 0.f && x[1] == 0.f && x[2] == 0.f ? PLANE_NON_PLANAR : PLANE_NON_AXIAL ) ) ) )
 
 // plane_t structure
 // !!! if this is changed, it must be changed in asm code too !!!
@@ -990,6 +1039,15 @@ typedef struct cplane_s {
 	byte	pad[2];
 } cplane_t;
 
+typedef enum {
+	TT_NONE,
+
+	TT_AABB,
+	TT_CAPSULE,
+	TT_BISPHERE,
+
+	TT_NUM_TRACE_TYPES
+} traceType_t;
 
 // a trace is returned when a box is swept through the world
 typedef struct {
@@ -1001,6 +1059,7 @@ typedef struct {
 	int			surfaceFlags;	// surface hit
 	int			contents;	// contents on other side of surface hit
 	int			entityNum;	// entity the contacted sirface is a part of
+	float		lateralFraction; // fraction of collision tangetially to the trace direction
 } trace_t;
 
 // trace->entityNum can also be 0 to (MAX_GENTITIES-1)
@@ -1060,6 +1119,7 @@ typedef enum {
 #define	SNAPFLAG_RATE_DELAYED	1
 #define	SNAPFLAG_NOT_ACTIVE		2	// snapshot used during connection and for zombies
 #define SNAPFLAG_SERVERCOUNT	4	// toggled every map_restart so transitions can be detected
+#define SNAPFLAG_MULTIPLE_PSS	8	// snap contains multiple playerstates
 
 //
 // per-level limits
@@ -1135,6 +1195,8 @@ typedef struct playerState_s {
 	int			delta_angles[3];	// add to command angles to get view direction
 									// changed by spawns, rotating objects, and teleporters
 
+	vec3_t		mins, maxs;		// bounding box size
+
 	int			groundEntityNum;// ENTITYNUM_NONE = in air
 
 	int			legsTimer;		// don't change low priority animations until this runs out
@@ -1151,6 +1213,10 @@ typedef struct playerState_s {
 	vec3_t		grapplePoint;	// location of grapple to pull towards if PMF_GRAPPLE_PULL
 
 	int			eFlags;			// copied to entityState_t->eFlags
+	int			contents;		// copied to entityState_t->contents
+	qboolean	capsule;		// copied to entityState_t->capsule
+
+	qboolean	linked;			// set by server
 
 	int			eventSequence;	// pmove generated events
 	int			events[MAX_PS_EVENTS];
@@ -1189,6 +1255,11 @@ typedef struct playerState_s {
 	int			entityEventSequence;
 } playerState_t;
 
+
+// Max players for splitscreen
+// Also see CL_MAX_SPLITVIEW in client.h for lowering max supported splitview
+// clients in client/renderer, while still keep network and mod compatibility.
+#define MAX_SPLITVIEW 4
 
 //====================================================================
 
@@ -1229,9 +1300,6 @@ typedef struct usercmd_s {
 } usercmd_t;
 
 //===================================================================
-
-// if entityState->solid == SOLID_BMODEL, modelindex is an inline model number
-#define	SOLID_BMODEL	0xffffff
 
 typedef enum {
 	TR_STATIONARY,
@@ -1287,7 +1355,16 @@ typedef struct entityState_s {
 	int		clientNum;		// 0 to (MAX_CLIENTS - 1), for players and corpses
 	int		frame;
 
-	int		solid;			// for client side prediction, trap_linkentity sets this properly
+	int		contents;		// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
+							// a non-solid entity should set to 0
+
+	qboolean	bmodel;		// if true, modelindex is an inline model number
+							// if false, assume an explicit mins / maxs bounding box
+							// only set by trap_SetBrushModel
+
+	qboolean	capsule;	// if true, use capsule instead of bbox for clipping against this ent
+
+	vec3_t		mins, maxs;	// bounding box size
 
 	int		event;			// impulse events -- muzzle flashes, footsteps, etc
 	int		eventParm;
@@ -1304,7 +1381,6 @@ typedef struct entityState_s {
 typedef enum {
 	CA_UNINITIALIZED,
 	CA_DISCONNECTED, 	// not talking to a server
-	CA_AUTHORIZING,		// not used any more, was checking cd key 
 	CA_CONNECTING,		// sending request packets to the server
 	CA_CHALLENGING,		// sending challenge packets to the server
 	CA_CONNECTED,		// netchan_t established, getting gamestate
@@ -1324,7 +1400,7 @@ typedef enum {
 typedef struct {
   int height;       // number of scan lines
   int top;          // top of glyph in buffer
-  int bottom;       // bottom of glyph in buffer
+  int left;         // left of glyph in buffer
   int pitch;        // width for copying
   int xSkip;        // x adjustment
   int imageWidth;   // width of actual image
@@ -1342,6 +1418,11 @@ typedef struct {
   float glyphScale;
   char name[MAX_QPATH];
 } fontInfo_t;
+
+#ifndef GAME
+char *Com_LocalClientCvarName(int localClient, const char *in_cvarName);
+int Com_LocalClientForCvarName(const char *in_cvarName);
+#endif
 
 #define Square(x) ((x)*(x))
 
@@ -1399,10 +1480,6 @@ typedef enum _flag_status {
 #define SAY_ALL		0
 #define SAY_TEAM	1
 #define SAY_TELL	2
-
-#define CDKEY_LEN 16
-#define CDCHKSUM_LEN 2
-
 
 #define LERP( a, b, w ) ( ( a ) * ( 1.0f - ( w ) ) + ( b ) * ( w ) )
 #define LUMA( red, green, blue ) ( 0.2126f * ( red ) + 0.7152f * ( green ) + 0.0722f * ( blue ) )

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -114,46 +122,45 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL PrintMsg( gentity_t *e
 ==============
 AddTeamScore
 
- used for gametype > GT_TEAM
- for gametype GT_TEAM the level.teamScores is updated in AddScore in g_combat.c
+ for gametype GT_TEAM this is called in AddScore in g_combat.c (checks fraglimit to win)
+ for gametype > GT_TEAM this is called when gametype-specific scoring happens (checks capturelimit to win)
+        (e.g. capture flag, kill obelisk, return skulls)
 ==============
 */
 void AddTeamScore(vec3_t origin, int team, int score) {
+	int			eventParm;
+	int			otherTeam;
 	gentity_t	*te;
 
-	te = G_TempEntity(origin, EV_GLOBAL_TEAM_SOUND );
-	te->r.svFlags |= SVF_BROADCAST;
+	if ( score == 0 ) {
+		return;
+	}
 
-	if ( team == TEAM_RED ) {
-		if ( level.teamScores[ TEAM_RED ] + score == level.teamScores[ TEAM_BLUE ] ) {
-			//teams are tied sound
-			te->s.eventParm = GTS_TEAMS_ARE_TIED;
-		}
-		else if ( level.teamScores[ TEAM_RED ] <= level.teamScores[ TEAM_BLUE ] &&
-					level.teamScores[ TEAM_RED ] + score > level.teamScores[ TEAM_BLUE ]) {
-			// red took the lead sound
-			te->s.eventParm = GTS_REDTEAM_TOOK_LEAD;
-		}
-		else {
-			// red scored sound
-			te->s.eventParm = GTS_REDTEAM_SCORED;
-		}
+	eventParm = -1;
+	otherTeam = OtherTeam( team );
+
+	if ( level.teamScores[ team ] + score == level.teamScores[ otherTeam ] ) {
+		//teams are tied sound
+		eventParm = GTS_TEAMS_ARE_TIED;
+	} else if ( level.teamScores[ team ] >= level.teamScores[ otherTeam ] &&
+				level.teamScores[ team ] + score < level.teamScores[ otherTeam ] ) {
+		// other team took the lead sound (negative score)
+		eventParm = ( otherTeam == TEAM_RED ) ? GTS_REDTEAM_TOOK_LEAD : GTS_BLUETEAM_TOOK_LEAD;
+	} else if ( level.teamScores[ team ] <= level.teamScores[ otherTeam ] &&
+				level.teamScores[ team ] + score > level.teamScores[ otherTeam ] ) {
+		// this team took the lead sound
+		eventParm = ( team == TEAM_RED ) ? GTS_REDTEAM_TOOK_LEAD : GTS_BLUETEAM_TOOK_LEAD;
+	} else if ( score > 0 && g_gametype.integer != GT_TEAM ) {
+		// team scored sound
+		eventParm = ( team == TEAM_RED ) ? GTS_REDTEAM_SCORED : GTS_BLUETEAM_SCORED;
 	}
-	else {
-		if ( level.teamScores[ TEAM_BLUE ] + score == level.teamScores[ TEAM_RED ] ) {
-			//teams are tied sound
-			te->s.eventParm = GTS_TEAMS_ARE_TIED;
-		}
-		else if ( level.teamScores[ TEAM_BLUE ] <= level.teamScores[ TEAM_RED ] &&
-					level.teamScores[ TEAM_BLUE ] + score > level.teamScores[ TEAM_RED ]) {
-			// blue took the lead sound
-			te->s.eventParm = GTS_BLUETEAM_TOOK_LEAD;
-		}
-		else {
-			// blue scored sound
-			te->s.eventParm = GTS_BLUETEAM_SCORED;
-		}
+
+	if ( eventParm != -1 ) {
+		te = G_TempEntity(origin, EV_GLOBAL_TEAM_SOUND );
+		te->r.svFlags |= SVF_BROADCAST;
+		te->s.eventParm = eventParm;
 	}
+
 	level.teamScores[ team ] += score;
 }
 
@@ -1126,7 +1133,7 @@ void TeamplayInfoMessage( gentity_t *ent ) {
 		}
 	}
 
-	trap_SendServerCommand( ent-g_entities, va("tinfo %i %s", cnt, string) );
+	trap_SendServerCommand( ent-g_entities, va("tinfo %i %i %s", team, cnt, string) );
 }
 
 void CheckTeamStatus(void) {
@@ -1324,14 +1331,14 @@ gentity_t *SpawnObelisk( vec3_t origin, int team, int spawnflags) {
 	VectorCopy( origin, ent->s.pos.trBase );
 	VectorCopy( origin, ent->r.currentOrigin );
 
-	VectorSet( ent->r.mins, -15, -15, 0 );
-	VectorSet( ent->r.maxs, 15, 15, 87 );
+	VectorSet( ent->s.mins, -15, -15, 0 );
+	VectorSet( ent->s.maxs, 15, 15, 87 );
 
 	ent->s.eType = ET_GENERAL;
 	ent->flags = FL_NO_KNOCKBACK;
 
 	if( g_gametype.integer == GT_OBELISK ) {
-		ent->r.contents = CONTENTS_SOLID;
+		ent->s.contents = CONTENTS_SOLID;
 		ent->takedamage = qtrue;
 		ent->health = g_obeliskHealth.integer;
 		ent->die = ObeliskDie;
@@ -1340,7 +1347,7 @@ gentity_t *SpawnObelisk( vec3_t origin, int team, int spawnflags) {
 		ent->nextthink = level.time + g_obeliskRegenPeriod.integer * 1000;
 	}
 	if( g_gametype.integer == GT_HARVESTER ) {
-		ent->r.contents = CONTENTS_TRIGGER;
+		ent->s.contents = CONTENTS_TRIGGER;
 		ent->touch = ObeliskTouch;
 	}
 
@@ -1354,7 +1361,7 @@ gentity_t *SpawnObelisk( vec3_t origin, int team, int spawnflags) {
 
 		// drop to floor
 		VectorSet( dest, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2] - 4096 );
-		trap_Trace( &tr, ent->s.origin, ent->r.mins, ent->r.maxs, dest, ent->s.number, MASK_SOLID );
+		trap_Trace( &tr, ent->s.origin, ent->s.mins, ent->s.maxs, dest, ent->s.number, MASK_SOLID );
 		if ( tr.startsolid ) {
 			ent->s.origin[2] -= 1;
 			G_Printf( "SpawnObelisk: %s startsolid at %s\n", ent->classname, vtos(ent->s.origin) );

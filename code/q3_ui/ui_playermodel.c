@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -100,6 +108,8 @@ typedef struct
 	int				numpages;
 	char			modelskin[64];
 	int				selectedmodel;
+	int				localClient;
+	char			bannerString[32];
 } playermodel_t;
 
 static playermodel_t s_playermodel;
@@ -192,10 +202,10 @@ PlayerModel_SaveChanges
 */
 static void PlayerModel_SaveChanges( void )
 {
-	trap_Cvar_Set( "model", s_playermodel.modelskin );
-	trap_Cvar_Set( "headmodel", s_playermodel.modelskin );
-	trap_Cvar_Set( "team_model", s_playermodel.modelskin );
-	trap_Cvar_Set( "team_headmodel", s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_model"), s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_headmodel"), s_playermodel.modelskin );
 }
 
 /*
@@ -418,7 +428,7 @@ static void PlayerModel_BuildList( void )
 			continue;
 			
 		// iterate all skin files in directory
-		numfiles = trap_FS_GetFileList( va("models/players/%s",dirptr), "tga", filelist, 2048 );
+		numfiles = trap_FS_GetFileList( va("models/players/%s",dirptr), "$images", filelist, 2048 );
 		fileptr  = filelist;
 		for (j=0; j<numfiles && s_playermodel.nummodels < MAX_PLAYERMODELS;j++,fileptr+=filelen+1)
 		{
@@ -463,11 +473,11 @@ static void PlayerModel_SetMenuItems( void )
 	char*			pdest;
 
 	// name
-	trap_Cvar_VariableStringBuffer( "name", s_playermodel.playername.string, 16 );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playermodel.localClient, "name"), s_playermodel.playername.string, 16 );
 	Q_CleanStr( s_playermodel.playername.string );
 
 	// model
-	trap_Cvar_VariableStringBuffer( "model", s_playermodel.modelskin, 64 );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin, 64 );
 	
 	// use default skin if none is set
 	if (!strchr(s_playermodel.modelskin, '/')) {
@@ -517,7 +527,7 @@ static void PlayerModel_SetMenuItems( void )
 PlayerModel_MenuInit
 =================
 */
-static void PlayerModel_MenuInit( void )
+static void PlayerModel_MenuInit( int localClient )
 {
 	int			i;
 	int			j;
@@ -531,6 +541,9 @@ static void PlayerModel_MenuInit( void )
 	// zero set all our globals
 	memset( &s_playermodel, 0 ,sizeof(playermodel_t) );
 
+	s_playermodel.localClient = localClient;
+	Com_sprintf(s_playermodel.bannerString, sizeof (s_playermodel.bannerString), "PLAYER %d MODEL", s_playermodel.localClient+1);
+
 	PlayerModel_Cache();
 
 	s_playermodel.menu.key        = PlayerModel_MenuKey;
@@ -540,7 +553,7 @@ static void PlayerModel_MenuInit( void )
 	s_playermodel.banner.generic.type  = MTYPE_BTEXT;
 	s_playermodel.banner.generic.x     = 320;
 	s_playermodel.banner.generic.y     = 16;
-	s_playermodel.banner.string        = "PLAYER MODEL";
+	s_playermodel.banner.string = s_playermodel.bannerString;
 	s_playermodel.banner.color         = color_white;
 	s_playermodel.banner.style         = UI_CENTER;
 
@@ -724,9 +737,8 @@ void PlayerModel_Cache( void )
 	}
 }
 
-void UI_PlayerModelMenu(void)
-{
-	PlayerModel_MenuInit();
+void UI_PlayerModelMenu(int localClient) {
+	PlayerModel_MenuInit(localClient);
 
 	UI_PushMenu( &s_playermodel.menu );
 

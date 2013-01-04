@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -37,7 +45,9 @@ MAIN MENU
 #define ID_SETUP				12
 #define ID_DEMOS				13
 #define ID_CINEMATICS			14
-#define ID_TEAMARENA		15
+#ifndef MISSIONPACK
+#define ID_TEAMARENA			15
+#endif
 #define ID_MODS					16
 #define ID_EXIT					17
 
@@ -53,7 +63,9 @@ typedef struct {
 	menutext_s		setup;
 	menutext_s		demos;
 	menutext_s		cinematics;
+#ifndef MISSIONPACK
 	menutext_s		teamArena;
+#endif
 	menutext_s		mods;
 	menutext_s		exit;
 
@@ -120,10 +132,12 @@ void Main_MenuEvent (void* ptr, int event) {
 		UI_ModsMenu();
 		break;
 
+#ifndef MISSIONPACK
 	case ID_TEAMARENA:
 		trap_Cvar_Set( "fs_game", BASETA);
 		trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
 		break;
+#endif
 
 	case ID_EXIT:
 		UI_ConfirmMenu( "EXIT GAME?", 0, MainMenu_ExitAction );
@@ -230,6 +244,7 @@ static void Main_MenuDraw( void ) {
 }
 
 
+#ifndef MISSIONPACK
 /*
 ===============
 UI_TeamArenaExists
@@ -255,6 +270,7 @@ static qboolean UI_TeamArenaExists( void ) {
 	}
 	return qfalse;
 }
+#endif
 
 
 /*
@@ -268,21 +284,13 @@ and that local cinematics are killed
 */
 void UI_MainMenu( void ) {
 	int		y;
+#ifndef MISSIONPACK
 	qboolean teamArena = qfalse;
+#endif
 	int		style = UI_CENTER | UI_DROPSHADOW;
 
 	trap_Cvar_Set( "sv_killserver", "1" );
 
-	if( !uis.demoversion && !ui_cdkeychecked.integer ) {
-		char	key[17];
-
-		trap_GetCDKey( key, sizeof(key) );
-		if( trap_VerifyCDKey( key, NULL ) == qfalse ) {
-			UI_CDKeyMenu();
-			return;
-		}
-	}
-	
 	memset( &s_main, 0 ,sizeof(mainmenu_t) );
 	memset( &s_errorMessage, 0 ,sizeof(errorMessage_t) );
 
@@ -365,6 +373,7 @@ void UI_MainMenu( void ) {
 	s_main.cinematics.color					= color_red;
 	s_main.cinematics.style					= style;
 
+#ifndef MISSIONPACK
 	if ( !uis.demoversion && UI_TeamArenaExists() ) {
 		teamArena = qtrue;
 		y += MAIN_MENU_VERTICAL_SPACING;
@@ -378,6 +387,7 @@ void UI_MainMenu( void ) {
 		s_main.teamArena.color					= color_red;
 		s_main.teamArena.style					= style;
 	}
+#endif
 
 	if ( !uis.demoversion ) {
 		y += MAIN_MENU_VERTICAL_SPACING;
@@ -408,9 +418,11 @@ void UI_MainMenu( void ) {
 	Menu_AddItem( &s_main.menu,	&s_main.setup );
 	Menu_AddItem( &s_main.menu,	&s_main.demos );
 	Menu_AddItem( &s_main.menu,	&s_main.cinematics );
+#ifndef MISSIONPACK
 	if (teamArena) {
 		Menu_AddItem( &s_main.menu,	&s_main.teamArena );
 	}
+#endif
 	if ( !uis.demoversion ) {
 		Menu_AddItem( &s_main.menu,	&s_main.mods );
 	}

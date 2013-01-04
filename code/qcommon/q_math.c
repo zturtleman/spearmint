@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -994,6 +1002,113 @@ void PerpendicularVector( vec3_t dst, const vec3_t src )
 	VectorNormalize( dst );
 }
 
+#define LINE_DISTANCE_EPSILON 1e-05f
+
+/*
+================
+DistanceBetweenLineSegmentsSquared
+
+Return the smallest distance between two line segments, squared
+================
+*/
+vec_t DistanceBetweenLineSegmentsSquared(
+	const vec3_t sP0, const vec3_t sP1,
+	const vec3_t tP0, const vec3_t tP1,
+	float *s, float *t )
+{
+	vec3_t  sMag, tMag, diff;
+	float   a, b, c, d, e;
+	float   D;
+	float   sN, sD;
+	float   tN, tD;
+	vec3_t  separation;
+
+	VectorSubtract( sP1, sP0, sMag );
+	VectorSubtract( tP1, tP0, tMag );
+	VectorSubtract( sP0, tP0, diff );
+	a = DotProduct( sMag, sMag );
+	b = DotProduct( sMag, tMag );
+	c = DotProduct( tMag, tMag );
+	d = DotProduct( sMag, diff );
+	e = DotProduct( tMag, diff );
+	sD = tD = D = a * c - b * b;
+
+	if( D < LINE_DISTANCE_EPSILON )
+	{
+		// the lines are almost parallel
+		sN = 0.0;   // force using point P0 on segment S1
+		sD = 1.0;   // to prevent possible division by 0.0 later
+		tN = e;
+		tD = c;
+	}
+	else
+	{
+		// get the closest points on the infinite lines
+		sN = ( b * e - c * d );
+		tN = ( a * e - b * d );
+
+		if( sN < 0.0 )
+		{
+			// sN < 0 => the s=0 edge is visible
+			sN = 0.0;
+			tN = e;
+			tD = c;
+		}
+		else if( sN > sD )
+		{
+			// sN > sD => the s=1 edge is visible
+			sN = sD;
+			tN = e + b;
+			tD = c;
+		}
+	}
+
+	if( tN < 0.0 )
+	{
+		// tN < 0 => the t=0 edge is visible
+		tN = 0.0;
+
+		// recompute sN for this edge
+		if( -d < 0.0 )
+			sN = 0.0;
+		else if( -d > a )
+			sN = sD;
+		else
+		{
+			sN = -d;
+			sD = a;
+		}
+	}
+	else if( tN > tD )
+	{
+		// tN > tD => the t=1 edge is visible
+		tN = tD;
+
+		// recompute sN for this edge
+		if( ( -d + b ) < 0.0 )
+			sN = 0;
+		else if( ( -d + b ) > a )
+			sN = sD;
+		else
+		{
+			sN = ( -d + b );
+			sD = a;
+		}
+	}
+
+	// finally do the division to get *s and *t
+	*s = ( fabs( sN ) < LINE_DISTANCE_EPSILON ? 0.0 : sN / sD );
+	*t = ( fabs( tN ) < LINE_DISTANCE_EPSILON ? 0.0 : tN / tD );
+
+	// get the difference of the two closest points
+	VectorScale( sMag, *s, sMag );
+	VectorScale( tMag, *t, tMag );
+	VectorAdd( diff, sMag, separation );
+	VectorSubtract( separation, tMag, separation );
+
+	return VectorLengthSquared( separation );
+}
+
 /*
 ================
 Q_isnan
@@ -1018,7 +1133,7 @@ int Q_isnan( float x )
 =====================
 Q_acos
 
-the msvc acos doesn't always return a value between -PI and PI:
+the msvc acos doesn't always return a value between 0 and PI:
 
 int i;
 i = 1065353246;
@@ -1032,11 +1147,34 @@ float Q_acos(float c) {
 	angle = acos(c);
 
 	if (angle > M_PI) {
-		return (float)M_PI;
+		return M_PI;
 	}
-	if (angle < -M_PI) {
-		return (float)M_PI;
+	if (angle < 0.0f) {
+		return 0.0f;
+	}
+	return angle;
+}
+
+/*
+=====================
+Q_asin
+
+the msvc asin probably has same odd behavior as acos
+
+=====================
+*/
+float Q_asin(float c) {
+	float angle;
+
+	angle = asin(c);
+
+	if (angle > M_PI_2) {
+		return M_PI_2;
+	}
+	if (angle < -M_PI_2) {
+		return -M_PI_2;
 	}
 	return angle;
 }
 #endif
+

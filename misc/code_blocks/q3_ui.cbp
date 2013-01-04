@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="q3_ui" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release Win32">
+				<Option platforms="Windows;" />
+				<Option output="../../build/q3_ui_release/uix86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/q3_ui_release" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+					<Add option="-DWIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_WINDOWS" />
+					<Add option="-D_USRDLL" />
+					<Add option="-DQ3_UI_EXPORTS" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+			<Target title="Debug Win32">
+				<Option platforms="Windows;" />
+				<Option output="../../build/q3_ui_debug/uix86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/q3_ui_debug" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-g" />
+					<Add option="-O0" />
+					<Add option="-DWIN32" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_WINDOWS" />
+					<Add option="-D_USRDLL" />
+					<Add option="-DQ3_UI_EXPORTS" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+			<Target title="Release Linux i386">
+				<Option platforms="Unix;" />
+				<Option output="../../build/q3_ui_release/uii386.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/q3_ui_release" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-fPIC" />
+					<Add option="-W" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_USRDLL" />
+					<Add option="-DQ3_UI_EXPORTS" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+			<Target title="Debug Linux i386">
+				<Option platforms="Unix;" />
+				<Option output="../../build/q3_ui_debug/uii386.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/q3_ui_debug" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-fPIC" />
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-D_DEBUG" />
+					<Add option="-DDEBUG" />
+					<Add option="-D_USRDLL" />
+					<Add option="-DQ3_UI_EXPORTS" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+			<Target title="Release Linux x86_64">
+				<Option platforms="Unix;" />
+				<Option output="../../build/q3_ui_release/uix86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/q3_ui_release" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-fPIC" />
+					<Add option="-W" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_USRDLL" />
+					<Add option="-DQ3_UI_EXPORTS" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+			<Target title="Debug Linux x86_64">
+				<Option platforms="Unix;" />
+				<Option output="../../build/q3_ui_debug/uix86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/q3_ui_debug" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-fPIC" />
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-D_DEBUG" />
+					<Add option="-DDEBUG" />
+					<Add option="-D_USRDLL" />
+					<Add option="-DQ3_UI_EXPORTS" />
+					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Unit filename="../../code/client/keycodes.h" />
+		<Unit filename="../../code/game/bg_lib.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/bg_misc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/bg_misc.h" />
+		<Unit filename="../../code/q3_ui/ui_addbots.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_atoms.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_cinematics.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_confirm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_connect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_controls2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_credits.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_demo2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_display.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_gameinfo.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_ingame.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_ingame_selectplayer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_joystick.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_loadconfig.c">
+			<Option compilerVar="CC" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_local.h" />
+		<Unit filename="../../code/q3_ui/ui_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_menu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_mfield.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_mods.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_network.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_options.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_playermodel.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_players.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_playersettings.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_preferences.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_qmenu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_removebots.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_saveconfig.c">
+			<Option compilerVar="CC" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_selectplayer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_serverinfo.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_servers2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_setup.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_sound.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_sparena.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_specifyserver.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_splevel.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_sppostgame.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_spreset.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_spskill.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_startserver.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_team.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_teamorders.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_video.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/q_math.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/q_shared.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/q_shared.h" />
+		<Unit filename="../../code/ui/ui_public.h" />
+		<Unit filename="../../code/ui/ui_syscalls.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

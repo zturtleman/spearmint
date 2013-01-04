@@ -1,27 +1,85 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
 // cg_drawtools.c -- helper functions called by cg_draw, cg_scoreboard, cg_info, etc
 #include "cg_local.h"
+
+static screenPlacement_e cg_horizontalPlacement = PLACE_CENTER;
+static screenPlacement_e cg_verticalPlacement = PLACE_CENTER;
+static screenPlacement_e cg_lastHorizontalPlacement = PLACE_CENTER;
+static screenPlacement_e cg_lastVerticalPlacement = PLACE_CENTER;
+
+/*
+================
+CG_SetScreenPlacement
+================
+*/
+void CG_SetScreenPlacement(screenPlacement_e hpos, screenPlacement_e vpos)
+{
+	cg_lastHorizontalPlacement = cg_horizontalPlacement;
+	cg_lastVerticalPlacement = cg_verticalPlacement;
+
+	cg_horizontalPlacement = hpos;
+	cg_verticalPlacement = vpos;
+}
+
+/*
+================
+CG_PopScreenPlacement
+================
+*/
+void CG_PopScreenPlacement(void)
+{
+	cg_horizontalPlacement = cg_lastHorizontalPlacement;
+	cg_verticalPlacement = cg_lastVerticalPlacement;
+}
+
+/*
+================
+CG_GetScreenHorizontalPlacement
+================
+*/
+screenPlacement_e CG_GetScreenHorizontalPlacement(void)
+{
+	return cg_horizontalPlacement;
+}
+
+/*
+================
+CG_GetScreenVerticalPlacement
+================
+*/
+screenPlacement_e CG_GetScreenVerticalPlacement(void)
+{
+	return cg_verticalPlacement;
+}
 
 /*
 ================
@@ -31,17 +89,76 @@ Adjusted for resolution and screen aspect ratio
 ================
 */
 void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
-#if 0
-	// adjust for wide screens
-	if ( cgs.glconfig.vidWidth * 480 > cgs.glconfig.vidHeight * 640 ) {
-		*x += 0.5 * ( cgs.glconfig.vidWidth - ( cgs.glconfig.vidHeight * 640 / 480 ) );
+	int viewXBias = 0;
+
+	if (cg.numViewports != 1 && cg.snap) {
+		qboolean right = qfalse;
+		qboolean down = qfalse;
+
+		if (cg.numViewports == 2) {
+			if (cg.viewport == 1) {
+				down = qtrue;
+			}
+		}
+		else if (cg.numViewports == 3 && cg.viewport == 2) {
+			down = qtrue;
+		}
+		else if (cg.numViewports <= 4) {
+			if (cg.viewport == 1 || cg.viewport == 3) {
+				right = qtrue;
+			}
+			if (cg.viewport == 2 || cg.viewport == 3) {
+				down = qtrue;
+			}
+		}
+
+		if (cg.viewport != 0 && (cg.numViewports == 2 || cg.numViewports == 3) && cg_splitviewVertical.integer) {
+			right = !right;
+			down = !down;
+		}
+
+		if (right) {
+			viewXBias = 2;
+			*x += SCREEN_WIDTH;
+		}
+		if (down) {
+			*y += SCREEN_HEIGHT;
+		}
 	}
-#endif
-	// scale for screen sizes
-	*x *= cgs.screenXScale;
-	*y *= cgs.screenYScale;
-	*w *= cgs.screenXScale;
-	*h *= cgs.screenYScale;
+
+	if (cg_horizontalPlacement == PLACE_STRETCH) {
+		// scale for screen sizes (not aspect correct in wide screen)
+		*x *= cgs.screenXScaleStretch;
+		*w *= cgs.screenXScaleStretch;
+	} else {
+		// scale for screen sizes
+		*x *= cgs.screenXScale;
+		*w *= cgs.screenXScale;
+
+		// Screen Placement
+		if (cg_horizontalPlacement == PLACE_CENTER) {
+			*x += cgs.screenXBias;
+		} else if (cg_horizontalPlacement == PLACE_RIGHT) {
+			*x += cgs.screenXBias*2;
+		}
+
+		// Offset for widescreen
+		*x += cgs.screenXBias*(viewXBias);
+	}
+
+	if (cg_verticalPlacement == PLACE_STRETCH) {
+		*y *= cgs.screenYScaleStretch;
+		*h *= cgs.screenYScaleStretch;
+	} else {
+		*y *= cgs.screenYScale;
+		*h *= cgs.screenYScale;
+
+		if (cg_verticalPlacement == PLACE_CENTER) {
+			*y += cgs.screenYBias;
+		} else if (cg_verticalPlacement == PLACE_BOTTOM) {
+			*y += cgs.screenYBias*2;
+		}
+	}
 }
 
 /*
@@ -69,14 +186,22 @@ Coords are virtual 640x480
 */
 void CG_DrawSides(float x, float y, float w, float h, float size) {
 	CG_AdjustFrom640( &x, &y, &w, &h );
-	size *= cgs.screenXScale;
+	if (cg_horizontalPlacement == PLACE_STRETCH) {
+		size *= cgs.screenXScaleStretch;
+	} else {
+		size *= cgs.screenXScale;
+	}
 	trap_R_DrawStretchPic( x, y, size, h, 0, 0, 0, 0, cgs.media.whiteShader );
 	trap_R_DrawStretchPic( x + w - size, y, size, h, 0, 0, 0, 0, cgs.media.whiteShader );
 }
 
 void CG_DrawTopBottom(float x, float y, float w, float h, float size) {
 	CG_AdjustFrom640( &x, &y, &w, &h );
-	size *= cgs.screenYScale;
+	if (cg_verticalPlacement == PLACE_STRETCH) {
+		size *= cgs.screenYScaleStretch;
+	} else {
+		size *= cgs.screenYScale;
+	}
 	trap_R_DrawStretchPic( x, y, w, size, 0, 0, 0, 0, cgs.media.whiteShader );
 	trap_R_DrawStretchPic( x, y + h - size, w, size, 0, 0, 0, 0, cgs.media.whiteShader );
 }
@@ -110,6 +235,32 @@ void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader 
 	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
 }
 
+/*
+================
+CG_SetClipRegion
+=================
+*/
+void CG_SetClipRegion( float x, float y, float w, float h ) {
+	vec4_t clip;
+
+	CG_AdjustFrom640( &x, &y, &w, &h );
+
+	clip[ 0 ] = x;
+	clip[ 1 ] = y;
+	clip[ 2 ] = x + w;
+	clip[ 3 ] = y + h;
+
+	trap_R_SetClipRegion( clip );
+}
+
+/*
+================
+CG_ClearClipRegion
+=================
+*/
+void CG_ClearClipRegion( void ) {
+	trap_R_SetClipRegion( NULL );
+}
 
 
 /*
@@ -290,32 +441,39 @@ Clear around a sized down screen
 */
 void CG_TileClear( void ) {
 	int		top, bottom, left, right;
-	int		w, h;
+	float		x, y, w, h;
 
-	w = cgs.glconfig.vidWidth;
-	h = cgs.glconfig.vidHeight;
-
-	if ( cg.refdef.x == 0 && cg.refdef.y == 0 && 
-		cg.refdef.width == w && cg.refdef.height == h ) {
+	if (cg.cur_ps->pm_type == PM_INTERMISSION || cg_viewsize.integer >= 100) {
 		return;		// full screen rendering
 	}
 
+	CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+
+	// viewport coords
+	x = y = 0;
+	w = SCREEN_WIDTH;
+	h = SCREEN_HEIGHT;
+	CG_AdjustFrom640(&x, &y, &w, &h);
+
+	// view screen coords
 	top = cg.refdef.y;
 	bottom = top + cg.refdef.height-1;
 	left = cg.refdef.x;
 	right = left + cg.refdef.width-1;
 
 	// clear above view screen
-	CG_TileClearBox( 0, 0, w, top, cgs.media.backTileShader );
+	CG_TileClearBox( x, y, w, top, cgs.media.backTileShader );
 
 	// clear below view screen
-	CG_TileClearBox( 0, bottom, w, h - bottom, cgs.media.backTileShader );
+	CG_TileClearBox( x, bottom, w, h - bottom, cgs.media.backTileShader );
 
 	// clear left of view screen
-	CG_TileClearBox( 0, top, left, bottom - top + 1, cgs.media.backTileShader );
+	CG_TileClearBox( x, top, left, bottom - top + 1, cgs.media.backTileShader );
 
 	// clear right of view screen
 	CG_TileClearBox( right, top, w - right, bottom - top + 1, cgs.media.backTileShader );
+
+	CG_PopScreenPlacement();
 }
 
 
@@ -426,8 +584,8 @@ CG_ColorForHealth
 */
 void CG_ColorForHealth( vec4_t hcolor ) {
 
-	CG_GetColorForHealth( cg.snap->ps.stats[STAT_HEALTH], 
-		cg.snap->ps.stats[STAT_ARMOR], hcolor );
+	CG_GetColorForHealth( cg.cur_ps->stats[STAT_HEALTH], 
+		cg.cur_ps->stats[STAT_ARMOR], hcolor );
 }
 
 

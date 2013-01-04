@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
@@ -166,7 +174,7 @@ int Export_BotLibSetup(void)
 		Log_Open(logfilename);
 	}
 
-	botimport.Print(PRT_MESSAGE, "------- BotLib Initialization -------\n");
+	botimport.Print(PRT_DEVELOPER, "------- BotLib Initialization -------\n");
 
 	botlibglobals.maxclients = (int) LibVarValue("maxclients", "128");
 	botlibglobals.maxentities = (int) LibVarValue("maxentities", "1024");
@@ -284,7 +292,7 @@ int Export_BotLibLoadMap(const char *mapname)
 
 	if (!BotLibSetup("BotLoadMap")) return BLERR_LIBRARYNOTSETUP;
 	//
-	botimport.Print(PRT_MESSAGE, "------------ Map Loading ------------\n");
+	botimport.Print(PRT_DEVELOPER, "------------ Map Loading ------------\n");
 	//startup AAS for the current map, model and sound index
 	errnum = AAS_LoadMap(mapname);
 	if (errnum != BLERR_NOERROR) return errnum;
@@ -292,9 +300,9 @@ int Export_BotLibLoadMap(const char *mapname)
 	BotInitLevelItems();		//be_ai_goal.h
 	BotSetBrushModelTypes();	//be_ai_move.h
 	//
-	botimport.Print(PRT_MESSAGE, "-------------------------------------\n");
+	botimport.Print(PRT_DEVELOPER, "-------------------------------------\n");
 #ifdef DEBUG
-	botimport.Print(PRT_MESSAGE, "map loaded in %d msec\n", Sys_MilliSeconds() - starttime);
+	botimport.Print(PRT_DEVELOPER, "map loaded in %d msec\n", Sys_MilliSeconds() - starttime);
 #endif
 	//
 	return BLERR_NOERROR;
@@ -348,7 +356,8 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 	static int line[2];
 	int newarea, i, highlightarea, flood;
 //	int reachnum;
-	vec3_t eye, forward, right, end, origin;
+	vec3_t forward, origin;
+//	vec3_t eye, right, end;
 //	vec3_t bottomcenter;
 //	aas_trace_t trace;
 //	aas_face_t *face;
@@ -358,8 +367,8 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 //	bot_goal_t goal;
 
 	// clock_t start_time, end_time;
-	vec3_t mins = {-16, -16, -24};
-	vec3_t maxs = {16, 16, 32};
+//	vec3_t mins = {-16, -16, -24};
+//	vec3_t maxs = {16, 16, 32};
 
 //	int areas[10], numareas;
 
@@ -583,13 +592,13 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 		AAS_Reachability_WeaponJump(703, 716);
 	} //end if*/
 
-	AngleVectors(parm3, forward, right, NULL);
+//	AngleVectors(parm3, forward, right, NULL);
 	//get the eye 16 units to the right of the origin
-	VectorMA(parm2, 8, right, eye);
+//	VectorMA(parm2, 8, right, eye);
 	//get the eye 24 units up
-	eye[2] += 24;
+//	eye[2] += 24;
 	//get the end point for the line to be traced
-	VectorMA(eye, 800, forward, end);
+//	VectorMA(eye, 800, forward, end);
 
 //	AAS_TestMovementPrediction(1, parm2, forward);
 /*
@@ -707,6 +716,7 @@ static void Init_AAS_Export( aas_export_t *aas ) {
 	// be_aas_reach.c
 	//--------------------------------------------
 	aas->AAS_AreaReachability = AAS_AreaReachability;
+	aas->AAS_BestReachableArea = AAS_BestReachableArea;
 	//--------------------------------------------
 	// be_aas_route.c
 	//--------------------------------------------
@@ -890,9 +900,11 @@ botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
 	be_botlib_export.BotLibVarGet = Export_BotLibVarGet;
 
 	be_botlib_export.PC_AddGlobalDefine = PC_AddGlobalDefine;
+	be_botlib_export.PC_RemoveAllGlobalDefines = PC_RemoveAllGlobalDefines;
 	be_botlib_export.PC_LoadSourceHandle = PC_LoadSourceHandle;
 	be_botlib_export.PC_FreeSourceHandle = PC_FreeSourceHandle;
 	be_botlib_export.PC_ReadTokenHandle = PC_ReadTokenHandle;
+	be_botlib_export.PC_UnreadLastTokenHandle = PC_UnreadLastTokenHandle;
 	be_botlib_export.PC_SourceFileAndLine = PC_SourceFileAndLine;
 
 	be_botlib_export.BotLibStartFrame = Export_BotLibStartFrame;

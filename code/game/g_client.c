@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -473,13 +481,13 @@ void CopyToBodyQue( gentity_t *ent ) {
 	}
 
 	body->r.svFlags = ent->r.svFlags;
-	VectorCopy (ent->r.mins, body->r.mins);
-	VectorCopy (ent->r.maxs, body->r.maxs);
+	VectorCopy (ent->s.mins, body->s.mins);
+	VectorCopy (ent->s.maxs, body->s.maxs);
 	VectorCopy (ent->r.absmin, body->r.absmin);
 	VectorCopy (ent->r.absmax, body->r.absmax);
 
 	body->clipmask = CONTENTS_SOLID | CONTENTS_PLAYERCLIP;
-	body->r.contents = CONTENTS_CORPSE;
+	body->s.contents = CONTENTS_CORPSE;
 	body->r.ownerNum = ent->s.number;
 
 	body->nextthink = level.time + 5000;
@@ -685,7 +693,30 @@ static void ClientCleanName(const char *in, char *out, int outSize)
 
 	// don't allow empty names
 	if( *out == '\0' || colorlessLen == 0)
-		Q_strncpyz(out, "UnnamedPlayer", outSize );
+		Q_strncpyz(out, DEFAULT_CLIENT_NAME, outSize );
+}
+
+/*
+===========
+ClientHandicap
+============
+*/
+float ClientHandicap( gclient_t *client ) {
+	char	userinfo[MAX_INFO_STRING];
+	float	handicap;
+
+	if (!client) {
+		return 100;
+	}
+
+	trap_GetUserinfo( client - level.clients, userinfo, sizeof(userinfo) );
+
+	handicap = atof( Info_ValueForKey( userinfo, "handicap" ) );
+	if ( handicap < 1 || handicap > 100) {
+		handicap = 100;
+	}
+
+	return handicap;
 }
 
 
@@ -702,7 +733,7 @@ if desired.
 */
 void ClientUserinfoChanged( int clientNum ) {
 	gentity_t *ent;
-	int		teamTask, teamLeader, team, health;
+	int		teamTask, teamLeader, team;
 	char	*s;
 	char	model[MAX_QPATH];
 	char	headModel[MAX_QPATH];
@@ -710,8 +741,6 @@ void ClientUserinfoChanged( int clientNum ) {
 	gclient_t	*client;
 	char	c1[MAX_INFO_STRING];
 	char	c2[MAX_INFO_STRING];
-	char	redTeam[MAX_INFO_STRING];
-	char	blueTeam[MAX_INFO_STRING];
 	char	userinfo[MAX_INFO_STRING];
 
 	ent = g_entities + clientNum;
@@ -763,18 +792,10 @@ void ClientUserinfoChanged( int clientNum ) {
 	if (client->ps.powerups[PW_GUARD]) {
 		client->pers.maxHealth = 200;
 	} else {
-		health = atoi( Info_ValueForKey( userinfo, "handicap" ) );
-		client->pers.maxHealth = health;
-		if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
-			client->pers.maxHealth = 100;
-		}
+		client->pers.maxHealth = ClientHandicap( client );
 	}
 #else
-	health = atoi( Info_ValueForKey( userinfo, "handicap" ) );
-	client->pers.maxHealth = health;
-	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
-		client->pers.maxHealth = 100;
-	}
+	client->pers.maxHealth = ClientHandicap( client );
 #endif
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 
@@ -863,9 +884,6 @@ void ClientUserinfoChanged( int clientNum ) {
 	strcpy(c1, Info_ValueForKey( userinfo, "color1" ));
 	strcpy(c2, Info_ValueForKey( userinfo, "color2" ));
 
-	strcpy(redTeam, Info_ValueForKey( userinfo, "g_redteam" ));
-	strcpy(blueTeam, Info_ValueForKey( userinfo, "g_blueteam" ));
-	
 	// send over a subset of the userinfo keys so other clients can
 	// print scoreboards, display models, and play custom sounds
 	if (ent->r.svFlags & SVF_BOT)
@@ -877,8 +895,8 @@ void ClientUserinfoChanged( int clientNum ) {
 	}
 	else
 	{
-		s = va("n\\%s\\t\\%i\\model\\%s\\hmodel\\%s\\g_redteam\\%s\\g_blueteam\\%s\\c1\\%s\\c2\\%s\\hc\\%i\\w\\%i\\l\\%i\\tt\\%d\\tl\\%d",
-			client->pers.netname, client->sess.sessionTeam, model, headModel, redTeam, blueTeam, c1, c2, 
+		s = va("n\\%s\\t\\%i\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%s\\hc\\%i\\w\\%i\\l\\%i\\tt\\%d\\tl\\%d",
+			client->pers.netname, client->sess.sessionTeam, model, headModel, c1, c2, 
 			client->pers.maxHealth, client->sess.wins, client->sess.losses, teamTask, teamLeader);
 	}
 
@@ -909,37 +927,49 @@ to the server machine, but qfalse on map changes and tournement
 restarts.
 ============
 */
-char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
+char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int connectionNum, int localPlayerNum ) {
 	char		*value;
 //	char		*areabits;
 	gclient_t	*client;
 	char		userinfo[MAX_INFO_STRING];
 	gentity_t	*ent;
+	qboolean	firstConnectionPlayer;
 
 	ent = &g_entities[ clientNum ];
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
- 	// IP filtering
- 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=500
- 	// recommanding PB based IP / GUID banning, the builtin system is pretty limited
- 	// check to see if they are on the banned IP list
-	value = Info_ValueForKey (userinfo, "ip");
-	if ( G_FilterPacket( value ) ) {
-		return "You are banned from this server.";
-	}
+	// Check if it's the first player on the client (i.e. not a splitscreen player)
+	firstConnectionPlayer = ( level.connections[connectionNum].numLocalPlayers == 0 );
 
-  // we don't check password for bots and local client
-  // NOTE: local client <-> "ip" "localhost"
-  //   this means this client is not running in our current process
-	if ( !isBot && (strcmp(value, "localhost") != 0)) {
-		// check for a password
-		value = Info_ValueForKey (userinfo, "password");
-		if ( g_password.string[0] && Q_stricmp( g_password.string, "none" ) &&
-			strcmp( g_password.string, value) != 0) {
-			return "Invalid password";
+	if ( firstConnectionPlayer ) {
+		// IP filtering
+		// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=500
+		// recommanding PB based IP / GUID banning, the builtin system is pretty limited
+		// check to see if they are on the banned IP list
+		value = Info_ValueForKey (userinfo, "ip");
+		if ( G_FilterPacket( value ) ) {
+			return "You are banned from this server.";
+		}
+
+		// we don't check password for bots and local client
+		// NOTE: local client <-> "ip" "localhost"
+		//   this means this client is not running in our current process
+		if ( !isBot && (strcmp(value, "localhost") != 0) ) {
+			// check for a password
+			value = Info_ValueForKey (userinfo, "password");
+			if ( g_password.string[0] && Q_stricmp( g_password.string, "none" ) &&
+				strcmp( g_password.string, value) != 0) {
+				return "Invalid password";
+			}
+		}
+	} else {
+		// Don't allow splitscreen players in single player.
+		if ( g_singlePlayer.integer ) {
+			return "Splitscreen not allowed in single player.";
 		}
 	}
+
 	// if a player reconnects quickly after a disconnect, the client disconnect may never be called, thus flag can get lost in the ether
 	if (ent->inuse) {
 		G_LogPrintf("Forcing disconnect on active client: %i\n", clientNum);
@@ -955,6 +985,12 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	memset( client, 0, sizeof(*client) );
 
 	client->pers.connected = CON_CONNECTING;
+
+	// update client connection info
+	level.connections[connectionNum].numLocalPlayers++;
+	level.connections[connectionNum].localPlayerNums[localPlayerNum] = clientNum;
+	client->pers.connectionNum = connectionNum;
+	client->pers.localPlayerNum = localPlayerNum;
 
 	// read or initialize the session data
 	if ( firstTime || level.newSession ) {
@@ -975,7 +1011,8 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	ClientUserinfoChanged( clientNum );
 
 	// don't do the "xxx connected" messages if they were caried over from previous level
-	if ( firstTime ) {
+	// or if they're an extra local player
+	if ( firstTime && firstConnectionPlayer ) {
 		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " connected\n\"", client->pers.netname) );
 	}
 
@@ -1039,7 +1076,11 @@ void ClientBegin( int clientNum ) {
 
 	if ( client->sess.sessionTeam != TEAM_SPECTATOR ) {
 		if ( g_gametype.integer != GT_TOURNAMENT  ) {
-			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " entered the game\n\"", client->pers.netname) );
+			if ( level.connections[client->pers.connectionNum].numLocalPlayers > 1 ) {
+				trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " dropped in\n\"", client->pers.netname) );
+			} else {
+				trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " entered the game\n\"", client->pers.netname) );
+			}
 		}
 	}
 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
@@ -1072,7 +1113,6 @@ void ClientSpawn(gentity_t *ent) {
 //	char	*savedAreaBits;
 	int		accuracy_hits, accuracy_shots;
 	int		eventSequence;
-	char	userinfo[MAX_INFO_STRING];
 
 	index = ent - g_entities;
 	client = ent->client;
@@ -1153,30 +1193,27 @@ void ClientSpawn(gentity_t *ent) {
 
 	client->airOutTime = level.time + 12000;
 
-	trap_GetUserinfo( index, userinfo, sizeof(userinfo) );
 	// set max health
-	client->pers.maxHealth = atoi( Info_ValueForKey( userinfo, "handicap" ) );
-	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
-		client->pers.maxHealth = 100;
-	}
+	client->pers.maxHealth = ClientHandicap( client );
 	// clear entity values
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 	client->ps.eFlags = flags;
+	client->ps.contents = CONTENTS_BODY;
+	client->ps.capsule = qtrue;
 
 	ent->s.groundEntityNum = ENTITYNUM_NONE;
 	ent->client = &level.clients[index];
 	ent->takedamage = qtrue;
 	ent->inuse = qtrue;
 	ent->classname = "player";
-	ent->r.contents = CONTENTS_BODY;
 	ent->clipmask = MASK_PLAYERSOLID;
 	ent->die = player_die;
 	ent->waterlevel = 0;
 	ent->watertype = 0;
 	ent->flags = 0;
 	
-	VectorCopy (playerMins, ent->r.mins);
-	VectorCopy (playerMaxs, ent->r.maxs);
+	VectorCopy (playerMins, client->ps.mins);
+	VectorCopy (playerMaxs, client->ps.maxs);
 
 	client->ps.clientNum = index;
 
@@ -1326,7 +1363,7 @@ void ClientDisconnect( int clientNum ) {
 		ent->client->sess.sessionTeam == TEAM_FREE &&
 		level.intermissiontime ) {
 
-		trap_SendConsoleCommand( EXEC_APPEND, "map_restart 0\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, "map_restart 0\n" );
 		level.restarted = qtrue;
 		level.changemap = NULL;
 		level.intermissiontime = 0;
@@ -1347,6 +1384,11 @@ void ClientDisconnect( int clientNum ) {
 	if ( ent->r.svFlags & SVF_BOT ) {
 		BotAIShutdownClient( clientNum, qfalse );
 	}
+
+	// clear player connection info
+	level.connections[ent->client->pers.connectionNum].numLocalPlayers--;
+	level.connections[ent->client->pers.connectionNum].localPlayerNums[ent->client->pers.localPlayerNum] = -1;
+	ent->client->pers.localPlayerNum = ent->client->pers.connectionNum = -1;
 }
 
 

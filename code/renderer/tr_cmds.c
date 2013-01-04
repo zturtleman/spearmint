@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 #include "tr_local.h"
@@ -268,6 +276,90 @@ void	RE_SetColor( const float *rgba ) {
 
 /*
 =============
+R_ClipRegion
+=============
+*/
+static qboolean R_ClipRegion ( float *x, float *y, float *w, float *h,
+		float *s1, float *t1, float *s2, float *t2 ) {
+	float left, top, right, bottom;
+	float _s1, _t1, _s2, _t2;
+	float clipLeft, clipTop, clipRight, clipBottom;
+
+	if (tr.clipRegion[2] <= tr.clipRegion[0] ||
+		tr.clipRegion[3] <= tr.clipRegion[1] ) {
+		return qfalse;
+	}
+
+	left = *x;
+	top = *y;
+	right = *x + *w;
+	bottom = *y + *h;
+
+	_s1 = *s1;
+	_t1 = *t1;
+	_s2 = *s2;
+	_t2 = *t2;
+
+	clipLeft = tr.clipRegion[0];
+	clipTop = tr.clipRegion[1];
+	clipRight = tr.clipRegion[2];
+	clipBottom = tr.clipRegion[3];
+
+	// Completely clipped away
+	if ( right <= clipLeft || left >= clipRight ||
+		bottom <= clipTop || top >= clipBottom ) {
+		return qtrue;
+	}
+
+	// Clip left edge
+	if ( left < clipLeft ) {
+		float f = ( clipLeft - left ) / ( right - left );
+		*s1 = ( f * ( _s2 - _s1 ) ) + _s1;
+		*x = clipLeft;
+		*w -= ( clipLeft - left );
+	}
+
+	// Clip right edge
+	if ( right > clipRight ) {
+		float f = ( clipRight - right ) / ( left - right );
+		*s2 = ( f * ( _s1 - _s2 ) ) + _s2;
+		*w = clipRight - *x;
+	}
+
+	// Clip top edge
+	if ( top < clipTop ) {
+		float f = ( clipTop - top ) / ( bottom - top );
+		*t1 = ( f * ( _t2 - _t1 ) ) + _t1;
+		*y = clipTop;
+		*h -= ( clipTop - top );
+	}
+
+	// Clip bottom edge
+	if ( bottom > clipBottom ) {
+		float f = ( clipBottom - bottom ) / ( top - bottom );
+		*t2 = ( f * ( _t1 - _t2 ) ) + _t2;
+		*h = clipBottom - *y;
+	}
+
+	return qfalse;
+}
+
+/*
+=============
+RE_SetClipRegion
+=============
+*/
+void RE_SetClipRegion( const float *region ) {
+	if ( region == NULL ) {
+		Com_Memset( tr.clipRegion, 0, sizeof( vec4_t ) );
+	} else {
+		Vector4Copy( region, tr.clipRegion );
+	}
+}
+
+
+/*
+=============
 RE_StretchPic
 =============
 */
@@ -275,9 +367,12 @@ void RE_StretchPic ( float x, float y, float w, float h,
 					  float s1, float t1, float s2, float t2, qhandle_t hShader ) {
 	stretchPicCommand_t	*cmd;
 
-  if (!tr.registered) {
-    return;
-  }
+	if (!tr.registered) {
+		return;
+	}
+	if (R_ClipRegion(&x, &y, &w, &h, &s1, &t1, &s2, &t2)) {
+		return;
+	}
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
 	if ( !cmd ) {
 		return;
@@ -292,6 +387,156 @@ void RE_StretchPic ( float x, float y, float w, float h,
 	cmd->t1 = t1;
 	cmd->s2 = s2;
 	cmd->t2 = t2;
+}
+
+/*
+=============
+RE_RotatedPic
+=============
+*/
+void RE_RotatedPic( float x, float y, float w, float h,
+					float s1, float t1, float s2, float t2, qhandle_t hShader, float angle ) {
+	stretchPicCommand_t *cmd;
+
+	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
+	if ( !cmd ) {
+		return;
+	}
+	cmd->commandId = RC_ROTATED_PIC;
+	cmd->shader = R_GetShaderByHandle( hShader );
+	cmd->x = x;
+	cmd->y = y;
+	cmd->w = w;
+	cmd->h = h;
+
+	// fixup
+	cmd->w /= 2;
+	cmd->h /= 2;
+	cmd->x += cmd->w;
+	cmd->y += cmd->h;
+	cmd->w = sqrt( ( cmd->w * cmd->w ) + ( cmd->h * cmd->h ) );
+	cmd->h = cmd->w;
+
+	cmd->angle = angle;
+	cmd->s1 = s1;
+	cmd->t1 = t1;
+	cmd->s2 = s2;
+	cmd->t2 = t2;
+}
+
+/*
+==============
+RE_StretchPicGradient
+==============
+*/
+void RE_StretchPicGradient( float x, float y, float w, float h,
+							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType ) {
+	stretchPicCommand_t *cmd;
+
+	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
+	if ( !cmd ) {
+		return;
+	}
+	cmd->commandId = RC_STRETCH_PIC_GRADIENT;
+	cmd->shader = R_GetShaderByHandle( hShader );
+	cmd->x = x;
+	cmd->y = y;
+	cmd->w = w;
+	cmd->h = h;
+	cmd->s1 = s1;
+	cmd->t1 = t1;
+	cmd->s2 = s2;
+	cmd->t2 = t2;
+
+	if ( !gradientColor ) {
+		static float colorWhite[4] = { 1, 1, 1, 1 };
+
+		gradientColor = colorWhite;
+	}
+
+	cmd->gradientColor[0] = gradientColor[0] * 255;
+	cmd->gradientColor[1] = gradientColor[1] * 255;
+	cmd->gradientColor[2] = gradientColor[2] * 255;
+	cmd->gradientColor[3] = gradientColor[3] * 255;
+	cmd->gradientType = gradientType;
+}
+
+/*
+=============
+RE_2DPolyies
+=============
+*/
+extern int r_numpolyverts;
+
+void RE_2DPolyies( polyVert_t* verts, int numverts, qhandle_t hShader ) {
+	poly2dCommand_t* cmd;
+
+	if ( r_numpolyverts + numverts > max_polyverts ) {
+		return;
+	}
+
+	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
+	if ( !cmd ) {
+		return;
+	}
+
+	cmd->commandId =    RC_2DPOLYS;
+	cmd->verts =        &backEndData[tr.smpFrame]->polyVerts[r_numpolyverts];
+	cmd->numverts =     numverts;
+	memcpy( cmd->verts, verts, sizeof( polyVert_t ) * numverts );
+	cmd->shader =       R_GetShaderByHandle( hShader );
+
+	r_numpolyverts += numverts;
+}
+
+/*
+====================
+RE_GetGlobalFog
+====================
+*/
+void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
+	if (type) {
+		*type = tr.globalFogType;
+	}
+
+	if (color) {
+		VectorCopy( tr.globalFogColor, color );
+	}
+
+	if (depthForOpaque) {
+		*depthForOpaque = tr.globalFogDepthForOpaque;
+	}
+
+	if (density) {
+		*density = tr.globalFogDensity;
+	}
+}
+
+/*
+====================
+RE_GetWaterFog
+====================
+*/
+void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
+	// ZTM: TODO: Use origin to get water fog.
+	// Idea: For each bmodel containing point `origin', check shader on each side for waterfogvars
+	(void)origin;
+
+	if (type) {
+		*type = tr.waterFogType;
+	}
+
+	if (color) {
+		VectorCopy( tr.waterFogColor, color );
+	}
+
+	if (depthForOpaque) {
+		*depthForOpaque = tr.waterFogDepthForOpaque;
+	}
+
+	if (density) {
+		*density = tr.waterFogDensity;
+	}
 }
 
 #define MODE_RED_CYAN	1

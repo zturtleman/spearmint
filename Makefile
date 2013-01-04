@@ -1,8 +1,11 @@
 #
-# ioq3 Makefile
+# Spearmint Makefile
 #
 # GNU Make required
 #
+
+# ioquake3 svn version that this is based on
+IOQ3_REVISION = 2398
 
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
@@ -26,9 +29,6 @@ ifeq ($(COMPILE_PLATFORM),mingw32)
   endif
 endif
 
-ifndef BUILD_STANDALONE
-  BUILD_STANDALONE =
-endif
 ifndef BUILD_CLIENT
   BUILD_CLIENT     =
 endif
@@ -52,6 +52,9 @@ ifndef BUILD_MISSIONPACK
 endif
 ifndef BUILD_RENDERER_REND2
   BUILD_RENDERER_REND2=
+endif
+ifndef BUILD_FINAL
+  BUILD_FINAL      =0
 endif
 
 ifneq ($(PLATFORM),darwin)
@@ -101,11 +104,11 @@ VERSION=1.36
 endif
 
 ifndef CLIENTBIN
-CLIENTBIN=ioquake3
+CLIENTBIN=spearmint
 endif
 
 ifndef SERVERBIN
-SERVERBIN=ioq3ded
+SERVERBIN=spearmint-server
 endif
 
 ifndef BASEGAME
@@ -121,7 +124,12 @@ MISSIONPACK=missionpack
 endif
 
 ifndef MISSIONPACK_CFLAGS
-MISSIONPACK_CFLAGS=-DMISSIONPACK
+MISSIONPACK_CFLAGS=-DMISSIONPACK -DMISSIONPACK_HUD
+endif
+
+# Add "-DEXAMPLE" to define EXAMPLE in engine and game/cgame/ui.
+ifndef BUILD_DEFINES
+BUILD_DEFINES =
 endif
 
 ifndef COPYDIR
@@ -169,7 +177,7 @@ ifndef USE_CURL_DLOPEN
 endif
 
 ifndef USE_CODEC_VORBIS
-USE_CODEC_VORBIS=0
+USE_CODEC_VORBIS=1
 endif
 
 ifndef USE_MUMBLE
@@ -181,7 +189,7 @@ USE_VOIP=1
 endif
 
 ifndef USE_FREETYPE
-USE_FREETYPE=0
+USE_FREETYPE=1
 endif
 
 ifndef USE_INTERNAL_SPEEX
@@ -194,6 +202,18 @@ endif
 
 ifndef USE_INTERNAL_JPEG
 USE_INTERNAL_JPEG=1
+endif
+
+ifndef USE_INTERNAL_FREETYPE
+USE_INTERNAL_FREETYPE=1
+endif
+
+ifndef USE_INTERNAL_OGG
+USE_INTERNAL_OGG=1
+endif
+
+ifndef USE_INTERNAL_VORBIS
+USE_INTERNAL_VORBIS=1
 endif
 
 ifndef USE_LOCAL_HEADERS
@@ -233,6 +253,7 @@ Q3UIDIR=$(MOUNT_DIR)/q3_ui
 JPDIR=$(MOUNT_DIR)/jpeg-8c
 SPEEXDIR=$(MOUNT_DIR)/libspeex
 ZDIR=$(MOUNT_DIR)/zlib
+FTDIR=$(MOUNT_DIR)/freetype-2.4.9
 Q3ASMDIR=$(MOUNT_DIR)/tools/asm
 LBURGDIR=$(MOUNT_DIR)/tools/lcc/lburg
 Q3CPPDIR=$(MOUNT_DIR)/tools/lcc/cpp
@@ -242,6 +263,8 @@ LOKISETUPDIR=misc/setup
 NSISDIR=misc/nsis
 SDLHDIR=$(MOUNT_DIR)/SDL12
 LIBSDIR=$(MOUNT_DIR)/libs
+OGGDIR=$(MOUNT_DIR)/libogg
+VORBISDIR=$(MOUNT_DIR)/libvorbis
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -267,14 +290,27 @@ ifneq ($(BUILD_CLIENT),0)
   endif
 endif
 
-# Add svn version info
-USE_GIT=
-ifeq ($(wildcard .git),.git)
-	GIT_REV=$(shell git show -s --pretty=format:%h-%ad --date=short)
-  ifneq ($(GIT_REV),)
-    VERSION:=$(VERSION)_GIT_$(GIT_REV)
-    USE_GIT=1
-  endif
+ifneq ($(BUILD_FINAL),1)
+	# Add svn version info
+	USE_SVN=
+	ifeq ($(wildcard .svn),.svn)
+	  SVN_REV=$(shell LANG=C svnversion .)
+	  ifneq ($(SVN_REV),)
+		VERSION:=$(VERSION)_SVN$(SVN_REV)
+		USE_SVN=1
+	  endif
+	else
+	ifeq ($(wildcard .git/svn/.metadata),.git/svn/.metadata)
+	  SVN_REV=$(shell LANG=C git svn info | awk '$$1 == "Revision:" {print $$2; exit 0}')
+	  ifneq ($(SVN_REV),)
+		VERSION:=$(VERSION)_SVN$(SVN_REV)
+	  endif
+	endif
+	endif
+
+	ifdef IOQ3_REVISION
+	  VERSION:=$(VERSION)_IOQ3r$(IOQ3_REVISION)
+	endif
 endif
 
 
@@ -370,16 +406,14 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
     endif
   endif
 
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LIBS += -lvorbisfile -lvorbis -logg
-  endif
-
   ifeq ($(USE_MUMBLE),1)
     CLIENT_LIBS += -lrt
   endif
 
   ifeq ($(USE_FREETYPE),1)
-    BASE_CFLAGS += $(FREETYPE_CFLAGS)
+    ifneq ($(USE_INTERNAL_FREETYPE), 1)
+      BASE_CFLAGS += $(FREETYPE_CFLAGS)
+    endif
   endif
 
   ifeq ($(ARCH),i386)
@@ -437,11 +471,9 @@ ifeq ($(PLATFORM),darwin)
   endif
 
   ifeq ($(USE_FREETYPE),1)
-    BASE_CFLAGS += $(FREETYPE_CFLAGS)
-  endif
-
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LIBS += -lvorbisfile -lvorbis -logg
+    ifneq ($(USE_INTERNAL_FREETYPE), 1)
+      BASE_CFLAGS += $(FREETYPE_CFLAGS)
+    endif
   endif
 
   BASE_CFLAGS += -D_THREAD_SAFE=1
@@ -528,9 +560,17 @@ ifeq ($(PLATFORM),mingw32)
   CLIENT_LDFLAGS += -mwindows
   CLIENT_LIBS = -lgdi32 -lole32
   RENDERER_LIBS = -lgdi32 -lole32 -lopengl32
-  
+
   ifeq ($(USE_FREETYPE),1)
-    BASE_CFLAGS += -Ifreetype2
+    ifneq ($(USE_INTERNAL_FREETYPE),1)
+      BASE_CFLAGS += -Ifreetype2
+    endif
+  endif
+
+  ifeq ($(ARCH),x64)
+    WINLIBDIR=$(LIBSDIR)/win64
+  else
+    WINLIBDIR=$(LIBSDIR)/win32
   endif
 
   ifeq ($(USE_CURL),1)
@@ -538,19 +578,11 @@ ifeq ($(PLATFORM),mingw32)
     ifneq ($(USE_CURL_DLOPEN),1)
       ifeq ($(USE_LOCAL_HEADERS),1)
         CLIENT_CFLAGS += -DCURL_STATICLIB
-        ifeq ($(ARCH),x64)
-          CLIENT_LIBS += $(LIBSDIR)/win64/libcurl.a
-        else
-          CLIENT_LIBS += $(LIBSDIR)/win32/libcurl.a
-        endif
+        CLIENT_LIBS += $(WINLIBDIR)/libcurl.a
       else
         CLIENT_LIBS += $(CURL_LIBS)
       endif
     endif
-  endif
-
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LIBS += -lvorbisfile -lvorbis -logg
   endif
 
   ifeq ($(ARCH),x86)
@@ -566,18 +598,20 @@ ifeq ($(PLATFORM),mingw32)
   
   ifeq ($(USE_LOCAL_HEADERS),1)
     CLIENT_CFLAGS += -I$(SDLHDIR)/include
-    ifeq ($(ARCH), x86)
-    CLIENT_LIBS += $(LIBSDIR)/win32/libSDLmain.a \
-                      $(LIBSDIR)/win32/libSDL.dll.a
-    RENDERER_LIBS += $(LIBSDIR)/win32/libSDLmain.a \
-                      $(LIBSDIR)/win32/libSDL.dll.a
-    SDLDLL=SDL.dll
+    CLIENT_LIBS += $(WINLIBDIR)/libSDLmain.a
+    ifeq ($(ARCH),x64)
+      CLIENT_LIBS += $(WINLIBDIR)/libSDL64.dll.a
     else
-    CLIENT_LIBS += $(LIBSDIR)/win64/libSDLmain.a \
-                      $(LIBSDIR)/win64/libSDL64.dll.a
-    RENDERER_LIBS += $(LIBSDIR)/win64/libSDLmain.a \
-                      $(LIBSDIR)/win64/libSDL64.dll.a
-    SDLDLL=SDL64.dll
+      CLIENT_LIBS += $(WINLIBDIR)/libSDL.dll.a
+    endif
+
+    RENDERER_LIBS += $(WINLIBDIR)/libSDLmain.a
+    ifeq ($(ARCH),x64)
+      RENDERER_LIBS += $(WINLIBDIR)/libSDL64.dll.a
+      SDLDLL=SDL64.dll
+    else
+      RENDERER_LIBS += $(WINLIBDIR)/libSDL.dll.a
+      SDLDLL=SDL.dll
     endif
   else
     CLIENT_CFLAGS += $(SDL_CFLAGS)
@@ -632,10 +666,6 @@ ifeq ($(PLATFORM),freebsd)
     endif
   endif
 
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LIBS += -lvorbisfile -lvorbis -logg
-  endif
-
   # cross-compiling tweaks
   ifeq ($(ARCH),i386)
     ifeq ($(CROSS_COMPILING),1)
@@ -686,10 +716,6 @@ ifeq ($(PLATFORM),openbsd)
     ifneq ($(USE_OPENAL_DLOPEN),1)
       CLIENT_LIBS += $(THREAD_LIBS) -lossaudio -lopenal
     endif
-  endif
-
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LIBS += -lvorbisfile -lvorbis -logg
   endif
 
   ifeq ($(USE_CURL),1) 
@@ -888,13 +914,13 @@ ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
     TARGETS += \
 	$(B)/$(BASEGAME)/cgame$(SHLIBNAME) \
-	$(B)/$(BASEGAME)/qagame$(SHLIBNAME) \
+	$(B)/$(BASEGAME)/game$(SHLIBNAME) \
 	$(B)/$(BASEGAME)/ui$(SHLIBNAME)
   endif
   ifneq ($(BUILD_MISSIONPACK),0)
     TARGETS += \
     $(B)/$(MISSIONPACK)/cgame$(SHLIBNAME) \
-    $(B)/$(MISSIONPACK)/qagame$(SHLIBNAME) \
+    $(B)/$(MISSIONPACK)/game$(SHLIBNAME) \
     $(B)/$(MISSIONPACK)/ui$(SHLIBNAME)
   endif
 endif
@@ -904,12 +930,12 @@ ifneq ($(BUILD_GAME_QVM),0)
     ifneq ($(BUILD_BASEGAME),0)
       TARGETS += \
       $(B)/$(BASEGAME)/vm/cgame.qvm \
-      $(B)/$(BASEGAME)/vm/qagame.qvm \
+      $(B)/$(BASEGAME)/vm/game.qvm \
       $(B)/$(BASEGAME)/vm/ui.qvm
 	endif
     ifneq ($(BUILD_MISSIONPACK),0)
       TARGETS += \
-      $(B)/$(MISSIONPACK)/vm/qagame.qvm \
+      $(B)/$(MISSIONPACK)/vm/game.qvm \
       $(B)/$(MISSIONPACK)/vm/cgame.qvm \
       $(B)/$(MISSIONPACK)/vm/ui.qvm
     endif
@@ -967,7 +993,26 @@ else
 endif
 
 ifeq ($(USE_FREETYPE),1)
+ifeq ($(USE_INTERNAL_FREETYPE),1)
+  BASE_CFLAGS += -I$(FTDIR)/include \
+					-DFT2_BUILD_LIBRARY
+else
   RENDERER_LIBS += -lfreetype
+endif
+endif
+
+ifeq ($(USE_CODEC_VORBIS),1)
+ifeq ($(USE_INTERNAL_VORBIS),1)
+  CLIENT_CFLAGS += -I$(VORBISDIR)/include
+  
+else
+  CLIENT_LIBS += -lvorbisfile -lvorbis
+endif
+ifeq ($(USE_INTERNAL_OGG),1)
+  CLIENT_CFLAGS += -I$(OGGDIR)/include
+else
+  CLIENT_LIBS += -logg
+endif
 endif
 
 ifeq ("$(CC)", $(findstring "$(CC)", "clang" "clang++"))
@@ -980,10 +1025,6 @@ endif
 
 ifeq ($(USE_LOCAL_HEADERS),1)
   BASE_CFLAGS += -DUSE_LOCAL_HEADERS
-endif
-
-ifeq ($(BUILD_STANDALONE),1)
-  BASE_CFLAGS += -DSTANDALONE
 endif
 
 ifeq ($(GENERATE_DEPENDENCIES),1)
@@ -1003,6 +1044,8 @@ BASE_CFLAGS += -Wformat=2 -Wno-format-zero-length -Wformat-security -Wno-format-
 BASE_CFLAGS += -Wstrict-aliasing=2 -Wmissing-format-attribute
 BASE_CFLAGS += -Wdisabled-optimization
 BASE_CFLAGS += -Werror-implicit-function-declaration
+
+BASE_CFLAGS += $(BUILD_DEFINES)
 
 ifeq ($(V),1)
 echo_cmd=@:
@@ -1052,7 +1095,7 @@ endef
 
 define DO_GAME_CC
 $(echo_cmd) "GAME_CC $<"
-$(Q)$(CC) $(BASEGAME_CFLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(BASEGAME_CFLAGS) -DGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
@@ -1076,7 +1119,7 @@ endef
 
 define DO_GAME_CC_MISSIONPACK
 $(echo_cmd) "GAME_CC_MISSIONPACK $<"
-$(Q)$(CC) $(MISSIONPACK_CFLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(MISSIONPACK_CFLAGS) -DGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
@@ -1104,7 +1147,7 @@ endef
 
 define DO_WINDRES
 $(echo_cmd) "WINDRES $<"
-$(Q)$(WINDRES) -i $< -o $@
+$(Q)$(WINDRES) -DWIN32_MISC_ICON_PATH -i $< -o $@
 endef
 
 
@@ -1130,6 +1173,7 @@ release:
 targets: makedirs
 	@echo ""
 	@echo "Building $(CLIENTBIN) in $(B):"
+	@echo "  IOQ3_REVISION: $(IOQ3_REVISION)"
 	@echo "  PLATFORM: $(PLATFORM)"
 	@echo "  ARCH: $(ARCH)"
 	@echo "  VERSION: $(VERSION)"
@@ -1191,6 +1235,7 @@ makedirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/client ];then $(MKDIR) $(B)/client;fi
+	@if [ ! -d $(B)/client/vorbis ];then $(MKDIR) $(B)/client/vorbis;fi
 	@if [ ! -d $(B)/renderer ];then $(MKDIR) $(B)/renderer;fi
 	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
 	@if [ ! -d $(B)/rend2/glsl ];then $(MKDIR) $(B)/rend2/glsl;fi
@@ -1336,42 +1381,42 @@ $(Q3LCC): $(Q3LCCOBJ) $(Q3RCC) $(Q3CPP)
 
 define DO_Q3LCC
 $(echo_cmd) "Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_CGAME_Q3LCC
 $(echo_cmd) "CGAME_Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DCGAME -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DCGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_GAME_Q3LCC
 $(echo_cmd) "GAME_Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DQAGAME -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_UI_Q3LCC
 $(echo_cmd) "UI_Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DUI -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DUI $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_Q3LCC_MISSIONPACK
 $(echo_cmd) "Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_CGAME_Q3LCC_MISSIONPACK
 $(echo_cmd) "CGAME_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DCGAME -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DCGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_GAME_Q3LCC_MISSIONPACK
 $(echo_cmd) "GAME_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DQAGAME -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_UI_Q3LCC_MISSIONPACK
 $(echo_cmd) "UI_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DUI -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DUI $(BUILD_DEFINES) -o $@ $<
 endef
 
 
@@ -1497,6 +1542,38 @@ ifeq ($(PLATFORM),mingw32)
 else
   Q3OBJ += \
 	$(B)/client/con_tty.o
+endif
+
+ifeq ($(USE_CODEC_VORBIS),1)
+ifneq ($(USE_INTERNAL_VORBIS),0)
+  Q3OBJ += \
+		$(B)/client/vorbis/mdct.o \
+		$(B)/client/vorbis/smallft.o \
+		$(B)/client/vorbis/block.o \
+		$(B)/client/vorbis/envelope.o \
+		$(B)/client/vorbis/window.o \
+		$(B)/client/vorbis/lsp.o \
+		$(B)/client/vorbis/lpc.o \
+		$(B)/client/vorbis/analysis.o \
+		$(B)/client/vorbis/synthesis.o \
+		$(B)/client/vorbis/psy.o \
+		$(B)/client/vorbis/info.o \
+		$(B)/client/vorbis/floor1.o \
+		$(B)/client/vorbis/floor0.o \
+		$(B)/client/vorbis/res0.o \
+		$(B)/client/vorbis/mapping0.o \
+		$(B)/client/vorbis/registry.o \
+		$(B)/client/vorbis/codebook.o \
+		$(B)/client/vorbis/sharedbook.o \
+		$(B)/client/vorbis/lookup.o \
+		$(B)/client/vorbis/bitrate.o \
+		$(B)/client/vorbis/vorbisfile.o
+endif
+ifneq ($(USE_INTERNAL_OGG),0)
+  Q3OBJ += \
+		$(B)/client/bitwise.o \
+		$(B)/client/framing.o
+endif
 endif
 
 Q3R2OBJ = \
@@ -1671,6 +1748,36 @@ ifneq ($(USE_INTERNAL_JPEG),0)
     $(B)/renderer/jutils.o
 endif
 
+ifeq ($(USE_FREETYPE),1)
+ifneq ($(USE_INTERNAL_FREETYPE),0)
+  FTOBJ += \
+    $(B)/renderer/ftinit.o \
+    $(B)/renderer/ftsystem.o \
+    $(B)/renderer/ftbase.o \
+	\
+    $(B)/renderer/ftbzip2.o \
+    $(B)/renderer/ftgzip.o \
+    $(B)/renderer/ftlzw.o \
+	\
+    $(B)/renderer/autofit.o \
+    $(B)/renderer/bdf.o \
+    $(B)/renderer/cff.o \
+    $(B)/renderer/pcf.o \
+    $(B)/renderer/pfr.o \
+    $(B)/renderer/psaux.o \
+    $(B)/renderer/pshinter.o \
+    $(B)/renderer/psnames.o \
+    $(B)/renderer/raster.o \
+    $(B)/renderer/sfnt.o \
+    $(B)/renderer/smooth.o \
+    $(B)/renderer/truetype.o \
+    $(B)/renderer/type1.o \
+    $(B)/renderer/type1cid.o \
+    $(B)/renderer/type42.o \
+    $(B)/renderer/winfnt.o
+endif
+endif
+
 ifeq ($(ARCH),i386)
   Q3OBJ += \
     $(B)/client/snd_mixa.o \
@@ -1833,49 +1940,49 @@ $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(LIBSDLMAIN)
 		-o $@ $(Q3OBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(LIBS)
 
-$(B)/renderer_opengl1_$(SHLIBNAME): $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ)
+$(B)/renderer_opengl1_$(SHLIBNAME): $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) \
+	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 
-$(B)/renderer_opengl1_smp_$(SHLIBNAME): $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ)
+$(B)/renderer_opengl1_smp_$(SHLIBNAME): $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) \
+	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 
-$(B)/renderer_rend2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ)
+$(B)/renderer_rend2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) \
+	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 
-$(B)/renderer_rend2_smp_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ)
+$(B)/renderer_rend2_smp_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) \
+	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 
 else
-$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(LIBSDLMAIN)
+$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) \
-		-o $@ $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) \
+		-o $@ $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
 
-$(B)/$(CLIENTBIN)-smp$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(LIBSDLMAIN)
+$(B)/$(CLIENTBIN)-smp$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(THREAD_LDFLAGS) \
-		-o $@ $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) \
+		-o $@ $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
 
-$(B)/$(CLIENTBIN)_rend2$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(LIBSDLMAIN)
+$(B)/$(CLIENTBIN)_rend2$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) \
-		-o $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) \
+		-o $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
 
-$(B)/$(CLIENTBIN)_rend2-smp$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(LIBSDLMAIN)
+$(B)/$(CLIENTBIN)_rend2-smp$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(THREAD_LDFLAGS) \
-		-o $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) \
+		-o $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
 endif
 
@@ -2074,7 +2181,7 @@ $(B)/$(SERVERBIN)$(FULLBINEXT): $(Q3DOBJ)
 
 
 #############################################################################
-## BASEQ3 CGAME
+## BASEGAME CGAME
 #############################################################################
 
 Q3CGOBJ_ = \
@@ -2083,7 +2190,10 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/bg_pmove.o \
   $(B)/$(BASEGAME)/cgame/bg_slidemove.o \
   $(B)/$(BASEGAME)/cgame/bg_lib.o \
+  $(B)/$(BASEGAME)/cgame/bg_tracemap.o \
+  $(B)/$(BASEGAME)/cgame/cg_atmospheric.o \
   $(B)/$(BASEGAME)/cgame/cg_consolecmds.o \
+  $(B)/$(BASEGAME)/cgame/cg_newdraw.o \
   $(B)/$(BASEGAME)/cgame/cg_draw.o \
   $(B)/$(BASEGAME)/cgame/cg_drawtools.o \
   $(B)/$(BASEGAME)/cgame/cg_effects.o \
@@ -2095,10 +2205,12 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/cg_particles.o \
   $(B)/$(BASEGAME)/cgame/cg_players.o \
   $(B)/$(BASEGAME)/cgame/cg_playerstate.o \
+  $(B)/$(BASEGAME)/cgame/cg_polybus.o \
   $(B)/$(BASEGAME)/cgame/cg_predict.o \
   $(B)/$(BASEGAME)/cgame/cg_scoreboard.o \
   $(B)/$(BASEGAME)/cgame/cg_servercmds.o \
   $(B)/$(BASEGAME)/cgame/cg_snapshot.o \
+  $(B)/$(BASEGAME)/cgame/cg_spawn.o \
   $(B)/$(BASEGAME)/cgame/cg_view.o \
   $(B)/$(BASEGAME)/cgame/cg_weapons.o \
   \
@@ -2126,6 +2238,8 @@ MPCGOBJ_ = \
   $(B)/$(MISSIONPACK)/cgame/bg_pmove.o \
   $(B)/$(MISSIONPACK)/cgame/bg_slidemove.o \
   $(B)/$(MISSIONPACK)/cgame/bg_lib.o \
+  $(B)/$(MISSIONPACK)/cgame/bg_tracemap.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_atmospheric.o \
   $(B)/$(MISSIONPACK)/cgame/cg_consolecmds.o \
   $(B)/$(MISSIONPACK)/cgame/cg_newdraw.o \
   $(B)/$(MISSIONPACK)/cgame/cg_draw.o \
@@ -2139,10 +2253,12 @@ MPCGOBJ_ = \
   $(B)/$(MISSIONPACK)/cgame/cg_particles.o \
   $(B)/$(MISSIONPACK)/cgame/cg_players.o \
   $(B)/$(MISSIONPACK)/cgame/cg_playerstate.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_polybus.o \
   $(B)/$(MISSIONPACK)/cgame/cg_predict.o \
   $(B)/$(MISSIONPACK)/cgame/cg_scoreboard.o \
   $(B)/$(MISSIONPACK)/cgame/cg_servercmds.o \
   $(B)/$(MISSIONPACK)/cgame/cg_snapshot.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_spawn.o \
   $(B)/$(MISSIONPACK)/cgame/cg_view.o \
   $(B)/$(MISSIONPACK)/cgame/cg_weapons.o \
   $(B)/$(MISSIONPACK)/ui/ui_shared.o \
@@ -2164,7 +2280,7 @@ $(B)/$(MISSIONPACK)/vm/cgame.qvm: $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 
 
 #############################################################################
-## BASEQ3 GAME
+## BASEGAME GAME
 #############################################################################
 
 Q3GOBJ_ = \
@@ -2180,6 +2296,7 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/bg_pmove.o \
   $(B)/$(BASEGAME)/game/bg_slidemove.o \
   $(B)/$(BASEGAME)/game/bg_lib.o \
+  $(B)/$(BASEGAME)/game/bg_tracemap.o \
   $(B)/$(BASEGAME)/game/g_active.o \
   $(B)/$(BASEGAME)/game/g_arenas.o \
   $(B)/$(BASEGAME)/game/g_bot.o \
@@ -2206,11 +2323,11 @@ Q3GOBJ_ = \
 Q3GOBJ = $(Q3GOBJ_) $(B)/$(BASEGAME)/game/g_syscalls.o
 Q3GVMOBJ = $(Q3GOBJ_:%.o=%.asm)
 
-$(B)/$(BASEGAME)/qagame$(SHLIBNAME): $(Q3GOBJ)
+$(B)/$(BASEGAME)/game$(SHLIBNAME): $(Q3GOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
 
-$(B)/$(BASEGAME)/vm/qagame.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/game.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm
 
@@ -2231,6 +2348,7 @@ MPGOBJ_ = \
   $(B)/$(MISSIONPACK)/game/bg_pmove.o \
   $(B)/$(MISSIONPACK)/game/bg_slidemove.o \
   $(B)/$(MISSIONPACK)/game/bg_lib.o \
+  $(B)/$(MISSIONPACK)/game/bg_tracemap.o \
   $(B)/$(MISSIONPACK)/game/g_active.o \
   $(B)/$(MISSIONPACK)/game/g_arenas.o \
   $(B)/$(MISSIONPACK)/game/g_bot.o \
@@ -2257,18 +2375,18 @@ MPGOBJ_ = \
 MPGOBJ = $(MPGOBJ_) $(B)/$(MISSIONPACK)/game/g_syscalls.o
 MPGVMOBJ = $(MPGOBJ_:%.o=%.asm)
 
-$(B)/$(MISSIONPACK)/qagame$(SHLIBNAME): $(MPGOBJ)
+$(B)/$(MISSIONPACK)/game$(SHLIBNAME): $(MPGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPGOBJ)
 
-$(B)/$(MISSIONPACK)/vm/qagame.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/game.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(MPGVMOBJ) $(GDIR)/g_syscalls.asm
 
 
 
 #############################################################################
-## BASEQ3 UI
+## BASEGAME UI
 #############################################################################
 
 Q3UIOBJ_ = \
@@ -2277,7 +2395,6 @@ Q3UIOBJ_ = \
   $(B)/$(BASEGAME)/ui/bg_lib.o \
   $(B)/$(BASEGAME)/ui/ui_addbots.o \
   $(B)/$(BASEGAME)/ui/ui_atoms.o \
-  $(B)/$(BASEGAME)/ui/ui_cdkey.o \
   $(B)/$(BASEGAME)/ui/ui_cinematics.o \
   $(B)/$(BASEGAME)/ui/ui_confirm.o \
   $(B)/$(BASEGAME)/ui/ui_connect.o \
@@ -2287,6 +2404,8 @@ Q3UIOBJ_ = \
   $(B)/$(BASEGAME)/ui/ui_display.o \
   $(B)/$(BASEGAME)/ui/ui_gameinfo.o \
   $(B)/$(BASEGAME)/ui/ui_ingame.o \
+  $(B)/$(BASEGAME)/ui/ui_ingame_selectplayer.o \
+  $(B)/$(BASEGAME)/ui/ui_joystick.o \
   $(B)/$(BASEGAME)/ui/ui_loadconfig.o \
   $(B)/$(BASEGAME)/ui/ui_menu.o \
   $(B)/$(BASEGAME)/ui/ui_mfield.o \
@@ -2300,6 +2419,7 @@ Q3UIOBJ_ = \
   $(B)/$(BASEGAME)/ui/ui_qmenu.o \
   $(B)/$(BASEGAME)/ui/ui_removebots.o \
   $(B)/$(BASEGAME)/ui/ui_saveconfig.o \
+  $(B)/$(BASEGAME)/ui/ui_selectplayer.o \
   $(B)/$(BASEGAME)/ui/ui_serverinfo.o \
   $(B)/$(BASEGAME)/ui/ui_servers2.o \
   $(B)/$(BASEGAME)/ui/ui_setup.o \
@@ -2387,6 +2507,12 @@ $(B)/client/%.o: $(SPEEXDIR)/%.c
 $(B)/client/%.o: $(ZDIR)/%.c
 	$(DO_CC)
 
+$(B)/client/%.o: $(OGGDIR)/src/%.c
+	$(DO_CC)
+
+$(B)/client/vorbis/%.o: $(VORBISDIR)/lib/%.c
+	$(DO_CC)
+
 $(B)/client/%.o: $(SDLDIR)/%.c
 	$(DO_CC)
 
@@ -2406,15 +2532,6 @@ $(B)/client/%.o: $(SYSDIR)/%.rc
 $(B)/renderer/%.o: $(CMDIR)/%.c
 	$(DO_REF_CC)
 
-$(B)/renderer/%.o: $(SDLDIR)/%.c
-	$(DO_REF_CC)
-
-$(B)/renderer/%.o: $(JPDIR)/%.c
-	$(DO_REF_CC)
-
-$(B)/renderer/%.o: $(RDIR)/%.c
-	$(DO_REF_CC)
-
 $(B)/rend2/glsl/%.c: $(R2DIR)/glsl/%.glsl
 	$(DO_REF_STR)
 
@@ -2424,6 +2541,74 @@ $(B)/rend2/glsl/%.o: $(B)/rend2/glsl/%.c
 $(B)/rend2/%.o: $(R2DIR)/%.c
 	$(DO_REF_CC)
 
+$(B)/renderer/%.o: $(SDLDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderer/%.o: $(JPDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderer/%.o: $(RDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderer/%.o: $(FTDIR)/src/base/%.c
+	$(DO_REF_CC)
+
+$(B)/renderer/ftbzip2.o: $(FTDIR)/src/bzip2/ftbzip2.c
+	$(DO_REF_CC)
+
+$(B)/renderer/ftgzip.o: $(FTDIR)/src/gzip/ftgzip.c
+	$(DO_REF_CC)
+
+$(B)/renderer/ftlzw.o: $(FTDIR)/src/lzw/ftlzw.c
+	$(DO_REF_CC)
+
+$(B)/renderer/autofit.o: $(FTDIR)/src/autofit/autofit.c
+	$(DO_REF_CC)
+
+$(B)/renderer/bdf.o: $(FTDIR)/src/bdf/bdf.c
+	$(DO_REF_CC)
+
+$(B)/renderer/cff.o: $(FTDIR)/src/cff/cff.c
+	$(DO_REF_CC)
+
+$(B)/renderer/pcf.o: $(FTDIR)/src/pcf/pcf.c
+	$(DO_REF_CC)
+
+$(B)/renderer/pfr.o: $(FTDIR)/src/pfr/pfr.c
+	$(DO_REF_CC)
+
+$(B)/renderer/psaux.o: $(FTDIR)/src/psaux/psaux.c
+	$(DO_REF_CC)
+
+$(B)/renderer/pshinter.o: $(FTDIR)/src/pshinter/pshinter.c
+	$(DO_REF_CC)
+
+$(B)/renderer/psnames.o: $(FTDIR)/src/psnames/psnames.c
+	$(DO_REF_CC)
+
+$(B)/renderer/raster.o: $(FTDIR)/src/raster/raster.c
+	$(DO_REF_CC)
+
+$(B)/renderer/sfnt.o: $(FTDIR)/src/sfnt/sfnt.c
+	$(DO_REF_CC)
+
+$(B)/renderer/smooth.o: $(FTDIR)/src/smooth/smooth.c
+	$(DO_REF_CC)
+
+$(B)/renderer/truetype.o: $(FTDIR)/src/truetype/truetype.c
+	$(DO_REF_CC)
+
+$(B)/renderer/type1.o: $(FTDIR)/src/type1/type1.c
+	$(DO_REF_CC)
+
+$(B)/renderer/type1cid.o: $(FTDIR)/src/cid/type1cid.c
+	$(DO_REF_CC)
+
+$(B)/renderer/type42.o: $(FTDIR)/src/type42/type42.c
+	$(DO_REF_CC)
+
+$(B)/renderer/winfnt.o: $(FTDIR)/src/winfonts/winfnt.c
+	$(DO_REF_CC)
 
 $(B)/ded/%.o: $(ASMDIR)/%.s
 	$(DO_AS)
@@ -2456,11 +2641,11 @@ $(B)/ded/%.o: $(SYSDIR)/%.rc
 $(B)/ded/%.o: $(NDIR)/%.c
 	$(DO_DED_CC)
 
-# Extra dependencies to ensure the git version is incorporated
-ifeq ($(USE_GIT),1)
-  $(B)/client/cl_console.o : .git/index
-  $(B)/client/common.o : .git/index
-  $(B)/ded/common.o : .git/index
+# Extra dependencies to ensure the SVN version is incorporated
+ifeq ($(USE_SVN),1)
+  $(B)/client/cl_console.o : .svn/entries
+  $(B)/client/common.o : .svn/entries
+  $(B)/ded/common.o : .svn/entries
 endif
 
 
@@ -2548,7 +2733,7 @@ $(B)/$(MISSIONPACK)/qcommon/%.asm: $(CMDIR)/%.c $(Q3LCC)
 # MISC
 #############################################################################
 
-OBJ = $(Q3OBJ) $(Q3ROBJ) $(Q3R2OBJ) $(Q3RPOBJ_UP) $(Q3RPOBJ_SMP) $(Q3DOBJ) $(JPGOBJ) \
+OBJ = $(Q3OBJ) $(Q3ROBJ) $(Q3R2OBJ) $(Q3RPOBJ_UP) $(Q3RPOBJ_SMP) $(Q3DOBJ) $(JPGOBJ) $(FTOBJ) \
   $(MPGOBJ) $(Q3GOBJ) $(Q3CGOBJ) $(MPCGOBJ) $(Q3UIOBJ) $(MPUIOBJ) \
   $(MPGVMOBJ) $(Q3GVMOBJ) $(Q3CGVMOBJ) $(MPCGVMOBJ) $(Q3UIVMOBJ) $(MPUIVMOBJ)
 TOOLSOBJ = $(LBURGOBJ) $(Q3CPPOBJ) $(Q3RCCOBJ) $(Q3LCCOBJ) $(Q3ASMOBJ)
@@ -2556,7 +2741,6 @@ STRINGOBJ = $(Q3R2STRINGOBJ)
 
 
 copyfiles: release
-	@if [ ! -d $(COPYDIR)/$(BASEGAME) ]; then echo "You need to set COPYDIR to where your Quake3 data is!"; fi
 ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
 	-$(MKDIR) -p -m 0755 $(COPYDIR)/$(BASEGAME)
@@ -2595,7 +2779,7 @@ ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/cgame$(SHLIBNAME) \
 					$(COPYDIR)/$(BASEGAME)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/qagame$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/game$(SHLIBNAME) \
 					$(COPYDIR)/$(BASEGAME)/.
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/ui$(SHLIBNAME) \
 					$(COPYDIR)/$(BASEGAME)/.
@@ -2603,7 +2787,7 @@ ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_MISSIONPACK),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/cgame$(SHLIBNAME) \
 					$(COPYDIR)/$(MISSIONPACK)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/qagame$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/game$(SHLIBNAME) \
 					$(COPYDIR)/$(MISSIONPACK)/.
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/ui$(SHLIBNAME) \
 					$(COPYDIR)/$(MISSIONPACK)/.

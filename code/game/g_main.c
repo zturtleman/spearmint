@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -37,6 +45,7 @@ typedef struct {
 
 gentity_t		g_entities[MAX_GENTITIES];
 gclient_t		g_clients[MAX_CLIENTS];
+gconnection_t	g_connections[MAX_CLIENTS];
 
 vmCvar_t	g_gametype;
 vmCvar_t	g_dmflags;
@@ -81,6 +90,7 @@ vmCvar_t	pmove_fixed;
 vmCvar_t	pmove_msec;
 vmCvar_t	g_rankings;
 vmCvar_t	g_listEntity;
+vmCvar_t	g_singlePlayer;
 #ifdef MISSIONPACK
 vmCvar_t	g_obeliskHealth;
 vmCvar_t	g_obeliskRegenPeriod;
@@ -89,7 +99,6 @@ vmCvar_t	g_obeliskRespawnDelay;
 vmCvar_t	g_cubeTimeout;
 vmCvar_t	g_redteam;
 vmCvar_t	g_blueteam;
-vmCvar_t	g_singlePlayer;
 vmCvar_t	g_enableDust;
 vmCvar_t	g_enableBreath;
 vmCvar_t	g_proxMineTimeout;
@@ -157,6 +166,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_allowVote, "g_allowVote", "1", CVAR_ARCHIVE, 0, qfalse },
 	{ &g_listEntity, "g_listEntity", "0", 0, 0, qfalse },
 
+	{ &g_singlePlayer, "ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM, 0, qfalse, qfalse  },
+
 #ifdef MISSIONPACK
 	{ &g_obeliskHealth, "g_obeliskHealth", "2500", 0, 0, qfalse },
 	{ &g_obeliskRegenPeriod, "g_obeliskRegenPeriod", "1", 0, 0, qfalse },
@@ -164,9 +175,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SERVERINFO, 0, qfalse },
 
 	{ &g_cubeTimeout, "g_cubeTimeout", "30", 0, 0, qfalse },
-	{ &g_redteam, "g_redteam", "Stroggs", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_USERINFO , 0, qtrue, qtrue },
-	{ &g_blueteam, "g_blueteam", "Pagans", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_USERINFO , 0, qtrue, qtrue  },
-	{ &g_singlePlayer, "ui_singlePlayerActive", "", 0, 0, qfalse, qfalse  },
+	{ &g_redteam, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue, qtrue },
+	{ &g_blueteam, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue, qtrue  },
 
 	{ &g_enableDust, "g_enableDust", "0", CVAR_SERVERINFO, 0, qtrue, qfalse },
 	{ &g_enableBreath, "g_enableBreath", "0", CVAR_SERVERINFO, 0, qtrue, qfalse },
@@ -186,6 +196,7 @@ static int gameCvarTableSize = ARRAY_LEN( gameCvarTable );
 void G_InitGame( int levelTime, int randomSeed, int restart );
 void G_RunFrame( int levelTime );
 void G_ShutdownGame( int restart );
+qboolean G_SnapshotCallback( int entityNum, int clientNum );
 void CheckExitRules( void );
 
 
@@ -199,6 +210,8 @@ This must be the very first function compiled into the .q3vm file
 */
 Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11  ) {
 	switch ( command ) {
+	case GAME_GETAPIVERSION:
+		return ( GAME_API_MAJOR_VERSION << 16) | ( GAME_API_MINOR_VERSION & 0xFFFF );
 	case GAME_INIT:
 		G_InitGame( arg0, arg1, arg2 );
 		return 0;
@@ -206,7 +219,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		G_ShutdownGame( arg0 );
 		return 0;
 	case GAME_CLIENT_CONNECT:
-		return (intptr_t)ClientConnect( arg0, arg1, arg2 );
+		return (intptr_t)ClientConnect( arg0, arg1, arg2, arg3, arg4 );
 	case GAME_CLIENT_THINK:
 		ClientThink( arg0 );
 		return 0;
@@ -227,6 +240,8 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return 0;
 	case GAME_CONSOLE_COMMAND:
 		return ConsoleCommand();
+	case GAME_SNAPSHOT_CALLBACK:
+		return G_SnapshotCallback( arg0, arg1 );
 	case BOTAI_START_FRAME:
 		return BotAIStartFrame( arg0 );
 	}
@@ -234,6 +249,21 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	return -1;
 }
 
+
+void QDECL G_DPrintf( const char *fmt, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	if (!trap_Cvar_VariableIntegerValue("developer")) {
+		return;
+	}
+
+	va_start (argptr, fmt);
+	Q_vsnprintf (text, sizeof(text), fmt, argptr);
+	va_end (argptr);
+
+	trap_Print( text );
+}
 
 void QDECL G_Printf( const char *fmt, ... ) {
 	va_list		argptr;
@@ -310,7 +340,7 @@ void G_FindTeams( void ) {
 		}
 	}
 
-	G_Printf ("%i teams with %i entities\n", c, c2);
+	G_DPrintf ("%i teams with %i entities\n", c, c2);
 }
 
 void G_RemapTeamShaders( void ) {
@@ -356,7 +386,14 @@ void G_RegisterCvars( void ) {
 	// check some things
 	if ( g_gametype.integer < 0 || g_gametype.integer >= GT_MAX_GAME_TYPE ) {
 		G_Printf( "g_gametype %i is out of range, defaulting to 0\n", g_gametype.integer );
+		g_gametype.integer = 0;
 		trap_Cvar_Set( "g_gametype", "0" );
+	}
+
+	// Don't allow single player gametype to be used in multiplayer.
+	if ( g_gametype.integer == GT_SINGLE_PLAYER && !g_singlePlayer.integer) {
+		g_gametype.integer = GT_FFA;
+		trap_Cvar_Set( "g_gametype", va("%d", g_gametype.integer) );
 	}
 
 	level.warmupModificationCount = g_warmup.modificationCount;
@@ -403,11 +440,11 @@ G_InitGame
 ============
 */
 void G_InitGame( int levelTime, int randomSeed, int restart ) {
-	int					i;
+	int					i, j;
 
-	G_Printf ("------- Game Initialization -------\n");
-	G_Printf ("gamename: %s\n", GAMEVERSION);
-	G_Printf ("gamedate: %s\n", __DATE__);
+	G_DPrintf ("------- Game Initialization -------\n");
+	G_DPrintf ("gamename: %s\n", GAMEVERSION);
+	G_DPrintf ("gamedate: %s\n", __DATE__);
 
 	srand( randomSeed );
 
@@ -446,9 +483,23 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	G_InitWorldSession();
 
+	G_RegisterCommands( );
+
 	// initialize all entities for this game
 	memset( g_entities, 0, MAX_GENTITIES * sizeof(g_entities[0]) );
 	level.gentities = g_entities;
+
+	// initialize all client connections for this game
+	level.maxconnections = g_maxclients.integer;
+	memset( g_connections, 0, MAX_CLIENTS * sizeof(g_connections[0]) );
+	level.connections = g_connections;
+
+	// clear local player nums
+	for ( i=0 ; i<level.maxconnections ; i++ ) {
+		for ( j=0; j<MAX_SPLITVIEW ; j++ ) {
+			level.connections[i].localPlayerNums[j] = -1;
+		}
+	}
 
 	// initialize all clients for this game
 	level.maxclients = g_maxclients.integer;
@@ -491,7 +542,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	SaveRegisteredItems();
 
-	G_Printf ("-----------------------------------\n");
+	G_DPrintf ("-----------------------------------\n");
 
 	if( g_gametype.integer == GT_SINGLE_PLAYER || trap_Cvar_VariableIntegerValue( "com_buildScript" ) ) {
 		G_ModelIndex( SP_PODIUM_MODEL );
@@ -515,7 +566,7 @@ G_ShutdownGame
 =================
 */
 void G_ShutdownGame( int restart ) {
-	G_Printf ("==== ShutdownGame ====\n");
+	G_DPrintf ("==== ShutdownGame ====\n");
 
 	if ( level.logFile ) {
 		G_LogPrintf("ShutdownGame:\n" );
@@ -530,9 +581,27 @@ void G_ShutdownGame( int restart ) {
 	if ( trap_Cvar_VariableIntegerValue( "bot_enable" ) ) {
 		BotAIShutdown( restart );
 	}
+
+	G_UnregisterCommands( );
 }
 
 
+/*
+=================
+G_SnapshotCallback
+=================
+*/
+qboolean G_SnapshotCallback( int entityNum, int clientNum ) {
+	gentity_t *ent;
+
+	ent = &g_entities[ entityNum ];
+
+	if ( ent->snapshotCallback ) {
+		return ent->snapshotCallback( ent, &g_entities[ clientNum ] );
+	}
+
+	return qtrue;
+}
 
 //===================================================================
 
@@ -556,6 +625,17 @@ void QDECL Com_Printf( const char *msg, ... ) {
 	va_end (argptr);
 
 	trap_Print( text );
+}
+
+void QDECL Com_DPrintf( const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	va_start (argptr, msg);
+	Q_vsnprintf (text, sizeof(text), msg, argptr);
+	va_end (argptr);
+
+	G_DPrintf ("%s", text);
 }
 
 /*
@@ -941,12 +1021,13 @@ void MoveClientToIntermission( gentity_t *ent ) {
 	memset( ent->client->ps.powerups, 0, sizeof(ent->client->ps.powerups) );
 
 	ent->client->ps.eFlags = 0;
+	ent->client->ps.contents = 0;
 	ent->s.eFlags = 0;
+	ent->s.contents = 0;
 	ent->s.eType = ET_GENERAL;
 	ent->s.modelindex = 0;
 	ent->s.loopSound = 0;
 	ent->s.event = 0;
-	ent->r.contents = 0;
 }
 
 /*
@@ -1008,6 +1089,7 @@ void BeginIntermission( void ) {
 			ClientRespawn(client);
 		}
 		MoveClientToIntermission( client );
+		trap_UnlinkEntity(client);
 	}
 #ifdef MISSIONPACK
 	if (g_singlePlayer.integer) {
@@ -1050,7 +1132,7 @@ void ExitLevel (void) {
 	if ( g_gametype.integer == GT_TOURNAMENT  ) {
 		if ( !level.restarted ) {
 			RemoveTournamentLoser();
-			trap_SendConsoleCommand( EXEC_APPEND, "map_restart 0\n" );
+			trap_Cmd_ExecuteText( EXEC_APPEND, "map_restart 0\n" );
 			level.restarted = qtrue;
 			level.changemap = NULL;
 			level.intermissiontime = 0;
@@ -1063,9 +1145,9 @@ void ExitLevel (void) {
 
 	if( !Q_stricmp( nextmap, "map_restart 0" ) && Q_stricmp( d1, "" ) ) {
 		trap_Cvar_Set( "nextmap", "vstr d2" );
-		trap_SendConsoleCommand( EXEC_APPEND, "vstr d1\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, "vstr d1\n" );
 	} else {
-		trap_SendConsoleCommand( EXEC_APPEND, "vstr nextmap\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, "vstr nextmap\n" );
 	}
 
 	level.changemap = NULL;
@@ -1193,7 +1275,7 @@ void LogExit( const char *string ) {
 		if (g_gametype.integer >= GT_CTF) {
 			won = level.teamScores[TEAM_RED] > level.teamScores[TEAM_BLUE];
 		}
-		trap_SendConsoleCommand( EXEC_APPEND, (won) ? "spWin\n" : "spLose\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, (won) ? "spWin\n" : "spLose\n" );
 	}
 #endif
 
@@ -1480,7 +1562,7 @@ void CheckTournament( void ) {
 		if ( level.time > level.warmupTime ) {
 			level.warmupTime += 10000;
 			trap_Cvar_Set( "g_restarted", "1" );
-			trap_SendConsoleCommand( EXEC_APPEND, "map_restart 0\n" );
+			trap_Cmd_ExecuteText( EXEC_APPEND, "map_restart 0\n" );
 			level.restarted = qtrue;
 			return;
 		}
@@ -1535,7 +1617,7 @@ void CheckTournament( void ) {
 		if ( level.time > level.warmupTime ) {
 			level.warmupTime += 10000;
 			trap_Cvar_Set( "g_restarted", "1" );
-			trap_SendConsoleCommand( EXEC_APPEND, "map_restart 0\n" );
+			trap_Cmd_ExecuteText( EXEC_APPEND, "map_restart 0\n" );
 			level.restarted = qtrue;
 			return;
 		}
@@ -1551,7 +1633,7 @@ CheckVote
 void CheckVote( void ) {
 	if ( level.voteExecuteTime && level.voteExecuteTime < level.time ) {
 		level.voteExecuteTime = 0;
-		trap_SendConsoleCommand( EXEC_APPEND, va("%s\n", level.voteString ) );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", level.voteString ) );
 	}
 	if ( !level.voteTime ) {
 		return;
@@ -1583,13 +1665,7 @@ PrintTeam
 ==================
 */
 void PrintTeam(int team, char *message) {
-	int i;
-
-	for ( i = 0 ; i < level.maxclients ; i++ ) {
-		if (level.clients[i].sess.sessionTeam != team)
-			continue;
-		trap_SendServerCommand( i, message );
-	}
+	G_TeamCommand( team, message );
 }
 
 /*
@@ -1686,7 +1762,7 @@ void CheckTeamVote( int team ) {
 				SetLeader(team, atoi(level.teamVoteString[cs_offset] + 7));
 			}
 			else {
-				trap_SendConsoleCommand( EXEC_APPEND, va("%s\n", level.teamVoteString[cs_offset] ) );
+				trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", level.teamVoteString[cs_offset] ) );
 			}
 		} else if ( level.teamVoteNo[cs_offset] >= level.numteamVotingClients[cs_offset]/2 ) {
 			// same behavior as a timeout

@@ -1,23 +1,31 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 Copyright (C) 2005 Stuart Dalton (badcdev@gmail.com)
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
@@ -35,6 +43,229 @@ cvar_t *s_muteWhenMinimized;
 cvar_t *s_muteWhenUnfocused;
 
 static soundInterface_t si;
+
+listener_t listeners[MAX_LISTENERS];
+
+/*
+=================
+S_ListenersInit
+=================
+*/
+void S_ListenersInit(void) {
+	int i;
+
+	for (i = 0; i < MAX_LISTENERS; ++i)
+	{
+		listeners[i].valid = qfalse;
+		listeners[i].updated = qfalse;
+
+		listeners[i].number = -1;
+		VectorClear(listeners[i].origin);
+		AxisClear(listeners[i].axis);
+		listeners[i].inwater = 0;
+		listeners[i].firstPerson = qfalse;
+	}
+}
+
+/*
+=================
+S_ListenersEndFrame
+=================
+*/
+void S_ListenersEndFrame(void) {
+	int i;
+
+	for (i = 0; i < MAX_LISTENERS; ++i)
+	{
+		// Didn't receive update for this listener this frame, so free it.
+		if (!listeners[i].updated)
+			listeners[i].valid = qfalse;
+
+		listeners[i].updated = qfalse;
+	}
+}
+
+/*
+=================
+S_HearingThroughEntity
+=================
+*/
+qboolean S_HearingThroughEntity( int entityNum )
+{
+	int i;
+
+	// Note: Listeners may be one frame out of date.
+	for (i = 0; i < MAX_LISTENERS; ++i)
+	{
+		if (listeners[i].valid && listeners[i].number == entityNum)
+		{
+			return listeners[i].firstPerson;
+		}
+	}
+
+	return qfalse;
+}
+
+/*
+====================
+S_EntityIsListener
+====================
+*/
+qboolean S_EntityIsListener(int entityNum)
+{
+	int i;
+
+	// NOTE: Listeners may be one frame out of date.
+	for (i = 0; i < MAX_LISTENERS; ++i)
+	{
+		if (listeners[i].valid && listeners[i].number == entityNum)
+		{
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+/*
+====================
+S_ClosestListener
+====================
+*/
+int S_ClosestListener(const vec3_t origin) {
+	float dist, closestDist = INT_MAX;
+	int closestListener = -1;
+	int i;
+
+	// NOTE: Listeners may be one frame out of date.
+	for (i = 0; i < MAX_LISTENERS; ++i)
+	{
+		if (listeners[i].valid)
+		{
+			dist = Distance(origin, listeners[i].origin);
+			if (dist < closestDist) {
+				closestDist = dist;
+				closestListener = i;
+			}
+		}
+	}
+
+	return closestListener;
+}
+
+/*
+====================
+S_ListenersClosestDistance
+====================
+*/
+float S_ListenersClosestDistance(const vec3_t origin) {
+	float dist, closestDist = INT_MAX;
+	int i;
+
+	// NOTE: Listeners may be one frame out of date.
+	for (i = 0; i < MAX_LISTENERS; ++i)
+	{
+		if (listeners[i].valid)
+		{
+			dist = Distance(origin, listeners[i].origin);
+			if (dist < closestDist) {
+				closestDist = dist;
+			}
+		}
+	}
+	
+	return closestDist;
+}
+
+/*
+====================
+S_ListenersClosestDistanceSquared
+====================
+*/
+float S_ListenersClosestDistanceSquared(const vec3_t origin) {
+	float dist, closestDist = INT_MAX;
+	int i;
+
+	// NOTE: Listeners may be one frame out of date.
+	for (i = 0; i < MAX_LISTENERS; ++i)
+	{
+		if (listeners[i].valid)
+		{
+			dist = DistanceSquared(origin, listeners[i].origin);
+			if (dist < closestDist) {
+				closestDist = dist;
+			}
+		}
+	}
+	
+	return closestDist;
+}
+
+/*
+====================
+S_ListenerNumForEntity
+====================
+*/
+int S_ListenerNumForEntity(int entityNum, qboolean create)
+{
+	int i;
+	int freeListener = -1;
+
+	for (i = 0; i < MAX_LISTENERS; ++i)
+	{
+		if (listeners[i].valid)
+		{
+			if (listeners[i].number == entityNum)
+				return i;
+		}
+		else if (create && freeListener == -1)
+			freeListener = i;
+	}
+
+	if (create && freeListener == -1)
+	{
+		// Find listener that might be freed next frame, otherwise we
+		// could fail to get a slot when listener changes entityNums.
+		for (i = MAX_LISTENERS-1; i >= 0; --i)
+		{
+			if (listeners[i].valid && !listeners[i].updated)
+			{
+				freeListener = i;
+				break;
+			}
+		}
+	}
+
+	return freeListener;
+}
+
+/*
+=================
+S_UpdateListener
+=================
+*/
+void S_UpdateListener(int entityNum, const vec3_t origin, const vec3_t axis[3], int inwater, qboolean firstPerson)
+{
+	int listener;
+
+	// Get listener for entityNum.
+	listener = S_ListenerNumForEntity(entityNum, qtrue);
+
+	if (listener < 0 || listener >= MAX_LISTENERS)
+		return;
+
+	listeners[listener].valid = qtrue;
+	listeners[listener].updated = qtrue;
+
+	// Update listener info.
+	listeners[listener].number = entityNum;
+	VectorCopy(origin, listeners[listener].origin);
+	VectorCopy(axis[0], listeners[listener].axis[0]);
+	VectorCopy(axis[1], listeners[listener].axis[1]);
+	VectorCopy(axis[2], listeners[listener].axis[2]);
+	listeners[listener].inwater = inwater;
+	listeners[listener].firstPerson = firstPerson;
+}
 
 /*
 =================
@@ -60,6 +291,7 @@ static qboolean S_ValidSoundInterface( soundInterface_t *si )
 	if( !si->DisableSounds ) return qfalse;
 	if( !si->BeginRegistration ) return qfalse;
 	if( !si->RegisterSound ) return qfalse;
+	if( !si->SoundDuration ) return qfalse;
 	if( !si->ClearSoundBuffer ) return qfalse;
 	if( !si->SoundInfo ) return qfalse;
 	if( !si->SoundList ) return qfalse;
@@ -202,11 +434,10 @@ void S_StopLoopingSound( int entityNum )
 S_Respatialize
 =================
 */
-void S_Respatialize( int entityNum, const vec3_t origin,
-		vec3_t axis[3], int inwater )
+void S_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater, qboolean firstPerson )
 {
 	if( si.Respatialize ) {
-		si.Respatialize( entityNum, origin, axis, inwater );
+		si.Respatialize( entityNum, origin, axis, inwater, firstPerson );
 	}
 }
 
@@ -251,6 +482,8 @@ void S_Update( void )
 	if( si.Update ) {
 		si.Update( );
 	}
+
+	S_ListenersEndFrame();
 }
 
 /*
@@ -289,6 +522,19 @@ sfxHandle_t	S_RegisterSound( const char *sample, qboolean compressed )
 	} else {
 		return 0;
 	}
+}
+
+/*
+=================
+S_SoundDuration
+=================
+*/
+int S_SoundDuration( sfxHandle_t handle )
+{
+	if( si.SoundDuration )
+		return si.SoundDuration( handle );
+	else
+		return 0;
 }
 
 /*
@@ -490,6 +736,7 @@ void S_Init( void )
 	} else {
 
 		S_CodecInit( );
+		S_ListenersInit( );
 
 		Cmd_AddCommand( "play", S_Play_f );
 		Cmd_AddCommand( "music", S_Music_f );

@@ -1,12 +1,12 @@
-; sample NSIS description file for an ioquake3 mod installer
+; sample NSIS description file for a Spearmint mod installer
 
 !define NAME "Catch the Chicken"
-!define FSNAME "ioquake3-q3ctc"
+!define FSNAME "spearmint-q3ctc"
 !define VERSION "1.4"
 !define RELEASE "1"
 !define MODDIR "q3ctc"
-!define PUBLISHER "The ioquake3 Team"
-!define URL "http://ioquake3.org/"
+!define PUBLISHER "The Spearmint Team"
+!define URL "http://ioq3ztm.googlecode.com/"
 ; uncomment if the mod works without baseq3
 ;!define STANDALONE
 
@@ -27,16 +27,21 @@
 
 ; no need to edit below in theory
 
+!define GAMENAME "Spearmint"
+!define CLIENT "spearmint.x86.exe"
+!define GAMEDIR "Spearmint"
+!define GAMEKEY "spearmint"
+
 SetCompressor lzma
 
 !define MULTIUSER_MUI
 !define MULTIUSER_EXECUTIONLEVEL Highest
 !define MULTIUSER_INSTALLMODE_COMMANDLINE
-!define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_KEY "Software\ioquake3"
+!define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_KEY "Software\${GAMEKEY}"
 !define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_VALUENAME "Install_Mode"
-!define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_KEY "Software\ioquake3"
+!define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_KEY "Software\${GAMEKEY}"
 !define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME "Install_Dir"
-!define MULTIUSER_INSTALLMODE_INSTDIR "ioquake3"
+!define MULTIUSER_INSTALLMODE_INSTDIR "${GAMEDIR}"
 !include MultiUser.nsh
 
 !include "FileFunc.nsh"
@@ -44,7 +49,7 @@ SetCompressor lzma
 !include "MUI2.nsh"
 
 ; The name of the installer
-Name "${NAME}-${VERSION} for ioquake3"
+Name "${NAME}-${VERSION} for ${GAMENAME}"
 
 ; The file to write
 OutFile "${FSNAME}-${VERSION}-${RELEASE}.x86.exe"
@@ -77,9 +82,9 @@ OutFile "${FSNAME}-${VERSION}-${RELEASE}.x86.exe"
 ;Multiuser stuff
 Function .onInit
   !insertmacro MULTIUSER_INIT
-  ReadRegStr $0 SHCTX "Software\ioquake3" ${MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME}
+  ReadRegStr $0 SHCTX "Software\${GAMEKEY}" ${MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME}
   IfErrors 0 oninitdone
-    MessageBox MB_OK "You need to install the ioquake3 engine first"
+    MessageBox MB_OK "You need to install ${GAMENAME} first"
     Abort
   oninitdone:
 FunctionEnd
@@ -115,7 +120,7 @@ Section "${NAME}" sec_base
 !else
 !define ARGS "+set fs_game ${MODDIR}"
 !endif
-  CreateShortCut "$SMPROGRAMS\ioquake3\${NAME}.lnk" "$INSTDIR\ioquake3.x86.exe" "${ARGS}" "$INSTDIR\ioquake3.x86.exe" 0 "" "" "${NAME}"
+  CreateShortCut "$SMPROGRAMS\${GAMENAME}\${NAME}.lnk" "$INSTDIR\${CLIENT}" "${ARGS}" "$INSTDIR\${CLIENT}" 0 "" "" "${NAME}"
 
 SectionEnd
 
@@ -130,10 +135,10 @@ Section "Uninstall"
   Delete $INSTDIR\uninstall-${FSNAME}.exe
 
   ; Remove shortcuts, if any
-  Delete "$SMPROGRAMS\ioquake3\${NAME}.lnk"
+  Delete "$SMPROGRAMS\${GAMENAME}\${NAME}.lnk"
 
   ; Remove directories used
-  RMDir "$SMPROGRAMS\ioquake3"
+  RMDir "$SMPROGRAMS\${GAMENAME}"
   RMDir "$INSTDIR\${MODDIR}"
   RMDir "$INSTDIR"
 

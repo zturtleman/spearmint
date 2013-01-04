@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 #include "q_shared.h"
@@ -856,7 +864,7 @@ netField_t	entityStateFields[] =
 { NETF(legsAnim), 8 },
 { NETF(groundEntityNum), GENTITYNUM_BITS },
 { NETF(pos.trType), 8 },
-{ NETF(eFlags), 19 },
+{ NETF(eFlags), 32 },
 { NETF(otherEntityNum), GENTITYNUM_BITS },
 { NETF(weapon), 8 },
 { NETF(clientNum), 8 },
@@ -866,7 +874,15 @@ netField_t	entityStateFields[] =
 { NETF(origin[0]), 0 },
 { NETF(origin[1]), 0 },
 { NETF(origin[2]), 0 },
-{ NETF(solid), 24 },
+{ NETF(contents), 32 },
+{ NETF(bmodel), 1 },
+{ NETF(capsule), 1 },
+{ NETF(mins[0]), 0 },
+{ NETF(mins[1]), 0 },
+{ NETF(mins[2]), 0 },
+{ NETF(maxs[0]), 0 },
+{ NETF(maxs[1]), 0 },
+{ NETF(maxs[2]), 0 },
 { NETF(powerups), MAX_POWERUPS },
 { NETF(modelindex), 8 },
 { NETF(otherEntityNum2), GENTITYNUM_BITS },
@@ -1178,7 +1194,10 @@ netField_t	playerStateFields[] =
 { PSF(pm_flags), 16 },
 { PSF(groundEntityNum), GENTITYNUM_BITS },
 { PSF(weaponstate), 4 },
-{ PSF(eFlags), 16 },
+{ PSF(eFlags), 32 },
+{ PSF(contents), 32 },
+{ PSF(capsule), 1 },
+{ PSF(linked), 1 },
 { PSF(externalEvent), 10 },
 { PSF(gravity), 16 },
 { PSF(speed), 16 },
@@ -1203,7 +1222,13 @@ netField_t	playerStateFields[] =
 { PSF(grapplePoint[1]), 0 },
 { PSF(grapplePoint[2]), 0 },
 { PSF(jumppad_ent), GENTITYNUM_BITS },
-{ PSF(loopSound), 16 }
+{ PSF(loopSound), 16 },
+{ PSF(mins[0]), 0 },
+{ PSF(mins[1]), 0 },
+{ PSF(mins[2]), 0 },
+{ PSF(maxs[0]), 0 },
+{ PSF(maxs[1]), 0 },
+{ PSF(maxs[2]), 0 }
 };
 
 /*

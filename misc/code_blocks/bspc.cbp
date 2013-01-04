@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="bspc" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release Win32">
+				<Option platforms="Windows;" />
+				<Option output="../../build/bspc-release/bspc" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../../build/bspc-release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+					<Add option="-DWIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add option="-DBSPC" />
+					<Add option="-DNO_GZIP" />
+				</Compiler>
+			</Target>
+			<Target title="Debug Win32">
+				<Option platforms="Windows;" />
+				<Option output="../../build/bspc-debug/bspc" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../../build/bspc-debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-g" />
+					<Add option="-O0" />
+					<Add option="-DWIN32" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add option="-DBSPC" />
+					<Add option="-DNO_GZIP" />
+				</Compiler>
+			</Target>
+			<Target title="Release Linux">
+				<Option platforms="Unix;Mac;" />
+				<Option output="../../build/bspc-release/bspc" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../../build/bspc-release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+					<Add option="-Dstricmp=strcasecmp" />
+					<Add option="-DLINUX" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add option="-DBSPC" />
+					<Add option="-DNO_GZIP" />
+				</Compiler>
+				<Linker>
+					<Add library="dl" />
+					<Add library="m" />
+					<Add library="pthread" />
+				</Linker>
+			</Target>
+			<Target title="Debug Linux">
+				<Option platforms="Unix;Mac;" />
+				<Option output="../../build/bspc-debug/bspc" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../../build/bspc-debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-g" />
+					<Add option="-O0" />
+					<Add option="-Dstricmp=strcasecmp" />
+					<Add option="-DLINUX" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add option="-DBSPC" />
+					<Add option="-DNO_GZIP" />
+				</Compiler>
+				<Linker>
+					<Add library="dl" />
+					<Add library="m" />
+					<Add library="pthread" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-DCom_Memcpy=memcpy" />
+			<Add option="-DCom_Memset=memset" />
+		</Compiler>
+		<Unit filename="../../code/botlib/aasfile.h" />
+		<Unit filename="../../code/botlib/be_aas_bsp.h" />
+		<Unit filename="../../code/botlib/be_aas_bspq3.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_cluster.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_cluster.h" />
+		<Unit filename="../../code/botlib/be_aas_debug.h" />
+		<Unit filename="../../code/botlib/be_aas_def.h" />
+		<Unit filename="../../code/botlib/be_aas_entity.h" />
+		<Unit filename="../../code/botlib/be_aas_file.h" />
+		<Unit filename="../../code/botlib/be_aas_funcs.h" />
+		<Unit filename="../../code/botlib/be_aas_main.h" />
+		<Unit filename="../../code/botlib/be_aas_move.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_move.h" />
+		<Unit filename="../../code/botlib/be_aas_optimize.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_optimize.h" />
+		<Unit filename="../../code/botlib/be_aas_reach.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_reach.h" />
+		<Unit filename="../../code/botlib/be_aas_route.h" />
+		<Unit filename="../../code/botlib/be_aas_routealt.h" />
+		<Unit filename="../../code/botlib/be_aas_sample.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/be_aas_sample.h" />
+		<Unit filename="../../code/botlib/be_interface.h" />
+		<Unit filename="../../code/botlib/l_libvar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/l_libvar.h" />
+		<Unit filename="../../code/botlib/l_log.h" />
+		<Unit filename="../../code/botlib/l_memory.h" />
+		<Unit filename="../../code/botlib/l_precomp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/l_precomp.h" />
+		<Unit filename="../../code/botlib/l_script.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/l_script.h" />
+		<Unit filename="../../code/botlib/l_struct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/botlib/l_struct.h" />
+		<Unit filename="../../code/bspc/_files.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/aas_areamerging.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/aas_areamerging.h" />
+		<Unit filename="../../code/bspc/aas_cfg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/aas_cfg.h" />
+		<Unit filename="../../code/bspc/aas_create.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/aas_create.h" />
+		<Unit filename="../../code/bspc/aas_edgemelting.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/aas_edgemelting.h" />
+		<Unit filename="../../code/bspc/aas_facemerging.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/aas_facemerging.h" />
+		<Unit filename="../../code/bspc/aas_file.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/aas_file.h" />
+		<Unit filename="../../code/bspc/aas_gsubdiv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/aas_gsubdiv.h" />
+		<Unit filename="../../code/bspc/aas_map.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/aas_map.h" />
+		<Unit filename="../../code/bspc/aas_prunenodes.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/aas_prunenodes.h" />
+		<Unit filename="../../code/bspc/aas_store.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/aas_store.h" />
+		<Unit filename="../../code/bspc/be_aas_bspc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/be_aas_bspc.h" />
+		<Unit filename="../../code/bspc/brushbsp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/bspc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/csg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/glfile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_bsp_ent.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_bsp_ent.h" />
+		<Unit filename="../../code/bspc/l_bsp_hl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_bsp_hl.h" />
+		<Unit filename="../../code/bspc/l_bsp_q1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_bsp_q1.h" />
+		<Unit filename="../../code/bspc/l_bsp_q2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_bsp_q2.h" />
+		<Unit filename="../../code/bspc/l_bsp_q3.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_bsp_q3.h" />
+		<Unit filename="../../code/bspc/l_bsp_sin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_bsp_sin.h" />
+		<Unit filename="../../code/bspc/l_cmd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_cmd.h" />
+		<Unit filename="../../code/bspc/l_log.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_log.h" />
+		<Unit filename="../../code/bspc/l_math.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_math.h" />
+		<Unit filename="../../code/bspc/l_mem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_mem.h" />
+		<Unit filename="../../code/bspc/l_poly.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_poly.h" />
+		<Unit filename="../../code/bspc/l_qfiles.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_qfiles.h" />
+		<Unit filename="../../code/bspc/l_threads.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_threads.h" />
+		<Unit filename="../../code/bspc/l_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/l_utils.h" />
+		<Unit filename="../../code/bspc/leakfile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/map.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/map_hl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/map_q1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/map_q2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/map_q3.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/map_sin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/nodraw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/portals.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/q2files.h" />
+		<Unit filename="../../code/bspc/q3files.h" />
+		<Unit filename="../../code/bspc/qbsp.h" />
+		<Unit filename="../../code/bspc/sinfiles.h" />
+		<Unit filename="../../code/bspc/textures.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/bspc/tree.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/cm_load.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/cm_local.h" />
+		<Unit filename="../../code/qcommon/cm_patch.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/cm_patch.h" />
+		<Unit filename="../../code/qcommon/cm_polylib.h" />
+		<Unit filename="../../code/qcommon/cm_public.h" />
+		<Unit filename="../../code/qcommon/cm_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/cm_trace.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/ioapi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/ioapi.h" />
+		<Unit filename="../../code/qcommon/md4.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/q_shared.h" />
+		<Unit filename="../../code/qcommon/qcommon.h" />
+		<Unit filename="../../code/qcommon/qfiles.h" />
+		<Unit filename="../../code/qcommon/surfaceflags.h" />
+		<Unit filename="../../code/qcommon/unzip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/qcommon/unzip.h" />
+		<Unit filename="../../code/zlib/adler32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/crc32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/crc32.h" />
+		<Unit filename="../../code/zlib/inffast.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/inffast.h" />
+		<Unit filename="../../code/zlib/inffixed.h" />
+		<Unit filename="../../code/zlib/inflate.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/inflate.h" />
+		<Unit filename="../../code/zlib/inftrees.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/inftrees.h" />
+		<Unit filename="../../code/zlib/zconf.h" />
+		<Unit filename="../../code/zlib/zlib.h" />
+		<Unit filename="../../code/zlib/zutil.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/zutil.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // qcommon.h -- definitions common between client and server, but not game.or ref modules
@@ -138,7 +146,7 @@ NET
 
 #define	PORT_ANY			-1
 
-#define	MAX_RELIABLE_COMMANDS	64			// max string commands buffered for restransmit
+#define	MAX_RELIABLE_COMMANDS	(64*MAX_SPLITVIEW) // max string commands buffered for restransmit
 
 typedef enum {
 	NA_BAD = 0,					// an address lookup failed
@@ -189,7 +197,7 @@ void		NET_LeaveMulticast6(void);
 void		NET_Sleep(int msec);
 
 
-#define	MAX_MSGLEN				16384		// max length of a message, which may
+#define	MAX_MSGLEN				32768		// max length of a message, which may
 											// be fragmented into multiple packets
 
 #define MAX_DOWNLOAD_WINDOW		48	// ACK window of 48 download chunks. Cannot set this higher, or clients
@@ -260,21 +268,10 @@ PROTOCOL
 // NOTE: that stuff only works with two digits protocols
 extern int demo_protocols[];
 
-#if !defined UPDATE_SERVER_NAME && !defined STANDALONE
-#define	UPDATE_SERVER_NAME	"update.quake3arena.com"
-#endif
+//#define	UPDATE_SERVER_NAME	"update.quake3arena.com"
 // override on command line, config files etc.
 #ifndef MASTER_SERVER_NAME
-#define MASTER_SERVER_NAME	"master.quake3arena.com"
-#endif
-
-#ifndef STANDALONE
-  #ifndef AUTHORIZE_SERVER_NAME
-    #define	AUTHORIZE_SERVER_NAME	"authorize.quake3arena.com"
-  #endif
-  #ifndef PORT_AUTHORIZE
-  #define	PORT_AUTHORIZE		27952
-  #endif
+#define MASTER_SERVER_NAME	"dpmaster.deathmask.net"
 #endif
 
 #define	PORT_MASTER			27950
@@ -337,21 +334,17 @@ typedef enum {
 } vmInterpret_t;
 
 typedef enum {
-	TRAP_MEMSET = 100,
+	TRAP_MEMSET = 0,
 	TRAP_MEMCPY,
 	TRAP_STRNCPY,
 	TRAP_SIN,
 	TRAP_COS,
 	TRAP_ATAN2,
 	TRAP_SQRT,
-	TRAP_MATRIXMULTIPLY,
-	TRAP_ANGLEVECTORS,
-	TRAP_PERPENDICULARVECTOR,
 	TRAP_FLOOR,
 	TRAP_CEIL,
-
-	TRAP_TESTPRINTINT,
-	TRAP_TESTPRINTFLOAT
+	TRAP_ACOS,
+	TRAP_ASIN
 } sharedTraps_t;
 
 void	VM_Init( void );
@@ -366,6 +359,7 @@ void	VM_Forced_Unload_Done(void);
 vm_t	*VM_Restart(vm_t *vm, qboolean unpure);
 
 intptr_t		QDECL VM_Call( vm_t *vm, int callNum, ... );
+int				VM_SafeCall( vm_t *vm, int callnum );
 
 void	VM_Debug( int level );
 
@@ -408,6 +402,9 @@ void Cbuf_AddText( const char *text );
 
 void Cbuf_ExecuteText( int exec_when, const char *text );
 // this can be used in place of either Cbuf_AddText or Cbuf_InsertText
+
+void Cbuf_ExecuteTextSafe( int exec_when, const char *text );
+// used by VMs with special handling for unsafe calls.
 
 void Cbuf_Execute (void);
 // Pulls off \n terminated lines of text from the command buffer and sends
@@ -455,6 +452,7 @@ void	Cmd_ArgvBuffer( int arg, char *buffer, int bufferLength );
 char	*Cmd_Args (void);
 char	*Cmd_ArgsFrom( int arg );
 void	Cmd_ArgsBuffer( char *buffer, int bufferLength );
+void	Cmd_LiteralArgsBuffer( char *buffer, int bufferLength );
 char	*Cmd_Cmd (void);
 void	Cmd_Args_Sanitize( void );
 // The functions that execute commands get their parameters with these
@@ -470,6 +468,8 @@ void	Cmd_ExecuteString( const char *text );
 // Parses a single line of text into arguments and tries to execute it
 // as if it was typed at the console
 
+void	Cmd_SaveCmdContext( void );
+void	Cmd_RestoreCmdContext( void );
 
 /*
 ==============================================================
@@ -533,6 +533,8 @@ int		Cvar_VariableIntegerValue( const char *var_name );
 char	*Cvar_VariableString( const char *var_name );
 void	Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 // returns an empty string if not defined
+void	Cvar_LatchedVariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+// returns the latched value if there is one, else the normal one, empty string if not defined
 
 int	Cvar_Flags(const char *var_name);
 // returns CVAR_NONEXISTENT if cvar doesn't exist or the flags of that particular CVAR.
@@ -598,9 +600,9 @@ issues.
 #define	MAX_FILE_HANDLES	64
 
 #ifdef DEDICATED
-#	define Q3CONFIG_CFG "q3config_server.cfg"
+#	define Q3CONFIG_CFG "config_server.cfg"
 #else
-#	define Q3CONFIG_CFG "q3config.cfg"
+#	define Q3CONFIG_CFG "config.cfg"
 #endif
 
 qboolean FS_Initialized( void );
@@ -608,8 +610,8 @@ qboolean FS_Initialized( void );
 void	FS_InitFilesystem ( void );
 void	FS_Shutdown( qboolean closemfp );
 
-qboolean FS_ConditionalRestart(int checksumFeed, qboolean disconnect);
-void	FS_Restart( int checksumFeed );
+qboolean FS_ConditionalRestart(qboolean disconnect);
+void	FS_Restart( void );
 // shutdown and restart the filesystem so changes to fs_gamedir can take effect
 
 void FS_AddGameDirectory( const char *path, const char *dir );
@@ -618,6 +620,8 @@ char	**FS_ListFiles( const char *directory, const char *extension, int *numfiles
 // directory should not have either a leading or trailing /
 // if extension is "/", only subdirectories will be returned
 // the returned files will not include any directories or /
+
+void	FS_SortFileList(char **filelist, int numfiles);
 
 void	FS_FreeFileList( char **list );
 
@@ -650,8 +654,7 @@ long		FS_FOpenFileRead( const char *qpath, fileHandle_t *file, qboolean uniqueFI
 // It is generally safe to always set uniqueFILE to true, because the majority of
 // file IO goes through FS_ReadFile, which Does The Right Thing already.
 
-int		FS_FileIsInPAK(const char *filename, int *pChecksum );
-// returns 1 if a file is in the PAK file, otherwise -1
+int     FS_Delete( char *filename );    // only works inside the 'save' directory (for deleting savegames/images)
 
 int		FS_Write( const void *buffer, int len, fileHandle_t f );
 
@@ -701,16 +704,13 @@ qboolean FS_FilenameCompare( const char *s1, const char *s2 );
 
 const char *FS_LoadedPakNames( void );
 const char *FS_LoadedPakChecksums( void );
-const char *FS_LoadedPakPureChecksums( void );
 // Returns a space separated string containing the checksums of all loaded pk3 files.
 // Servers with sv_pure set will get this string and pass it to clients.
 
 const char *FS_ReferencedPakNames( void );
 const char *FS_ReferencedPakChecksums( void );
-const char *FS_ReferencedPakPureChecksums( void );
-// Returns a space separated string containing the checksums of all loaded 
-// AND referenced pk3 files. Servers with sv_pure set will get this string 
-// back from clients for pure validation 
+// Returns a space separated string containing the checksums of all referenced pk3 files.
+// The server will send this to the clients so they can check which files should be auto-downloaded.
 
 void FS_ClearPakReferences( int flags );
 // clears referenced booleans on loaded pk3s
@@ -724,12 +724,13 @@ void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames );
 
 qboolean FS_CheckDirTraversal(const char *checkdir);
 qboolean FS_idPak(char *pak, char *base, int numPaks);
+qboolean FS_DefaultPak( char *pak );
 qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring );
 
-void FS_Rename( const char *from, const char *to );
+qboolean FS_Rename( const char *from, const char *to );
 
-void FS_Remove( const char *osPath );
-void FS_HomeRemove( const char *homePath );
+int FS_Remove( const char *osPath );
+int FS_HomeRemove( const char *homePath );
 
 void	FS_FilenameCompletion( const char *dir, const char *ext,
 		qboolean stripExt, void(*callback)(const char *s), qboolean allowNonPureFilesOnDisk );
@@ -769,10 +770,6 @@ MISC
 ==============================================================
 */
 
-// centralizing the declarations for cl_cdkey
-// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=470
-extern char cl_cdkey[34];
-
 // returned by Sys_GetProcessorFeatures
 typedef enum
 {
@@ -796,7 +793,9 @@ typedef enum {
 	SE_KEY,			// evValue is a key code, evValue2 is the down flag
 	SE_CHAR,		// evValue is an ascii char
 	SE_MOUSE,		// evValue and evValue2 are relative signed x / y moves
+	SE_MOUSE_LAST = SE_MOUSE + MAX_SPLITVIEW - 1, // Reserve values for SE_MOUSE events for splitscreen players
 	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
+	SE_JOYSTICK_AXIS_LAST = SE_JOYSTICK_AXIS + MAX_SPLITVIEW - 1, // Reserve values for SE_JOYSTICK_AXIS events for splitscreen players
 	SE_CONSOLE		// evPtr is a char*
 } sysEventType_t;
 
@@ -821,7 +820,7 @@ void 		QDECL Com_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 
 void 		QDECL Com_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void 		QDECL Com_Error( int code, const char *fmt, ... ) __attribute__ ((noreturn, format(printf, 2, 3)));
 void 		Com_Quit_f( void ) __attribute__ ((noreturn));
-void		Com_GameRestart(int checksumFeed, qboolean disconnect);
+void		Com_GameRestart(qboolean disconnect);
 
 int			Com_Milliseconds( void );	// will be journaled properly
 unsigned	Com_BlockChecksum( const void *buffer, int length );
@@ -834,12 +833,15 @@ void		Com_RunAndTimeServerPacket(netadr_t *evFrom, msg_t *buf);
 
 qboolean	Com_IsVoipTarget(uint8_t *voipTargets, int voipTargetsSize, int clientNum);
 
+qboolean	Com_GameIsSinglePlayer(void);
+
 void		Com_StartupVariable( const char *match );
 // checks for and removes command line "+set var arg" constructs
 // if match is NULL, all set commands will be executed, otherwise
 // only a set with the exact name.  Only used during startup.
 
 
+extern	cvar_t	*com_fs_pure;
 extern	cvar_t	*com_developer;
 extern	cvar_t	*com_dedicated;
 extern	cvar_t	*com_speeds;
@@ -848,6 +850,7 @@ extern	cvar_t	*com_sv_running;
 extern	cvar_t	*com_cl_running;
 extern	cvar_t	*com_version;
 extern	cvar_t	*com_blood;
+extern	cvar_t	*com_singlePlayerActive;
 extern	cvar_t	*com_buildScript;		// for building release pak files
 extern	cvar_t	*com_journal;
 extern	cvar_t	*com_cameraMode;
@@ -857,7 +860,6 @@ extern	cvar_t	*com_maxfpsUnfocused;
 extern	cvar_t	*com_minimized;
 extern	cvar_t	*com_maxfpsMinimized;
 extern	cvar_t	*com_altivec;
-extern	cvar_t	*com_standalone;
 extern	cvar_t	*com_basegame;
 extern	cvar_t	*com_homepath;
 
@@ -974,14 +976,15 @@ void CL_Disconnect( qboolean showMainMenu );
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit);
 void CL_Frame( int msec );
 qboolean CL_GameCommand( void );
+void CL_GameConsoleText( void );
 void CL_KeyEvent (int key, qboolean down, unsigned time);
 
 void CL_CharEvent( int key );
 // char events are for field typing, not game control
 
-void CL_MouseEvent( int dx, int dy, int time );
+void CL_MouseEvent( int localClientNum, int dx, int dy, int time );
 
-void CL_JoystickEvent( int axis, int value, int time );
+void CL_JoystickEvent( int localClientNum, int axis, int value, int time );
 
 void CL_PacketEvent( netadr_t from, msg_t *msg );
 
@@ -997,9 +1000,6 @@ void	CL_ForwardCommandToServer( const char *string );
 // adds the current command line as a clc_clientCommand to the client message.
 // things like godmode, noclip, etc, are commands directed to the server,
 // so when they are typed in at the console, they will need to be forwarded.
-
-void CL_CDDialog( void );
-// bring up the "need a cd to play" dialog
 
 void CL_FlushMemory( void );
 // dump all memory on an error
@@ -1045,7 +1045,6 @@ int SV_SendQueuedPackets(void);
 // UI interface
 //
 qboolean UI_GameCommand( void );
-qboolean UI_usesUniqueCDKey(void);
 
 /*
 ==============================================================
@@ -1109,7 +1108,9 @@ qboolean	Sys_IsLANAddress (netadr_t adr);
 void		Sys_ShowIP(void);
 
 qboolean Sys_Mkdir( const char *path );
+qboolean Sys_Rmdir( const char *path );
 FILE	*Sys_Mkfifo( const char *ospath );
+int		Sys_StatFile( char *ospath );
 char	*Sys_Cwd( void );
 void	Sys_SetDefaultInstallPath(const char *path);
 char	*Sys_DefaultInstallPath(void);

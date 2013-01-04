@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 #include "client.h"
@@ -138,6 +146,105 @@ keyname_t keynames[] =
 	{"JOY30", K_JOY30},
 	{"JOY31", K_JOY31},
 	{"JOY32", K_JOY32},
+
+	{"2JOY1", K_2JOY1},
+	{"2JOY2", K_2JOY2},
+	{"2JOY3", K_2JOY3},
+	{"2JOY4", K_2JOY4},
+	{"2JOY5", K_2JOY5},
+	{"2JOY6", K_2JOY6},
+	{"2JOY7", K_2JOY7},
+	{"2JOY8", K_2JOY8},
+	{"2JOY9", K_2JOY9},
+	{"2JOY10", K_2JOY10},
+	{"2JOY11", K_2JOY11},
+	{"2JOY12", K_2JOY12},
+	{"2JOY13", K_2JOY13},
+	{"2JOY14", K_2JOY14},
+	{"2JOY15", K_2JOY15},
+	{"2JOY16", K_2JOY16},
+	{"2JOY17", K_2JOY17},
+	{"2JOY18", K_2JOY18},
+	{"2JOY19", K_2JOY19},
+	{"2JOY20", K_2JOY20},
+	{"2JOY21", K_2JOY21},
+	{"2JOY22", K_2JOY22},
+	{"2JOY23", K_2JOY23},
+	{"2JOY24", K_2JOY24},
+	{"2JOY25", K_2JOY25},
+	{"2JOY26", K_2JOY26},
+	{"2JOY27", K_2JOY27},
+	{"2JOY28", K_2JOY28},
+	{"2JOY29", K_2JOY29},
+	{"2JOY30", K_2JOY30},
+	{"2JOY31", K_2JOY31},
+	{"2JOY32", K_2JOY32},
+
+	{"3JOY1", K_3JOY1},
+	{"3JOY2", K_3JOY2},
+	{"3JOY3", K_3JOY3},
+	{"3JOY4", K_3JOY4},
+	{"3JOY5", K_3JOY5},
+	{"3JOY6", K_3JOY6},
+	{"3JOY7", K_3JOY7},
+	{"3JOY8", K_3JOY8},
+	{"3JOY9", K_3JOY9},
+	{"3JOY10", K_3JOY10},
+	{"3JOY11", K_3JOY11},
+	{"3JOY12", K_3JOY12},
+	{"3JOY13", K_3JOY13},
+	{"3JOY14", K_3JOY14},
+	{"3JOY15", K_3JOY15},
+	{"3JOY16", K_3JOY16},
+	{"3JOY17", K_3JOY17},
+	{"3JOY18", K_3JOY18},
+	{"3JOY19", K_3JOY19},
+	{"3JOY20", K_3JOY20},
+	{"3JOY21", K_3JOY21},
+	{"3JOY22", K_3JOY22},
+	{"3JOY23", K_3JOY23},
+	{"3JOY24", K_3JOY24},
+	{"3JOY25", K_3JOY25},
+	{"3JOY26", K_3JOY26},
+	{"3JOY27", K_3JOY27},
+	{"3JOY28", K_3JOY28},
+	{"3JOY29", K_3JOY29},
+	{"3JOY30", K_3JOY30},
+	{"3JOY31", K_3JOY31},
+	{"3JOY32", K_3JOY32},
+
+	{"4JOY1", K_4JOY1},
+	{"4JOY2", K_4JOY2},
+	{"4JOY3", K_4JOY3},
+	{"4JOY4", K_4JOY4},
+	{"4JOY5", K_4JOY5},
+	{"4JOY6", K_4JOY6},
+	{"4JOY7", K_4JOY7},
+	{"4JOY8", K_4JOY8},
+	{"4JOY9", K_4JOY9},
+	{"4JOY10", K_4JOY10},
+	{"4JOY11", K_4JOY11},
+	{"4JOY12", K_4JOY12},
+	{"4JOY13", K_4JOY13},
+	{"4JOY14", K_4JOY14},
+	{"4JOY15", K_4JOY15},
+	{"4JOY16", K_4JOY16},
+	{"4JOY17", K_4JOY17},
+	{"4JOY18", K_4JOY18},
+	{"4JOY19", K_4JOY19},
+	{"4JOY20", K_4JOY20},
+	{"4JOY21", K_4JOY21},
+	{"4JOY22", K_4JOY22},
+	{"4JOY23", K_4JOY23},
+	{"4JOY24", K_4JOY24},
+	{"4JOY25", K_4JOY25},
+	{"4JOY26", K_4JOY26},
+	{"4JOY27", K_4JOY27},
+	{"4JOY28", K_4JOY28},
+	{"4JOY29", K_4JOY29},
+	{"4JOY30", K_4JOY30},
+	{"4JOY31", K_4JOY31},
+	{"4JOY32", K_4JOY32},
 
 	{"AUX1", K_AUX1},
 	{"AUX2", K_AUX2},
@@ -440,6 +547,7 @@ void Field_KeyDownEvent( field_t *edit, int key ) {
 
 	switch ( key ) {
 		case K_DEL:
+		case K_KP_DEL:
 			if ( edit->cursor < len ) {
 				memmove( edit->buffer + edit->cursor, 
 					edit->buffer + edit->cursor + 1, len - edit->cursor );
@@ -447,26 +555,31 @@ void Field_KeyDownEvent( field_t *edit, int key ) {
 			break;
 
 		case K_RIGHTARROW:
+		case K_KP_RIGHTARROW:
 			if ( edit->cursor < len ) {
 				edit->cursor++;
 			}
 			break;
 
 		case K_LEFTARROW:
+		case K_KP_LEFTARROW:
 			if ( edit->cursor > 0 ) {
 				edit->cursor--;
 			}
 			break;
 
 		case K_HOME:
+		case K_KP_HOME:
 			edit->cursor = 0;
 			break;
 
 		case K_END:
+		case K_KP_END:
 			edit->cursor = len;
 			break;
 
 		case K_INS:
+		case K_KP_INS:
 			key_overstrikeMode = !key_overstrikeMode;
 			break;
 
@@ -664,12 +777,12 @@ void Console_Key (int key) {
 	}
 
 	// console scrolling
-	if ( key == K_PGUP ) {
+	if ( key == K_PGUP || key == K_KP_PGUP ) {
 		Con_PageUp();
 		return;
 	}
 
-	if ( key == K_PGDN) {
+	if ( key == K_PGDN || key == K_KP_PGDN ) {
 		Con_PageDown();
 		return;
 	}
@@ -693,13 +806,13 @@ void Console_Key (int key) {
 	}
 
 	// ctrl-home = top of console
-	if ( key == K_HOME && keys[K_CTRL].down ) {
+	if ( ( key == K_HOME || key == K_KP_HOME ) && keys[K_CTRL].down ) {
 		Con_Top();
 		return;
 	}
 
 	// ctrl-end = bottom of console
-	if ( key == K_END && keys[K_CTRL].down ) {
+	if ( ( key == K_END || key == K_KP_END ) && keys[K_CTRL].down ) {
 		Con_Bottom();
 		return;
 	}
@@ -913,11 +1026,11 @@ Key_GetKey
 ===================
 */
 
-int Key_GetKey(const char *binding) {
+int Key_GetKey(const char *binding, int startKey) {
   int i;
 
   if (binding) {
-  	for (i=0 ; i < MAX_KEYS ; i++) {
+  	for (i=startKey ; i < MAX_KEYS ; i++) {
       if (keys[i].binding && Q_stricmp(binding, keys[i].binding) == 0) {
         return i;
       }
@@ -1171,7 +1284,7 @@ CL_KeyDownEvent
 Called by CL_KeyEvent to handle a keypress
 ===================
 */
-void CL_KeyDownEvent( int key, unsigned time )
+void CL_KeyDownEvent( int key, unsigned time, qboolean onlybinds )
 {
 	keys[key].down = qtrue;
 	keys[key].repeats++;
@@ -1237,19 +1350,25 @@ void CL_KeyDownEvent( int key, unsigned time )
 
 	// distribute the key down event to the apropriate handler
 	if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
-		Console_Key( key );
+		if ( !onlybinds ) {
+			Console_Key( key );
+		}
 	} else if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		if ( uivm ) {
+		if ( uivm && ( !onlybinds || VM_Call( uivm, UI_WANTSBINDKEYS ) ) ) {
 			VM_Call( uivm, UI_KEY_EVENT, key, qtrue );
 		} 
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
-		if ( cgvm ) {
+		if ( cgvm && ( !onlybinds || VM_Call( cgvm, CG_WANTSBINDKEYS ) ) ) {
 			VM_Call( cgvm, CG_KEY_EVENT, key, qtrue );
 		} 
 	} else if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
-		Message_Key( key );
+		if ( !onlybinds ) {
+			Message_Key( key );
+		}
 	} else if ( clc.state == CA_DISCONNECTED ) {
-		Console_Key( key );
+		if ( !onlybinds ) {
+			Console_Key( key );
+		}
 	} else {
 		// send the bound action
 		CL_ParseBinding( key, qtrue, time );
@@ -1264,7 +1383,7 @@ CL_KeyUpEvent
 Called by CL_KeyEvent to handle a keyrelease
 ===================
 */
-void CL_KeyUpEvent( int key, unsigned time )
+void CL_KeyUpEvent( int key, unsigned time, qboolean onlybinds )
 {
 	keys[key].repeats = 0;
 	keys[key].down = qfalse;
@@ -1289,9 +1408,13 @@ void CL_KeyUpEvent( int key, unsigned time )
 		CL_ParseBinding( key, qfalse, time );
 
 	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
-		VM_Call( uivm, UI_KEY_EVENT, key, qfalse );
+		if ( !onlybinds || VM_Call( uivm, UI_WANTSBINDKEYS ) ) {
+			VM_Call( uivm, UI_KEY_EVENT, key, qfalse );
+		}
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME && cgvm ) {
-		VM_Call( cgvm, CG_KEY_EVENT, key, qfalse );
+		if ( !onlybinds || VM_Call( cgvm, CG_WANTSBINDKEYS ) ) {
+			VM_Call( cgvm, CG_KEY_EVENT, key, qfalse );
+		}
 	}
 }
 
@@ -1303,10 +1426,31 @@ Called by the system for both key up and key down events
 ===================
 */
 void CL_KeyEvent (int key, qboolean down, unsigned time) {
+	qboolean onlybinds = qfalse;
+
+	switch ( key ) {
+	case K_KP_PGUP:
+	case K_KP_EQUALS:
+	case K_KP_5:
+	case K_KP_LEFTARROW:
+	case K_KP_UPARROW:
+	case K_KP_RIGHTARROW:
+	case K_KP_DOWNARROW:
+	case K_KP_END:
+	case K_KP_PGDN:
+	case K_KP_INS:
+	case K_KP_DEL:
+	case K_KP_HOME:
+		if ( keys[K_KP_NUMLOCK].down ) {
+			onlybinds = qtrue;
+		}
+		break;
+	}
+
 	if( down )
-		CL_KeyDownEvent( key, time );
+		CL_KeyDownEvent( key, time, onlybinds );
 	else
-		CL_KeyUpEvent( key, time );
+		CL_KeyUpEvent( key, time, onlybinds );
 }
 
 /*
@@ -1367,6 +1511,32 @@ void Key_ClearStates (void)
 	}
 }
 
+/*
+====================
+Key_KeynumToStringBuf
+====================
+*/
+void Key_KeynumToStringBuf( int keynum, char *buf, int buflen ) {
+	Q_strncpyz( buf, Key_KeynumToString( keynum ), buflen );
+}
+
+/*
+====================
+Key_GetBindingBuf
+====================
+*/
+void Key_GetBindingBuf( int keynum, char *buf, int buflen ) {
+	char	*value;
+
+	value = Key_GetBinding( keynum );
+	if ( value ) {
+		Q_strncpyz( buf, value, buflen );
+	}
+	else {
+		*buf = 0;
+	}
+}
+
 static int keyCatchers = 0;
 
 /*
@@ -1393,7 +1563,7 @@ void Key_SetCatcher( int catcher ) {
 
 // This must not exceed MAX_CMD_LINE
 #define			MAX_CONSOLE_SAVE_BUFFER	1024
-#define			CONSOLE_HISTORY_FILE    "q3history"
+#define			CONSOLE_HISTORY_FILE    "history"
 static char	consoleSaveBuffer[ MAX_CONSOLE_SAVE_BUFFER ];
 static int	consoleSaveBufferSize = 0;
 

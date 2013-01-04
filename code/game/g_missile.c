@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -183,13 +191,13 @@ static void ProximityMine_Activate( gentity_t *ent ) {
 	trigger->classname = "proxmine_trigger";
 
 	r = ent->splashRadius;
-	VectorSet( trigger->r.mins, -r, -r, -r );
-	VectorSet( trigger->r.maxs, r, r, r );
+	VectorSet( trigger->s.mins, -r, -r, -r );
+	VectorSet( trigger->s.maxs, r, r, r );
 
 	G_SetOrigin( trigger, ent->s.pos.trBase );
 
 	trigger->parent = ent;
-	trigger->r.contents = CONTENTS_TRIGGER;
+	trigger->s.contents = CONTENTS_TRIGGER;
 	trigger->touch = ProximityMine_Trigger;
 
 	trap_LinkEntity (trigger);
@@ -353,8 +361,8 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		ent->enemy = other;
 		ent->die = ProximityMine_Die;
 		VectorCopy(trace->plane.normal, ent->movedir);
-		VectorSet(ent->r.mins, -4, -4, -4);
-		VectorSet(ent->r.maxs, 4, 4, 4);
+		VectorSet(ent->s.mins, -4, -4, -4);
+		VectorSet(ent->s.maxs, 4, 4, 4);
 		trap_LinkEntity(ent);
 
 		return;
@@ -373,9 +381,9 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 
 			ent->enemy = other;
 
-			v[0] = other->r.currentOrigin[0] + (other->r.mins[0] + other->r.maxs[0]) * 0.5;
-			v[1] = other->r.currentOrigin[1] + (other->r.mins[1] + other->r.maxs[1]) * 0.5;
-			v[2] = other->r.currentOrigin[2] + (other->r.mins[2] + other->r.maxs[2]) * 0.5;
+			v[0] = other->r.currentOrigin[0] + (other->s.mins[0] + other->s.maxs[0]) * 0.5;
+			v[1] = other->r.currentOrigin[1] + (other->s.mins[1] + other->s.maxs[1]) * 0.5;
+			v[2] = other->r.currentOrigin[2] + (other->s.mins[2] + other->s.maxs[2]) * 0.5;
 
 			SnapVectorTowards( v, ent->s.pos.trBase );	// save net bandwidth
 		} else {
@@ -468,11 +476,11 @@ void G_RunMissile( gentity_t *ent ) {
 		passent = ent->r.ownerNum;
 	}
 	// trace a line from the previous position to the current position
-	trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask );
+	trap_Trace( &tr, ent->r.currentOrigin, ent->s.mins, ent->s.maxs, origin, passent, ent->clipmask );
 
 	if ( tr.startsolid || tr.allsolid ) {
 		// make sure the tr.entityNum is set to the entity we're stuck in
-		trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, ent->r.currentOrigin, passent, ent->clipmask );
+		trap_Trace( &tr, ent->r.currentOrigin, ent->s.mins, ent->s.maxs, ent->r.currentOrigin, passent, ent->clipmask );
 		tr.fraction = 0;
 	}
 	else {
@@ -500,7 +508,7 @@ void G_RunMissile( gentity_t *ent ) {
 	// if the prox mine wasn't yet outside the player body
 	if (ent->s.weapon == WP_PROX_LAUNCHER && !ent->count) {
 		// check if the prox mine is outside the owner bbox
-		trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, ent->r.currentOrigin, ENTITYNUM_NONE, ent->clipmask );
+		trap_Trace( &tr, ent->r.currentOrigin, ent->s.mins, ent->s.maxs, ent->r.currentOrigin, ENTITYNUM_NONE, ent->clipmask );
 		if (!tr.startsolid || tr.entityNum != ent->r.ownerNum) {
 			ent->count = 1;
 		}

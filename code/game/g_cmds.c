@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -187,35 +195,40 @@ Returns a player number for either a number or name string
 Returns -1 if invalid
 ==================
 */
-int ClientNumberFromString( gentity_t *to, char *s ) {
+int ClientNumberFromString( gentity_t *to, char *s, qboolean checkNums, qboolean checkNames ) {
 	gclient_t	*cl;
 	int			idnum;
 	char		cleanName[MAX_STRING_CHARS];
 
-	// numeric values could be slot numbers
-	if ( StringIsInteger( s ) ) {
-		idnum = atoi( s );
-		if ( idnum >= 0 && idnum < level.maxclients ) {
-			cl = &level.clients[idnum];
-			if ( cl->pers.connected == CON_CONNECTED ) {
+	if ( checkNums ) {
+		// numeric values could be slot numbers
+		if ( StringIsInteger( s ) ) {
+			idnum = atoi( s );
+			if ( idnum >= 0 && idnum < level.maxclients ) {
+				cl = &level.clients[idnum];
+				if ( cl->pers.connected == CON_CONNECTED ) {
+					return idnum;
+				}
+			}
+		}
+	}
+
+	if ( checkNames ) {
+		// check for a name match
+		for ( idnum=0,cl=level.clients ; idnum < level.maxclients ; idnum++,cl++ ) {
+			if ( cl->pers.connected != CON_CONNECTED ) {
+				continue;
+			}
+			Q_strncpyz(cleanName, cl->pers.netname, sizeof(cleanName));
+			Q_CleanStr(cleanName);
+			if ( !Q_stricmp( cleanName, s ) ) {
 				return idnum;
 			}
 		}
 	}
 
-	// check for a name match
-	for ( idnum=0,cl=level.clients ; idnum < level.maxclients ; idnum++,cl++ ) {
-		if ( cl->pers.connected != CON_CONNECTED ) {
-			continue;
-		}
-		Q_strncpyz(cleanName, cl->pers.netname, sizeof(cleanName));
-		Q_CleanStr(cleanName);
-		if ( !Q_stricmp( cleanName, s ) ) {
-			return idnum;
-		}
-	}
-
 	trap_SendServerCommand( to-g_entities, va("print \"User %s is not on the server\n\"", s));
+
 	return -1;
 }
 
@@ -633,6 +646,11 @@ void SetTeam( gentity_t *ent, char *s ) {
 	// get and distribute relevent paramters
 	ClientUserinfoChanged( clientNum );
 
+	// client sent an early team command, they haven't spawned yet.
+	if ( client->pers.connected != CON_CONNECTED ) {
+		return;
+	}
+
 	ClientBegin( clientNum );
 }
 
@@ -717,7 +735,7 @@ void Cmd_Follow_f( gentity_t *ent ) {
 	}
 
 	trap_Argv( 1, arg, sizeof( arg ) );
-	i = ClientNumberFromString( ent, arg );
+	i = ClientNumberFromString( ent, arg, qtrue, qtrue );
 	if ( i == -1 ) {
 		return;
 	}
@@ -729,6 +747,11 @@ void Cmd_Follow_f( gentity_t *ent ) {
 
 	// can't follow another spectator
 	if ( level.clients[ i ].sess.sessionTeam == TEAM_SPECTATOR ) {
+		return;
+	}
+
+	// don't follow one of their local players
+	if ( level.clients[ i ].pers.connectionNum == ent->client->pers.connectionNum ) {
 		return;
 	}
 
@@ -801,6 +824,11 @@ void Cmd_FollowCycle_f( gentity_t *ent, int dir ) {
 			continue;
 		}
 
+		// don't follow one of their local players
+		if ( level.clients[ clientnum ].pers.connectionNum == ent->client->pers.connectionNum ) {
+			continue;
+		}
+
 		// this is good, we can use it
 		ent->client->sess.spectatorClient = clientnum;
 		ent->client->sess.spectatorState = SPECTATOR_FOLLOW;
@@ -817,44 +845,43 @@ G_Say
 ==================
 */
 
-static void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char *name, const char *message ) {
+static qboolean G_SayTo( gentity_t *ent, gentity_t *other, int mode ) {
 	if (!other) {
-		return;
+		return qfalse;
 	}
 	if (!other->inuse) {
-		return;
+		return qfalse;
 	}
 	if (!other->client) {
-		return;
+		return qfalse;
 	}
 	if ( other->client->pers.connected != CON_CONNECTED ) {
-		return;
+		return qfalse;
 	}
 	if ( mode == SAY_TEAM  && !OnSameTeam(ent, other) ) {
-		return;
+		return qfalse;
 	}
 	// no chatting to players in tournements
 	if ( (g_gametype.integer == GT_TOURNAMENT )
 		&& other->client->sess.sessionTeam == TEAM_FREE
 		&& ent->client->sess.sessionTeam != TEAM_FREE ) {
-		return;
+		return qfalse;
 	}
 
-	trap_SendServerCommand( other-g_entities, va("%s \"%s%c%c%s\"", 
-		mode == SAY_TEAM ? "tchat" : "chat",
-		name, Q_COLOR_ESCAPE, color, message));
+	return qtrue;
 }
 
 #define EC		"\x19"
 
 void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) {
-	int			j;
+	int			i, j;
 	gentity_t	*other;
 	int			color;
 	char		name[64];
 	// don't let text be too long for malicious reasons
 	char		text[MAX_SAY_TEXT];
 	char		location[64];
+	char		*cmd, *str;
 
 	if ( g_gametype.integer < GT_TEAM && mode == SAY_TEAM ) {
 		mode = SAY_ALL;
@@ -866,6 +893,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		G_LogPrintf( "say: %s: %s\n", ent->client->pers.netname, chatText );
 		Com_sprintf (name, sizeof(name), "%s%c%c"EC": ", ent->client->pers.netname, Q_COLOR_ESCAPE, COLOR_WHITE );
 		color = COLOR_GREEN;
+		cmd = "chat";
 		break;
 	case SAY_TEAM:
 		G_LogPrintf( "sayteam: %s: %s\n", ent->client->pers.netname, chatText );
@@ -876,6 +904,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 			Com_sprintf (name, sizeof(name), EC"(%s%c%c"EC")"EC": ", 
 				ent->client->pers.netname, Q_COLOR_ESCAPE, COLOR_WHITE );
 		color = COLOR_CYAN;
+		cmd = "tchat";
 		break;
 	case SAY_TELL:
 		if (target && target->inuse && target->client && g_gametype.integer >= GT_TEAM &&
@@ -885,13 +914,20 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		else
 			Com_sprintf (name, sizeof(name), EC"[%s%c%c"EC"]"EC": ", ent->client->pers.netname, Q_COLOR_ESCAPE, COLOR_WHITE );
 		color = COLOR_MAGENTA;
+		cmd = "tell";
 		break;
 	}
 
 	Q_strncpyz( text, chatText, sizeof(text) );
 
+	str = va( "%s \"%s%c%c%s\"", cmd, name, Q_COLOR_ESCAPE, color, text );
+
 	if ( target ) {
-		G_SayTo( ent, target, mode, color, name, text );
+		if ( !G_SayTo( ent, target, mode ) ) {
+			return;
+		}
+
+		trap_SendServerCommand( target-g_entities, str );
 		return;
 	}
 
@@ -900,10 +936,28 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		G_Printf( "%s%s\n", name, text);
 	}
 
+	// send to everyone on team
+	if ( mode == SAY_TEAM ) {
+		G_TeamCommand( ent->client->sess.sessionTeam, str );
+		return;
+	}
+
 	// send it to all the apropriate clients
-	for (j = 0; j < level.maxclients; j++) {
-		other = &g_entities[j];
-		G_SayTo( ent, other, mode, color, name, text );
+	for (i = 0; i < level.maxconnections; i++) {
+		for (  j = 0; j < MAX_SPLITVIEW; j++ ) {
+			if ( level.connections[i].localPlayerNums[j] == -1 )
+				continue;
+
+			other = &g_entities[level.connections[i].localPlayerNums[j]];
+
+			if ( !G_SayTo( ent, other, mode ) ) {
+				break;
+			}
+		}
+
+		if ( j == MAX_SPLITVIEW ) {
+			trap_SendServerCommandEx( i, -1, str );
+		}
 	}
 }
 
@@ -949,7 +1003,7 @@ static void Cmd_Tell_f( gentity_t *ent ) {
 	}
 
 	trap_Argv( 1, arg, sizeof( arg ) );
-	targetNum = ClientNumberFromString( ent, arg );
+	targetNum = ClientNumberFromString( ent, arg, qtrue, qtrue );
 	if ( targetNum == -1 ) {
 		return;
 	}
@@ -1075,7 +1129,7 @@ static void Cmd_VoiceTell_f( gentity_t *ent, qboolean voiceonly ) {
 	}
 
 	trap_Argv( 1, arg, sizeof( arg ) );
-	targetNum = ClientNumberFromString( ent, arg );
+	targetNum = ClientNumberFromString( ent, arg, qtrue, qtrue );
 	if ( targetNum == -1 ) {
 		return;
 	}
@@ -1204,7 +1258,7 @@ void Cmd_GameCommand_f( gentity_t *ent ) {
 	}
 
 	trap_Argv( 1, arg, sizeof( arg ) );
-	targetNum = ClientNumberFromString( ent, arg );
+	targetNum = ClientNumberFromString( ent, arg, qtrue, qtrue );
 	if ( targetNum == -1 ) {
 		return;
 	}
@@ -1293,26 +1347,26 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 	} else if ( !Q_stricmp( arg1, "map" ) ) {
 	} else if ( !Q_stricmp( arg1, "g_gametype" ) ) {
 	} else if ( !Q_stricmp( arg1, "kick" ) ) {
-	} else if ( !Q_stricmp( arg1, "clientkick" ) ) {
+	} else if ( !Q_stricmp( arg1, "kicknum" ) ) {
 	} else if ( !Q_stricmp( arg1, "g_doWarmup" ) ) {
 	} else if ( !Q_stricmp( arg1, "timelimit" ) ) {
 	} else if ( !Q_stricmp( arg1, "fraglimit" ) ) {
 	} else {
 		trap_SendServerCommand( ent-g_entities, "print \"Invalid vote string.\n\"" );
-		trap_SendServerCommand( ent-g_entities, "print \"Vote commands are: map_restart, nextmap, map <mapname>, g_gametype <n>, kick <player>, clientkick <clientnum>, g_doWarmup, timelimit <time>, fraglimit <frags>.\n\"" );
+		trap_SendServerCommand( ent-g_entities, "print \"Vote commands are: map_restart, nextmap, map <mapname>, g_gametype <n>, kick <player>, kicknum <clientnum>, g_doWarmup, timelimit <time>, fraglimit <frags>.\n\"" );
 		return;
 	}
 
 	// if there is still a vote to be executed
 	if ( level.voteExecuteTime ) {
 		level.voteExecuteTime = 0;
-		trap_SendConsoleCommand( EXEC_APPEND, va("%s\n", level.voteString ) );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", level.voteString ) );
 	}
 
 	// special case for g_gametype, check for bad values
 	if ( !Q_stricmp( arg1, "g_gametype" ) ) {
 		i = atoi( arg2 );
-		if( i == GT_SINGLE_PLAYER || i < GT_FFA || i >= GT_MAX_GAME_TYPE) {
+		if( i == GT_SINGLE_PLAYER || i < 0 || i >= GT_MAX_GAME_TYPE) {
 			trap_SendServerCommand( ent-g_entities, "print \"Invalid gametype.\n\"" );
 			return;
 		}
@@ -1341,6 +1395,19 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 		}
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "vstr nextmap");
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", level.voteString );
+	} else if ( !Q_stricmp( arg1, "kicknum" ) || !Q_stricmp( arg1, "kick" ) ) {
+		i = ClientNumberFromString( ent, arg2, !Q_stricmp( arg1, "kicknum" ), !Q_stricmp( arg1, "kick" ) );
+		if ( i == -1 ) {
+			return;
+		}
+
+		if ( level.clients[i].pers.localClient ) {
+			trap_SendServerCommand( ent-g_entities, "print \"Cannot kick host client.\n\"" );
+			return;
+		}
+
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "kicknum %d", i );
+		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "kick %s" , level.clients[i].pers.netname );
 	} else {
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s \"%s\"", arg1, arg2 );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", level.voteString );
@@ -1639,17 +1706,62 @@ void Cmd_Stats_f( gentity_t *ent ) {
 ClientCommand
 =================
 */
-void ClientCommand( int clientNum ) {
+void ClientCommand( int connectionNum ) {
 	gentity_t *ent;
-	char	cmd[MAX_TOKEN_CHARS];
+	gconnection_t *connection;
+	int		clientNum;
+	char	*cmd;
+	char	buf[MAX_TOKEN_CHARS];
+
+	connection = &level.connections[connectionNum];
+
+	trap_Argv( 0, buf, sizeof( buf ) );
+
+	cmd = &buf[0];
+
+	// Commands for extra local players.
+	// 2team, 2give, 2teamtask, ...
+	if (cmd[0] >= '2' && cmd[0] <= '0'+MAX_SPLITVIEW) {
+		int num;
+
+		num = cmd[0]-'1';
+
+		cmd++;
+
+		if ( connection->localPlayerNums[num] == -1 ) {
+			//G_Printf("Client %d's local player %d not connected.\n", connectionNum, lc+1);
+			return;
+		}
+
+		clientNum = connection->localPlayerNums[num];
+	} else {
+		int i;
+
+		for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
+			if ( connection->localPlayerNums[i] != -1 ) {
+				clientNum = connection->localPlayerNums[i];
+				break;
+			}
+		}
+		if ( i == MAX_SPLITVIEW ) {
+			//G_Printf("No Local player connected from connection %d!\n", connectionNum);
+			return;
+		}
+	}
 
 	ent = g_entities + clientNum;
-	if (!ent->client || ent->client->pers.connected != CON_CONNECTED) {
+	if ( !ent->client ) {
 		return;		// not fully in game yet
 	}
 
-
-	trap_Argv( 0, cmd, sizeof( cmd ) );
+	if ( ent->client->pers.connected != CON_CONNECTED ) {
+		// Allow local clients to use team command before game finishes starting up,
+		// so team can be set by UI when starting a local game (without trying to have a wait command delay them).
+		if (ent->client->pers.localClient && !level.intermissiontime && Q_stricmp (cmd, "team") == 0) {
+			Cmd_Team_f (ent);
+		}
+		return;
+	}
 
 	if (Q_stricmp (cmd, "say") == 0) {
 		Cmd_Say_f (ent, SAY_ALL, qfalse);
@@ -1743,5 +1855,5 @@ void ClientCommand( int clientNum ) {
 	else if (Q_stricmp (cmd, "stats") == 0)
 		Cmd_Stats_f( ent );
 	else
-		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", cmd ) );
+		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", buf ) );
 }

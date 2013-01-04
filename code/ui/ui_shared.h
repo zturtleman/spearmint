@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 #ifndef __UI_SHARED_H
@@ -88,6 +96,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ART_FX_TEAL			"menu/art/fx_teal"
 #define ART_FX_WHITE		"menu/art/fx_white"
 #define ART_FX_YELLOW		"menu/art/fx_yel"
+
+#define NUM_COLOR_EFFECTS 7
 
 #define ASSET_GRADIENTBAR "ui/assets/gradientbar2.tga"
 #define ASSET_SCROLLBAR             "ui/assets/scrollbar.tga"
@@ -304,9 +314,9 @@ typedef struct {
   qboolean fontRegistered;
 
   // player settings
-	qhandle_t fxBasePic;
-  qhandle_t fxPic[7];
-	qhandle_t	crosshairShader[NUM_CROSSHAIRS];
+  qhandle_t fxBasePic;
+  qhandle_t fxPic[NUM_COLOR_EFFECTS];
+  qhandle_t crosshairShader[NUM_CROSSHAIRS];
 
 } cachedAssets_t;
 
@@ -353,6 +363,7 @@ typedef struct {
 	void (*keynumToStringBuf)( int keynum, char *buf, int buflen );
 	void (*getBindingBuf)( int keynum, char *buf, int buflen );
 	void (*setBinding)( int keynum, const char *binding );
+	int (*getKey)( const char *binding, int startKey );
 	void (*executeText)(int exec_when, const char *text );	
 	void (*Error)(int level, const char *error, ...) __attribute__ ((noreturn, format (printf, 2, 3)));
 	void (*Print)(const char *msg, ...) __attribute__ ((format (printf, 1, 2)));
@@ -422,6 +433,7 @@ void *Display_CaptureItem(int x, int y);
 qboolean Display_MouseMove(void *p, int x, int y);
 int Display_CursorType(int x, int y);
 qboolean Display_KeyBindPending( void );
+qboolean Display_WantsBindKeys( void );
 void Menus_OpenByName(const char *p);
 menuDef_t *Menus_FindByName(const char *p);
 void Menus_ShowByName(const char *p);
@@ -440,11 +452,5 @@ qboolean UI_OutOfMemory( void );
 void Controls_GetConfig( void );
 void Controls_SetConfig(qboolean restart);
 void Controls_SetDefaults( void );
-
-int			trap_PC_AddGlobalDefine( char *define );
-int			trap_PC_LoadSource( const char *filename );
-int			trap_PC_FreeSource( int handle );
-int			trap_PC_ReadToken( int handle, pc_token_t *pc_token );
-int			trap_PC_SourceFileAndLine( int handle, char *filename, int *line );
 
 #endif

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
@@ -809,7 +817,7 @@ void CM_AddFacetBevels( facet_t *facet ) {
 
 	int i, j, k, l;
 	int axis, dir, order, flipped;
-	float plane[4], d, newplane[4];
+	float plane[4], d, minBack, newplane[4];
 	winding_t *w, *w2;
 	vec3_t mins, maxs, vec, vec2;
 
@@ -853,8 +861,15 @@ void CM_AddFacetBevels( facet_t *facet ) {
 			}
 			// see if the plane is allready present
 			for ( i = 0 ; i < facet->numBorders ; i++ ) {
-				if (CM_PlaneEqual(&planes[facet->borderPlanes[i]], plane, &flipped))
-					break;
+				if ( dir > 0 ) {
+					if ( planes[facet->borderPlanes[i]].plane[axis] >= 0.9999f ) {
+						break;
+					}
+				} else {
+					if ( planes[facet->borderPlanes[i]].plane[axis] <= -0.9999f ) {
+						break;
+					}
+				}
 			}
 
 			if ( i == facet->numBorders ) {
@@ -879,7 +894,7 @@ void CM_AddFacetBevels( facet_t *facet ) {
 			continue;
 		CM_SnapVector(vec);
 		for ( k = 0; k < 3 ; k++ )
-			if ( vec[k] == -1 || vec[k] == 1 )
+			if ( vec[k] == -1.0f || vec[k] == 1.0f || ( vec[k] == 0.0f && vec[( k + 1 ) % 3] == 0.0f ) )
 				break;	// axial
 		if ( k < 3 )
 			continue;	// only test non-axial edges
@@ -899,14 +914,23 @@ void CM_AddFacetBevels( facet_t *facet ) {
 
 				// if all the points of the facet winding are
 				// behind this plane, it is a proper edge bevel
+				minBack = 0.0f;
 				for ( l = 0 ; l < w->numpoints ; l++ )
 				{
 					d = DotProduct (w->p[l], plane) - plane[3];
 					if (d > 0.1)
 						break;	// point in front
+					if ( d < minBack ) {
+						minBack = d;
+					}
 				}
 				if ( l < w->numpoints )
 					continue;
+
+				// if no points at the back then the winding is on the bevel plane
+				if ( minBack > -0.1f ) {
+					break;
+				}
 
 				//if it's the surface plane
 				if (CM_PlaneEqual(&planes[facet->surfacePlane], plane, &flipped)) {
@@ -1405,7 +1429,7 @@ void CM_TraceThroughPatchCollide( traceWork_t *tw, const struct patchCollide_s *
 		planes = &pc->planes[ facet->surfacePlane ];
 		VectorCopy(planes->plane, plane);
 		plane[3] = planes->plane[3];
-		if ( tw->sphere.use ) {
+		if ( tw->type == TT_CAPSULE ) {
 			// adjust the plane distance apropriately for radius
 			plane[3] += tw->sphere.radius;
 
@@ -1444,7 +1468,7 @@ void CM_TraceThroughPatchCollide( traceWork_t *tw, const struct patchCollide_s *
 				VectorCopy(planes->plane, plane);
 				plane[3] = planes->plane[3];
 			}
-			if ( tw->sphere.use ) {
+			if ( tw->type == TT_CAPSULE ) {
 				// adjust the plane distance apropriately for radius
 				plane[3] += tw->sphere.radius;
 
@@ -1533,7 +1557,7 @@ qboolean CM_PositionTestInPatchCollide( traceWork_t *tw, const struct patchColli
 		planes = &pc->planes[ facet->surfacePlane ];
 		VectorCopy(planes->plane, plane);
 		plane[3] = planes->plane[3];
-		if ( tw->sphere.use ) {
+		if ( tw->type == TT_CAPSULE ) {
 			// adjust the plane distance apropriately for radius
 			plane[3] += tw->sphere.radius;
 
@@ -1566,7 +1590,7 @@ qboolean CM_PositionTestInPatchCollide( traceWork_t *tw, const struct patchColli
 				VectorCopy(planes->plane, plane);
 				plane[3] = planes->plane[3];
 			}
-			if ( tw->sphere.use ) {
+			if ( tw->type == TT_CAPSULE ) {
 				// adjust the plane distance apropriately for radius
 				plane[3] += tw->sphere.radius;
 

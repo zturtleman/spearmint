@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // tr_shade_calc.c
@@ -43,6 +51,8 @@ static float *TableForFunc( genFunc_t func )
 		return tr.sawToothTable;
 	case GF_INVERSE_SAWTOOTH:
 		return tr.inverseSawToothTable;
+	case GF_NOISE:
+		return tr.noiseTable;
 	case GF_NONE:
 	default:
 		break;
@@ -709,6 +719,8 @@ float RB_CalcWaveColorSingle( const waveForm_t *wf )
 
 	if ( wf->func == GF_NOISE ) {
 		glow = wf->base + R_NoiseGet4f( 0, 0, 0, ( tess.shaderTime + wf->phase ) * wf->frequency ) * wf->amplitude;
+	} else if ( wf->func == GF_RANDOM ) {
+		glow = wf->base + R_RandomOn( (tess.shaderTime + wf->phase) * wf->frequency ) * wf->amplitude;
 	} else {
 		glow = EvalWaveForm( wf ) * tr.identityLight;
 	}
@@ -777,8 +789,31 @@ void RB_CalcWaveAlpha( const waveForm_t *wf, unsigned char *dstColors )
 ** RB_CalcModulateColorsByFog
 */
 void RB_CalcModulateColorsByFog( unsigned char *colors ) {
-	int		i;
-	float	texCoords[SHADER_MAX_VERTEXES][2];
+	int			i;
+	float		f, texCoords[SHADER_MAX_VERTEXES][2];
+	fog_t		*fog;
+	qboolean	linearFog;
+
+	// no world, no fogging
+	if ( backEnd.refdef.rdflags & RDF_NOWORLDMODEL ) {
+		return;
+	}
+
+	if ( r_useGlFog->integer ) {
+		return;
+	}
+
+	fog = tr.world->fogs + tess.fogNum;
+
+	if ( fog->originalBrushNumber < 0 ) {
+		if ( backEnd.refdef.fogType == FT_NONE ) {
+			return;
+		}
+
+		linearFog = ( backEnd.refdef.fogType == FT_LINEAR );
+	} else {
+		linearFog = ( fog->shader->fogParms.fogType == FT_LINEAR );
+	}
 
 	// calculate texcoords so we can derive density
 	// this is not wasted, because it would only have
@@ -786,10 +821,25 @@ void RB_CalcModulateColorsByFog( unsigned char *colors ) {
 	RB_CalcFogTexCoords( texCoords[0] );
 
 	for ( i = 0; i < tess.numVertexes; i++, colors += 4 ) {
-		float f = 1.0 - R_FogFactor( texCoords[i][0], texCoords[i][1] );
-		colors[0] *= f;
-		colors[1] *= f;
-		colors[2] *= f;
+		if ( texCoords[ i ][ 0 ] <= 0.0f || texCoords[ i ][ 1 ] <= 0.0f ) {
+			continue;
+		}
+
+		if ( linearFog ) {
+			f = 1.0f - ( texCoords[ i ][ 0 ] * texCoords[ i ][ 1 ] );
+		} else {
+			f = 1.0f - R_FogFactor( texCoords[i][0], texCoords[i][1] );
+		}
+
+		if ( f <= 0.0f ) {
+			colors[ 0 ] = 0;
+			colors[ 1 ] = 0;
+			colors[ 2 ] = 0;
+		} else {
+			colors[ 0 ] *= f;
+			colors[ 1 ] *= f;
+			colors[ 2 ] *= f;
+		}
 	}
 }
 
@@ -797,8 +847,31 @@ void RB_CalcModulateColorsByFog( unsigned char *colors ) {
 ** RB_CalcModulateAlphasByFog
 */
 void RB_CalcModulateAlphasByFog( unsigned char *colors ) {
-	int		i;
-	float	texCoords[SHADER_MAX_VERTEXES][2];
+	int			i;
+	float		f, texCoords[SHADER_MAX_VERTEXES][2];
+	fog_t		*fog;
+	qboolean	linearFog;
+
+	// no world, no fogging
+	if ( backEnd.refdef.rdflags & RDF_NOWORLDMODEL ) {
+		return;
+	}
+
+	if ( r_useGlFog->integer ) {
+		return;
+	}
+
+	fog = tr.world->fogs + tess.fogNum;
+
+	if ( fog->originalBrushNumber < 0 ) {
+		if ( backEnd.refdef.fogType == FT_NONE ) {
+			return;
+		}
+
+		linearFog = ( backEnd.refdef.fogType == FT_LINEAR );
+	} else {
+		linearFog = ( fog->shader->fogParms.fogType == FT_LINEAR );
+	}
 
 	// calculate texcoords so we can derive density
 	// this is not wasted, because it would only have
@@ -806,8 +879,21 @@ void RB_CalcModulateAlphasByFog( unsigned char *colors ) {
 	RB_CalcFogTexCoords( texCoords[0] );
 
 	for ( i = 0; i < tess.numVertexes; i++, colors += 4 ) {
-		float f = 1.0 - R_FogFactor( texCoords[i][0], texCoords[i][1] );
-		colors[3] *= f;
+		if ( texCoords[ i ][ 0 ] <= 0.0f || texCoords[ i ][ 1 ] <= 0.0f ) {
+			continue;
+		}
+
+		if ( linearFog ) {
+			f = 1.0f - ( texCoords[ i ][ 0 ] * texCoords[ i ][ 1 ] );
+		} else {
+			f = 1.0f - R_FogFactor( texCoords[i][0], texCoords[i][1] );
+		}
+
+		if ( f <= 0.0f ) {
+			colors[ 3 ] = 0;
+		} else {
+			colors[ 3 ] *= f;
+		}
 	}
 }
 
@@ -815,8 +901,31 @@ void RB_CalcModulateAlphasByFog( unsigned char *colors ) {
 ** RB_CalcModulateRGBAsByFog
 */
 void RB_CalcModulateRGBAsByFog( unsigned char *colors ) {
-	int		i;
-	float	texCoords[SHADER_MAX_VERTEXES][2];
+	int			i;
+	float		f, texCoords[SHADER_MAX_VERTEXES][2];
+	fog_t		*fog;
+	qboolean	linearFog;
+
+	// no world, no fogging
+	if ( backEnd.refdef.rdflags & RDF_NOWORLDMODEL ) {
+		return;
+	}
+
+	if ( r_useGlFog->integer ) {
+		return;
+	}
+
+	fog = tr.world->fogs + tess.fogNum;
+
+	if ( fog->originalBrushNumber < 0 ) {
+		if ( backEnd.refdef.fogType == FT_NONE ) {
+			return;
+		}
+
+		linearFog = ( backEnd.refdef.fogType == FT_LINEAR );
+	} else {
+		linearFog = ( fog->shader->fogParms.fogType == FT_LINEAR );
+	}
 
 	// calculate texcoords so we can derive density
 	// this is not wasted, because it would only have
@@ -824,11 +933,27 @@ void RB_CalcModulateRGBAsByFog( unsigned char *colors ) {
 	RB_CalcFogTexCoords( texCoords[0] );
 
 	for ( i = 0; i < tess.numVertexes; i++, colors += 4 ) {
-		float f = 1.0 - R_FogFactor( texCoords[i][0], texCoords[i][1] );
-		colors[0] *= f;
-		colors[1] *= f;
-		colors[2] *= f;
-		colors[3] *= f;
+		if ( texCoords[ i ][ 0 ] <= 0.0f || texCoords[ i ][ 1 ] <= 0.0f ) {
+			continue;
+		}
+
+		if ( linearFog ) {
+			f = 1.0f - ( texCoords[ i ][ 0 ] * texCoords[ i ][ 1 ] );
+		} else {
+			f = 1.0f - R_FogFactor( texCoords[i][0], texCoords[i][1] );
+		}
+
+		if ( f <= 0.0f ) {
+			colors[ 0 ] = 0;
+			colors[ 1 ] = 0;
+			colors[ 2 ] = 0;
+			colors[ 3 ] = 0;
+		} else {
+			colors[ 0 ] *= f;
+			colors[ 1 ] *= f;
+			colors[ 2 ] *= f;
+			colors[ 3 ] *= f;
+		}
 	}
 }
 
@@ -857,10 +982,16 @@ void RB_CalcFogTexCoords( float *st ) {
 	float		eyeT;
 	qboolean	eyeOutside;
 	fog_t		*fog;
+	bmodel_t	*bmodel;
 	vec3_t		local;
-	vec4_t		fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
+	vec4_t		fogSurface, fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
+
+	if ( r_useGlFog->integer ) {
+		return;
+	}
 
 	fog = tr.world->fogs + tess.fogNum;
+	bmodel = tr.world->bmodels + fog->modelNum;
 
 	// all fogging distance is based on world Z units
 	VectorSubtract( backEnd.or.origin, backEnd.viewParms.or.origin, local );
@@ -869,62 +1000,115 @@ void RB_CalcFogTexCoords( float *st ) {
 	fogDistanceVector[2] = -backEnd.or.modelMatrix[10];
 	fogDistanceVector[3] = DotProduct( local, backEnd.viewParms.or.axis[0] );
 
-	// scale the fog vectors based on the fog's thickness
-	fogDistanceVector[0] *= fog->tcScale;
-	fogDistanceVector[1] *= fog->tcScale;
-	fogDistanceVector[2] *= fog->tcScale;
-	fogDistanceVector[3] *= fog->tcScale;
-
-	// rotate the gradient vector for this orientation
-	if ( fog->hasSurface ) {
-		fogDepthVector[0] = fog->surface[0] * backEnd.or.axis[0][0] + 
-			fog->surface[1] * backEnd.or.axis[0][1] + fog->surface[2] * backEnd.or.axis[0][2];
-		fogDepthVector[1] = fog->surface[0] * backEnd.or.axis[1][0] + 
-			fog->surface[1] * backEnd.or.axis[1][1] + fog->surface[2] * backEnd.or.axis[1][2];
-		fogDepthVector[2] = fog->surface[0] * backEnd.or.axis[2][0] + 
-			fog->surface[1] * backEnd.or.axis[2][1] + fog->surface[2] * backEnd.or.axis[2][2];
-		fogDepthVector[3] = -fog->surface[3] + DotProduct( backEnd.or.origin, fog->surface );
-
-		eyeT = DotProduct( backEnd.or.viewOrigin, fogDepthVector ) + fogDepthVector[3];
-	} else {
-		eyeT = 1;	// non-surface fog always has eye inside
-	}
-
-	// see if the viewpoint is outside
-	// this is needed for clipping distance even for constant fog
-
-	if ( eyeT < 0 ) {
-		eyeOutside = qtrue;
-	} else {
-		eyeOutside = qfalse;
-	}
-
-	fogDistanceVector[3] += 1.0/512;
-
-	// calculate density for each point
-	for (i = 0, v = tess.xyz[0] ; i < tess.numVertexes ; i++, v += 4) {
-		// calculate the length in fog
-		s = DotProduct( v, fogDistanceVector ) + fogDistanceVector[3];
-		t = DotProduct( v, fogDepthVector ) + fogDepthVector[3];
-
-		// partially clipped fogs use the T axis		
-		if ( eyeOutside ) {
-			if ( t < 1.0 ) {
-				t = 1.0/32;	// point is outside, so no fogging
-			} else {
-				t = 1.0/32 + 30.0/32 * t / ( t - eyeT );	// cut the distance at the fog plane
-			}
-		} else {
-			if ( t < 0 ) {
-				t = 1.0/32;	// point is outside, so no fogging
-			} else {
-				t = 31.0/32;
-			}
+	// level-wide fogging
+	if ( fog->originalBrushNumber < 0 ) {
+		if ( backEnd.refdef.fogType == FT_NONE ) {
+			return;
 		}
 
-		st[0] = s;
-		st[1] = t;
-		st += 2;
+		// scale the fog vectors based on the fog's thickness
+		fogDistanceVector[0] *= backEnd.refdef.fogTcScale;
+		fogDistanceVector[1] *= backEnd.refdef.fogTcScale;
+		fogDistanceVector[2] *= backEnd.refdef.fogTcScale;
+		fogDistanceVector[3] *= backEnd.refdef.fogTcScale;
+
+		// calculate density for each point
+		if ( backEnd.refdef.fogType == FT_LINEAR ) {
+			t = 1.0;
+		} else {
+			t = 31.0/32;
+		}
+
+		for ( i = 0, v = tess.xyz[ 0 ]; i < tess.numVertexes; i++, v += 4 ) {
+			// calculate the length in fog (t is always 0 if eye is in fog)
+			st[ 0 ] = DotProduct( v, fogDistanceVector ) + fogDistanceVector[ 3 ];
+			st[ 1 ] = t;
+			st += 2;
+		}
+	} else {
+		// scale the fog vectors based on the fog's thickness
+		fogDistanceVector[0] *= fog->tcScale;
+		fogDistanceVector[1] *= fog->tcScale;
+		fogDistanceVector[2] *= fog->tcScale;
+		fogDistanceVector[3] *= fog->tcScale;
+
+		// offset fog surface
+		VectorCopy( fog->surface, fogSurface );
+#if 1 // WolfET
+		fogSurface[ 3 ] = fog->surface[ 3 ] + DotProduct( fogSurface, bmodel->orientation[ backEnd.smpFrame ].origin );
+#else
+		fogSurface[ 3 ] = fog->surface[ 3 ];
+#endif
+
+		// rotate the gradient vector for this orientation
+		if ( fog->hasSurface ) {
+			fogDepthVector[0] = fogSurface[0] * backEnd.or.axis[0][0] + 
+				fogSurface[1] * backEnd.or.axis[0][1] + fogSurface[2] * backEnd.or.axis[0][2];
+			fogDepthVector[1] = fogSurface[0] * backEnd.or.axis[1][0] + 
+				fogSurface[1] * backEnd.or.axis[1][1] + fogSurface[2] * backEnd.or.axis[1][2];
+			fogDepthVector[2] = fogSurface[0] * backEnd.or.axis[2][0] + 
+				fogSurface[1] * backEnd.or.axis[2][1] + fogSurface[2] * backEnd.or.axis[2][2];
+			fogDepthVector[3] = -fogSurface[3] + DotProduct( backEnd.or.origin, fogSurface );
+
+#if 0 // WolfET
+			// scale the fog vectors based on the fog's thickness
+			fogDepthVector[ 0 ] *= fog->shader->fogParms.tcScale;
+			fogDepthVector[ 1 ] *= fog->shader->fogParms.tcScale;
+			fogDepthVector[ 2 ] *= fog->shader->fogParms.tcScale;
+			fogDepthVector[ 3 ] *= fog->shader->fogParms.tcScale;
+#endif
+
+			eyeT = DotProduct( backEnd.or.viewOrigin, fogDepthVector ) + fogDepthVector[3];
+		} else {
+			eyeT = 1;	// non-surface fog always has eye inside
+		}
+
+		// see if the viewpoint is outside
+		// this is needed for clipping distance even for constant fog
+
+		if ( eyeT <= 0 ) {
+			eyeOutside = qtrue;
+		} else {
+			eyeOutside = qfalse;
+		}
+
+		if ( fog->shader->fogParms.fogType == FT_EXP ) {
+			fogDistanceVector[3] += 1.0/512;
+		}
+
+		// calculate density for each point
+		for (i = 0, v = tess.xyz[0] ; i < tess.numVertexes ; i++, v += 4) {
+			// calculate the length in fog
+			s = DotProduct( v, fogDistanceVector ) + fogDistanceVector[3];
+			t = DotProduct( v, fogDepthVector ) + fogDepthVector[3];
+
+			if ( fog->shader->fogParms.fogType == FT_LINEAR ) {
+				if ( !eyeOutside ) {
+					t += eyeT;
+				}
+
+				//%	t *= fog->tcScale;
+			} else {
+				// partially clipped fogs use the T axis
+				if ( eyeOutside ) {
+					if ( t < 1.0 ) {
+						t = 1.0/32;	// point is outside, so no fogging
+					} else {
+						t = 1.0/32 + 30.0/32 * t / ( t - eyeT );	// cut the distance at the fog plane
+					}
+				} else {
+					if ( t < 0 ) {
+						t = 1.0/32;	// point is outside, so no fogging
+					} else {
+						t = 31.0/32;
+					}
+				}
+			}
+
+			st[0] = s;
+			st[1] = t;
+			st += 2;
+		}
 	}
 }
 

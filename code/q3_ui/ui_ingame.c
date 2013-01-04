@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -46,6 +54,7 @@ INGAME MENU
 #define ID_QUIT					17
 #define ID_RESUME				18
 #define ID_TEAMORDERS			19
+#define ID_LOCALPLAYERS			20
 
 
 typedef struct {
@@ -62,6 +71,7 @@ typedef struct {
 	menutext_s		teamorders;
 	menutext_s		quit;
 	menutext_s		resume;
+	menutext_s		localPlayers;
 } ingamemenu_t;
 
 static ingamemenu_t	s_ingame;
@@ -98,6 +108,26 @@ static void InGame_QuitAction( qboolean result ) {
 
 /*
 =================
+UI_TogglePlayerIngame
+=================
+*/
+void UI_TogglePlayerIngame(int localClientNum)
+{
+	uiClientState_t	cs;
+
+	trap_GetClientState( &cs );
+
+	if (cs.clientNums[localClientNum] == -1) {
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(localClientNum, "dropin")) );
+	} else {
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(localClientNum, "dropout")) );
+	}
+
+	UI_ForceMenuOff ();
+}
+
+/*
+=================
 InGame_Event
 =================
 */
@@ -108,7 +138,7 @@ void InGame_Event( void *ptr, int notification ) {
 
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_TEAM:
-		UI_TeamMainMenu();
+		InSelectPlayerMenu(UI_TeamMainMenu, "CHANGE TEAM", qtrue);
 		break;
 
 	case ID_SETUP:
@@ -146,6 +176,10 @@ void InGame_Event( void *ptr, int notification ) {
 	case ID_RESUME:
 		UI_PopMenu();
 		break;
+
+	case ID_LOCALPLAYERS:
+		InSelectPlayerMenu(UI_TogglePlayerIngame, "ADD OR DROP", qfalse);
+		break;
 	}
 }
 
@@ -176,8 +210,11 @@ void InGame_MenuInit( void ) {
 	s_ingame.frame.width				= 466;//359;
 	s_ingame.frame.height				= 332;//256;
 
-	//y = 96;
-	y = 88;
+	if (UI_MaxSplitView() > 1) {
+		y = 88;
+	} else {
+		y = 96;
+	}
 	s_ingame.team.generic.type			= MTYPE_PTEXT;
 	s_ingame.team.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
 	s_ingame.team.generic.x				= 320;
@@ -231,10 +268,28 @@ void InGame_MenuInit( void ) {
 	}
 	else {
 		trap_GetClientState( &cs );
-		trap_GetConfigString( CS_PLAYERS + cs.clientNum, info, MAX_INFO_STRING );
+		trap_GetConfigString( CS_PLAYERS + cs.clientNums[0], info, MAX_INFO_STRING );
 		team = atoi( Info_ValueForKey( info, "t" ) );
 		if( team == TEAM_SPECTATOR ) {
 			s_ingame.teamorders.generic.flags |= QMF_GRAYED;
+		}
+	}
+
+	if (UI_MaxSplitView() > 1) {
+		y += INGAME_MENU_VERTICAL_SPACING;
+		s_ingame.localPlayers.generic.type		= MTYPE_PTEXT;
+		s_ingame.localPlayers.generic.flags		= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+		s_ingame.localPlayers.generic.x			= 320;
+		s_ingame.localPlayers.generic.y			= y;
+		s_ingame.localPlayers.generic.id		= ID_LOCALPLAYERS;
+		s_ingame.localPlayers.generic.callback	= InGame_Event;
+		s_ingame.localPlayers.string			= "LOCAL PLAYERS";
+		s_ingame.localPlayers.color				= color_red;
+		s_ingame.localPlayers.style				= UI_CENTER|UI_SMALLFONT;
+
+		if (trap_Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER)
+		{
+			s_ingame.localPlayers.generic.flags |= QMF_GRAYED;
 		}
 	}
 
@@ -312,6 +367,9 @@ void InGame_MenuInit( void ) {
 	Menu_AddItem( &s_ingame.menu, &s_ingame.addbots );
 	Menu_AddItem( &s_ingame.menu, &s_ingame.removebots );
 	Menu_AddItem( &s_ingame.menu, &s_ingame.teamorders );
+	if (UI_MaxSplitView() > 1) {
+		Menu_AddItem( &s_ingame.menu, &s_ingame.localPlayers);
+	}
 	Menu_AddItem( &s_ingame.menu, &s_ingame.setup );
 	Menu_AddItem( &s_ingame.menu, &s_ingame.server );
 	Menu_AddItem( &s_ingame.menu, &s_ingame.restart );

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -49,6 +57,21 @@ void QDECL Com_Printf( const char *msg, ... ) {
 	Q_vsnprintf (text, sizeof(text), msg, argptr);
 	va_end (argptr);
 
+	trap_Print( va("%s", text) );
+}
+
+void QDECL Com_DPrintf( const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	if (!trap_Cvar_VariableValue("developer")) {
+		return;			// don't confuse non-developers with techie stuff...
+	}
+
+	va_start (argptr, msg);
+	Q_vsnprintf (text, sizeof(text), msg, argptr);
+	va_end (argptr);
+
 	trap_Print( text );
 }
 
@@ -62,6 +85,33 @@ float UI_ClampCvar( float min, float max, float value )
 	if ( value < min ) return min;
 	if ( value > max ) return max;
 	return value;
+}
+
+/*
+=================
+UI_MaxSplitView
+=================
+*/
+int UI_MaxSplitView(void) {
+	return uis.maxSplitView;
+}
+
+/*
+=================
+UI_NumLocalClients
+=================
+*/
+int UI_NumLocalClients(uiClientState_t *cs) {
+	int numLocalClients = 0;
+	int i;
+
+	for (i = 0; i < UI_MaxSplitView(); i++) {
+		if (cs->clientNums[i] >= 0 && cs->clientNums[i] < MAX_CLIENTS) {
+			numLocalClients++;
+		}
+	}
+
+	return numLocalClients;
 }
 
 /*
@@ -155,7 +205,6 @@ void UI_ForceMenuOff (void)
 	uis.activemenu = NULL;
 
 	trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-	trap_Key_ClearStates();
 	trap_Cvar_Set( "cl_paused", "0" );
 }
 
@@ -789,18 +838,6 @@ qboolean UI_IsFullscreen( void ) {
 	return qfalse;
 }
 
-static void NeedCDAction( qboolean result ) {
-	if ( !result ) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, "quit\n" );
-	}
-}
-
-static void NeedCDKeyAction( qboolean result ) {
-	if ( !result ) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, "quit\n" );
-	}
-}
-
 void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 	// this should be the ONLY way the menu system is brought up
 	// enusure minumum menu data is cached
@@ -812,12 +849,6 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 		return;
 	case UIMENU_MAIN:
 		UI_MainMenu();
-		return;
-	case UIMENU_NEED_CD:
-		UI_ConfirmMenu( "Insert the CD", 0, NeedCDAction );
-		return;
-	case UIMENU_BAD_CD_KEY:
-		UI_ConfirmMenu( "Bad CD Key", 0, NeedCDKeyAction );
 		return;
 	case UIMENU_INGAME:
 		/*
@@ -869,20 +900,26 @@ void UI_KeyEvent( int key, int down ) {
 UI_MouseEvent
 =================
 */
-void UI_MouseEvent( int dx, int dy )
+void UI_MouseEvent( int localClientNum, int dx, int dy )
 {
 	int				i;
 	menucommon_s*	m;
+	float			biasScaled = uis.bias / uis.xscale;
+
+	if (localClientNum != 0) {
+		// q3_ui currently only supports one cursor
+		return;
+	}
 
 	if (!uis.activemenu)
 		return;
 
 	// update mouse screen position
 	uis.cursorx += dx;
-	if (uis.cursorx < -uis.bias)
-		uis.cursorx = -uis.bias;
-	else if (uis.cursorx > SCREEN_WIDTH+uis.bias)
-		uis.cursorx = SCREEN_WIDTH+uis.bias;
+	if (uis.cursorx < -biasScaled)
+		uis.cursorx = -biasScaled;
+	else if (uis.cursorx > SCREEN_WIDTH+biasScaled)
+		uis.cursorx = SCREEN_WIDTH+biasScaled;
 
 	uis.cursory += dy;
 	if (uis.cursory < 0)
@@ -928,6 +965,40 @@ void UI_MouseEvent( int dx, int dy )
 	}
 }
 
+/*
+=================
+UI_MousePosition
+=================
+*/
+int UI_MousePosition( int localClientNum )
+{
+	if (localClientNum != 0) {
+		// ui currently only supports one cursor
+		return 0;
+	}
+
+	return (int)rint( uis.cursorx * uis.xscale + uis.bias ) |
+			(int)rint( uis.cursory * uis.yscale ) << 16;
+}
+
+/*
+=================
+UI_SetMousePosition
+=================
+*/
+void UI_SetMousePosition( int localClientNum, int x, int y )
+{
+	if (localClientNum != 0) {
+		// ui currently only supports one cursor
+		return;
+	}
+
+	uis.cursorx = x / uis.xscale - (uis.bias / uis.xscale);
+	uis.cursory = y / uis.yscale;
+
+	UI_MouseEvent(localClientNum, 0, 0);
+}
+
 char *UI_Argv( int arg ) {
 	static char	buffer[MAX_STRING_CHARS];
 
@@ -954,10 +1025,12 @@ UI_Cache
 void UI_Cache_f( void ) {
 	MainMenu_Cache();
 	InGame_Cache();
+	InSelectPlayer_Cache();
 	ConfirmMenu_Cache();
 	PlayerModel_Cache();
 	PlayerSettings_Cache();
 	Controls_Cache();
+	UI_Joystick_Cache();
 	Demos_Cache();
 	UI_CinematicsMenu_Cache();
 	Preferences_Cache();
@@ -978,10 +1051,10 @@ void UI_Cache_f( void ) {
 	UI_AddBots_Cache();
 	UI_RemoveBots_Cache();
 	UI_SetupMenu_Cache();
+	UI_SelectPlayer_Cache();
 //	UI_LoadConfig_Cache();
 //	UI_SaveConfigMenu_Cache();
 	UI_BotSelectMenu_Cache();
-	UI_CDKeyMenu_Cache();
 	UI_ModsMenu_Cache();
 
 }
@@ -1038,11 +1111,6 @@ qboolean UI_ConsoleCommand( int realTime ) {
 		return qtrue;
 	}
 
-	if ( Q_stricmp (cmd, "ui_cdkey") == 0 ) {
-		UI_CDKeyMenu_f();
-		return qtrue;
-	}
-
 	return qfalse;
 }
 
@@ -1059,7 +1127,9 @@ void UI_Shutdown( void ) {
 UI_Init
 =================
 */
-void UI_Init( void ) {
+void UI_Init( qboolean inGameLoad, int maxSplitView ) {
+	uis.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
+	
 	UI_RegisterCvars();
 
 	UI_InitGameinfo();
@@ -1219,7 +1289,11 @@ void UI_Refresh( int realtime )
 			Menu_Draw( uis.activemenu );
 
 		if( uis.firstdraw ) {
-			UI_MouseEvent( 0, 0 );
+			int i;
+
+			for (i = 0; i < UI_MaxSplitView(); ++i) {
+				UI_MouseEvent( i, 0, 0 );
+			}
 			uis.firstdraw = qfalse;
 		}
 	}

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // tr_shade.c
@@ -656,11 +664,22 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 	// from RB_CalcFogTexCoords()
 	fog_t  *fog;
 	vec3_t  local;
+	float tcScale;
 
 	if (!tess.fogNum)
 		return;
 
 	fog = tr.world->fogs + tess.fogNum;
+
+	if ( tr.world && tess.fogNum == tr.world->globalFog ) {
+		if ( backEnd.refdef.fogType == FT_NONE ) {
+			return;
+		}
+
+		tcScale = backEnd.refdef.fogTcScale;
+	} else {
+		tcScale = fog->tcScale;
+	}
 
 	VectorSubtract( backEnd.or.origin, backEnd.viewParms.or.origin, local );
 	fogDistanceVector[0] = -backEnd.or.modelMatrix[2];
@@ -669,7 +688,7 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 	fogDistanceVector[3] = DotProduct( local, backEnd.viewParms.or.axis[0] );
 
 	// scale the fog vectors based on the fog's thickness
-	VectorScale4(fogDistanceVector, fog->tcScale, fogDistanceVector);
+	VectorScale4(fogDistanceVector, tcScale, fogDistanceVector);
 
 	// rotate the gradient vector for this orientation
 	if ( fog->hasSurface ) {
@@ -784,7 +803,7 @@ static void ForwardDlight( void ) {
 			GLSL_SetUniformFloat(sp, GENERIC_UNIFORM_TIME, tess.shaderTime);
 		}
 
-		if ( input->fogNum ) {
+		if ( input->fogNum && ( !input->shader->noFog || pStage->isFogged ) ) {
 			vec4_t fogColorMask;
 
 			GLSL_SetUniformVec4(sp, GENERIC_UNIFORM_FOGDISTANCE, fogDistanceVector);
@@ -974,7 +993,7 @@ static void ForwardSunlight( void ) {
 			GLSL_SetUniformFloat(sp, GENERIC_UNIFORM_TIME, tess.shaderTime);
 		}
 
-		if ( input->fogNum ) {
+		if ( input->fogNum && ( !input->shader->noFog || pStage->isFogged ) ) {
 			vec4_t fogColorMask;
 
 			GLSL_SetUniformVec4(sp, GENERIC_UNIFORM_FOGDISTANCE, fogDistanceVector);
@@ -1170,9 +1189,22 @@ static void RB_FogPass( void ) {
 	vec4_t	fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
 	float	eyeT = 0;
 	shaderProgram_t *sp;
+	int		colorInt;
 
 	int deformGen;
 	vec5_t deformParams;
+
+	if ( tr.world && tess.fogNum == tr.world->globalFog ) {
+		if ( backEnd.refdef.fogType == FT_NONE ) {
+			return;
+		}
+
+		colorInt = backEnd.refdef.fogColorInt;
+	} else {
+		fog = tr.world->fogs + tess.fogNum;
+
+		colorInt = fog->colorInt;
+	}
 
 	ComputeDeformValues(&deformGen, deformParams);
 
@@ -1192,8 +1224,6 @@ static void RB_FogPass( void ) {
 
 	GLSL_BindProgram(sp);
 
-	fog = tr.world->fogs + tess.fogNum;
-
 	GLSL_SetUniformMatrix16(sp, FOGPASS_UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	GLSL_SetUniformFloat(sp, FOGPASS_UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
@@ -1205,10 +1235,10 @@ static void RB_FogPass( void ) {
 		GLSL_SetUniformFloat(sp, FOGPASS_UNIFORM_TIME, tess.shaderTime);
 	}
 
-	color[0] = ((unsigned char *)(&fog->colorInt))[0] / 255.0f;
-	color[1] = ((unsigned char *)(&fog->colorInt))[1] / 255.0f;
-	color[2] = ((unsigned char *)(&fog->colorInt))[2] / 255.0f;
-	color[3] = ((unsigned char *)(&fog->colorInt))[3] / 255.0f;
+	color[0] = ((unsigned char *)(&colorInt))[0] / 255.0f;
+	color[1] = ((unsigned char *)(&colorInt))[1] / 255.0f;
+	color[2] = ((unsigned char *)(&colorInt))[2] / 255.0f;
+	color[3] = ((unsigned char *)(&colorInt))[3] / 255.0f;
 	GLSL_SetUniformVec4(sp, FOGPASS_UNIFORM_COLOR, color);
 
 	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT);
@@ -1218,6 +1248,8 @@ static void RB_FogPass( void ) {
 	GLSL_SetUniformFloat(sp, FOGPASS_UNIFORM_FOGEYET, eyeT);
 
 	if ( tess.shader->fogPass == FP_EQUAL ) {
+		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_EQUAL );
+	} else if ( tess.shader->sort >= SS_BLEND0 ) {
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_EQUAL );
 	} else {
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
@@ -1352,7 +1384,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformFloat(sp, GENERIC_UNIFORM_TIME, tess.shaderTime);
 		}
 
-		if ( input->fogNum ) {
+		if ( input->fogNum && ( !input->shader->noFog || pStage->isFogged ) ) {
 			GLSL_SetUniformVec4(sp, GENERIC_UNIFORM_FOGDISTANCE, fogDistanceVector);
 			GLSL_SetUniformVec4(sp, GENERIC_UNIFORM_FOGDEPTH, fogDepthVector);
 			GLSL_SetUniformFloat(sp, GENERIC_UNIFORM_FOGEYET, eyeT);
@@ -1431,7 +1463,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		GLSL_SetUniformInt(sp, GENERIC_UNIFORM_COLORGEN, pStage->rgbGen);
 		GLSL_SetUniformInt(sp, GENERIC_UNIFORM_ALPHAGEN, pStage->alphaGen);
 
-		if ( input->fogNum )
+		if ( input->fogNum && ( !input->shader->noFog || pStage->isFogged ) )
 		{
 			vec4_t fogColorMask;
 
@@ -1781,7 +1813,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	// now do fog
 	//
-	if ( tess.fogNum && tess.shader->fogPass ) {
+	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && tr.world && tess.fogNum == tr.world->globalFog ) ) ) {
 		RB_FogPass();
 	}
 

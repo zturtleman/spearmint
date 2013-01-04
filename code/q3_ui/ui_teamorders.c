@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -81,6 +89,28 @@ static const char *ctfMessages[] = {
 	"i stop being the leader",
 	NULL
 };
+#ifdef MISSIONPACK
+static const char *ctfVoiceChats[] = {
+	"startleader",
+	"defend",
+	"followme",
+	"getflag",
+	"camp",
+	NULL,
+	"stopleader",
+	NULL
+};
+static const char *ctfButtons[] = {
+	NULL,
+	"8", // defend
+	"10", // followme
+	"7", // getflag
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
+#endif
 
 #define NUM_TEAM_ORDERS		6
 static const char *teamOrders[] = {
@@ -101,6 +131,26 @@ static const char *teamMessages[] = {
 	"i stop being the leader",
 	NULL
 };
+#ifdef MISSIONPACK
+static const char *teamVoiceChats[] = {
+	"startleader",
+	"followme",
+	"patrol",
+	"camp",
+	NULL,
+	"stopleader",
+	NULL
+};
+static const char *teamButtons[] = {
+	NULL,
+	"10", // followme
+	"9", // patrol
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
+#endif
 
 
 /*
@@ -255,6 +305,10 @@ static void UI_TeamOrdersMenu_ListEvent( void *ptr, int event ) {
 	int		id;
 	int		selection;
 	char	message[256];
+#ifdef MISSIONPACK
+	const char **voiceChats;
+	const char **buttons;
+#endif
 
 	if (event != QM_ACTIVATED)
 		return;
@@ -275,12 +329,41 @@ static void UI_TeamOrdersMenu_ListEvent( void *ptr, int event ) {
 
 	if( id == ID_LIST_CTF_ORDERS ) {
 		Com_sprintf( message, sizeof(message), ctfMessages[selection], teamOrdersMenuInfo.botNames[teamOrdersMenuInfo.selectedBot] );
+#ifdef MISSIONPACK
+		voiceChats = ctfVoiceChats;
+		buttons = ctfButtons;
+#endif
 	}
 	else {
 		Com_sprintf( message, sizeof(message), teamMessages[selection], teamOrdersMenuInfo.botNames[teamOrdersMenuInfo.selectedBot] );
+#ifdef MISSIONPACK
+		voiceChats = teamVoiceChats;
+		buttons = teamButtons;
+#endif
 	}
 
+#ifdef MISSIONPACK
+	if (teamOrdersMenuInfo.selectedBot == 0) // Everyone
+	{
+		if (voiceChats[selection] != NULL && buttons[selection] != NULL)
+			trap_Cmd_ExecuteText( EXEC_APPEND, va( "cmd vsay_team %s; +button%s; wait; -button%s", voiceChats[selection], buttons[selection], buttons[selection] ));
+		else if (voiceChats[selection] != NULL)
+			trap_Cmd_ExecuteText( EXEC_APPEND, va( "cmd vsay_team %s", voiceChats[selection] ) );
+		else
+			trap_Cmd_ExecuteText( EXEC_APPEND, va( "say_team \"%s\"\n", message ) );
+	}
+	else
+	{
+		if (voiceChats[selection] != NULL && buttons[selection] != NULL)
+			trap_Cmd_ExecuteText( EXEC_APPEND, va( "cmd vtell %s %s; +button%s; wait; -button%s", teamOrdersMenuInfo.botNames[teamOrdersMenuInfo.selectedBot], voiceChats[selection], buttons[selection], buttons[selection] ) );
+		else if (voiceChats[selection] != NULL)
+			trap_Cmd_ExecuteText( EXEC_APPEND, va( "cmd vtell %s", voiceChats[selection] ) );
+		else
+			trap_Cmd_ExecuteText( EXEC_APPEND, va( "say_team \"%s\"\n", message ) );
+	}
+#else
 	trap_Cmd_ExecuteText( EXEC_APPEND, va( "say_team \"%s\"\n", message ) );
+#endif
 	UI_PopMenu();
 }
 
@@ -315,7 +398,7 @@ static void UI_TeamOrdersMenu_BuildBotList( void ) {
 	for( n = 0; n < numPlayers && teamOrdersMenuInfo.numBots < 9; n++ ) {
 		trap_GetConfigString( CS_PLAYERS + n, info, MAX_INFO_STRING );
 
-		if( n == cs.clientNum ) {
+		if( n == cs.clientNums[0] ) {
 			playerTeam = *Info_ValueForKey( info, "t" );
 			continue;
 		}
@@ -437,7 +520,7 @@ void UI_TeamOrdersMenu_f( void ) {
 
 	// not available to spectators
 	trap_GetClientState( &cs );
-	trap_GetConfigString( CS_PLAYERS + cs.clientNum, info, MAX_INFO_STRING );
+	trap_GetConfigString( CS_PLAYERS + cs.clientNums[0], info, MAX_INFO_STRING );
 	team = atoi( Info_ValueForKey( info, "t" ) );
 	if( team == TEAM_SPECTATOR ) {
 		return;

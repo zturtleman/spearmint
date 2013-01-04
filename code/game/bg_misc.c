@@ -1,29 +1,37 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
 // bg_misc.c -- both games misc functions, all completely stateless
 
 #include "../qcommon/q_shared.h"
-#include "bg_public.h"
+#include "bg_misc.h"
 
 /*QUAKED item_***** ( 0 0 0 ) (-16 -16 -16) (16 16 16) suspended
 DO NOT USE THIS CLASS, IT JUST HOLDS GENERAL INFORMATION.
@@ -1346,7 +1354,6 @@ char *eventnames[] = {
 	"EV_MISSILE_MISS_METAL",
 	"EV_RAILTRAIL",
 	"EV_SHOTGUN",
-	"EV_BULLET",				// otherEntity is the shooter
 
 	"EV_PAIN",
 	"EV_DEATH1",
@@ -1401,7 +1408,7 @@ void BG_AddPredictableEventToPlayerstate( int newEvent, int eventParm, playerSta
 		char buf[256];
 		trap_Cvar_VariableStringBuffer("showevents", buf, sizeof(buf));
 		if ( atof(buf) != 0 ) {
-#ifdef QAGAME
+#ifdef GAME
 			Com_Printf(" game event svt %5d -> %5d: num = %20s parm %d\n", ps->pmove_framecount/*ps->commandTime*/, ps->eventSequence, eventnames[newEvent], eventParm);
 #else
 			Com_Printf("Cgame event svt %5d -> %5d: num = %20s parm %d\n", ps->pmove_framecount/*ps->commandTime*/, ps->eventSequence, eventnames[newEvent], eventParm);
@@ -1465,7 +1472,7 @@ and after local prediction on the client
 void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean snap ) {
 	int		i;
 
-	if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_SPECTATOR ) {
+	if ( !ps->linked ) {
 		s->eType = ET_INVISIBLE;
 	} else if ( ps->stats[STAT_HEALTH] <= GIB_HEALTH ) {
 		s->eType = ET_INVISIBLE;
@@ -1526,8 +1533,19 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 		}
 	}
 
+	s->contents = ps->contents;
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;
+
+	s->bmodel = qfalse;
+	s->capsule = ps->capsule;
+
+	VectorCopy( ps->mins, s->mins );
+	VectorCopy( ps->maxs, s->maxs );
+	if ( snap ) {
+		SnapVector( s->mins );
+		SnapVector( s->maxs );
+	}
 }
 
 /*
@@ -1541,7 +1559,7 @@ and after local prediction on the client
 void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s, int time, qboolean snap ) {
 	int		i;
 
-	if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_SPECTATOR ) {
+	if ( !ps->linked ) {
 		s->eType = ET_INVISIBLE;
 	} else if ( ps->stats[STAT_HEALTH] <= GIB_HEALTH ) {
 		s->eType = ET_INVISIBLE;
@@ -1606,6 +1624,72 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 		}
 	}
 
+	s->contents = ps->contents;
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;
+
+	s->bmodel = qfalse;
+	s->capsule = ps->capsule;
+
+	VectorCopy( ps->mins, s->mins );
+	VectorCopy( ps->maxs, s->maxs );
+	if ( snap ) {
+		SnapVector( s->mins );
+		SnapVector( s->maxs );
+	}
 }
+
+int cmdcmp( const void *a, const void *b ) {
+  return Q_stricmp( (const char *)a, ((dummyCmd_t *)b)->name );
+}
+
+#if defined CGAME || defined UI
+/*
+========================
+BG_RegisterClientCvars
+
+Init client-side cvars in cgame and ui.
+========================
+*/
+void BG_RegisterClientCvars(int maxSplitview) {
+	int i;
+	const char *name;
+	const int userInfo[MAX_SPLITVIEW] = { CVAR_USERINFO, CVAR_USERINFO2, CVAR_USERINFO3, CVAR_USERINFO4 };
+	const char *modelNames[MAX_SPLITVIEW] = { DEFAULT_MODEL, DEFAULT_MODEL2, DEFAULT_MODEL3, DEFAULT_MODEL4 };
+	const char *headModelNames[MAX_SPLITVIEW] = { DEFAULT_HEAD, DEFAULT_HEAD2, DEFAULT_HEAD3, DEFAULT_HEAD4 };
+	const char *teamModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_MODEL, DEFAULT_TEAM_MODEL2, DEFAULT_TEAM_MODEL3, DEFAULT_TEAM_MODEL4 };
+	const char *teamHeadModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_HEAD, DEFAULT_TEAM_HEAD2, DEFAULT_TEAM_HEAD3, DEFAULT_TEAM_HEAD4 };
+
+	for (i = 0; i < maxSplitview; i++) {
+		if (i == 0) {
+			name = DEFAULT_CLIENT_NAME;
+		} else {
+			name = va("%s%d", DEFAULT_CLIENT_NAME, i + 1);
+		}
+
+		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "name"), name, userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "model"), modelNames[i], userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "headmodel"), headModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "team_model"), teamModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "team_headmodel"), teamHeadModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "color1"), va("%d", DEFAULT_CLIENT_COLOR1), userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "color2"), va("%d", DEFAULT_CLIENT_COLOR2), userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "handicap"), "100", userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "teamtask"), "0", userInfo[i] );
+
+		// init autoswitch so the ui will have it correctly even
+		// if the cgame hasn't been started
+		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "cg_autoswitch"), "1", CVAR_ARCHIVE);
+	}
+
+	trap_Cvar_Register(NULL, "cg_predictItems", "1", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
+
+	// cgame might not be initialized before menu is used
+	trap_Cvar_Register(NULL, "cg_viewsize", "100", CVAR_ARCHIVE );
+}
+#endif

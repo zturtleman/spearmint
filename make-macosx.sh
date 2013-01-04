@@ -2,9 +2,9 @@
 #
 
 CC=gcc-4.0
-APPBUNDLE=ioquake3.app
-BINARY=ioquake3.${BUILDARCH}
-DEDBIN=ioq3ded.${BUILDARCH}
+APPBUNDLE=spearmint.app
+BINARY=spearmint.${BUILDARCH}
+DEDBIN=spearmint-server.${BUILDARCH}
 PKGINFO=APPLIOQ3
 ICNS=misc/quake3.icns
 DESTDIR=build/release-darwin-${BUILDARCH}
@@ -35,20 +35,20 @@ else
 fi
 
 BIN_OBJ="
-	build/release-darwin-${BUILDARCH}/ioquake3.${BUILDARCH}
+	build/release-darwin-${BUILDARCH}/spearmint.${BUILDARCH}
 "
 BIN_DEDOBJ="
-	build/release-darwin-${BUILDARCH}/ioq3ded.${BUILDARCH}
+	build/release-darwin-${BUILDARCH}/spearmint-server.${BUILDARCH}
 "
 BASE_OBJ="
 	build/release-darwin-${BUILDARCH}/$BASEDIR/cgame${BUILDARCH}.dylib
 	build/release-darwin-${BUILDARCH}/$BASEDIR/ui${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/$BASEDIR/qagame${BUILDARCH}.dylib
+	build/release-darwin-${BUILDARCH}/$BASEDIR/game${BUILDARCH}.dylib
 "
 MPACK_OBJ="
 	build/release-darwin-${BUILDARCH}/$MPACKDIR/cgame${BUILDARCH}.dylib
 	build/release-darwin-${BUILDARCH}/$MPACKDIR/ui${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/$MPACKDIR/qagame${BUILDARCH}.dylib
+	build/release-darwin-${BUILDARCH}/$MPACKDIR/game${BUILDARCH}.dylib
 "
 RENDER_OBJ="
 	build/release-darwin-${BUILDARCH}/renderer_opengl1_smp_${BUILDARCH}.dylib
@@ -59,7 +59,7 @@ RENDER_OBJ="
 
 cd `dirname $0`
 if [ ! -f Makefile ]; then
-	echo "This script must be run from the ioquake3 build directory"
+	echo "This script must be run from the Spearmint build directory"
 	exit 1
 fi
 
@@ -114,7 +114,7 @@ fi
 if [ ! -d $DESTDIR/$APPBUNDLE/Contents/Resources ]; then
 	mkdir -p $DESTDIR/$APPBUNDLE/Contents/Resources
 fi
-cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/ioquake3.icns || exit 1;
+cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/spearmint.icns || exit 1;
 echo $PKGINFO > $DESTDIR/$APPBUNDLE/Contents/PkgInfo
 echo "
 	<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -128,15 +128,15 @@ echo "
 		<key>CFBundleExecutable</key>
 		<string>$BINARY</string>
 		<key>CFBundleGetInfoString</key>
-		<string>ioquake3 $Q3_VERSION</string>
+		<string>Spearmint $Q3_VERSION</string>
 		<key>CFBundleIconFile</key>
-		<string>ioquake3.icns</string>
+		<string>spearmint.icns</string>
 		<key>CFBundleIdentifier</key>
 		<string>org.ioquake.ioquake3</string>
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>ioquake3</string>
+		<string>Spearmint</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>

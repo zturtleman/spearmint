@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -50,14 +58,6 @@ vmCvar_t bot_minplayers;
 extern gentity_t	*podium1;
 extern gentity_t	*podium2;
 extern gentity_t	*podium3;
-
-float trap_Cvar_VariableValue( const char *var_name ) {
-	char buf[128];
-
-	trap_Cvar_VariableStringBuffer(var_name, buf, sizeof(buf));
-	return atof(buf);
-}
-
 
 
 /*
@@ -177,7 +177,7 @@ static void G_LoadArenas( void ) {
 		strcat(filename, dirptr);
 		G_LoadArenasFromFile(filename);
 	}
-	trap_Print( va( "%i arenas parsed\n", g_numArenas ) );
+	G_DPrintf("%i arenas parsed\n", g_numArenas);
 	
 	for( n = 0; n < g_numArenas; n++ ) {
 		Info_SetValueForKey( g_arenaInfos[n], "num", va( "%i", n ) );
@@ -225,19 +225,25 @@ static void PlayerIntroSound( const char *modelAndSkin ) {
 		skin = model;
 	}
 
-	trap_SendConsoleCommand( EXEC_APPEND, va( "play sound/player/announce/%s.wav\n", skin ) );
+	trap_Cmd_ExecuteText( EXEC_APPEND, va( "play sound/player/announce/%s.wav\n", skin ) );
 }
 
 /*
 ===============
-G_AddRandomBot
+G_SelectRandomBotForAdd
 ===============
 */
-void G_AddRandomBot( int team ) {
+int G_SelectRandomBotForAdd( int team ) {
 	int		i, n, num;
-	float	skill;
-	char	*value, netname[36], *teamstr;
+	char	*value;
 	gclient_t	*cl;
+
+	// To improve random bot selection when there are few bot types, duplicate bots are
+	// allowed on separate teams to try to keep each team from having duplicate bots.
+	// If there are enough bot types to fill the server, avoid duplicating bots on any team.
+	if ( g_numBots >= level.maxclients ) {
+		team = -1;
+	}
 
 	num = 0;
 	for ( n = 0; n < g_numBots ; n++ ) {
@@ -284,18 +290,38 @@ void G_AddRandomBot( int team ) {
 		if (i >= g_maxclients.integer) {
 			num--;
 			if (num <= 0) {
-				skill = trap_Cvar_VariableValue( "g_spSkill" );
-				if (team == TEAM_RED) teamstr = "red";
-				else if (team == TEAM_BLUE) teamstr = "blue";
-				else teamstr = "";
-				strncpy(netname, value, sizeof(netname)-1);
-				netname[sizeof(netname)-1] = '\0';
-				Q_CleanStr(netname);
-				trap_SendConsoleCommand( EXEC_INSERT, va("addbot %s %f %s %i\n", netname, skill, teamstr, 0) );
-				return;
+				return n;
 			}
 		}
 	}
+
+	// all bot types are on this team, randomly choose any bot type
+	return random()*(g_numBots-1);
+}
+
+/*
+===============
+G_AddRandomBot
+===============
+*/
+void G_AddRandomBot( int team ) {
+	int n;
+	char *value, netname[36], *teamstr;
+	float	skill;
+
+	n = G_SelectRandomBotForAdd(team);
+
+	// Get name of selected bot.
+	value = Info_ValueForKey( g_botInfos[n], "name" );
+
+	skill = trap_Cvar_VariableValue( "g_spSkill" );
+	if (team == TEAM_RED) teamstr = "red";
+	else if (team == TEAM_BLUE) teamstr = "blue";
+	else teamstr = "free";
+	strncpy(netname, value, sizeof(netname)-1);
+	netname[sizeof(netname)-1] = '\0';
+	Q_CleanStr(netname);
+	trap_Cmd_ExecuteText( EXEC_INSERT, va("addbot %s %f %s %i\n", netname, skill, teamstr, 0) );
 }
 
 /*
@@ -318,7 +344,7 @@ int G_RemoveRandomBot( int team ) {
 		if ( team >= 0 && cl->sess.sessionTeam != team ) {
 			continue;
 		}
-		trap_SendConsoleCommand( EXEC_INSERT, va("clientkick %d\n", i) );
+		trap_Cmd_ExecuteText( EXEC_INSERT, va("kicknum %d\n", i) );
 		return qtrue;
 	}
 	return qfalse;
@@ -560,7 +586,10 @@ G_AddBot
 ===============
 */
 static void G_AddBot( const char *name, float skill, const char *team, int delay, char *altname) {
+	int				value;
+	int				connectionNum;
 	int				clientNum;
+	int				t;
 	char			*botinfo;
 	char			*key;
 	char			*s;
@@ -568,19 +597,55 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	char			*model;
 	char			*headmodel;
 	char			userinfo[MAX_INFO_STRING];
+	qboolean		modelSet;
 
 	// have the server allocate a client slot
-	clientNum = trap_BotAllocateClient();
-	if ( clientNum == -1 ) {
+	value = trap_BotAllocateClient();
+	if ( value == -1 ) {
 		G_Printf( S_COLOR_RED "Unable to add bot. All player slots are in use.\n" );
 		G_Printf( S_COLOR_RED "Start server with more 'open' slots (or check setting of sv_maxclients cvar).\n" );
 		return;
 	}
 
+	// get connection and client numbers
+	connectionNum = value & 0xFFFF;
+	clientNum = value >> 16;
+
+	// set default team
+	if( !team || !*team ) {
+		if( g_gametype.integer >= GT_TEAM ) {
+			if( PickTeam(clientNum) == TEAM_RED) {
+				team = "red";
+			}
+			else {
+				team = "blue";
+			}
+		}
+		else {
+			team = "free";
+		}
+	}
+
 	// get the botinfo from bots.txt
-	botinfo = G_GetBotInfoByName( name );
+	if (Q_stricmp(name, "random") == 0) {
+		if (Q_stricmp(team, "blue") == 0)
+			t = TEAM_BLUE;
+		else if (Q_stricmp(team, "red") == 0)
+			t = TEAM_RED;
+		else
+			t = TEAM_FREE;
+
+		// get info of a randomly selected bot
+		botinfo = G_GetBotInfoByNumber( G_SelectRandomBotForAdd( t ) );
+	}
+	else {
+		// get info of the bot
+		botinfo = G_GetBotInfoByName( name );
+	}
+
 	if ( !botinfo ) {
 		G_Printf( S_COLOR_RED "Error: Bot '%s' not defined\n", name );
+		trap_BotFreeClient(clientNum);
 		return;
 	}
 
@@ -599,6 +664,7 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	Info_SetValueForKey( userinfo, "rate", "25000" );
 	Info_SetValueForKey( userinfo, "snaps", "20" );
 	Info_SetValueForKey( userinfo, "skill", va("%.2f", skill) );
+	Info_SetValueForKey( userinfo, "team", team );
 
 	if ( skill >= 1 && skill < 2 ) {
 		Info_SetValueForKey( userinfo, "handicap", "50" );
@@ -612,8 +678,9 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 
 	key = "model";
 	model = Info_ValueForKey( botinfo, key );
-	if ( !*model ) {
-		model = "visor/default";
+	modelSet = ( *model );
+	if ( !modelSet ) {
+		model = DEFAULT_MODEL;
 	}
 	Info_SetValueForKey( userinfo, key, model );
 	key = "team_model";
@@ -622,60 +689,43 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	key = "headmodel";
 	headmodel = Info_ValueForKey( botinfo, key );
 	if ( !*headmodel ) {
-		headmodel = model;
+		if (!modelSet) {
+			headmodel = DEFAULT_HEAD;
+		} else {
+			headmodel = model;
+		}
 	}
 	Info_SetValueForKey( userinfo, key, headmodel );
 	key = "team_headmodel";
 	Info_SetValueForKey( userinfo, key, headmodel );
 
-	key = "gender";
-	s = Info_ValueForKey( botinfo, key );
-	if ( !*s ) {
-		s = "male";
-	}
-	Info_SetValueForKey( userinfo, "sex", s );
-
 	key = "color1";
 	s = Info_ValueForKey( botinfo, key );
 	if ( !*s ) {
-		s = "4";
+		s = va("%d", DEFAULT_CLIENT_COLOR1);
 	}
 	Info_SetValueForKey( userinfo, key, s );
 
 	key = "color2";
 	s = Info_ValueForKey( botinfo, key );
 	if ( !*s ) {
-		s = "5";
+		s = va("%d", DEFAULT_CLIENT_COLOR2);
 	}
 	Info_SetValueForKey( userinfo, key, s );
 
 	s = Info_ValueForKey(botinfo, "aifile");
 	if (!*s ) {
 		trap_Print( S_COLOR_RED "Error: bot has no aifile specified\n" );
+		trap_BotFreeClient(clientNum);
 		return;
 	}
 	Info_SetValueForKey( userinfo, "characterfile", s );
-
-	if( !team || !*team ) {
-		if( g_gametype.integer >= GT_TEAM ) {
-			if( PickTeam(clientNum) == TEAM_RED) {
-				team = "red";
-			}
-			else {
-				team = "blue";
-			}
-		}
-		else {
-			team = "red";
-		}
-	}
-	Info_SetValueForKey( userinfo, "team", team );
 
 	// register the userinfo
 	trap_SetUserinfo( clientNum, userinfo );
 
 	// have it connect to the game as a normal client
-	if ( ClientConnect( clientNum, qtrue, qtrue ) ) {
+	if ( ClientConnect( clientNum, qtrue, qtrue, connectionNum, 0 ) ) {
 		return;
 	}
 
@@ -743,7 +793,7 @@ void Svcmd_AddBot_f( void ) {
 	// go ahead and load the bot's media immediately
 	if ( level.time - level.startTime > 1000 &&
 		trap_Cvar_VariableIntegerValue( "cl_running" ) ) {
-		trap_SendServerCommand( -1, "loaddefered\n" );	// FIXME: spelled wrong, but not changing for demo
+		trap_SendServerCommand( -1, "loaddeferred\n" );
 	}
 }
 
@@ -763,7 +813,7 @@ void Svcmd_BotList_f( void ) {
 	for (i = 0; i < g_numBots; i++) {
 		strcpy(name, Info_ValueForKey( g_botInfos[i], "name" ));
 		if ( !*name ) {
-			strcpy(name, "UnnamedPlayer");
+			strcpy(name, DEFAULT_CLIENT_NAME);
 		}
 		strcpy(funname, Info_ValueForKey( g_botInfos[i], "funname" ));
 		if ( !*funname ) {
@@ -771,7 +821,7 @@ void Svcmd_BotList_f( void ) {
 		}
 		strcpy(model, Info_ValueForKey( g_botInfos[i], "model" ));
 		if ( !*model ) {
-			strcpy(model, "visor/default");
+			strcpy(model, DEFAULT_MODEL);
 		}
 		strcpy(aifile, Info_ValueForKey( g_botInfos[i], "aifile"));
 		if (!*aifile ) {
@@ -833,7 +883,7 @@ static void G_SpawnBots( char *botList, int baseDelay ) {
 
 		// we must add the bot this way, calling G_AddBot directly at this stage
 		// does "Bad Things"
-		trap_SendConsoleCommand( EXEC_INSERT, va("addbot %s %f free %i\n", bot, skill, delay) );
+		trap_Cmd_ExecuteText( EXEC_INSERT, va("addbot %s %f free %i\n", bot, skill, delay) );
 
 		delay += BOT_BEGIN_DELAY_INCREMENT;
 	}
@@ -905,7 +955,7 @@ static void G_LoadBots( void ) {
 		strcat(filename, dirptr);
 		G_LoadBotsFromFile(filename);
 	}
-	trap_Print( va( "%i bots parsed\n", g_numBots ) );
+	G_DPrintf("%i bots parsed\n", g_numBots);
 }
 
 

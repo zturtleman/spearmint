@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
@@ -36,6 +44,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ART_FX_TEAL			"menu/art/fx_teal"
 #define ART_FX_WHITE		"menu/art/fx_white"
 #define ART_FX_YELLOW		"menu/art/fx_yel"
+
+#define NUM_COLOR_EFFECTS 7
 
 #define ID_NAME			10
 #define ID_HANDICAP		11
@@ -63,16 +73,18 @@ typedef struct {
 	menubitmap_s		item_null;
 
 	qhandle_t			fxBasePic;
-	qhandle_t			fxPic[7];
+	qhandle_t			fxPic[NUM_COLOR_EFFECTS];
 	playerInfo_t		playerinfo;
 	int					current_fx;
 	char				playerModel[MAX_QPATH];
+	int					localClient;
+	char				bannerString[32];
 } playersettings_t;
 
 static playersettings_t	s_playersettings;
 
-static int gamecodetoui[] = {4,2,3,0,5,1,6};
-static int uitogamecode[] = {4,6,2,3,1,5,7};
+static int gamecodetoui[NUM_COLOR_EFFECTS] = {4,2,3,0,5,1,6};
+static int uitogamecode[NUM_COLOR_EFFECTS] = {4,6,2,3,1,5,7};
 
 static const char *handicap_items[] = {
 	"None",
@@ -207,6 +219,7 @@ static void PlayerSettings_DrawEffects( void *self ) {
 	qboolean		focus;
 	int				style;
 	float			*color;
+	float			xOffset;
 
 	item = (menulist_s *)self;
 	focus = (item->generic.parent->cursor == item->generic.menuPosition);
@@ -220,8 +233,10 @@ static void PlayerSettings_DrawEffects( void *self ) {
 
 	UI_DrawProportionalString( item->generic.x, item->generic.y, "Effects", style, color );
 
+	xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
+
 	UI_DrawHandlePic( item->generic.x + 64, item->generic.y + PROP_HEIGHT + 8, 128, 8, s_playersettings.fxBasePic );
-	UI_DrawHandlePic( item->generic.x + 64 + item->curvalue * 16 + 8, item->generic.y + PROP_HEIGHT + 6, 16, 12, s_playersettings.fxPic[item->curvalue] );
+	UI_DrawHandlePic( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 12, s_playersettings.fxPic[item->curvalue] );
 }
 
 
@@ -235,7 +250,7 @@ static void PlayerSettings_DrawPlayer( void *self ) {
 	vec3_t			viewangles;
 	char			buf[MAX_QPATH];
 
-	trap_Cvar_VariableStringBuffer( "model", buf, sizeof( buf ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playersettings.localClient, "model"), buf, sizeof( buf ) );
 	if ( strcmp( buf, s_playersettings.playerModel ) != 0 ) {
 		UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, buf );
 		strcpy( s_playersettings.playerModel, buf );
@@ -258,13 +273,15 @@ PlayerSettings_SaveChanges
 */
 static void PlayerSettings_SaveChanges( void ) {
 	// name
-	trap_Cvar_Set( "name", s_playersettings.name.field.buffer );
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playersettings.localClient, "name"), s_playersettings.name.field.buffer );
 
 	// handicap
-	trap_Cvar_SetValue( "handicap", 100 - s_playersettings.handicap.curvalue * 5 );
+	trap_Cvar_SetValue( Com_LocalClientCvarName(s_playersettings.localClient, "handicap"),
+			100 - s_playersettings.handicap.curvalue * 5 );
 
 	// effects color
-	trap_Cvar_SetValue( "color1", uitogamecode[s_playersettings.effects.curvalue] );
+	trap_Cvar_SetValue( Com_LocalClientCvarName(s_playersettings.localClient, "color1"),
+			uitogamecode[s_playersettings.effects.curvalue] );
 }
 
 
@@ -292,12 +309,13 @@ static void PlayerSettings_SetMenuItems( void ) {
 	int		h;
 
 	// name
-	Q_strncpyz( s_playersettings.name.field.buffer, UI_Cvar_VariableString("name"), sizeof(s_playersettings.name.field.buffer) );
+	Q_strncpyz( s_playersettings.name.field.buffer, UI_Cvar_VariableString(
+			Com_LocalClientCvarName(s_playersettings.localClient, "name")), sizeof(s_playersettings.name.field.buffer) );
 
 	// effects color
-	c = trap_Cvar_VariableValue( "color1" ) - 1;
-	if( c < 0 || c > 6 ) {
-		c = 6;
+	c = trap_Cvar_VariableValue( Com_LocalClientCvarName(s_playersettings.localClient, "color1") ) - 1;
+	if( c < 0 || c > NUM_COLOR_EFFECTS-1 ) {
+		c = NUM_COLOR_EFFECTS-1;
 	}
 	s_playersettings.effects.curvalue = gamecodetoui[c];
 
@@ -308,11 +326,12 @@ static void PlayerSettings_SetMenuItems( void ) {
 	viewangles[PITCH] = 0;
 	viewangles[ROLL]  = 0;
 
-	UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, UI_Cvar_VariableString( "model" ) );
+	UI_PlayerInfo_SetModel( &s_playersettings.playerinfo,
+			UI_Cvar_VariableString( Com_LocalClientCvarName(s_playersettings.localClient, "model") ) );
 	UI_PlayerInfo_SetInfo( &s_playersettings.playerinfo, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 
 	// handicap
-	h = Com_Clamp( 5, 100, trap_Cvar_VariableValue("handicap") );
+	h = Com_Clamp( 5, 100, trap_Cvar_VariableValue(Com_LocalClientCvarName(s_playersettings.localClient, "handicap")) );
 	s_playersettings.handicap.curvalue = 20 - h / 5;
 }
 
@@ -329,12 +348,13 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_HANDICAP:
-		trap_Cvar_Set( "handicap", va( "%i", 100 - 25 * s_playersettings.handicap.curvalue ) );
+		trap_Cvar_Set( Com_LocalClientCvarName(s_playersettings.localClient, "handicap"),
+				va( "%i", 100 - 25 * s_playersettings.handicap.curvalue ) );
 		break;
 
 	case ID_MODEL:
 		PlayerSettings_SaveChanges();
-		UI_PlayerModelMenu();
+		UI_PlayerModelMenu(s_playersettings.localClient);
 		break;
 
 	case ID_BACK:
@@ -350,10 +370,18 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 PlayerSettings_MenuInit
 =================
 */
-static void PlayerSettings_MenuInit( void ) {
+static void PlayerSettings_MenuInit( int localClient )
+{
 	int		y;
 
 	memset(&s_playersettings,0,sizeof(playersettings_t));
+
+	s_playersettings.localClient = localClient;
+	if (UI_MaxSplitView() == 1) {
+		Com_sprintf(s_playersettings.bannerString, sizeof (s_playersettings.bannerString), "PLAYER SETTINGS");
+	} else {
+		Com_sprintf(s_playersettings.bannerString, sizeof (s_playersettings.bannerString), "PLAYER %d SETTINGS", s_playersettings.localClient+1);
+	}
 
 	PlayerSettings_Cache();
 
@@ -361,11 +389,16 @@ static void PlayerSettings_MenuInit( void ) {
 	s_playersettings.menu.wrapAround = qtrue;
 	s_playersettings.menu.fullscreen = qtrue;
 
-	s_playersettings.banner.generic.type  = MTYPE_BTEXT;
+	if (UI_MaxSplitView() == 1) {
+		s_playersettings.banner.generic.type  = MTYPE_BTEXT;
+	} else {
+		// ZTM: Q3's BTEXT doesn't have numbers sadly.
+		s_playersettings.banner.generic.type  = MTYPE_PTEXT;
+	}
 	s_playersettings.banner.generic.x     = 320;
 	s_playersettings.banner.generic.y     = 16;
-	s_playersettings.banner.string        = "PLAYER SETTINGS";
-	s_playersettings.banner.color         = color_white;
+	s_playersettings.banner.string = s_playersettings.bannerString;
+	s_playersettings.banner.color         = color_red;
 	s_playersettings.banner.style         = UI_CENTER;
 
 	s_playersettings.framel.generic.type  = MTYPE_BITMAP;
@@ -421,7 +454,7 @@ static void PlayerSettings_MenuInit( void ) {
 	s_playersettings.effects.generic.top		= y - 8;
 	s_playersettings.effects.generic.right		= 192 + 200;
 	s_playersettings.effects.generic.bottom		= y + 2* PROP_HEIGHT;
-	s_playersettings.effects.numitems			= 7;
+	s_playersettings.effects.numitems			= NUM_COLOR_EFFECTS;
 
 	s_playersettings.model.generic.type			= MTYPE_BITMAP;
 	s_playersettings.model.generic.name			= ART_MODEL0;
@@ -507,7 +540,7 @@ void PlayerSettings_Cache( void ) {
 UI_PlayerSettingsMenu
 =================
 */
-void UI_PlayerSettingsMenu( void ) {
-	PlayerSettings_MenuInit();
+void UI_PlayerSettingsMenu( int localClient ) {
+	PlayerSettings_MenuInit(localClient);
 	UI_PushMenu( &s_playersettings.menu );
 }

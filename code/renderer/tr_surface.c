@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // tr_surf.c
@@ -275,6 +283,148 @@ static void RB_SurfaceTriangles( srfTriangles_t *srf ) {
 	}
 
 	tess.numVertexes += srf->numVerts;
+}
+
+
+
+/*
+=============
+RB_SurfaceFoliage
+=============
+*/
+static void RB_SurfaceFoliage( srfFoliage_t *srf ) {
+	int o, i, a, numVerts, numIndexes;
+	vec4_t distanceCull, distanceVector;
+	float alpha, z, dist, fovScale;
+	vec3_t local;
+	vec_t               *xyz;
+	int srcColor, *color;
+	int dlightBits;
+	foliageInstance_t   *instance;
+
+
+	// basic setup
+	numVerts = srf->numVerts;
+	numIndexes = srf->numIndexes;
+
+	// set fov scale
+	fovScale = backEnd.viewParms.fovX * ( 1.0 / 90.0 );
+
+	// calculate distance vector
+	VectorSubtract( backEnd.or.origin, backEnd.viewParms.or.origin, local );
+	distanceVector[ 0 ] = -backEnd.or.modelMatrix[ 2 ];
+	distanceVector[ 1 ] = -backEnd.or.modelMatrix[ 6 ];
+	distanceVector[ 2 ] = -backEnd.or.modelMatrix[ 10 ];
+	distanceVector[ 3 ] = DotProduct( local, backEnd.viewParms.or.axis[ 0 ] );
+
+	// attempt distance cull
+	Vector4Copy( tess.shader->distanceCull, distanceCull );
+	if ( distanceCull[ 1 ] > 0 ) {
+		//VectorSubtract( srf->localOrigin, viewOrigin, delta );
+		//alpha = (distanceCull[ 1 ] - VectorLength( delta ) + srf->radius) * distanceCull[ 3 ];
+		z = fovScale * ( DotProduct( srf->origin, distanceVector ) + distanceVector[ 3 ] - srf->radius );
+		alpha = ( distanceCull[ 1 ] - z ) * distanceCull[ 3 ];
+		if ( alpha < distanceCull[ 2 ] ) {
+			return;
+		}
+	}
+
+	// set dlight bits
+	dlightBits = srf->dlightBits[ backEnd.smpFrame ];
+	tess.dlightBits |= dlightBits;
+
+	// iterate through origin list
+	instance = srf->instances;
+	for ( o = 0; o < srf->numInstances; o++, instance++ )
+	{
+		// fade alpha based on distance between inner and outer radii
+		if ( distanceCull[ 1 ] > 0.0f ) {
+			// calculate z distance
+			z = fovScale * ( DotProduct( instance->origin, distanceVector ) + distanceVector[ 3 ] );
+			if ( z < -64.0f ) {  // epsilon so close-by foliage doesn't pop in and out
+				continue;
+			}
+
+			// check against frustum planes
+			for ( i = 0; i < 5; i++ )
+			{
+				dist = DotProduct( instance->origin, backEnd.viewParms.frustum[ i ].normal ) - backEnd.viewParms.frustum[ i ].dist;
+				if ( dist < -64.0 ) {
+					break;
+				}
+			}
+			if ( i != 5 ) {
+				continue;
+			}
+
+			// radix
+			if ( o & 1 ) {
+				z *= 1.25;
+				if ( o & 2 ) {
+					z *= 1.25;
+				}
+			}
+
+			// calculate alpha
+			alpha = ( distanceCull[ 1 ] - z ) * distanceCull[ 3 ];
+			if ( alpha < distanceCull[ 2 ] ) {
+				continue;
+			}
+
+			// set color
+			a = alpha > 1.0f ? 255 : alpha * 255;
+#if __MACOS__ // LBO 3/15/05. Byte-swap fix for Mac - alpha is in the LSB.
+			srcColor = ( *( (int*) instance->color ) & 0xFFFFFF00 ) | ( a & 0xff );
+#else
+			srcColor = ( *( (int*) instance->color ) & 0xFFFFFF ) | ( a << 24 );
+#endif
+		} else
+		{
+			srcColor = *( (int*) instance->color );
+		}
+
+		// Com_Printf( "Color: %d %d %d %d\n", srf->colors[ o ][ 0 ], srf->colors[ o ][ 1 ], srf->colors[ o ][ 2 ], alpha );
+
+		RB_CHECKOVERFLOW( numVerts, numIndexes );
+
+		// set after overflow check so dlights work properly
+		tess.dlightBits |= dlightBits;
+
+		// copy indexes
+		memcpy( &tess.indexes[ tess.numIndexes ], srf->indexes, numIndexes * sizeof( srf->indexes[ 0 ] ) );
+		for ( i = 0; i < numIndexes; i++ )
+			tess.indexes[ tess.numIndexes + i ] += tess.numVertexes;
+
+		// copy xyz, normal and st
+		xyz = tess.xyz[ tess.numVertexes ];
+		memcpy( xyz, srf->xyz, numVerts * sizeof( srf->xyz[ 0 ] ) );
+		if ( tess.shader->needsNormal ) {
+			memcpy( &tess.normal[ tess.numVertexes ], srf->normal, numVerts * sizeof( srf->xyz[ 0 ] ) );
+		}
+
+		for (i = 0; i < numVerts; i++) {
+			tess.texCoords[tess.numVertexes+i][0][0] = srf->texCoords[i][0];
+			tess.texCoords[tess.numVertexes+i][0][1] = srf->texCoords[i][1];
+
+			tess.texCoords[tess.numVertexes+i][1][0] = srf->lmTexCoords[i][0];
+			tess.texCoords[tess.numVertexes+i][1][1] = srf->lmTexCoords[i][1];
+		}
+
+		// offset xyz
+		for ( i = 0; i < numVerts; i++, xyz += 4 )
+			VectorAdd( xyz, instance->origin, xyz );
+
+		// copy color
+		color = (int*) tess.vertexColors[ tess.numVertexes ];
+		for ( i = 0; i < numVerts; i++ )
+			color[ i ] = srcColor;
+
+		// increment
+		tess.numIndexes += numIndexes;
+		tess.numVertexes += numVerts;
+	}
+
+	// RB_DrawBounds( srf->bounds[ 0 ], srf->bounds[ 1 ] );
 }
 
 
@@ -1221,6 +1371,34 @@ static void RB_SurfaceDisplayList( srfDisplayList_t *surf ) {
 	qglCallList( surf->listNum );
 }
 
+void RB_SurfacePolyBuffer( srfPolyBuffer_t *surf ) {
+	int i;
+
+	tess.numIndexes =   surf->pPolyBuffer->numIndicies;
+	tess.numVertexes =  surf->pPolyBuffer->numVerts;
+
+	for (i = 0; i < tess.numVertexes; i++)
+	{
+		tess.xyz[i][0] = surf->pPolyBuffer->xyz[i][0];
+		tess.xyz[i][1] = surf->pPolyBuffer->xyz[i][1];
+		tess.xyz[i][2] = surf->pPolyBuffer->xyz[i][2];
+		tess.xyz[i][3] = surf->pPolyBuffer->xyz[i][3];
+
+		tess.texCoords[i][0][0] = surf->pPolyBuffer->st[i][0];
+		tess.texCoords[i][0][1] = surf->pPolyBuffer->st[i][1];
+		
+		tess.vertexColors[i][0] = surf->pPolyBuffer->color[i][0];
+		tess.vertexColors[i][1] = surf->pPolyBuffer->color[i][1];
+		tess.vertexColors[i][2] = surf->pPolyBuffer->color[i][2];
+		tess.vertexColors[i][3] = surf->pPolyBuffer->color[i][3];
+	}
+
+	for (i = 0; i < tess.numIndexes; i++)
+	{
+		tess.indexes[i] = (glIndex_t)surf->pPolyBuffer->indicies[i];
+	}
+}
+
 static void RB_SurfaceSkip( void *surf ) {
 }
 
@@ -1231,7 +1409,9 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_SurfaceFace,			// SF_FACE,
 	(void(*)(void*))RB_SurfaceGrid,			// SF_GRID,
 	(void(*)(void*))RB_SurfaceTriangles,		// SF_TRIANGLES,
+	(void(*)(void*))RB_SurfaceFoliage,			// SF_FOLIAGE,
 	(void(*)(void*))RB_SurfacePolychain,		// SF_POLY,
+	(void(*)(void*))RB_SurfacePolyBuffer,		// SF_POLYBUFFER,
 	(void(*)(void*))RB_SurfaceMesh,			// SF_MD3,
 	(void(*)(void*))RB_SurfaceAnim,			// SF_MD4,
 #ifdef RAVENMD4

@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // sv_bot.c
@@ -38,6 +46,8 @@ int bot_maxdebugpolys;
 extern botlib_export_t	*botlib_export;
 int	bot_enable;
 
+static cvar_t	*bot_developer;
+
 
 /*
 ==================
@@ -47,6 +57,7 @@ SV_BotAllocateClient
 int SV_BotAllocateClient(void) {
 	int			i;
 	client_t	*cl;
+	player_t	*player;
 
 	// find a client slot
 	for ( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ ) {
@@ -59,14 +70,29 @@ int SV_BotAllocateClient(void) {
 		return -1;
 	}
 
-	cl->gentity = SV_GentityNum( i );
-	cl->gentity->s.number = i;
+	// find a player slot
+	for ( i = 0, player = svs.players; i < sv_maxclients->integer; i++, player++ ) {
+		if ( !player->inUse ) {
+			break;
+		}
+	}
+
+	if ( i == sv_maxclients->integer ) {
+		return -1;
+	}
+
+	player->inUse = qtrue;
+	player->client = cl;
+
 	cl->state = CS_ACTIVE;
+	cl->localPlayers[0] = player;
 	cl->lastPacketTime = svs.time;
 	cl->netchan.remoteAddress.type = NA_BOT;
 	cl->rate = 16384;
 
-	return i;
+	SV_SetupPlayerEntity( player );
+
+	return ( (int)( cl - svs.clients ) & 0xFFFF ) | ( (int)( player - svs.players ) << 16 );
 }
 
 /*
@@ -74,17 +100,24 @@ int SV_BotAllocateClient(void) {
 SV_BotFreeClient
 ==================
 */
-void SV_BotFreeClient( int clientNum ) {
-	client_t	*cl;
+void SV_BotFreeClient( int playerNum ) {
+	client_t	*client;
+	player_t	*player;
 
-	if ( clientNum < 0 || clientNum >= sv_maxclients->integer ) {
-		Com_Error( ERR_DROP, "SV_BotFreeClient: bad clientNum: %i", clientNum );
+	if ( playerNum < 0 || playerNum >= sv_maxclients->integer ) {
+		Com_Error( ERR_DROP, "SV_BotFreeClient: bad playerNum: %i", playerNum );
 	}
-	cl = &svs.clients[clientNum];
-	cl->state = CS_FREE;
-	cl->name[0] = 0;
-	if ( cl->gentity ) {
-		cl->gentity->r.svFlags &= ~SVF_BOT;
+
+	player = &svs.players[playerNum];
+
+	client = player->client;
+	client->state = CS_FREE;
+	client->localPlayers[0] = NULL;
+
+	player->client = NULL;
+	player->name[0] = 0;
+	if ( player->gentity ) {
+		player->gentity->r.svFlags &= ~SVF_BOT;
 	}
 }
 
@@ -112,12 +145,12 @@ void BotDrawDebugPolygons(void (*drawPoly)(int color, int numPoints, float *poin
 		if (!bot_highlightarea) bot_highlightarea = Cvar_Get("bot_highlightarea", "0", 0);
 		//
 		parm0 = 0;
-		if (svs.clients[0].lastUsercmd.buttons & BUTTON_ATTACK) parm0 |= 1;
+		if (svs.players[0].lastUsercmd.buttons & BUTTON_ATTACK) parm0 |= 1;
 		if (bot_reachability->integer) parm0 |= 2;
 		if (bot_groundonly->integer) parm0 |= 4;
 		botlib_export->BotLibVarSet("bot_highlightarea", bot_highlightarea->string);
-		botlib_export->Test(parm0, NULL, svs.clients[0].gentity->r.currentOrigin, 
-			svs.clients[0].gentity->r.currentAngles);
+		botlib_export->Test(parm0, NULL, svs.players[0].gentity->r.currentOrigin, 
+			svs.players[0].gentity->r.currentAngles);
 	} //end if
 	//draw all debug polys
 	for (i = 0; i < bot_maxdebugpolys; i++) {
@@ -143,6 +176,12 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL BotImport_Print(int ty
 	va_end(ap);
 
 	switch(type) {
+		case PRT_DEVELOPER: {
+			if (bot_developer->integer) {
+				Com_Printf("%s", str);
+			}
+			break;
+		}
 		case PRT_MESSAGE: {
 			Com_Printf("%s", str);
 			break;
@@ -178,7 +217,7 @@ BotImport_Trace
 static void BotImport_Trace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int passent, int contentmask) {
 	trace_t trace;
 
-	SV_Trace(&trace, start, mins, maxs, end, passent, contentmask, qfalse);
+	SV_Trace(&trace, start, mins, maxs, end, passent, contentmask, TT_AABB);
 	//copy the trace information
 	bsptrace->allsolid = trace.allsolid;
 	bsptrace->startsolid = trace.startsolid;
@@ -203,7 +242,7 @@ BotImport_EntityTrace
 static void BotImport_EntityTrace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int entnum, int contentmask) {
 	trace_t trace;
 
-	SV_ClipToEntity(&trace, start, mins, maxs, end, entnum, contentmask, qfalse);
+	SV_ClipToEntity(&trace, start, mins, maxs, end, entnum, contentmask, TT_AABB);
 	//copy the trace information
 	bsptrace->allsolid = trace.allsolid;
 	bsptrace->startsolid = trace.startsolid;
@@ -417,11 +456,30 @@ static void BotImport_DebugLineShow(int line, vec3_t start, vec3_t end, int colo
 
 /*
 ==================
+SV_ClientForPlayerNum
+
+ClientNum is for players array and we want client_t
+==================
+*/
+client_t *SV_ClientForPlayerNum( int playerNum ) {
+	if ( playerNum < 0 || playerNum >= sv_maxclients->integer )
+		return NULL;
+
+	return svs.players[playerNum].client;
+}
+
+/*
+==================
 SV_BotClientCommand
 ==================
 */
-static void BotClientCommand( int client, char *command ) {
-	SV_ExecuteClientCommand( &svs.clients[client], command, qtrue );
+static void BotClientCommand( int playerNum, char *command ) {
+	client_t *client = SV_ClientForPlayerNum( playerNum );
+
+	if ( !client )
+		return;
+
+	SV_ExecuteClientCommand( client, command, qtrue );
 }
 
 /*
@@ -479,7 +537,7 @@ SV_BotInitCvars
 void SV_BotInitCvars(void) {
 
 	Cvar_Get("bot_enable", "1", 0);						//enable the bot
-	Cvar_Get("bot_developer", "0", CVAR_CHEAT);			//bot developer mode
+	bot_developer = Cvar_Get("bot_developer", "0", CVAR_CHEAT); //bot developer mode
 	Cvar_Get("bot_debug", "0", CVAR_CHEAT);				//enable bot debugging
 	Cvar_Get("bot_maxdebugpolys", "2", 0);				//maximum number of debug polys
 	Cvar_Get("bot_groundonly", "1", 0);					//only show ground faces of areas
@@ -572,7 +630,11 @@ int SV_BotGetConsoleMessage( int client, char *buf, int size )
 	client_t	*cl;
 	int			index;
 
-	cl = &svs.clients[client];
+	cl = SV_ClientForPlayerNum( client );
+
+	if ( !cl )
+		return qfalse;
+
 	cl->lastPacketTime = svs.time;
 
 	if ( cl->reliableAcknowledge == cl->reliableSequence ) {
@@ -596,12 +658,16 @@ int SV_BotGetConsoleMessage( int client, char *buf, int size )
 EntityInPVS
 ==================
 */
-int EntityInPVS( int client, int entityNum ) {
+int EntityInPVS( int playerNum, int entityNum ) {
 	client_t			*cl;
 	clientSnapshot_t	*frame;
 	int					i;
 
-	cl = &svs.clients[client];
+	cl = SV_ClientForPlayerNum( playerNum );
+
+	if ( !cl )
+		return qfalse;
+
 	frame = &cl->frames[cl->netchan.outgoingSequence & PACKET_MASK];
 	for ( i = 0; i < frame->num_entities; i++ )	{
 		if ( svs.snapshotEntities[(frame->first_entity + i) % svs.numSnapshotEntities].number == entityNum ) {
@@ -617,11 +683,15 @@ int EntityInPVS( int client, int entityNum ) {
 SV_BotGetSnapshotEntity
 ==================
 */
-int SV_BotGetSnapshotEntity( int client, int sequence ) {
-	client_t			*cl;
+int SV_BotGetSnapshotEntity( int playerNum, int sequence ) {
+	client_t *cl;
 	clientSnapshot_t	*frame;
 
-	cl = &svs.clients[client];
+	cl = SV_ClientForPlayerNum( playerNum );
+
+	if ( !cl )
+		return -1;
+
 	frame = &cl->frames[cl->netchan.outgoingSequence & PACKET_MASK];
 	if (sequence < 0 || sequence >= frame->num_entities) {
 		return -1;

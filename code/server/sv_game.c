@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // sv_game.c -- interface to the game dll
@@ -74,30 +82,30 @@ SV_GameSendServerCommand
 Sends a command string to a client
 ===============
 */
-void SV_GameSendServerCommand( int clientNum, const char *text ) {
+void SV_GameSendServerCommand( int clientNum, int localPlayerNum, const char *text ) {
 	if ( clientNum == -1 ) {
-		SV_SendServerCommand( NULL, "%s", text );
+		SV_SendServerCommand( NULL, -1, "%s", text );
 	} else {
 		if ( clientNum < 0 || clientNum >= sv_maxclients->integer ) {
 			return;
 		}
-		SV_SendServerCommand( svs.clients + clientNum, "%s", text );	
+		SV_SendServerCommand( svs.clients + clientNum, localPlayerNum, "%s", text );	
 	}
 }
 
 
 /*
 ===============
-SV_GameDropClient
+SV_GameDropPlayer
 
-Disconnects the client with a message
+Disconnects the player with a message
 ===============
 */
-void SV_GameDropClient( int clientNum, const char *reason ) {
-	if ( clientNum < 0 || clientNum >= sv_maxclients->integer ) {
+void SV_GameDropPlayer( int playerNum, const char *reason ) {
+	if ( playerNum < 0 || playerNum >= sv_maxclients->integer ) {
 		return;
 	}
-	SV_DropClient( svs.clients + clientNum, reason );	
+	SV_DropPlayer( svs.players + playerNum, reason );	
 }
 
 
@@ -125,11 +133,11 @@ void SV_SetBrushModel( sharedEntity_t *ent, const char *name ) {
 
 	h = CM_InlineModel( ent->s.modelindex );
 	CM_ModelBounds( h, mins, maxs );
-	VectorCopy (mins, ent->r.mins);
-	VectorCopy (maxs, ent->r.maxs);
-	ent->r.bmodel = qtrue;
+	VectorCopy (mins, ent->s.mins);
+	VectorCopy (maxs, ent->s.maxs);
+	ent->s.bmodel = qtrue;
 
-	ent->r.contents = -1;		// we don't know exactly what is in the brushes
+	ent->s.contents = -1;		// we don't know exactly what is in the brushes
 
 	SV_LinkEntity( ent );		// FIXME: remove
 }
@@ -214,7 +222,7 @@ void SV_AdjustAreaPortalState( sharedEntity_t *ent, qboolean open ) {
 SV_EntityContact
 ==================
 */
-qboolean	SV_EntityContact( vec3_t mins, vec3_t maxs, const sharedEntity_t *gEnt, int capsule ) {
+qboolean	SV_EntityContact( const vec3_t mins, const vec3_t maxs, const sharedEntity_t *gEnt, traceType_t type ) {
 	const float	*origin, *angles;
 	clipHandle_t	ch;
 	trace_t			trace;
@@ -225,7 +233,7 @@ qboolean	SV_EntityContact( vec3_t mins, vec3_t maxs, const sharedEntity_t *gEnt,
 
 	ch = SV_ClipHandleForEntity( gEnt );
 	CM_TransformedBoxTrace ( &trace, vec3_origin, vec3_origin, mins, maxs,
-		ch, -1, origin, angles, capsule );
+		ch, -1, origin, angles, type );
 
 	return trace.startsolid;
 }
@@ -267,11 +275,11 @@ SV_GetUsercmd
 
 ===============
 */
-void SV_GetUsercmd( int clientNum, usercmd_t *cmd ) {
-	if ( clientNum < 0 || clientNum >= sv_maxclients->integer ) {
-		Com_Error( ERR_DROP, "SV_GetUsercmd: bad clientNum:%i", clientNum );
+void SV_GetUsercmd( int playerNum, usercmd_t *cmd ) {
+	if ( playerNum < 0 || playerNum >= sv_maxclients->integer ) {
+		Com_Error( ERR_DROP, "SV_GetUsercmd: bad playerNum:%i", playerNum );
 	}
-	*cmd = svs.clients[clientNum].lastUsercmd;
+	*cmd = svs.players[playerNum].lastUsercmd;
 }
 
 //==============================================
@@ -291,6 +299,33 @@ The module is making a system call
 */
 intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	switch( args[0] ) {
+
+	case TRAP_MEMSET:
+		Com_Memset( VMA(1), args[2], args[3] );
+		return 0;
+	case TRAP_MEMCPY:
+		Com_Memcpy( VMA(1), VMA(2), args[3] );
+		return 0;
+	case TRAP_STRNCPY:
+		strncpy( VMA(1), VMA(2), args[3] );
+		return args[1];
+	case TRAP_SIN:
+		return FloatAsInt( sin( VMF(1) ) );
+	case TRAP_COS:
+		return FloatAsInt( cos( VMF(1) ) );
+	case TRAP_ATAN2:
+		return FloatAsInt( atan2( VMF(1), VMF(2) ) );
+	case TRAP_SQRT:
+		return FloatAsInt( sqrt( VMF(1) ) );
+	case TRAP_FLOOR:
+		return FloatAsInt( floor( VMF(1) ) );
+	case TRAP_CEIL:
+		return FloatAsInt( ceil( VMF(1) ) );
+	case TRAP_ACOS:
+		return FloatAsInt( Q_acos( VMF(1) ) );
+	case TRAP_ASIN:
+		return FloatAsInt( Q_asin( VMF(1) ) );
+
 	case G_PRINT:
 		Com_Printf( "%s", (const char*)VMA(1) );
 		return 0;
@@ -299,6 +334,22 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_MILLISECONDS:
 		return Sys_Milliseconds();
+	case G_REAL_TIME:
+		return Com_RealTime( VMA(1) );
+	case G_SNAPVECTOR:
+		Q_SnapVector(VMA(1));
+		return 0;
+
+	case G_ADDCOMMAND:
+		Cmd_AddCommand( VMA(1), NULL );
+		return 0;
+	case G_REMOVECOMMAND:
+		Cmd_RemoveCommandSafe( VMA(1) );
+		return 0;
+	case G_CMD_EXECUTETEXT:
+		Cbuf_ExecuteTextSafe( args[1], VMA(2) );
+		return 0;
+
 	case G_CVAR_REGISTER:
 		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4] ); 
 		return 0;
@@ -308,18 +359,36 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_CVAR_SET:
 		Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2) );
 		return 0;
+	case G_CVAR_SET_VALUE:
+		Cvar_SetValueSafe( VMA(1), VMF(2) );
+		return 0;
+	case G_CVAR_RESET:
+		Cvar_Reset( VMA(1) );
+		return 0;
+	case G_CVAR_VARIABLE_VALUE:
+		return FloatAsInt( Cvar_VariableValue( VMA(1) ) );
 	case G_CVAR_VARIABLE_INTEGER_VALUE:
 		return Cvar_VariableIntegerValue( (const char *)VMA(1) );
 	case G_CVAR_VARIABLE_STRING_BUFFER:
 		Cvar_VariableStringBuffer( VMA(1), VMA(2), args[3] );
 		return 0;
+	case G_CVAR_LATCHED_VARIABLE_STRING_BUFFER:
+		Cvar_LatchedVariableStringBuffer( VMA( 1 ), VMA( 2 ), args[3] );
+		return 0;
+	case G_CVAR_INFO_STRING_BUFFER:
+		Cvar_InfoStringBuffer( args[1], VMA(2), args[3] );
+		return 0;
+
 	case G_ARGC:
 		return Cmd_Argc();
 	case G_ARGV:
 		Cmd_ArgvBuffer( args[1], VMA(2), args[3] );
 		return 0;
-	case G_SEND_CONSOLE_COMMAND:
-		Cbuf_ExecuteText( args[1], VMA(2) );
+	case G_ARGS:
+		Cmd_ArgsBuffer( VMA(1), args[2] );
+		return 0;
+	case G_LITERAL_ARGS:
+		Cmd_LiteralArgsBuffer( VMA(1), args[2] );
 		return 0;
 
 	case G_FS_FOPEN_FILE:
@@ -330,22 +399,45 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_FS_WRITE:
 		FS_Write( VMA(1), args[2], args[3] );
 		return 0;
+	case G_FS_SEEK:
+		return FS_Seek( args[1], args[2], args[3] );
 	case G_FS_FCLOSE_FILE:
 		FS_FCloseFile( args[1] );
 		return 0;
 	case G_FS_GETFILELIST:
 		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
-	case G_FS_SEEK:
-		return FS_Seek( args[1], args[2], args[3] );
+	case G_FS_DELETE:
+		return FS_Delete( VMA(1) );
+	case G_FS_RENAME:
+		return FS_Rename( VMA(1), VMA(2) );
+
+	case G_PC_ADD_GLOBAL_DEFINE:
+		return botlib_export->PC_AddGlobalDefine( VMA(1) );
+	case G_PC_REMOVE_ALL_GLOBAL_DEFINES:
+		botlib_export->PC_RemoveAllGlobalDefines();
+		return 0;
+	case G_PC_LOAD_SOURCE:
+		return botlib_export->PC_LoadSourceHandle( VMA(1) );
+	case G_PC_FREE_SOURCE:
+		return botlib_export->PC_FreeSourceHandle( args[1] );
+	case G_PC_READ_TOKEN:
+		return botlib_export->PC_ReadTokenHandle( args[1], VMA(2) );
+	case G_PC_UNREAD_TOKEN:
+		botlib_export->PC_UnreadLastTokenHandle( args[1] );
+		return 0;
+	case G_PC_SOURCE_FILE_AND_LINE:
+		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
+
+		//====================================
 
 	case G_LOCATE_GAME_DATA:
 		SV_LocateGameData( VMA(1), args[2], args[3], VMA(4), args[5] );
 		return 0;
 	case G_DROP_CLIENT:
-		SV_GameDropClient( args[1], VMA(2) );
+		SV_GameDropPlayer( args[1], VMA(2) );
 		return 0;
 	case G_SEND_SERVER_COMMAND:
-		SV_GameSendServerCommand( args[1], VMA(2) );
+		SV_GameSendServerCommand( args[1], args[2], VMA(3) );
 		return 0;
 	case G_LINKENTITY:
 		SV_LinkEntity( VMA(1) );
@@ -356,14 +448,14 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_ENTITIES_IN_BOX:
 		return SV_AreaEntities( VMA(1), VMA(2), VMA(3), args[4] );
 	case G_ENTITY_CONTACT:
-		return SV_EntityContact( VMA(1), VMA(2), VMA(3), /*int capsule*/ qfalse );
+		return SV_EntityContact( VMA(1), VMA(2), VMA(3), TT_AABB );
 	case G_ENTITY_CONTACTCAPSULE:
-		return SV_EntityContact( VMA(1), VMA(2), VMA(3), /*int capsule*/ qtrue );
+		return SV_EntityContact( VMA(1), VMA(2), VMA(3), TT_CAPSULE );
 	case G_TRACE:
-		SV_Trace( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], /*int capsule*/ qfalse );
+		SV_Trace( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], TT_AABB );
 		return 0;
 	case G_TRACECAPSULE:
-		SV_Trace( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], /*int capsule*/ qtrue );
+		SV_Trace( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], TT_CAPSULE );
 		return 0;
 	case G_POINT_CONTENTS:
 		return SV_PointContents( VMA(1), args[2] );
@@ -423,11 +515,6 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_DEBUG_POLYGON_DELETE:
 		BotImport_DebugPolygonDelete( args[1] );
 		return 0;
-	case G_REAL_TIME:
-		return Com_RealTime( VMA(1) );
-	case G_SNAPVECTOR:
-		Q_SnapVector(VMA(1));
-		return 0;
 
 		//====================================
 
@@ -439,17 +526,6 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->BotLibVarSet( VMA(1), VMA(2) );
 	case BOTLIB_LIBVAR_GET:
 		return botlib_export->BotLibVarGet( VMA(1), VMA(2), args[3] );
-
-	case BOTLIB_PC_ADD_GLOBAL_DEFINE:
-		return botlib_export->PC_AddGlobalDefine( VMA(1) );
-	case BOTLIB_PC_LOAD_SOURCE:
-		return botlib_export->PC_LoadSourceHandle( VMA(1) );
-	case BOTLIB_PC_FREE_SOURCE:
-		return botlib_export->PC_FreeSourceHandle( args[1] );
-	case BOTLIB_PC_READ_TOKEN:
-		return botlib_export->PC_ReadTokenHandle( args[1], VMA(2) );
-	case BOTLIB_PC_SOURCE_FILE_AND_LINE:
-		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
 
 	case BOTLIB_START_FRAME:
 		return botlib_export->BotLibStartFrame( VMF(1) );
@@ -465,7 +541,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_GET_CONSOLE_MESSAGE:
 		return SV_BotGetConsoleMessage( args[1], VMA(2), args[3] );
 	case BOTLIB_USER_COMMAND:
-		SV_ClientThink( &svs.clients[args[1]], VMA(2) );
+		SV_PlayerThink( &svs.players[args[1]], VMA(2) );
 		return 0;
 
 	case BOTLIB_AAS_BBOX_AREAS:
@@ -508,6 +584,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 
 	case BOTLIB_AAS_AREA_REACHABILITY:
 		return botlib_export->aas.AAS_AreaReachability( args[1] );
+	case BOTLIB_AAS_BEST_REACHABLE_AREA:
+		return botlib_export->aas.AAS_BestReachableArea( VMA(1), VMA(2), VMA(3), VMA(4) );
 
 	case BOTLIB_AAS_AREA_TRAVEL_TIME_TO_GOAL_AREA:
 		return botlib_export->aas.AAS_AreaTravelTimeToGoalArea( args[1], VMA(2), args[3], args[4] );
@@ -794,48 +872,6 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION:
 		return botlib_export->ai.GeneticParentsAndChildSelection(args[1], VMA(2), VMA(3), VMA(4), VMA(5));
 
-	case TRAP_MEMSET:
-		Com_Memset( VMA(1), args[2], args[3] );
-		return 0;
-
-	case TRAP_MEMCPY:
-		Com_Memcpy( VMA(1), VMA(2), args[3] );
-		return 0;
-
-	case TRAP_STRNCPY:
-		strncpy( VMA(1), VMA(2), args[3] );
-		return args[1];
-
-	case TRAP_SIN:
-		return FloatAsInt( sin( VMF(1) ) );
-
-	case TRAP_COS:
-		return FloatAsInt( cos( VMF(1) ) );
-
-	case TRAP_ATAN2:
-		return FloatAsInt( atan2( VMF(1), VMF(2) ) );
-
-	case TRAP_SQRT:
-		return FloatAsInt( sqrt( VMF(1) ) );
-
-	case TRAP_MATRIXMULTIPLY:
-		MatrixMultiply( VMA(1), VMA(2), VMA(3) );
-		return 0;
-
-	case TRAP_ANGLEVECTORS:
-		AngleVectors( VMA(1), VMA(2), VMA(3), VMA(4) );
-		return 0;
-
-	case TRAP_PERPENDICULARVECTOR:
-		PerpendicularVector( VMA(1), VMA(2) );
-		return 0;
-
-	case TRAP_FLOOR:
-		return FloatAsInt( floor( VMF(1) ) );
-
-	case TRAP_CEIL:
-		return FloatAsInt( ceil( VMF(1) ) );
-
 
 	default:
 		Com_Error( ERR_DROP, "Bad game system trap: %ld", (long int) args[0] );
@@ -867,7 +903,21 @@ Called for both a full init and a restart
 ==================
 */
 static void SV_InitGameVM( qboolean restart ) {
-	int		i;
+	unsigned int	version, major, minor;
+	int				i;
+
+	// sanity check
+	version = VM_SafeCall( gvm, GAME_GETAPIVERSION );
+	major = (version >> 16) & 0xFFFF;
+	minor = version & 0xFFFF;
+	Com_DPrintf("Loading game with version %x.%x\n", major, minor);
+	if (major != GAME_API_MAJOR_VERSION || minor > GAME_API_MINOR_VERSION) {
+		// Free gvm now, so GAME_SHUTDOWN doesn't get called later.
+		VM_Free( gvm );
+		gvm = NULL;
+
+		Com_Error(ERR_DROP, "Game is version %x.%x, expected %x.%x", major, minor, GAME_API_MAJOR_VERSION, GAME_API_MINOR_VERSION );
+	}
 
 	// start the entity parsing at the beginning
 	sv.entityParsePoint = CM_EntityString();
@@ -877,7 +927,7 @@ static void SV_InitGameVM( qboolean restart ) {
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=522
 	//   now done before GAME_INIT call
 	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
-		svs.clients[i].gentity = NULL;
+		svs.players[i].gentity = NULL;
 	}
 	
 	// use the current msec count for a random seed
@@ -931,7 +981,7 @@ void SV_InitGameProgs( void ) {
 	}
 
 	// load the dll or bytecode
-	gvm = VM_Create( "qagame", SV_GameSystemCalls, Cvar_VariableValue( "vm_game" ) );
+	gvm = VM_Create( "game", SV_GameSystemCalls, Cvar_VariableValue( "vm_game" ) );
 	if ( !gvm ) {
 		Com_Error( ERR_FATAL, "VM_Create on game failed" );
 	}

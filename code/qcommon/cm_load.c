@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // cmodel.c -- model loading
@@ -43,6 +51,7 @@ void SetPlaneSignbits (cplane_t *out) {
 
 // to allow boxes to be treated as brush models, we allocate
 // some extra indexes along with those needed by the map
+#define BOX_LEAF_BRUSHES	1
 #define	BOX_BRUSHES		1
 #define	BOX_SIDES		6
 #define	BOX_LEAFS		2
@@ -68,6 +77,7 @@ cmodel_t	box_model;
 cplane_t	*box_planes;
 cbrush_t	*box_brush;
 
+int			capsule_contents;
 
 
 void	CM_InitBoxHull (void);
@@ -105,10 +115,12 @@ void CMod_LoadShaders( lump_t *l ) {
 
 	Com_Memcpy( cm.shaders, in, count * sizeof( *cm.shaders ) );
 
-	out = cm.shaders;
-	for ( i=0 ; i<count ; i++, in++, out++ ) {
-		out->contentFlags = LittleLong( out->contentFlags );
-		out->surfaceFlags = LittleLong( out->surfaceFlags );
+	if ( LittleLong( 1 ) != 1 ) {
+		out = cm.shaders;
+		for ( i=0 ; i<count ; i++, in++, out++ ) {
+			out->contentFlags = LittleLong( out->contentFlags );
+			out->surfaceFlags = LittleLong( out->surfaceFlags );
+		}
 	}
 }
 
@@ -362,7 +374,7 @@ void CMod_LoadLeafBrushes (lump_t *l)
 		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
 	count = l->filelen / sizeof(*in);
 
-	cm.leafbrushes = Hunk_Alloc( (count + BOX_BRUSHES) * sizeof( *cm.leafbrushes ), h_high );
+	cm.leafbrushes = Hunk_Alloc( (BOX_LEAF_BRUSHES + count) * sizeof( *cm.leafbrushes ), h_high );
 	cm.numLeafBrushes = count;
 
 	out = cm.leafbrushes;
@@ -425,6 +437,7 @@ void CMod_LoadBrushSides (lump_t *l)
 
 	for ( i=0 ; i<count ; i++, in++, out++) {
 		num = LittleLong( in->planeNum );
+		out->planeNum = num;
 		out->plane = &cm.planes[num];
 		out->shaderNum = LittleLong( in->shaderNum );
 		if ( out->shaderNum < 0 || out->shaderNum >= cm.numShaders ) {
@@ -434,6 +447,151 @@ void CMod_LoadBrushSides (lump_t *l)
 	}
 }
 
+#define CM_EDGE_VERTEX_EPSILON 0.1f
+
+/*
+=================
+CMod_BrushEdgesAreTheSame
+=================
+*/
+static qboolean CMod_BrushEdgesAreTheSame( const vec3_t p0, const vec3_t p1,
+		const vec3_t q0, const vec3_t q1 )
+{
+	if( VectorCompareEpsilon( p0, q0, CM_EDGE_VERTEX_EPSILON ) &&
+			VectorCompareEpsilon( p1, q1, CM_EDGE_VERTEX_EPSILON ) )
+		return qtrue;
+
+	if( VectorCompareEpsilon( p1, q0, CM_EDGE_VERTEX_EPSILON ) &&
+			VectorCompareEpsilon( p0, q1, CM_EDGE_VERTEX_EPSILON ) )
+		return qtrue;
+
+	return qfalse;
+}
+
+/*
+=================
+CMod_AddEdgeToBrush
+=================
+*/
+static qboolean CMod_AddEdgeToBrush( const vec3_t p0, const vec3_t p1,
+		cbrushedge_t *edges, int *numEdges )
+{
+	int i;
+
+	if( !edges || !numEdges )
+		return qfalse;
+
+	for( i = 0; i < *numEdges; i++ )
+	{
+		if( CMod_BrushEdgesAreTheSame( p0, p1,
+					edges[ i ].p0, edges[ i ].p1 ) )
+			return qfalse;
+	}
+
+	VectorCopy( p0, edges[ *numEdges ].p0 );
+	VectorCopy( p1, edges[ *numEdges ].p1 );
+	(*numEdges)++;
+
+	return qtrue;
+}
+
+/*
+=================
+CMod_CreateBrushSideWindings
+=================
+*/
+static void CMod_CreateBrushSideWindings( void )
+{
+	int						i, j, k;
+	winding_t			*w;
+	cbrushside_t	*side, *chopSide;
+	cplane_t			*plane;
+	cbrush_t			*brush;
+	cbrushedge_t	*tempEdges;
+	int						numEdges;
+	int						edgesAlloc;
+	int						totalEdgesAlloc = 0;
+	int						totalEdges = 0;
+	
+	for( i = 0; i < cm.numBrushes; i++ )
+	{
+		brush = &cm.brushes[ i ];
+		numEdges = 0;
+
+		// walk the list of brush sides
+		for( j = 0; j < brush->numsides; j++ )
+		{
+			// get side and plane
+			side = &brush->sides[ j ];
+			plane = side->plane;
+
+			w = BaseWindingForPlane( plane->normal, plane->dist );
+
+			// walk the list of brush sides
+			for( k = 0; k < brush->numsides && w != NULL; k++ )
+			{
+				chopSide = &brush->sides[ k ];
+
+				if( chopSide == side )
+					continue;
+
+				if( chopSide->planeNum == ( side->planeNum ^ 1 ) )
+					continue;		// back side clipaway
+
+				plane = &cm.planes[ chopSide->planeNum ^ 1 ];
+				ChopWindingInPlace( &w, plane->normal, plane->dist, 0 );
+			}
+
+			if( w )
+				numEdges += w->numpoints;
+
+			// set side winding
+			side->winding = w;
+		}
+
+		// Allocate a temporary buffer of the maximal size
+		tempEdges = (cbrushedge_t *)Z_Malloc( sizeof( cbrushedge_t ) * numEdges );
+		brush->numEdges = 0;
+
+		// compose the points into edges
+		for( j = 0; j < brush->numsides; j++ )
+		{
+			side = &brush->sides[ j ];
+
+			if( side->winding )
+			{
+				for( k = 0; k < side->winding->numpoints - 1; k++ )
+				{
+					if( brush->numEdges == numEdges )
+						Com_Error( ERR_FATAL,
+								"Insufficient memory allocated for collision map edges" );
+
+					CMod_AddEdgeToBrush( side->winding->p[ k ],
+							side->winding->p[ k + 1 ], tempEdges, &brush->numEdges );
+				}
+
+				FreeWinding( side->winding );
+				side->winding = NULL;
+			}
+		}
+
+		// Allocate a buffer of the actual size
+		edgesAlloc = sizeof( cbrushedge_t ) * brush->numEdges;
+		totalEdgesAlloc += edgesAlloc;
+		brush->edges = (cbrushedge_t *)Hunk_Alloc( edgesAlloc, h_low );
+
+		// Copy temporary buffer to permanent buffer
+		Com_Memcpy( brush->edges, tempEdges, edgesAlloc );
+
+		// Free temporary buffer
+		Z_Free( tempEdges );
+
+		totalEdges += brush->numEdges;
+	}
+
+	Com_DPrintf( "Allocated %d bytes for %d collision map edges...\n",
+			totalEdgesAlloc, totalEdges );
+}
 
 /*
 =================
@@ -626,9 +784,9 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
 	}
 
-	if ( header.version != BSP_VERSION ) {
-		Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number (%i should be %i)"
-		, name, header.version, BSP_VERSION );
+	if ( header.version != Q3_BSP_VERSION && header.version != WOLF_BSP_VERSION ) {
+		Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number (%i should be %i or %i)",
+			name, header.version, Q3_BSP_VERSION, WOLF_BSP_VERSION );
 	}
 
 	cmod_base = (byte *)buf.i;
@@ -646,6 +804,8 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	CMod_LoadEntityString (&header.lumps[LUMP_ENTITIES]);
 	CMod_LoadVisibility( &header.lumps[LUMP_VISIBILITY] );
 	CMod_LoadPatches( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS] );
+
+	CMod_CreateBrushSideWindings( );
 
 	// we are NOT freeing the file, because it is cached for the ref
 	FS_FreeFile (buf.v);
@@ -682,7 +842,7 @@ cmodel_t	*CM_ClipHandleToModel( clipHandle_t handle ) {
 	if ( handle < cm.numSubModels ) {
 		return &cm.cmodels[handle];
 	}
-	if ( handle == BOX_MODEL_HANDLE ) {
+	if ( handle == BOX_MODEL_HANDLE || handle == CAPSULE_MODEL_HANDLE ) {
 		return &box_model;
 	}
 	if ( handle < MAX_SUBMODELS ) {
@@ -756,7 +916,10 @@ void CM_InitBoxHull (void)
 	box_brush = &cm.brushes[cm.numBrushes];
 	box_brush->numsides = 6;
 	box_brush->sides = cm.brushsides + cm.numBrushSides;
-	box_brush->contents = CONTENTS_BODY;
+	box_brush->contents = 0; // Will be set to CONTENTS_SOLID, CONTENTS_BODY, etc
+	box_brush->edges = (cbrushedge_t *)Hunk_Alloc(
+			sizeof( cbrushedge_t ) * 12, h_low );
+	box_brush->numEdges = 12;
 
 	box_model.leaf.numLeafBrushes = 1;
 //	box_model.leaf.firstLeafBrush = cm.numBrushes;
@@ -798,12 +961,13 @@ BSP trees instead of being compared directly.
 Capsules are handled differently though.
 ===================
 */
-clipHandle_t CM_TempBoxModel( const vec3_t mins, const vec3_t maxs, int capsule ) {
+clipHandle_t CM_TempBoxModel( const vec3_t mins, const vec3_t maxs, int capsule, int contents ) {
 
 	VectorCopy( mins, box_model.mins );
 	VectorCopy( maxs, box_model.maxs );
 
 	if ( capsule ) {
+		capsule_contents = contents;
 		return CAPSULE_MODEL_HANDLE;
 	}
 
@@ -820,8 +984,40 @@ clipHandle_t CM_TempBoxModel( const vec3_t mins, const vec3_t maxs, int capsule 
 	box_planes[10].dist = mins[2];
 	box_planes[11].dist = -mins[2];
 
+	// First side
+	VectorSet( box_brush->edges[ 0 ].p0,  mins[ 0 ], mins[ 1 ], mins[ 2 ] );
+	VectorSet( box_brush->edges[ 0 ].p1,  mins[ 0 ], maxs[ 1 ], mins[ 2 ] );
+	VectorSet( box_brush->edges[ 1 ].p0,  mins[ 0 ], maxs[ 1 ], mins[ 2 ] );
+	VectorSet( box_brush->edges[ 1 ].p1,  mins[ 0 ], maxs[ 1 ], maxs[ 2 ] );
+	VectorSet( box_brush->edges[ 2 ].p0,  mins[ 0 ], maxs[ 1 ], maxs[ 2 ] );
+	VectorSet( box_brush->edges[ 2 ].p1,  mins[ 0 ], mins[ 1 ], maxs[ 2 ] );
+	VectorSet( box_brush->edges[ 3 ].p0,  mins[ 0 ], mins[ 1 ], maxs[ 2 ] );
+	VectorSet( box_brush->edges[ 3 ].p1,  mins[ 0 ], mins[ 1 ], mins[ 2 ] );
+
+	// Opposite side
+	VectorSet( box_brush->edges[ 4 ].p0,  maxs[ 0 ], mins[ 1 ], mins[ 2 ] );
+	VectorSet( box_brush->edges[ 4 ].p1,  maxs[ 0 ], maxs[ 1 ], mins[ 2 ] );
+	VectorSet( box_brush->edges[ 5 ].p0,  maxs[ 0 ], maxs[ 1 ], mins[ 2 ] );
+	VectorSet( box_brush->edges[ 5 ].p1,  maxs[ 0 ], maxs[ 1 ], maxs[ 2 ] );
+	VectorSet( box_brush->edges[ 6 ].p0,  maxs[ 0 ], maxs[ 1 ], maxs[ 2 ] );
+	VectorSet( box_brush->edges[ 6 ].p1,  maxs[ 0 ], mins[ 1 ], maxs[ 2 ] );
+	VectorSet( box_brush->edges[ 7 ].p0,  maxs[ 0 ], mins[ 1 ], maxs[ 2 ] );
+	VectorSet( box_brush->edges[ 7 ].p1,  maxs[ 0 ], mins[ 1 ], mins[ 2 ] );
+
+	// Connecting edges
+	VectorSet( box_brush->edges[ 8 ].p0,  mins[ 0 ], mins[ 1 ], mins[ 2 ] );
+	VectorSet( box_brush->edges[ 8 ].p1,  maxs[ 0 ], mins[ 1 ], mins[ 2 ] );
+	VectorSet( box_brush->edges[ 9 ].p0,  mins[ 0 ], maxs[ 1 ], mins[ 2 ] );
+	VectorSet( box_brush->edges[ 9 ].p1,  maxs[ 0 ], maxs[ 1 ], mins[ 2 ] );
+	VectorSet( box_brush->edges[ 10 ].p0, mins[ 0 ], maxs[ 1 ], maxs[ 2 ] );
+	VectorSet( box_brush->edges[ 10 ].p1, maxs[ 0 ], maxs[ 1 ], maxs[ 2 ] );
+	VectorSet( box_brush->edges[ 11 ].p0, mins[ 0 ], mins[ 1 ], maxs[ 2 ] );
+	VectorSet( box_brush->edges[ 11 ].p1, maxs[ 0 ], mins[ 1 ], maxs[ 2 ] );
+
 	VectorCopy( mins, box_brush->bounds[0] );
 	VectorCopy( maxs, box_brush->bounds[1] );
+
+	box_brush->contents = contents;
 
 	return BOX_MODEL_HANDLE;
 }

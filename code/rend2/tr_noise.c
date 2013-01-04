@@ -1,37 +1,42 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // tr_noise.c
-#include "../qcommon/q_shared.h"
-#include "../qcommon/qfiles.h"
-#include "../qcommon/qcommon.h"
+#include "tr_local.h"
 
-#define NOISE_SIZE 256
-#define NOISE_MASK ( NOISE_SIZE - 1 )
-
-#define VAL( a ) s_noise_perm[ ( a ) & ( NOISE_MASK )]
+#define VAL( a ) s_noise_perm[ ( a ) & FUNCTABLE_MASK ]
+#define VALR( a ) s_random[ ( a ) & FUNCTABLE_MASK ]
 #define INDEX( x, y, z, t ) VAL( x + VAL( y + VAL( z + VAL( t ) ) ) )
 
-static float s_noise_table[NOISE_SIZE];
-static int s_noise_perm[NOISE_SIZE];
+static float s_noise_table[FUNCTABLE_SIZE];
+static int s_noise_perm[FUNCTABLE_SIZE];
+static int s_random[FUNCTABLE_SIZE];
 
 static float GetNoiseValue( int x, int y, int z, int t )
 {
@@ -44,10 +49,11 @@ void R_NoiseInit( void )
 {
 	int i;
 
-	for ( i = 0; i < NOISE_SIZE; i++ )
+	for ( i = 0; i < FUNCTABLE_SIZE; i++ )
 	{
 		s_noise_table[i] = ( float ) ( ( ( rand() / ( float ) RAND_MAX ) * 2.0 - 1.0 ) );
 		s_noise_perm[i] = ( unsigned char ) ( rand() / ( float ) RAND_MAX * 255 );
+		s_random[i] = rand() & 0x01;
 	}
 }
 
@@ -91,3 +97,10 @@ float R_NoiseGet4f( float x, float y, float z, float t )
 
 	return finalvalue;
 }
+
+// Used in the shader functions (GF_RANDOM) to implement a quasi random flickering.
+int R_RandomOn(float t)
+{
+	return VALR((unsigned int) floor(t));
+}
+
