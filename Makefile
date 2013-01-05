@@ -288,15 +288,17 @@ ifneq ($(BUILD_CLIENT),0)
 endif
 
 ifneq ($(BUILD_FINAL),1)
-  # Add svn version info
-  USE_GIT=
-  ifeq ($(wildcard .git),.git)
-    GIT_REV=$(shell git show -s --pretty=format:%h-%ad --date=short)
-    ifneq ($(GIT_REV),)
-      VERSION:=$(VERSION)_GIT_$(GIT_REV)
-      USE_GIT=1
-    endif
+
+# Add git version info
+USE_GIT=
+ifeq ($(wildcard .git),.git)
+  GIT_REV=$(shell git show -s --pretty=format:%h-%ad --date=short)
+  ifneq ($(GIT_REV),)
+    VERSION:=$(VERSION)_GIT_$(GIT_REV)
+    USE_GIT=1
   endif
+endif
+
 endif
 
 
@@ -422,7 +424,7 @@ ifeq ($(PLATFORM),darwin)
   CLIENT_LIBS=
   RENDERER_LIBS=
   OPTIMIZEVM=
-  
+
   BASE_CFLAGS = -Wall -Wimplicit -Wstrict-prototypes
 
   ifeq ($(ARCH),ppc)
@@ -520,7 +522,7 @@ ifeq ($(PLATFORM),mingw32)
       CLIENT_LDFLAGS += $(OPENAL_LDFLAGS)
     endif
   endif
-  
+
   ifeq ($(ARCH),x64)
     OPTIMIZEVM = -O3 -fno-omit-frame-pointer \
       -falign-loops=2 -funroll-loops -falign-jumps=2 -falign-functions=2 \
@@ -581,7 +583,7 @@ ifeq ($(PLATFORM),mingw32)
   # libmingw32 must be linked before libSDLmain
   CLIENT_LIBS += -lmingw32
   RENDERER_LIBS += -lmingw32
-  
+
   ifeq ($(USE_LOCAL_HEADERS),1)
     CLIENT_CFLAGS += -I$(SDLHDIR)/include
     CLIENT_LIBS += $(WINLIBDIR)/libSDLmain.a
@@ -704,7 +706,7 @@ ifeq ($(PLATFORM),openbsd)
     endif
   endif
 
-  ifeq ($(USE_CURL),1) 
+  ifeq ($(USE_CURL),1)
     ifneq ($(USE_CURL_DLOPEN),1)
       CLIENT_LIBS += -lcurl
     endif
@@ -753,7 +755,7 @@ ifeq ($(PLATFORM),irix64)
     -I. -I$(ROOT)/usr/include
   CLIENT_CFLAGS += $(SDL_CFLAGS)
   OPTIMIZE = -O3
-  
+
   SHLIBEXT=so
   SHLIBCFLAGS=
   SHLIBLDFLAGS=-shared
@@ -811,7 +813,7 @@ ifeq ($(PLATFORM),sunos)
     CLIENT_LDFLAGS += -L/usr/X11/lib/NVIDIA -R/usr/X11/lib/NVIDIA
   endif
   endif
-  
+
   OPTIMIZE = $(OPTIMIZEVM) -ffast-math
 
   SHLIBEXT=so
@@ -899,15 +901,15 @@ endif
 ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
     TARGETS += \
-	$(B)/$(BASEGAME)/cgame$(SHLIBNAME) \
-	$(B)/$(BASEGAME)/game$(SHLIBNAME) \
-	$(B)/$(BASEGAME)/ui$(SHLIBNAME)
+      $(B)/$(BASEGAME)/cgame$(SHLIBNAME) \
+      $(B)/$(BASEGAME)/game$(SHLIBNAME) \
+      $(B)/$(BASEGAME)/ui$(SHLIBNAME)
   endif
   ifneq ($(BUILD_MISSIONPACK),0)
     TARGETS += \
-    $(B)/$(MISSIONPACK)/cgame$(SHLIBNAME) \
-    $(B)/$(MISSIONPACK)/game$(SHLIBNAME) \
-    $(B)/$(MISSIONPACK)/ui$(SHLIBNAME)
+      $(B)/$(MISSIONPACK)/cgame$(SHLIBNAME) \
+      $(B)/$(MISSIONPACK)/game$(SHLIBNAME) \
+      $(B)/$(MISSIONPACK)/ui$(SHLIBNAME)
   endif
 endif
 
@@ -918,7 +920,7 @@ ifneq ($(BUILD_GAME_QVM),0)
       $(B)/$(BASEGAME)/vm/cgame.qvm \
       $(B)/$(BASEGAME)/vm/game.qvm \
       $(B)/$(BASEGAME)/vm/ui.qvm
-	endif
+  endif
     ifneq ($(BUILD_MISSIONPACK),0)
       TARGETS += \
       $(B)/$(MISSIONPACK)/vm/game.qvm \
@@ -1259,7 +1261,7 @@ TOOLS_LIBS =
 TOOLS_LDFLAGS =
 
 ifeq ($(GENERATE_DEPENDENCIES),1)
-	TOOLS_CFLAGS += -MMD
+  TOOLS_CFLAGS += -MMD
 endif
 
 define DO_TOOLS_CC
@@ -1280,8 +1282,8 @@ Q3LCC       = $(B)/tools/q3lcc$(BINEXT)
 Q3ASM       = $(B)/tools/q3asm$(BINEXT)
 
 LBURGOBJ= \
-	$(B)/tools/lburg/lburg.o \
-	$(B)/tools/lburg/gram.o
+  $(B)/tools/lburg/lburg.o \
+  $(B)/tools/lburg/gram.o
 
 $(B)/tools/lburg/%.o: $(LBURGDIR)/%.c
 	$(DO_TOOLS_CC)
@@ -1336,16 +1338,16 @@ $(Q3RCC): $(Q3RCCOBJ)
 	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
 
 Q3CPPOBJ = \
-	$(B)/tools/cpp/cpp.o \
-	$(B)/tools/cpp/lex.o \
-	$(B)/tools/cpp/nlist.o \
-	$(B)/tools/cpp/tokens.o \
-	$(B)/tools/cpp/macro.o \
-	$(B)/tools/cpp/eval.o \
-	$(B)/tools/cpp/include.o \
-	$(B)/tools/cpp/hideset.o \
-	$(B)/tools/cpp/getopt.o \
-	$(B)/tools/cpp/unix.o
+  $(B)/tools/cpp/cpp.o \
+  $(B)/tools/cpp/lex.o \
+  $(B)/tools/cpp/nlist.o \
+  $(B)/tools/cpp/tokens.o \
+  $(B)/tools/cpp/macro.o \
+  $(B)/tools/cpp/eval.o \
+  $(B)/tools/cpp/include.o \
+  $(B)/tools/cpp/hideset.o \
+  $(B)/tools/cpp/getopt.o \
+  $(B)/tools/cpp/unix.o
 
 $(B)/tools/cpp/%.o: $(Q3CPPDIR)/%.c
 	$(DO_TOOLS_CC)
@@ -1524,10 +1526,10 @@ Q3OBJ = \
 
 ifeq ($(PLATFORM),mingw32)
   Q3OBJ += \
-	$(B)/client/con_passive.o
+    $(B)/client/con_passive.o
 else
   Q3OBJ += \
-	$(B)/client/con_tty.o
+    $(B)/client/con_tty.o
 endif
 
 ifeq ($(USE_CODEC_VORBIS),1)
@@ -1600,7 +1602,7 @@ Q3R2OBJ = \
   $(B)/rend2/tr_world.o \
   \
   $(B)/renderer/sdl_gamma.o
-  
+
 Q3R2STRINGOBJ = \
   $(B)/rend2/glsl/bokeh_fp.o \
   $(B)/rend2/glsl/bokeh_vp.o \
@@ -2071,17 +2073,17 @@ endif
 ifeq ($(ARCH),x86_64)
   Q3DOBJ += \
       $(B)/ded/snapvector.o \
-      $(B)/ded/ftola.o 
+      $(B)/ded/ftola.o
 endif
 ifeq ($(ARCH),amd64)
   Q3DOBJ += \
       $(B)/ded/snapvector.o \
-      $(B)/ded/ftola.o 
+      $(B)/ded/ftola.o
 endif
 ifeq ($(ARCH),x64)
   Q3DOBJ += \
       $(B)/ded/snapvector.o \
-      $(B)/ded/ftola.o 
+      $(B)/ded/ftola.o
 endif
 
 ifeq ($(USE_INTERNAL_ZLIB),1)
@@ -2832,10 +2834,7 @@ else
 endif
 
 dist:
-	rm -rf $(CLIENTBIN)-$(VERSION)
-	svn export . $(CLIENTBIN)-$(VERSION)
-	tar --owner=root --group=root --force-local -cjf $(CLIENTBIN)-$(VERSION).tar.bz2 $(CLIENTBIN)-$(VERSION)
-	rm -rf $(CLIENTBIN)-$(VERSION)
+	git archive --format zip --output $(CLIENTBIN)-$(VERSION).zip HEAD
 
 #############################################################################
 # DEPENDENCIES
