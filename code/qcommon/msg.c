@@ -45,8 +45,6 @@ Handles byte ordering and avoids alignment errors
 ==============================================================================
 */
 
-int oldsize = 0;
-
 void MSG_initHuffman( void );
 
 void MSG_Init( msg_t *buf, byte *data, int length ) {
@@ -115,8 +113,6 @@ int	overflows;
 void MSG_WriteBits( msg_t *msg, int value, int bits ) {
 	int	i;
 //	FILE*	fp;
-
-	oldsize += bits;
 
 	// this isn't an exact overflow check, but close enough
 	if ( msg->maxsize - msg->cursize < 4 ) {
@@ -757,7 +753,6 @@ void MSG_WriteDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *
 		from->buttons == to->buttons &&
 		from->weapon == to->weapon) {
 			MSG_WriteBits( msg, 0, 1 );				// no change
-			oldsize += 7;
 			return;
 	}
 	key ^= to->serverTime;
@@ -1030,7 +1025,6 @@ static void MSG_WriteDeltaNetFields( msg_t *msg, void *from, void *to,
 
 				if (fullFloat == 0.0f) {
 						MSG_WriteBits( msg, 0, 1 );
-						oldsize += FLOAT_INT_BITS;
 				} else {
 					MSG_WriteBits( msg, 1, 1 );
 					if ( trunc == fullFloat && trunc + FLOAT_INT_BIAS >= 0 && 
@@ -1341,8 +1335,6 @@ void MSG_WriteDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
 
 	MSG_WriteByte( msg, lc );	// # of changes
 
-	oldsize += numFields;
-
 	MSG_WriteDeltaNetFields( msg, from, to, entityStateFields, lc );
 }
 
@@ -1535,8 +1527,6 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 	lc = MSG_LastChangedField( from, to, playerStateFields, numFields );
 
 	MSG_WriteByte( msg, lc );	// # of changes
-
-	oldsize += numFields - lc;
 
 	MSG_WriteDeltaNetFields( msg, from, to, playerStateFields, lc );
 }
