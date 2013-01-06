@@ -2208,6 +2208,10 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 	s = CG_ConfigString( CS_LEVEL_START_TIME );
 	cgs.levelStartTime = atoi( s );
 
+	trap_SetNetFields( sizeof (entityState_t), bg_entityStateFields, bg_numEntityStateFields,
+					   sizeof (playerState_t), bg_playerStateFields, bg_numPlayerStateFields );
+
+
 	CG_ParseServerinfo();
 
 	// load the new map

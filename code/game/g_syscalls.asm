@@ -83,6 +83,7 @@ equ trap_DebugPolygonCreate				-124
 equ trap_DebugPolygonDelete				-125
 equ trap_TraceCapsule					-126
 equ trap_EntityContactCapsule			-127
+equ trap_SetNetFields					-128
 
 
 equ trap_BotLibSetup					-201

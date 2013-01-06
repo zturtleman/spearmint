@@ -212,6 +212,20 @@ void CL_SetUserCmdValue( int userCmdValue, float sensitivityScale, int localClie
 }
 
 /*
+===============
+CL_SetNetFields
+===============
+*/
+void CL_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
+					   int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
+	if ( com_sv_running->integer )
+		return;
+
+	MSG_SetNetFields( entityStateFields, numEntityStateFields, entityStateSize,
+					  playerStateFields, numPlayerStateFields, playerStateSize );
+}
+
+/*
 =====================
 CL_AddCgameCommand
 =====================
@@ -765,6 +779,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_SETUSERCMDVALUE:
 		CL_SetUserCmdValue( args[1], VMF(2), args[3] );
 		return 0;
+	case CG_SET_NET_FIELDS:
+		CL_SetNetFields( args[1], VMA(2), args[3], args[4], VMA(5), args[6] );
+		return 0;
 	case CG_MEMORY_REMAINING:
 		return Hunk_MemoryRemaining();
   case CG_KEY_ISDOWN:
@@ -923,12 +940,6 @@ void CL_InitCGame( void ) {
 	// otherwise server commands sent just before a gamestate are dropped
 	VM_Call( cgvm, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, CL_MAX_SPLITVIEW,
 			clc.clientNums[0], clc.clientNums[1], clc.clientNums[2], clc.clientNums[3] );
-
-	if (!com_sv_running->integer) {
-		// set net fields
-		MSG_SetNetFields( playerStateFields, numPlayerStateFields, sizeof ( playerState_t ),
-						entityStateFields, numEntityStateFields, sizeof ( entityState_t ) );
-	}
 
 	// reset any CVAR_CHEAT cvars registered by cgame
 	if ( !clc.demoplaying && !cl_connectedToCheatServer )

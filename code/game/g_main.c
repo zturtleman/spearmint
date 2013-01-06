@@ -454,6 +454,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	G_InitMemory();
 
+	// tell server entity and player state size and network field info
+	trap_SetNetFields( sizeof (entityState_t), bg_entityStateFields, bg_numEntityStateFields,
+					   sizeof (playerState_t), bg_playerStateFields, bg_numPlayerStateFields );
+
 	// set some level globals
 	memset( &level, 0, sizeof( level ) );
 	level.time = levelTime;

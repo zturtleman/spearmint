@@ -127,6 +127,27 @@ typedef enum { GENDER_MALE, GENDER_FEMALE, GENDER_NEUTER } gender_t;
 /*
 ===================================================================================
 
+ENTITY STATE / PLAYER STATE
+
+server game / client game definitions of entity state and player state.
+
+Add new fields to bg_entityStateFields / bg_playerStateFields in bg_misc.c
+===================================================================================
+*/
+
+// ZTM: TODO: make entityState_t and playerState_t independent of engine,
+//				for now it's only possible to change number of bits.
+
+extern vmNetField_t	bg_entityStateFields[];
+extern int			bg_numEntityStateFields;
+
+extern vmNetField_t	bg_playerStateFields[];
+extern int			bg_numPlayerStateFields;
+
+
+/*
+===================================================================================
+
 PMOVE MODULE
 
 The pmove code takes a player_state_t and a usercmd_t and generates a new player_state_t

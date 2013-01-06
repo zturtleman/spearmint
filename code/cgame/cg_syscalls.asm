@@ -75,6 +75,7 @@ equ	trap_GetCurrentCmdNumber			-155
 equ	trap_GetUserCmd						-156
 equ	trap_SetUserCmdValue				-157
 equ	trap_SendClientCommand				-158
+equ	trap_SetNetFields					-159
 
 
 

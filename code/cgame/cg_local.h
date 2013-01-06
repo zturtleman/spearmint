@@ -1719,6 +1719,10 @@ void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int localCli
 // send a string to the server over the network
 void		trap_SendClientCommand( const char *s );
 
+//
+void		trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
+						int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields );
+
 // model collision
 void		trap_CM_LoadMap( const char *mapname );
 int			trap_CM_NumInlineModels( void );

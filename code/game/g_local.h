@@ -776,6 +776,8 @@ extern	vmCvar_t	g_proxMineTimeout;
 // Additional shared traps in bg_misc.h
 
 void	trap_LocateGameData( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *gameClients, int sizeofGameClient );
+void	trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
+						   int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields );
 void	trap_DropClient( int clientNum, const char *reason );
 void	trap_SendServerCommandEx( int connectionNum, int localPlayerNum, const char *text );
 void	trap_SetConfigstring( int num, const char *string );

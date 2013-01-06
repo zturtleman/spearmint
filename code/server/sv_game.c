@@ -268,6 +268,17 @@ void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int sizeofGEnti
 	sv.gameClientSize = sizeofGameClient;
 }
 
+/*
+===============
+SV_SetNetFields
+
+===============
+*/
+void SV_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
+					   int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
+	MSG_SetNetFields( entityStateFields, numEntityStateFields, entityStateSize,
+					  playerStateFields, numPlayerStateFields, playerStateSize );
+}
 
 /*
 ===============
@@ -432,6 +443,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 
 	case G_LOCATE_GAME_DATA:
 		SV_LocateGameData( VMA(1), args[2], args[3], VMA(4), args[5] );
+		return 0;
+	case G_SET_NET_FIELDS:
+		SV_SetNetFields( args[1], VMA(2), args[3], args[4], VMA(5), args[6] );
 		return 0;
 	case G_DROP_CLIENT:
 		SV_GameDropPlayer( args[1], VMA(2) );
@@ -933,10 +947,6 @@ static void SV_InitGameVM( qboolean restart ) {
 	// use the current msec count for a random seed
 	// init for this gamestate
 	VM_Call (gvm, GAME_INIT, sv.time, Com_Milliseconds(), restart);
-
-	// set net fields
-	MSG_SetNetFields( playerStateFields, numPlayerStateFields, sizeof ( playerState_t ),
-					entityStateFields, numEntityStateFields, sizeof ( entityState_t ) );
 }
 
 
