@@ -34,8 +34,6 @@ static huffman_t		msgHuff;
 
 static qboolean			msgInit = qfalse;
 
-int pcount[256];
-
 /*
 ==============================================================================
 
@@ -815,6 +813,49 @@ netField_t communication
 =============================================================================
 */
 
+// These can't be blindly increased.
+#define MAX_NETF_ARRAY_BITS 32
+#define MAX_NETF_ELEMENTS (32 * MAX_NETF_ARRAY_BITS)
+
+typedef struct {
+	int		offset;
+	int		numElements; // 1 to 1024 (MAX_NETF_ELEMENTS)
+	int		numElementArrays;
+	int		bits;		// 0 = float
+	int		pcount;
+} netField_t;
+
+typedef struct {
+	char		*objectName;
+	int			objectSize;
+
+	int			numFields;
+	netField_t	*fields;
+} netFields_t;
+
+static netFields_t msg_playerStateFields = { "playerState_t", 0, 0, NULL };
+static netFields_t msg_entityStateFields = { "entityState_t", 0, 0, NULL };
+
+/*
+=================
+MSG_ReportChangeVectors
+
+Prints out a table from the current statistics for copying to code
+=================
+*/
+static void MSG_ReportChangeVectors( netFields_t *stateFields ) {
+	netField_t *field;
+	int i;
+
+ 	Com_Printf( "%s (number of fields: %i, object size: %i)\n", stateFields->objectName, stateFields->numFields, stateFields->objectSize );
+
+	for ( i = 0, field = stateFields->fields; i < msg_entityStateFields.numFields; i++, field++ ) {
+		if ( field->pcount ) {
+			Com_Printf( "field %i used %i times\n", i, field->pcount );
+		}
+	}
+}
+
 /*
 =================
 MSG_ReportChangeVectors_f
@@ -823,25 +864,9 @@ Prints out a table from the current statistics for copying to code
 =================
 */
 void MSG_ReportChangeVectors_f( void ) {
-	int i;
-	for(i=0;i<256;i++) {
-		if (pcount[i]) {
-			Com_Printf("%d used %d\n", i, pcount[i]);
-		}
-	}
+	MSG_ReportChangeVectors( &msg_playerStateFields );
+	MSG_ReportChangeVectors( &msg_entityStateFields );
 }
-
-typedef struct {
-	char	*name;
-	int		offset;
-	int		numElements; // 1 to 1024
-	int		numElementArrays;
-	int		bits;		// 0 = float
-} netField_t;
-
-// These can't be blindly increased.
-#define MAX_NETF_ARRAY_BITS 32
-#define MAX_NETF_ELEMENTS (32 * MAX_NETF_ARRAY_BITS)
 
 /*
 ==================
@@ -852,19 +877,28 @@ Validate net fields and setup each field's numElementArrays.
 Returns pointer to error message or NULL if no error.
 ==================
 */
-const char *MSG_InitNetFields( netField_t *fields, int numFields, int objectLength, int expectedNetworkData ) {
-	netField_t	*field;
-	int			fieldLength;
-	int			networkData;
-	int			i, n;
+static const char *MSG_InitNetFields( netFields_t *stateFields, const vmNetField_t *vmFields, int numFields, int objectSize, int expectedNetworkData ) {
+	netField_t			*field;
+	const vmNetField_t	*vmField;
+	int					fieldLength;
+	int					networkData;
+	int					i, n;
 
-	if ( !fields || numFields < 1 ) {
+	if ( !vmFields || numFields < 1 ) {
 		return "no fields";
 	}
 
+	stateFields->objectSize = objectSize;
+	stateFields->numFields = numFields;
+	stateFields->fields = Hunk_Alloc( sizeof (netField_t) * numFields, h_high );
+
 	networkData = 0;
 
-	for ( i = 0, field = fields ; i < numFields ; i++, field++ ) {
+	for ( i = 0, field = stateFields->fields, vmField = vmFields ; i < numFields ; i++, field++, vmField++ ) {
+		field->offset = vmField->offset;
+		field->numElements = vmField->numElements;
+		field->bits = vmField->bits;
+
 		if ( field->offset < 0 ) {
 			return "field->offset < 0";
 		}
@@ -890,7 +924,7 @@ const char *MSG_InitNetFields( netField_t *fields, int numFields, int objectLeng
 			fieldLength += 4;
 		}
 
-		if ( field->offset + fieldLength > objectLength ) {
+		if ( field->offset + fieldLength > objectSize ) {
 			return "a field goes past end of state";
 		}
 
@@ -902,7 +936,7 @@ const char *MSG_InitNetFields( netField_t *fields, int numFields, int objectLeng
 		networkData += fieldLength;
 	}
 
-	if ( networkData > objectLength ) {
+	if ( networkData > objectSize ) {
 		return "fields send more than size of state";
 	}
 
@@ -920,19 +954,41 @@ const char *MSG_InitNetFields( netField_t *fields, int numFields, int objectLeng
 
 /*
 ==================
+MSG_SetNetFields
+==================
+*/
+void MSG_SetNetFields( vmNetField_t *vmPlayerFields, int numPlayerFields, int playerStateSize,
+					   vmNetField_t *vmEntityFields, int numEntityFields, int entityStateSize ) {
+	const char *error;
+
+	error = MSG_InitNetFields( &msg_playerStateFields, vmPlayerFields, numPlayerFields, playerStateSize, 0 );
+
+	if ( error ) {
+		Com_Error( ERR_DROP, "playerState_t: %s", error );
+	}
+
+	error = MSG_InitNetFields( &msg_entityStateFields, vmEntityFields, numEntityFields, entityStateSize, entityStateSize - 4 );
+
+	if ( error ) {
+		Com_Error( ERR_DROP, "entityState_t: %s", error );
+	}
+}
+
+/*
+==================
 MSG_LastChangedField
 
 Returns index of last changed field + 1, or 0 if no fields are different.
 ==================
 */
-static int MSG_LastChangedField( void *from, void *to, netField_t *fields, int numFields ) {
+static int MSG_LastChangedField( void *from, void *to, netFields_t *stateFields ) {
 	int			i, lc, n;
 	int			*fromF, *toF;
 	netField_t	*field;
 
 	lc = 0;
 	// build the change vector as bytes so it is endien independent
-	for ( i = numFields-1, field = &fields[numFields-1] ; i >= 0 ; i--, field-- ) {
+	for ( i = stateFields->numFields-1, field = &stateFields->fields[i] ; i >= 0 ; i--, field-- ) {
 		toF = (int *)( (byte *)to + field->offset );
 
 		if ( from ) {
@@ -970,7 +1026,7 @@ MSG_WriteDeltaNetFields
 ==================
 */
 static void MSG_WriteDeltaNetFields( msg_t *msg, void *from, void *to,
-						   netField_t *fields, int numSendFields ) {
+						   netFields_t *stateFields, int numSendFields ) {
 	int			i, n;
 	netField_t	*field;
 	int			trunc;
@@ -980,7 +1036,7 @@ static void MSG_WriteDeltaNetFields( msg_t *msg, void *from, void *to,
 	int			arraysChanged;
 	int			bitsArray[MAX_NETF_ELEMENTS / MAX_NETF_ARRAY_BITS];
 
-	for ( i = 0, field = fields ; i < numSendFields ; i++, field++ ) {
+	for ( i = 0, field = stateFields->fields ; i < numSendFields ; i++, field++ ) {
 		fromF = (int *)( (byte *)from + field->offset );
 		toF = (int *)( (byte *)to + field->offset );
 
@@ -1057,7 +1113,7 @@ MSG_ReadDeltaNetFields
 ==================
 */
 static void MSG_ReadDeltaNetFields( msg_t *msg, void *from, void *to,
-						 netField_t *fields, int numFields, int numReadFields,
+						 netFields_t *stateFields, int numReadFields,
 						 int startBit, int print ) {
 	int			i, n;
 	netField_t	*field;
@@ -1068,7 +1124,7 @@ static void MSG_ReadDeltaNetFields( msg_t *msg, void *from, void *to,
 	int			bitsArray[MAX_NETF_ELEMENTS / MAX_NETF_ARRAY_BITS];
 	int			endBit;
 
-	for ( i = 0, field = fields ; i < numReadFields ; i++, field++ ) {
+	for ( i = 0, field = stateFields->fields ; i < numReadFields ; i++, field++ ) {
 		toF = (int *)( (byte *)to + field->offset );
 
 		arraysChanged = MSG_ReadBits( msg, field->numElementArrays );
@@ -1101,13 +1157,13 @@ static void MSG_ReadDeltaNetFields( msg_t *msg, void *from, void *to,
 			}
 
 			if ( print ) {
-				Com_Printf( "%s ", field->name );
+				Com_Printf( "array %i ", i );
 			}
 		} else {
 			bitsArray[ 0 ] = 1;
 
 			if ( print ) {
-				Com_Printf( "%s:", field->name );
+				Com_Printf( "field %i:", i );
 			}
 		}
 
@@ -1167,11 +1223,11 @@ static void MSG_ReadDeltaNetFields( msg_t *msg, void *from, void *to,
 					}
 				}
 			}
-//			pcount[i]++;
+			field->pcount++;
 		}
 	}
 	// copy unchanged fields
-	for ( i = numReadFields, field = &fields[numReadFields] ; i < numFields ; i++, field++ ) {
+	for ( i = numReadFields, field = &stateFields->fields[i] ; i < stateFields->numFields ; i++, field++ ) {
 		toF = (int *)( (byte *)to + field->offset );
 		// no change
 		if (from) {
@@ -1205,10 +1261,10 @@ entityState_t communication
 */
 
 // using the stringizing operator to save typing...
-#define	NETF(x) #x,(size_t)&((entityState_t*)0)->x, 1, 0
-#define	NETA(x) #x,(size_t)&((entityState_t*)0)->x, ARRAY_LEN( ((entityState_t*)0)->x ), 0 // the 0 is setup in MSG_InitNetFields
+#define	NETF(x) (size_t)&((entityState_t*)0)->x, 1
+#define	NETA(x) (size_t)&((entityState_t*)0)->x, ARRAY_LEN( ((entityState_t*)0)->x )
 
-netField_t	entityStateFields[] = 
+vmNetField_t	entityStateFields[] = 
 {
 { NETF(pos.trTime), 32 },
 { NETF(pos.trBase[0]), 0 },
@@ -1271,6 +1327,8 @@ netField_t	entityStateFields[] =
 { NETF(frame), 16 }
 };
 
+int numEntityStateFields = ARRAY_LEN(entityStateFields);
+
 /*
 ==================
 MSG_WriteDeltaEntity
@@ -1285,20 +1343,9 @@ identical, under the assumption that the in-order delta code will catch it.
 void MSG_WriteDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
 						   qboolean force ) {
 	int			lc;
-	int			numFields;
-	static qboolean firstTime = qtrue;
 
-	numFields = ARRAY_LEN( entityStateFields );
-
-	if ( firstTime ) {
-		int	sizeofGameEntityState_t = sizeof (entityState_t);
-		const char *error = MSG_InitNetFields( entityStateFields, numFields, sizeofGameEntityState_t, sizeofGameEntityState_t - 4 );
-
-		if ( error ) {
-			Com_Error( ERR_DROP, "WriteDeltaEntity: %s", error );
-		}
-
-		firstTime = qfalse;
+	if ( !msg_entityStateFields.fields ) {
+		Com_Error( ERR_DROP, "entityState_t missing netFields" );
 	}
 
 	// a NULL to is a delta remove message
@@ -1315,7 +1362,7 @@ void MSG_WriteDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
 		Com_Error (ERR_FATAL, "MSG_WriteDeltaEntity: Bad entity number: %i", to->number );
 	}
 
-	lc = MSG_LastChangedField( from, to, entityStateFields, numFields );
+	lc = MSG_LastChangedField( from, to, &msg_entityStateFields );
 
 	if ( lc == 0 ) {
 		// nothing at all changed
@@ -1335,7 +1382,7 @@ void MSG_WriteDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
 
 	MSG_WriteByte( msg, lc );	// # of changes
 
-	MSG_WriteDeltaNetFields( msg, from, to, entityStateFields, lc );
+	MSG_WriteDeltaNetFields( msg, from, to, &msg_entityStateFields, lc );
 }
 
 /*
@@ -1353,23 +1400,11 @@ Can go from either a baseline or a previous packet_entity
 void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to, 
 						 int number) {
 	int			lc;
-	int			numFields;
-	int			sizeofGameEntityState_t;
 	int			print;
 	int			startBit;
-	static qboolean firstTime = qtrue;
 
-	numFields = ARRAY_LEN( entityStateFields );
-	sizeofGameEntityState_t = sizeof (entityState_t);
-
-	if ( firstTime ) {
-		const char *error = MSG_InitNetFields( entityStateFields, numFields, sizeofGameEntityState_t, sizeofGameEntityState_t - 4 );
-
-		if ( error ) {
-			Com_Error( ERR_DROP, "ReadDeltaEntity: %s", error );
-		}
-
-		firstTime = qfalse;
+	if ( !msg_entityStateFields.fields ) {
+		Com_Error( ERR_DROP, "entityState_t missing netFields" );
 	}
 
 	if ( number < 0 || number >= MAX_GENTITIES) {
@@ -1395,9 +1430,9 @@ void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
 	// check for no delta
 	if ( MSG_ReadBits( msg, 1 ) == 0 ) {
 		if ( from )
-			Com_Memcpy(to, from, sizeofGameEntityState_t );
+			Com_Memcpy(to, from, msg_entityStateFields.objectSize );
 		else
-			Com_Memset(to, 0, sizeofGameEntityState_t );
+			Com_Memset(to, 0, msg_entityStateFields.objectSize );
 
 		to->number = number;
 		return;
@@ -1405,7 +1440,7 @@ void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
 
 	lc = MSG_ReadByte(msg);
 
-	if ( lc > numFields || lc < 0 ) {
+	if ( lc > msg_entityStateFields.numFields || lc < 0 ) {
 		Com_Error( ERR_DROP, "invalid entityState field count" );
 	}
 
@@ -1420,7 +1455,7 @@ void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
 
 	to->number = number;
 
-	MSG_ReadDeltaNetFields( msg, from, to, entityStateFields, numFields, lc, startBit, print );
+	MSG_ReadDeltaNetFields( msg, from, to, &msg_entityStateFields, lc, startBit, print );
 }
 
 
@@ -1433,10 +1468,10 @@ plyer_state_t communication
 */
 
 // using the stringizing operator to save typing...
-#define	PSF(x) #x,(size_t)&((playerState_t*)0)->x, 1, 1
-#define	PSA(x) #x,(size_t)&((playerState_t*)0)->x, ARRAY_LEN( ((playerState_t*)0)->x ), 0 // the 0 is setup in MSG_InitNetFields
+#define	PSF(x) (size_t)&((playerState_t*)0)->x, 1
+#define	PSA(x) (size_t)&((playerState_t*)0)->x, ARRAY_LEN( ((playerState_t*)0)->x )
 
-netField_t	playerStateFields[] = 
+vmNetField_t	playerStateFields[] = 
 {
 { PSF(commandTime), 32 },				
 { PSF(origin[0]), 0 },
@@ -1501,6 +1536,8 @@ netField_t	playerStateFields[] =
 { PSF(maxs[2]), 0 }
 };
 
+int numPlayerStateFields = ARRAY_LEN(playerStateFields);
+
 /*
 =============
 MSG_WriteDeltaPlayerstate
@@ -1509,26 +1546,16 @@ MSG_WriteDeltaPlayerstate
 */
 void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct playerState_s *to ) {
 	int				lc;
-	int				numFields;
-	static qboolean firstTime = qtrue;
 
-	numFields = ARRAY_LEN( playerStateFields );
-
-	if ( firstTime ) {
-		const char *error = MSG_InitNetFields( playerStateFields, numFields, sizeof (playerState_t), 0 );
-
-		if ( error ) {
-			Com_Error( ERR_DROP, "ReadDeltaPlayerstate: %s", error );
-		}
-
-		firstTime = qfalse;
+	if ( !msg_playerStateFields.fields ) {
+		Com_Error( ERR_DROP, "playerState_t missing netFields" );
 	}
 
-	lc = MSG_LastChangedField( from, to, playerStateFields, numFields );
+	lc = MSG_LastChangedField( from, to, &msg_playerStateFields );
 
 	MSG_WriteByte( msg, lc );	// # of changes
 
-	MSG_WriteDeltaNetFields( msg, from, to, playerStateFields, lc );
+	MSG_WriteDeltaNetFields( msg, from, to, &msg_playerStateFields, lc );
 }
 
 
@@ -1539,21 +1566,11 @@ MSG_ReadDeltaPlayerstate
 */
 void MSG_ReadDeltaPlayerstate (msg_t *msg, playerState_t *from, playerState_t *to ) {
 	int			lc;
-	int			numFields;
 	int			startBit;
 	int			print;
-	static qboolean firstTime = qtrue;
 
-	numFields = ARRAY_LEN( playerStateFields );
-
-	if ( firstTime ) {
-		const char *error = MSG_InitNetFields( playerStateFields, numFields, sizeof (playerState_t), 0 );
-
-		if ( error ) {
-			Com_Error( ERR_DROP, "ReadDeltaPlayerstate: %s", error );
-		}
-
-		firstTime = qfalse;
+	if ( !msg_playerStateFields.fields ) {
+		Com_Error( ERR_DROP, "playerState_t missing netFields" );
 	}
 
 	if ( msg->bit == 0 ) {
@@ -1573,11 +1590,11 @@ void MSG_ReadDeltaPlayerstate (msg_t *msg, playerState_t *from, playerState_t *t
 
 	lc = MSG_ReadByte(msg);
 
-	if ( lc > numFields || lc < 0 ) {
+	if ( lc > msg_playerStateFields.numFields || lc < 0 ) {
 		Com_Error( ERR_DROP, "invalid playerState field count" );
 	}
 
-	MSG_ReadDeltaNetFields( msg, from, to, playerStateFields, numFields, lc, startBit, print );
+	MSG_ReadDeltaNetFields( msg, from, to, &msg_playerStateFields, lc, startBit, print );
 }
 
 int msg_hData[256] = {

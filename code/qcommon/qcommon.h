@@ -109,6 +109,9 @@ void MSG_ReadDeltaUsercmd( msg_t *msg, struct usercmd_s *from, struct usercmd_s 
 void MSG_WriteDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *to );
 void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *to );
 
+void MSG_SetNetFields( vmNetField_t *vmPlayerFields, int numPlayerFields, int playerStateSize,
+					   vmNetField_t *vmEntityFields, int numEntityFields, int entityStateSize );
+
 void MSG_WriteDeltaEntity( msg_t *msg, struct entityState_s *from, struct entityState_s *to
 						   , qboolean force );
 void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to, 
@@ -119,6 +122,12 @@ void MSG_ReadDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct pl
 
 
 void MSG_ReportChangeVectors_f( void );
+
+extern vmNetField_t entityStateFields[];
+extern vmNetField_t playerStateFields[];
+
+extern int numEntityStateFields;
+extern int numPlayerStateFields;
 
 //============================================================================
 

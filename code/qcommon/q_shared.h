@@ -1378,6 +1378,12 @@ typedef struct entityState_s {
 	int		generic1;
 } entityState_t;
 
+typedef struct {
+	int		offset;
+	int		numElements; // 1 to 1024
+	int		bits;		// 0 = float
+} vmNetField_t;
+
 typedef enum {
 	CA_UNINITIALIZED,
 	CA_DISCONNECTED, 	// not talking to a server

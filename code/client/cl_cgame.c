@@ -924,6 +924,12 @@ void CL_InitCGame( void ) {
 	VM_Call( cgvm, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, CL_MAX_SPLITVIEW,
 			clc.clientNums[0], clc.clientNums[1], clc.clientNums[2], clc.clientNums[3] );
 
+	if (!com_sv_running->integer) {
+		// set net fields
+		MSG_SetNetFields( playerStateFields, numPlayerStateFields, sizeof ( playerState_t ),
+						entityStateFields, numEntityStateFields, sizeof ( entityState_t ) );
+	}
+
 	// reset any CVAR_CHEAT cvars registered by cgame
 	if ( !clc.demoplaying && !cl_connectedToCheatServer )
 		Cvar_SetCheatState();

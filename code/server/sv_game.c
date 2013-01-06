@@ -933,6 +933,10 @@ static void SV_InitGameVM( qboolean restart ) {
 	// use the current msec count for a random seed
 	// init for this gamestate
 	VM_Call (gvm, GAME_INIT, sv.time, Com_Milliseconds(), restart);
+
+	// set net fields
+	MSG_SetNetFields( playerStateFields, numPlayerStateFields, sizeof ( playerState_t ),
+					entityStateFields, numEntityStateFields, sizeof ( entityState_t ) );
 }
 
 
