@@ -32,7 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "q_shared.h"
 #include "qcommon.h"
 
-#define	MAX_CMD_BUFFER	16384
+#define	MAX_CMD_BUFFER  128*1024
 #define	MAX_CMD_LINE	1024
 
 typedef struct {

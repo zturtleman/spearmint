@@ -127,11 +127,6 @@ static qboolean	R_CullSurface( msurface_t *surf ) {
 		{
 			return qtrue;
 		}
-
-		if ( sphereCull == CULL_IN )
-		{
-			return qfalse;
-		}
 	}
 
 	if (surf->cullinfo.type & CULLINFO_BOX)
@@ -147,11 +142,6 @@ static qboolean	R_CullSurface( msurface_t *surf ) {
 		if ( boxCull == CULL_OUT )
 		{
 			return qtrue;
-		}
-
-		if ( boxCull == CULL_IN )
-		{
-			return qfalse;
 		}
 	}
 
@@ -938,6 +928,8 @@ R_AddWorldSurfaces
 =============
 */
 void R_AddWorldSurfaces (void) {
+	int planeBits, dlightBits, pshadowBits;
+
 	if ( !r_drawworld->integer ) {
 		return;
 	}
@@ -968,18 +960,25 @@ void R_AddWorldSurfaces (void) {
 		tr.refdef.num_pshadows = 32 ;
 	}
 
+	planeBits = (tr.viewParms.flags & VPF_FARPLANEFRUSTUM) ? 31 : 15;
+
 	if ( tr.viewParms.flags & VPF_DEPTHSHADOW )
 	{
-		R_RecursiveWorldNode( tr.world->nodes, 31, 0, 0);
+		dlightBits = 0;
+		pshadowBits = 0;
 	}
 	else if ( !(tr.viewParms.flags & VPF_SHADOWMAP) )
 	{
-		R_RecursiveWorldNode( tr.world->nodes, 15, ( 1 << tr.refdef.num_dlights ) - 1, ( 1 << tr.refdef.num_pshadows ) - 1 );
+		dlightBits = ( 1 << tr.refdef.num_dlights ) - 1;
+		pshadowBits = ( 1 << tr.refdef.num_pshadows ) - 1;
 	}
 	else
 	{
-		R_RecursiveWorldNode( tr.world->nodes, 31, ( 1 << tr.refdef.num_dlights ) - 1, 0 );
+		dlightBits = ( 1 << tr.refdef.num_dlights ) - 1;
+		pshadowBits = 0;
 	}
+
+	R_RecursiveWorldNode( tr.world->nodes, planeBits, dlightBits, pshadowBits);
 
 	// now add all the potentially visible surfaces
 	// also mask invisible dlights for next frame
