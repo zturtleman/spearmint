@@ -507,23 +507,23 @@ CG_RemoveNotifyLine
 */
 void CG_RemoveNotifyLine( cglc_t *localClient )
 {
-  int i, offset, totalLength;
+	int i, offset, totalLength;
 
-  if( !localClient || localClient->numConsoleLines == 0 )
-    return;
+	if( !localClient || localClient->numConsoleLines == 0 )
+		return;
 
-  offset = localClient->consoleLines[ 0 ].length;
-  totalLength = strlen( localClient->consoleText ) - offset;
+	offset = localClient->consoleLines[ 0 ].length;
+	totalLength = strlen( localClient->consoleText ) - offset;
 
-  //slide up consoleText
-  for( i = 0; i <= totalLength; i++ )
-    localClient->consoleText[ i ] = localClient->consoleText[ i + offset ];
+	// slide up consoleText
+	for ( i = 0; i <= totalLength; i++ )
+		localClient->consoleText[ i ] = localClient->consoleText[ i + offset ];
 
-  //pop up the first consoleLine
-  for( i = 0; i < localClient->numConsoleLines; i++ )
-    localClient->consoleLines[ i ] = localClient->consoleLines[ i + 1 ];
+	// pop up the first consoleLine
+	for ( i = 0; i < localClient->numConsoleLines; i++ )
+		localClient->consoleLines[ i ] = localClient->consoleLines[ i + 1 ];
 
-  localClient->numConsoleLines--;
+	localClient->numConsoleLines--;
 }
 
 /*
