@@ -367,6 +367,7 @@ Kick a user off of the server
 */
 static void SV_Kick_f( void ) {
 	player_t	*player;
+	client_t	*client;
 
 	// make sure server is running
 	if ( !com_sv_running->integer ) {
@@ -383,13 +384,17 @@ static void SV_Kick_f( void ) {
 	if ( !player ) {
 		return;
 	}
-	if( player->client->netchan.remoteAddress.type == NA_LOOPBACK ) {
+
+	client = player->client;
+
+	if( client->netchan.remoteAddress.type == NA_LOOPBACK ) {
 		Com_Printf("Cannot kick host player\n");
 		return;
 	}
 
 	SV_DropPlayer( player, "was kicked" );
-	player->client->lastPacketTime = svs.time;	// in case there is a funny zombie
+
+	client->lastPacketTime = svs.time;	// in case there is a funny zombie
 }
 
 /*
@@ -462,6 +467,7 @@ Kick a user off of the server
 */
 static void SV_KickNum_f( void ) {
 	player_t	*player;
+	client_t	*client;
 
 	// make sure server is running
 	if ( !com_sv_running->integer ) {
@@ -478,13 +484,17 @@ static void SV_KickNum_f( void ) {
 	if ( !player ) {
 		return;
 	}
-	if( player->client->netchan.remoteAddress.type == NA_LOOPBACK ) {
+
+	client = player->client;
+
+	if( client->netchan.remoteAddress.type == NA_LOOPBACK ) {
 		Com_Printf("Cannot kick host player\n");
 		return;
 	}
 
 	SV_DropPlayer( player, "was kicked" );
-	player->client->lastPacketTime = svs.time;	// in case there is a funny zombie
+
+	client->lastPacketTime = svs.time;	// in case there is a funny zombie
 }
 
 /*
