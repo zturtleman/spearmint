@@ -459,10 +459,18 @@ void IN_4Button15Down(void) {IN_KeyDown(&cis[3].in_buttons[15]);}
 void IN_4Button15Up(void) {IN_KeyUp(&cis[3].in_buttons[15]);}
 
 void IN_CenterView_Main(int localClientNum) {
-	if (localClientNum < 0 || localClientNum >= CL_MAX_SPLITVIEW || cl.snap.lcIndex[localClientNum] == -1) {
+	sharedPlayerState_t *ps;
+
+	if (localClientNum < 0 || localClientNum >= CL_MAX_SPLITVIEW || !cl.snap.valid || cl.snap.lcIndex[localClientNum] == -1) {
 		return;
 	}
-	cl.localClients[localClientNum].viewangles[PITCH] = -SHORT2ANGLE(cl.snap.pss[cl.snap.lcIndex[localClientNum]].delta_angles[PITCH]);
+
+	ps = DA_ElementPointer(cl.snap.playerStates, cl.snap.lcIndex[localClientNum]);
+	if ( !ps ) {
+		return;
+	}
+
+	cl.localClients[localClientNum].viewangles[PITCH] = -SHORT2ANGLE(ps->delta_angles[PITCH]);
 }
 
 void IN_CenterView (void) {

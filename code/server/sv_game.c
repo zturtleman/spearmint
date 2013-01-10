@@ -53,10 +53,18 @@ sharedEntity_t *SV_GentityNum( int num ) {
 	return ent;
 }
 
-playerState_t *SV_GameClientNum( int num ) {
-	playerState_t	*ps;
+sharedEntityState_t *SV_GameEntityStateNum( int num ) {
+	sharedEntity_t *ent;
 
-	ps = (playerState_t *)((byte *)sv.gameClients + sv.gameClientSize*(num));
+	ent = SV_GentityNum( num );
+
+	return &ent->s;
+}
+
+sharedPlayerState_t *SV_GameClientNum( int num ) {
+	sharedPlayerState_t	*ps;
+
+	ps = (sharedPlayerState_t *)((byte *)sv.gameClients + sv.gameClientSize*(num));
 
 	return ps;
 }
@@ -259,7 +267,7 @@ SV_LocateGameData
 ===============
 */
 void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int sizeofGEntity_t,
-					   playerState_t *clients, int sizeofGameClient ) {
+					   sharedPlayerState_t *clients, int sizeofGameClient ) {
 	sv.gentities = gEnts;
 	sv.gentitySize = sizeofGEntity_t;
 	sv.num_entities = numGEntities;
@@ -276,6 +284,9 @@ SV_SetNetFields
 */
 void SV_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
 					   int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
+	sv.gameEntityStateSize = entityStateSize;
+	sv.gamePlayerStateSize = playerStateSize;
+
 	MSG_SetNetFields( entityStateFields, numEntityStateFields, entityStateSize,
 					  playerStateFields, numPlayerStateFields, playerStateSize );
 }

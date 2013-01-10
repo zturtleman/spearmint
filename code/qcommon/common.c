@@ -1873,6 +1873,145 @@ void Hunk_ClearTempMemory( void ) {
 /*
 ===================================================================
 
+Dynamic array
+
+Mainly for handling arrays with element length set at run-time.
+
+===================================================================
+*/
+
+/*
+================
+DA_Init
+================
+*/
+#ifdef ZONE_DEBUG
+void DA_InitDebug( darray_t *darray, int maxElements, int elementLength, qboolean freeable, char *file, int line )
+#else
+void DA_Init( darray_t *darray, int maxElements, int elementLength, qboolean freeable )
+#endif
+{
+	assert( !darray->pointer );
+	assert( maxElements > 0 );
+	assert( elementLength > 0 );
+
+	// need to be able to manually free some arrays
+	if ( freeable ) {
+#ifdef ZONE_DEBUG
+		darray->pointer = Z_MallocDebug( maxElements * elementLength, "DA_Init", file, line );
+#else
+		darray->pointer = Z_Malloc( maxElements * elementLength );
+#endif
+	} else {
+		darray->pointer = Hunk_Alloc( maxElements * elementLength, h_high );
+	}
+
+	darray->freeable = freeable;
+	darray->maxElements = maxElements;
+	darray->elementLength = elementLength;
+
+	DA_Clear( darray );
+}
+
+/*
+================
+DA_Free
+================
+*/
+void DA_Free( darray_t *darray ) {
+	if ( darray->pointer ) {
+		if ( darray->freeable ) {
+			Z_Free( darray->pointer );
+		}
+		darray->pointer = NULL;
+	}
+
+	darray->maxElements = 0;
+	darray->elementLength = 0;
+}
+
+/*
+================
+DA_Clear
+================
+*/
+void DA_Clear( darray_t *darray ) {
+	if ( !darray->pointer )
+		return;
+
+	Com_Memset( darray->pointer, 0, darray->maxElements * darray->elementLength );
+}
+
+/*
+================
+DA_ClearElement
+================
+*/
+void DA_ClearElement( darray_t *darray, int num ) {
+	assert( darray->pointer );
+	assert( num < darray->maxElements );
+	assert( darray->elementLength > 0 );
+
+	if ( !darray->pointer )
+		return;
+
+	Com_Memset( darray->pointer + num * darray->elementLength, 0, darray->elementLength );
+}
+
+/*
+================
+DA_SetElement
+================
+*/
+void DA_SetElement( darray_t *darray, int num, const void *data ) {
+	assert( darray->pointer );
+	assert( num < darray->maxElements );
+	assert( darray->elementLength > 0 );
+
+	if ( !darray->pointer )
+		return;
+
+	Com_Memcpy( darray->pointer + num * darray->elementLength, data, darray->elementLength );
+}
+
+/*
+================
+DA_GetElement
+================
+*/
+void DA_GetElement( const darray_t darray, int num, void *data ) {
+	assert( darray.pointer );
+	assert( num < darray.maxElements );
+	assert( darray.elementLength > 0 );
+
+	Com_Memcpy( data, darray.pointer + num * darray.elementLength, darray.elementLength );
+}
+
+/*
+================
+DA_ElementPointer
+================
+*/
+void *DA_ElementPointer( const darray_t darray, int num ) {
+	assert( darray.pointer );
+	assert( num >= 0 );
+	assert( num < darray.maxElements );
+	assert( darray.elementLength > 0 );
+
+	if ( !darray.pointer ) {
+		return NULL;
+	}
+
+	if (num < 0 || num >= darray.maxElements) {
+		return NULL;
+	}
+
+	return darray.pointer + num * darray.elementLength;
+}
+
+/*
+===================================================================
+
 EVENTS AND JOURNALING
 
 In addition to these events, .cfg files are also copied to the

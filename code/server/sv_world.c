@@ -172,7 +172,7 @@ void SV_UnlinkEntity( sharedEntity_t *gEnt ) {
 	svEntity_t		*ent;
 	svEntity_t		*scan;
 	worldSector_t	*ws;
-	playerState_t	*ps;
+	sharedPlayerState_t	*ps;
 
 	ent = SV_SvEntityForGentity( gEnt );
 
@@ -221,7 +221,7 @@ void SV_LinkEntity( sharedEntity_t *gEnt ) {
 	int			lastLeaf;
 	float		*origin, *angles;
 	svEntity_t	*ent;
-	playerState_t	*ps;
+	sharedPlayerState_t	*ps;
 
 	ent = SV_SvEntityForGentity( gEnt );
 

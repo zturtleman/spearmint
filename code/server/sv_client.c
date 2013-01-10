@@ -582,9 +582,13 @@ Destructor for data allocated in a client structure
 */
 void SV_FreeClient(client_t *client)
 {
-#ifdef USE_VOIP
 	int index;
-	
+
+	for (index = 0; index < ARRAY_LEN(client->frames); index++) {
+		DA_Free( &client->frames[index].playerStates );
+	}
+
+#ifdef USE_VOIP
 	for(index = client->queuedVoipIndex; index < client->queuedVoipPackets; index++)
 	{
 		index %= ARRAY_LEN(client->voipPacket);
@@ -597,6 +601,8 @@ void SV_FreeClient(client_t *client)
 
 	SV_Netchan_FreeQueue(client);
 	SV_CloseDownload(client);
+
+	client->state = CS_FREE;
 }
 
 /*
@@ -708,9 +714,6 @@ void SV_DropPlayer( player_t *drop, const char *reason ) {
 	// Free all allocated data on the client structure
 	SV_FreePlayer( drop );
 
-	if ( numLocalPlayers == 1 )
-		SV_FreeClient( client );
-
 	// tell everyone why they got dropped
 	SV_SendServerCommand( NULL, -1, "print \"%s" S_COLOR_WHITE " %s\n\"", drop->name, reason );
 
@@ -730,23 +733,19 @@ void SV_DropPlayer( player_t *drop, const char *reason ) {
 		SV_SendServerCommand( client, -1, "disconnect \"%s\"", reason);
 	}
 
-	if ( isBot ) {
-		SV_BotFreeClient( playerNum );
-	}
-
-	// nuke user info
-	SV_SetUserinfo( playerNum, "" );
-
 	//
 	drop->inUse = qfalse;
 
 	if ( isBot ) {
 		// bots shouldn't go zombie, as there's no real net connection.
-		client->state = CS_FREE;
+		SV_BotFreeClient( playerNum );
 	} else if ( numLocalPlayers == 1 ) {
 		Com_DPrintf( "Going to CS_ZOMBIE for %s\n", drop->name );
 		client->state = CS_ZOMBIE;		// become free in a few seconds
 	}
+
+	// nuke user info
+	SV_SetUserinfo( playerNum, "" );
 
 	// if this was the last client on the server, send a heartbeat
 	// to the master so it is known the server is empty
@@ -796,7 +795,9 @@ the wrong gamestate.
 */
 static void SV_SendClientGameState( client_t *client ) {
 	int			start;
-	entityState_t	*base, nullstate;
+#if 0 // ZTM: FIXME: ### baseline
+	sharedEntityState_t	*base;
+#endif
 	msg_t		msg;
 	byte		msgBuffer[MAX_MSGLEN];
 	int			i;
@@ -835,16 +836,17 @@ static void SV_SendClientGameState( client_t *client ) {
 		}
 	}
 
+#if 0 // ZTM: FIXME: ### send baseline with first snapshot?
 	// write the baselines
-	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
-		base = &sv.svEntities[start].baseline;
+		base = (sharedEntityState_t *)DA_ElementPointer( sv.svEntitiesBaseline, start );
 		if ( !base->number ) {
 			continue;
 		}
 		MSG_WriteByte( &msg, svc_baseline );
-		MSG_WriteDeltaEntity( &msg, &nullstate, base, qtrue );
+		MSG_WriteDeltaEntity( &msg, NULL, base, qtrue );
 	}
+#endif
 
 	MSG_WriteByte( &msg, svc_EOF );
 

@@ -85,22 +85,33 @@ void CL_LocalClientRemoved(int localClientNum) {
 
 /*
 ==================
+CL_ParseEntityState
+
+Client only looks at shared part of entityState_t
+==================
+*/
+sharedEntityState_t *CL_ParseEntityState( int num ) {
+	return DA_ElementPointer( cl.parseEntities, num & ( MAX_PARSE_ENTITIES - 1 ) );
+}
+
+/*
+==================
 CL_DeltaEntity
 
 Parses deltas from the given base and adds the resulting entity
 to the current frame
 ==================
 */
-void CL_DeltaEntity (msg_t *msg, clSnapshot_t *frame, int newnum, entityState_t *old, 
+void CL_DeltaEntity (msg_t *msg, clSnapshot_t *frame, int newnum, sharedEntityState_t *old, 
 					 qboolean unchanged) {
-	entityState_t	*state;
+	sharedEntityState_t	*state;
 
 	// save the parsed entity state into the big circular buffer so
 	// it can be used as the source for a later delta
-	state = &cl.parseEntities[cl.parseEntitiesNum & (MAX_PARSE_ENTITIES-1)];
+	state = CL_ParseEntityState( cl.parseEntitiesNum );
 
 	if ( unchanged ) {
-		*state = *old;
+		Com_Memcpy( state, old, cl.cgameEntityStateSize );
 	} else {
 		MSG_ReadDeltaEntity( msg, old, state, newnum );
 	}
@@ -120,7 +131,7 @@ CL_ParsePacketEntities
 */
 void CL_ParsePacketEntities( msg_t *msg, clSnapshot_t *oldframe, clSnapshot_t *newframe) {
 	int			newnum;
-	entityState_t	*oldstate;
+	sharedEntityState_t	*oldstate;
 	int			oldindex, oldnum;
 
 	newframe->parseEntitiesNum = cl.parseEntitiesNum;
@@ -135,8 +146,7 @@ void CL_ParsePacketEntities( msg_t *msg, clSnapshot_t *oldframe, clSnapshot_t *n
 		if ( oldindex >= oldframe->numEntities ) {
 			oldnum = 99999;
 		} else {
-			oldstate = &cl.parseEntities[
-				(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
+			oldstate = CL_ParseEntityState(oldframe->parseEntitiesNum + oldindex);
 			oldnum = oldstate->number;
 		}
 	}
@@ -165,8 +175,7 @@ void CL_ParsePacketEntities( msg_t *msg, clSnapshot_t *oldframe, clSnapshot_t *n
 			if ( oldindex >= oldframe->numEntities ) {
 				oldnum = 99999;
 			} else {
-				oldstate = &cl.parseEntities[
-					(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
+				oldstate = CL_ParseEntityState(oldframe->parseEntitiesNum + oldindex);
 				oldnum = oldstate->number;
 			}
 		}
@@ -182,8 +191,7 @@ void CL_ParsePacketEntities( msg_t *msg, clSnapshot_t *oldframe, clSnapshot_t *n
 			if ( oldindex >= oldframe->numEntities ) {
 				oldnum = 99999;
 			} else {
-				oldstate = &cl.parseEntities[
-					(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
+				oldstate = CL_ParseEntityState(oldframe->parseEntitiesNum + oldindex);
 				oldnum = oldstate->number;
 			}
 			continue;
@@ -194,7 +202,7 @@ void CL_ParsePacketEntities( msg_t *msg, clSnapshot_t *oldframe, clSnapshot_t *n
 			if ( cl_shownet->integer == 3 ) {
 				Com_Printf ("%3i:  baseline: %i\n", msg->readcount, newnum);
 			}
-			CL_DeltaEntity( msg, newframe, newnum, &cl.entityBaselines[newnum], qfalse );
+			CL_DeltaEntity( msg, newframe, newnum, DA_ElementPointer( cl.entityBaselines, newnum ), qfalse );
 			continue;
 		}
 
@@ -213,8 +221,7 @@ void CL_ParsePacketEntities( msg_t *msg, clSnapshot_t *oldframe, clSnapshot_t *n
 		if ( oldindex >= oldframe->numEntities ) {
 			oldnum = 99999;
 		} else {
-			oldstate = &cl.parseEntities[
-				(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
+			oldstate = CL_ParseEntityState(oldframe->parseEntitiesNum + oldindex);
 			oldnum = oldstate->number;
 		}
 	}
@@ -234,9 +241,18 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	int			len;
 	clSnapshot_t	*old;
 	clSnapshot_t	newSnap;
+	sharedPlayerState_t *newPS, *oldPS;
 	int			deltaNum;
 	int			oldMessageNum;
 	int			i, packetNum;
+
+	if ( !cgvm ) {
+		Com_Error( ERR_DROP, "Got snapshot before loading cgame" );
+	}
+
+	if ( !cl.cgamePlayerStateSize || !cl.cgamePlayerStateSize ) {
+		Com_Error( ERR_DROP, "cgame needs to call trap_SetNetFields" );
+	}
 
 	// get the reliable sequence acknowledge number
 	// NOTE: now sent with all server to client messages
@@ -301,6 +317,8 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	
 	MSG_ReadData( msg, &newSnap.areamask, len);
 
+	DA_Init( &newSnap.playerStates, MAX_SPLITVIEW, cl.cgamePlayerStateSize, qtrue );
+
 	// read playerinfo
 	SHOWNET( msg, "playerstate" );
 	if (newSnap.snapFlags & SNAPFLAG_MULTIPLE_PSS) {
@@ -328,21 +346,27 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
 		// Read player states
 		if (newSnap.lcIndex[i] != -1) {
-			if (old && old->lcIndex[i] != -1) {
-				MSG_ReadDeltaPlayerstate( msg, &old->pss[old->lcIndex[i]], &newSnap.pss[newSnap.lcIndex[i]] );
+			newPS = (sharedPlayerState_t *) DA_ElementPointer( newSnap.playerStates, newSnap.lcIndex[i] );
+
+			if ( old && old->valid && old->lcIndex[i] != -1 ) {
+				oldPS = (sharedPlayerState_t *) DA_ElementPointer( old->playerStates, old->lcIndex[i] );
+
+				MSG_ReadDeltaPlayerstate( msg, oldPS, newPS );
 			} else {
-				MSG_ReadDeltaPlayerstate( msg, NULL, &newSnap.pss[newSnap.lcIndex[i]] );
+				MSG_ReadDeltaPlayerstate( msg, NULL, newPS );
 			}
 		}
 
 		// Server added local client
-		if (old && old->lcIndex[i] == -1 && newSnap.lcIndex[i] != -1) {
+		if ( old && old->valid && old->lcIndex[i] == -1 && newSnap.lcIndex[i] != -1 ) {
+			newPS = (sharedPlayerState_t *) DA_ElementPointer( newSnap.playerStates, newSnap.lcIndex[i] );
+
 			// ZTM: FIXME: Not the most reliable way to get clientNum, ps could be a followed client.
-			CL_LocalClientAdded(i, newSnap.pss[newSnap.lcIndex[i]].clientNum);
+			CL_LocalClientAdded(i, newPS->clientNum);
 		}
 
 		// Server removed local client
-		if (old && old->lcIndex[i] != -1 && newSnap.lcIndex[i] == -1) {
+		if ( old && old->valid && old->lcIndex[i] != -1 && newSnap.lcIndex[i] == -1 ) {
 			CL_LocalClientRemoved(i);
 		}
 	}
@@ -354,6 +378,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	// if not valid, dump the entire thing now that it has
 	// been properly read
 	if ( !newSnap.valid ) {
+		DA_Free( &newSnap.playerStates );
 		return;
 	}
 
@@ -367,6 +392,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 		oldMessageNum = newSnap.messageNum - ( PACKET_BACKUP - 1 );
 	}
 	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
+		DA_Free( &cl.snapshots[oldMessageNum & PACKET_MASK].playerStates );
 		cl.snapshots[oldMessageNum & PACKET_MASK].valid = qfalse;
 	}
 
@@ -376,11 +402,14 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	// calculate ping time
 	for ( i = 0 ; i < PACKET_BACKUP ; i++ ) {
 		packetNum = ( clc.netchan.outgoingSequence - 1 - i ) & PACKET_MASK;
-		if ( cl.snap.pss[0].commandTime >= cl.outPackets[ packetNum ].p_serverTime ) {
+		newPS = (sharedPlayerState_t *) DA_ElementPointer( cl.snap.playerStates, 0 );
+		if ( newPS->commandTime >= cl.outPackets[ packetNum ].p_serverTime ) {
 			cl.snap.ping = cls.realtime - cl.outPackets[ packetNum ].p_realtime;
 			break;
 		}
 	}
+	// free player states
+	DA_Free( &cl.snapshots[cl.snap.messageNum & PACKET_MASK].playerStates );
 	// save the frame off in the backup array for later delta comparisons
 	cl.snapshots[cl.snap.messageNum & PACKET_MASK] = cl.snap;
 
@@ -524,9 +553,10 @@ CL_ParseGamestate
 */
 void CL_ParseGamestate( msg_t *msg ) {
 	int				i;
-	entityState_t	*es;
+#if 0 // ZTM: FIXME: ### baseline
+	sharedEntityState_t	*es;
+#endif
 	int				newnum;
-	entityState_t	nullstate;
 	int				cmd;
 	char			*s;
 	char oldGame[MAX_QPATH];
@@ -568,14 +598,15 @@ void CL_ParseGamestate( msg_t *msg ) {
 			cl.gameState.stringOffsets[ i ] = cl.gameState.dataCount;
 			Com_Memcpy( cl.gameState.stringData + cl.gameState.dataCount, s, len + 1 );
 			cl.gameState.dataCount += len + 1;
+#if 0 // ZTM: FIXME: ### cgame hasn't been loaded yet, so cannot parse baseline
 		} else if ( cmd == svc_baseline ) {
 			newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
 			if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
 				Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
 			}
-			Com_Memset (&nullstate, 0, sizeof(nullstate));
-			es = &cl.entityBaselines[ newnum ];
-			MSG_ReadDeltaEntity( msg, &nullstate, es, newnum );
+			es = DA_ElementPointer( cl.entityBaselines, newnum );
+			MSG_ReadDeltaEntity( msg, NULL, es, newnum );
+#endif
 		} else {
 			Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte" );
 		}

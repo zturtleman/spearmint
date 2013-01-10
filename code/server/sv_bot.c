@@ -111,8 +111,8 @@ void SV_BotFreeClient( int playerNum ) {
 	player = &svs.players[playerNum];
 
 	client = player->client;
-	client->state = CS_FREE;
 	client->localPlayers[0] = NULL;
+	SV_FreeClient( client );
 
 	player->client = NULL;
 	player->name[0] = 0;
@@ -670,7 +670,7 @@ int EntityInPVS( int playerNum, int entityNum ) {
 
 	frame = &cl->frames[cl->netchan.outgoingSequence & PACKET_MASK];
 	for ( i = 0; i < frame->num_entities; i++ )	{
-		if ( svs.snapshotEntities[(frame->first_entity + i) % svs.numSnapshotEntities].number == entityNum ) {
+		if ( SV_SnapshotEntity(frame->first_entity + i)->number == entityNum ) {
 			return qtrue;
 		}
 	}
@@ -696,6 +696,6 @@ int SV_BotGetSnapshotEntity( int playerNum, int sequence ) {
 	if (sequence < 0 || sequence >= frame->num_entities) {
 		return -1;
 	}
-	return svs.snapshotEntities[(frame->first_entity + sequence) % svs.numSnapshotEntities].number;
+	return SV_SnapshotEntity(frame->first_entity + sequence)->number;
 }
 

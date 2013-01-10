@@ -54,15 +54,20 @@ typedef struct {
 
 	byte			areamask[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 
-	int				numPSs;
-	playerState_t	pss[MAX_SPLITVIEW];		// complete information about the current players at this time
 	int				lcIndex[MAX_SPLITVIEW];		// Local Client Indexes
-
-	int				numEntities;			// all of the entities that need to be presented
-	entityState_t	entities[MAX_ENTITIES_IN_SNAPSHOT];	// at the time of this snapshot
 
 	int				numServerCommands;		// text based server commands to execute when this
 	int				serverCommandSequence;	// snapshot becomes current
+
+	int				numEntities;
+	int				numPSs;
+
+#ifdef CGAME
+	entityState_t	entities[MAX_ENTITIES_IN_SNAPSHOT]; // all of the entities that need to be presented
+											// at the time of this snapshot
+
+	playerState_t	pss[MAX_SPLITVIEW];		// complete information about the current players at this time
+#endif
 } snapshot_t;
 
 enum {

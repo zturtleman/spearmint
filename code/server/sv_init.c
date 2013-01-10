@@ -214,9 +214,14 @@ baseline will be transmitted
 ================
 */
 static void SV_CreateBaseline( void ) {
+#if 0 // ZTM: FIXME: ### baseline
 	sharedEntity_t *svent;
 	int				entnum;	
+#endif
 
+	DA_Init( &sv.svEntitiesBaseline, MAX_GENTITIES, sv.gameEntityStateSize, qfalse );
+
+#if 0 // ZTM: FIXME: ### baseline isn't networked atm
 	for ( entnum = 1; entnum < sv.num_entities ; entnum++ ) {
 		svent = SV_GentityNum(entnum);
 		if (!svent->r.linked) {
@@ -227,8 +232,9 @@ static void SV_CreateBaseline( void ) {
 		//
 		// take current state as baseline
 		//
-		sv.svEntities[entnum].baseline = svent->s;
+		DA_SetElement( &sv.svEntitiesBaseline, entnum, SV_GameEntityStateNum(entnum) );
 	}
+#endif
 }
 
 
@@ -403,6 +409,10 @@ static void SV_ClearServer(void) {
 			Z_Free( sv.configstrings[i] );
 		}
 	}
+
+	DA_Free( &svs.snapshotEntities );
+	DA_Free( &sv.svEntitiesBaseline );
+
 	Com_Memset (&sv, 0, sizeof(sv));
 }
 
@@ -478,10 +488,6 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	// clear pak references
 	FS_ClearPakReferences(0);
 
-	// allocate the snapshot entities on the hunk
-	svs.snapshotEntities = Hunk_Alloc( sizeof(entityState_t)*svs.numSnapshotEntities, h_high );
-	svs.nextSnapshotEntities = 0;
-
 	// toggle the server bit so clients can detect that a
 	// server has changed
 	svs.snapFlagServerBit ^= SNAPFLAG_SERVERCOUNT;
@@ -532,6 +538,10 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 
 	// load and spawn all other entities
 	SV_InitGameProgs();
+
+	// allocate the snapshot entities on the hunk
+	DA_Init( &svs.snapshotEntities, svs.numSnapshotEntities, sv.gameEntityStateSize, qfalse );
+	svs.nextSnapshotEntities = 0;
 
 	// don't allow a map_restart if game is modified
 	sv_gametype->modified = qfalse;

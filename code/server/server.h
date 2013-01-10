@@ -57,7 +57,6 @@ typedef struct svEntity_s {
 	struct worldSector_s *worldSector;
 	struct svEntity_s *nextEntityInWorldSector;
 	
-	entityState_t	baseline;		// for delta compression of initial sighting
 	int			numClusters;		// if -1, use headnode instead
 	int			clusternums[MAX_ENT_CLUSTERS];
 	int			lastCluster;		// if all the clusters don't fit in clusternums
@@ -82,6 +81,7 @@ typedef struct {
 	struct cmodel_s	*models[MAX_MODELS];
 	char			*configstrings[MAX_CONFIGSTRINGS];
 	svEntity_t		svEntities[MAX_GENTITIES];
+	darray_t		svEntitiesBaseline; // for delta compression of initial sighting
 
 	char			*entityParsePoint;	// used during game VM init
 
@@ -90,8 +90,11 @@ typedef struct {
 	int				gentitySize;
 	int				num_entities;		// current number, <= MAX_GENTITIES
 
-	playerState_t	*gameClients;
-	int				gameClientSize;		// will be > sizeof(playerState_t) due to game private data
+	sharedPlayerState_t	*gameClients;
+	int				gameClientSize;		// will be > sizeof(sharedPlayerState_t) due to game private data
+
+	int				gameEntityStateSize;
+	int				gamePlayerStateSize;
 
 	int				restartTime;
 	int				time;
@@ -105,7 +108,7 @@ typedef struct {
 	int				areabytes;
 	byte			areabits[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 	int				numPSs;
-	playerState_t	pss[MAX_SPLITVIEW];
+	darray_t		playerStates;
 	int				lcIndex[MAX_SPLITVIEW];
 	int				num_entities;
 	int				first_entity;		// into the circular sv_packet_entities[]
@@ -248,7 +251,7 @@ typedef struct {
 	player_t	*players;					// [sv_maxclients->integer]; // a single client can have multiple players
 	int			numSnapshotEntities;		// sv_maxclients->integer*PACKET_BACKUP*MAX_PACKET_ENTITIES
 	int			nextSnapshotEntities;		// next snapshotEntities to use
-	entityState_t	*snapshotEntities;		// [numSnapshotEntities]
+	darray_t	snapshotEntities;			// [numSnapshotEntities*gameEntityStateSize]
 	int			nextHeartbeatTime;
 	challenge_t	challenges[MAX_CHALLENGES];	// to prevent invalid IPs from connecting
 	netadr_t	redirectAddress;			// for rcon return messages
@@ -381,6 +384,7 @@ void SV_Heartbeat_f( void );
 //
 // sv_snapshot.c
 //
+sharedEntityState_t *SV_SnapshotEntity( int num );
 void SV_AddServerCommand( client_t *client, int localPlayerNum, const char *cmd );
 void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg );
 void SV_WriteFrameToClient (client_t *client, msg_t *msg);
@@ -393,7 +397,8 @@ void SV_SendClientSnapshot( client_t *client );
 //
 int	SV_NumForGentity( sharedEntity_t *ent );
 sharedEntity_t *SV_GentityNum( int num );
-playerState_t *SV_GameClientNum( int num );
+sharedEntityState_t *SV_GameEntityStateNum( int num );
+sharedPlayerState_t *SV_GameClientNum( int num );
 svEntity_t	*SV_SvEntityForGentity( sharedEntity_t *gEnt );
 sharedEntity_t *SV_GEntityForSvEntity( svEntity_t *svEnt );
 void		SV_InitGameProgs ( void );

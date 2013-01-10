@@ -116,7 +116,7 @@ int CL_GetCurrentCmdNumber( void ) {
 CL_GetParseEntityState
 ====================
 */
-qboolean	CL_GetParseEntityState( int parseEntityNumber, entityState_t *state ) {
+qboolean	CL_GetParseEntityState( int parseEntityNumber, void *state ) {
 	// can't return anything that hasn't been parsed yet
 	if ( parseEntityNumber >= cl.parseEntitiesNum ) {
 		Com_Error( ERR_DROP, "CL_GetParseEntityState: %i >= %i",
@@ -128,7 +128,7 @@ qboolean	CL_GetParseEntityState( int parseEntityNumber, entityState_t *state ) {
 		return qfalse;
 	}
 
-	*state = cl.parseEntities[ parseEntityNumber & ( MAX_PARSE_ENTITIES - 1 ) ];
+	Com_Memcpy( state, CL_ParseEntityState(parseEntityNumber), cl.cgameEntityStateSize );
 	return qtrue;
 }
 
@@ -147,7 +147,7 @@ void	CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
 CL_GetSnapshot
 ====================
 */
-qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
+qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerStates, void *entities ) {
 	clSnapshot_t	*clSnap;
 	int				i, count;
 
@@ -178,13 +178,15 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->ping = clSnap->ping;
 	snapshot->serverTime = clSnap->serverTime;
 	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
-	snapshot->numPSs = clSnap->numPSs;
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
 		snapshot->lcIndex[i] = clSnap->lcIndex[i];
 	}
+
+	snapshot->numPSs = clSnap->numPSs;
 	for (i = 0; i < snapshot->numPSs; i++) {
-		snapshot->pss[i] = clSnap->pss[i];
+		Com_Memcpy( playerStates + i * cl.cgamePlayerStateSize, DA_ElementPointer( clSnap->playerStates, i ), cl.cgamePlayerStateSize );
 	}
+
 	count = clSnap->numEntities;
 	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
 		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, MAX_ENTITIES_IN_SNAPSHOT );
@@ -192,8 +194,7 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	}
 	snapshot->numEntities = count;
 	for ( i = 0 ; i < count ; i++ ) {
-		snapshot->entities[i] = 
-			cl.parseEntities[ ( clSnap->parseEntitiesNum + i ) & (MAX_PARSE_ENTITIES-1) ];
+		Com_Memcpy( entities + i * cl.cgameEntityStateSize, CL_ParseEntityState( clSnap->parseEntitiesNum + i ), cl.cgameEntityStateSize );
 	}
 
 	// FIXME: configstring changes and server commands!!!
@@ -218,6 +219,9 @@ CL_SetNetFields
 */
 void CL_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
 					   int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
+	cl.cgameEntityStateSize = entityStateSize;
+	cl.cgamePlayerStateSize = playerStateSize;
+
 	if ( com_sv_running->integer )
 		return;
 
@@ -446,6 +450,7 @@ void CL_ShutdownCGame( void ) {
 	if ( !cgvm ) {
 		return;
 	}
+
 	VM_Call( cgvm, CG_SHUTDOWN );
 	VM_Free( cgvm );
 	cgvm = NULL;
@@ -769,7 +774,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		CL_GetCurrentSnapshotNumber( VMA(1), VMA(2) );
 		return 0;
 	case CG_GETSNAPSHOT:
-		return CL_GetSnapshot( args[1], VMA(2) );
+		return CL_GetSnapshot( args[1], VMA(2), VMA(3), VMA(4) );
 	case CG_GETSERVERCOMMAND:
 		return CL_GetServerCommand( args[1] );
 	case CG_GETCURRENTCMDNUMBER:
@@ -940,6 +945,12 @@ void CL_InitCGame( void ) {
 	// otherwise server commands sent just before a gamestate are dropped
 	VM_Call( cgvm, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, CL_MAX_SPLITVIEW,
 			clc.clientNums[0], clc.clientNums[1], clc.clientNums[2], clc.clientNums[3] );
+
+	// entityBaselines and parseEntities are saved across vid_restart
+	if ( !cl.entityBaselines.pointer && !cl.parseEntities.pointer ) {
+		DA_Init( &cl.entityBaselines, MAX_GENTITIES, cl.cgameEntityStateSize, qtrue );
+		DA_Init( &cl.parseEntities, MAX_PARSE_ENTITIES, cl.cgameEntityStateSize, qtrue );
+	}
 
 	// reset any CVAR_CHEAT cvars registered by cgame
 	if ( !clc.demoplaying && !cl_connectedToCheatServer )

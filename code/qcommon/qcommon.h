@@ -112,13 +112,13 @@ void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *t
 void MSG_SetNetFields( vmNetField_t *vmEntityFields, int numEntityFields, int entityStateSize,
 					   vmNetField_t *vmPlayerFields, int numPlayerFields, int playerStateSize );
 
-void MSG_WriteDeltaEntity( msg_t *msg, struct entityState_s *from, struct entityState_s *to
-						   , qboolean force );
-void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to, 
+void MSG_WriteDeltaEntity( msg_t *msg, sharedEntityState_t *from, sharedEntityState_t *to,
+						   qboolean force );
+void MSG_ReadDeltaEntity( msg_t *msg, sharedEntityState_t *from, sharedEntityState_t *to, 
 						 int number );
 
-void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct playerState_s *to );
-void MSG_ReadDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct playerState_s *to );
+void MSG_WriteDeltaPlayerstate( msg_t *msg, sharedPlayerState_t *from, sharedPlayerState_t *to );
+void MSG_ReadDeltaPlayerstate( msg_t *msg, sharedPlayerState_t *from, sharedPlayerState_t *to );
 
 
 void MSG_ReportChangeVectors_f( void );
@@ -950,6 +950,27 @@ void *Hunk_AllocateTempMemory( int size );
 void Hunk_FreeTempMemory( void *buf );
 int	Hunk_MemoryRemaining( void );
 void Hunk_Log( void);
+
+typedef struct {
+	void *pointer;
+	int maxElements;
+	int elementLength;
+	qboolean freeable;
+} darray_t;
+
+#ifdef ZONE_DEBUG
+#define DA_Init(_darray,_maxElements,_elementLength,_freeable) DA_InitDebug(_darray,_maxElements,_elementLength,_freeable,__FILE__,__LINE__)
+void DA_InitDebug( darray_t *darray, int maxElements, int elementLength, qboolean freeable, char *file, int line );
+#else
+void DA_Init( darray_t *darray, int maxElements, int elementLength, qboolean freeable );
+#endif
+void DA_Free( darray_t *darray );
+void DA_Clear( darray_t *darray );
+
+void DA_ClearElement( darray_t *darray, int num );
+void DA_SetElement( darray_t *darray, int num, const void *data );
+void DA_GetElement( const darray_t darray, int num, void *data );
+void *DA_ElementPointer( const darray_t darray, int num );
 
 void Com_TouchMemory( void );
 

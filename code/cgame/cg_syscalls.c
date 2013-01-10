@@ -453,8 +453,8 @@ void		trap_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
 	syscall( CG_GETCURRENTSNAPSHOTNUMBER, snapshotNumber, serverTime );
 }
 
-qboolean	trap_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
-	return syscall( CG_GETSNAPSHOT, snapshotNumber, snapshot );
+qboolean	trap_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerStates, void *entities ) {
+	return syscall( CG_GETSNAPSHOT, snapshotNumber, snapshot, playerStates, entities );
 }
 
 qboolean	trap_GetServerCommand( int serverCommandNumber ) {

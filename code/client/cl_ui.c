@@ -53,10 +53,12 @@ static void GetClientState( uiClientState_t *state ) {
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
 		state->clientNums[i] = clc.clientNums[i];
 
-		if (cl.snap.lcIndex[i] != -1)
-			state->psClientNums[i] = cl.snap.pss[cl.snap.lcIndex[i]].clientNum;
-		else
+		if ( cl.snap.valid && cl.snap.lcIndex[i] != -1 ) {
+			sharedPlayerState_t *ps = (sharedPlayerState_t*) DA_ElementPointer( cl.snap.playerStates, cl.snap.lcIndex[i] );
+			state->psClientNums[i] = ps->clientNum;
+		} else {
 			state->psClientNums[i] = clc.clientNums[i];
+		}
 	}
 }
 

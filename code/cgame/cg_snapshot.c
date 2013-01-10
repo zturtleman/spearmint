@@ -314,7 +314,7 @@ static snapshot_t *CG_ReadNextSnapshot( void ) {
 
 		// try to read the snapshot from the client system
 		cgs.processedSnapshotNum++;
-		r = trap_GetSnapshot( cgs.processedSnapshotNum, dest );
+		r = trap_GetSnapshot( cgs.processedSnapshotNum, dest, dest->pss, dest->entities );
 
 		// FIXME: why would trap_GetSnapshot return a snapshot with the same server time
 		if ( cg.snap && r && dest->serverTime == cg.snap->serverTime ) {

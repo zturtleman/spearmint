@@ -627,7 +627,7 @@ static void SVC_Status( netadr_t from ) {
 	int		i;
 	client_t	*cl;
 	player_t	*pl;
-	playerState_t	*ps;
+	sharedPlayerState_t	*ps;
 	int		statusLength;
 	int		playerLength;
 	char	infostring[MAX_INFO_STRING];
@@ -1015,7 +1015,7 @@ static void SV_CalcPings( void ) {
 	client_t	*cl;
 	int			total, count;
 	int			delta;
-	playerState_t	*ps;
+	sharedPlayerState_t	*ps;
 
 	for (i=0 ; i < sv_maxclients->integer ; i++) {
 		cl = &svs.clients[i];
@@ -1092,7 +1092,7 @@ static void SV_CheckTimeouts( void ) {
 		&& cl->lastPacketTime < zombiepoint) {
 			// using the client id cause the cl->name is empty at this point
 			Com_DPrintf( "Going from CS_ZOMBIE to CS_FREE for client %d\n", i );
-			cl->state = CS_FREE;	// can now be reused
+			SV_FreeClient( cl );	// can now be reused
 			continue;
 		}
 		if ( cl->state >= CS_CONNECTED && cl->lastPacketTime < droppoint) {
@@ -1100,7 +1100,7 @@ static void SV_CheckTimeouts( void ) {
 			// cause a timeout
 			if ( ++cl->timeoutCount > 5 ) {
 				SV_DropClient (cl, "timed out"); 
-				cl->state = CS_FREE;	// don't bother with zombie state
+				SV_FreeClient( cl );	// don't bother with zombie state
 			}
 		} else {
 			cl->timeoutCount = 0;

@@ -1012,7 +1012,7 @@ static void SV_Status_f( void ) {
 	int			i, j, l;
 	player_t	*player;
 	client_t	*cl;
-	playerState_t	*ps;
+	sharedPlayerState_t	*ps;
 	const char		*s;
 	int			ping;
 

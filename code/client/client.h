@@ -74,7 +74,7 @@ typedef struct {
 	int				cmdNum;			// the next cmdNum the server is expecting
 
 	int				numPSs;
-	playerState_t	pss[MAX_SPLITVIEW];		// complete information about the current players at this time
+	darray_t		playerStates;	// complete information about the current players at this time
 	int				lcIndex[MAX_SPLITVIEW];
 
 	int				numEntities;			// all of the entities that need to be presented
@@ -162,12 +162,18 @@ typedef struct {
 	// big stuff at end of structure so most offsets are 15 bits or less
 	clSnapshot_t	snapshots[PACKET_BACKUP];
 
-	entityState_t	entityBaselines[MAX_GENTITIES];	// for delta compression when not in previous frame
+	darray_t		entityBaselines; // entityState_t [MAX_GENTITIES], for delta compression when not in previous frame
 
-	entityState_t	parseEntities[MAX_PARSE_ENTITIES];
+	darray_t		parseEntities; // entityState_t [MAX_PARSE_ENTITIES]
+
+	int				cgameEntityStateSize;
+	int				cgamePlayerStateSize;
+
 } clientActive_t;
 
 extern	clientActive_t		cl;
+
+sharedEntityState_t *CL_ParseEntityState( int num );
 
 /*
 =============================================================================

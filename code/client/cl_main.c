@@ -191,16 +191,19 @@ void CL_UpdateMumble(void)
 	vec3_t pos, forward, up;
 	float scale = cl_mumbleScale->value;
 	float tmp;
+	sharedPlayerState_t *ps;
 	
 	if(!cl_useMumble->integer)
 		return;
 
-	// !!! FIXME: not sure if this is even close to correct.
-	AngleVectors( cl.snap.pss[0].viewangles, forward, NULL, up);
+	ps = (sharedPlayerState_t *)DA_ElementPointer( cl.snap.playerStates, 0 );
 
-	pos[0] = cl.snap.pss[0].origin[0] * scale;
-	pos[1] = cl.snap.pss[0].origin[2] * scale;
-	pos[2] = cl.snap.pss[0].origin[1] * scale;
+	// !!! FIXME: not sure if this is even close to correct.
+	AngleVectors( ps->viewangles, forward, NULL, up);
+
+	pos[0] = ps->origin[0] * scale;
+	pos[1] = ps->origin[2] * scale;
+	pos[2] = ps->origin[1] * scale;
 
 	tmp = forward[1];
 	forward[1] = forward[2];
@@ -790,8 +793,9 @@ void CL_Record_f( void ) {
 	msg_t	buf;
 	int			i;
 	int			len;
-	entityState_t	*ent;
-	entityState_t	nullstate;
+#if 0 // ZTM: FIXME: ### baseline
+	sharedEntityState_t	*ent;
+#endif
 	char		*s;
 
 	if ( Cmd_Argc() > 2 ) {
@@ -884,16 +888,17 @@ void CL_Record_f( void ) {
 		MSG_WriteBigString (&buf, s);
 	}
 
+#if 0 // ZTM: FIXME: ### baseline is disabled atm
 	// baselines
-	Com_Memset (&nullstate, 0, sizeof(nullstate));
 	for ( i = 0; i < MAX_GENTITIES ; i++ ) {
-		ent = &cl.entityBaselines[i];
+		ent = (sharedEntityState_t *)DA_ElementPointer( cl.entityBaselines, i );
 		if ( !ent->number ) {
 			continue;
 		}
 		MSG_WriteByte (&buf, svc_baseline);		
-		MSG_WriteDeltaEntity (&buf, &nullstate, ent, qtrue );
+		MSG_WriteDeltaEntity (&buf, NULL, ent, qtrue );
 	}
+#endif
 
 	MSG_WriteByte( &buf, svc_EOF );
 	
@@ -1299,6 +1304,8 @@ CL_ShutdownAll
 */
 void CL_ShutdownAll(qboolean shutdownRef)
 {
+	int index;
+
 	if(CL_VideoRecording())
 		CL_CloseAVI();
 
@@ -1314,6 +1321,15 @@ void CL_ShutdownAll(qboolean shutdownRef)
 	CL_ShutdownCGame();
 	// shutdown UI
 	CL_ShutdownUI();
+
+	// free client structure
+	for (index = 0; index < ARRAY_LEN(cl.snapshots); index++) {
+		DA_Free( &cl.snapshots[index].playerStates );
+		cl.snapshots[index].valid = qfalse;
+	}
+
+	DA_Free( &cl.entityBaselines );
+	DA_Free( &cl.parseEntities );
 
 	// shutdown the renderer
 	if(shutdownRef)
@@ -2140,15 +2156,6 @@ void CL_DownloadsComplete( void ) {
 
 	// let the client game init and load data
 	clc.state = CA_LOADING;
-
-	// Pump the loop, this may change gamestate!
-	Com_EventLoop();
-
-	// if the gamestate was changed by calling Com_EventLoop
-	// then we loaded everything already and we don't want to do it again.
-	if ( clc.state != CA_LOADING ) {
-		return;
-	}
 
 	// starting to load a map so we get out of full screen ui mode
 	Cvar_Set("r_uiFullScreen", "0");

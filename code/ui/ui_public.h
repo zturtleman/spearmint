@@ -38,7 +38,7 @@ typedef struct {
 	connstate_t		connState;
 	int				connectPacketCount;
 	int				clientNums[MAX_SPLITVIEW];
-	int				psClientNums[MAX_SPLITVIEW]; // clientNum from local client's playerState_t, which could be a followed client.
+	int				psClientNums[MAX_SPLITVIEW]; // clientNums from player states, which could be followed clients.
 	char			servername[MAX_STRING_CHARS];
 	char			updateInfoString[MAX_STRING_CHARS];
 	char			messageString[MAX_STRING_CHARS];

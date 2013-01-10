@@ -1697,7 +1697,7 @@ void		trap_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime );
 
 // a snapshot get can fail if the snapshot (or the entties it holds) is so
 // old that it has fallen out of the client system queue
-qboolean	trap_GetSnapshot( int snapshotNumber, snapshot_t *snapshot );
+qboolean	trap_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerStates, void *entities );
 
 // retrieve a text command from the server stream
 // the current snapshot will hold the number of the most recent command

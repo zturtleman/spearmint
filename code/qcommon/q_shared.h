@@ -1160,100 +1160,30 @@ typedef struct {
 
 //=========================================================
 
-// bit field limits
-#define	MAX_STATS				16
-#define	MAX_PERSISTANT			16
-#define	MAX_POWERUPS			16
-#define	MAX_WEAPONS				16		
+// New fields cannot be added to sharedPlayerState_t without updating
+//   playerState_t in bg_misc.h (and thus breaking mod compatiblity).
 
-#define	MAX_PS_EVENTS			2
-
-#define PS_PMOVEFRAMECOUNTBITS	6
-
-// playerState_t is the information needed by both the client and server
-// to predict player motion and actions
-// nothing outside of pmove should modify these, or some degree of prediction error
-// will occur
-
-// you can't add anything to this without modifying the code in msg.c
-
-// playerState_t is a full superset of entityState_t as it is used by players,
-// so if a playerState_t is transmitted, the entityState_t can be fully derived
-// from it.
-typedef struct playerState_s {
+typedef struct sharedPlayerState_s {
 	int			commandTime;	// cmd->serverTime of last executed command
-	int			pm_type;
-	int			bobCycle;		// for view bobbing and footstep generation
-	int			pm_flags;		// ducked, jump_held, etc
-	int			pm_time;
 
 	vec3_t		origin;
-	vec3_t		velocity;
-	int			weaponTime;
-	int			gravity;
-	int			speed;
+
 	int			delta_angles[3];	// add to command angles to get view direction
 									// changed by spawns, rotating objects, and teleporters
 
-	vec3_t		mins, maxs;		// bounding box size
-
-	int			groundEntityNum;// ENTITYNUM_NONE = in air
-
-	int			legsTimer;		// don't change low priority animations until this runs out
-	int			legsAnim;		// mask off ANIM_TOGGLEBIT
-
-	int			torsoTimer;		// don't change low priority animations until this runs out
-	int			torsoAnim;		// mask off ANIM_TOGGLEBIT
-
-	int			movementDir;	// a number 0 to 7 that represents the relative angle
-								// of movement to the view angle (axial and diagonals)
-								// when at rest, the value will remain unchanged
-								// used to twist the legs during strafing
-
-	vec3_t		grapplePoint;	// location of grapple to pull towards if PMF_GRAPPLE_PULL
-
-	int			eFlags;			// copied to entityState_t->eFlags
-	int			contents;		// copied to entityState_t->contents
-	qboolean	capsule;		// copied to entityState_t->capsule
-
 	qboolean	linked;			// set by server
 
-	int			eventSequence;	// pmove generated events
-	int			events[MAX_PS_EVENTS];
-	int			eventParms[MAX_PS_EVENTS];
-
-	int			externalEvent;	// events set on player from another source
-	int			externalEventParm;
-	int			externalEventTime;
-
 	int			clientNum;		// ranges from 0 to MAX_CLIENTS-1
-	int			weapon;			// copied to entityState_t->weapon
-	int			weaponstate;
 
 	vec3_t		viewangles;		// for fixed views
 	int			viewheight;
 
-	// damage feedback
-	int			damageEvent;	// when it changes, latch the other parms
-	int			damageYaw;
-	int			damagePitch;
-	int			damageCount;
-
-	int			stats[MAX_STATS];
-	int			persistant[MAX_PERSISTANT];	// stats that aren't cleared on death
-	int			powerups[MAX_POWERUPS];	// level.time that the powerup runs out
-	int			ammo[MAX_WEAPONS];
-
-	int			generic1;
-	int			loopSound;
-	int			jumppad_ent;	// jumppad entity hit this frame
-
-	// not communicated over the net at all
 	int			ping;			// server to game info for scoreboard
-	int			pmove_framecount;	// FIXME: don't transmit over the network
-	int			jumppad_frame;
-	int			entityEventSequence;
-} playerState_t;
+
+	// ZTM: FIXME: make persistant private to game/cgame. Currently server accesses PERS_SCORE (0) in it.
+	int			persistant[1];	// stats that aren't cleared on death
+
+} sharedPlayerState_t;
 
 
 // Max players for splitscreen
@@ -1318,65 +1248,32 @@ typedef struct {
 	vec3_t	trDelta;			// velocity, etc
 } trajectory_t;
 
-// entityState_t is the information conveyed from the server
-// in an update message about entities that the client will
-// need to render in some way
-// Different eTypes may use the information in different ways
-// The messages are delta compressed, so it doesn't really matter if
-// the structure size is fairly large
+// New fields cannot be added to sharedEntityState_t without updating
+//   entityState_t in bg_misc.h (and thus breaking mod compatiblity).
 
-typedef struct entityState_s {
+typedef struct sharedEntityState_s {
 	int		number;			// entity index
-	int		eType;			// entityType_t
-	int		eFlags;
-
-	trajectory_t	pos;	// for calculating position
-	trajectory_t	apos;	// for calculating angles
-
-	int		time;
-	int		time2;
-
-	vec3_t	origin;
-	vec3_t	origin2;
-
-	vec3_t	angles;
-	vec3_t	angles2;
-
-	int		otherEntityNum;	// shotgun sources, etc
-	int		otherEntityNum2;
-
-	int		groundEntityNum;	// ENTITYNUM_NONE = in air
-
-	int		constantLight;	// r + (g<<8) + (b<<16) + (intensity<<24)
-	int		loopSound;		// constantly loop this sound
-
-	int		modelindex;
-	int		modelindex2;
-	int		clientNum;		// 0 to (MAX_CLIENTS - 1), for players and corpses
-	int		frame;
 
 	int		contents;		// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
 							// a non-solid entity should set to 0
+
+	qboolean	capsule;	// if true, use capsule instead of bbox for clipping against this ent
 
 	qboolean	bmodel;		// if true, modelindex is an inline model number
 							// if false, assume an explicit mins / maxs bounding box
 							// only set by trap_SetBrushModel
 
-	qboolean	capsule;	// if true, use capsule instead of bbox for clipping against this ent
+	int		modelindex;
 
 	vec3_t		mins, maxs;	// bounding box size
 
-	int		event;			// impulse events -- muzzle flashes, footsteps, etc
-	int		eventParm;
+	vec3_t	origin;
+	vec3_t	origin2;
 
-	// for players
-	int		powerups;		// bit flags
-	int		weapon;			// determines weapon and flash model, etc
-	int		legsAnim;		// mask off ANIM_TOGGLEBIT
-	int		torsoAnim;		// mask off ANIM_TOGGLEBIT
-
+	// ZTM: FIXME: Server should not require a variable named "generic."
 	int		generic1;
-} entityState_t;
+
+} sharedEntityState_t;
 
 typedef struct {
 	int		offset;

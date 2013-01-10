@@ -1271,7 +1271,7 @@ If force is not set, then nothing at all will be generated if the entity is
 identical, under the assumption that the in-order delta code will catch it.
 ==================
 */
-void MSG_WriteDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
+void MSG_WriteDeltaEntity( msg_t *msg, sharedEntityState_t *from, sharedEntityState_t *to,
 						   qboolean force ) {
 	int			lc;
 
@@ -1328,7 +1328,7 @@ If the delta removes the entity, entityState_t->number will be set to MAX_GENTIT
 Can go from either a baseline or a previous packet_entity
 ==================
 */
-void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to, 
+void MSG_ReadDeltaEntity( msg_t *msg, sharedEntityState_t *from, sharedEntityState_t *to, 
 						 int number) {
 	int			lc;
 	int			print;
@@ -1404,7 +1404,7 @@ MSG_WriteDeltaPlayerstate
 
 =============
 */
-void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct playerState_s *to ) {
+void MSG_WriteDeltaPlayerstate( msg_t *msg, sharedPlayerState_t *from, sharedPlayerState_t *to ) {
 	int				lc;
 
 	if ( !msg_playerStateFields.fields ) {
@@ -1424,7 +1424,7 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 MSG_ReadDeltaPlayerstate
 ===================
 */
-void MSG_ReadDeltaPlayerstate (msg_t *msg, playerState_t *from, playerState_t *to ) {
+void MSG_ReadDeltaPlayerstate (msg_t *msg, sharedPlayerState_t *from, sharedPlayerState_t *to ) {
 	int			lc;
 	int			startBit;
 	int			print;

@@ -76,8 +76,8 @@ typedef struct gentity_s gentity_t;
 typedef struct gclient_s gclient_t;
 
 struct gentity_s {
-	entityState_t	s;				// communicated by server to clients
 	entityShared_t	r;				// shared by both the server system and game
+	entityState_t	s;				// communicated by server to clients
 
 	// DO NOT MODIFY ANYTHING ABOVE THIS, THE SERVER
 	// EXPECTS THE FIELDS IN THAT ORDER!
