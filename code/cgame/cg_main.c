@@ -520,8 +520,12 @@ void CG_RemoveNotifyLine( cglc_t *localClient )
 		localClient->consoleText[ i ] = localClient->consoleText[ i + offset ];
 
 	// pop up the first consoleLine
-	for ( i = 0; i < localClient->numConsoleLines; i++ )
-		localClient->consoleLines[ i ] = localClient->consoleLines[ i + 1 ];
+	for ( i = 1; i < localClient->numConsoleLines; i++ )
+		localClient->consoleLines[ i - 1 ] = localClient->consoleLines[ i ];
+
+	// clear last slot
+	localClient->consoleLines[ localClient->numConsoleLines - 1 ].length = 0;
+	localClient->consoleLines[ localClient->numConsoleLines - 1 ].time = 0;
 
 	localClient->numConsoleLines--;
 }
@@ -532,7 +536,7 @@ CG_AddNotifyText
 =================
 */
 void CG_AddNotifyText( void ) {
-	char text[ BIG_INFO_STRING ];
+	char text[ MAX_CONSOLE_TEXT - 1 ];
 	char *buffer;
 	int bufferLen;
 	int lc;
@@ -571,6 +575,11 @@ void CG_AddNotifyText( void ) {
 
 		if( localClient->numConsoleLines == MAX_CONSOLE_LINES )
 			CG_RemoveNotifyLine( localClient );
+
+		// free lines until there is enough space to fit buffer
+		while ( strlen( localClient->consoleText ) + bufferLen > MAX_CONSOLE_TEXT ) {
+			CG_RemoveNotifyLine( localClient );
+		}
 
 		Q_strcat( localClient->consoleText, MAX_CONSOLE_TEXT, buffer );
 		localClient->consoleLines[ localClient->numConsoleLines ].time = cg.time;
