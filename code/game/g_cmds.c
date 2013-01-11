@@ -516,7 +516,7 @@ void BroadcastTeamChange( gclient_t *client, int oldTeam )
 SetTeam
 =================
 */
-void SetTeam( gentity_t *ent, char *s ) {
+void SetTeam( gentity_t *ent, const char *s ) {
 	int					team, oldTeam;
 	gclient_t			*client;
 	int					clientNum;
@@ -646,7 +646,7 @@ void SetTeam( gentity_t *ent, char *s ) {
 	// get and distribute relevent paramters
 	ClientUserinfoChanged( clientNum );
 
-	// client sent an early team command, they haven't spawned yet.
+	// client hasn't spawned yet, they sent teampref or g_teamAutoJoin is enabled
 	if ( client->pers.connected != CON_CONNECTED ) {
 		return;
 	}
@@ -1750,17 +1750,8 @@ void ClientCommand( int connectionNum ) {
 	}
 
 	ent = g_entities + clientNum;
-	if ( !ent->client ) {
+	if (!ent->client || ent->client->pers.connected != CON_CONNECTED) {
 		return;		// not fully in game yet
-	}
-
-	if ( ent->client->pers.connected != CON_CONNECTED ) {
-		// Allow local clients to use team command before game finishes starting up,
-		// so team can be set by UI when starting a local game (without trying to have a wait command delay them).
-		if (ent->client->pers.localClient && !level.intermissiontime && Q_stricmp (cmd, "team") == 0) {
-			Cmd_Team_f (ent);
-		}
-		return;
 	}
 
 	if (Q_stricmp (cmd, "say") == 0) {

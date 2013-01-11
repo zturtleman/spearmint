@@ -5221,18 +5221,13 @@ BotDeathmatchAI
 ==================
 */
 void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
-	char gender[144], name[144], buf[144];
+	char gender[144], name[144];
 	int i;
 
 	//if the bot has just been setup
 	if (bs->setupcount > 0) {
 		bs->setupcount--;
 		if (bs->setupcount > 0) return;
-		//set the team
-		if ( !bs->map_restart && g_gametype.integer != GT_TOURNAMENT ) {
-			Com_sprintf(buf, sizeof(buf), "team %s", bs->settings.team);
-			trap_EA_Command(bs->client, buf);
-		}
 		//get the gender characteristic
 		trap_Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, sizeof(gender));
 		//set the chat gender

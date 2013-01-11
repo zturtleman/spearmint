@@ -569,7 +569,6 @@ qboolean G_BotConnect( int clientNum, qboolean restart ) {
 
 	Q_strncpyz( settings.characterfile, Info_ValueForKey( userinfo, "characterfile" ), sizeof(settings.characterfile) );
 	settings.skill = atof( Info_ValueForKey( userinfo, "skill" ) );
-	Q_strncpyz( settings.team, Info_ValueForKey( userinfo, "team" ), sizeof(settings.team) );
 
 	if (!BotAISetupClient( clientNum, &settings, restart )) {
 		trap_DropClient( clientNum, "BotAISetupClient failed" );
@@ -664,7 +663,7 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	Info_SetValueForKey( userinfo, "rate", "25000" );
 	Info_SetValueForKey( userinfo, "snaps", "20" );
 	Info_SetValueForKey( userinfo, "skill", va("%.2f", skill) );
-	Info_SetValueForKey( userinfo, "team", team );
+	Info_SetValueForKey( userinfo, "teampref", team );
 
 	if ( skill >= 1 && skill < 2 ) {
 		Info_SetValueForKey( userinfo, "handicap", "50" );

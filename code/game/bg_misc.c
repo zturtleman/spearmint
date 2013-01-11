@@ -1821,6 +1821,11 @@ void BG_RegisterClientCvars(int maxSplitview) {
 
 		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "teamtask"), "0", userInfo[i] );
 
+		// set to in ui before starting server
+		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "teampref"), "", userInfo[i] );
+		// clear team if was previously set (only want it used for one game)
+		trap_Cvar_Set( Com_LocalClientCvarName(i, "teampref"), "" );
+
 		// init autoswitch so the ui will have it correctly even
 		// if the cgame hasn't been started
 		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "cg_autoswitch"), "1", CVAR_ARCHIVE);

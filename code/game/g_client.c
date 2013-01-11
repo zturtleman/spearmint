@@ -733,7 +733,7 @@ if desired.
 */
 void ClientUserinfoChanged( int clientNum ) {
 	gentity_t *ent;
-	int		teamTask, teamLeader, team;
+	int		teamTask, teamLeader;
 	char	*s;
 	char	model[MAX_QPATH];
 	char	headModel[MAX_QPATH];
@@ -808,22 +808,6 @@ void ClientUserinfoChanged( int clientNum ) {
 		Q_strncpyz( headModel, Info_ValueForKey (userinfo, "headmodel"), sizeof( headModel ) );
 	}
 
-	// bots set their team a few frames later
-	if (g_gametype.integer >= GT_TEAM && g_entities[clientNum].r.svFlags & SVF_BOT) {
-		s = Info_ValueForKey( userinfo, "team" );
-		if ( !Q_stricmp( s, "red" ) || !Q_stricmp( s, "r" ) ) {
-			team = TEAM_RED;
-		} else if ( !Q_stricmp( s, "blue" ) || !Q_stricmp( s, "b" ) ) {
-			team = TEAM_BLUE;
-		} else {
-			// pick the team with the least number of players
-			team = PickTeam( clientNum );
-		}
-	}
-	else {
-		team = client->sess.sessionTeam;
-	}
-
 /*	NOTE: all client side now
 
 	// team
@@ -889,7 +873,7 @@ void ClientUserinfoChanged( int clientNum ) {
 	if (ent->r.svFlags & SVF_BOT)
 	{
 		s = va("n\\%s\\t\\%i\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%s\\hc\\%i\\w\\%i\\l\\%i\\skill\\%s\\tt\\%d\\tl\\%d",
-			client->pers.netname, team, model, headModel, c1, c2, 
+			client->pers.netname, client->sess.sessionTeam, model, headModel, c1, c2, 
 			client->pers.maxHealth, client->sess.wins, client->sess.losses,
 			Info_ValueForKey( userinfo, "skill" ), teamTask, teamLeader );
 	}

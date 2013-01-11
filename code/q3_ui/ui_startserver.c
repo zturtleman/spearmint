@@ -860,7 +860,18 @@ static void ServerOptions_Start( void ) {
 	trap_Cvar_SetValue( "g_friendlyfire", friendlyfire );
 	trap_Cvar_SetValue( "sv_pure", pure );
 	trap_Cvar_Set("sv_hostname", s_serveroptions.hostname.field.buffer );
-	
+
+	// set player's team
+	if( dedicated == 0 && s_serveroptions.gametype >= GT_TEAM ) {
+		trap_Cmd_ExecuteText( EXEC_APPEND, va( "teampref %s\n", playerTeam_list[s_serveroptions.playerTeam[0].curvalue] ) );
+
+		for (n = 1; n < UI_MaxSplitView(); ++n) {
+			if (s_serveroptions.playerType[n].curvalue == PT_HUMAN) {
+				trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s %s\n", Com_LocalClientCvarName( n, "teampref" ), playerTeam_list[s_serveroptions.playerTeam[n].curvalue] ) );
+			}
+		}
+	}
+
 	// the wait commands will allow the dedicated to take effect
 	info = UI_GetArenaInfoByNumber( s_startserver.maplist[ s_startserver.currentmap ]);
 	trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait ; wait ; map %s\n", Info_ValueForKey( info, "map" )));
@@ -882,17 +893,6 @@ static void ServerOptions_Start( void ) {
 			Com_sprintf( buf, sizeof(buf), "addbot %s %i\n", s_serveroptions.botNameBuffers[n], skill );
 		}
 		trap_Cmd_ExecuteText( EXEC_APPEND, buf );
-	}
-
-	// set player's team
-	if( dedicated == 0 && s_serveroptions.gametype >= GT_TEAM ) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, va( "team %s\n", playerTeam_list[s_serveroptions.playerTeam[0].curvalue] ) );
-
-		for (n = 1; n < UI_MaxSplitView(); ++n) {
-			if (s_serveroptions.playerType[n].curvalue == PT_HUMAN) {
-				trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s %s\n", Com_LocalClientCvarName(n, "team"), playerTeam_list[s_serveroptions.playerTeam[n].curvalue] ) );
-			}
-		}
 	}
 }
 
