@@ -1588,8 +1588,7 @@ static	void R_SetParent (mnode_t *node, mnode_t *parent) {
 			while ( c-- )
 			{
 				gen = ( srfGeneric_t* )( **mark ).data;
-				if ( gen->surfaceType != SF_FACE &&
-					 gen->surfaceType != SF_GRID &&
+				if ( gen->surfaceType != SF_GRID &&
 					 gen->surfaceType != SF_TRIANGLES &&
 					 gen->surfaceType != SF_FOLIAGE ) {
 					continue;

@@ -1048,60 +1048,6 @@ static void RB_SurfaceMesh(md3Surface_t *surface) {
 }
 
 
-/*
-==============
-RB_SurfaceFace
-==============
-*/
-static void RB_SurfaceFace( srfSurfaceFace_t *surf ) {
-	int			i;
-	unsigned	*indices, *tessIndexes;
-	float		*v;
-	float		*normal;
-	int			ndx;
-	int			Bob;
-	int			numPoints;
-	int			dlightBits;
-
-	RB_CHECKOVERFLOW( surf->numPoints, surf->numIndices );
-
-	dlightBits = surf->dlightBits[backEnd.smpFrame];
-	tess.dlightBits |= dlightBits;
-
-	indices = ( unsigned * ) ( ( ( char  * ) surf ) + surf->ofsIndices );
-
-	Bob = tess.numVertexes;
-	tessIndexes = tess.indexes + tess.numIndexes;
-	for ( i = surf->numIndices-1 ; i >= 0  ; i-- ) {
-		tessIndexes[i] = indices[i] + Bob;
-	}
-
-	tess.numIndexes += surf->numIndices;
-
-	numPoints = surf->numPoints;
-
-	if ( tess.shader->needsNormal ) {
-		normal = surf->plane.normal;
-		for ( i = 0, ndx = tess.numVertexes; i < numPoints; i++, ndx++ ) {
-			VectorCopy( normal, tess.normal[ndx] );
-		}
-	}
-
-	for ( i = 0, v = surf->points[0], ndx = tess.numVertexes; i < numPoints; i++, v += VERTEXSIZE, ndx++ ) {
-		VectorCopy( v, tess.xyz[ndx]);
-		tess.texCoords[ndx][0][0] = v[3];
-		tess.texCoords[ndx][0][1] = v[4];
-		tess.texCoords[ndx][1][0] = v[5];
-		tess.texCoords[ndx][1][1] = v[6];
-		* ( unsigned int * ) &tess.vertexColors[ndx] = * ( unsigned int * ) &v[7];
-		tess.vertexDlightBits[ndx] = dlightBits;
-	}
-
-
-	tess.numVertexes += surf->numPoints;
-}
-
-
 static float	LodErrorForVolume( vec3_t local, float radius ) {
 	vec3_t		world;
 	float		d;
@@ -1406,7 +1352,6 @@ static void RB_SurfaceSkip( void *surf ) {
 void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_SurfaceBad,			// SF_BAD, 
 	(void(*)(void*))RB_SurfaceSkip,			// SF_SKIP, 
-	(void(*)(void*))RB_SurfaceFace,			// SF_FACE,
 	(void(*)(void*))RB_SurfaceGrid,			// SF_GRID,
 	(void(*)(void*))RB_SurfaceTriangles,		// SF_TRIANGLES,
 	(void(*)(void*))RB_SurfaceFoliage,			// SF_FOLIAGE,

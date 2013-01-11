@@ -56,7 +56,6 @@ static qboolean R_CullSurface( surfaceType_t *surface, shader_t *shader/*, int *
 	// ydnar: made surface culling generic, inline with q3map2 surface classification
 	switch ( *surface )
 	{
-	case SF_FACE:
 	case SF_TRIANGLES:
 		break;
 	case SF_GRID:
@@ -135,7 +134,6 @@ static int R_DlightSurface( msurface_t *surface, int dlightBits ) {
 	// ydnar: made surface dlighting generic, inline with q3map2 surface classification
 	switch ( (surfaceType_t) *surface->data )
 	{
-	case SF_FACE:
 	case SF_TRIANGLES:
 	case SF_GRID:
 	case SF_FOLIAGE:

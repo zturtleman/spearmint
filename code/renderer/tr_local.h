@@ -546,7 +546,6 @@ SURFACES
 typedef enum {
 	SF_BAD,
 	SF_SKIP,				// ignore
-	SF_FACE,
 	SF_GRID,
 	SF_TRIANGLES,
 	SF_FOLIAGE,
@@ -651,30 +650,6 @@ typedef struct srfGridMesh_s
 	drawVert_t		verts[1];		// variable sized
 } srfGridMesh_t;
 
-
-
-#define	VERTEXSIZE	8
-
-typedef struct srfSurfaceFace_s
-{
-	surfaceType_t	surfaceType;
-
-	// culling information
-	vec3_t bounds[ 2 ];
-	vec3_t origin;
-	float radius;
-	cplane_t	plane;
-
-	// dynamic lighting information
-	int			dlightBits[SMP_FRAMES];
-
-	// triangle definitions (no normals at points)
-	int			numPoints;
-	int			numIndices;
-	int			ofsIndices;
-	float		points[1][VERTEXSIZE];	// variable sized
-										// there is a variable length list of indices here also
-} srfSurfaceFace_t;
 
 
 // misc_models in maps are turned into direct geometry by q3map2 ;D

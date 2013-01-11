@@ -102,12 +102,14 @@ void R_DlightBmodel( bmodel_t *bmodel ) {
 	for ( i = 0 ; i < bmodel->numSurfaces ; i++ ) {
 		surf = bmodel->firstSurface + i;
 
-		if ( *surf->data == SF_FACE ) {
-			((srfSurfaceFace_t *)surf->data)->dlightBits[ tr.smpFrame ] = mask;
-		} else if ( *surf->data == SF_GRID ) {
-			((srfGridMesh_t *)surf->data)->dlightBits[ tr.smpFrame ] = mask;
-		} else if ( *surf->data == SF_TRIANGLES ) {
-			((srfTriangles_t *)surf->data)->dlightBits[ tr.smpFrame ] = mask;
+		switch ( *surf->data ) {
+			case SF_TRIANGLES:
+			case SF_GRID:
+			case SF_FOLIAGE:
+				((srfGeneric_t *)surf->data)->dlightBits[ tr.smpFrame ] = mask;
+				break;
+			default:
+				break;
 		}
 	}
 }
