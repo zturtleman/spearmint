@@ -506,7 +506,7 @@ static void ParseMesh( dsurface_t *ds, drawVert_t *verts, msurface_t *surf ) {
 ParseTriSurf
 ===============
 */
-static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int *indexes ) {
+static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int *indexes, qboolean forceMarks ) {
 	srfTriangles_t	*tri;
 	int				i, j;
 	int				numVerts, numIndexes;
@@ -537,6 +537,7 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, i
 	tri = R_GetSurfMemory( sizeof( *tri ) + numVerts * sizeof( tri->verts[0] )
 						   + numIndexes * sizeof( tri->indexes[0] ) );
 	tri->surfaceType = SF_TRIANGLES;
+	tri->forceMarks = forceMarks;
 	tri->numVerts = numVerts;
 	tri->numIndexes = numIndexes;
 	tri->verts = (drawVert_t *)(tri + 1);
@@ -1477,11 +1478,11 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 			numMeshes++;
 			break;
 		case MST_TRIANGLE_SOUP:
-			ParseTriSurf( in, dv, out, indexes );
+			ParseTriSurf( in, dv, out, indexes, qfalse );
 			numTriSurfs++;
 			break;
 		case MST_PLANAR:
-			ParseTriSurf( in, dv, out, indexes );
+			ParseTriSurf( in, dv, out, indexes, qtrue );
 			numFaces++;
 			break;
 		case MST_FLARE:

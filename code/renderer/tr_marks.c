@@ -437,9 +437,14 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 				}
 			}
 		}
-		else if(*surfaces[i] == SF_TRIANGLES && r_marksOnTriangleMeshes->integer) {
+		else if(*surfaces[i] == SF_TRIANGLES) {
 
 			srfTriangles_t *surf = (srfTriangles_t *) surfaces[i];
+
+			// Check if there should be marks on this surface
+			if ( !surf->forceMarks && !r_marksOnTriangleMeshes->integer) {
+				continue;
+			}
 
 			for (k = 0; k < surf->numIndexes; k += 3)
 			{
