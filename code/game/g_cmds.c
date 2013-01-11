@@ -1733,6 +1733,7 @@ ClientCommand
 void ClientCommand( int connectionNum ) {
 	gentity_t *ent;
 	gconnection_t *connection;
+	int		localPlayerNum;
 	int		clientNum;
 	char	*cmd;
 	char	buf[MAX_TOKEN_CHARS];
@@ -1746,28 +1747,24 @@ void ClientCommand( int connectionNum ) {
 	// Commands for extra local players.
 	// 2team, 2give, 2teamtask, ...
 	if (cmd[0] >= '2' && cmd[0] <= '0'+MAX_SPLITVIEW) {
-		int num;
-
-		num = cmd[0]-'1';
+		localPlayerNum = cmd[0]-'1';
 
 		cmd++;
 
-		if ( connection->localPlayerNums[num] == -1 ) {
+		if ( connection->localPlayerNums[localPlayerNum] == -1 ) {
 			//G_Printf("Client %d's local player %d not connected.\n", connectionNum, lc+1);
 			return;
 		}
 
-		clientNum = connection->localPlayerNums[num];
+		clientNum = connection->localPlayerNums[localPlayerNum];
 	} else {
-		int i;
-
-		for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
-			if ( connection->localPlayerNums[i] != -1 ) {
-				clientNum = connection->localPlayerNums[i];
+		for ( localPlayerNum = 0; localPlayerNum < MAX_SPLITVIEW; localPlayerNum++ ) {
+			if ( connection->localPlayerNums[localPlayerNum] != -1 ) {
+				clientNum = connection->localPlayerNums[localPlayerNum];
 				break;
 			}
 		}
-		if ( i == MAX_SPLITVIEW ) {
+		if ( localPlayerNum == MAX_SPLITVIEW ) {
 			//G_Printf("No Local player connected from connection %d!\n", connectionNum);
 			return;
 		}
