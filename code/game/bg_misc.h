@@ -161,9 +161,6 @@ typedef struct entityState_s {
 	vec3_t	origin;
 	vec3_t	origin2;
 
-	// ZTM: FIXME: Server should not require a variable named "generic."
-	int		generic1;
-
 	// DO NOT MODIFY ANYTHING ABOVE THIS, THE SERVER
 	// EXPECTS THE FIELDS IN THAT ORDER!
 	//================================
@@ -195,11 +192,14 @@ typedef struct entityState_s {
 	int		event;			// impulse events -- muzzle flashes, footsteps, etc
 	int		eventParm;
 
+	int		team;
+
 	// for players
 	int		powerups;		// bit flags
 	int		weapon;			// determines weapon and flash model, etc
 	int		legsAnim;		// mask off ANIM_TOGGLEBIT
 	int		torsoAnim;		// mask off ANIM_TOGGLEBIT
+	int		tokens;			// harvester skulls
 } entityState_t;
 
 
@@ -311,7 +311,7 @@ typedef struct playerState_s {
 	int			powerups[MAX_POWERUPS];	// level.time that the powerup runs out
 	int			ammo[MAX_WEAPONS];
 
-	int			generic1;
+	int			tokens;			// harvester skulls
 	int			loopSound;
 	int			jumppad_ent;	// jumppad entity hit this frame
 

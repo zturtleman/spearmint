@@ -315,7 +315,7 @@ qboolean EntityCarriesCubes(aas_entityinfo_t *entinfo) {
 		return qfalse;
 	//FIXME: get this info from the aas_entityinfo_t ?
 	BotAI_GetEntityState(entinfo->number, &state);
-	if (state.generic1 > 0)
+	if (state.tokens > 0)
 		return qtrue;
 	return qfalse;
 }
@@ -1787,12 +1787,12 @@ void BotUpdateInventory(bot_state_t *bs) {
 #ifdef MISSIONPACK
 	bs->inventory[INVENTORY_NEUTRALFLAG] = bs->cur_ps.powerups[PW_NEUTRALFLAG] != 0;
 	if (BotTeam(bs) == TEAM_RED) {
-		bs->inventory[INVENTORY_REDCUBE] = bs->cur_ps.generic1;
+		bs->inventory[INVENTORY_REDCUBE] = bs->cur_ps.tokens;
 		bs->inventory[INVENTORY_BLUECUBE] = 0;
 	}
 	else {
 		bs->inventory[INVENTORY_REDCUBE] = 0;
-		bs->inventory[INVENTORY_BLUECUBE] = bs->cur_ps.generic1;
+		bs->inventory[INVENTORY_BLUECUBE] = bs->cur_ps.tokens;
 	}
 #endif
 	BotCheckItemPickup(bs, oldinventory);
@@ -4737,7 +4737,7 @@ void BotCheckForProxMines(bot_state_t *bs, entityState_t *state) {
 	if (state->eType != ET_MISSILE || state->weapon != WP_PROX_LAUNCHER)
 		return;
 	// if this prox mine is from someone on our own team
-	if (state->generic1 == BotTeam(bs))
+	if (state->team == BotTeam(bs))
 		return;
 	// if the bot doesn't have a weapon to deactivate the mine
 	if (!(bs->inventory[INVENTORY_PLASMAGUN] > 0 && bs->inventory[INVENTORY_CELLS] > 0) &&

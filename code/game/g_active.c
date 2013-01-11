@@ -606,14 +606,14 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 
 #ifdef MISSIONPACK
 			if ( g_gametype.integer == GT_HARVESTER ) {
-				if ( ent->client->ps.generic1 > 0 ) {
+				if ( ent->client->ps.tokens > 0 ) {
 					if ( ent->client->sess.sessionTeam == TEAM_RED ) {
 						item = BG_FindItem( "Blue Cube" );
 					} else {
 						item = BG_FindItem( "Red Cube" );
 					}
 					if ( item ) {
-						for ( j = 0; j < ent->client->ps.generic1; j++ ) {
+						for ( j = 0; j < ent->client->ps.tokens; j++ ) {
 							drop = Drop_Item( ent, item, 0 );
 							if ( ent->client->sess.sessionTeam == TEAM_RED ) {
 								drop->spawnflags = TEAM_BLUE;
@@ -622,7 +622,7 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 							}
 						}
 					}
-					ent->client->ps.generic1 = 0;
+					ent->client->ps.tokens = 0;
 				}
 			}
 #endif

@@ -495,7 +495,7 @@ static void CG_Missile( centity_t *cent ) {
 
 #ifdef MISSIONPACK
 	if ( cent->currentState.weapon == WP_PROX_LAUNCHER ) {
-		if (s1->generic1 == TEAM_BLUE) {
+		if (s1->team == TEAM_BLUE) {
 			ent.hModel = cgs.media.blueProxMine;
 		}
 	}

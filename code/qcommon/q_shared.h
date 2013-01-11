@@ -1270,9 +1270,6 @@ typedef struct sharedEntityState_s {
 	vec3_t	origin;
 	vec3_t	origin2;
 
-	// ZTM: FIXME: Server should not require a variable named "generic."
-	int		generic1;
-
 } sharedEntityState_t;
 
 typedef struct {

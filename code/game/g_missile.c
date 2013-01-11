@@ -148,7 +148,7 @@ void ProximityMine_Trigger( gentity_t *trigger, gentity_t *other, trace_t *trace
 
 	if ( g_gametype.integer >= GT_TEAM ) {
 		// don't trigger same team mines
-		if (trigger->parent->s.generic1 == other->client->sess.sessionTeam) {
+		if (trigger->parent->s.team == other->client->sess.sessionTeam) {
 			return;
 		}
 	}
@@ -801,8 +801,7 @@ gentity_t *fire_prox( gentity_t *self, vec3_t start, vec3_t dir ) {
 	// if count == 1 then the prox mine left the player bbox and can attack to it
 	bolt->count = 0;
 
-	//FIXME: we prolly wanna abuse another field
-	bolt->s.generic1 = self->client->sess.sessionTeam;
+	bolt->s.team = self->client->sess.sessionTeam;
 
 	bolt->s.pos.trType = TR_GRAVITY;
 	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame

@@ -976,7 +976,8 @@ vmNetField_t	bg_entityStateFields[] =
 { NETF(modelindex), 8 },
 { NETF(otherEntityNum2), GENTITYNUM_BITS },
 { NETF(loopSound), 8 },
-{ NETF(generic1), 8 },
+{ NETF(tokens), 8 },
+{ NETF(team), 8 },
 { NETF(origin2[2]), 0 },
 { NETF(origin2[0]), 0 },
 { NETF(origin2[1]), 0 },
@@ -1045,7 +1046,7 @@ vmNetField_t	bg_playerStateFields[] =
 { PSF(damageYaw), 8 },
 { PSF(damagePitch), 8 },
 { PSF(damageCount), 8 },
-{ PSF(generic1), 8 },
+{ PSF(tokens), 8 },
 { PSF(pm_type), 8 },					
 { PSF(delta_angles[0]), 16 },
 { PSF(delta_angles[2]), 16 },
@@ -1261,10 +1262,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		}
 
 		// check team only
-		if( ( ent->generic1 & 2 ) && ( ps->persistant[PERS_TEAM] != TEAM_RED ) ) {
-			return qfalse;
-		}
-		if( ( ent->generic1 & 4 ) && ( ps->persistant[PERS_TEAM] != TEAM_BLUE ) ) {
+		if( ent->team != 255 && ( ps->persistant[PERS_TEAM] != ent->team ) ) {
 			return qfalse;
 		}
 
@@ -1674,7 +1672,8 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 
 	s->contents = ps->contents;
 	s->loopSound = ps->loopSound;
-	s->generic1 = ps->generic1;
+	s->tokens = ps->tokens;
+	s->team = ps->persistant[PERS_TEAM];
 
 	s->bmodel = qfalse;
 	s->capsule = ps->capsule;
@@ -1765,7 +1764,8 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 
 	s->contents = ps->contents;
 	s->loopSound = ps->loopSound;
-	s->generic1 = ps->generic1;
+	s->tokens = ps->tokens;
+	s->team = ps->persistant[PERS_TEAM];
 
 	s->bmodel = qfalse;
 	s->capsule = ps->capsule;

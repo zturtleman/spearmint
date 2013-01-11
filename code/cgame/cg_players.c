@@ -1774,7 +1774,7 @@ static void CG_PlayerTokens( centity_t *cent, int renderfx ) {
 	vec3_t		dir, origin;
 	skulltrail_t *trail;
 	trail = &cg.skulltrails[cent->currentState.number];
-	tokens = cent->currentState.generic1;
+	tokens = cent->currentState.tokens;
 	if ( !tokens ) {
 		trail->numpositions = 0;
 		return;

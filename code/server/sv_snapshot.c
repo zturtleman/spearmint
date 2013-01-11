@@ -489,10 +489,10 @@ static void SV_AddEntitiesVisibleFromPoint( int clientNum, vec3_t origin, client
 
 		// if it's a portal entity, add everything visible from its camera position
 		if ( ent->r.svFlags & SVF_PORTAL ) {
-			if ( ent->s.generic1 ) {
+			if ( ent->r.portalCullDistance ) {
 				vec3_t dir;
 				VectorSubtract(ent->s.origin, origin, dir);
-				if ( VectorLengthSquared(dir) > (float) ent->s.generic1 * ent->s.generic1 ) {
+				if ( VectorLengthSquared(dir) > (float) ent->r.portalCullDistance * ent->r.portalCullDistance ) {
 					continue;
 				}
 			}

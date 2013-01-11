@@ -794,7 +794,7 @@ static void CG_HarvesterSkulls(rectDef_t *rect, float scale, vec4_t color, qbool
 	char num[16];
 	vec3_t origin, angles;
 	qhandle_t handle;
-	int value = cg.cur_ps->generic1;
+	int value = cg.cur_ps->tokens;
 
 	if (cgs.gametype != GT_HARVESTER) {
 		return;

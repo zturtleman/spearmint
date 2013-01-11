@@ -151,7 +151,7 @@ void TossClientCubes( gentity_t *self ) {
 	vec3_t		angles;
 	vec3_t		origin;
 
-	self->client->ps.generic1 = 0;
+	self->client->ps.tokens = 0;
 
 	// this should never happen but we should never
 	// get the server to crash due to skull being spawned in
@@ -417,7 +417,7 @@ void CheckAlmostScored( gentity_t *self, gentity_t *attacker ) {
 	char		*classname;
 
 	// if the player was carrying cubes
-	if ( self->client->ps.generic1 ) {
+	if ( self->client->ps.tokens ) {
 		if ( self->client->sess.sessionTeam == TEAM_BLUE ) {
 			classname = "team_redobelisk";
 		}

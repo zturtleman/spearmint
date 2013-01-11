@@ -83,6 +83,9 @@ typedef struct {
 	// ent->r.ownerNum == passEntityNum	(don't interact with your own missiles)
 	// entity[ent->r.ownerNum].r.ownerNum == passEntityNum	(don't interact with other missiles from owner)
 	int			ownerNum;
+
+	// if set, portal entities are only sent to client if distance between portal and client <= portalCullDistance
+	int			portalCullDistance;
 } entityShared_t;
 
 
