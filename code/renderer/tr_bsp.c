@@ -506,7 +506,7 @@ static void ParseMesh( dsurface_t *ds, drawVert_t *verts, msurface_t *surf ) {
 ParseTriSurf
 ===============
 */
-static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int *indexes, qboolean forceMarks ) {
+static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int *indexes, qboolean planar ) {
 	srfTriangles_t	*tri;
 	int				i, j;
 	int				numVerts, numIndexes;
@@ -537,7 +537,7 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, i
 	tri = R_GetSurfMemory( sizeof( *tri ) + numVerts * sizeof( tri->verts[0] )
 						   + numIndexes * sizeof( tri->indexes[0] ) );
 	tri->surfaceType = SF_TRIANGLES;
-	tri->forceMarks = forceMarks;
+	tri->planar = planar;
 	tri->numVerts = numVerts;
 	tri->numIndexes = numIndexes;
 	tri->verts = (drawVert_t *)(tri + 1);

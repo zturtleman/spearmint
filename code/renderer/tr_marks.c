@@ -171,7 +171,7 @@ void R_BoxSurfaces_r(mnode_t *node, vec3_t mins, vec3_t maxs, surfaceType_t **li
 			surf->viewCount = tr.viewCount;
 		}
 		// extra check for surfaces to avoid list overflows
-		else if (*(surf->data) == SF_TRIANGLES && (( srfTriangles_t * ) surf->data)->forceMarks) {
+		else if (*(surf->data) == SF_TRIANGLES && (( srfTriangles_t * ) surf->data)->planar) {
 			// the face plane should go through the box
 			s = BoxOnPlaneSide( mins, maxs, &(( srfTriangles_t * ) surf->data)->plane );
 			if (s == 1 || s == 2) {
@@ -414,7 +414,7 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 			srfTriangles_t *surf = (srfTriangles_t *) surfaces[i];
 
 			// Check if there should be marks on this surface
-			if ( !surf->forceMarks && !r_marksOnTriangleMeshes->integer) {
+			if ( !surf->planar && !r_marksOnTriangleMeshes->integer) {
 				continue;
 			}
 
