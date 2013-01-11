@@ -1061,6 +1061,14 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	// play lead change annoucement and time/frag limit warnings
 	CG_CheckGameSounds();
 
+	// add buffered sounds
+	CG_PlayBufferedSounds();
+
+#ifdef MISSIONPACK
+	// play buffered voice chats
+	CG_PlayBufferedVoiceChats();
+#endif
+
 	for (i = 0, cg.viewport = -1; i < CG_MaxSplitView(); i++) {
 		if (!renderClientViewport[i]) {
 			continue;
@@ -1093,14 +1101,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			CG_AddAtmosphericEffects();
 		}
 		CG_AddViewWeapon( &cg.cur_lc->predictedPlayerState );
-
-		// add buffered sounds
-		CG_PlayBufferedSounds();
-
-#ifdef MISSIONPACK
-		// play buffered voice chats
-		CG_PlayBufferedVoiceChats();
-#endif
 
 		// finish up the rest of the refdef
 		if ( cg.testModelEntity.hModel ) {

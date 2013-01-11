@@ -2844,8 +2844,18 @@ Draw console notify area.
 =====================
 */
 void CG_DrawNotify( void ) {
+	int x;
+
+#ifdef MISSIONPACK_HUD
+	// voice head is being shown
+	if ( cg.cur_lc->voiceTime && cg.cur_lc->clientNum != cg.cur_lc->currentVoiceClient )
+		x = 72;
+	else
+#endif
+		x = 0;
+
 	CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
-	CG_DrawSmallWrappedText(0, 0, cg.cur_lc->consoleText);
+	CG_DrawSmallWrappedText(x, 0, cg.cur_lc->consoleText);
 }
 
 //==================================================================================
@@ -2859,10 +2869,14 @@ void CG_DrawTimedMenus( void ) {
 	if (cg.cur_lc->voiceTime) {
 		int t = cg.time - cg.cur_lc->voiceTime;
 		if ( t > 2500 ) {
-			Menus_CloseByName("voiceMenu");
-			trap_Cvar_Set("cl_conXOffset", "0");
 			cg.cur_lc->voiceTime = 0;
 		}
+	}
+
+	if ( cg.cur_lc->voiceTime && cg.cur_lc->clientNum != cg.cur_lc->currentVoiceClient ) {
+		Menus_OpenByName("voiceMenu");
+	} else {
+		Menus_CloseByName("voiceMenu");
 	}
 }
 #endif
@@ -2916,8 +2930,8 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 			if ( cg_drawStatus.integer ) {
 				CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
 
-				Menu_PaintAll();
 				CG_DrawTimedMenus();
+				Menu_PaintAll();
 			}
 #else
 			CG_DrawStatusBar();

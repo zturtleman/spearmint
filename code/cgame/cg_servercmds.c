@@ -836,6 +836,7 @@ voiceChatList_t *CG_VoiceChatListForClient( int clientNum ) {
 
 typedef struct bufferedVoiceChat_s
 {
+	int localClientBits;
 	int clientNum;
 	sfxHandle_t snd;
 	int voiceOnly;
@@ -852,6 +853,9 @@ CG_PlayVoiceChat
 */
 void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 #ifdef MISSIONPACK
+	qboolean	showHead;
+	int			i;
+
 	// if we are going into the intermission, don't start any voices
 	if ( cg.intermissionStarted ) {
 		return;
@@ -867,13 +871,25 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 				cgs.acceptTask = orderTask;
 				cgs.acceptLeader = vchat->clientNum;
 			}
+		}
+
+		showHead = qfalse;
+		for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+			if ( vchat->localClientBits & ( 1 << i ) ) {
+				cg.localClients[i].voiceTime = cg.time;
+				cg.localClients[i].currentVoiceClient = vchat->clientNum;
+				showHead = qtrue;
+			}
+		}
+
+		if ( showHead ) {
 			// see if this was an order
 			CG_ShowResponseHead();
 		}
 	}
 	if (!vchat->voiceOnly && !cg_noVoiceText.integer) {
 		CG_AddToTeamChat( vchat->message );
-		CG_Printf( "%s\n", vchat->message );
+		CG_NotifyBitsPrintf( vchat->localClientBits, "%s\n", vchat->message );
 	}
 	voiceChatBuffer[cg.voiceChatBufferOut].snd = 0;
 #endif
@@ -924,7 +940,7 @@ void CG_AddBufferedVoiceChat( bufferedVoiceChat_t *vchat ) {
 CG_VoiceChatLocal
 =================
 */
-void CG_VoiceChatLocal( int mode, qboolean voiceOnly, int clientNum, int color, const char *cmd ) {
+void CG_VoiceChatLocal( int localClientBits, int mode, qboolean voiceOnly, int clientNum, int color, const char *cmd ) {
 #ifdef MISSIONPACK
 	char *chat;
 	voiceChatList_t *voiceChatList;
@@ -942,13 +958,12 @@ void CG_VoiceChatLocal( int mode, qboolean voiceOnly, int clientNum, int color, 
 	}
 	ci = &cgs.clientinfo[ clientNum ];
 
-	cgs.currentVoiceClient = clientNum;
-
 	voiceChatList = CG_VoiceChatListForClient( clientNum );
 
 	if ( CG_GetVoiceChat( voiceChatList, cmd, &snd, &chat ) ) {
 		//
 		if ( mode == SAY_TEAM || !cg_teamChatsOnly.integer ) {
+			vchat.localClientBits = localClientBits;
 			vchat.clientNum = clientNum;
 			vchat.snd = snd;
 			vchat.voiceOnly = voiceOnly;
@@ -973,15 +988,15 @@ void CG_VoiceChatLocal( int mode, qboolean voiceOnly, int clientNum, int color, 
 CG_VoiceChat
 =================
 */
-void CG_VoiceChat( int mode ) {
+void CG_VoiceChat( int localClientBits, int mode, int start ) {
 	const char *cmd;
 	int clientNum, color;
 	qboolean voiceOnly;
 
-	voiceOnly = atoi(CG_Argv(1));
-	clientNum = atoi(CG_Argv(2));
-	color = atoi(CG_Argv(3));
-	cmd = CG_Argv(4);
+	voiceOnly = atoi(CG_Argv(start+1));
+	clientNum = atoi(CG_Argv(start+2));
+	color = atoi(CG_Argv(start+3));
+	cmd = CG_Argv(start+4);
 
 	if (cg_noTaunt.integer != 0) {
 		if (!strcmp(cmd, VOICECHAT_KILLINSULT)  || !strcmp(cmd, VOICECHAT_TAUNT) ||
@@ -991,7 +1006,7 @@ void CG_VoiceChat( int mode ) {
 		}
 	}
 
-	CG_VoiceChatLocal( mode, voiceOnly, clientNum, color, cmd );
+	CG_VoiceChatLocal( localClientBits, mode, voiceOnly, clientNum, color, cmd );
 }
 #endif
 
@@ -1177,29 +1192,17 @@ static void CG_ServerCommand( void ) {
 
 #ifdef MISSIONPACK
 	if ( !strcmp( cmd, "vchat" ) ) {
-		if ( localPlayerBits != -1 ) {
-			return;
-		}
-
-		CG_VoiceChat( SAY_ALL );
+		CG_VoiceChat( localPlayerBits == -1 ? ~0 : localPlayerBits, SAY_ALL, start );
 		return;
 	}
 
 	if ( !strcmp( cmd, "vtchat" ) ) {
-		if ( localPlayerBits != -1 ) {
-			return;
-		}
-
-		CG_VoiceChat( SAY_TEAM );
+		CG_VoiceChat( localPlayerBits, SAY_TEAM, start );
 		return;
 	}
 
 	if ( !strcmp( cmd, "vtell" ) ) {
-		if ( localPlayerBits != -1 ) {
-			return;
-		}
-
-		CG_VoiceChat( SAY_TELL );
+		CG_VoiceChat( localPlayerBits, SAY_TELL, start );
 		return;
 	}
 #endif

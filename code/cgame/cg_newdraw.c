@@ -462,7 +462,7 @@ static void CG_DrawSelectedPlayerName( rectDef_t *rect, float scale, vec4_t colo
 	int team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + ((voice) ? cgs.currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer()]);
+	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer()]);
 	if (ci) {
 		CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, ci->name, 0, 0, textStyle);
 	}
@@ -593,7 +593,7 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
 	vec3_t			mins, maxs, angles;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + ((voice) ? cgs.currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer()]);
+	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer()]);
 
 	if (ci) {
 		if ( cg_draw3dIcons.integer ) {
@@ -1861,9 +1861,7 @@ int CG_ClientNumFromName(const char *p) {
 
 void CG_ShowResponseHead(void) {
 #ifdef MISSIONPACK_HUD
-  Menus_OpenByName("voiceMenu");
-	trap_Cvar_Set("cl_conXOffset", "72");
-	cg.cur_lc->voiceTime = cg.time;
+	Menus_OpenByName("voiceMenu");
 #endif // MISSIONPACK_HUD
 }
 

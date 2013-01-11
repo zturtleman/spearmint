@@ -1026,25 +1026,36 @@ static void Cmd_Tell_f( gentity_t *ent ) {
 
 
 #ifdef MISSIONPACK
-static void G_VoiceTo( gentity_t *ent, gentity_t *other, int mode, const char *id, qboolean voiceonly ) {
-	int color;
-	char *cmd;
-
+static qboolean G_VoiceTo( gentity_t *ent, gentity_t *other, int mode ) {
 	if (!other) {
-		return;
+		return qfalse;
 	}
 	if (!other->inuse) {
-		return;
+		return qfalse;
 	}
 	if (!other->client) {
-		return;
+		return qfalse;
 	}
 	if ( mode == SAY_TEAM && !OnSameTeam(ent, other) ) {
-		return;
+		return qfalse;
 	}
 	// no chatting to players in tournements
 	if ( g_gametype.integer == GT_TOURNAMENT ) {
-		return;
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+void G_Voice( gentity_t *ent, gentity_t *target, int mode, const char *id, qboolean voiceonly ) {
+	int			i, j;
+	gentity_t	*other;
+	int			color;
+	char		*cmd;
+	char		*str;
+
+	if ( g_gametype.integer < GT_TEAM && mode == SAY_TEAM ) {
+		mode = SAY_ALL;
 	}
 
 	if (mode == SAY_TEAM) {
@@ -1060,19 +1071,14 @@ static void G_VoiceTo( gentity_t *ent, gentity_t *other, int mode, const char *i
 		cmd = "vchat";
 	}
 
-	trap_SendServerCommand( other-g_entities, va("%s %d %d %d %s", cmd, voiceonly, ent->s.number, color, id));
-}
-
-void G_Voice( gentity_t *ent, gentity_t *target, int mode, const char *id, qboolean voiceonly ) {
-	int			j;
-	gentity_t	*other;
-
-	if ( g_gametype.integer < GT_TEAM && mode == SAY_TEAM ) {
-		mode = SAY_ALL;
-	}
+	str = va( "%s %d %d %d %s", cmd, voiceonly, ent->s.number, color, id );
 
 	if ( target ) {
-		G_VoiceTo( ent, target, mode, id, voiceonly );
+		if ( !G_VoiceTo( ent, target, mode ) ) {
+			return;
+		}
+
+		trap_SendServerCommand( target-g_entities, str );
 		return;
 	}
 
@@ -1081,10 +1087,28 @@ void G_Voice( gentity_t *ent, gentity_t *target, int mode, const char *id, qbool
 		G_Printf( "voice: %s %s\n", ent->client->pers.netname, id);
 	}
 
+	// send to everyone on team
+	if ( mode == SAY_TEAM ) {
+		G_TeamCommand( ent->client->sess.sessionTeam, str );
+		return;
+	}
+
 	// send it to all the apropriate clients
-	for (j = 0; j < level.maxclients; j++) {
-		other = &g_entities[j];
-		G_VoiceTo( ent, other, mode, id, voiceonly );
+	for (i = 0; i < level.maxconnections; i++) {
+		for (  j = 0; j < MAX_SPLITVIEW; j++ ) {
+			if ( level.connections[i].localPlayerNums[j] == -1 )
+				continue;
+
+			other = &g_entities[level.connections[i].localPlayerNums[j]];
+
+			if ( !G_VoiceTo( ent, other, mode ) ) {
+				break;
+			}
+		}
+
+		if ( j == MAX_SPLITVIEW ) {
+			trap_SendServerCommandEx( i, -1, str );
+		}
 	}
 }
 

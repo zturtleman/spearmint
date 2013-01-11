@@ -521,6 +521,7 @@ typedef struct {
 	// attacking player
 	int			attackerTime;
 	int			voiceTime;
+	int			currentVoiceClient;
 
 	// reward medals
 	int			rewardStack;
@@ -1135,7 +1136,6 @@ typedef struct {
 	int currentOrder;
 	qboolean orderPending;
 	int orderTime;
-	int currentVoiceClient;
 	int acceptOrderTime;
 	int acceptTask;
 	int acceptLeader;
@@ -1617,7 +1617,7 @@ void CG_SetConfigValues( void );
 void CG_ShaderStateChanged(void);
 #ifdef MISSIONPACK
 void CG_LoadVoiceChats( void );
-void CG_VoiceChatLocal( int mode, qboolean voiceOnly, int clientNum, int color, const char *cmd );
+void CG_VoiceChatLocal( int localClientBits, int mode, qboolean voiceOnly, int clientNum, int color, const char *cmd );
 void CG_PlayBufferedVoiceChats( void );
 #endif
 
