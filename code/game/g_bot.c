@@ -230,13 +230,17 @@ static void PlayerIntroSound( const char *modelAndSkin ) {
 
 /*
 ===============
-G_BotInGame
+G_BotsInGame
+
+Returns number of bots named 'value' on team 'team' (or whole server if 'team' is -1).
 ===============
 */
-qboolean G_BotInGame( const char *value, int team ) {
-	int			i;
+int G_BotsInGame( const char *value, int team ) {
+	int			i, total;
 	char		userinfo[MAX_INFO_VALUE];
 	gclient_t	*cl;
+
+	total = 0;
 
 	// check if bot is connecting or connected
 	for ( i=0 ; i< g_maxclients.integer ; i++ ) {
@@ -251,7 +255,7 @@ qboolean G_BotInGame( const char *value, int team ) {
 			continue;
 		}
 		if ( !Q_stricmp( value, cl->pers.netname ) ) {
-			return qtrue;
+			total++;
 		}
 	}
 
@@ -264,13 +268,18 @@ qboolean G_BotInGame( const char *value, int team ) {
 			continue;
 		}
 
+		cl = level.clients + botSpawnQueue[i].clientNum;
+		if ( team >= 0 && cl->sess.sessionTeam != team ) {
+			continue;
+		}
+
 		trap_GetUserinfo( botSpawnQueue[i].clientNum, userinfo, sizeof(userinfo) );
 		if ( !Q_stricmp( value, Info_ValueForKey (userinfo, "name") ) ) {
-			return qtrue;
+			total++;
 		}
 	}
 
-	return qfalse;
+	return total;
 }
 
 /*
@@ -279,8 +288,9 @@ G_SelectRandomBotForAdd
 ===============
 */
 int G_SelectRandomBotForAdd( int team ) {
-	qboolean	botInGame[MAX_BOTS];
-	int			n, num;
+	int			botsInGame;
+	int			bestSelection[MAX_BOTS];
+	int			n, bestCount, bestNum;
 	char		*value;
 
 	// To improve random bot selection when there are few bot types, duplicate bots are
@@ -290,31 +300,37 @@ int G_SelectRandomBotForAdd( int team ) {
 		team = -1;
 	}
 
-	num = 0;
+	// find least used bots on team
+	bestCount = MAX_CLIENTS;
+	bestNum = 0;
 	for ( n = 0; n < g_numBots ; n++ ) {
-		value = Info_ValueForKey( g_botInfos[n], "name" );
-		//
-		botInGame[n] = G_BotInGame( value, team );
-		if ( botInGame[n] ) {
-			continue;
+		value = Info_ValueForKey( g_botInfos[n], "funname" );
+		if ( !value[0] ) {
+			value = Info_ValueForKey( g_botInfos[n], "name" );
 		}
-		//
-		num++;
-	}
-	num = random() * num;
-	for ( n = 0; n < g_numBots ; n++ ) {
-		if ( botInGame[n] ) {
-			continue;
+
+		// get number of bots by name/team
+		botsInGame = G_BotsInGame( value, team );
+
+		if ( botsInGame < bestCount ) {
+			// reset selection
+			bestCount = botsInGame;
+			bestNum = 0;
 		}
-		//
-		num--;
-		if (num <= 0) {
-			return n;
+
+		if ( botsInGame == bestCount ) {
+			// add bot
+			bestSelection[bestNum++] = n;
 		}
 	}
 
-	// all bot types are on this team, randomly choose any bot type
-	return random()*(g_numBots-1);
+	// choose random least used bot on team
+	if ( bestNum > 0 ) {
+		bestNum = random() * ( bestNum - 1 );
+		return bestSelection[bestNum];
+	}
+
+	return 0;
 }
 
 /*
