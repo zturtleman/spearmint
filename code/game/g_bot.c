@@ -230,13 +230,58 @@ static void PlayerIntroSound( const char *modelAndSkin ) {
 
 /*
 ===============
+G_BotInGame
+===============
+*/
+qboolean G_BotInGame( const char *value, int team ) {
+	int			i;
+	char		userinfo[MAX_INFO_VALUE];
+	gclient_t	*cl;
+
+	// check if bot is connecting or connected
+	for ( i=0 ; i< g_maxclients.integer ; i++ ) {
+		cl = level.clients + i;
+		if ( cl->pers.connected == CON_DISCONNECTED ) {
+			continue;
+		}
+		if ( !(g_entities[i].r.svFlags & SVF_BOT) ) {
+			continue;
+		}
+		if ( team >= 0 && cl->sess.sessionTeam != team ) {
+			continue;
+		}
+		if ( !Q_stricmp( value, cl->pers.netname ) ) {
+			return qtrue;
+		}
+	}
+
+	// check if bot is in spawn queue
+	for( i = 0; i < BOT_SPAWN_QUEUE_DEPTH; i++ ) {
+		if( !botSpawnQueue[i].spawnTime ) {
+			continue;
+		}
+		if ( botSpawnQueue[i].spawnTime > level.time ) {
+			continue;
+		}
+
+		trap_GetUserinfo( botSpawnQueue[i].clientNum, userinfo, sizeof(userinfo) );
+		if ( !Q_stricmp( value, Info_ValueForKey (userinfo, "name") ) ) {
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+/*
+===============
 G_SelectRandomBotForAdd
 ===============
 */
 int G_SelectRandomBotForAdd( int team ) {
-	int		i, n, num;
-	char	*value;
-	gclient_t	*cl;
+	qboolean	botInGame[MAX_BOTS];
+	int			n, num;
+	char		*value;
 
 	// To improve random bot selection when there are few bot types, duplicate bots are
 	// allowed on separate teams to try to keep each team from having duplicate bots.
@@ -249,49 +294,22 @@ int G_SelectRandomBotForAdd( int team ) {
 	for ( n = 0; n < g_numBots ; n++ ) {
 		value = Info_ValueForKey( g_botInfos[n], "name" );
 		//
-		for ( i=0 ; i< g_maxclients.integer ; i++ ) {
-			cl = level.clients + i;
-			if ( cl->pers.connected != CON_CONNECTED ) {
-				continue;
-			}
-			if ( !(g_entities[i].r.svFlags & SVF_BOT) ) {
-				continue;
-			}
-			if ( team >= 0 && cl->sess.sessionTeam != team ) {
-				continue;
-			}
-			if ( !Q_stricmp( value, cl->pers.netname ) ) {
-				break;
-			}
+		botInGame[n] = G_BotInGame( value, team );
+		if ( botInGame[n] ) {
+			continue;
 		}
-		if (i >= g_maxclients.integer) {
-			num++;
-		}
+		//
+		num++;
 	}
 	num = random() * num;
 	for ( n = 0; n < g_numBots ; n++ ) {
-		value = Info_ValueForKey( g_botInfos[n], "name" );
-		//
-		for ( i=0 ; i< g_maxclients.integer ; i++ ) {
-			cl = level.clients + i;
-			if ( cl->pers.connected != CON_CONNECTED ) {
-				continue;
-			}
-			if ( !(g_entities[i].r.svFlags & SVF_BOT) ) {
-				continue;
-			}
-			if ( team >= 0 && cl->sess.sessionTeam != team ) {
-				continue;
-			}
-			if ( !Q_stricmp( value, cl->pers.netname ) ) {
-				break;
-			}
+		if ( botInGame[n] ) {
+			continue;
 		}
-		if (i >= g_maxclients.integer) {
-			num--;
-			if (num <= 0) {
-				return n;
-			}
+		//
+		num--;
+		if (num <= 0) {
+			return n;
 		}
 	}
 
