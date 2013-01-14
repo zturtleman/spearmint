@@ -553,9 +553,6 @@ CL_ParseGamestate
 */
 void CL_ParseGamestate( msg_t *msg ) {
 	int				i;
-#if 0 // ZTM: FIXME: ### baseline
-	sharedEntityState_t	*es;
-#endif
 	int				newnum;
 	int				cmd;
 	char			*s;
@@ -598,15 +595,6 @@ void CL_ParseGamestate( msg_t *msg ) {
 			cl.gameState.stringOffsets[ i ] = cl.gameState.dataCount;
 			Com_Memcpy( cl.gameState.stringData + cl.gameState.dataCount, s, len + 1 );
 			cl.gameState.dataCount += len + 1;
-#if 0 // ZTM: FIXME: ### cgame hasn't been loaded yet, so cannot parse baseline
-		} else if ( cmd == svc_baseline ) {
-			newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
-			if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
-				Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
-			}
-			es = DA_ElementPointer( cl.entityBaselines, newnum );
-			MSG_ReadDeltaEntity( msg, NULL, es, newnum );
-#endif
 		} else {
 			Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte" );
 		}
@@ -649,6 +637,23 @@ void CL_ParseGamestate( msg_t *msg ) {
 
 	// make sure the game starts
 	Cvar_Set( "cl_paused", "0" );
+}
+
+/*
+==================
+CL_ParseBaseline
+==================
+*/
+void CL_ParseBaseline( msg_t *msg ) {
+	sharedEntityState_t	*es;
+	int					newnum;
+
+	newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
+	if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
+		Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
+	}
+	es = DA_ElementPointer( cl.entityBaselines, newnum );
+	MSG_ReadDeltaEntity( msg, NULL, es, newnum );
 }
 
 
@@ -1038,6 +1043,9 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			break;
 		case svc_gamestate:
 			CL_ParseGamestate( msg );
+			break;
+		case svc_baseline:
+			CL_ParseBaseline( msg );
 			break;
 		case svc_snapshot:
 			CL_ParseSnapshot( msg );

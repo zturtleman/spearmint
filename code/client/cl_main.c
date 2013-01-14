@@ -793,9 +793,7 @@ void CL_Record_f( void ) {
 	msg_t	buf;
 	int			i;
 	int			len;
-#if 0 // ZTM: FIXME: ### baseline
 	sharedEntityState_t	*ent;
-#endif
 	char		*s;
 
 	if ( Cmd_Argc() > 2 ) {
@@ -888,8 +886,16 @@ void CL_Record_f( void ) {
 		MSG_WriteBigString (&buf, s);
 	}
 
-#if 0 // ZTM: FIXME: ### baseline is disabled atm
-	// baselines
+	MSG_WriteByte( &buf, svc_EOF );
+
+	// write the client nums
+	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
+		MSG_WriteLong(&buf, clc.clientNums[i]);
+	}
+
+	// finished writing the gamestate stuff
+
+	// write initial baselines
 	for ( i = 0; i < MAX_GENTITIES ; i++ ) {
 		ent = (sharedEntityState_t *)DA_ElementPointer( cl.entityBaselines, i );
 		if ( !ent->number ) {
@@ -897,16 +903,6 @@ void CL_Record_f( void ) {
 		}
 		MSG_WriteByte (&buf, svc_baseline);		
 		MSG_WriteDeltaEntity (&buf, NULL, ent, qtrue );
-	}
-#endif
-
-	MSG_WriteByte( &buf, svc_EOF );
-	
-	// finished writing the gamestate stuff
-
-	// write the client nums
-	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
-		MSG_WriteLong(&buf, clc.clientNums[i]);
 	}
 
 	// finished writing the client packet

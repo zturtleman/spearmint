@@ -290,6 +290,32 @@ void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg ) {
 }
 
 /*
+==================
+SV_WriteBaselineToClient
+==================
+*/
+void SV_WriteBaselineToClient( client_t *client, msg_t *msg ) {
+	sharedEntityState_t	*base;
+	int					start;
+
+	if ( !client->needBaseline ) {
+		return;
+	}
+
+	client->needBaseline = qfalse;
+
+	// write the baselines
+	for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
+		base = (sharedEntityState_t *)DA_ElementPointer( sv.svEntitiesBaseline, start );
+		if ( !base->number ) {
+			continue;
+		}
+		MSG_WriteByte( msg, svc_baseline );
+		MSG_WriteDeltaEntity( msg, NULL, base, qtrue );
+	}
+}
+
+/*
 =============================================================================
 
 Build a client snapshot structure
@@ -714,8 +740,11 @@ void SV_SendClientSnapshot( client_t *client ) {
 	// client is awaiting gamestate (or downloading a pk3), hold off sending snapshot as it
 	// can't be loaded until after cgame is loaded
 	if ( client->gamestateMessageNum == -1 || client->oldServerTime > 0 || *client->downloadName ) {
-		//Com_DPrintf( "%s: Skipping snapshot, awaiting gamestate...\n", SV_ClientName( client ) );
+		client->needBaseline = qtrue;
 	} else {
+		// entities delta baseline
+		SV_WriteBaselineToClient( client, &msg );
+
 		// send over all the relevant entityState_t
 		// and playerState_t
 		SV_WriteSnapshotToClient( client, &msg );

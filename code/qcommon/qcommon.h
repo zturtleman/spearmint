@@ -294,7 +294,7 @@ enum svc_ops_e {
 	svc_nop,
 	svc_gamestate,
 	svc_configstring,			// [short] [string] only in gamestate messages
-	svc_baseline,				// only in gamestate messages
+	svc_baseline,
 	svc_serverCommand,			// [string] to be executed by client game module
 	svc_download,				// [short] size [size bytes]
 	svc_snapshot,

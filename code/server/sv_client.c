@@ -541,6 +541,7 @@ gotnewcl:
 	newcl->lastSnapshotTime = 0;
 	newcl->lastPacketTime = svs.time;
 	newcl->lastConnectTime = svs.time;
+	newcl->needBaseline = qtrue;
 	
 	// when we receive the first packet from the client, we will
 	// notice that it is from a different serverid and that the
@@ -795,9 +796,6 @@ the wrong gamestate.
 */
 static void SV_SendClientGameState( client_t *client ) {
 	int			start;
-#if 0 // ZTM: FIXME: ### baseline
-	sharedEntityState_t	*base;
-#endif
 	msg_t		msg;
 	byte		msgBuffer[MAX_MSGLEN];
 	int			i;
@@ -835,18 +833,6 @@ static void SV_SendClientGameState( client_t *client ) {
 			MSG_WriteBigString( &msg, sv.configstrings[start] );
 		}
 	}
-
-#if 0 // ZTM: FIXME: ### send baseline with first snapshot?
-	// write the baselines
-	for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
-		base = (sharedEntityState_t *)DA_ElementPointer( sv.svEntitiesBaseline, start );
-		if ( !base->number ) {
-			continue;
-		}
-		MSG_WriteByte( &msg, svc_baseline );
-		MSG_WriteDeltaEntity( &msg, NULL, base, qtrue );
-	}
-#endif
 
 	MSG_WriteByte( &msg, svc_EOF );
 

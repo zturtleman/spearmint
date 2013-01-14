@@ -214,14 +214,11 @@ baseline will be transmitted
 ================
 */
 static void SV_CreateBaseline( void ) {
-#if 0 // ZTM: FIXME: ### baseline
 	sharedEntity_t *svent;
 	int				entnum;	
-#endif
 
 	DA_Init( &sv.svEntitiesBaseline, MAX_GENTITIES, sv.gameEntityStateSize, qfalse );
 
-#if 0 // ZTM: FIXME: ### baseline isn't networked atm
 	for ( entnum = 1; entnum < sv.num_entities ; entnum++ ) {
 		svent = SV_GentityNum(entnum);
 		if (!svent->r.linked) {
@@ -234,7 +231,6 @@ static void SV_CreateBaseline( void ) {
 		//
 		DA_SetElement( &sv.svEntitiesBaseline, entnum, SV_GameEntityStateNum(entnum) );
 	}
-#endif
 }
 
 
