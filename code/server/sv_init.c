@@ -330,7 +330,7 @@ void SV_ChangeMaxClients( void ) {
 	oldPlayers = Hunk_AllocateTempMemory( count * sizeof(player_t) );
 	// copy the clients and players to hunk memory
 	for ( i = 0 ; i < count ; i++ ) {
-		if ( svs.players[i].inUse && oldPlayers[i].client->state >= CS_CONNECTED ) {
+		if ( svs.players[i].inUse && svs.players[i].client->state >= CS_CONNECTED ) {
 			oldPlayers[i] = svs.players[i];
 			oldPlayers[i].client = NULL; // client pointer gets restored using localPlayers pointers.
 		}
