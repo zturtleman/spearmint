@@ -2037,24 +2037,23 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 			break;
 		}
 
-		if ( c != clc_clientCommand ) {
+		if ( c == clc_clientCommand ) {
+			if ( !SV_ClientCommand( cl, msg ) ) {
+				return;	// we couldn't execute it because of the flood protection
+			}
+
+			if (cl->state == CS_ZOMBIE) {
+				return;	// disconnect command
+			}
+#ifdef USE_VOIP
+		} else if ( c == clc_voip ) {
+			SV_UserVoip( cl, msg );
+#endif
+		} else {
+			// unknown command
 			break;
 		}
-		if ( !SV_ClientCommand( cl, msg ) ) {
-			return;	// we couldn't execute it because of the flood protection
-		}
-		if (cl->state == CS_ZOMBIE) {
-			return;	// disconnect command
-		}
 	} while ( 1 );
-
-	// read optional voip data
-	if ( c == clc_voip ) {
-#ifdef USE_VOIP
-		SV_UserVoip( cl, msg );
-		c = MSG_ReadByte( msg );
-#endif
-	}
 
 	// read the usercmd_t
 	if ( c == clc_move ) {
