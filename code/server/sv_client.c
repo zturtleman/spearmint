@@ -72,14 +72,7 @@ void SV_GetChallenge(netadr_t from)
 	}
 
 	gameName = Cmd_Argv(2);
-
-#ifdef LEGACY_PROTOCOL
-	// gamename is optional for legacy protocol
-	if (com_legacyprotocol->integer && !*gameName)
-		gameMismatch = qfalse;
-	else
-#endif
-		gameMismatch = !*gameName || strcmp(gameName, com_gamename->string) != 0;
+	gameMismatch = !*gameName || strcmp(gameName, com_gamename->string) != 0;
 
 	// reject client if the gamename string sent by the client doesn't match ours
 	if (gameMismatch)
@@ -1359,15 +1352,8 @@ void SV_UserinfoChanged( player_t *player ) {
 	}
 
 #ifdef USE_VOIP
-#ifdef LEGACY_PROTOCOL
-	if(cl->compat)
-		cl->hasVoip = qfalse;
-	else
-#endif
-	{
-		val = Info_ValueForKey(player->userinfo, "cl_voip");
-		cl->hasVoip = atoi(val);
-	}
+	val = Info_ValueForKey(player->userinfo, "cl_voip");
+	cl->hasVoip = atoi(val);
 #endif
 
 	// TTimo

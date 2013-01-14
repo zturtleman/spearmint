@@ -43,7 +43,6 @@ Suite 120, Rockville, Maryland 20850 USA.
   #define HOMEPATH_NAME_WIN		"Spearmint"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
   #define GAMENAME_FOR_MASTER		"Spearmint"	// must NOT contain whitespace
-//  #define LEGACY_PROTOCOL	// You probably don't need this for your standalone game
 
   #ifndef PRODUCT_VERSION
     #define PRODUCT_VERSION "1.36"
@@ -57,12 +56,14 @@ Suite 120, Rockville, Maryland 20850 USA.
   #define HOMEPATH_NAME_WIN		"Quake3"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
   #define GAMENAME_FOR_MASTER		"Quake3Arena"
-  #define LEGACY_PROTOCOL
 
   #ifndef PRODUCT_VERSION
     #define PRODUCT_VERSION "1.36"
   #endif
 #endif
+
+// In the future if the client-server protocol is modified, this may allow old and new engines to play together
+//#define LEGACY_PROTOCOL
 
 // Heartbeat for dpmaster protocol. You shouldn't change this unless you know what you're doing
 #define HEARTBEAT_FOR_MASTER		"DarkPlaces"
