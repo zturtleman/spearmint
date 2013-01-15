@@ -68,12 +68,9 @@ A normal server packet will look like:
 1	snapFlags
 1	areaBytes
 <areabytes>
-if (snapFlags & SNAPFLAG_MULTIPLE_PSS)
-	1   number of player states
-	<playerstates>
-else
-	<playerstate>
-endif
+1   number of player states
+8	lcIndex and playerNum for each of MAX_SPLITVIEW
+<playerstates>
 <packetentities>
 
 =============================================================================
@@ -221,9 +218,6 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	if ( client->state != CS_ACTIVE ) {
 		snapFlags |= SNAPFLAG_NOT_ACTIVE;
 	}
-	if (frame->numPSs > 1 || frame->lcIndex[0] != 0) {
-		snapFlags |= SNAPFLAG_MULTIPLE_PSS;
-	}
 
 	MSG_WriteByte (msg, snapFlags);
 
@@ -237,12 +231,11 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		frame->numPSs = MAX_SPLITVIEW;
 	}
 
-	// send number of playerstates and local player indexes if needed
-	if (snapFlags & SNAPFLAG_MULTIPLE_PSS) {
-		MSG_WriteByte (msg, frame->numPSs);
-		for (i = 0; i < MAX_SPLITVIEW; i++) {
-			MSG_WriteByte (msg, frame->lcIndex[i]);
-		}
+	// send number of playerstates and local player indexes
+	MSG_WriteByte (msg, frame->numPSs);
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		MSG_WriteByte (msg, frame->lcIndex[i]);
+		MSG_WriteByte (msg, frame->clientNums[i]);
 	}
 
 	for (i = 0; i < MAX_SPLITVIEW; i++) {

@@ -164,15 +164,13 @@ static void CG_TransitionSnapshot( void ) {
 	cg.snap = cg.nextSnap;
 
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		// Server added local client
-		if (oldFrame && oldFrame->lcIndex[i] == -1 && cg.snap->lcIndex[i] != -1) {
-			// ZTM: FIXME: Not the most reliable way to get clientNum, ps could be a followed client.
-			CG_LocalClientAdded(i, cg.snap->pss[cg.snap->lcIndex[i]].clientNum);
-		}
+		// Server added or removed local client
+		if ( oldFrame && oldFrame->clientNums[i] != cg.snap->clientNums[i] ) {
+			CG_LocalClientRemoved( i );
 
-		// Server removed local client
-		if (oldFrame && oldFrame->lcIndex[i] != -1 && cg.snap->lcIndex[i] == -1) {
-			CG_LocalClientRemoved(i);
+			if ( cg.snap->clientNums[i] != -1 ) {
+				CG_LocalClientAdded( i, cg.snap->clientNums[i] );
+			}
 		}
 	}
 

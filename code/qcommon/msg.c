@@ -1424,7 +1424,7 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, sharedPlayerState_t *from, sharedPla
 MSG_ReadDeltaPlayerstate
 ===================
 */
-void MSG_ReadDeltaPlayerstate (msg_t *msg, sharedPlayerState_t *from, sharedPlayerState_t *to ) {
+void MSG_ReadDeltaPlayerstate( msg_t *msg, sharedPlayerState_t *from, sharedPlayerState_t *to, int number ) {
 	int			lc;
 	int			startBit;
 	int			print;
@@ -1443,7 +1443,7 @@ void MSG_ReadDeltaPlayerstate (msg_t *msg, sharedPlayerState_t *from, sharedPlay
 	// just print the delta records
 	if ( cl_shownet && ( cl_shownet->integer >= 2 || cl_shownet->integer == -2 ) ) {
 		print = 1;
-		Com_Printf( "%3i: playerstate ", msg->readcount );
+		Com_Printf( "%3i: playerstate #%-i3", msg->readcount, number );
 	} else {
 		print = 0;
 	}

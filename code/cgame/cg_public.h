@@ -55,6 +55,7 @@ typedef struct {
 	byte			areamask[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 
 	int				lcIndex[MAX_SPLITVIEW];		// Local Client Indexes
+	int				clientNums[MAX_SPLITVIEW];
 
 	int				numServerCommands;		// text based server commands to execute when this
 	int				serverCommandSequence;	// snapshot becomes current

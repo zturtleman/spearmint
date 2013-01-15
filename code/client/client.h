@@ -76,6 +76,7 @@ typedef struct {
 	int				numPSs;
 	darray_t		playerStates;	// complete information about the current players at this time
 	int				lcIndex[MAX_SPLITVIEW];
+	int				clientNums[MAX_SPLITVIEW];
 
 	int				numEntities;			// all of the entities that need to be presented
 	int				parseEntitiesNum;		// at the time of this snapshot

@@ -180,6 +180,7 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerS
 	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
 		snapshot->lcIndex[i] = clSnap->lcIndex[i];
+		snapshot->clientNums[i] = clSnap->clientNums[i];
 	}
 
 	snapshot->numPSs = clSnap->numPSs;

@@ -118,7 +118,7 @@ void MSG_ReadDeltaEntity( msg_t *msg, sharedEntityState_t *from, sharedEntitySta
 						 int number );
 
 void MSG_WriteDeltaPlayerstate( msg_t *msg, sharedPlayerState_t *from, sharedPlayerState_t *to );
-void MSG_ReadDeltaPlayerstate( msg_t *msg, sharedPlayerState_t *from, sharedPlayerState_t *to );
+void MSG_ReadDeltaPlayerstate( msg_t *msg, sharedPlayerState_t *from, sharedPlayerState_t *to, int number );
 
 
 void MSG_ReportChangeVectors_f( void );

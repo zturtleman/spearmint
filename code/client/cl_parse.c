@@ -321,25 +321,21 @@ void CL_ParseSnapshot( msg_t *msg ) {
 
 	// read playerinfo
 	SHOWNET( msg, "playerstate" );
-	if (newSnap.snapFlags & SNAPFLAG_MULTIPLE_PSS) {
-		newSnap.numPSs = MSG_ReadByte( msg );
-		if (newSnap.numPSs > MAX_SPLITVIEW) {
-			Com_DPrintf(S_COLOR_YELLOW "Warning: Got numPSs as %d (max=%d)\n", newSnap.numPSs, MAX_SPLITVIEW);
-			newSnap.numPSs = MAX_SPLITVIEW;
-		}
-		for (i = 0; i < MAX_SPLITVIEW; i++) {
-			newSnap.lcIndex[i] = MSG_ReadByte( msg );
 
-			// -1 gets converted to 255 should be set to -1 (and so should all invalid values)
-			if (newSnap.lcIndex[i] >= newSnap.numPSs) {
-				newSnap.lcIndex[i] = -1;
-			}
-		}
-	} else {
-		newSnap.numPSs = 1;
-		newSnap.lcIndex[0] = 0;
-		for (i = 1; i < MAX_SPLITVIEW; i++) {
+	newSnap.numPSs = MSG_ReadByte( msg );
+	if (newSnap.numPSs > MAX_SPLITVIEW) {
+		Com_DPrintf(S_COLOR_YELLOW "Warning: Got numPSs as %d (max=%d)\n", newSnap.numPSs, MAX_SPLITVIEW);
+		newSnap.numPSs = MAX_SPLITVIEW;
+	}
+
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		newSnap.lcIndex[i] = MSG_ReadByte( msg );
+		newSnap.clientNums[i] = MSG_ReadByte( msg );
+
+		// -1 gets converted to 255 should be set to -1 (and so should all invalid values)
+		if ( newSnap.lcIndex[i] >= newSnap.numPSs || newSnap.clientNums[i] >= MAX_CLIENTS ) {
 			newSnap.lcIndex[i] = -1;
+			newSnap.clientNums[i] = -1;
 		}
 	}
 
@@ -351,23 +347,19 @@ void CL_ParseSnapshot( msg_t *msg ) {
 			if ( old && old->valid && old->lcIndex[i] != -1 ) {
 				oldPS = (sharedPlayerState_t *) DA_ElementPointer( old->playerStates, old->lcIndex[i] );
 
-				MSG_ReadDeltaPlayerstate( msg, oldPS, newPS );
+				MSG_ReadDeltaPlayerstate( msg, oldPS, newPS, newSnap.clientNums[i] );
 			} else {
-				MSG_ReadDeltaPlayerstate( msg, NULL, newPS );
+				MSG_ReadDeltaPlayerstate( msg, NULL, newPS, newSnap.clientNums[i] );
 			}
 		}
 
-		// Server added local client
-		if ( old && old->valid && old->lcIndex[i] == -1 && newSnap.lcIndex[i] != -1 ) {
-			newPS = (sharedPlayerState_t *) DA_ElementPointer( newSnap.playerStates, newSnap.lcIndex[i] );
+		// Server added or removed local client
+		if ( old && old->clientNums[i] != newSnap.clientNums[i] ) {
+			CL_LocalClientRemoved( i );
 
-			// ZTM: FIXME: Not the most reliable way to get clientNum, ps could be a followed client.
-			CL_LocalClientAdded(i, newPS->clientNum);
-		}
-
-		// Server removed local client
-		if ( old && old->valid && old->lcIndex[i] != -1 && newSnap.lcIndex[i] == -1 ) {
-			CL_LocalClientRemoved(i);
+			if ( newSnap.clientNums[i] != -1 ) {
+				CL_LocalClientAdded( i, newSnap.clientNums[i] );
+			}
 		}
 	}
 

@@ -110,6 +110,7 @@ typedef struct {
 	int				numPSs;
 	darray_t		playerStates;
 	int				lcIndex[MAX_SPLITVIEW];
+	int				clientNums[MAX_SPLITVIEW];
 	int				num_entities;
 	int				first_entity;		// into the circular sv_packet_entities[]
 										// the entities MUST be in increasing state number
