@@ -560,28 +560,96 @@ void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, floa
 
 /*
 ====================
+R_PointInBrush
+
+ZTM: TODO: Use bmodel->orientation[ tr.smpFrame ].axis ?
+====================
+*/
+qboolean R_PointInBrush( const vec3_t point, const bmodel_t *bmodel ) {
+	int		j;
+	const float	*origin = bmodel->orientation[ tr.smpFrame ].origin;
+	const float	*mins = bmodel->bounds[ 0 ];
+	const float	*maxs = bmodel->bounds[ 1 ];
+
+	for ( j = 0; j < 3; j++ )
+	{
+		if ( origin[ j ] + mins[ j ] >= point[ j ] ) {
+			break;
+		}
+		if ( origin[ j ] + maxs[ j ] <= point[ j ] ) {
+			break;
+		}
+	}
+
+	return ( j == 3 );
+
+}
+
+/*
+====================
 RE_GetWaterFog
 ====================
 */
 void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
-	// ZTM: TODO: Use origin to get water fog.
-	// Idea: For each bmodel containing point `origin', check shader on each side for waterfogvars
-	(void)origin;
+	int					bmodelNum;
+	int					surfaceNum;
+	const bmodel_t		*bmodel;
+	const msurface_t	*surface;
 
-	if (type) {
-		*type = tr.waterFogType;
+	if ( !tr.world ) {
+		if (type) {
+			*type = FT_NONE;
+		}
+
+		if (color) {
+			VectorSet( color, 0, 0, 0 );
+		}
+
+		if (depthForOpaque) {
+			*depthForOpaque = 0;
+		}
+
+		if (density) {
+			*density = 0;
+		}
+
+		return;
 	}
 
-	if (color) {
-		VectorCopy( tr.waterFogColor, color );
-	}
+	for ( bmodelNum = 0, bmodel = tr.world->bmodels; bmodelNum < tr.world->numBModels; bmodelNum++, bmodel++ ) {
 
-	if (depthForOpaque) {
-		*depthForOpaque = tr.waterFogDepthForOpaque;
-	}
+		if ( !R_PointInBrush( origin, bmodel ) )
+			continue;
 
-	if (density) {
-		*density = tr.waterFogDensity;
+		for ( surfaceNum = 0, surface = tr.world->surfaces + bmodel->firstSurface; surfaceNum < bmodel->numSurfaces; surfaceNum++, surface ) {
+			if ( !surface->shader ) {
+				continue;
+			}
+
+			if ( surface->shader->waterFogParms.fogType != FT_NONE
+					|| surface->shader->waterFogParms.color[0]
+					|| surface->shader->waterFogParms.color[1]
+					|| surface->shader->waterFogParms.color[2] ) {
+
+				if (type) {
+					*type = surface->shader->waterFogParms.fogType;
+				}
+
+				if (color) {
+					VectorCopy( surface->shader->waterFogParms.color, color );
+				}
+
+				if (depthForOpaque) {
+					*depthForOpaque = surface->shader->waterFogParms.depthForOpaque;
+				}
+
+				if (density) {
+					*density = surface->shader->waterFogParms.density;
+				}
+
+				return;
+			}
+		}
 	}
 }
 

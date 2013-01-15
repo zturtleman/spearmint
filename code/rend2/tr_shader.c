@@ -1873,30 +1873,26 @@ static qboolean ParseShader( char **text )
 
 			fogvar = atof( token );
 
-			//----(SA)	right now allow one water color per map.  I'm sure this will need
-			//			to change at some point, but I'm not sure how to track fog parameters
-			//			on a "per-water volume" basis yet.
-
 			if ( fogvar == 0 ) {
 				// Specifies "use the map values for everything except the fog color"
-				tr.waterFogType = FT_NONE;
+				shader.waterFogParms.fogType = FT_NONE;
 
 				if ( watercolor[0] == 0 && watercolor[1] == 0 && watercolor[2] == 0 ) {
 					// Color must be non-zero.
 					watercolor[0] = watercolor[1] = watercolor[2] = 0.00001;
 				}
 			} else if ( fogvar > 1 ) {
-				tr.waterFogType = FT_LINEAR;
-				tr.waterFogDepthForOpaque = fogvar;
-				tr.waterFogDensity = DEFAULT_FOG_LINEAR_DENSITY;
+				shader.waterFogParms.fogType = FT_LINEAR;
+				shader.waterFogParms.depthForOpaque = fogvar;
+				shader.waterFogParms.density = DEFAULT_FOG_LINEAR_DENSITY;
 			} else {
-				tr.waterFogType = FT_EXP;
-				tr.waterFogDensity = fogvar;
-				//tr.waterFogDepthForOpaque = 5; // ZTM: FIXME: Um, what? this doesn't seems like it would work using Q3 fogging.
-				tr.waterFogDepthForOpaque = 2048;
+				shader.waterFogParms.fogType = FT_EXP;
+				shader.waterFogParms.density = fogvar;
+				//shader.waterFogParms.depthForOpaque = 5; // ZTM: FIXME: Um, what? this doesn't seems like it would work using Q3 fogging.
+				shader.waterFogParms.depthForOpaque = 2048;
 			}
 
-			VectorCopy( watercolor, tr.waterFogColor );
+			VectorCopy( watercolor, shader.waterFogParms.color );
 			continue;
 		}
 		// fogvars ( <red> <green> <blue> ) [density <= 1 or depthForOpaque > 1]

@@ -383,6 +383,7 @@ typedef struct shader_s {
 	qboolean	isSky;
 	skyParms_t	sky;
 	fogParms_t	fogParms;
+	fogParms_t	waterFogParms;
 
 	float		portalRange;			// distance to fog out at
 
@@ -1091,12 +1092,6 @@ typedef struct {
 	vec3_t		skyFogColor;
 	float		skyFogDepthForOpaque;
 	float		skyFogDensity;
-
-	// set by waterfogvars in a shader
-	fogType_t	waterFogType;
-	vec3_t		waterFogColor;
-	float		waterFogDepthForOpaque;
-	float		waterFogDensity;
 
 	//
 	// put large tables at the end, so most elements will be
