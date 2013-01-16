@@ -445,7 +445,8 @@ void S_SpatializeOrigin (vec3_t origin, int master_vol, int *left_vol, int *righ
     vec_t		lscale, rscale, scale;
     vec3_t		source_vec;
     vec3_t		vec;
-	int i;
+	int			i;
+	int			vol;
 
 	const float dist_mult = SOUND_ATTENUATE;
 	
@@ -488,14 +489,23 @@ void S_SpatializeOrigin (vec3_t origin, int master_vol, int *left_vol, int *righ
 
 		// add in distance effect
 		scale = (1.0 - dist) * rscale;
-		*right_vol += (master_vol * scale);
-		if (*right_vol < 0)
-			*right_vol = 0;
+		vol = (master_vol * scale);
+		if (vol < 0)
+			vol = 0;
+		*right_vol += vol;
 
 		scale = (1.0 - dist) * lscale;
+		vol = (master_vol * scale);
+		if (vol < 0)
+			vol = 0;
 		*left_vol += (master_vol * scale);
-		if (*left_vol < 0)
-			*left_vol = 0;
+	}
+
+	if ( *right_vol > master_vol ) {
+		*right_vol = master_vol;
+	}
+	if ( *left_vol > master_vol ) {
+		*left_vol = master_vol;
 	}
 }
 
