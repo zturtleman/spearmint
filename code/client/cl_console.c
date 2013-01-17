@@ -84,6 +84,16 @@ void Con_ToggleConsole_f (void) {
 }
 
 /*
+===================
+Con_ToggleMenu_f
+===================
+*/
+void Con_ToggleMenu_f( void ) {
+	CL_KeyEvent( K_ESCAPE, qtrue, Sys_Milliseconds() );
+	CL_KeyEvent( K_ESCAPE, qfalse, Sys_Milliseconds() );
+}
+
+/*
 ================
 Con_MessageMode_f
 ================
@@ -328,6 +338,7 @@ void Con_Init (void) {
 	CL_LoadConsoleHistory( );
 
 	Cmd_AddCommand ("toggleconsole", Con_ToggleConsole_f);
+	Cmd_AddCommand ("togglemenu", Con_ToggleMenu_f);
 	Cmd_AddCommand ("messagemode", Con_MessageMode_f);
 	Cmd_AddCommand ("messagemode2", Con_MessageMode2_f);
 	Cmd_AddCommand ("messagemode3", Con_MessageMode3_f);
@@ -345,6 +356,7 @@ Con_Shutdown
 void Con_Shutdown(void)
 {
 	Cmd_RemoveCommand("toggleconsole");
+	Cmd_RemoveCommand("togglemenu");
 	Cmd_RemoveCommand("messagemode");
 	Cmd_RemoveCommand("messagemode2");
 	Cmd_RemoveCommand("messagemode3");

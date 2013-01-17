@@ -1235,6 +1235,25 @@ void CL_InitKeyCommands( void ) {
 
 /*
 ===================
+CL_BindUICommand
+
+Returns qtrue if bind command should be executed while user interface is shown
+===================
+*/
+static qboolean CL_BindUICommand( const char *cmd ) {
+	if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE )
+		return qfalse;
+
+	if ( !Q_stricmp( cmd, "toggleconsole" ) )
+		return qtrue;
+	if ( !Q_stricmp( cmd, "togglemenu" ) )
+		return qtrue;
+
+	return qfalse;
+}
+
+/*
+===================
 CL_ParseBinding
 
 Execute the commands in the bind string
@@ -1243,10 +1262,19 @@ Execute the commands in the bind string
 void CL_ParseBinding( int key, qboolean down, unsigned time )
 {
 	char buf[ MAX_STRING_CHARS ], *p = buf, *end;
+	qboolean allCommands, allowUpCmds;
 
+	if( clc.state == CA_DISCONNECTED && Key_GetCatcher( ) == 0 )
+		return;
 	if( !keys[key].binding || !keys[key].binding[0] )
 		return;
 	Q_strncpyz( buf, keys[key].binding, sizeof( buf ) );
+
+	// run all bind commands if console, ui, etc aren't reading keys
+	allCommands = ( Key_GetCatcher( ) == 0 );
+
+	// allow button up commands if in game even if key catcher is set
+	allowUpCmds = ( clc.state != CA_DISCONNECTED );
 
 	while( 1 )
 	{
@@ -1260,16 +1288,20 @@ void CL_ParseBinding( int key, qboolean down, unsigned time )
 			// button commands add keynum and time as parameters
 			// so that multiple sources can be discriminated and
 			// subframe corrected
-			char cmd[1024];
-			Com_sprintf( cmd, sizeof( cmd ), "%c%s %d %d\n",
-				( down ) ? '+' : '-', p + 1, key, time );
-			Cbuf_AddText( cmd );
+			if ( allCommands || ( allowUpCmds && !down ) ) {
+				char cmd[1024];
+				Com_sprintf( cmd, sizeof( cmd ), "%c%s %d %d\n",
+					( down ) ? '+' : '-', p + 1, key, time );
+				Cbuf_AddText( cmd );
+			}
 		}
 		else if( down )
 		{
 			// normal commands only execute on key press
-			Cbuf_AddText( p );
-			Cbuf_AddText( "\n" );
+			if ( allCommands || CL_BindUICommand( p ) ) {
+				Cbuf_AddText( p );
+				Cbuf_AddText( "\n" );
+			}
 		}
 		if( !end )
 			break;
@@ -1369,10 +1401,10 @@ void CL_KeyDownEvent( int key, unsigned time, qboolean onlybinds )
 		if ( !onlybinds ) {
 			Console_Key( key );
 		}
-	} else {
-		// send the bound action
-		CL_ParseBinding( key, qtrue, time );
 	}
+
+	// send the bound action
+	CL_ParseBinding( key, qtrue, time );
 	return;
 }
 
@@ -1404,8 +1436,7 @@ void CL_KeyUpEvent( int key, unsigned time, qboolean onlybinds )
 	// console mode and menu mode, to keep the character from continuing
 	// an action started before a mode switch.
 	//
-	if( clc.state != CA_DISCONNECTED )
-		CL_ParseBinding( key, qfalse, time );
+	CL_ParseBinding( key, qfalse, time );
 
 	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
 		if ( !onlybinds || VM_Call( uivm, UI_WANTSBINDKEYS ) ) {
