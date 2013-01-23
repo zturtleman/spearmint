@@ -621,7 +621,7 @@ static void IN_InitJoystick( void )
 		}
 
 		Com_DPrintf( "Joystick %d opened for player %d\n", in_joystickNo[i]->integer, i+1 );
-		Com_DPrintf( "Name:       %s\n", SDL_JoystickName(in_joystickNo[i]->integer) );
+		Com_DPrintf( "Name:       %s\n", SDL_JoystickNameForIndex(in_joystickNo[i]->integer) );
 		Com_DPrintf( "Axes:       %d\n", SDL_JoystickNumAxes(stick[i]) );
 		Com_DPrintf( "Hats:       %d\n", SDL_JoystickNumHats(stick[i]) );
 		Com_DPrintf( "Buttons:    %d\n", SDL_JoystickNumButtons(stick[i]) );

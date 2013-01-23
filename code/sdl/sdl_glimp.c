@@ -245,7 +245,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 
 	if( SDL_GetDesktopDisplayMode( display, &desktopMode ) == 0 )
 	{
-		displayAspect = (float)desktopMode.w / (float)desktopMode.h;
+		float displayAspect = (float)desktopMode.w / (float)desktopMode.h;
 
 		ri.Printf( PRINT_ALL, "Display aspect: %.3f\n", displayAspect );
 	}
