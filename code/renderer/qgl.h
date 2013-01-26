@@ -34,10 +34,32 @@ Suite 120, Rockville, Maryland 20850 USA.
 #ifndef __QGL_H__
 #define __QGL_H__
 
+#ifdef USE_GLES
+#include <GLES/gl.h>
+#include <GLES/glext.h>
+
+#define GL_TEXTURE0_ARB GL_TEXTURE0
+#define GL_TEXTURE1_ARB GL_TEXTURE1
+#define GL_MAX_TEXTURE_UNITS_ARB GL_MAX_TEXTURE_UNITS
+
+#define qglActiveTexture glActiveTexture
+#define qglClientActiveTexture glClientActiveTexture
+#define qglMultiTexCoord4f glMultiTexCoord4f
+
+// Remap some renamed functions in GLES
+#define glClearDepth	glClearDepthf
+#define glDepthRange	glDepthRangef
+#define glOrtho			glOrthof
+#define GL_RGB8			GL_RGBA
+
+#define APIENTRY
+#define APIENTRYP APIENTRY *
+#else
 #ifdef USE_LOCAL_HEADERS
 #	include "SDL_opengl.h"
 #else
 #	include <SDL_opengl.h>
+#endif
 #endif
 
 extern void (APIENTRYP qglActiveTextureARB) (GLenum texture);
@@ -67,6 +89,7 @@ extern void (APIENTRYP qglUnlockArraysEXT) (void);
 #define qglClearIndex glClearIndex
 #define qglClearStencil glClearStencil
 #define qglClipPlane glClipPlane
+#define qglClipPlanef glClipPlanef
 #define qglColor3b glColor3b
 #define qglColor3bv glColor3bv
 #define qglColor3d glColor3d
@@ -116,7 +139,9 @@ extern void (APIENTRYP qglUnlockArraysEXT) (void);
 #define qglDisable glDisable
 #define qglDisableClientState glDisableClientState
 #define qglDrawArrays glDrawArrays
+#ifndef USE_GLES
 #define qglDrawBuffer glDrawBuffer
+#endif
 #define qglDrawElements glDrawElements
 #define qglDrawPixels glDrawPixels
 #define qglEdgeFlag glEdgeFlag
@@ -284,7 +309,9 @@ extern void (APIENTRYP qglUnlockArraysEXT) (void);
 #define qglRasterPos4iv glRasterPos4iv
 #define qglRasterPos4s glRasterPos4s
 #define qglRasterPos4sv glRasterPos4sv
+#ifndef USE_GLES
 #define qglReadBuffer glReadBuffer
+#endif
 #define qglReadPixels glReadPixels
 #define qglRectd glRectd
 #define qglRectdv glRectdv

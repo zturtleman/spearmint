@@ -215,6 +215,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define ARCH_STRING "alpha"
 #elif defined __sparc__
 #define ARCH_STRING "sparc"
+#elif defined __ARM_ARCH_7A__
+#define ARCH_STRING "armeabi-v7a"
+#elif defined __ARM_ARCH_5TE__
+#define ARCH_STRING "armeabi"
 #elif defined __arm__
 #define ARCH_STRING "arm"
 #elif defined __cris__

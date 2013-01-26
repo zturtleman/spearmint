@@ -183,6 +183,7 @@ void R_ImageList_f( void ) {
 		case 4:
 			ri.Printf( PRINT_ALL, "RGBA " );
 			break;
+#ifndef USE_GLES
 		case GL_RGBA8:
 			ri.Printf( PRINT_ALL, "RGBA8" );
 			break;
@@ -199,6 +200,7 @@ void R_ImageList_f( void ) {
 		case GL_RGB5:
 			ri.Printf( PRINT_ALL, "RGB5 " );
 			break;
+#endif
 		default:
 			ri.Printf( PRINT_ALL, "???? " );
 		}
@@ -589,6 +591,7 @@ static void Upload32( unsigned *data,
 		}
 	}
 
+#ifndef USE_GLES
 	if(lightMap)
 	{
 		if(r_greyscale->integer)
@@ -597,6 +600,9 @@ static void Upload32( unsigned *data,
 			internalFormat = GL_RGB;
 	}
 	else
+#else
+	if(!lightMap)
+#endif
 	{
 		for ( i = 0; i < c; i++ )
 		{
@@ -621,6 +627,7 @@ static void Upload32( unsigned *data,
 		// select proper internal format
 		if ( samples == 3 )
 		{
+#ifndef USE_GLES
 			if(r_greyscale->integer)
 			{
 				if(r_texturebits->integer == 16)
@@ -653,9 +660,13 @@ static void Upload32( unsigned *data,
 					internalFormat = GL_RGB;
 				}
 			}
+#else
+			internalFormat = GL_RGBA;
+#endif
 		}
 		else if ( samples == 4 )
 		{
+#ifndef USE_GLES
 			if(r_greyscale->integer)
 			{
 				if(r_texturebits->integer == 16)
@@ -680,6 +691,9 @@ static void Upload32( unsigned *data,
 					internalFormat = GL_RGBA;
 				}
 			}
+#else
+			internalFormat = GL_RGBA;
+#endif
 		}
 	}
 
@@ -749,17 +763,21 @@ done:
 
 	if (mipmap)
 	{
+#ifndef USE_GLES
 		if ( glConfig.textureFilterAnisotropic )
 			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
 					(GLint)Com_Clamp( 1, glConfig.maxAnisotropy, r_ext_max_anisotropy->integer ) );
+#endif
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 	}
 	else
 	{
+#ifndef USE_GLES
 		if ( glConfig.textureFilterAnisotropic )
 			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1 );
+#endif
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
@@ -1127,7 +1145,9 @@ static void R_CreateFogImages( void ) {
 	int		x, y, alpha;
 	byte	*data;
 	float	d;
+#ifndef USE_GLES
 	float	borderColor[4];
+#endif
 	int		fog_s, fog_t;
 
 	// Create exponential fog image
@@ -1153,12 +1173,14 @@ static void R_CreateFogImages( void ) {
 	tr.fogImage = R_CreateImage("*fog", (byte *)data, fog_s, fog_t, qfalse, qfalse, GL_CLAMP_TO_EDGE );
 	ri.Hunk_FreeTempMemory( data );
 
+#ifndef USE_GLES
 	borderColor[0] = 1.0;
 	borderColor[1] = 1.0;
 	borderColor[2] = 1.0;
 	borderColor[3] = 1;
 
 	qglTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
+#endif
 
 
 	// Create linear fog image
@@ -1198,6 +1220,7 @@ static void R_CreateFogImages( void ) {
 	tr.linearFogImage = R_CreateImage("*linearfog", (byte *)data, fog_s, fog_t, qfalse, qfalse, GL_CLAMP_TO_EDGE );
 	ri.Hunk_FreeTempMemory( data );
 
+#ifndef USE_GLES
 	// ydnar: the following lines are unecessary for new GL_CLAMP_TO_EDGE fog
 	borderColor[0] = 1.0;
 	borderColor[1] = 1.0;
@@ -1205,6 +1228,7 @@ static void R_CreateFogImages( void ) {
 	borderColor[3] = 1;
 
 	qglTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
+#endif
 }
 
 /*

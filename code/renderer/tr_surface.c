@@ -441,7 +441,7 @@ static void RB_SurfaceBeam( void )
 	int	i;
 	vec3_t perpvec;
 	vec3_t direction, normalized_direction;
-	vec3_t	start_points[NUM_BEAM_SEGS], end_points[NUM_BEAM_SEGS];
+	vec3_t points[NUM_BEAM_SEGS * 2];
 	vec3_t oldorigin, origin;
 
 	e = &backEnd.currentEntity->e;
@@ -467,23 +467,26 @@ static void RB_SurfaceBeam( void )
 
 	for ( i = 0; i < NUM_BEAM_SEGS ; i++ )
 	{
-		RotatePointAroundVector( start_points[i], normalized_direction, perpvec, (360.0/NUM_BEAM_SEGS)*i );
-//		VectorAdd( start_points[i], origin, start_points[i] );
-		VectorAdd( start_points[i], direction, end_points[i] );
+		RotatePointAroundVector(points[i * 2], normalized_direction, perpvec, (360.0 / NUM_BEAM_SEGS) * i);
+		VectorAdd(points[i * 2], direction, points[i * 2 + 1]);
 	}
 
 	GL_Bind( tr.whiteImage );
 
 	GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE );
 
-	qglColor3f( 1, 0, 0 );
+	qglColor4f( 1, 0, 0, 1 );
 
+#ifdef USE_GLES
+	qglVertexPointer(3, GL_FLOAT, 0, points);
+	qglDrawArrays(GL_TRIANGLE_STRIP, 0, NUM_BEAM_SEGS * 2);
+#else
 	qglBegin( GL_TRIANGLE_STRIP );
-	for ( i = 0; i <= NUM_BEAM_SEGS; i++ ) {
-		qglVertex3fv( start_points[ i % NUM_BEAM_SEGS] );
-		qglVertex3fv( end_points[ i % NUM_BEAM_SEGS] );
+	for ( i = 0; i <= NUM_BEAM_SEGS*2; i++ ) {
+		qglVertex3fv( points[ i % NUM_BEAM_SEGS*2 ] );
 	}
 	qglEnd();
+#endif
 }
 
 //================================================================================
@@ -1252,6 +1255,30 @@ Draws x/y/z lines from the origin for orientation debugging
 ===================
 */
 static void RB_SurfaceAxis( void ) {
+#ifdef USE_GLES
+	byte colors[3][4] = {
+		{255, 0, 0, 255},
+		{0, 255, 0, 255},
+		{0, 0, 255, 255}
+	};
+	vec3_t verts[6] = {
+		{0.0f, 0.0f, 0.0f},
+		{16.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f},
+		{0.0f, 16.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 16.0f}
+	};
+	glIndex_t indicies[6] = { 0, 1, 0, 2, 0, 3 };
+
+	GL_Bind( tr.whiteImage );
+	qglLineWidth( 3 );
+	qglEnableClientState(GL_COLOR_ARRAY);
+	qglColorPointer(4, GL_UNSIGNED_BYTE, 0, colors);
+	qglVertexPointer(3, GL_FLOAT, 0, verts);
+	qglDrawElements(GL_LINES, 6, GL_INDEX_TYPE, indicies);
+	qglLineWidth( 1 );
+#else
 	GL_Bind( tr.whiteImage );
 	qglLineWidth( 3 );
 	qglBegin( GL_LINES );
@@ -1266,6 +1293,7 @@ static void RB_SurfaceAxis( void ) {
 	qglVertex3f( 0,0,16 );
 	qglEnd();
 	qglLineWidth( 1 );
+#endif
 }
 
 //===========================================================================
@@ -1312,9 +1340,11 @@ static void RB_SurfaceFlare(srfFlare_t *surf)
 }
 
 static void RB_SurfaceDisplayList( srfDisplayList_t *surf ) {
+#ifndef USE_GLES
 	// all apropriate state must be set in RB_BeginSurface
 	// this isn't implemented yet...
 	qglCallList( surf->listNum );
+#endif
 }
 
 void RB_SurfacePolyBuffer( srfPolyBuffer_t *surf ) {

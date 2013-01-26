@@ -607,10 +607,26 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 
 	Q_strncpyz(vm->name, module, sizeof(vm->name));
 
+#ifdef __ANDROID__
+	if ( interpret == VMI_NATIVE ) {
+		// try to load as a system dll
+		Com_DPrintf( "Loading dll file %s.\n", vm->name );
+		vm->dllHandle = Sys_LoadGameDll(vm->name, &vm->entryPoint, VM_DllSyscall);
+		if ( vm->dllHandle ) {
+			vm->systemCall = systemCalls;
+			return vm;
+		}
+
+		Com_DPrintf( "Failed to load dll, looking for qvm.\n" );
+		interpret = VMI_COMPILED;
+		return NULL;
+	}
+#endif
+
 	do
 	{
 		retval = FS_FindVM(&startSearch, filename, sizeof(filename), module, (interpret == VMI_NATIVE));
-		
+		#ifndef __ANDROID__
 		if(retval == VMI_NATIVE)
 		{
 			Com_DPrintf("Try loading dll file %s\n", filename);
@@ -625,7 +641,9 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 			
 			Com_Printf("Failed loading dll, trying next\n");
 		}
-		else if(retval == VMI_COMPILED)
+		else
+		#endif
+		if(retval == VMI_COMPILED)
 		{
 			vm->searchPath = startSearch;
 			if((header = VM_LoadQVM(vm, qtrue, qtrue)))

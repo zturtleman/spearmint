@@ -318,6 +318,7 @@ void GL_State( unsigned long stateBits )
 		}
 	}
 
+#ifndef USE_GLES
 	//
 	// fill/line mode
 	//
@@ -332,6 +333,7 @@ void GL_State( unsigned long stateBits )
 			qglPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		}
 	}
+#endif
 
 	//
 	// depthtest
@@ -481,7 +483,11 @@ void RB_BeginDrawingView (void) {
 	// clip to the plane of the portal
 	if ( backEnd.viewParms.isPortal ) {
 		float	plane[4];
+#ifdef USE_GLES
+		float	plane2[4];
+#else
 		double	plane2[4];
+#endif
 
 		plane[0] = backEnd.viewParms.portalPlane.normal[0];
 		plane[1] = backEnd.viewParms.portalPlane.normal[1];
@@ -494,7 +500,11 @@ void RB_BeginDrawingView (void) {
 		plane2[3] = DotProduct (plane, backEnd.viewParms.or.origin) - plane[3];
 
 		qglLoadMatrixf( s_flipMatrix );
+#ifdef USE_GLES
+		qglClipPlanef (GL_CLIP_PLANE0, plane2);
+#else
 		qglClipPlane (GL_CLIP_PLANE0, plane2);
+#endif
 		qglEnable (GL_CLIP_PLANE0);
 	} else {
 		qglDisable (GL_CLIP_PLANE0);
@@ -756,6 +766,11 @@ Used for cinematics.
 void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty) {
 	int			i, j;
 	int			start, end;
+#ifdef USE_GLES
+	vec2_t		texcoords[4];
+	vec2_t		verts[4];
+	glIndex_t indicies[6] = { 0, 1, 2, 0, 3, 2 };
+#endif
 
 	if ( !tr.registered ) {
 		return;
@@ -805,6 +820,25 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 
 	RB_SetGL2D();
 
+#ifdef USE_GLES
+	qglColor4f( tr.identityLight, tr.identityLight, tr.identityLight, 1.0f );
+
+	verts[0][0] = x;  verts[0][1] = y;
+	verts[1][0] = x+w;  verts[1][1] = y;
+	verts[2][0] = x+w;  verts[2][1] = y+h;
+	verts[3][0] = x;  verts[3][1] = y+h;
+	
+	texcoords[0][0] = 0.5f/cols;      texcoords[0][1] = 0.5f/rows;
+	texcoords[1][0] = (cols-0.5f)/cols;   texcoords[1][1] = 0.5f/rows;
+	texcoords[2][0] = (cols-0.5f)/cols;   texcoords[2][1] = (rows-0.5f)/rows;
+	texcoords[3][0] = 0.5f/cols;      texcoords[3][1] = (rows-0.5f)/rows;
+	
+	qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	qglTexCoordPointer( 2, GL_FLOAT, 0, texcoords );
+	qglVertexPointer  ( 2, GL_FLOAT, 0, verts );
+	qglDrawElements( GL_TRIANGLE_STRIP, 6, GL_INDEX_TYPE, indicies );
+	qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+#else
 	qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
 
 	qglBegin (GL_QUADS);
@@ -817,6 +851,7 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 	qglTexCoord2f ( 0.5f / cols, ( rows - 0.5f ) / rows );
 	qglVertex2f (x, y+h);
 	qglEnd ();
+#endif
 }
 
 void RE_UploadCinematic (int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty) {
@@ -1187,7 +1222,9 @@ const void	*RB_DrawBuffer( const void *data ) {
 
 	cmd = (const drawBufferCommand_t *)data;
 
+#ifndef USE_GLES
 	qglDrawBuffer( cmd->buffer );
+#endif
 
 	// clear screen for debugging
 	if ( r_clear->integer ) {
@@ -1213,6 +1250,11 @@ void RB_ShowImages( void ) {
 	image_t	*image;
 	float	x, y, w, h;
 	int		start, end;
+#ifdef USE_GLES
+	vec2_t texcoords[4] = { {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f} };
+	vec2_t verts[4];
+	glIndex_t indicies[6] = { 0, 1, 2, 0, 3, 2 };
+#endif
 
 	if ( !backEnd.projection2D ) {
 		RB_SetGL2D();
@@ -1223,6 +1265,10 @@ void RB_ShowImages( void ) {
 	qglFinish();
 
 	start = ri.Milliseconds();
+
+#ifdef USE_GLES
+	qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+#endif
 
 	for ( i=0 ; i<tr.numImages ; i++ ) {
 		image = tr.images[i];
@@ -1239,6 +1285,17 @@ void RB_ShowImages( void ) {
 		}
 
 		GL_Bind( image );
+
+#ifdef USE_GLES
+		verts[0][0] = x;  verts[0][1] = y;
+		verts[1][0] = x+w;  verts[1][1] = y;
+		verts[2][0] = x+w;  verts[2][1] = y+h;
+		verts[3][0] = x;  verts[3][1] = y+h;
+
+		qglTexCoordPointer( 2, GL_FLOAT, 0, texcoords );
+		qglVertexPointer  ( 2, GL_FLOAT, 0, verts );
+		qglDrawElements( GL_TRIANGLE_STRIP, 6, GL_INDEX_TYPE, indicies );
+#else
 		qglBegin (GL_QUADS);
 		qglTexCoord2f( 0, 0 );
 		qglVertex2f( x, y );
@@ -1249,7 +1306,12 @@ void RB_ShowImages( void ) {
 		qglTexCoord2f( 0, 1 );
 		qglVertex2f( x, y + h );
 		qglEnd();
+#endif
 	}
+
+#ifdef USE_GLES
+	qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+#endif
 
 	qglFinish();
 
@@ -1315,6 +1377,7 @@ const void	*RB_SwapBuffers( const void *data ) {
 
 	cmd = (const swapBuffersCommand_t *)data;
 
+#ifndef USE_GLES
 	// we measure overdraw by reading back the stencil buffer and
 	// counting up the number of increments that have happened
 	if ( r_measureOverdraw->integer ) {
@@ -1332,6 +1395,7 @@ const void	*RB_SwapBuffers( const void *data ) {
 		backEnd.pc.c_overDraw += sum;
 		ri.Hunk_FreeTempMemory( stencilReadback );
 	}
+#endif
 
 
 	if ( !glState.finishCalled ) {

@@ -138,7 +138,11 @@ void RB_Fog( int fogNum ) {
 	// only send changes if necessary
 
 	//if ( fogMode != lastFogMode ) {
+#ifdef USE_GLES
+		qglFogf( GL_FOG_MODE, (float)fogMode );
+#else
 		qglFogi( GL_FOG_MODE, fogMode );
+#endif
 	//	lastFogMode = fogMode;
 	//}
 	//if ( color[0] != lastColor[0] || color[1] != lastColor[1] || color[2] != lastColor[2] || !lastFogMode ) {
@@ -1564,6 +1568,7 @@ R_DebugPolygon
 ================
 */
 void R_DebugPolygon( int color, int numPoints, float *points ) {
+#ifndef USE_GLES
 	int		i;
 
 	GL_State( GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE );
@@ -1587,6 +1592,7 @@ void R_DebugPolygon( int color, int numPoints, float *points ) {
 	}
 	qglEnd();
 	qglDepthRange( 0, 1 );
+#endif
 }
 
 /*

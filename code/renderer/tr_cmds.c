@@ -661,7 +661,9 @@ for each RE_EndFrame
 */
 void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	drawBufferCommand_t	*cmd = NULL;
+#ifndef USE_GLES
 	colorMaskCommand_t *colcmd = NULL;
+#endif
 
 	if ( !tr.registered ) {
 		return;
@@ -738,6 +740,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			ri.Error(ERR_FATAL, "RE_BeginFrame() - glGetError() failed (0x%x)!", err);
 	}
 
+#ifndef USE_GLES
 	if (glConfig.stereoEnabled) {
 		if( !(cmd = R_GetCommandBuffer(sizeof(*cmd))) )
 			return;
@@ -753,7 +756,9 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		}
 	}
 	else
+#endif
 	{
+#ifndef USE_GLES
 		if(r_anaglyphMode->integer)
 		{
 			if(r_anaglyphMode->modified)
@@ -797,6 +802,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			colcmd->commandId = RC_COLORMASK;
 		}
 		else
+#endif
 		{
 			if(stereoFrame != STEREO_CENTER)
 				ri.Error( ERR_FATAL, "RE_BeginFrame: Stereo is disabled, but stereoFrame was %i", stereoFrame );

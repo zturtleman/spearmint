@@ -260,6 +260,7 @@ FLARE BACK END
 ===============================================================================
 */
 
+#ifndef USE_GLES // ZTM: FIXME: Get flares working with GLES
 /*
 ==================
 RB_TestFlare
@@ -533,4 +534,9 @@ void RB_RenderFlares (void) {
 	qglMatrixMode( GL_MODELVIEW );
 	qglPopMatrix();
 }
+#else
+void RB_RenderFlares (void) {
+
+}
+#endif
 

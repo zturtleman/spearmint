@@ -829,6 +829,109 @@ ifeq ($(PLATFORM),sunos)
 else # ifeq sunos
 
 #############################################################################
+# SETUP AND BUILD -- Android
+#############################################################################
+
+ifeq ($(PLATFORM),android)
+
+ifeq ($(strip $(ANDROID_NDK_DIR)),)
+  $(error "Please set ANDROID_NDK_DIR in Makefile.local as path to Android NDK r8d, ANDROID_NDK_DIR=/path/to/ndk")
+endif
+
+  # FIXME get external storage directory at runtime ?
+  DEFAULT_BASEDIR=/sdcard/quake3
+
+  CLIENTBIN=libclient
+  FULLBINEXT=.a
+
+  BUILD_SERVER=0
+  BUILD_RENDERER_REND2=0
+  USE_RENDERER_DLOPEN=0
+  USE_CURL=0
+  USE_CURL_DLOPEN=0
+  USE_OPENAL=0
+  USE_OPENAL_DLOPEN=0
+  USE_MUMBLE=0
+  USE_VOIP=0
+  USE_INTERNAL_SPEEX=0
+
+  BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
+    -pipe -DUSE_ICON
+
+  OPTIMIZEVM = -O3 -funroll-loops -fomit-frame-pointer
+  OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+
+  ANDROID_PLATFORM=$(ANDROID_NDK_DIR)/platforms/android-9
+  ANDROID_GCC_VER=4.6
+
+  ifeq ($(ARCH),armeabi)
+    ANDROID_GCC_PREFIX=$(ANDROID_NDK_DIR)/toolchains/arm-linux-androideabi-$(ANDROID_GCC_VER)/prebuilt/linux-x86/bin/arm-linux-androideabi-
+
+    ANDROID_CFLAGS=-march=armv5te -mtune=xscale -msoft-float -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__  -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__
+
+    ANDROID_CFLAGS += -I$(ANDROID_PLATFORM)/arch-arm/usr/include
+    ANDROID_LDFLAGS = -L$(ANDROID_PLATFORM)/arch-arm/usr/lib
+  else ifeq ($(ARCH),armeabi-v7a)
+    ANDROID_GCC_PREFIX=$(ANDROID_NDK_DIR)/toolchains/arm-linux-androideabi-$(ANDROID_GCC_VER)/prebuilt/linux-x86/bin/arm-linux-androideabi-
+
+    ANDROID_CFLAGS=-mcpu=cortex-a8 -mfloat-abi=softfp -mfpu=neon -fpic -fno-short-enums -ffunction-sections -funwind-tables -fstack-protector -ftree-vectorize -fsingle-precision-constant -D__MATH_NEON
+
+    ANDROID_CFLAGS += -I$(ANDROID_PLATFORM)/arch-arm/usr/include
+    ANDROID_LDFLAGS = -L$(ANDROID_PLATFORM)/arch-arm/usr/lib
+  else ifeq ($(ARCH),x86)
+    ANDROID_GCC_PREFIX=$(ANDROID_NDK_DIR)/toolchains/x86-$(ANDROID_GCC_VER)/prebuilt/linux-x86/bin/i686-linux-android-
+
+    ANDROID_CFLAGS = -I$(ANDROID_PLATFORM)/arch-x86/usr/include
+    ANDROID_LDFLAGS = -L$(ANDROID_PLATFORM)/arch-x86/usr/lib
+
+    # TODO
+    #HAVE_VM_COMPILED=true
+  else ifeq ($(ARCH),mips)
+    ANDROID_GCC_PREFIX=$(ANDROID_NDK_DIR)/toolchains/mipsel-linux-android-$(ANDROID_GCC_VER)/prebuilt/linux-x86/bin/mipsel-linux-android-
+
+    ANDROID_CFLAGS = -I$(ANDROID_PLATFORM)/arch-mips/usr/include
+    ANDROID_LDFLAGS = -L$(ANDROID_PLATFORM)/arch-mips/usr/lib
+  else
+    $(error "Please set ARCH to armeabi, armeabi-v7a, x86, or mips")
+  endif
+
+  CC=$(ANDROID_GCC_PREFIX)gcc
+  AR=$(ANDROID_GCC_PREFIX)ar
+
+  CFLAGS=-D__linux__ $(ANDROID_CFLAGS)
+  LDFLAGS=-nostdlib $(ANDROID_LDFLAGS)
+
+  BASE_CFLAGS += -DUSE_GLES
+
+  SHLIBEXT=so
+  SHLIBCFLAGS=-fPIC -fvisibility=hidden
+  SHLIBLDFLAGS=-shared $(LDFLAGS) -lc -lm -lgcc
+
+  # NOTE client is compiled to a static library, these must be specified in android project's Android.mk
+  THREAD_LIBS=
+  LIBS=-ldl -lm
+
+  BINEXT=.so
+
+  CLIENT_LIBS=-nostdlib -lc -llog -lgcc
+  RENDERER_LIBS = -lGLESv1_CM
+
+  ifeq ($(USE_FREETYPE),1)
+    ifneq ($(USE_INTERNAL_FREETYPE), 1)
+      BASE_CFLAGS += $(FREETYPE_CFLAGS)
+    endif
+  endif
+
+  ifeq ($(USE_LOCAL_HEADERS),1)
+    BASE_CFLAGS += -I$(SDLHDIR)/include
+  endif
+
+  # Disable 4 player splitscreen, it's probably not playable on most android devices (lack of controls / screen space).
+  BASE_CFLAGS += -DCL_MAX_SPLITVIEW=1
+
+else # ifeq android
+
+#############################################################################
 # SETUP AND BUILD -- GENERIC
 #############################################################################
   BASE_CFLAGS=
@@ -846,6 +949,7 @@ endif #OpenBSD
 endif #NetBSD
 endif #IRIX
 endif #SunOS
+endif #Android
 
 ifneq ($(HAVE_VM_COMPILED),true)
   BASE_CFLAGS += -DNO_VM_COMPILED
@@ -1919,6 +2023,15 @@ ifeq ($(USE_MUMBLE),1)
     $(B)/client/libmumblelink.o
 endif
 
+ifeq ($(PLATFORM),android)
+$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ)
+	$(echo_cmd) "LD $@"
+	$(Q)$(AR) rcs $@ $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ)
+
+$(B)/$(CLIENTBIN)_rend2$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ)
+	$(echo_cmd) "LD $@"
+	$(Q)$(AR) rcs $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ)
+else
 ifneq ($(USE_RENDERER_DLOPEN),0)
 $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
@@ -1945,7 +2058,6 @@ $(B)/renderer_rend2_smp_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
-
 else
 $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
@@ -1970,6 +2082,7 @@ $(B)/$(CLIENTBIN)_rend2-smp$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(THREAD_LDFLAGS) \
 		-o $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
+endif
 endif
 
 ifneq ($(strip $(LIBSDLMAIN)),)
@@ -2208,7 +2321,7 @@ Q3CGVMOBJ = $(Q3CGOBJ_:%.o=%.asm)
 
 $(B)/$(BASEGAME)/cgame$(SHLIBNAME): $(Q3CGOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3CGOBJ)
+	$(Q)$(CC) $(CFLAGS) -o $@ $(Q3CGOBJ) $(SHLIBLDFLAGS)
 
 $(B)/$(BASEGAME)/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
@@ -2257,7 +2370,7 @@ MPCGVMOBJ = $(MPCGOBJ_:%.o=%.asm)
 
 $(B)/$(MISSIONPACK)/cgame$(SHLIBNAME): $(MPCGOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPCGOBJ)
+	$(Q)$(CC) $(CFLAGS) -o $@ $(MPCGOBJ) $(SHLIBLDFLAGS)
 
 $(B)/$(MISSIONPACK)/vm/cgame.qvm: $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
@@ -2311,7 +2424,7 @@ Q3GVMOBJ = $(Q3GOBJ_:%.o=%.asm)
 
 $(B)/$(BASEGAME)/game$(SHLIBNAME): $(Q3GOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
+	$(Q)$(CC) $(CFLAGS) -o $@ $(Q3GOBJ) $(SHLIBLDFLAGS)
 
 $(B)/$(BASEGAME)/vm/game.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
@@ -2363,7 +2476,7 @@ MPGVMOBJ = $(MPGOBJ_:%.o=%.asm)
 
 $(B)/$(MISSIONPACK)/game$(SHLIBNAME): $(MPGOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPGOBJ)
+	$(Q)$(CC) $(CFLAGS) -o $@ $(MPGOBJ) $(SHLIBLDFLAGS)
 
 $(B)/$(MISSIONPACK)/vm/game.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
@@ -2428,7 +2541,7 @@ Q3UIVMOBJ = $(Q3UIOBJ_:%.o=%.asm)
 
 $(B)/$(BASEGAME)/ui$(SHLIBNAME): $(Q3UIOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3UIOBJ)
+	$(Q)$(CC) $(CFLAGS) -o $@ $(Q3UIOBJ) $(SHLIBLDFLAGS)
 
 $(B)/$(BASEGAME)/vm/ui.qvm: $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
@@ -2456,7 +2569,7 @@ MPUIVMOBJ = $(MPUIOBJ_:%.o=%.asm)
 
 $(B)/$(MISSIONPACK)/ui$(SHLIBNAME): $(MPUIOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPUIOBJ)
+	$(Q)$(CC) $(CFLAGS) -o $@ $(MPUIOBJ) $(SHLIBLDFLAGS)
 
 $(B)/$(MISSIONPACK)/vm/ui.qvm: $(MPUIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"

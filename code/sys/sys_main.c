@@ -487,7 +487,47 @@ void *Sys_LoadGameDll(const char *name,
 {
 	void *libHandle;
 	void (*dllEntry)(intptr_t (*syscallptr)(intptr_t, ...));
+#ifdef __ANDROID__
+	char  fname[MAX_OSPATH];
+	char  *pwdpath;
 
+	assert(name);
+
+	// Get android lib directory, data/data/<package-name>/lib
+	pwdpath = "/data/data/org.spearmint.app/lib"; //Sys_Cwd();
+
+	/* The libraries are shipped in the package directory and can't be loaded from
+	 * e.g. the sdcard because it seems to be mounted noexec or the loader just doesn't
+	 * allow it.
+	 * On android libraries need to be prefixed with 'lib' else the loader
+	 * refuses to load them.
+	 */
+	Com_sprintf (fname, sizeof(fname), "%s/lib%s" ARCH_STRING DLL_EXT, pwdpath, name);
+
+	Com_Printf( "Loading DLL file: %s\n", fname);
+	libHandle = Sys_LoadLibrary(fname);
+
+	if(!libHandle)
+	{
+		Com_Printf("Sys_LoadGameDll(%s) failed:\n\"%s\"\n", name, Sys_LibraryError());
+
+#ifdef __ARM_ARCH_7A__
+		// have ARM v7a build fallback to ARM v5te
+		Com_sprintf (fname, sizeof(fname), "%s/lib%s" "armeabi" DLL_EXT, pwdpath, name);
+
+		Com_Printf( "Loading DLL file: %s\n", fname);
+		libHandle = Sys_LoadLibrary(fname);
+
+		if(!libHandle)
+		{
+			Com_Printf("Sys_LoadGameDll(%s) failed:\n\"%s\"\n", name, Sys_LibraryError());
+			return NULL;
+		}
+#else
+		return NULL;
+#endif
+	}
+#else
 	assert(name);
 
 	Com_DPrintf( "Loading DLL file: %s\n", name);
@@ -498,6 +538,7 @@ void *Sys_LoadGameDll(const char *name,
 		Com_Printf("Sys_LoadGameDll(%s) failed:\n\"%s\"\n", name, Sys_LibraryError());
 		return NULL;
 	}
+#endif
 
 	dllEntry = Sys_LoadFunction( libHandle, "dllEntry" );
 	*entryPoint = Sys_LoadFunction( libHandle, "vmMain" );
