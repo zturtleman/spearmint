@@ -609,8 +609,7 @@ void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
 		pointSize = 12;
 	}
 
-	// make sure the render thread is stopped
-	R_SyncRenderThread();
+	R_IssuePendingRenderCommands();
 
 	if ( R_GetFont( fontName, pointSize, font ) )
 		return;

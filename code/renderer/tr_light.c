@@ -106,7 +106,7 @@ void R_DlightBmodel( bmodel_t *bmodel ) {
 			case SF_TRIANGLES:
 			case SF_GRID:
 			case SF_FOLIAGE:
-				((srfGeneric_t *)surf->data)->dlightBits[ tr.smpFrame ] = mask;
+				((srfGeneric_t *)surf->data)->dlightBits = mask;
 				break;
 			default:
 				break;

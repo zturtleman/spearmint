@@ -582,12 +582,14 @@ RB_SurfaceTriangles
 =============
 */
 static void RB_SurfaceTriangles( srfTriangles_t *srf ) {
-	if( RB_SurfaceHelperVBO (srf->vbo, srf->ibo, srf->numVerts, srf->numTriangles * 3, srf->firstIndex, srf->minIndex, srf->maxIndex, srf->dlightBits[backEnd.smpFrame], srf->pshadowBits[backEnd.smpFrame], qtrue ) )
+	if( RB_SurfaceHelperVBO (srf->vbo, srf->ibo, srf->numVerts, srf->numTriangles * 3,
+				srf->firstIndex, srf->minIndex, srf->maxIndex, srf->dlightBits, srf->pshadowBits, qtrue ) )
 	{
 		return;
 	}
 
-	RB_SurfaceHelper(srf->numVerts, srf->verts, srf->numTriangles, srf->triangles, srf->dlightBits[backEnd.smpFrame], srf->pshadowBits[backEnd.smpFrame]);
+	RB_SurfaceHelper(srf->numVerts, srf->verts, srf->numTriangles,
+			srf->triangles, srf->dlightBits, srf->pshadowBits);
 }
 
 
@@ -1313,12 +1315,14 @@ RB_SurfaceFace
 ==============
 */
 static void RB_SurfaceFace( srfSurfaceFace_t *srf ) {
-	if( RB_SurfaceHelperVBO (srf->vbo, srf->ibo, srf->numVerts, srf->numTriangles * 3, srf->firstIndex, srf->minIndex, srf->maxIndex, srf->dlightBits[backEnd.smpFrame], srf->pshadowBits[backEnd.smpFrame], qtrue ) )
+	if( RB_SurfaceHelperVBO (srf->vbo, srf->ibo, srf->numVerts, srf->numTriangles * 3,
+				srf->firstIndex, srf->minIndex, srf->maxIndex, srf->dlightBits, srf->pshadowBits, qtrue ) )
 	{
 		return;
 	}
 
-	RB_SurfaceHelper(srf->numVerts, srf->verts, srf->numTriangles, srf->triangles, srf->dlightBits[backEnd.smpFrame], srf->pshadowBits[backEnd.smpFrame]);
+	RB_SurfaceHelper(srf->numVerts, srf->verts, srf->numTriangles,
+			srf->triangles, srf->dlightBits, srf->pshadowBits);
 }
 
 
@@ -1380,15 +1384,16 @@ static void RB_SurfaceGrid( srfGridMesh_t *srf ) {
 	int     pshadowBits;
 	//int		*vDlightBits;
 
-	if( RB_SurfaceHelperVBO (srf->vbo, srf->ibo, srf->numVerts, srf->numTriangles * 3, srf->firstIndex, srf->minIndex, srf->maxIndex, srf->dlightBits[backEnd.smpFrame], srf->pshadowBits[backEnd.smpFrame], qtrue ) )
+	if( RB_SurfaceHelperVBO (srf->vbo, srf->ibo, srf->numVerts, srf->numTriangles * 3,
+				srf->firstIndex, srf->minIndex, srf->maxIndex, srf->dlightBits, srf->pshadowBits, qtrue ) )
 	{
 		return;
 	}
 
-	dlightBits = srf->dlightBits[backEnd.smpFrame];
+	dlightBits = srf->dlightBits;
 	tess.dlightBits |= dlightBits;
 
-	pshadowBits = srf->pshadowBits[backEnd.smpFrame];
+	pshadowBits = srf->pshadowBits;
 	tess.pshadowBits |= pshadowBits;
 
 	// determine the allowable discrepance
@@ -1666,7 +1671,8 @@ void RB_SurfacePolyBuffer( srfPolyBuffer_t *surf ) {
 
 static void RB_SurfaceVBOMesh(srfVBOMesh_t * srf)
 {
-	RB_SurfaceHelperVBO (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes, srf->firstIndex, srf->minIndex, srf->maxIndex, srf->dlightBits[backEnd.smpFrame], srf->pshadowBits[backEnd.smpFrame], qfalse );
+	RB_SurfaceHelperVBO (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes, srf->firstIndex,
+			srf->minIndex, srf->maxIndex, srf->dlightBits, srf->pshadowBits, qfalse );
 }
 
 void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)

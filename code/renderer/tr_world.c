@@ -140,7 +140,7 @@ static int R_DlightSurface( msurface_t *surface, int dlightBits ) {
 		break;
 
 	default:
-		gen->dlightBits[ tr.smpFrame ] = 0;
+		gen->dlightBits = 0;
 		return 0;
 	}
 
@@ -192,7 +192,7 @@ static int R_DlightSurface( msurface_t *surface, int dlightBits ) {
 	}
 
 	// set surface dlight bits and return
-	gen->dlightBits[ tr.smpFrame ] = dlightBits;
+	gen->dlightBits = dlightBits;
 	return dlightBits;
 }
 

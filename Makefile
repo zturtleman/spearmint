@@ -29,9 +29,6 @@ endif
 ifndef BUILD_CLIENT
   BUILD_CLIENT     =
 endif
-ifndef BUILD_CLIENT_SMP
-  BUILD_CLIENT_SMP =
-endif
 ifndef BUILD_SERVER
   BUILD_SERVER     =
 endif
@@ -52,10 +49,6 @@ ifndef BUILD_RENDERER_REND2
 endif
 ifndef BUILD_FINAL
   BUILD_FINAL      =0
-endif
-
-ifneq ($(PLATFORM),darwin)
-  BUILD_CLIENT_SMP = 0
 endif
 
 #############################################################################
@@ -608,8 +601,6 @@ ifeq ($(PLATFORM),mingw32)
     SDLDLL=SDL.dll
   endif
 
-  BUILD_CLIENT_SMP = 0
-
 else # ifeq mingw32
 
 #############################################################################
@@ -875,25 +866,13 @@ endif
 ifneq ($(BUILD_CLIENT),0)
   ifneq ($(USE_RENDERER_DLOPEN),0)
     TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT) $(B)/renderer_opengl1_$(SHLIBNAME)
-    ifneq ($(BUILD_CLIENT_SMP),0)
-      TARGETS += $(B)/renderer_opengl1_smp_$(SHLIBNAME)
-    endif
     ifneq ($(BUILD_RENDERER_REND2), 0)
       TARGETS += $(B)/renderer_rend2_$(SHLIBNAME)
-      ifneq ($(BUILD_CLIENT_SMP),0)
-        TARGETS += $(B)/renderer_rend2_smp_$(SHLIBNAME)
-      endif
     endif
   else
     TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT)
     ifneq ($(BUILD_RENDERER_REND2), 0)
       TARGETS += $(B)/$(CLIENTBIN)_rend2$(FULLBINEXT)
-    endif
-    ifneq ($(BUILD_CLIENT_SMP),0)
-      TARGETS += $(B)/$(CLIENTBIN)-smp$(FULLBINEXT)
-      ifneq ($(BUILD_RENDERER_REND2), 0)
-        TARGETS += $(B)/$(CLIENTBIN)_rend2-smp$(FULLBINEXT)
-      endif
     endif
   endif
 endif
@@ -1061,11 +1040,6 @@ $(Q)cat $< | sed 's/^/\"/;s/$$/\\n\"/' >> $@
 $(Q)echo ";" >> $@
 endef
 
-define DO_SMP_CC
-$(echo_cmd) "SMP_CC $<"
-$(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) $(OPTIMIZE) -DSMP -o $@ -c $<
-endef
-
 define DO_BOT_CC
 $(echo_cmd) "BOT_CC $<"
 $(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) $(BOTCFLAGS) $(OPTIMIZE) -DBOTLIB -o $@ -c $<
@@ -1227,7 +1201,6 @@ makedirs:
 	@if [ ! -d $(B)/renderer ];then $(MKDIR) $(B)/renderer;fi
 	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
 	@if [ ! -d $(B)/rend2/glsl ];then $(MKDIR) $(B)/rend2/glsl;fi
-	@if [ ! -d $(B)/renderersmp ];then $(MKDIR) $(B)/renderersmp;fi
 	@if [ ! -d $(B)/ded ];then $(MKDIR) $(B)/ded;fi
 	@if [ ! -d $(B)/$(BASEGAME) ];then $(MKDIR) $(B)/$(BASEGAME);fi
 	@if [ ! -d $(B)/$(BASEGAME)/cgame ];then $(MKDIR) $(B)/$(BASEGAME)/cgame;fi
@@ -1664,13 +1637,8 @@ Q3ROBJ = \
   $(B)/renderer/tr_surface.o \
   $(B)/renderer/tr_world.o \
   \
-  $(B)/renderer/sdl_gamma.o
-
-Q3RPOBJ_UP = \
+  $(B)/renderer/sdl_gamma.o \
   $(B)/renderer/sdl_glimp.o
-
-Q3RPOBJ_SMP = \
-  $(B)/renderersmp/sdl_glimp.o
 
 ifneq ($(USE_RENDERER_DLOPEN), 0)
   Q3ROBJ += \
@@ -1928,50 +1896,27 @@ $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(LIBSDLMAIN)
 		-o $@ $(Q3OBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(LIBS)
 
-$(B)/renderer_opengl1_$(SHLIBNAME): $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ)
+$(B)/renderer_opengl1_$(SHLIBNAME): $(Q3ROBJ) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) \
+	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 
-$(B)/renderer_opengl1_smp_$(SHLIBNAME): $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ)
+$(B)/renderer_rend2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) \
+	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
-
-$(B)/renderer_rend2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) \
-		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
-
-$(B)/renderer_rend2_smp_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) \
-		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
-
 else
-$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
+$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) \
-		-o $@ $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) \
+		-o $@ $(Q3OBJ) $(Q3ROBJ) $(JPGOBJ) $(FTOBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
 
-$(B)/$(CLIENTBIN)-smp$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(THREAD_LDFLAGS) \
-		-o $@ $(Q3OBJ) $(Q3ROBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) \
-		$(THREAD_LIBS) $(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
-
-$(B)/$(CLIENTBIN)_rend2$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
+$(B)/$(CLIENTBIN)_rend2$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) \
-		-o $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_UP) $(JPGOBJ) $(FTOBJ) \
+		-o $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
-
-$(B)/$(CLIENTBIN)_rend2-smp$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(THREAD_LDFLAGS) \
-		-o $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(Q3RPOBJ_SMP) $(JPGOBJ) $(FTOBJ) \
-		$(THREAD_LIBS) $(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
 endif
 
 ifneq ($(strip $(LIBSDLMAIN)),)
@@ -2504,9 +2449,6 @@ $(B)/client/vorbis/%.o: $(VORBISDIR)/lib/%.c
 $(B)/client/%.o: $(SDLDIR)/%.c
 	$(DO_CC)
 
-$(B)/renderersmp/%.o: $(SDLDIR)/%.c
-	$(DO_SMP_CC)
-
 $(B)/client/%.o: $(SYSDIR)/%.c
 	$(DO_CC)
 
@@ -2721,7 +2663,7 @@ $(B)/$(MISSIONPACK)/qcommon/%.asm: $(CMDIR)/%.c $(Q3LCC)
 # MISC
 #############################################################################
 
-OBJ = $(Q3OBJ) $(Q3ROBJ) $(Q3R2OBJ) $(Q3RPOBJ_UP) $(Q3RPOBJ_SMP) $(Q3DOBJ) $(JPGOBJ) $(FTOBJ) \
+OBJ = $(Q3OBJ) $(Q3ROBJ) $(Q3R2OBJ) $(Q3DOBJ) $(JPGOBJ) $(FTOBJ) \
   $(MPGOBJ) $(Q3GOBJ) $(Q3CGOBJ) $(MPCGOBJ) $(Q3UIOBJ) $(MPUIOBJ) \
   $(MPGVMOBJ) $(Q3GVMOBJ) $(Q3CGVMOBJ) $(MPCGVMOBJ) $(Q3UIVMOBJ) $(MPUIVMOBJ)
 TOOLSOBJ = $(LBURGOBJ) $(Q3CPPOBJ) $(Q3RCCOBJ) $(Q3LCCOBJ) $(Q3ASMOBJ)
@@ -2745,15 +2687,6 @@ ifneq ($(BUILD_CLIENT),0)
     ifneq ($(BUILD_RENDERER_REND2),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_rend2_$(SHLIBNAME) $(COPYBINDIR)/renderer_rend2_$(SHLIBNAME)
     endif
-  endif
-endif
-
-# Don't copy the SMP until it's working together with SDL.
-ifneq ($(BUILD_CLIENT_SMP),0)
-  ifneq ($(USE_RENDERER_DLOPEN),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl1_smp_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl1_smp_$(SHLIBNAME)
-  else
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)-smp$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)-smp$(FULLBINEXT)
   endif
 endif
 

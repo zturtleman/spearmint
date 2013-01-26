@@ -29,7 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 #include "tr_local.h"
 
-backEndData_t	*backEndData[SMP_FRAMES];
+backEndData_t	*backEndData;
 backEndState_t	backEnd;
 
 
@@ -708,7 +708,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 /*
 ============================================================================
 
-RENDER BACK END THREAD FUNCTIONS
+RENDER BACK END FUNCTIONS
 
 ============================================================================
 */
@@ -760,7 +760,7 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 	if ( !tr.registered ) {
 		return;
 	}
-	R_SyncRenderThread();
+	R_IssuePendingRenderCommands();
 
 	// we definately want to sync every frame for the cinematics
 	qglFinish();
@@ -1350,21 +1350,12 @@ const void	*RB_SwapBuffers( const void *data ) {
 /*
 ====================
 RB_ExecuteRenderCommands
-
-This function will be called synchronously if running without
-smp extensions, or asynchronously by another thread.
 ====================
 */
 void RB_ExecuteRenderCommands( const void *data ) {
 	int		t1, t2;
 
 	t1 = ri.Milliseconds ();
-
-	if ( !r_smp->integer || data == backEndData[0]->commands.cmds ) {
-		backEnd.smpFrame = 0;
-	} else {
-		backEnd.smpFrame = 1;
-	}
 
 	while ( 1 ) {
 		data = PADP(data, sizeof(void *));
@@ -1408,7 +1399,7 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			break;
 		case RC_END_OF_LIST:
 		default:
-			// stop rendering on this thread
+			// stop rendering
 			t2 = ri.Milliseconds ();
 			backEnd.pc.msec = t2 - t1;
 			return;
@@ -1416,30 +1407,3 @@ void RB_ExecuteRenderCommands( const void *data ) {
 	}
 
 }
-
-
-/*
-================
-RB_RenderThread
-================
-*/
-void RB_RenderThread( void ) {
-	const void	*data;
-
-	// wait for either a rendering command or a quit command
-	while ( 1 ) {
-		// sleep until we have work to do
-		data = GLimp_RendererSleep();
-
-		if ( !data ) {
-			return;	// all done, renderer is shutting down
-		}
-
-		renderThreadActive = qtrue;
-
-		RB_ExecuteRenderCommands( data );
-
-		renderThreadActive = qfalse;
-	}
-}
-
