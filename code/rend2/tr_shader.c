@@ -3448,8 +3448,7 @@ void R_FindLightmap( int *lightmapIndex ) {
 		return;
 	}
 
-	// sync up render thread, because we're going to have to load an image
-	R_SyncRenderThread();
+	R_IssuePendingRenderCommands();
 
 	// attempt to load an external lightmap
 	Com_sprintf( fileName, sizeof (fileName), "%s/" EXTERNAL_LIGHTMAP, tr.worldDir, *lightmapIndex );

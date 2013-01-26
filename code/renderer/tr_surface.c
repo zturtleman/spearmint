@@ -330,7 +330,7 @@ static void RB_SurfaceFoliage( srfFoliage_t *srf ) {
 	}
 
 	// set dlight bits
-	dlightBits = srf->dlightBits[ backEnd.smpFrame ];
+	dlightBits = srf->dlightBits;
 	tess.dlightBits |= dlightBits;
 
 	// iterate through origin list

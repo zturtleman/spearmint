@@ -241,7 +241,7 @@ void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
 		return;
 	}
 
-	pPolySurf = &backEndData[tr.smpFrame]->polybuffers[r_numpolybuffers];
+	pPolySurf = &backEndData->polybuffers[r_numpolybuffers];
 	r_numpolybuffers++;
 
 	pPolySurf->surfaceType = SF_POLYBUFFER;
@@ -464,7 +464,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 	tr.refdef.polys = &backEndData->polys[r_firstScenePoly];
 
 	tr.refdef.numPolyBuffers = r_numpolybuffers - r_firstScenePolybuffer;
-	tr.refdef.polybuffers = &backEndData[tr.smpFrame]->polybuffers[r_firstScenePolybuffer];
+	tr.refdef.polybuffers = &backEndData->polybuffers[r_firstScenePolybuffer];
 
 	// turn off dynamic lighting globally by clearing all the
 	// dlights if it needs to be disabled or if vertex lighting is enabled

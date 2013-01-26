@@ -457,7 +457,7 @@ void RE_2DPolyies( polyVert_t* verts, int numverts, qhandle_t hShader ) {
 	}
 
 	cmd->commandId =    RC_2DPOLYS;
-	cmd->verts =        &backEndData[tr.smpFrame]->polyVerts[r_numpolyverts];
+	cmd->verts =        &backEndData->polyVerts[r_numpolyverts];
 	cmd->numverts =     numverts;
 	memcpy( cmd->verts, verts, sizeof( polyVert_t ) * numverts );
 	cmd->shader =       R_GetShaderByHandle( hShader );
@@ -492,12 +492,12 @@ void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, floa
 ====================
 R_PointInBrush
 
-ZTM: TODO: Use bmodel->orientation[ tr.smpFrame ].axis ?
+ZTM: TODO: Use bmodel->orientation.axis ?
 ====================
 */
 qboolean R_PointInBrush( const vec3_t point, const bmodel_t *bmodel ) {
 	int		j;
-	const float	*origin = bmodel->orientation[ tr.smpFrame ].origin;
+	const float	*origin = bmodel->orientation.origin;
 	const float	*mins = bmodel->bounds[ 0 ];
 	const float	*maxs = bmodel->bounds[ 1 ];
 

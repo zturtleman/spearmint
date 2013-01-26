@@ -803,9 +803,9 @@ typedef struct {
 	// ydnar: for fog volumes
 	int firstBrush;
 	int numBrushes;
-	orientation_t orientation[ SMP_FRAMES ];
-	qboolean visible[ SMP_FRAMES ];
-	int entityNum[ SMP_FRAMES ];
+	orientation_t orientation;
+	qboolean visible;
+	int entityNum;
 } bmodel_t;
 
 typedef struct {

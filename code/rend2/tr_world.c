@@ -410,12 +410,12 @@ void R_AddBrushModelSurfaces ( trRefEntity_t *ent ) {
 	tr.currentBModel = bmodel;
 
 	// set model state for decals and dynamic fog
-	VectorCopy( ent->e.origin, bmodel->orientation[ tr.smpFrame ].origin );
-	VectorCopy( ent->e.axis[ 0 ], bmodel->orientation[ tr.smpFrame ].axis[ 0 ] );
-	VectorCopy( ent->e.axis[ 1 ], bmodel->orientation[ tr.smpFrame ].axis[ 1 ] );
-	VectorCopy( ent->e.axis[ 2 ], bmodel->orientation[ tr.smpFrame ].axis[ 2 ] );
-	bmodel->visible[ tr.smpFrame ] = qtrue;
-	bmodel->entityNum[ tr.smpFrame ] = tr.currentEntityNum;
+	VectorCopy( ent->e.origin, bmodel->orientation.origin );
+	VectorCopy( ent->e.axis[ 0 ], bmodel->orientation.axis[ 0 ] );
+	VectorCopy( ent->e.axis[ 1 ], bmodel->orientation.axis[ 1 ] );
+	VectorCopy( ent->e.axis[ 2 ], bmodel->orientation.axis[ 2 ] );
+	bmodel->visible = qtrue;
+	bmodel->entityNum = tr.currentEntityNum;
 
 	R_SetupEntityLighting( &tr.refdef, ent );
 	R_DlightBmodel( bmodel );

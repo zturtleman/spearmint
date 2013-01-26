@@ -990,7 +990,7 @@ void RB_CalcFogTexCoords( float *st ) {
 		// offset fog surface
 		VectorCopy( fog->surface, fogSurface );
 #if 1 // WolfET
-		fogSurface[ 3 ] = fog->surface[ 3 ] + DotProduct( fogSurface, bmodel->orientation[ backEnd.smpFrame ].origin );
+		fogSurface[ 3 ] = fog->surface[ 3 ] + DotProduct( fogSurface, bmodel->orientation.origin );
 #else
 		fogSurface[ 3 ] = fog->surface[ 3 ];
 #endif
