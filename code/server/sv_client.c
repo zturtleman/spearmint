@@ -1308,9 +1308,8 @@ void SV_UserinfoChanged( player_t *player ) {
 
 	// rate command
 
-	// if the client is on the same subnet as the server and we aren't running an
-	// internet public server, assume they don't need a rate choke
-	if ( Sys_IsLANAddress( cl->netchan.remoteAddress ) && com_dedicated->integer != 2 && sv_lanForceRate->integer == 1) {
+	// if the client is on the same subnet as the server, assume they don't need a rate choke
+	if ( Sys_IsLANAddress( cl->netchan.remoteAddress ) && sv_lanForceRate->integer == 1 ) {
 		cl->rate = 99999;	// lans should not rate limit
 	} else {
 		val = Info_ValueForKey (player->userinfo, "rate");

@@ -713,8 +713,8 @@ void SVC_Info( netadr_t from ) {
 		return;
 	}
 
-	// If sv_public is 0 and from a master server don't reply.
-	if ( sv_public->integer == 0 ) {
+	// If not a public server and request is from a master server, don't reply.
+	if ( sv_public->integer != 1 ) {
 		for (i = 0; i < MAX_MASTER_SERVERS; i++) {
 			if(!sv_master[i]->string[0])
 				continue;
@@ -1285,7 +1285,7 @@ void SV_Frame( int msec ) {
 	SV_CheckPublicStatus();
 
 	// "sv_public 1" is for internet public play
-	if (!sv_public || sv_public->integer != 1) {
+	if (sv_public->integer != 1) {
 		return;
 	}
 	SV_MasterHeartbeat(HEARTBEAT_FOR_MASTER);
