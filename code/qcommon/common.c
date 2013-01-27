@@ -2990,24 +2990,22 @@ int Com_ModifyMsec( int msec ) {
 		msec = 1;
 	}
 
-	if ( com_dedicated->integer ) {
-		// dedicated servers don't want to clamp for a much longer
-		// period, because it would mess up all the client's views
-		// of time.
-		if (com_sv_running->integer && msec > 500)
-			Com_Printf( "Hitch warning: %i msec frame time\n", msec );
-
-		clampTime = 5000;
-	} else 
-	if ( !com_sv_running->integer ) {
-		// clients of remote servers do not want to clamp time, because
-		// it would skew their view of the server's time temporarily
-		clampTime = 5000;
-	} else {
+	if ( com_sv_running->integer && Com_GameIsSinglePlayer() ) {
 		// for local single player gaming
 		// we may want to clamp the time to prevent players from
 		// flying off edges when something hitches.
 		clampTime = 200;
+	} else {
+		// servers don't want to clamp for a much longer period,
+		// because it would mess up all the client's views of time.
+
+		// clients of remote servers do not want to clamp time, because
+		// it would skew their view of the server's time temporarily
+
+		if (com_sv_running->integer && msec > 500)
+			Com_Printf( "Hitch warning: %i msec frame time\n", msec );
+
+		clampTime = 5000;
 	}
 
 	if ( msec > clampTime ) {
