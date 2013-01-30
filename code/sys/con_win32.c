@@ -279,6 +279,7 @@ CON_Init
 void CON_Init( void )
 {
 	CONSOLE_SCREEN_BUFFER_INFO info;
+	char consoleTitle[128];
 	int i;
 
 	// handle Ctrl-C or other console termination
@@ -304,7 +305,8 @@ void CON_Init( void )
 	qconsole_attrib = info.wAttributes;
 	qconsole_backgroundAttrib = qconsole_attrib & (BACKGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_RED|BACKGROUND_INTENSITY);
 
-	SetConsoleTitle(CLIENT_WINDOW_TITLE " Dedicated Server Console");
+	Com_sprintf( consoleTitle, sizeof (consoleTitle), "%s Dedicated Server Console", com_productName->string );
+	SetConsoleTitle( consoleTitle );
 
 	// initialize history
 	for( i = 0; i < QCONSOLE_HISTORY; i++ )

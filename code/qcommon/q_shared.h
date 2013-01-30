@@ -34,32 +34,18 @@ Suite 120, Rockville, Maryland 20850 USA.
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
-#if 1 // Change these for your standalone game
-  #define PRODUCT_NAME			"Spearmint"
-  #define BASEGAME			"baseq3"
-  #define CLIENT_WINDOW_TITLE     	"Spearmint"
-  #define CLIENT_WINDOW_MIN_TITLE 	"Spearmint"
-  #define HOMEPATH_NAME_UNIX		".spearmint"
-  #define HOMEPATH_NAME_WIN		"Spearmint"
-  #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
-  #define GAMENAME_FOR_MASTER		"Spearmint"	// must NOT contain whitespace
+#define PRODUCT_NAME				"Spearmint"
+#define HOMEPATH_NAME_UNIX			".spearmint"
+#define HOMEPATH_NAME_WIN			"Spearmint"
+#define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
+#define GAMENAME_FOR_MASTER			"Spearmint"	// must NOT contain whitespace
 
-  #ifndef PRODUCT_VERSION
-    #define PRODUCT_VERSION "1.36"
-  #endif
-#else // ioquake3 defaults
-  #define PRODUCT_NAME			"ioq3"
-  #define BASEGAME			"baseq3"
-  #define CLIENT_WINDOW_TITLE     	"ioquake3"
-  #define CLIENT_WINDOW_MIN_TITLE 	"ioq3"
-  #define HOMEPATH_NAME_UNIX		".q3a"
-  #define HOMEPATH_NAME_WIN		"Quake3"
-  #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
-  #define GAMENAME_FOR_MASTER		"Quake3Arena"
+#ifndef BASEGAME
+	#define BASEGAME				"baseq3"
+#endif
 
-  #ifndef PRODUCT_VERSION
-    #define PRODUCT_VERSION "1.36"
-  #endif
+#ifndef PRODUCT_VERSION
+	#define PRODUCT_VERSION "1.36"
 #endif
 
 // In the future if the client-server protocol is modified, this may allow old and new engines to play together

@@ -430,7 +430,8 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 		}
 #endif
 
-		SDL_WM_SetCaption(CLIENT_WINDOW_TITLE, CLIENT_WINDOW_MIN_TITLE);
+		cvar_t *com_productName = ri.Cvar_Get("com_productName", PRODUCT_NAME, CVAR_ROM);
+		SDL_WM_SetCaption(com_productName->string, com_productName->string);
 		SDL_ShowCursor(0);
 
 		if (!(vidscreen = SDL_SetVideoMode(glConfig.vidWidth, glConfig.vidHeight, colorbits, flags)))

@@ -2650,6 +2650,50 @@ static char** Sys_ConcatenateFileLists( char **list0, char **list1 )
 
 /*
 ================
+FS_GetModDescription
+================
+*/
+void FS_GetModDescription( const char *modDir, char *description, int descriptionLen ) {
+	fileHandle_t	descHandle;
+	char			descPath[MAX_QPATH];
+	int				nDescLen;
+	FILE			*file;
+
+	descPath[0] = '\0';
+	strcpy(descPath, modDir);
+	strcat(descPath, "/description.txt");
+	nDescLen = FS_SV_FOpenFileRead( descPath, &descHandle );
+
+	if ( nDescLen > 0 && descHandle) {
+		file = FS_FileForHandle(descHandle);
+		Com_Memset( description, 0, descriptionLen );
+		nDescLen = fread(description, 1, descriptionLen, file);
+		if (nDescLen >= 0) {
+			description[nDescLen] = '\0';
+		}
+
+		// Remove \n, \r\n, and \r
+		if (nDescLen > 0 && description[nDescLen - 1] == '\n') {
+			nDescLen--;
+			description[nDescLen] = '\0';
+		}
+		if (nDescLen > 0 && description[nDescLen - 1] == '\r') {
+			nDescLen--;
+			description[nDescLen] = '\0';
+		}
+
+		FS_FCloseFile(descHandle);
+	} else if ( !Q_stricmp( modDir, BASEQ3 ) ) {
+		Q_strncpyz( description, "Quake III Arena", descriptionLen );
+	} else if ( !Q_stricmp( modDir, BASETA ) ) {
+		Q_strncpyz( description, "Quake III: Team Arena", descriptionLen );
+	} else {
+		Q_strncpyz( description, modDir, descriptionLen );
+	}
+}
+
+/*
+================
 FS_GetModList
 
 Returns a list of mod directory names
@@ -2662,8 +2706,7 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 	char **pFiles = NULL;
 	char **pPaks = NULL;
 	char *name, *path;
-	char descPath[MAX_OSPATH];
-	fileHandle_t descHandle;
+	char description[MAX_OSPATH];
 
 	int dummy;
 	char **pFiles0 = NULL;
@@ -2723,28 +2766,13 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 				nLen = strlen(name) + 1;
 				// nLen is the length of the mod path
 				// we need to see if there is a description available
-				descPath[0] = '\0';
-				strcpy(descPath, name);
-				strcat(descPath, "/description.txt");
-				nDescLen = FS_SV_FOpenFileRead( descPath, &descHandle );
-				if ( nDescLen > 0 && descHandle) {
-					FILE *file;
-					file = FS_FileForHandle(descHandle);
-					Com_Memset( descPath, 0, sizeof( descPath ) );
-					nDescLen = fread(descPath, 1, 48, file);
-					if (nDescLen >= 0) {
-						descPath[nDescLen] = '\0';
-					}
-					FS_FCloseFile(descHandle);
-				} else {
-					strcpy(descPath, name);
-				}
-				nDescLen = strlen(descPath) + 1;
+				FS_GetModDescription( name, description, sizeof( description ) );
+				nDescLen = strlen(description) + 1;
 
 				if (nTotal + nLen + 1 + nDescLen + 1 < bufsize) {
 					strcpy(listbuf, name);
 					listbuf += nLen;
-					strcpy(listbuf, descPath);
+					strcpy(listbuf, description);
 					listbuf += nDescLen;
 					nTotal += nLen + nDescLen;
 					nMods++;
@@ -3402,6 +3430,7 @@ FS_Startup
 static void FS_Startup( const char *gameName, qboolean quiet )
 {
 	const char *homePath;
+	char description[MAX_QPATH];
 
 	if (!quiet) {
 		Com_Printf( "----- FS_Startup -----\n" );
@@ -3457,6 +3486,10 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 			FS_AddGameDirectory(fs_homepath->string, fs_gamedirvar->string);
 		}
 	}
+
+	FS_GetModDescription( fs_gamedir, description, sizeof ( description ) );
+	Q_CleanStr( description );
+	Cvar_Set( "com_productName", description );
 
 	// add our commands
 	Cmd_AddCommand ("path", FS_Path_f);
