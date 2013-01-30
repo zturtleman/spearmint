@@ -30,10 +30,18 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 // bg_misc.h -- definitions shared by both the server game and client game modules
 
+#ifndef MODDIR
+  #ifdef MISSIONPACK
+    #define MODDIR "missionpack"
+  #else
+    #define MODDIR "baseq3"
+  #endif
+#endif
+
 // because games can change separately from the main system version, we need a
 // second version that must match between game and cgame
 
-#define	GAME_VERSION		BASEGAME "-1"
+#define	GAME_VERSION		MODDIR "-1"
 
 #define	DEFAULT_GRAVITY		800
 #define	GIB_HEALTH			-40

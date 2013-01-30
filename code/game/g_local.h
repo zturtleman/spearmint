@@ -37,7 +37,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 //==================================================================
 
 // the "gameversion" client command will print this plus compile date
-#define	GAMEVERSION	BASEGAME
+#define	GAMEVERSION	MODDIR
 
 #define BODY_QUEUE_SIZE		8
 

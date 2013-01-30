@@ -109,6 +109,8 @@ ifndef BASEGAME_CFLAGS
 BASEGAME_CFLAGS=
 endif
 
+BASEGAME_CFLAGS+=-DMODDIR=\"$(BASEGAME)\"
+
 ifndef MISSIONPACK
 MISSIONPACK=missionpack
 endif
@@ -116,6 +118,8 @@ endif
 ifndef MISSIONPACK_CFLAGS
 MISSIONPACK_CFLAGS=-DMISSIONPACK -DMISSIONPACK_HUD
 endif
+
+MISSIONPACK_CFLAGS+=-DMODDIR=\"$(MISSIONPACK)\"
 
 # Add "-DEXAMPLE" to define EXAMPLE in engine and game/cgame/ui.
 ifndef BUILD_DEFINES
@@ -1006,7 +1010,7 @@ else
   STRIP_FLAG = -s
 endif
 
-BASE_CFLAGS += -DPRODUCT_VERSION=\\\"$(VERSION)\\\"
+BASE_CFLAGS += -DPRODUCT_VERSION=\\\"$(VERSION)\\\" -DBASEGAME=\\\"$(BASEGAME)\\\"
 BASE_CFLAGS += -Wformat=2 -Wno-format-zero-length -Wformat-security -Wno-format-nonliteral
 BASE_CFLAGS += -Wstrict-aliasing=2 -Wmissing-format-attribute
 BASE_CFLAGS += -Wdisabled-optimization
