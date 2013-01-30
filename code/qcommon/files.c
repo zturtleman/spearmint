@@ -2716,6 +2716,21 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 	*listbuf = 0;
 	nMods = nTotal = 0;
 
+	// add base game first
+	name = com_basegame->string;
+	nLen = strlen(name) + 1;
+	FS_GetModDescription( name, description, sizeof( description ) );
+	nDescLen = strlen(description) + 1;
+
+	if (nTotal + nLen + 1 + nDescLen + 1 < bufsize) {
+		strcpy(listbuf, name);
+		listbuf += nLen;
+		strcpy(listbuf, description);
+		listbuf += nDescLen;
+		nTotal += nLen + nDescLen;
+		nMods++;
+	}
+
 	pFiles0 = Sys_ListFiles( fs_homepath->string, NULL, NULL, &dummy, qtrue );
 	pFiles1 = Sys_ListFiles( fs_basepath->string, NULL, NULL, &dummy, qtrue );
 	// we searched for mods in the three paths
