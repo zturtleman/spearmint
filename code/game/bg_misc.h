@@ -211,11 +211,14 @@ typedef struct entityState_s {
 } entityState_t;
 
 
+// bit limits
+#define WEAPONNUM_BITS			4
+
 // array limits (engine will only network arrays <= 1024 elements)
 #define	MAX_STATS				16
 #define	MAX_PERSISTANT			16
 #define	MAX_POWERUPS			16 // entityState_t::powerups bit field limits this to <= 32.
-#define	MAX_WEAPONS				16 // playerState_t::stats[STAT_WEAPONS] is networked as 16 bits, which limits this to <= 16.
+#define	MAX_WEAPONS				(1<<WEAPONNUM_BITS) // playerState_t::stats[STAT_WEAPONS] bit field limits this to <= 16.
 
 #define	MAX_PS_EVENTS			2
 

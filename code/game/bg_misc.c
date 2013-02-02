@@ -1054,7 +1054,7 @@ vmNetField_t	bg_playerStateFields[] =
 { PSF(eventParms[0]), 8 },
 { PSF(eventParms[1]), 8 },
 { PSF(clientNum), 8 },
-{ PSF(weapon), 5 },
+{ PSF(weapon), WEAPONNUM_BITS },
 { PSF(viewangles[2]), 0 },
 { PSF(grapplePoint[0]), 0 },
 { PSF(grapplePoint[1]), 0 },
@@ -1780,13 +1780,44 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 
 /*
 ========================
+BG_ComposeBits
+========================
+*/
+void BG_ComposeBits( int *msg, int *bitsUsed, int value, int bits ) {
+	*msg |= ( value & ( ( 1 << bits ) - 1 ) ) << *bitsUsed;
+	*bitsUsed += bits;
+
+	if ( *bitsUsed > 32 ) {
+		Com_Error( ERR_DROP, "BG_ComposeBits exceeded 32 bits" );
+	}
+}
+
+/*
+========================
+BG_DecomposeBits
+========================
+*/
+void BG_DecomposeBits( int msg, int *bitsUsed, int *value, int bits ) {
+	if ( value ) {
+		*value = ( msg >> *bitsUsed ) & ( ( 1 << bits ) - 1 );
+	}
+	*bitsUsed += bits;
+
+	if ( *bitsUsed > 32 ) {
+		Com_Error( ERR_DROP, "BG_DecomposeBits exceeded 32 bits" );
+	}
+}
+
+/*
+========================
 BG_ComposeUserCmdValue
 ========================
 */
 int BG_ComposeUserCmdValue( int weapon ) {
-	int value;
+	int value = 0;
+	int bitsUsed = 0;
 
-	value = weapon & ( MAX_WEAPONS - 1 );
+	BG_ComposeBits( &value, &bitsUsed, weapon, WEAPONNUM_BITS );
 
 	return value;
 }
@@ -1797,9 +1828,9 @@ BG_DecomposeUserCmdValue
 ========================
 */
 void BG_DecomposeUserCmdValue( int value, int *weapon ) {
-	if (weapon) {
-		*weapon = value & ( MAX_WEAPONS - 1 );
-	}
+	int		bitsUsed = 0;
+
+	BG_DecomposeBits( value, &bitsUsed, weapon, WEAPONNUM_BITS );
 }
 
 int cmdcmp( const void *a, const void *b ) {
