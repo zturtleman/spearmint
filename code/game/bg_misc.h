@@ -995,6 +995,8 @@ void	BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 
 qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTime );
 
+int		BG_ComposeUserCmdValue( int weapon );
+void	BG_DecomposeUserCmdValue( int value, int *weapon );
 
 #define ARENAS_PER_TIER		4
 #define MAX_ARENAS			1024

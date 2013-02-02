@@ -1211,7 +1211,7 @@ typedef struct usercmd_s {
 	int				serverTime;
 	int				angles[3];
 	int 			buttons;
-	byte			weapon;           // weapon 
+	int				stateValue;
 	signed char	forwardmove, rightmove, upmove;
 } usercmd_t;
 
