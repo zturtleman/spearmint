@@ -294,3 +294,111 @@ void AddPointToBounds(const vec3_t v, vec3_t mins, vec3_t maxs)
 			maxs[i] = val;
 	}
 }
+
+#define LINE_DISTANCE_EPSILON 1e-05f
+
+/*
+================
+DistanceBetweenLineSegmentsSquared
+
+Return the smallest distance between two line segments, squared
+================
+*/
+vec_t DistanceBetweenLineSegmentsSquared(
+	const vec3_t sP0, const vec3_t sP1,
+	const vec3_t tP0, const vec3_t tP1,
+	float *s, float *t )
+{
+	vec3_t  sMag, tMag, diff;
+	float   a, b, c, d, e;
+	float   D;
+	float   sN, sD;
+	float   tN, tD;
+	vec3_t  separation;
+
+	VectorSubtract( sP1, sP0, sMag );
+	VectorSubtract( tP1, tP0, tMag );
+	VectorSubtract( sP0, tP0, diff );
+	a = DotProduct( sMag, sMag );
+	b = DotProduct( sMag, tMag );
+	c = DotProduct( tMag, tMag );
+	d = DotProduct( sMag, diff );
+	e = DotProduct( tMag, diff );
+	sD = tD = D = a * c - b * b;
+
+	if( D < LINE_DISTANCE_EPSILON )
+	{
+		// the lines are almost parallel
+		sN = 0.0;   // force using point P0 on segment S1
+		sD = 1.0;   // to prevent possible division by 0.0 later
+		tN = e;
+		tD = c;
+	}
+	else
+	{
+		// get the closest points on the infinite lines
+		sN = ( b * e - c * d );
+		tN = ( a * e - b * d );
+
+		if( sN < 0.0 )
+		{
+			// sN < 0 => the s=0 edge is visible
+			sN = 0.0;
+			tN = e;
+			tD = c;
+		}
+		else if( sN > sD )
+		{
+			// sN > sD => the s=1 edge is visible
+			sN = sD;
+			tN = e + b;
+			tD = c;
+		}
+	}
+
+	if( tN < 0.0 )
+	{
+		// tN < 0 => the t=0 edge is visible
+		tN = 0.0;
+
+		// recompute sN for this edge
+		if( -d < 0.0 )
+			sN = 0.0;
+		else if( -d > a )
+			sN = sD;
+		else
+		{
+			sN = -d;
+			sD = a;
+		}
+	}
+	else if( tN > tD )
+	{
+		// tN > tD => the t=1 edge is visible
+		tN = tD;
+
+		// recompute sN for this edge
+		if( ( -d + b ) < 0.0 )
+			sN = 0;
+		else if( ( -d + b ) > a )
+			sN = sD;
+		else
+		{
+			sN = ( -d + b );
+			sD = a;
+		}
+	}
+
+	// finally do the division to get *s and *t
+	*s = ( fabs( sN ) < LINE_DISTANCE_EPSILON ? 0.0 : sN / sD );
+	*t = ( fabs( tN ) < LINE_DISTANCE_EPSILON ? 0.0 : tN / tD );
+
+	// get the difference of the two closest points
+	VectorScale( sMag, *s, sMag );
+	VectorScale( tMag, *t, tMag );
+	VectorAdd( diff, sMag, separation );
+	VectorSubtract( separation, tMag, separation );
+
+	return VectorLengthSquared( separation );
+}
+
