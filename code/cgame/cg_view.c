@@ -526,7 +526,7 @@ static void CG_OffsetFirstPersonView( void ) {
 
 //======================================================================
 
-void CG_ZoomDown( int localClientNum ) {
+void CG_ZoomDown_f( int localClientNum ) {
 	cglc_t *lc = &cg.localClients[localClientNum];
 
 	if ( lc->zoomed ) {
@@ -537,7 +537,7 @@ void CG_ZoomDown( int localClientNum ) {
 	lc->zoomTime = cg.time;
 }
 
-void CG_ZoomUp( int localClientNum ) {
+void CG_ZoomUp_f( int localClientNum ) {
 	cglc_t *lc = &cg.localClients[localClientNum];
 
 	if ( !lc->zoomed ) {
@@ -546,38 +546,6 @@ void CG_ZoomUp( int localClientNum ) {
 
 	lc->zoomed = qfalse;
 	lc->zoomTime = cg.time;
-}
-
-void CG_ZoomDown_f( void ) { 
-	CG_ZoomDown(0);
-}
-
-void CG_ZoomUp_f( void ) { 
-	CG_ZoomUp(0);
-}
-
-void CG_2ZoomDown_f( void ) { 
-	CG_ZoomDown(1);
-}
-
-void CG_2ZoomUp_f( void ) { 
-	CG_ZoomUp(1);
-}
-
-void CG_3ZoomDown_f( void ) { 
-	CG_ZoomDown(2);
-}
-
-void CG_3ZoomUp_f( void ) { 
-	CG_ZoomUp(2);
-}
-
-void CG_4ZoomDown_f( void ) { 
-	CG_ZoomDown(3);
-}
-
-void CG_4ZoomUp_f( void ) { 
-	CG_ZoomUp(3);
 }
 
 

@@ -1297,10 +1297,9 @@ typedef struct {
   char name[MAX_QPATH];
 } fontInfo_t;
 
-#ifndef GAME
 char *Com_LocalClientCvarName(int localClient, const char *in_cvarName);
 int Com_LocalClientForCvarName(const char *in_cvarName);
-#endif
+const char *Com_LocalClientBaseCvarName(const char *in_cvarName);
 
 #define Square(x) ((x)*(x))
 

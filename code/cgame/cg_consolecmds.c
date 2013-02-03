@@ -108,46 +108,30 @@ static void CG_ButtonEvent( int localPlayerNum, int buttonNum, qboolean down ) {
 	trap_Cmd_ExecuteText( EXEC_NOW, Com_LocalClientCvarName( localPlayerNum, cmd ) );
 }
 
-#define ATTACK_BUTTON 0
-static void CG_AttackDown_f( void ) {
-	CG_ButtonEvent( 0, ATTACK_BUTTON, qtrue );
+/*
+=============
+CG_AttackDown_f
+=============
+*/
+static void CG_AttackDown_f( int localPlayerNum ) {
+	CG_ButtonEvent( localPlayerNum, 0, qtrue );
 }
 
-static void CG_AttackUp_f( void ) {
-	CG_ButtonEvent( 0, ATTACK_BUTTON, qfalse );
+/*
+=============
+CG_AttackUp_f
+=============
+*/
+static void CG_AttackUp_f( int localPlayerNum ) {
+	CG_ButtonEvent( localPlayerNum, 0, qfalse );
 }
-
-static void CG_2AttackDown_f( void ) {
-	CG_ButtonEvent( 1, ATTACK_BUTTON, qtrue );
-}
-
-static void CG_2AttackUp_f( void ) {
-	CG_ButtonEvent( 1, ATTACK_BUTTON, qfalse );
-}
-
-static void CG_3AttackDown_f( void ) {
-	CG_ButtonEvent( 2, ATTACK_BUTTON, qtrue );
-}
-
-static void CG_3AttackUp_f( void ) {
-	CG_ButtonEvent( 2, ATTACK_BUTTON, qfalse );
-}
-
-static void CG_4AttackDown_f( void ) {
-	CG_ButtonEvent( 3, ATTACK_BUTTON, qtrue );
-}
-
-static void CG_4AttackUp_f( void ) {
-	CG_ButtonEvent( 3, ATTACK_BUTTON, qfalse );
-}
-#undef ATTACK_BUTTON
 
 /*
 =============
 CG_ScoresDown
 =============
 */
-static void CG_ScoresDown(int localClientNum) {
+static void CG_ScoresDown_f(int localClientNum) {
 	cglc_t *lc = &cg.localClients[localClientNum];
 
 #ifdef MISSIONPACK_HUD
@@ -175,88 +159,16 @@ static void CG_ScoresDown(int localClientNum) {
 
 /*
 =============
-CG_ScoresUp
+CG_ScoresUp_f
 =============
 */
-static void CG_ScoresUp( int localClientNum ) {
+static void CG_ScoresUp_f( int localClientNum ) {
 	cglc_t *lc = &cg.localClients[localClientNum];
 
 	if ( lc->showScores ) {
 		lc->showScores = qfalse;
 		lc->scoreFadeTime = cg.time;
 	}
-}
-
-/*
-=============
-CG_ScoresDown_f
-=============
-*/
-void CG_ScoresDown_f(void) {
-	CG_ScoresDown(0);
-}
-
-/*
-=============
-CG_ScoresUp_f
-=============
-*/
-void CG_ScoresUp_f(void) {
-	CG_ScoresUp(0);
-}
-
-/*
-=============
-CG_2ScoresDown_f
-=============
-*/
-void CG_2ScoresDown_f(void) {
-	CG_ScoresDown(1);
-}
-
-/*
-=============
-CG_2ScoresUp_f
-=============
-*/
-void CG_2ScoresUp_f(void) {
-	CG_ScoresUp(1);
-}
-
-/*
-=============
-CG_3ScoresDown_f
-=============
-*/
-void CG_3ScoresDown_f(void) {
-	CG_ScoresDown(2);
-}
-
-/*
-=============
-CG_3ScoresUp_f
-=============
-*/
-void CG_3ScoresUp_f(void) {
-	CG_ScoresUp(2);
-}
-
-/*
-=============
-CG_4ScoresDown_f
-=============
-*/
-void CG_4ScoresDown_f(void) {
-	CG_ScoresDown(3);
-}
-
-/*
-=============
-CG_4ScoresUp_f
-=============
-*/
-void CG_4ScoresUp_f(void) {
-	CG_ScoresUp(3);
 }
 
 #ifdef MISSIONPACK_HUD
@@ -622,44 +534,8 @@ static consoleCommand_t	commands[] = {
 	{ "nextskin", CG_TestModelNextSkin_f },
 	{ "prevskin", CG_TestModelPrevSkin_f },
 	{ "viewpos", CG_Viewpos_f },
-	{ "+attack", CG_AttackDown_f },
-	{ "-attack", CG_AttackUp_f },
-	{ "+2attack", CG_2AttackDown_f },
-	{ "-2attack", CG_2AttackUp_f },
-	{ "+3attack", CG_3AttackDown_f },
-	{ "-3attack", CG_3AttackUp_f },
-	{ "+4attack", CG_4AttackDown_f },
-	{ "-4attack", CG_4AttackUp_f },
-	{ "+scores", CG_ScoresDown_f },
-	{ "-scores", CG_ScoresUp_f },
-	{ "+2scores", CG_2ScoresDown_f },
-	{ "-2scores", CG_2ScoresUp_f },
-	{ "+3scores", CG_3ScoresDown_f },
-	{ "-3scores", CG_3ScoresUp_f },
-	{ "+4scores", CG_4ScoresDown_f },
-	{ "-4scores", CG_4ScoresUp_f },
-	{ "+zoom", CG_ZoomDown_f },
-	{ "-zoom", CG_ZoomUp_f },
-	{ "+2zoom", CG_2ZoomDown_f },
-	{ "-2zoom", CG_2ZoomUp_f },
-	{ "+3zoom", CG_3ZoomDown_f },
-	{ "-3zoom", CG_3ZoomUp_f },
-	{ "+4zoom", CG_4ZoomDown_f },
-	{ "-4zoom", CG_4ZoomUp_f },
 	{ "sizeup", CG_SizeUp_f },
 	{ "sizedown", CG_SizeDown_f },
-	{ "weapnext", CG_NextWeapon_f },
-	{ "weapprev", CG_PrevWeapon_f },
-	{ "weapon", CG_Weapon_f },
-	{ "2weapnext", CG_2NextWeapon_f },
-	{ "2weapprev", CG_2PrevWeapon_f },
-	{ "2weapon", CG_2Weapon_f },
-	{ "3weapnext", CG_3NextWeapon_f },
-	{ "3weapprev", CG_3PrevWeapon_f },
-	{ "3weapon", CG_3Weapon_f },
-	{ "4weapnext", CG_4NextWeapon_f },
-	{ "4weapprev", CG_4PrevWeapon_f },
-	{ "4weapon", CG_4Weapon_f },
 	{ "tcmd", CG_TargetCommand_f },
 	{ "tell_target", CG_TellTarget_f },
 	{ "tell_attacker", CG_TellAttacker_f },
@@ -699,6 +575,23 @@ static consoleCommand_t	commands[] = {
 	{ "generateTracemap", CG_GenerateTracemap }
 };
 
+typedef struct {
+	char	*cmd;
+	void	(*function)(int);
+} playerConsoleCommand_t;
+
+static playerConsoleCommand_t	playerCommands[] = {
+	{ "+attack", CG_AttackDown_f },
+	{ "-attack", CG_AttackUp_f },
+	{ "+scores", CG_ScoresDown_f },
+	{ "-scores", CG_ScoresUp_f },
+	{ "+zoom", CG_ZoomDown_f },
+	{ "-zoom", CG_ZoomUp_f },
+	{ "weapnext", CG_NextWeapon_f },
+	{ "weapprev", CG_PrevWeapon_f },
+	{ "weapon", CG_Weapon_f },
+};
+
 /*
 =================
 CG_ConsoleCommand
@@ -710,14 +603,25 @@ Cmd_Argc() / Cmd_Argv()
 qboolean CG_ConsoleCommand( void ) {
 	const char	*cmd;
 	int		i;
+	int		localPlayerNum;
+	const char	*baseCmd;
 
 	cmd = CG_Argv(0);
 
-	for ( i = 0 ; i < ARRAY_LEN( commands ) ; i++ ) {
-		if (Com_LocalClientForCvarName(commands[i].cmd) >= CG_MaxSplitView()) {
-			continue;
-		}
+	localPlayerNum = Com_LocalClientForCvarName( cmd );
+	baseCmd = Com_LocalClientBaseCvarName( cmd );
 
+	for ( i = 0 ; i < ARRAY_LEN( playerCommands ) ; i++ ) {
+		if ( !Q_stricmp( baseCmd, playerCommands[i].cmd )) {
+			playerCommands[i].function( localPlayerNum );
+			return qtrue;
+		}
+	}
+
+	if ( localPlayerNum != 0 )
+		return qfalse;
+
+	for ( i = 0 ; i < ARRAY_LEN( commands ) ; i++ ) {
 		if ( !Q_stricmp( cmd, commands[i].cmd )) {
 			commands[i].function();
 			return qtrue;
@@ -737,14 +641,16 @@ so it can perform tab completion
 =================
 */
 void CG_InitConsoleCommands( void ) {
-	int		i;
+	int		i, j;
 
 	for ( i = 0 ; i < ARRAY_LEN( commands ) ; i++ ) {
-		if (Com_LocalClientForCvarName(commands[i].cmd) >= CG_MaxSplitView()) {
-			continue;
-		}
-
 		trap_AddCommand( commands[i].cmd );
+	}
+
+	for ( i = 0 ; i < ARRAY_LEN( playerCommands ) ; i++ ) {
+		for ( j = 0; j < CG_MaxSplitView(); j++ ) {
+			trap_AddCommand( Com_LocalClientCvarName( j, playerCommands[i].cmd ) );
+		}
 	}
 
 	//

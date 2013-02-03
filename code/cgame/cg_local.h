@@ -1319,16 +1319,8 @@ void CG_TestModelNextFrame_f (void);
 void CG_TestModelPrevFrame_f (void);
 void CG_TestModelNextSkin_f (void);
 void CG_TestModelPrevSkin_f (void);
-void CG_ZoomUp( int localClient );
-void CG_ZoomDown( int localClient );
-void CG_ZoomDown_f( void );
-void CG_ZoomUp_f( void );
-void CG_2ZoomDown_f( void );
-void CG_2ZoomUp_f( void );
-void CG_3ZoomDown_f( void );
-void CG_3ZoomUp_f( void );
-void CG_4ZoomDown_f( void );
-void CG_4ZoomUp_f( void );
+void CG_ZoomUp_f( int localClient );
+void CG_ZoomDown_f( int localClient );
 void CG_AddBufferedSound( sfxHandle_t sfx);
 
 void CG_SetupFrustum( void );
@@ -1486,21 +1478,9 @@ qboolean CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *
 //
 // cg_weapons.c
 //
-void CG_NextWeapon_f( void );
-void CG_PrevWeapon_f( void );
-void CG_Weapon_f( void );
-
-void CG_2NextWeapon_f( void );
-void CG_2PrevWeapon_f( void );
-void CG_2Weapon_f( void );
-
-void CG_3NextWeapon_f( void );
-void CG_3PrevWeapon_f( void );
-void CG_3Weapon_f( void );
-
-void CG_4NextWeapon_f( void );
-void CG_4PrevWeapon_f( void );
-void CG_4Weapon_f( void );
+void CG_NextWeapon_f( int localClient );
+void CG_PrevWeapon_f( int localClient );
+void CG_Weapon_f( int localClient );
 
 void CG_RegisterWeapon( int weaponNum );
 void CG_RegisterItemVisuals( int itemNum );
