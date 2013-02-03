@@ -95,6 +95,55 @@ static void CG_Viewpos_f (void) {
 
 /*
 =============
+CG_ButtonEvent
+=============
+*/
+static void CG_ButtonEvent( int localPlayerNum, int buttonNum, qboolean down ) {
+	char args[128];
+	char cmd[128];
+
+	trap_Args( args, sizeof ( args ) );
+	Com_sprintf( cmd, sizeof (cmd), "%cbutton%d %s", down ? '+' : '-', buttonNum, args );
+
+	trap_Cmd_ExecuteText( EXEC_NOW, Com_LocalClientCvarName( localPlayerNum, cmd ) );
+}
+
+#define ATTACK_BUTTON 0
+static void CG_AttackDown_f( void ) {
+	CG_ButtonEvent( 0, ATTACK_BUTTON, qtrue );
+}
+
+static void CG_AttackUp_f( void ) {
+	CG_ButtonEvent( 0, ATTACK_BUTTON, qfalse );
+}
+
+static void CG_2AttackDown_f( void ) {
+	CG_ButtonEvent( 1, ATTACK_BUTTON, qtrue );
+}
+
+static void CG_2AttackUp_f( void ) {
+	CG_ButtonEvent( 1, ATTACK_BUTTON, qfalse );
+}
+
+static void CG_3AttackDown_f( void ) {
+	CG_ButtonEvent( 2, ATTACK_BUTTON, qtrue );
+}
+
+static void CG_3AttackUp_f( void ) {
+	CG_ButtonEvent( 2, ATTACK_BUTTON, qfalse );
+}
+
+static void CG_4AttackDown_f( void ) {
+	CG_ButtonEvent( 3, ATTACK_BUTTON, qtrue );
+}
+
+static void CG_4AttackUp_f( void ) {
+	CG_ButtonEvent( 3, ATTACK_BUTTON, qfalse );
+}
+#undef ATTACK_BUTTON
+
+/*
+=============
 CG_ScoresDown
 =============
 */
@@ -573,6 +622,14 @@ static consoleCommand_t	commands[] = {
 	{ "nextskin", CG_TestModelNextSkin_f },
 	{ "prevskin", CG_TestModelPrevSkin_f },
 	{ "viewpos", CG_Viewpos_f },
+	{ "+attack", CG_AttackDown_f },
+	{ "-attack", CG_AttackUp_f },
+	{ "+2attack", CG_2AttackDown_f },
+	{ "-2attack", CG_2AttackUp_f },
+	{ "+3attack", CG_3AttackDown_f },
+	{ "-3attack", CG_3AttackUp_f },
+	{ "+4attack", CG_4AttackDown_f },
+	{ "-4attack", CG_4AttackUp_f },
 	{ "+scores", CG_ScoresDown_f },
 	{ "-scores", CG_ScoresUp_f },
 	{ "+2scores", CG_2ScoresDown_f },

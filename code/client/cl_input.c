@@ -1214,8 +1214,6 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-moveright", IN_MoverightUp);
 	Cmd_AddCommand ("+speed", IN_SpeedDown);
 	Cmd_AddCommand ("-speed", IN_SpeedUp);
-	Cmd_AddCommand ("+attack", IN_Button0Down);
-	Cmd_AddCommand ("-attack", IN_Button0Up);
 	Cmd_AddCommand ("+button0", IN_Button0Down);
 	Cmd_AddCommand ("-button0", IN_Button0Up);
 	Cmd_AddCommand ("+button1", IN_Button1Down);
@@ -1281,8 +1279,6 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-2moveright", IN_2MoverightUp);
 	Cmd_AddCommand ("+2speed", IN_2SpeedDown);
 	Cmd_AddCommand ("-2speed", IN_2SpeedUp);
-	Cmd_AddCommand ("+2attack", IN_2Button0Down);
-	Cmd_AddCommand ("-2attack", IN_2Button0Up);
 	Cmd_AddCommand ("+2button0", IN_2Button0Down);
 	Cmd_AddCommand ("-2button0", IN_2Button0Up);
 	Cmd_AddCommand ("+2button1", IN_2Button1Down);
@@ -1342,8 +1338,6 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-3moveright", IN_3MoverightUp);
 	Cmd_AddCommand ("+3speed", IN_3SpeedDown);
 	Cmd_AddCommand ("-3speed", IN_3SpeedUp);
-	Cmd_AddCommand ("+3attack", IN_3Button0Down);
-	Cmd_AddCommand ("-3attack", IN_3Button0Up);
 	Cmd_AddCommand ("+3button0", IN_3Button0Down);
 	Cmd_AddCommand ("-3button0", IN_3Button0Up);
 	Cmd_AddCommand ("+3button1", IN_3Button1Down);
@@ -1403,8 +1397,6 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-4moveright", IN_4MoverightUp);
 	Cmd_AddCommand ("+4speed", IN_4SpeedDown);
 	Cmd_AddCommand ("-4speed", IN_4SpeedUp);
-	Cmd_AddCommand ("+4attack", IN_4Button0Down);
-	Cmd_AddCommand ("-4attack", IN_4Button0Up);
 	Cmd_AddCommand ("+4button0", IN_4Button0Down);
 	Cmd_AddCommand ("-4button0", IN_4Button0Up);
 	Cmd_AddCommand ("+4button1", IN_4Button1Down);
@@ -1474,8 +1466,6 @@ void CL_ShutdownInput(void)
 	Cmd_RemoveCommand("-moveright");
 	Cmd_RemoveCommand("+speed");
 	Cmd_RemoveCommand("-speed");
-	Cmd_RemoveCommand("+attack");
-	Cmd_RemoveCommand("-attack");
 	Cmd_RemoveCommand("+button0");
 	Cmd_RemoveCommand("-button0");
 	Cmd_RemoveCommand("+button1");
@@ -1540,8 +1530,6 @@ void CL_ShutdownInput(void)
 	Cmd_RemoveCommand("-2moveright");
 	Cmd_RemoveCommand("+2speed");
 	Cmd_RemoveCommand("-2speed");
-	Cmd_RemoveCommand("+2attack");
-	Cmd_RemoveCommand("-2attack");
 	Cmd_RemoveCommand("+2button0");
 	Cmd_RemoveCommand("-2button0");
 	Cmd_RemoveCommand("+2button1");
@@ -1599,8 +1587,6 @@ void CL_ShutdownInput(void)
 	Cmd_RemoveCommand("-3moveright");
 	Cmd_RemoveCommand("+3speed");
 	Cmd_RemoveCommand("-3speed");
-	Cmd_RemoveCommand("+3attack");
-	Cmd_RemoveCommand("-3attack");
 	Cmd_RemoveCommand("+3button0");
 	Cmd_RemoveCommand("-3button0");
 	Cmd_RemoveCommand("+3button1");
@@ -1658,8 +1644,6 @@ void CL_ShutdownInput(void)
 	Cmd_RemoveCommand("-4moveright");
 	Cmd_RemoveCommand("+4speed");
 	Cmd_RemoveCommand("-4speed");
-	Cmd_RemoveCommand("+4attack");
-	Cmd_RemoveCommand("-4attack");
 	Cmd_RemoveCommand("+4button0");
 	Cmd_RemoveCommand("-4button0");
 	Cmd_RemoveCommand("+4button1");
