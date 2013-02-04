@@ -759,7 +759,6 @@ static int CG_CalcViewValues( void ) {
 
 	if (cg_cameraOrbit.integer) {
 		if (cg.time > cg.nextOrbitTime) {
-			cg.nextOrbitTime = cg.time + cg_cameraOrbitDelay.integer;
 			cg_thirdPersonAngle[cg.cur_localClientNum].value += cg_cameraOrbit.value;
 		}
 	}
@@ -1112,6 +1111,12 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 		// actually issue the rendering calls
 		CG_DrawActive( stereoView );
+	}
+
+	if (cg_cameraOrbit.integer) {
+		if (cg.time > cg.nextOrbitTime) {
+			cg.nextOrbitTime = cg.time + cg_cameraOrbitDelay.integer;
+		}
 	}
 
 	// load any models that have been deferred if a scoreboard is shown
