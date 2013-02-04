@@ -524,7 +524,7 @@ void CL_InitConnection (qboolean clear);
 void CL_ReadPackets (void);
 
 void CL_WritePacket( void );
-void IN_CenterView (void);
+void IN_CenterView( int localPlayerNum );
 
 void CL_VerifyCode( void );
 

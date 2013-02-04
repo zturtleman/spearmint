@@ -64,7 +64,7 @@ typedef struct
 
 	kbutton_t	in_buttons[16];
 
-	// NOTE: in_mlooking should be moved here if multiple mice are supported.
+	qboolean	in_mlooking;
 } clientInput_t;
 
 clientInput_t cis[CL_MAX_SPLITVIEW];
@@ -73,17 +73,14 @@ clientInput_t cis[CL_MAX_SPLITVIEW];
 kbutton_t	in_voiprecord;
 #endif
 
-qboolean	in_mlooking;
-
-
-void IN_MLookDown( void ) {
-	in_mlooking = qtrue;
+void IN_MLookDown( int localPlayerNum ) {
+	cis[localPlayerNum].in_mlooking = qtrue;
 }
 
-void IN_MLookUp( void ) {
-	in_mlooking = qfalse;
+void IN_MLookUp( int localPlayerNum ) {
+	cis[localPlayerNum].in_mlooking = qfalse;
 	if ( !cl_freelook->integer ) {
-		IN_CenterView ();
+		IN_CenterView ( localPlayerNum );
 	}
 }
 
@@ -208,109 +205,31 @@ float CL_KeyState( kbutton_t *key ) {
 
 
 
-void IN_UpDown(void) {IN_KeyDown(&cis[0].in_up);}
-void IN_UpUp(void) {IN_KeyUp(&cis[0].in_up);}
-void IN_DownDown(void) {IN_KeyDown(&cis[0].in_down);}
-void IN_DownUp(void) {IN_KeyUp(&cis[0].in_down);}
-void IN_LeftDown(void) {IN_KeyDown(&cis[0].in_left);}
-void IN_LeftUp(void) {IN_KeyUp(&cis[0].in_left);}
-void IN_RightDown(void) {IN_KeyDown(&cis[0].in_right);}
-void IN_RightUp(void) {IN_KeyUp(&cis[0].in_right);}
-void IN_ForwardDown(void) {IN_KeyDown(&cis[0].in_forward);}
-void IN_ForwardUp(void) {IN_KeyUp(&cis[0].in_forward);}
-void IN_BackDown(void) {IN_KeyDown(&cis[0].in_back);}
-void IN_BackUp(void) {IN_KeyUp(&cis[0].in_back);}
-void IN_LookupDown(void) {IN_KeyDown(&cis[0].in_lookup);}
-void IN_LookupUp(void) {IN_KeyUp(&cis[0].in_lookup);}
-void IN_LookdownDown(void) {IN_KeyDown(&cis[0].in_lookdown);}
-void IN_LookdownUp(void) {IN_KeyUp(&cis[0].in_lookdown);}
-void IN_MoveleftDown(void) {IN_KeyDown(&cis[0].in_moveleft);}
-void IN_MoveleftUp(void) {IN_KeyUp(&cis[0].in_moveleft);}
-void IN_MoverightDown(void) {IN_KeyDown(&cis[0].in_moveright);}
-void IN_MoverightUp(void) {IN_KeyUp(&cis[0].in_moveright);}
+void IN_UpDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_up);}
+void IN_UpUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_up);}
+void IN_DownDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_down);}
+void IN_DownUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_down);}
+void IN_LeftDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_left);}
+void IN_LeftUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_left);}
+void IN_RightDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_right);}
+void IN_RightUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_right);}
+void IN_ForwardDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_forward);}
+void IN_ForwardUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_forward);}
+void IN_BackDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_back);}
+void IN_BackUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_back);}
+void IN_LookupDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_lookup);}
+void IN_LookupUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_lookup);}
+void IN_LookdownDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_lookdown);}
+void IN_LookdownUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_lookdown);}
+void IN_MoveleftDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_moveleft);}
+void IN_MoveleftUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_moveleft);}
+void IN_MoverightDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_moveright);}
+void IN_MoverightUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_moveright);}
 
-void IN_SpeedDown(void) {IN_KeyDown(&cis[0].in_speed);}
-void IN_SpeedUp(void) {IN_KeyUp(&cis[0].in_speed);}
-void IN_StrafeDown(void) {IN_KeyDown(&cis[0].in_strafe);}
-void IN_StrafeUp(void) {IN_KeyUp(&cis[0].in_strafe);}
-
-void IN_2UpDown(void) {IN_KeyDown(&cis[1].in_up);}
-void IN_2UpUp(void) {IN_KeyUp(&cis[1].in_up);}
-void IN_2DownDown(void) {IN_KeyDown(&cis[1].in_down);}
-void IN_2DownUp(void) {IN_KeyUp(&cis[1].in_down);}
-void IN_2LeftDown(void) {IN_KeyDown(&cis[1].in_left);}
-void IN_2LeftUp(void) {IN_KeyUp(&cis[1].in_left);}
-void IN_2RightDown(void) {IN_KeyDown(&cis[1].in_right);}
-void IN_2RightUp(void) {IN_KeyUp(&cis[1].in_right);}
-void IN_2ForwardDown(void) {IN_KeyDown(&cis[1].in_forward);}
-void IN_2ForwardUp(void) {IN_KeyUp(&cis[1].in_forward);}
-void IN_2BackDown(void) {IN_KeyDown(&cis[1].in_back);}
-void IN_2BackUp(void) {IN_KeyUp(&cis[1].in_back);}
-void IN_2LookupDown(void) {IN_KeyDown(&cis[1].in_lookup);}
-void IN_2LookupUp(void) {IN_KeyUp(&cis[1].in_lookup);}
-void IN_2LookdownDown(void) {IN_KeyDown(&cis[1].in_lookdown);}
-void IN_2LookdownUp(void) {IN_KeyUp(&cis[1].in_lookdown);}
-void IN_2MoveleftDown(void) {IN_KeyDown(&cis[1].in_moveleft);}
-void IN_2MoveleftUp(void) {IN_KeyUp(&cis[1].in_moveleft);}
-void IN_2MoverightDown(void) {IN_KeyDown(&cis[1].in_moveright);}
-void IN_2MoverightUp(void) {IN_KeyUp(&cis[1].in_moveright);}
-
-void IN_2SpeedDown(void) {IN_KeyDown(&cis[1].in_speed);}
-void IN_2SpeedUp(void) {IN_KeyUp(&cis[1].in_speed);}
-void IN_2StrafeDown(void) {IN_KeyDown(&cis[1].in_strafe);}
-void IN_2StrafeUp(void) {IN_KeyUp(&cis[1].in_strafe);}
-
-void IN_3UpDown(void) {IN_KeyDown(&cis[2].in_up);}
-void IN_3UpUp(void) {IN_KeyUp(&cis[2].in_up);}
-void IN_3DownDown(void) {IN_KeyDown(&cis[2].in_down);}
-void IN_3DownUp(void) {IN_KeyUp(&cis[2].in_down);}
-void IN_3LeftDown(void) {IN_KeyDown(&cis[2].in_left);}
-void IN_3LeftUp(void) {IN_KeyUp(&cis[2].in_left);}
-void IN_3RightDown(void) {IN_KeyDown(&cis[2].in_right);}
-void IN_3RightUp(void) {IN_KeyUp(&cis[2].in_right);}
-void IN_3ForwardDown(void) {IN_KeyDown(&cis[2].in_forward);}
-void IN_3ForwardUp(void) {IN_KeyUp(&cis[2].in_forward);}
-void IN_3BackDown(void) {IN_KeyDown(&cis[2].in_back);}
-void IN_3BackUp(void) {IN_KeyUp(&cis[2].in_back);}
-void IN_3LookupDown(void) {IN_KeyDown(&cis[2].in_lookup);}
-void IN_3LookupUp(void) {IN_KeyUp(&cis[2].in_lookup);}
-void IN_3LookdownDown(void) {IN_KeyDown(&cis[2].in_lookdown);}
-void IN_3LookdownUp(void) {IN_KeyUp(&cis[2].in_lookdown);}
-void IN_3MoveleftDown(void) {IN_KeyDown(&cis[2].in_moveleft);}
-void IN_3MoveleftUp(void) {IN_KeyUp(&cis[2].in_moveleft);}
-void IN_3MoverightDown(void) {IN_KeyDown(&cis[2].in_moveright);}
-void IN_3MoverightUp(void) {IN_KeyUp(&cis[2].in_moveright);}
-
-void IN_3SpeedDown(void) {IN_KeyDown(&cis[2].in_speed);}
-void IN_3SpeedUp(void) {IN_KeyUp(&cis[2].in_speed);}
-void IN_3StrafeDown(void) {IN_KeyDown(&cis[2].in_strafe);}
-void IN_3StrafeUp(void) {IN_KeyUp(&cis[2].in_strafe);}
-
-void IN_4UpDown(void) {IN_KeyDown(&cis[3].in_up);}
-void IN_4UpUp(void) {IN_KeyUp(&cis[3].in_up);}
-void IN_4DownDown(void) {IN_KeyDown(&cis[3].in_down);}
-void IN_4DownUp(void) {IN_KeyUp(&cis[3].in_down);}
-void IN_4LeftDown(void) {IN_KeyDown(&cis[3].in_left);}
-void IN_4LeftUp(void) {IN_KeyUp(&cis[3].in_left);}
-void IN_4RightDown(void) {IN_KeyDown(&cis[3].in_right);}
-void IN_4RightUp(void) {IN_KeyUp(&cis[3].in_right);}
-void IN_4ForwardDown(void) {IN_KeyDown(&cis[3].in_forward);}
-void IN_4ForwardUp(void) {IN_KeyUp(&cis[3].in_forward);}
-void IN_4BackDown(void) {IN_KeyDown(&cis[3].in_back);}
-void IN_4BackUp(void) {IN_KeyUp(&cis[3].in_back);}
-void IN_4LookupDown(void) {IN_KeyDown(&cis[3].in_lookup);}
-void IN_4LookupUp(void) {IN_KeyUp(&cis[3].in_lookup);}
-void IN_4LookdownDown(void) {IN_KeyDown(&cis[3].in_lookdown);}
-void IN_4LookdownUp(void) {IN_KeyUp(&cis[3].in_lookdown);}
-void IN_4MoveleftDown(void) {IN_KeyDown(&cis[3].in_moveleft);}
-void IN_4MoveleftUp(void) {IN_KeyUp(&cis[3].in_moveleft);}
-void IN_4MoverightDown(void) {IN_KeyDown(&cis[3].in_moveright);}
-void IN_4MoverightUp(void) {IN_KeyUp(&cis[3].in_moveright);}
-
-void IN_4SpeedDown(void) {IN_KeyDown(&cis[3].in_speed);}
-void IN_4SpeedUp(void) {IN_KeyUp(&cis[3].in_speed);}
-void IN_4StrafeDown(void) {IN_KeyDown(&cis[3].in_strafe);}
-void IN_4StrafeUp(void) {IN_KeyUp(&cis[3].in_strafe);}
+void IN_SpeedDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_speed);}
+void IN_SpeedUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_speed);}
+void IN_StrafeDown( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_strafe);}
+void IN_StrafeUp( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_strafe);}
 
 #ifdef USE_VOIP
 void IN_VoipRecordDown(void)
@@ -326,139 +245,40 @@ void IN_VoipRecordUp(void)
 }
 #endif
 
-void IN_Button0Down(void) {IN_KeyDown(&cis[0].in_buttons[0]);}
-void IN_Button0Up(void) {IN_KeyUp(&cis[0].in_buttons[0]);}
-void IN_Button1Down(void) {IN_KeyDown(&cis[0].in_buttons[1]);}
-void IN_Button1Up(void) {IN_KeyUp(&cis[0].in_buttons[1]);}
-void IN_Button2Down(void) {IN_KeyDown(&cis[0].in_buttons[2]);}
-void IN_Button2Up(void) {IN_KeyUp(&cis[0].in_buttons[2]);}
-void IN_Button3Down(void) {IN_KeyDown(&cis[0].in_buttons[3]);}
-void IN_Button3Up(void) {IN_KeyUp(&cis[0].in_buttons[3]);}
-void IN_Button4Down(void) {IN_KeyDown(&cis[0].in_buttons[4]);}
-void IN_Button4Up(void) {IN_KeyUp(&cis[0].in_buttons[4]);}
-void IN_Button5Down(void) {IN_KeyDown(&cis[0].in_buttons[5]);}
-void IN_Button5Up(void) {IN_KeyUp(&cis[0].in_buttons[5]);}
-void IN_Button6Down(void) {IN_KeyDown(&cis[0].in_buttons[6]);}
-void IN_Button6Up(void) {IN_KeyUp(&cis[0].in_buttons[6]);}
-void IN_Button7Down(void) {IN_KeyDown(&cis[0].in_buttons[7]);}
-void IN_Button7Up(void) {IN_KeyUp(&cis[0].in_buttons[7]);}
-void IN_Button8Down(void) {IN_KeyDown(&cis[0].in_buttons[8]);}
-void IN_Button8Up(void) {IN_KeyUp(&cis[0].in_buttons[8]);}
-void IN_Button9Down(void) {IN_KeyDown(&cis[0].in_buttons[9]);}
-void IN_Button9Up(void) {IN_KeyUp(&cis[0].in_buttons[9]);}
-void IN_Button10Down(void) {IN_KeyDown(&cis[0].in_buttons[10]);}
-void IN_Button10Up(void) {IN_KeyUp(&cis[0].in_buttons[10]);}
-void IN_Button11Down(void) {IN_KeyDown(&cis[0].in_buttons[11]);}
-void IN_Button11Up(void) {IN_KeyUp(&cis[0].in_buttons[11]);}
-void IN_Button12Down(void) {IN_KeyDown(&cis[0].in_buttons[12]);}
-void IN_Button12Up(void) {IN_KeyUp(&cis[0].in_buttons[12]);}
-void IN_Button13Down(void) {IN_KeyDown(&cis[0].in_buttons[13]);}
-void IN_Button13Up(void) {IN_KeyUp(&cis[0].in_buttons[13]);}
-void IN_Button14Down(void) {IN_KeyDown(&cis[0].in_buttons[14]);}
-void IN_Button14Up(void) {IN_KeyUp(&cis[0].in_buttons[14]);}
-void IN_Button15Down(void) {IN_KeyDown(&cis[0].in_buttons[15]);}
-void IN_Button15Up(void) {IN_KeyUp(&cis[0].in_buttons[15]);}
+void IN_Button0Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[0]);}
+void IN_Button0Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[0]);}
+void IN_Button1Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[1]);}
+void IN_Button1Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[1]);}
+void IN_Button2Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[2]);}
+void IN_Button2Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[2]);}
+void IN_Button3Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[3]);}
+void IN_Button3Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[3]);}
+void IN_Button4Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[4]);}
+void IN_Button4Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[4]);}
+void IN_Button5Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[5]);}
+void IN_Button5Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[5]);}
+void IN_Button6Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[6]);}
+void IN_Button6Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[6]);}
+void IN_Button7Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[7]);}
+void IN_Button7Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[7]);}
+void IN_Button8Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[8]);}
+void IN_Button8Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[8]);}
+void IN_Button9Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[9]);}
+void IN_Button9Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[9]);}
+void IN_Button10Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[10]);}
+void IN_Button10Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[10]);}
+void IN_Button11Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[11]);}
+void IN_Button11Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[11]);}
+void IN_Button12Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[12]);}
+void IN_Button12Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[12]);}
+void IN_Button13Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[13]);}
+void IN_Button13Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[13]);}
+void IN_Button14Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[14]);}
+void IN_Button14Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[14]);}
+void IN_Button15Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[15]);}
+void IN_Button15Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[15]);}
 
-void IN_2Button0Down(void) {IN_KeyDown(&cis[1].in_buttons[0]);}
-void IN_2Button0Up(void) {IN_KeyUp(&cis[1].in_buttons[0]);}
-void IN_2Button1Down(void) {IN_KeyDown(&cis[1].in_buttons[1]);}
-void IN_2Button1Up(void) {IN_KeyUp(&cis[1].in_buttons[1]);}
-void IN_2Button2Down(void) {IN_KeyDown(&cis[1].in_buttons[2]);}
-void IN_2Button2Up(void) {IN_KeyUp(&cis[1].in_buttons[2]);}
-void IN_2Button3Down(void) {IN_KeyDown(&cis[1].in_buttons[3]);}
-void IN_2Button3Up(void) {IN_KeyUp(&cis[1].in_buttons[3]);}
-void IN_2Button4Down(void) {IN_KeyDown(&cis[1].in_buttons[4]);}
-void IN_2Button4Up(void) {IN_KeyUp(&cis[1].in_buttons[4]);}
-void IN_2Button5Down(void) {IN_KeyDown(&cis[1].in_buttons[5]);}
-void IN_2Button5Up(void) {IN_KeyUp(&cis[1].in_buttons[5]);}
-void IN_2Button6Down(void) {IN_KeyDown(&cis[1].in_buttons[6]);}
-void IN_2Button6Up(void) {IN_KeyUp(&cis[1].in_buttons[6]);}
-void IN_2Button7Down(void) {IN_KeyDown(&cis[1].in_buttons[7]);}
-void IN_2Button7Up(void) {IN_KeyUp(&cis[1].in_buttons[7]);}
-void IN_2Button8Down(void) {IN_KeyDown(&cis[1].in_buttons[8]);}
-void IN_2Button8Up(void) {IN_KeyUp(&cis[1].in_buttons[8]);}
-void IN_2Button9Down(void) {IN_KeyDown(&cis[1].in_buttons[9]);}
-void IN_2Button9Up(void) {IN_KeyUp(&cis[1].in_buttons[9]);}
-void IN_2Button10Down(void) {IN_KeyDown(&cis[1].in_buttons[10]);}
-void IN_2Button10Up(void) {IN_KeyUp(&cis[1].in_buttons[10]);}
-void IN_2Button11Down(void) {IN_KeyDown(&cis[1].in_buttons[11]);}
-void IN_2Button11Up(void) {IN_KeyUp(&cis[1].in_buttons[11]);}
-void IN_2Button12Down(void) {IN_KeyDown(&cis[1].in_buttons[12]);}
-void IN_2Button12Up(void) {IN_KeyUp(&cis[1].in_buttons[12]);}
-void IN_2Button13Down(void) {IN_KeyDown(&cis[1].in_buttons[13]);}
-void IN_2Button13Up(void) {IN_KeyUp(&cis[1].in_buttons[13]);}
-void IN_2Button14Down(void) {IN_KeyDown(&cis[1].in_buttons[14]);}
-void IN_2Button14Up(void) {IN_KeyUp(&cis[1].in_buttons[14]);}
-void IN_2Button15Down(void) {IN_KeyDown(&cis[1].in_buttons[15]);}
-void IN_2Button15Up(void) {IN_KeyUp(&cis[1].in_buttons[15]);}
-
-void IN_3Button0Down(void) {IN_KeyDown(&cis[2].in_buttons[0]);}
-void IN_3Button0Up(void) {IN_KeyUp(&cis[2].in_buttons[0]);}
-void IN_3Button1Down(void) {IN_KeyDown(&cis[2].in_buttons[1]);}
-void IN_3Button1Up(void) {IN_KeyUp(&cis[2].in_buttons[1]);}
-void IN_3Button2Down(void) {IN_KeyDown(&cis[2].in_buttons[2]);}
-void IN_3Button2Up(void) {IN_KeyUp(&cis[2].in_buttons[2]);}
-void IN_3Button3Down(void) {IN_KeyDown(&cis[2].in_buttons[3]);}
-void IN_3Button3Up(void) {IN_KeyUp(&cis[2].in_buttons[3]);}
-void IN_3Button4Down(void) {IN_KeyDown(&cis[2].in_buttons[4]);}
-void IN_3Button4Up(void) {IN_KeyUp(&cis[2].in_buttons[4]);}
-void IN_3Button5Down(void) {IN_KeyDown(&cis[2].in_buttons[5]);}
-void IN_3Button5Up(void) {IN_KeyUp(&cis[2].in_buttons[5]);}
-void IN_3Button6Down(void) {IN_KeyDown(&cis[2].in_buttons[6]);}
-void IN_3Button6Up(void) {IN_KeyUp(&cis[2].in_buttons[6]);}
-void IN_3Button7Down(void) {IN_KeyDown(&cis[2].in_buttons[7]);}
-void IN_3Button7Up(void) {IN_KeyUp(&cis[2].in_buttons[7]);}
-void IN_3Button8Down(void) {IN_KeyDown(&cis[2].in_buttons[8]);}
-void IN_3Button8Up(void) {IN_KeyUp(&cis[2].in_buttons[8]);}
-void IN_3Button9Down(void) {IN_KeyDown(&cis[2].in_buttons[9]);}
-void IN_3Button9Up(void) {IN_KeyUp(&cis[2].in_buttons[9]);}
-void IN_3Button10Down(void) {IN_KeyDown(&cis[2].in_buttons[10]);}
-void IN_3Button10Up(void) {IN_KeyUp(&cis[2].in_buttons[10]);}
-void IN_3Button11Down(void) {IN_KeyDown(&cis[2].in_buttons[11]);}
-void IN_3Button11Up(void) {IN_KeyUp(&cis[2].in_buttons[11]);}
-void IN_3Button12Down(void) {IN_KeyDown(&cis[2].in_buttons[12]);}
-void IN_3Button12Up(void) {IN_KeyUp(&cis[2].in_buttons[12]);}
-void IN_3Button13Down(void) {IN_KeyDown(&cis[2].in_buttons[13]);}
-void IN_3Button13Up(void) {IN_KeyUp(&cis[2].in_buttons[13]);}
-void IN_3Button14Down(void) {IN_KeyDown(&cis[2].in_buttons[14]);}
-void IN_3Button14Up(void) {IN_KeyUp(&cis[2].in_buttons[14]);}
-void IN_3Button15Down(void) {IN_KeyDown(&cis[2].in_buttons[15]);}
-void IN_3Button15Up(void) {IN_KeyUp(&cis[2].in_buttons[15]);}
-
-void IN_4Button0Down(void) {IN_KeyDown(&cis[3].in_buttons[0]);}
-void IN_4Button0Up(void) {IN_KeyUp(&cis[3].in_buttons[0]);}
-void IN_4Button1Down(void) {IN_KeyDown(&cis[3].in_buttons[1]);}
-void IN_4Button1Up(void) {IN_KeyUp(&cis[3].in_buttons[1]);}
-void IN_4Button2Down(void) {IN_KeyDown(&cis[3].in_buttons[2]);}
-void IN_4Button2Up(void) {IN_KeyUp(&cis[3].in_buttons[2]);}
-void IN_4Button3Down(void) {IN_KeyDown(&cis[3].in_buttons[3]);}
-void IN_4Button3Up(void) {IN_KeyUp(&cis[3].in_buttons[3]);}
-void IN_4Button4Down(void) {IN_KeyDown(&cis[3].in_buttons[4]);}
-void IN_4Button4Up(void) {IN_KeyUp(&cis[3].in_buttons[4]);}
-void IN_4Button5Down(void) {IN_KeyDown(&cis[3].in_buttons[5]);}
-void IN_4Button5Up(void) {IN_KeyUp(&cis[3].in_buttons[5]);}
-void IN_4Button6Down(void) {IN_KeyDown(&cis[3].in_buttons[6]);}
-void IN_4Button6Up(void) {IN_KeyUp(&cis[3].in_buttons[6]);}
-void IN_4Button7Down(void) {IN_KeyDown(&cis[3].in_buttons[7]);}
-void IN_4Button7Up(void) {IN_KeyUp(&cis[3].in_buttons[7]);}
-void IN_4Button8Down(void) {IN_KeyDown(&cis[3].in_buttons[8]);}
-void IN_4Button8Up(void) {IN_KeyUp(&cis[3].in_buttons[8]);}
-void IN_4Button9Down(void) {IN_KeyDown(&cis[3].in_buttons[9]);}
-void IN_4Button9Up(void) {IN_KeyUp(&cis[3].in_buttons[9]);}
-void IN_4Button10Down(void) {IN_KeyDown(&cis[3].in_buttons[10]);}
-void IN_4Button10Up(void) {IN_KeyUp(&cis[3].in_buttons[10]);}
-void IN_4Button11Down(void) {IN_KeyDown(&cis[3].in_buttons[11]);}
-void IN_4Button11Up(void) {IN_KeyUp(&cis[3].in_buttons[11]);}
-void IN_4Button12Down(void) {IN_KeyDown(&cis[3].in_buttons[12]);}
-void IN_4Button12Up(void) {IN_KeyUp(&cis[3].in_buttons[12]);}
-void IN_4Button13Down(void) {IN_KeyDown(&cis[3].in_buttons[13]);}
-void IN_4Button13Up(void) {IN_KeyUp(&cis[3].in_buttons[13]);}
-void IN_4Button14Down(void) {IN_KeyDown(&cis[3].in_buttons[14]);}
-void IN_4Button14Up(void) {IN_KeyUp(&cis[3].in_buttons[14]);}
-void IN_4Button15Down(void) {IN_KeyDown(&cis[3].in_buttons[15]);}
-void IN_4Button15Up(void) {IN_KeyUp(&cis[3].in_buttons[15]);}
-
-void IN_CenterView_Main(int localClientNum) {
+void IN_CenterView( int localClientNum ) {
 	sharedPlayerState_t *ps;
 
 	if (localClientNum < 0 || localClientNum >= CL_MAX_SPLITVIEW || !cl.snap.valid || cl.snap.lcIndex[localClientNum] == -1) {
@@ -471,22 +291,6 @@ void IN_CenterView_Main(int localClientNum) {
 	}
 
 	cl.localClients[localClientNum].viewangles[PITCH] = -SHORT2ANGLE(ps->delta_angles[PITCH]);
-}
-
-void IN_CenterView (void) {
-	IN_CenterView_Main(0);
-}
-
-void IN_2CenterView (void) {
-	IN_CenterView_Main(1);
-}
-
-void IN_3CenterView (void) {
-	IN_CenterView_Main(2);
-}
-
-void IN_4CenterView (void) {
-	IN_CenterView_Main(3);
 }
 
 
@@ -639,7 +443,7 @@ void CL_JoystickMove( calc_t *lc, clientInput_t *ci, usercmd_t *cmd ) {
 		cmd->rightmove = ClampChar( cmd->rightmove + (int) (j_yaw[lcNum]->value * lc->joystickAxis[j_yaw_axis[lcNum]->integer]) );
 	}
 
-	if ( in_mlooking ) {
+	if ( ci->in_mlooking ) {
 		lc->viewangles[PITCH] += anglespeed * j_forward[lcNum]->value * lc->joystickAxis[j_forward_axis[lcNum]->integer];
 		cmd->forwardmove = ClampChar( cmd->forwardmove + (int) (j_pitch[lcNum]->value * lc->joystickAxis[j_pitch_axis[lcNum]->integer]) );
 	} else {
@@ -735,7 +539,7 @@ void CL_MouseMove(calc_t *lc, clientInput_t *ci, usercmd_t *cmd)
 	else
 		lc->viewangles[YAW] -= m_yaw->value * mx;
 
-	if ((in_mlooking || cl_freelook->integer) && !ci->in_strafe.active)
+	if ((ci->in_mlooking || cl_freelook->integer) && !ci->in_strafe.active)
 		lc->viewangles[PITCH] += m_pitch->value * my;
 	else
 		cmd->forwardmove = ClampChar(cmd->forwardmove - m_forward->value * my);
@@ -1184,249 +988,98 @@ void CL_SendCmd( void ) {
 
 /*
 ============
+CL_AddPlayerCommand
+============
+*/
+void CL_AddPlayerCommand( const char *cmd_name, icommand_t function ) {
+	int i;
+
+	for ( i = 0; i < CL_MAX_SPLITVIEW; i++ ) {
+		Cmd_AddIntCommand( Com_LocalClientCvarName(i, cmd_name), function, i );
+	}
+}
+
+/*
+============
+CL_RemovePlayerCommand
+============
+*/
+void CL_RemovePlayerCommand( const char *cmd_name ) {
+	int i;
+
+	for ( i = 0; i < CL_MAX_SPLITVIEW; i++ ) {
+		Cmd_RemoveCommand( Com_LocalClientCvarName( i, cmd_name ) );
+	}
+}
+
+/*
+============
 CL_InitInput
 ============
 */
 void CL_InitInput( void ) {
-	Cmd_AddCommand ("centerview",IN_CenterView);
+	CL_AddPlayerCommand ("centerview",IN_CenterView);
 
-	Cmd_AddCommand ("+moveup",IN_UpDown);
-	Cmd_AddCommand ("-moveup",IN_UpUp);
-	Cmd_AddCommand ("+movedown",IN_DownDown);
-	Cmd_AddCommand ("-movedown",IN_DownUp);
-	Cmd_AddCommand ("+left",IN_LeftDown);
-	Cmd_AddCommand ("-left",IN_LeftUp);
-	Cmd_AddCommand ("+right",IN_RightDown);
-	Cmd_AddCommand ("-right",IN_RightUp);
-	Cmd_AddCommand ("+forward",IN_ForwardDown);
-	Cmd_AddCommand ("-forward",IN_ForwardUp);
-	Cmd_AddCommand ("+back",IN_BackDown);
-	Cmd_AddCommand ("-back",IN_BackUp);
-	Cmd_AddCommand ("+lookup", IN_LookupDown);
-	Cmd_AddCommand ("-lookup", IN_LookupUp);
-	Cmd_AddCommand ("+lookdown", IN_LookdownDown);
-	Cmd_AddCommand ("-lookdown", IN_LookdownUp);
-	Cmd_AddCommand ("+strafe", IN_StrafeDown);
-	Cmd_AddCommand ("-strafe", IN_StrafeUp);
-	Cmd_AddCommand ("+moveleft", IN_MoveleftDown);
-	Cmd_AddCommand ("-moveleft", IN_MoveleftUp);
-	Cmd_AddCommand ("+moveright", IN_MoverightDown);
-	Cmd_AddCommand ("-moveright", IN_MoverightUp);
-	Cmd_AddCommand ("+speed", IN_SpeedDown);
-	Cmd_AddCommand ("-speed", IN_SpeedUp);
-	Cmd_AddCommand ("+button0", IN_Button0Down);
-	Cmd_AddCommand ("-button0", IN_Button0Up);
-	Cmd_AddCommand ("+button1", IN_Button1Down);
-	Cmd_AddCommand ("-button1", IN_Button1Up);
-	Cmd_AddCommand ("+button2", IN_Button2Down);
-	Cmd_AddCommand ("-button2", IN_Button2Up);
-	Cmd_AddCommand ("+button3", IN_Button3Down);
-	Cmd_AddCommand ("-button3", IN_Button3Up);
-	Cmd_AddCommand ("+button4", IN_Button4Down);
-	Cmd_AddCommand ("-button4", IN_Button4Up);
-	Cmd_AddCommand ("+button5", IN_Button5Down);
-	Cmd_AddCommand ("-button5", IN_Button5Up);
-	Cmd_AddCommand ("+button6", IN_Button6Down);
-	Cmd_AddCommand ("-button6", IN_Button6Up);
-	Cmd_AddCommand ("+button7", IN_Button7Down);
-	Cmd_AddCommand ("-button7", IN_Button7Up);
-	Cmd_AddCommand ("+button8", IN_Button8Down);
-	Cmd_AddCommand ("-button8", IN_Button8Up);
-	Cmd_AddCommand ("+button9", IN_Button9Down);
-	Cmd_AddCommand ("-button9", IN_Button9Up);
-	Cmd_AddCommand ("+button10", IN_Button10Down);
-	Cmd_AddCommand ("-button10", IN_Button10Up);
-	Cmd_AddCommand ("+button11", IN_Button11Down);
-	Cmd_AddCommand ("-button11", IN_Button11Up);
-	Cmd_AddCommand ("+button12", IN_Button12Down);
-	Cmd_AddCommand ("-button12", IN_Button12Up);
-	Cmd_AddCommand ("+button13", IN_Button13Down);
-	Cmd_AddCommand ("-button13", IN_Button13Up);
-	Cmd_AddCommand ("+button14", IN_Button14Down);
-	Cmd_AddCommand ("-button14", IN_Button14Up);
-	Cmd_AddCommand ("+mlook", IN_MLookDown);
-	Cmd_AddCommand ("-mlook", IN_MLookUp);
+	CL_AddPlayerCommand ("+moveup",IN_UpDown);
+	CL_AddPlayerCommand ("-moveup",IN_UpUp);
+	CL_AddPlayerCommand ("+movedown",IN_DownDown);
+	CL_AddPlayerCommand ("-movedown",IN_DownUp);
+	CL_AddPlayerCommand ("+left",IN_LeftDown);
+	CL_AddPlayerCommand ("-left",IN_LeftUp);
+	CL_AddPlayerCommand ("+right",IN_RightDown);
+	CL_AddPlayerCommand ("-right",IN_RightUp);
+	CL_AddPlayerCommand ("+forward",IN_ForwardDown);
+	CL_AddPlayerCommand ("-forward",IN_ForwardUp);
+	CL_AddPlayerCommand ("+back",IN_BackDown);
+	CL_AddPlayerCommand ("-back",IN_BackUp);
+	CL_AddPlayerCommand ("+lookup", IN_LookupDown);
+	CL_AddPlayerCommand ("-lookup", IN_LookupUp);
+	CL_AddPlayerCommand ("+lookdown", IN_LookdownDown);
+	CL_AddPlayerCommand ("-lookdown", IN_LookdownUp);
+	CL_AddPlayerCommand ("+strafe", IN_StrafeDown);
+	CL_AddPlayerCommand ("-strafe", IN_StrafeUp);
+	CL_AddPlayerCommand ("+moveleft", IN_MoveleftDown);
+	CL_AddPlayerCommand ("-moveleft", IN_MoveleftUp);
+	CL_AddPlayerCommand ("+moveright", IN_MoverightDown);
+	CL_AddPlayerCommand ("-moveright", IN_MoverightUp);
+	CL_AddPlayerCommand ("+speed", IN_SpeedDown);
+	CL_AddPlayerCommand ("-speed", IN_SpeedUp);
+	CL_AddPlayerCommand ("+button0", IN_Button0Down);
+	CL_AddPlayerCommand ("-button0", IN_Button0Up);
+	CL_AddPlayerCommand ("+button1", IN_Button1Down);
+	CL_AddPlayerCommand ("-button1", IN_Button1Up);
+	CL_AddPlayerCommand ("+button2", IN_Button2Down);
+	CL_AddPlayerCommand ("-button2", IN_Button2Up);
+	CL_AddPlayerCommand ("+button3", IN_Button3Down);
+	CL_AddPlayerCommand ("-button3", IN_Button3Up);
+	CL_AddPlayerCommand ("+button4", IN_Button4Down);
+	CL_AddPlayerCommand ("-button4", IN_Button4Up);
+	CL_AddPlayerCommand ("+button5", IN_Button5Down);
+	CL_AddPlayerCommand ("-button5", IN_Button5Up);
+	CL_AddPlayerCommand ("+button6", IN_Button6Down);
+	CL_AddPlayerCommand ("-button6", IN_Button6Up);
+	CL_AddPlayerCommand ("+button7", IN_Button7Down);
+	CL_AddPlayerCommand ("-button7", IN_Button7Up);
+	CL_AddPlayerCommand ("+button8", IN_Button8Down);
+	CL_AddPlayerCommand ("-button8", IN_Button8Up);
+	CL_AddPlayerCommand ("+button9", IN_Button9Down);
+	CL_AddPlayerCommand ("-button9", IN_Button9Up);
+	CL_AddPlayerCommand ("+button10", IN_Button10Down);
+	CL_AddPlayerCommand ("-button10", IN_Button10Up);
+	CL_AddPlayerCommand ("+button11", IN_Button11Down);
+	CL_AddPlayerCommand ("-button11", IN_Button11Up);
+	CL_AddPlayerCommand ("+button12", IN_Button12Down);
+	CL_AddPlayerCommand ("-button12", IN_Button12Up);
+	CL_AddPlayerCommand ("+button13", IN_Button13Down);
+	CL_AddPlayerCommand ("-button13", IN_Button13Up);
+	CL_AddPlayerCommand ("+button14", IN_Button14Down);
+	CL_AddPlayerCommand ("-button14", IN_Button14Up);
+	CL_AddPlayerCommand ("+mlook", IN_MLookDown);
+	CL_AddPlayerCommand ("-mlook", IN_MLookUp);
 
 #ifdef USE_VOIP
 	Cmd_AddCommand ("+voiprecord", IN_VoipRecordDown);
 	Cmd_AddCommand ("-voiprecord", IN_VoipRecordUp);
-#endif
-
-#if CL_MAX_SPLITVIEW > 1
-	Cmd_AddCommand ("2centerview",IN_2CenterView);
-
-	Cmd_AddCommand ("+2moveup",IN_2UpDown);
-	Cmd_AddCommand ("-2moveup",IN_2UpUp);
-	Cmd_AddCommand ("+2movedown",IN_2DownDown);
-	Cmd_AddCommand ("-2movedown",IN_2DownUp);
-	Cmd_AddCommand ("+2left",IN_2LeftDown);
-	Cmd_AddCommand ("-2left",IN_2LeftUp);
-	Cmd_AddCommand ("+2right",IN_2RightDown);
-	Cmd_AddCommand ("-2right",IN_2RightUp);
-	Cmd_AddCommand ("+2forward",IN_2ForwardDown);
-	Cmd_AddCommand ("-2forward",IN_2ForwardUp);
-	Cmd_AddCommand ("+2back",IN_2BackDown);
-	Cmd_AddCommand ("-2back",IN_2BackUp);
-	Cmd_AddCommand ("+2lookup", IN_2LookupDown);
-	Cmd_AddCommand ("-2lookup", IN_2LookupUp);
-	Cmd_AddCommand ("+2lookdown", IN_2LookdownDown);
-	Cmd_AddCommand ("-2lookdown", IN_2LookdownUp);
-	Cmd_AddCommand ("+2strafe", IN_2StrafeDown);
-	Cmd_AddCommand ("-2strafe", IN_2StrafeUp);
-	Cmd_AddCommand ("+2moveleft", IN_2MoveleftDown);
-	Cmd_AddCommand ("-2moveleft", IN_2MoveleftUp);
-	Cmd_AddCommand ("+2moveright", IN_2MoverightDown);
-	Cmd_AddCommand ("-2moveright", IN_2MoverightUp);
-	Cmd_AddCommand ("+2speed", IN_2SpeedDown);
-	Cmd_AddCommand ("-2speed", IN_2SpeedUp);
-	Cmd_AddCommand ("+2button0", IN_2Button0Down);
-	Cmd_AddCommand ("-2button0", IN_2Button0Up);
-	Cmd_AddCommand ("+2button1", IN_2Button1Down);
-	Cmd_AddCommand ("-2button1", IN_2Button1Up);
-	Cmd_AddCommand ("+2button2", IN_2Button2Down);
-	Cmd_AddCommand ("-2button2", IN_2Button2Up);
-	Cmd_AddCommand ("+2button3", IN_2Button3Down);
-	Cmd_AddCommand ("-2button3", IN_2Button3Up);
-	Cmd_AddCommand ("+2button4", IN_2Button4Down);
-	Cmd_AddCommand ("-2button4", IN_2Button4Up);
-	Cmd_AddCommand ("+2button5", IN_2Button5Down);
-	Cmd_AddCommand ("-2button5", IN_2Button5Up);
-	Cmd_AddCommand ("+2button6", IN_2Button6Down);
-	Cmd_AddCommand ("-2button6", IN_2Button6Up);
-	Cmd_AddCommand ("+2button7", IN_2Button7Down);
-	Cmd_AddCommand ("-2button7", IN_2Button7Up);
-	Cmd_AddCommand ("+2button8", IN_2Button8Down);
-	Cmd_AddCommand ("-2button8", IN_2Button8Up);
-	Cmd_AddCommand ("+2button9", IN_2Button9Down);
-	Cmd_AddCommand ("-2button9", IN_2Button9Up);
-	Cmd_AddCommand ("+2button10", IN_2Button10Down);
-	Cmd_AddCommand ("-2button10", IN_2Button10Up);
-	Cmd_AddCommand ("+2button11", IN_2Button11Down);
-	Cmd_AddCommand ("-2button11", IN_2Button11Up);
-	Cmd_AddCommand ("+2button12", IN_2Button12Down);
-	Cmd_AddCommand ("-2button12", IN_2Button12Up);
-	Cmd_AddCommand ("+2button13", IN_2Button13Down);
-	Cmd_AddCommand ("-2button13", IN_2Button13Up);
-	Cmd_AddCommand ("+2button14", IN_2Button14Down);
-	Cmd_AddCommand ("-2button14", IN_2Button14Up);
-#endif
-
-#if CL_MAX_SPLITVIEW > 2
-	Cmd_AddCommand ("3centerview",IN_3CenterView);
-
-	Cmd_AddCommand ("+3moveup",IN_3UpDown);
-	Cmd_AddCommand ("-3moveup",IN_3UpUp);
-	Cmd_AddCommand ("+3movedown",IN_3DownDown);
-	Cmd_AddCommand ("-3movedown",IN_3DownUp);
-	Cmd_AddCommand ("+3left",IN_3LeftDown);
-	Cmd_AddCommand ("-3left",IN_3LeftUp);
-	Cmd_AddCommand ("+3right",IN_3RightDown);
-	Cmd_AddCommand ("-3right",IN_3RightUp);
-	Cmd_AddCommand ("+3forward",IN_3ForwardDown);
-	Cmd_AddCommand ("-3forward",IN_3ForwardUp);
-	Cmd_AddCommand ("+3back",IN_3BackDown);
-	Cmd_AddCommand ("-3back",IN_3BackUp);
-	Cmd_AddCommand ("+3lookup", IN_3LookupDown);
-	Cmd_AddCommand ("-3lookup", IN_3LookupUp);
-	Cmd_AddCommand ("+3lookdown", IN_3LookdownDown);
-	Cmd_AddCommand ("-3lookdown", IN_3LookdownUp);
-	Cmd_AddCommand ("+3strafe", IN_3StrafeDown);
-	Cmd_AddCommand ("-3strafe", IN_3StrafeUp);
-	Cmd_AddCommand ("+3moveleft", IN_3MoveleftDown);
-	Cmd_AddCommand ("-3moveleft", IN_3MoveleftUp);
-	Cmd_AddCommand ("+3moveright", IN_3MoverightDown);
-	Cmd_AddCommand ("-3moveright", IN_3MoverightUp);
-	Cmd_AddCommand ("+3speed", IN_3SpeedDown);
-	Cmd_AddCommand ("-3speed", IN_3SpeedUp);
-	Cmd_AddCommand ("+3button0", IN_3Button0Down);
-	Cmd_AddCommand ("-3button0", IN_3Button0Up);
-	Cmd_AddCommand ("+3button1", IN_3Button1Down);
-	Cmd_AddCommand ("-3button1", IN_3Button1Up);
-	Cmd_AddCommand ("+3button2", IN_3Button2Down);
-	Cmd_AddCommand ("-3button2", IN_3Button2Up);
-	Cmd_AddCommand ("+3button3", IN_3Button3Down);
-	Cmd_AddCommand ("-3button3", IN_3Button3Up);
-	Cmd_AddCommand ("+3button4", IN_3Button4Down);
-	Cmd_AddCommand ("-3button4", IN_3Button4Up);
-	Cmd_AddCommand ("+3button5", IN_3Button5Down);
-	Cmd_AddCommand ("-3button5", IN_3Button5Up);
-	Cmd_AddCommand ("+3button6", IN_3Button6Down);
-	Cmd_AddCommand ("-3button6", IN_3Button6Up);
-	Cmd_AddCommand ("+3button7", IN_3Button7Down);
-	Cmd_AddCommand ("-3button7", IN_3Button7Up);
-	Cmd_AddCommand ("+3button8", IN_3Button8Down);
-	Cmd_AddCommand ("-3button8", IN_3Button8Up);
-	Cmd_AddCommand ("+3button9", IN_3Button9Down);
-	Cmd_AddCommand ("-3button9", IN_3Button9Up);
-	Cmd_AddCommand ("+3button10", IN_3Button10Down);
-	Cmd_AddCommand ("-3button10", IN_3Button10Up);
-	Cmd_AddCommand ("+3button11", IN_3Button11Down);
-	Cmd_AddCommand ("-3button11", IN_3Button11Up);
-	Cmd_AddCommand ("+3button12", IN_3Button12Down);
-	Cmd_AddCommand ("-3button12", IN_3Button12Up);
-	Cmd_AddCommand ("+3button13", IN_3Button13Down);
-	Cmd_AddCommand ("-3button13", IN_3Button13Up);
-	Cmd_AddCommand ("+3button14", IN_3Button14Down);
-	Cmd_AddCommand ("-3button14", IN_3Button14Up);
-#endif
-
-#if CL_MAX_SPLITVIEW > 3
-	Cmd_AddCommand ("4centerview",IN_4CenterView);
-
-	Cmd_AddCommand ("+4moveup",IN_4UpDown);
-	Cmd_AddCommand ("-4moveup",IN_4UpUp);
-	Cmd_AddCommand ("+4movedown",IN_4DownDown);
-	Cmd_AddCommand ("-4movedown",IN_4DownUp);
-	Cmd_AddCommand ("+4left",IN_4LeftDown);
-	Cmd_AddCommand ("-4left",IN_4LeftUp);
-	Cmd_AddCommand ("+4right",IN_4RightDown);
-	Cmd_AddCommand ("-4right",IN_4RightUp);
-	Cmd_AddCommand ("+4forward",IN_4ForwardDown);
-	Cmd_AddCommand ("-4forward",IN_4ForwardUp);
-	Cmd_AddCommand ("+4back",IN_4BackDown);
-	Cmd_AddCommand ("-4back",IN_4BackUp);
-	Cmd_AddCommand ("+4lookup", IN_4LookupDown);
-	Cmd_AddCommand ("-4lookup", IN_4LookupUp);
-	Cmd_AddCommand ("+4lookdown", IN_4LookdownDown);
-	Cmd_AddCommand ("-4lookdown", IN_4LookdownUp);
-	Cmd_AddCommand ("+4strafe", IN_4StrafeDown);
-	Cmd_AddCommand ("-4strafe", IN_4StrafeUp);
-	Cmd_AddCommand ("+4moveleft", IN_4MoveleftDown);
-	Cmd_AddCommand ("-4moveleft", IN_4MoveleftUp);
-	Cmd_AddCommand ("+4moveright", IN_4MoverightDown);
-	Cmd_AddCommand ("-4moveright", IN_4MoverightUp);
-	Cmd_AddCommand ("+4speed", IN_4SpeedDown);
-	Cmd_AddCommand ("-4speed", IN_4SpeedUp);
-	Cmd_AddCommand ("+4button0", IN_4Button0Down);
-	Cmd_AddCommand ("-4button0", IN_4Button0Up);
-	Cmd_AddCommand ("+4button1", IN_4Button1Down);
-	Cmd_AddCommand ("-4button1", IN_4Button1Up);
-	Cmd_AddCommand ("+4button2", IN_4Button2Down);
-	Cmd_AddCommand ("-4button2", IN_4Button2Up);
-	Cmd_AddCommand ("+4button3", IN_4Button3Down);
-	Cmd_AddCommand ("-4button3", IN_4Button3Up);
-	Cmd_AddCommand ("+4button4", IN_4Button4Down);
-	Cmd_AddCommand ("-4button4", IN_4Button4Up);
-	Cmd_AddCommand ("+4button5", IN_4Button5Down);
-	Cmd_AddCommand ("-4button5", IN_4Button5Up);
-	Cmd_AddCommand ("+4button6", IN_4Button6Down);
-	Cmd_AddCommand ("-4button6", IN_4Button6Up);
-	Cmd_AddCommand ("+4button7", IN_4Button7Down);
-	Cmd_AddCommand ("-4button7", IN_4Button7Up);
-	Cmd_AddCommand ("+4button8", IN_4Button8Down);
-	Cmd_AddCommand ("-4button8", IN_4Button8Up);
-	Cmd_AddCommand ("+4button9", IN_4Button9Down);
-	Cmd_AddCommand ("-4button9", IN_4Button9Up);
-	Cmd_AddCommand ("+4button10", IN_4Button10Down);
-	Cmd_AddCommand ("-4button10", IN_4Button10Up);
-	Cmd_AddCommand ("+4button11", IN_4Button11Down);
-	Cmd_AddCommand ("-4button11", IN_4Button11Up);
-	Cmd_AddCommand ("+4button12", IN_4Button12Down);
-	Cmd_AddCommand ("-4button12", IN_4Button12Up);
-	Cmd_AddCommand ("+4button13", IN_4Button13Down);
-	Cmd_AddCommand ("-4button13", IN_4Button13Up);
-	Cmd_AddCommand ("+4button14", IN_4Button14Down);
-	Cmd_AddCommand ("-4button14", IN_4Button14Up);
 #endif
 
 	cl_nodelta = Cvar_Get ("cl_nodelta", "0", 0);
@@ -1440,238 +1093,67 @@ CL_ShutdownInput
 */
 void CL_ShutdownInput(void)
 {
-	Cmd_RemoveCommand("centerview");
+	CL_RemovePlayerCommand("centerview");
 
-	Cmd_RemoveCommand("+moveup");
-	Cmd_RemoveCommand("-moveup");
-	Cmd_RemoveCommand("+movedown");
-	Cmd_RemoveCommand("-movedown");
-	Cmd_RemoveCommand("+left");
-	Cmd_RemoveCommand("-left");
-	Cmd_RemoveCommand("+right");
-	Cmd_RemoveCommand("-right");
-	Cmd_RemoveCommand("+forward");
-	Cmd_RemoveCommand("-forward");
-	Cmd_RemoveCommand("+back");
-	Cmd_RemoveCommand("-back");
-	Cmd_RemoveCommand("+lookup");
-	Cmd_RemoveCommand("-lookup");
-	Cmd_RemoveCommand("+lookdown");
-	Cmd_RemoveCommand("-lookdown");
-	Cmd_RemoveCommand("+strafe");
-	Cmd_RemoveCommand("-strafe");
-	Cmd_RemoveCommand("+moveleft");
-	Cmd_RemoveCommand("-moveleft");
-	Cmd_RemoveCommand("+moveright");
-	Cmd_RemoveCommand("-moveright");
-	Cmd_RemoveCommand("+speed");
-	Cmd_RemoveCommand("-speed");
-	Cmd_RemoveCommand("+button0");
-	Cmd_RemoveCommand("-button0");
-	Cmd_RemoveCommand("+button1");
-	Cmd_RemoveCommand("-button1");
-	Cmd_RemoveCommand("+button2");
-	Cmd_RemoveCommand("-button2");
-	Cmd_RemoveCommand("+button3");
-	Cmd_RemoveCommand("-button3");
-	Cmd_RemoveCommand("+button4");
-	Cmd_RemoveCommand("-button4");
-	Cmd_RemoveCommand("+button5");
-	Cmd_RemoveCommand("-button5");
-	Cmd_RemoveCommand("+button6");
-	Cmd_RemoveCommand("-button6");
-	Cmd_RemoveCommand("+button7");
-	Cmd_RemoveCommand("-button7");
-	Cmd_RemoveCommand("+button8");
-	Cmd_RemoveCommand("-button8");
-	Cmd_RemoveCommand("+button9");
-	Cmd_RemoveCommand("-button9");
-	Cmd_RemoveCommand("+button10");
-	Cmd_RemoveCommand("-button10");
-	Cmd_RemoveCommand("+button11");
-	Cmd_RemoveCommand("-button11");
-	Cmd_RemoveCommand("+button12");
-	Cmd_RemoveCommand("-button12");
-	Cmd_RemoveCommand("+button13");
-	Cmd_RemoveCommand("-button13");
-	Cmd_RemoveCommand("+button14");
-	Cmd_RemoveCommand("-button14");
-	Cmd_RemoveCommand("+mlook");
-	Cmd_RemoveCommand("-mlook");
+	CL_RemovePlayerCommand("+moveup");
+	CL_RemovePlayerCommand("-moveup");
+	CL_RemovePlayerCommand("+movedown");
+	CL_RemovePlayerCommand("-movedown");
+	CL_RemovePlayerCommand("+left");
+	CL_RemovePlayerCommand("-left");
+	CL_RemovePlayerCommand("+right");
+	CL_RemovePlayerCommand("-right");
+	CL_RemovePlayerCommand("+forward");
+	CL_RemovePlayerCommand("-forward");
+	CL_RemovePlayerCommand("+back");
+	CL_RemovePlayerCommand("-back");
+	CL_RemovePlayerCommand("+lookup");
+	CL_RemovePlayerCommand("-lookup");
+	CL_RemovePlayerCommand("+lookdown");
+	CL_RemovePlayerCommand("-lookdown");
+	CL_RemovePlayerCommand("+strafe");
+	CL_RemovePlayerCommand("-strafe");
+	CL_RemovePlayerCommand("+moveleft");
+	CL_RemovePlayerCommand("-moveleft");
+	CL_RemovePlayerCommand("+moveright");
+	CL_RemovePlayerCommand("-moveright");
+	CL_RemovePlayerCommand("+speed");
+	CL_RemovePlayerCommand("-speed");
+	CL_RemovePlayerCommand("+button0");
+	CL_RemovePlayerCommand("-button0");
+	CL_RemovePlayerCommand("+button1");
+	CL_RemovePlayerCommand("-button1");
+	CL_RemovePlayerCommand("+button2");
+	CL_RemovePlayerCommand("-button2");
+	CL_RemovePlayerCommand("+button3");
+	CL_RemovePlayerCommand("-button3");
+	CL_RemovePlayerCommand("+button4");
+	CL_RemovePlayerCommand("-button4");
+	CL_RemovePlayerCommand("+button5");
+	CL_RemovePlayerCommand("-button5");
+	CL_RemovePlayerCommand("+button6");
+	CL_RemovePlayerCommand("-button6");
+	CL_RemovePlayerCommand("+button7");
+	CL_RemovePlayerCommand("-button7");
+	CL_RemovePlayerCommand("+button8");
+	CL_RemovePlayerCommand("-button8");
+	CL_RemovePlayerCommand("+button9");
+	CL_RemovePlayerCommand("-button9");
+	CL_RemovePlayerCommand("+button10");
+	CL_RemovePlayerCommand("-button10");
+	CL_RemovePlayerCommand("+button11");
+	CL_RemovePlayerCommand("-button11");
+	CL_RemovePlayerCommand("+button12");
+	CL_RemovePlayerCommand("-button12");
+	CL_RemovePlayerCommand("+button13");
+	CL_RemovePlayerCommand("-button13");
+	CL_RemovePlayerCommand("+button14");
+	CL_RemovePlayerCommand("-button14");
+	CL_RemovePlayerCommand("+mlook");
+	CL_RemovePlayerCommand("-mlook");
 
 #ifdef USE_VOIP
 	Cmd_RemoveCommand("+voiprecord");
 	Cmd_RemoveCommand("-voiprecord");
 #endif
-
-	Cmd_RemoveCommand("2centerview");
-
-	Cmd_RemoveCommand("+2moveup");
-	Cmd_RemoveCommand("-2moveup");
-	Cmd_RemoveCommand("+2movedown");
-	Cmd_RemoveCommand("-2movedown");
-	Cmd_RemoveCommand("+2left");
-	Cmd_RemoveCommand("-2left");
-	Cmd_RemoveCommand("+2right");
-	Cmd_RemoveCommand("-2right");
-	Cmd_RemoveCommand("+2forward");
-	Cmd_RemoveCommand("-2forward");
-	Cmd_RemoveCommand("+2back");
-	Cmd_RemoveCommand("-2back");
-	Cmd_RemoveCommand("+2lookup");
-	Cmd_RemoveCommand("-2lookup");
-	Cmd_RemoveCommand("+2lookdown");
-	Cmd_RemoveCommand("-2lookdown");
-	Cmd_RemoveCommand("+2strafe");
-	Cmd_RemoveCommand("-2strafe");
-	Cmd_RemoveCommand("+2moveleft");
-	Cmd_RemoveCommand("-2moveleft");
-	Cmd_RemoveCommand("+2moveright");
-	Cmd_RemoveCommand("-2moveright");
-	Cmd_RemoveCommand("+2speed");
-	Cmd_RemoveCommand("-2speed");
-	Cmd_RemoveCommand("+2button0");
-	Cmd_RemoveCommand("-2button0");
-	Cmd_RemoveCommand("+2button1");
-	Cmd_RemoveCommand("-2button1");
-	Cmd_RemoveCommand("+2button2");
-	Cmd_RemoveCommand("-2button2");
-	Cmd_RemoveCommand("+2button3");
-	Cmd_RemoveCommand("-2button3");
-	Cmd_RemoveCommand("+2button4");
-	Cmd_RemoveCommand("-2button4");
-	Cmd_RemoveCommand("+2button5");
-	Cmd_RemoveCommand("-2button5");
-	Cmd_RemoveCommand("+2button6");
-	Cmd_RemoveCommand("-2button6");
-	Cmd_RemoveCommand("+2button7");
-	Cmd_RemoveCommand("-2button7");
-	Cmd_RemoveCommand("+2button8");
-	Cmd_RemoveCommand("-2button8");
-	Cmd_RemoveCommand("+2button9");
-	Cmd_RemoveCommand("-2button9");
-	Cmd_RemoveCommand("+2button10");
-	Cmd_RemoveCommand("-2button10");
-	Cmd_RemoveCommand("+2button11");
-	Cmd_RemoveCommand("-2button11");
-	Cmd_RemoveCommand("+2button12");
-	Cmd_RemoveCommand("-2button12");
-	Cmd_RemoveCommand("+2button13");
-	Cmd_RemoveCommand("-2button13");
-	Cmd_RemoveCommand("+2button14");
-	Cmd_RemoveCommand("-2button14");
-
-	Cmd_RemoveCommand("3centerview");
-
-	Cmd_RemoveCommand("+3moveup");
-	Cmd_RemoveCommand("-3moveup");
-	Cmd_RemoveCommand("+3movedown");
-	Cmd_RemoveCommand("-3movedown");
-	Cmd_RemoveCommand("+3left");
-	Cmd_RemoveCommand("-3left");
-	Cmd_RemoveCommand("+3right");
-	Cmd_RemoveCommand("-3right");
-	Cmd_RemoveCommand("+3forward");
-	Cmd_RemoveCommand("-3forward");
-	Cmd_RemoveCommand("+3back");
-	Cmd_RemoveCommand("-3back");
-	Cmd_RemoveCommand("+3lookup");
-	Cmd_RemoveCommand("-3lookup");
-	Cmd_RemoveCommand("+3lookdown");
-	Cmd_RemoveCommand("-3lookdown");
-	Cmd_RemoveCommand("+3strafe");
-	Cmd_RemoveCommand("-3strafe");
-	Cmd_RemoveCommand("+3moveleft");
-	Cmd_RemoveCommand("-3moveleft");
-	Cmd_RemoveCommand("+3moveright");
-	Cmd_RemoveCommand("-3moveright");
-	Cmd_RemoveCommand("+3speed");
-	Cmd_RemoveCommand("-3speed");
-	Cmd_RemoveCommand("+3button0");
-	Cmd_RemoveCommand("-3button0");
-	Cmd_RemoveCommand("+3button1");
-	Cmd_RemoveCommand("-3button1");
-	Cmd_RemoveCommand("+3button2");
-	Cmd_RemoveCommand("-3button2");
-	Cmd_RemoveCommand("+3button3");
-	Cmd_RemoveCommand("-3button3");
-	Cmd_RemoveCommand("+3button4");
-	Cmd_RemoveCommand("-3button4");
-	Cmd_RemoveCommand("+3button5");
-	Cmd_RemoveCommand("-3button5");
-	Cmd_RemoveCommand("+3button6");
-	Cmd_RemoveCommand("-3button6");
-	Cmd_RemoveCommand("+3button7");
-	Cmd_RemoveCommand("-3button7");
-	Cmd_RemoveCommand("+3button8");
-	Cmd_RemoveCommand("-3button8");
-	Cmd_RemoveCommand("+3button9");
-	Cmd_RemoveCommand("-3button9");
-	Cmd_RemoveCommand("+3button10");
-	Cmd_RemoveCommand("-3button10");
-	Cmd_RemoveCommand("+3button11");
-	Cmd_RemoveCommand("-3button11");
-	Cmd_RemoveCommand("+3button12");
-	Cmd_RemoveCommand("-3button12");
-	Cmd_RemoveCommand("+3button13");
-	Cmd_RemoveCommand("-3button13");
-	Cmd_RemoveCommand("+3button14");
-	Cmd_RemoveCommand("-3button14");
-
-	Cmd_RemoveCommand("4centerview");
-
-	Cmd_RemoveCommand("+4moveup");
-	Cmd_RemoveCommand("-4moveup");
-	Cmd_RemoveCommand("+4movedown");
-	Cmd_RemoveCommand("-4movedown");
-	Cmd_RemoveCommand("+4left");
-	Cmd_RemoveCommand("-4left");
-	Cmd_RemoveCommand("+4right");
-	Cmd_RemoveCommand("-4right");
-	Cmd_RemoveCommand("+4forward");
-	Cmd_RemoveCommand("-4forward");
-	Cmd_RemoveCommand("+4back");
-	Cmd_RemoveCommand("-4back");
-	Cmd_RemoveCommand("+4lookup");
-	Cmd_RemoveCommand("-4lookup");
-	Cmd_RemoveCommand("+4lookdown");
-	Cmd_RemoveCommand("-4lookdown");
-	Cmd_RemoveCommand("+4strafe");
-	Cmd_RemoveCommand("-4strafe");
-	Cmd_RemoveCommand("+4moveleft");
-	Cmd_RemoveCommand("-4moveleft");
-	Cmd_RemoveCommand("+4moveright");
-	Cmd_RemoveCommand("-4moveright");
-	Cmd_RemoveCommand("+4speed");
-	Cmd_RemoveCommand("-4speed");
-	Cmd_RemoveCommand("+4button0");
-	Cmd_RemoveCommand("-4button0");
-	Cmd_RemoveCommand("+4button1");
-	Cmd_RemoveCommand("-4button1");
-	Cmd_RemoveCommand("+4button2");
-	Cmd_RemoveCommand("-4button2");
-	Cmd_RemoveCommand("+4button3");
-	Cmd_RemoveCommand("-4button3");
-	Cmd_RemoveCommand("+4button4");
-	Cmd_RemoveCommand("-4button4");
-	Cmd_RemoveCommand("+4button5");
-	Cmd_RemoveCommand("-4button5");
-	Cmd_RemoveCommand("+4button6");
-	Cmd_RemoveCommand("-4button6");
-	Cmd_RemoveCommand("+4button7");
-	Cmd_RemoveCommand("-4button7");
-	Cmd_RemoveCommand("+4button8");
-	Cmd_RemoveCommand("-4button8");
-	Cmd_RemoveCommand("+4button9");
-	Cmd_RemoveCommand("-4button9");
-	Cmd_RemoveCommand("+4button10");
-	Cmd_RemoveCommand("-4button10");
-	Cmd_RemoveCommand("+4button11");
-	Cmd_RemoveCommand("-4button11");
-	Cmd_RemoveCommand("+4button12");
-	Cmd_RemoveCommand("-4button12");
-	Cmd_RemoveCommand("+4button13");
-	Cmd_RemoveCommand("-4button13");
-	Cmd_RemoveCommand("+4button14");
-	Cmd_RemoveCommand("-4button14");
 }

@@ -369,6 +369,8 @@ typedef struct cmd_function_s
 	struct cmd_function_s	*next;
 	char					*name;
 	xcommand_t				function;
+	icommand_t				intFunction;
+	int						intValue;
 	completionFunc_t	complete;
 } cmd_function_t;
 
@@ -714,6 +716,36 @@ void	Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
 	cmd = S_Malloc (sizeof(cmd_function_t));
 	cmd->name = CopyString( cmd_name );
 	cmd->function = function;
+	cmd->intFunction = NULL;
+	cmd->intValue = 0;
+	cmd->complete = NULL;
+	cmd->next = cmd_functions;
+	cmd_functions = cmd;
+}
+
+/*
+============
+Cmd_AddIntCommand
+============
+*/
+void	Cmd_AddIntCommand( const char *cmd_name, icommand_t function, int value ) {
+	cmd_function_t	*cmd;
+	
+	// fail if the command already exists
+	if( Cmd_FindCommand( cmd_name ) )
+	{
+		// allow completion-only commands to be silently doubled
+		if( function != NULL )
+			Com_Printf( "Cmd_AddIntCommand: %s already defined\n", cmd_name );
+		return;
+	}
+
+	// use a small malloc to avoid zone fragmentation
+	cmd = S_Malloc (sizeof(cmd_function_t));
+	cmd->name = CopyString( cmd_name );
+	cmd->function = NULL;
+	cmd->intFunction = function;
+	cmd->intValue = value;
 	cmd->complete = NULL;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
@@ -774,7 +806,7 @@ void Cmd_RemoveCommandSafe( const char *cmd_name )
 
 	if( !cmd )
 		return;
-	if( cmd->function )
+	if( cmd->function || cmd->intFunction )
 	{
 		Com_Error( ERR_DROP, "Restricted source tried to remove "
 			"system command \"%s\"", cmd_name );
@@ -840,7 +872,9 @@ void	Cmd_ExecuteString( const char *text ) {
 			cmd_functions = cmdFunc;
 
 			// perform the action
-			if ( !cmdFunc->function ) {
+			if ( cmdFunc->intFunction ) {
+				cmdFunc->intFunction( cmdFunc->intValue );
+			} else if ( !cmdFunc->function ) {
 				// let the cgame or game handle it
 				break;
 			} else {
