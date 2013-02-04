@@ -523,6 +523,15 @@ typedef struct {
 	int			voiceTime;
 	int			currentVoiceClient;
 
+	// orders
+	int			currentOrder;
+	qboolean	orderPending;
+	int			orderTime;
+	int			acceptOrderTime;
+	int			acceptTask;
+	int			acceptLeader;
+	char		acceptVoice[MAX_NAME_LENGTH];
+
 	// reward medals
 	int			rewardStack;
 	int			rewardTime;
@@ -1132,15 +1141,6 @@ typedef struct {
 	void *capturedItem;
 	qhandle_t activeCursor;
 
-	// orders
-	int currentOrder;
-	qboolean orderPending;
-	int orderTime;
-	int acceptOrderTime;
-	int acceptTask;
-	int acceptLeader;
-	char acceptVoice[MAX_NAME_LENGTH];
-
 	// default global fog from bsp or fogvars in a shader
 	fogType_t	globalFogType;
 	vec3_t		globalFogColor;
@@ -1262,8 +1262,8 @@ extern	vmCvar_t		cg_consoleLatency;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
 extern	vmCvar_t		cg_blueTeamName;
-extern	vmCvar_t		cg_currentSelectedPlayer;
-extern	vmCvar_t		cg_currentSelectedPlayerName;
+extern	vmCvar_t		cg_currentSelectedPlayer[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_singlePlayer;
 extern	vmCvar_t		cg_enableDust;
 extern	vmCvar_t		cg_enableBreath;
@@ -1409,8 +1409,8 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
 void CG_Text_Paint(float x, float y, float scale, vec4_t color, const char *text, float adjust, int limit, int style);
 int CG_Text_Width(const char *text, float scale, int limit);
 int CG_Text_Height(const char *text, float scale, int limit);
-void CG_SelectPrevPlayer( void );
-void CG_SelectNextPlayer( void );
+void CG_SelectPrevPlayer( int localPlayerNum );
+void CG_SelectNextPlayer( int localPlayerNum );
 float CG_GetValue(int ownerDraw);
 qboolean CG_OwnerDrawVisible(int flags);
 void CG_RunMenuScript(char **args);
@@ -1422,7 +1422,7 @@ const char *CG_GetGameStatusText( void );
 const char *CG_GetKillerText( void );
 void CG_Draw3DModel(float x, float y, float w, float h, qhandle_t model, qhandle_t skin, vec3_t origin, vec3_t angles);
 void CG_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader);
-void CG_CheckOrderPending( void );
+void CG_CheckOrderPending( int localPlayerNum );
 const char *CG_GameTypeString( void );
 qboolean CG_YourTeamHasFlag( void );
 qboolean CG_OtherTeamHasFlag( void );

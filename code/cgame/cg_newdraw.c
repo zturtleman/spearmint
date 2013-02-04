@@ -65,43 +65,56 @@ void CG_SetPrintString(q3print_t type, const char *p) {
   }
 }
 
-void CG_CheckOrderPending(void) {
+void CG_CheckOrderPending( int localPlayerNum ) {
+	cglc_t *localClient;
+
 	if (cgs.gametype < GT_CTF) {
 		return;
 	}
-	if (cgs.orderPending) {
+
+	localClient = &cg.localClients[localPlayerNum];
+
+	if ( localClient->clientNum == -1 || cg.snap->lcIndex[localPlayerNum] == -1 ) {
+		return;
+	}
+
+	if (localClient->orderPending) {
 		//clientInfo_t *ci;
-		const char *p1, *p2, *b;
+		const char *p1, *p2;
+		char	b[128];
 		int		clientNum;
 		int		team;
+		int		selectedPlayer;
 
-		p1 = p2 = b = NULL;
+		p1 = p2 = NULL;
+		b[0] = '\0';
 
-		clientNum = cg.snap->pss[0].clientNum;
-		team = cg.snap->pss[0].persistant[PERS_TEAM];
+		clientNum = cg.snap->pss[ cg.snap->lcIndex[ localPlayerNum ] ].clientNum;
+		team = cg.snap->pss[ cg.snap->lcIndex[ localPlayerNum ] ].persistant[PERS_TEAM];
+		selectedPlayer = cg_currentSelectedPlayer[ localPlayerNum ].integer;
 
-		//ci = cgs.clientinfo + sortedTeamPlayers[team][cg_currentSelectedPlayer.integer];
+		//ci = cgs.clientinfo + sortedTeamPlayers[team][selectedPlayer];
 
-		switch (cgs.currentOrder) {
+		switch (localClient->currentOrder) {
 			case TEAMTASK_OFFENSE:
 				p1 = VOICECHAT_ONOFFENSE;
 				p2 = VOICECHAT_OFFENSE;
-				b = "+button7; wait; -button7";
+				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalClientCvarName( localPlayerNum, "+button7" ), Com_LocalClientCvarName( localPlayerNum, "-button7" ) );
 			break;
 			case TEAMTASK_DEFENSE:
 				p1 = VOICECHAT_ONDEFENSE;
 				p2 = VOICECHAT_DEFEND;
-				b = "+button8; wait; -button8";
+				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalClientCvarName( localPlayerNum, "+button8" ), Com_LocalClientCvarName( localPlayerNum, "-button8" ) );
 			break;					
 			case TEAMTASK_PATROL:
 				p1 = VOICECHAT_ONPATROL;
 				p2 = VOICECHAT_PATROL;
-				b = "+button9; wait; -button9";
+				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalClientCvarName( localPlayerNum, "+button9" ), Com_LocalClientCvarName( localPlayerNum, "-button9" ) );
 			break;
 			case TEAMTASK_FOLLOW: 
 				p1 = VOICECHAT_ONFOLLOW;
 				p2 = VOICECHAT_FOLLOWME;
-				b = "+button10; wait; -button10";
+				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalClientCvarName( localPlayerNum, "+button10" ), Com_LocalClientCvarName( localPlayerNum, "-button10" ) );
 			break;
 			case TEAMTASK_CAMP:
 				p1 = VOICECHAT_ONCAMPING;
@@ -117,80 +130,80 @@ void CG_CheckOrderPending(void) {
 			break;
 		}
 
-		if (cg_currentSelectedPlayer.integer == numSortedTeamPlayers[team]) {
+		if (selectedPlayer == numSortedTeamPlayers[team]) {
 			// to everyone
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd vsay_team %s\n", p2));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), p2));
 		} else {
 			// for the player self
-			if (sortedTeamPlayers[team][cg_currentSelectedPlayer.integer] == clientNum && p1) {
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("teamtask %i\n", cgs.currentOrder));
-				//trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd say_team %s\n", p2));
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd vsay_team %s\n", p1));
+			if (sortedTeamPlayers[team][selectedPlayer] == clientNum && p1) {
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("%s %i\n", Com_LocalClientCvarName(localPlayerNum, "teamtask"), localClient->currentOrder));
+				//trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "say_team"), p2));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), p1));
 			} else if (p2) {
-				//trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd say_team %s, %s\n", ci->name,p));
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd vtell %d %s\n", sortedTeamPlayers[team][cg_currentSelectedPlayer.integer], p2));
+				//trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s, %s\n", Com_LocalClientCvarName(localPlayerNum, "say_team"), ci->name,p));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %d %s\n", Com_LocalClientCvarName(localPlayerNum, "vtell"), sortedTeamPlayers[team][selectedPlayer], p2));
 			}
 		}
-		if (b) {
+		if (b[0]) {
 			trap_Cmd_ExecuteText(EXEC_APPEND, b);
 		}
-		cgs.orderPending = qfalse;
+		localClient->orderPending = qfalse;
 	}
 }
 
-static void CG_SetSelectedPlayerName( void ) {
+static void CG_SetSelectedPlayerName( int localPlayerNum ) {
 	int team;
 
-	team = cg.snap->pss[0].persistant[PERS_TEAM];
+	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
-	if (cg_currentSelectedPlayer.integer >= 0 && cg_currentSelectedPlayer.integer < numSortedTeamPlayers[team]) {
-		clientInfo_t *ci = cgs.clientinfo + sortedTeamPlayers[team][cg_currentSelectedPlayer.integer];
+	if (cg_currentSelectedPlayer[ localPlayerNum ].integer >= 0 && cg_currentSelectedPlayer[ localPlayerNum ].integer < numSortedTeamPlayers[team]) {
+		clientInfo_t *ci = cgs.clientinfo + sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer];
 		if (ci) {
-			trap_Cvar_Set("cg_selectedPlayerName", ci->name);
-			trap_Cvar_Set("cg_selectedPlayer", va("%d", sortedTeamPlayers[team][cg_currentSelectedPlayer.integer]));
-			cgs.currentOrder = ci->teamTask;
+			trap_Cvar_Set(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayerName"), ci->name);
+			trap_Cvar_Set(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayer"), va("%d", sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer]));
+			cg.localClients[ localPlayerNum ].currentOrder = ci->teamTask;
 		}
 	} else {
-		trap_Cvar_Set("cg_selectedPlayerName", "Everyone");
+		trap_Cvar_Set(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayerName"), "Everyone");
 	}
 }
-int CG_GetSelectedPlayer( void ) {
+int CG_GetSelectedPlayer( int localPlayerNum ) {
 	int team;
 
-	team = cg.snap->pss[0].persistant[PERS_TEAM];
+	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
-	if (cg_currentSelectedPlayer.integer < 0 || cg_currentSelectedPlayer.integer >= numSortedTeamPlayers[team]) {
-		cg_currentSelectedPlayer.integer = 0;
+	if (cg_currentSelectedPlayer[ localPlayerNum ].integer < 0 || cg_currentSelectedPlayer[ localPlayerNum ].integer >= numSortedTeamPlayers[team]) {
+		cg_currentSelectedPlayer[ localPlayerNum ].integer = 0;
 	}
-	return cg_currentSelectedPlayer.integer;
+	return cg_currentSelectedPlayer[ localPlayerNum ].integer;
 }
 
-void CG_SelectNextPlayer( void ) {
+void CG_SelectNextPlayer( int localPlayerNum ) {
 	int team;
 
-	team = cg.snap->pss[0].persistant[PERS_TEAM];
+	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
-	CG_CheckOrderPending();
-	if (cg_currentSelectedPlayer.integer >= 0 && cg_currentSelectedPlayer.integer < numSortedTeamPlayers[team]) {
-		cg_currentSelectedPlayer.integer++;
+	CG_CheckOrderPending( localPlayerNum );
+	if (cg_currentSelectedPlayer[ localPlayerNum ].integer >= 0 && cg_currentSelectedPlayer[ localPlayerNum ].integer < numSortedTeamPlayers[team]) {
+		cg_currentSelectedPlayer[ localPlayerNum ].integer++;
 	} else {
-		cg_currentSelectedPlayer.integer = 0;
+		cg_currentSelectedPlayer[ localPlayerNum ].integer = 0;
 	}
-	CG_SetSelectedPlayerName();
+	CG_SetSelectedPlayerName( localPlayerNum );
 }
 
-void CG_SelectPrevPlayer( void ) {
+void CG_SelectPrevPlayer( int localPlayerNum ) {
 	int team;
 
-	team = cg.snap->pss[0].persistant[PERS_TEAM];
+	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
-	CG_CheckOrderPending();
-	if (cg_currentSelectedPlayer.integer > 0 && cg_currentSelectedPlayer.integer < numSortedTeamPlayers[team]) {
-		cg_currentSelectedPlayer.integer--;
+	CG_CheckOrderPending( localPlayerNum );
+	if (cg_currentSelectedPlayer[ localPlayerNum ].integer > 0 && cg_currentSelectedPlayer[ localPlayerNum ].integer < numSortedTeamPlayers[team]) {
+		cg_currentSelectedPlayer[ localPlayerNum ].integer--;
 	} else {
-		cg_currentSelectedPlayer.integer = numSortedTeamPlayers[team];
+		cg_currentSelectedPlayer[ localPlayerNum ].integer = numSortedTeamPlayers[team];
 	}
-	CG_SetSelectedPlayerName();
+	CG_SetSelectedPlayerName( localPlayerNum );
 }
 
 
@@ -356,7 +369,7 @@ static void CG_DrawSelectedPlayerHealth( rectDef_t *rect, float scale, vec4_t co
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
 
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer()];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
 	if (ci) {
 		if (shader) {
 			trap_R_SetColor( color );
@@ -377,7 +390,7 @@ static void CG_DrawSelectedPlayerArmor( rectDef_t *rect, float scale, vec4_t col
 	int team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer()];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
 
 	if (ci) {
 		if (ci->armor > 0) {
@@ -430,16 +443,16 @@ static void CG_DrawSelectedPlayerStatus( rectDef_t *rect ) {
 	int team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer()];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
 
 	if (ci) {
 		qhandle_t h;
-		if (cgs.orderPending) {
+		if (cg.cur_lc->orderPending) {
 			// blink the icon
-			if ( cg.time > cgs.orderTime - 2500 && (cg.time >> 9 ) & 1 ) {
+			if ( cg.time > cg.cur_lc->orderTime - 2500 && (cg.time >> 9 ) & 1 ) {
 				return;
 			}
-			h = CG_StatusHandle(cgs.currentOrder);
+			h = CG_StatusHandle(cg.cur_lc->currentOrder);
 		}	else {
 			h = CG_StatusHandle(ci->teamTask);
 		}
@@ -462,7 +475,7 @@ static void CG_DrawSelectedPlayerName( rectDef_t *rect, float scale, vec4_t colo
 	int team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer()]);
+	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )]);
 	if (ci) {
 		CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, ci->name, 0, 0, textStyle);
 	}
@@ -473,7 +486,7 @@ static void CG_DrawSelectedPlayerLocation( rectDef_t *rect, float scale, vec4_t 
 	int				team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer()];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
 	if (ci) {
 		const char *p = CG_ConfigString(CS_LOCATIONS + ci->location);
 		if (!p || !*p) {
@@ -501,7 +514,7 @@ static void CG_DrawSelectedPlayerWeapon( rectDef_t *rect ) {
 	int				team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer()];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
 	if (ci) {
 		if ( cg_weapons[ci->curWeapon].weaponIcon ) {
 			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cg_weapons[ci->curWeapon].weaponIcon );
@@ -563,7 +576,7 @@ static void CG_DrawSelectedPlayerPowerup( rectDef_t *rect, qboolean draw2D ) {
 	float x, y;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer()];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
 	if (ci) {
 		x = rect->x;
 		y = rect->y;
@@ -593,7 +606,7 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
 	vec3_t			mins, maxs, angles;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer()]);
+	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )]);
 
 	if (ci) {
 		if ( cg_draw3dIcons.integer ) {
@@ -969,11 +982,11 @@ float CG_GetValue(int ownerDraw) {
 
   switch (ownerDraw) {
   case CG_SELECTEDPLAYER_ARMOR:
-    ci = cgs.clientinfo + sortedTeamPlayers[ps->persistant[PERS_TEAM]][CG_GetSelectedPlayer()];
+    ci = cgs.clientinfo + sortedTeamPlayers[ps->persistant[PERS_TEAM]][CG_GetSelectedPlayer( cg.cur_localClientNum )];
     return ci->armor;
     break;
   case CG_SELECTEDPLAYER_HEALTH:
-    ci = cgs.clientinfo + sortedTeamPlayers[ps->persistant[PERS_TEAM]][CG_GetSelectedPlayer()];
+    ci = cgs.clientinfo + sortedTeamPlayers[ps->persistant[PERS_TEAM]][CG_GetSelectedPlayer( cg.cur_localClientNum )];
     return ci->health;
     break;
   case CG_PLAYER_ARMOR_VALUE:
@@ -1057,11 +1070,11 @@ qboolean CG_YourTeamHasFlag(void) {
 qboolean CG_OwnerDrawVisible(int flags) {
 
 	if (flags & CG_SHOW_TEAMINFO) {
-		return (cg_currentSelectedPlayer.integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]);
+		return (cg_currentSelectedPlayer[cg.cur_localClientNum].integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]);
 	}
 
 	if (flags & CG_SHOW_NOTEAMINFO) {
-		return !(cg_currentSelectedPlayer.integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]);
+		return !(cg_currentSelectedPlayer[cg.cur_localClientNum].integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]);
 	}
 
 	if (flags & CG_SHOW_OTHERTEAMHASFLAG) {
@@ -1404,12 +1417,12 @@ void CG_DrawNewTeamInfo(rectDef_t *rect, float text_x, float text_y, float scale
 #endif
 
 			trap_R_SetColor(NULL);
-			if (cgs.orderPending) {
+			if (cg.cur_lc->orderPending) {
 				// blink the icon
-				if ( cg.time > cgs.orderTime - 2500 && (cg.time >> 9 ) & 1 ) {
+				if ( cg.time > cg.cur_lc->orderTime - 2500 && (cg.time >> 9 ) & 1 ) {
 					h = 0;
 				} else {
-					h = CG_StatusHandle(cgs.currentOrder);
+					h = CG_StatusHandle(cg.cur_lc->currentOrder);
 				}
 			}	else {
 				h = CG_StatusHandle(ci->teamTask);
@@ -1706,7 +1719,7 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
 		CG_DrawTeamSpectators(&rect, scale, color, shader);
 		break;
   case CG_TEAMINFO:
-		if (cg_currentSelectedPlayer.integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]) {
+		if (cg_currentSelectedPlayer[cg.cur_localClientNum].integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]) {
 			CG_DrawNewTeamInfo(&rect, text_x, text_y, scale, color, shader);
 		}
 		break;

@@ -215,8 +215,8 @@ vmCvar_t	cg_consoleLatency;
 #ifdef MISSIONPACK
 vmCvar_t 	cg_redTeamName;
 vmCvar_t 	cg_blueTeamName;
-vmCvar_t	cg_currentSelectedPlayer;
-vmCvar_t	cg_currentSelectedPlayerName;
+vmCvar_t	cg_currentSelectedPlayer[MAX_SPLITVIEW];
+vmCvar_t	cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 vmCvar_t	cg_singlePlayer;
 vmCvar_t	cg_enableDust;
 vmCvar_t	cg_enableBreath;
@@ -331,8 +331,14 @@ static cvarTable_t cvarTable[] = {
 #ifdef MISSIONPACK
 	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO },
 	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO },
-	{ &cg_currentSelectedPlayer, "cg_currentSelectedPlayer", "0", CVAR_ARCHIVE},
-	{ &cg_currentSelectedPlayerName, "cg_currentSelectedPlayerName", "", CVAR_ARCHIVE},
+	{ &cg_currentSelectedPlayer[0], "cg_currentSelectedPlayer", "0", CVAR_ARCHIVE},
+	{ &cg_currentSelectedPlayer[1], "2cg_currentSelectedPlayer", "0", CVAR_ARCHIVE},
+	{ &cg_currentSelectedPlayer[2], "3cg_currentSelectedPlayer", "0", CVAR_ARCHIVE},
+	{ &cg_currentSelectedPlayer[3], "4cg_currentSelectedPlayer", "0", CVAR_ARCHIVE},
+	{ &cg_currentSelectedPlayerName[0], "cg_currentSelectedPlayerName", "", CVAR_ARCHIVE},
+	{ &cg_currentSelectedPlayerName[1], "2cg_currentSelectedPlayerName", "", CVAR_ARCHIVE},
+	{ &cg_currentSelectedPlayerName[2], "3cg_currentSelectedPlayerName", "", CVAR_ARCHIVE},
+	{ &cg_currentSelectedPlayerName[3], "4cg_currentSelectedPlayerName", "", CVAR_ARCHIVE},
 	{ &cg_singlePlayer, "ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM},
 	{ &cg_enableDust, "g_enableDust", "0", CVAR_SERVERINFO},
 	{ &cg_enableBreath, "g_enableBreath", "0", CVAR_SERVERINFO},

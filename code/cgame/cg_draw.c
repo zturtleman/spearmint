@@ -2888,8 +2888,8 @@ CG_Draw2D
 static void CG_Draw2D(stereoFrame_t stereoFrame)
 {
 #ifdef MISSIONPACK
-	if (cgs.orderPending && cg.time > cgs.orderTime) {
-		CG_CheckOrderPending();
+	if (cg.cur_lc->orderPending && cg.time > cg.cur_lc->orderTime) {
+		CG_CheckOrderPending( cg.cur_localClientNum );
 	}
 #endif
 	// if we are taking a levelshot for the menu, don't draw anything

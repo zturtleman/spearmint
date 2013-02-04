@@ -299,63 +299,91 @@ static void CG_VoiceTellAttacker_f( int localPlayerNum ) {
 	trap_SendClientCommand( command );
 }
 
-static void CG_NextTeamMember_f( void ) {
-  CG_SelectNextPlayer();
+static void CG_NextTeamMember_f( int localPlayerNum ) {
+  CG_SelectNextPlayer( localPlayerNum );
 }
 
-static void CG_PrevTeamMember_f( void ) {
-  CG_SelectPrevPlayer();
+static void CG_PrevTeamMember_f( int localPlayerNum ) {
+  CG_SelectPrevPlayer( localPlayerNum );
 }
 
 // ASS U ME's enumeration order as far as task specific orders, OFFENSE is zero, CAMP is last
 //
-static void CG_NextOrder_f( void ) {
-	int clientNum = cg.snap->pss[0].clientNum;
-	int team = cg.snap->pss[0].persistant[PERS_TEAM];
-	clientInfo_t *ci = cgs.clientinfo + clientNum;
+static void CG_NextOrder_f( int localPlayerNum ) {
+	cglc_t			*localClient;
+	clientInfo_t	*ci;
+	int				clientNum;
+	int				team;
+
+	localClient = &cg.localClients[ localPlayerNum ];
+
+	if ( localClient->clientNum == -1 || cg.snap->lcIndex[localPlayerNum] == -1 ) {
+		return;
+	}
+
+	clientNum = cg.snap->pss[ cg.snap->lcIndex[ localPlayerNum ] ].clientNum;
+	team = cg.snap->pss[ cg.snap->lcIndex[ localPlayerNum ] ].persistant[PERS_TEAM];
+
+	ci = cgs.clientinfo + clientNum;
 
 	if (ci) {
-		if (!ci->teamLeader && sortedTeamPlayers[team][cg_currentSelectedPlayer.integer] != clientNum) {
+		if (!ci->teamLeader && sortedTeamPlayers[team][cg_currentSelectedPlayer[localPlayerNum].integer] != clientNum) {
 			return;
 		}
 	}
-	if (cgs.currentOrder < TEAMTASK_CAMP) {
-		cgs.currentOrder++;
+	if (localClient->currentOrder < TEAMTASK_CAMP) {
+		localClient->currentOrder++;
 
-		if (cgs.currentOrder == TEAMTASK_RETRIEVE) {
+		if (localClient->currentOrder == TEAMTASK_RETRIEVE) {
 			if (!CG_OtherTeamHasFlag()) {
-				cgs.currentOrder++;
+				localClient->currentOrder++;
 			}
 		}
 
-		if (cgs.currentOrder == TEAMTASK_ESCORT) {
+		if (localClient->currentOrder == TEAMTASK_ESCORT) {
 			if (!CG_YourTeamHasFlag()) {
-				cgs.currentOrder++;
+				localClient->currentOrder++;
 			}
 		}
 
 	} else {
-		cgs.currentOrder = TEAMTASK_OFFENSE;
+		localClient->currentOrder = TEAMTASK_OFFENSE;
 	}
-	cgs.orderPending = qtrue;
-	cgs.orderTime = cg.time + 3000;
+	localClient->orderPending = qtrue;
+	localClient->orderTime = cg.time + 3000;
 }
 
 
-static void CG_ConfirmOrder_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd vtell %d %s\n", cgs.acceptLeader, VOICECHAT_YES));
+static void CG_ConfirmOrder_f( int localPlayerNum ) {
+	cglc_t			*localClient;
+
+	localClient = &cg.localClients[ localPlayerNum ];
+
+	if ( localClient->clientNum == -1 ) {
+		return;
+	}
+
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %d %s\n", Com_LocalClientCvarName(localPlayerNum, "vtell"), localClient->acceptLeader, VOICECHAT_YES));
 	trap_Cmd_ExecuteText(EXEC_NOW, "+button5; wait; -button5");
-	if (cg.time < cgs.acceptOrderTime) {
-		trap_SendClientCommand(va("teamtask %d\n", cgs.acceptTask));
-		cgs.acceptOrderTime = 0;
+	if (cg.time < localClient->acceptOrderTime) {
+		trap_SendClientCommand(va("teamtask %d\n", localClient->acceptTask));
+		localClient->acceptOrderTime = 0;
 	}
 }
 
-static void CG_DenyOrder_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd vtell %d %s\n", cgs.acceptLeader, VOICECHAT_NO));
-	trap_Cmd_ExecuteText(EXEC_NOW, "+button6; wait; -button6");
-	if (cg.time < cgs.acceptOrderTime) {
-		cgs.acceptOrderTime = 0;
+static void CG_DenyOrder_f( int localPlayerNum ) {
+	cglc_t			*localClient;
+
+	localClient = &cg.localClients[ localPlayerNum ];
+
+	if ( localClient->clientNum == -1 ) {
+		return;
+	}
+
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %d %s\n", Com_LocalClientCvarName(localPlayerNum, "vtell"), localClient->acceptLeader, VOICECHAT_NO));
+	trap_Cmd_ExecuteText(EXEC_NOW, va("%s; wait; %s", Com_LocalClientCvarName(localPlayerNum, "+button6"), Com_LocalClientCvarName(localPlayerNum, "-button6")));
+	if (cg.time < localClient->acceptOrderTime) {
+		localClient->acceptOrderTime = 0;
 	}
 }
 
@@ -538,11 +566,6 @@ static consoleCommand_t	commands[] = {
 	{ "sizedown", CG_SizeDown_f },
 	{ "tcmd", CG_TargetCommand_f },
 #ifdef MISSIONPACK
-	{ "nextTeamMember", CG_NextTeamMember_f },
-	{ "prevTeamMember", CG_PrevTeamMember_f },
-	{ "nextOrder", CG_NextOrder_f },
-	{ "confirmOrder", CG_ConfirmOrder_f },
-	{ "denyOrder", CG_DenyOrder_f },
 	{ "spWin", CG_spWin_f },
 	{ "spLose", CG_spLose_f },
 #ifdef MISSIONPACK_HUD
@@ -574,6 +597,11 @@ static playerConsoleCommand_t	playerCommands[] = {
 #ifdef MISSIONPACK
 	{ "vtell_target", CG_VoiceTellTarget_f },
 	{ "vtell_attacker", CG_VoiceTellAttacker_f },
+	{ "nextTeamMember", CG_NextTeamMember_f },
+	{ "prevTeamMember", CG_PrevTeamMember_f },
+	{ "nextOrder", CG_NextOrder_f },
+	{ "confirmOrder", CG_ConfirmOrder_f },
+	{ "denyOrder", CG_DenyOrder_f },
 	{ "taskOffense", CG_TaskOffense_f },
 	{ "taskDefense", CG_TaskDefense_f },
 	{ "taskPatrol", CG_TaskPatrol_f },
