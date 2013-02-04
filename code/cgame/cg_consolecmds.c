@@ -41,17 +41,17 @@ extern menuDef_t *menuScoreboard;
 
 
 
-void CG_TargetCommand_f( void ) {
+void CG_TargetCommand_f( int localPlayerNum ) {
 	int		targetNum;
 	char	test[4];
 
-	targetNum = CG_CrosshairPlayer(0);
+	targetNum = CG_CrosshairPlayer( localPlayerNum );
 	if (!targetNum ) {
 		return;
 	}
 
 	trap_Argv( 1, test, 4 );
-	trap_Cmd_ExecuteText(EXEC_NOW, va( "gc %i %i", targetNum, atoi( test ) ) );
+	trap_Cmd_ExecuteText(EXEC_NOW, va( "%s %i %i", Com_LocalClientCvarName( localPlayerNum, "gc" ), targetNum, atoi( test ) ) );
 }
 
 
@@ -564,7 +564,6 @@ static consoleCommand_t	commands[] = {
 	{ "viewpos", CG_Viewpos_f },
 	{ "sizeup", CG_SizeUp_f },
 	{ "sizedown", CG_SizeDown_f },
-	{ "tcmd", CG_TargetCommand_f },
 #ifdef MISSIONPACK
 	{ "spWin", CG_spWin_f },
 	{ "spLose", CG_spLose_f },
@@ -592,6 +591,7 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "-scores", CG_ScoresUp_f },
 	{ "+zoom", CG_ZoomDown_f },
 	{ "-zoom", CG_ZoomUp_f },
+	{ "tcmd", CG_TargetCommand_f },
 	{ "tell_target", CG_TellTarget_f },
 	{ "tell_attacker", CG_TellAttacker_f },
 #ifdef MISSIONPACK
@@ -619,7 +619,7 @@ static playerConsoleCommand_t	playerCommands[] = {
 #endif
 	{ "weapnext", CG_NextWeapon_f },
 	{ "weapprev", CG_PrevWeapon_f },
-	{ "weapon", CG_Weapon_f },
+	{ "weapon", CG_Weapon_f }
 };
 
 /*
