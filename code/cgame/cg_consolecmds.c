@@ -87,10 +87,11 @@ CG_Viewpos_f
 Debugging command to print the current position
 =============
 */
-static void CG_Viewpos_f (void) {
-	CG_Printf ("(%i %i %i) : %i\n", (int)cg.refdef.vieworg[0],
-		(int)cg.refdef.vieworg[1], (int)cg.refdef.vieworg[2], 
-		(int)cg.refdefViewAngles[YAW]);
+static void CG_Viewpos_f( int localPlayerNum ) {
+	CG_Printf ("(%i %i %i) : %i\n", (int)cg.localClients[localPlayerNum].lastViewPos[0],
+		(int)cg.localClients[localPlayerNum].lastViewPos[1],
+		(int)cg.localClients[localPlayerNum].lastViewPos[2],
+		(int)cg.localClients[localPlayerNum].lastViewAngles[YAW]);
 }
 
 /*
@@ -563,7 +564,6 @@ static consoleCommand_t	commands[] = {
 	{ "prevframe", CG_TestModelPrevFrame_f },
 	{ "nextskin", CG_TestModelNextSkin_f },
 	{ "prevskin", CG_TestModelPrevSkin_f },
-	{ "viewpos", CG_Viewpos_f },
 	{ "sizeup", CG_SizeUp_f },
 	{ "sizedown", CG_SizeDown_f },
 #ifdef MISSIONPACK
@@ -619,6 +619,7 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "tauntDeathInsult", CG_TauntDeathInsult_f },
 	{ "tauntGauntlet", CG_TauntGauntlet_f },
 #endif
+	{ "viewpos", CG_Viewpos_f },
 	{ "weapnext", CG_NextWeapon_f },
 	{ "weapprev", CG_PrevWeapon_f },
 	{ "weapon", CG_Weapon_f }

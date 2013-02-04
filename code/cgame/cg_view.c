@@ -791,6 +791,14 @@ static int CG_CalcViewValues( void ) {
 		cg.refdef.rdflags |= RDF_NOWORLDMODEL | RDF_HYPERSPACE;
 	}
 
+	cg.cur_lc->lastViewPos[0] = cg.refdef.vieworg[0];
+	cg.cur_lc->lastViewPos[1] = cg.refdef.vieworg[1];
+	cg.cur_lc->lastViewPos[2] = cg.refdef.vieworg[2];
+
+	cg.cur_lc->lastViewAngles[YAW] = cg.refdefViewAngles[YAW];
+	cg.cur_lc->lastViewAngles[PITCH] = cg.refdefViewAngles[PITCH];
+	cg.cur_lc->lastViewAngles[ROLL] = cg.refdefViewAngles[ROLL];
+
 	// field of view
 	return CG_CalcFov();
 }

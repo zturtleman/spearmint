@@ -577,6 +577,9 @@ typedef struct {
 
 	//qboolean cameraMode;		// if rendering from a loaded camera
 
+	vec3_t		lastViewPos;
+	vec3_t		lastViewAngles;
+
 	// scoreboard
 	qboolean	showScores;
 	qboolean	scoreBoardShowing;
