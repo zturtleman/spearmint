@@ -359,70 +359,70 @@ static void CG_DenyOrder_f (void ) {
 	}
 }
 
-static void CG_TaskOffense_f (void ) {
+static void CG_TaskOffense_f( int localPlayerNum ) {
 	if (cgs.gametype == GT_CTF || cgs.gametype == GT_1FCTF) {
-		trap_Cmd_ExecuteText(EXEC_NOW, va("cmd vsay_team %s\n", VOICECHAT_ONGETFLAG));
+		trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), VOICECHAT_ONGETFLAG));
 	} else {
-		trap_Cmd_ExecuteText(EXEC_NOW, va("cmd vsay_team %s\n", VOICECHAT_ONOFFENSE));
+		trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), VOICECHAT_ONOFFENSE));
 	}
-	trap_SendClientCommand(va("teamtask %d\n", TEAMTASK_OFFENSE));
+	trap_SendClientCommand(va("%s %d\n", Com_LocalClientCvarName(localPlayerNum, "teamtask"), TEAMTASK_OFFENSE));
 }
 
-static void CG_TaskDefense_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd vsay_team %s\n", VOICECHAT_ONDEFENSE));
+static void CG_TaskDefense_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), VOICECHAT_ONDEFENSE));
 	trap_SendClientCommand(va("teamtask %d\n", TEAMTASK_DEFENSE));
 }
 
-static void CG_TaskPatrol_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd vsay_team %s\n", VOICECHAT_ONPATROL));
-	trap_SendClientCommand(va("teamtask %d\n", TEAMTASK_PATROL));
+static void CG_TaskPatrol_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), VOICECHAT_ONPATROL));
+	trap_SendClientCommand(va("%s %d\n", Com_LocalClientCvarName(localPlayerNum, "teamtask"), TEAMTASK_PATROL));
 }
 
-static void CG_TaskCamp_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd vsay_team %s\n", VOICECHAT_ONCAMPING));
-	trap_SendClientCommand(va("teamtask %d\n", TEAMTASK_CAMP));
+static void CG_TaskCamp_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), VOICECHAT_ONCAMPING));
+	trap_SendClientCommand(va("%s %d\n", Com_LocalClientCvarName(localPlayerNum, "teamtask"), TEAMTASK_CAMP));
 }
 
-static void CG_TaskFollow_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd vsay_team %s\n", VOICECHAT_ONFOLLOW));
-	trap_SendClientCommand(va("teamtask %d\n", TEAMTASK_FOLLOW));
+static void CG_TaskFollow_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), VOICECHAT_ONFOLLOW));
+	trap_SendClientCommand(va("%s %d\n", Com_LocalClientCvarName(localPlayerNum, "teamtask"), TEAMTASK_FOLLOW));
 }
 
-static void CG_TaskRetrieve_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd vsay_team %s\n", VOICECHAT_ONRETURNFLAG));
-	trap_SendClientCommand(va("teamtask %d\n", TEAMTASK_RETRIEVE));
+static void CG_TaskRetrieve_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), VOICECHAT_ONRETURNFLAG));
+	trap_SendClientCommand(va("%s %d\n", Com_LocalClientCvarName(localPlayerNum, "teamtask"), TEAMTASK_RETRIEVE));
 }
 
-static void CG_TaskEscort_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd vsay_team %s\n", VOICECHAT_ONFOLLOWCARRIER));
-	trap_SendClientCommand(va("teamtask %d\n", TEAMTASK_ESCORT));
+static void CG_TaskEscort_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), VOICECHAT_ONFOLLOWCARRIER));
+	trap_SendClientCommand(va("%s %d\n", Com_LocalClientCvarName(localPlayerNum, "teamtask"), TEAMTASK_ESCORT));
 }
 
-static void CG_TaskOwnFlag_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd vsay_team %s\n", VOICECHAT_IHAVEFLAG));
+static void CG_TaskOwnFlag_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), VOICECHAT_IHAVEFLAG));
 }
 
-static void CG_TauntKillInsult_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, "cmd vsay kill_insult\n");
+static void CG_TauntKillInsult_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay"), VOICECHAT_KILLINSULT));
 }
 
-static void CG_TauntPraise_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, "cmd vsay praise\n");
+static void CG_TauntPraise_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay"), VOICECHAT_PRAISE));
 }
 
-static void CG_TauntTaunt_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, "cmd vtaunt\n");
+static void CG_TauntTaunt_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s\n", Com_LocalClientCvarName(localPlayerNum, "vtaunt")));
 }
 
-static void CG_TauntDeathInsult_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, "cmd vsay death_insult\n");
+static void CG_TauntDeathInsult_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay"), VOICECHAT_DEATHINSULT));
 }
 
-static void CG_TauntGauntlet_f (void ) {
-	trap_Cmd_ExecuteText(EXEC_NOW, "cmd vsay kill_guantlet\n");
+static void CG_TauntGauntlet_f( int localPlayerNum ) {
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay"), VOICECHAT_KILLGAUNTLET));
 }
 
-static void CG_TaskSuicide_f (void ) {
+static void CG_TaskSuicide_f( int localPlayerNum ) {
 	int		clientNum;
 	char	command[128];
 
@@ -431,7 +431,7 @@ static void CG_TaskSuicide_f (void ) {
 		return;
 	}
 
-	Com_sprintf( command, 128, "tell %i suicide", clientNum );
+	Com_sprintf( command, 128, "%s %i suicide", Com_LocalClientCvarName( localPlayerNum, "tell" ), clientNum );
 	trap_SendClientCommand( command );
 }
 
@@ -547,20 +547,6 @@ static consoleCommand_t	commands[] = {
 	{ "nextOrder", CG_NextOrder_f },
 	{ "confirmOrder", CG_ConfirmOrder_f },
 	{ "denyOrder", CG_DenyOrder_f },
-	{ "taskOffense", CG_TaskOffense_f },
-	{ "taskDefense", CG_TaskDefense_f },
-	{ "taskPatrol", CG_TaskPatrol_f },
-	{ "taskCamp", CG_TaskCamp_f },
-	{ "taskFollow", CG_TaskFollow_f },
-	{ "taskRetrieve", CG_TaskRetrieve_f },
-	{ "taskEscort", CG_TaskEscort_f },
-	{ "taskSuicide", CG_TaskSuicide_f },
-	{ "taskOwnFlag", CG_TaskOwnFlag_f },
-	{ "tauntKillInsult", CG_TauntKillInsult_f },
-	{ "tauntPraise", CG_TauntPraise_f },
-	{ "tauntTaunt", CG_TauntTaunt_f },
-	{ "tauntDeathInsult", CG_TauntDeathInsult_f },
-	{ "tauntGauntlet", CG_TauntGauntlet_f },
 	{ "spWin", CG_spWin_f },
 	{ "spLose", CG_spLose_f },
 #ifdef MISSIONPACK_HUD
@@ -587,6 +573,22 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "-scores", CG_ScoresUp_f },
 	{ "+zoom", CG_ZoomDown_f },
 	{ "-zoom", CG_ZoomUp_f },
+#ifdef MISSIONPACK
+	{ "taskOffense", CG_TaskOffense_f },
+	{ "taskDefense", CG_TaskDefense_f },
+	{ "taskPatrol", CG_TaskPatrol_f },
+	{ "taskCamp", CG_TaskCamp_f },
+	{ "taskFollow", CG_TaskFollow_f },
+	{ "taskRetrieve", CG_TaskRetrieve_f },
+	{ "taskEscort", CG_TaskEscort_f },
+	{ "taskSuicide", CG_TaskSuicide_f },
+	{ "taskOwnFlag", CG_TaskOwnFlag_f },
+	{ "tauntKillInsult", CG_TauntKillInsult_f },
+	{ "tauntPraise", CG_TauntPraise_f },
+	{ "tauntTaunt", CG_TauntTaunt_f },
+	{ "tauntDeathInsult", CG_TauntDeathInsult_f },
+	{ "tauntGauntlet", CG_TauntGauntlet_f },
+#endif
 	{ "weapnext", CG_NextWeapon_f },
 	{ "weapprev", CG_PrevWeapon_f },
 	{ "weapon", CG_Weapon_f },
