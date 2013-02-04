@@ -238,64 +238,64 @@ static void CG_spLose_f( void) {
 
 #endif
 
-static void CG_TellTarget_f( void ) {
+static void CG_TellTarget_f( int localPlayerNum ) {
 	int		clientNum;
 	char	command[128];
 	char	message[128];
 
-	clientNum = CG_CrosshairPlayer(0);
+	clientNum = CG_CrosshairPlayer( localPlayerNum );
 	if ( clientNum == -1 ) {
 		return;
 	}
 
 	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "tell %i %s", clientNum, message );
+	Com_sprintf( command, 128, "%s %i %s", Com_LocalClientCvarName( localPlayerNum, "tell" ), clientNum, message );
 	trap_SendClientCommand( command );
 }
 
-static void CG_TellAttacker_f( void ) {
+static void CG_TellAttacker_f( int localPlayerNum ) {
 	int		clientNum;
 	char	command[128];
 	char	message[128];
 
-	clientNum = CG_LastAttacker(0);
+	clientNum = CG_LastAttacker( localPlayerNum );
 	if ( clientNum == -1 ) {
 		return;
 	}
 
 	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "tell %i %s", clientNum, message );
+	Com_sprintf( command, 128, "%s %i %s", Com_LocalClientCvarName( localPlayerNum, "tell" ), clientNum, message );
 	trap_SendClientCommand( command );
 }
 
 #ifdef MISSIONPACK
-static void CG_VoiceTellTarget_f( void ) {
+static void CG_VoiceTellTarget_f( int localPlayerNum ) {
 	int		clientNum;
 	char	command[128];
 	char	message[128];
 
-	clientNum = CG_CrosshairPlayer(0);
+	clientNum = CG_CrosshairPlayer( localPlayerNum );
 	if ( clientNum == -1 ) {
 		return;
 	}
 
 	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "vtell %i %s", clientNum, message );
+	Com_sprintf( command, 128, "%s %i %s", Com_LocalClientCvarName( localPlayerNum, "vtell" ), clientNum, message );
 	trap_SendClientCommand( command );
 }
 
-static void CG_VoiceTellAttacker_f( void ) {
+static void CG_VoiceTellAttacker_f( int localPlayerNum ) {
 	int		clientNum;
 	char	command[128];
 	char	message[128];
 
-	clientNum = CG_LastAttacker(0);
+	clientNum = CG_LastAttacker( localPlayerNum );
 	if ( clientNum == -1 ) {
 		return;
 	}
 
 	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "vtell %i %s", clientNum, message );
+	Com_sprintf( command, 128, "%s %i %s", Com_LocalClientCvarName( localPlayerNum, "vtell" ), clientNum, message );
 	trap_SendClientCommand( command );
 }
 
@@ -537,11 +537,7 @@ static consoleCommand_t	commands[] = {
 	{ "sizeup", CG_SizeUp_f },
 	{ "sizedown", CG_SizeDown_f },
 	{ "tcmd", CG_TargetCommand_f },
-	{ "tell_target", CG_TellTarget_f },
-	{ "tell_attacker", CG_TellAttacker_f },
 #ifdef MISSIONPACK
-	{ "vtell_target", CG_VoiceTellTarget_f },
-	{ "vtell_attacker", CG_VoiceTellAttacker_f },
 	{ "nextTeamMember", CG_NextTeamMember_f },
 	{ "prevTeamMember", CG_PrevTeamMember_f },
 	{ "nextOrder", CG_NextOrder_f },
@@ -573,7 +569,11 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "-scores", CG_ScoresUp_f },
 	{ "+zoom", CG_ZoomDown_f },
 	{ "-zoom", CG_ZoomUp_f },
+	{ "tell_target", CG_TellTarget_f },
+	{ "tell_attacker", CG_TellAttacker_f },
 #ifdef MISSIONPACK
+	{ "vtell_target", CG_VoiceTellTarget_f },
+	{ "vtell_attacker", CG_VoiceTellAttacker_f },
 	{ "taskOffense", CG_TaskOffense_f },
 	{ "taskDefense", CG_TaskDefense_f },
 	{ "taskPatrol", CG_TaskPatrol_f },
