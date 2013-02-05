@@ -35,7 +35,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 void RB_ToneMap(FBO_t *hdrFbo, int autoExposure);
 void RB_BokehBlur(float blur);
-void RB_GodRays(void);
+void RB_SunRays(void);
 void RB_GaussianBlur(float blur);
 
 #endif
