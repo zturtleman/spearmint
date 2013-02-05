@@ -183,39 +183,22 @@ or configs will never get loaded from disk!
 // every time a new pk3 file is built, this checksum must be updated.
 // the easiest way to get it is to just run the game and see what it spits out
 
-#define PAK_OPTIONAL 1	// Optional pak only used by client which isn't needed to play the game.
+#define MAX_PAKSUMS 64
 
-typedef struct
-{
-	char *gamename;
-	char *pakname;
+#define PAK_NODOWNLOAD 1
+
+typedef struct {
+	char gamename[MAX_QPATH];
+	char pakname[MAX_QPATH];
 	unsigned checksum;
 	int flags;
 } purePak_t;
 
-// Only requires paks for gamenames which are used (and aren't flagged as optional).
-const purePak_t com_purePaks[] =
-{
-	// pak3 and pak7 only contain qvms, which are over-ridden by qvms in pak8
-	{BASEQ3, "pak0", 4204185745u, 0},
-	{BASEQ3, "pak1", 4193093146u, 0},
-	{BASEQ3, "pak2", 2353701282u, 0},
-	{BASEQ3, "pak3", 3321918099u, PAK_OPTIONAL},
-	{BASEQ3, "pak4", 2809125413u, 0},
-	{BASEQ3, "pak5", 1185311901u, 0},
-	{BASEQ3, "pak6", 750524939u, 0},
-	{BASEQ3, "pak7", 2842227859u, PAK_OPTIONAL},
-	{BASEQ3, "pak8", 3662040954u, 0},
+purePak_t com_purePaks[MAX_PAKSUMS];
 
-	{"demoq3", "pak0", 1042450890u, 0},
-
-	{BASETA, "pak0", 946490770u, 0},
-	{BASETA, "pak1", 1414087181u, 0},
-	{BASETA, "pak2", 409244605u, 0},
-	{BASETA, "pak3", 648653547u, 0},
-
-	{NULL, NULL, 0, 0}
-};
+qboolean	fs_foundPaksums;
+qboolean	fs_pakMismatchWarningDialog;
+int			fs_numPaksums;
 
 // if this is defined, the executable positively won't work with any paks other
 // than the demo pak, even if productid is present.  This is only used for our
@@ -344,26 +327,6 @@ qboolean FS_Initialized( void ) {
 
 /*
 =================
-FS_PakIsOptional
-=================
-*/
-qboolean FS_PakIsOptional(pack_t *pack) {
-	int i;
-
-	for ( i = 0 ; com_purePaks[i].pakname != NULL ; i++ ) {
-		if ((com_purePaks[i].flags & PAK_OPTIONAL)
-			&& !Q_stricmp(com_purePaks[i].gamename, pack->pakGamename)
-			&& !Q_stricmp(com_purePaks[i].pakname, pack->pakBasename)
-			&& pack->checksum == com_purePaks[i].checksum) {
-			return qtrue;
-		}
-	}
-
-	return qfalse;
-}
-
-/*
-=================
 FS_PakIsPure
 =================
 */
@@ -378,10 +341,6 @@ qboolean FS_PakIsPure( pack_t *pack ) {
 			if ( pack->checksum == fs_serverPaks[i] ) {
 				return qtrue;		// on the aproved list
 			}
-		}
-
-		if (FS_PakIsOptional(pack)) {
-			return qtrue;
 		}
 		return qfalse;	// not on the pure server pak list
 	}
@@ -3174,18 +3133,18 @@ qboolean FS_idPak(char *pak, char *base, int numPaks)
 
 /*
 ================
-FS_DefaultPak
+FS_PakAllowDownload
 ================
 */
-qboolean FS_DefaultPak( char *pak ) {
+qboolean FS_PakAllowDownload( char *pak ) {
 	int i;
 
-	for (i = 0; com_purePaks[i].pakname != NULL; i++) {
-		if ( !FS_FilenameCompare(pak, va("%s/%s", com_purePaks[i].gamename, com_purePaks[i].pakname)) ) {
-			return qtrue;
+	for (i = 0; i < fs_numPaksums; i++) {
+		if ( ( com_purePaks[i].flags & PAK_NODOWNLOAD ) && !FS_FilenameCompare(pak, va("%s/%s", com_purePaks[i].gamename, com_purePaks[i].pakname)) ) {
+			return qfalse;
 		}
 	}
-	return qfalse;
+	return qtrue;
 }
 
 /*
@@ -3247,10 +3206,10 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 		// Ok, see if we have this pak file
 		havepak = qfalse;
 
-		// never autodownload any of the id or default paks
+		// never autodownload any of the id or paks which don't allow it
 		if ( FS_idPak(fs_serverReferencedPakNames[i], BASEQ3, NUM_ID_PAKS)
 			|| FS_idPak(fs_serverReferencedPakNames[i], BASETA, NUM_TA_PAKS)
-			|| FS_DefaultPak(fs_serverReferencedPakNames[i]) )
+			|| !FS_PakAllowDownload(fs_serverReferencedPakNames[i]) )
 		{
 			continue;
 		}
@@ -3536,6 +3495,126 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 
 /*
 ===================
+FS_AddModToList
+===================
+*/
+void FS_AddModToList( char *list, int listLen, const char *gamedir ) {
+	char gameDescription[MAX_QPATH];
+
+	FS_GetModDescription( gamedir, gameDescription, sizeof ( gameDescription ) );
+
+	if ( !strstr( list, gameDescription ) ) {
+		if ( strlen( list ) ) {
+			Q_strcat( list, listLen, ", " );
+		}
+
+		Q_strcat( list, listLen, gameDescription );
+	}
+}
+
+/*
+===================
+FS_ClearPakChecksums
+===================
+*/
+void FS_ClearPakChecksums( void ) {
+	fs_foundPaksums = qfalse;
+	fs_pakMismatchWarningDialog = qtrue;
+	fs_numPaksums = 0;
+}
+
+/*
+===================
+FS_LoadPakChecksums
+
+Load checksums for pk3 files in gamedir
+===================
+*/
+static qboolean FS_LoadPakChecksums( const char *gamedir ) {
+	char			*buffer;
+	fileHandle_t	paksumsHandle;
+	char			path[MAX_OSPATH];
+	int				nPaksumsLen;
+	char			*text_p, *token;
+
+	if ( !gamedir || !*gamedir ) {
+		return qfalse;
+	}
+
+	Com_sprintf( path, sizeof ( path ), "%s/PAKSUMS", gamedir );
+	nPaksumsLen = FS_SV_FOpenFileRead( path, &paksumsHandle );
+
+	if ( nPaksumsLen <= 0 || !paksumsHandle) {
+		return qfalse;
+	}
+
+	fs_foundPaksums = qtrue;
+
+	buffer = Hunk_AllocateTempMemory(nPaksumsLen+1);
+
+	FS_Read( buffer, nPaksumsLen, paksumsHandle );
+
+	// guarantee that it will have a trailing 0 for string operations
+	buffer[nPaksumsLen] = 0;
+
+	FS_FCloseFile( paksumsHandle );
+	paksumsHandle = 0;
+
+	text_p = buffer;
+
+	while ( 1 ) {
+		token = COM_Parse( &text_p );
+		if ( !*token )
+			break;
+
+		if ( Q_stricmp( token, "config" ) == 0 ) {
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token )
+				continue;
+			if ( Q_stricmp( token, "noPakMismatchWarningDialog" ) == 0 ) {
+				fs_pakMismatchWarningDialog = qfalse;
+			} else {
+				Com_Printf( "Unknown config option '%s' in %s\n", token, path );
+			}
+		} else {
+			if ( fs_numPaksums >= MAX_PAKSUMS ) {
+				Com_Error( ERR_DROP, "Too many PAKSUMS (max is %d)", MAX_PAKSUMS );
+			}
+
+			COM_StripExtension( token, com_purePaks[fs_numPaksums].pakname, sizeof ( com_purePaks[fs_numPaksums].pakname ) );
+
+			// read checksum
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token ) {
+				Com_Printf( "'%s' missing checksum in %s\n", com_purePaks[fs_numPaksums].pakname, path );
+				continue;
+			}
+			com_purePaks[fs_numPaksums].checksum = (unsigned)atoi(token);
+
+			// read optional keywords
+			com_purePaks[fs_numPaksums].flags = 0;
+			while ( 1 ) {
+				token = COM_ParseExt( &text_p, qfalse );
+				if ( !*token )
+					break;
+				if ( Q_stricmp( token, "nodownload" ) == 0 ) {
+					com_purePaks[fs_numPaksums].flags |= PAK_NODOWNLOAD;
+				} else {
+					Com_Printf( "Unknown pak keyword '%s' in %s\n", token, path );
+				}
+			}
+
+			Q_strncpyz( com_purePaks[fs_numPaksums].gamename, gamedir, sizeof ( com_purePaks[fs_numPaksums].gamename ) );
+			fs_numPaksums++;
+		}
+	}
+
+	Hunk_FreeTempMemory( buffer );
+	return qtrue;
+}
+
+/*
+===================
 FS_CheckPaks
 
 Checks that default pk3s are present and their checksums are correct
@@ -3544,89 +3623,111 @@ Checks that default pk3s are present and their checksums are correct
 static void FS_CheckPaks( void )
 {
 	searchpath_t	*path;
-	unsigned foundPak = 0;
-	unsigned invalidPak = 0;
-#ifndef DEDICATED
-	qboolean hasPakFile = qfalse;
-#endif
-	int pak, total = 0;
+	qboolean		basePaksums;
+	qboolean		hasBaseGamePakFile = qfalse;
+	qboolean		missingPak = qfalse;
+	qboolean		invalidPak = qfalse;
+	char			badGames[512];
+	int				pak;
 
 	// If we're not pure don't check
 	if (com_fs_pure && !com_fs_pure->integer)
 		return;
 
-	// Add up total value of foundPak
-	for (pak = 0; com_purePaks[pak].pakname != NULL; pak++) {
-		if (com_purePaks[pak].flags & PAK_OPTIONAL) {
-			continue;
-		}
+	FS_ClearPakChecksums();
+	basePaksums = FS_LoadPakChecksums( com_basegame->string );
+	FS_LoadPakChecksums( fs_basegame->string );
+	FS_LoadPakChecksums( fs_gamedirvar->string );
 
-		// Only require paks that will be used
-		if (!!Q_stricmpn( com_basegame->string, com_purePaks[pak].gamename, MAX_OSPATH )
-			&& !(fs_basegame->string[0] && !Q_stricmpn( fs_basegame->string, com_purePaks[pak].gamename, MAX_OSPATH ))
-			&& !(fs_gamedirvar->string[0] && !Q_stricmpn( fs_gamedirvar->string, com_purePaks[pak].gamename, MAX_OSPATH )))
-		{
-			continue;
-		}
-
-		total += 1<<pak;
-	}
-
-	for( path = fs_searchpaths; path; path = path->next )
-	{
-		const char *pakBasename = path->pack->pakBasename;
-
-		if (!path->pack)
-			continue;
-
-#ifndef DEDICATED
-		hasPakFile = qtrue;
-#endif
-
-		for (pak = 0; com_purePaks[pak].pakname != NULL; pak++)
-		{
-			if (!Q_stricmpn( path->pack->pakGamename, com_purePaks[pak].gamename, MAX_OSPATH )
-				&& !Q_stricmpn( pakBasename, com_purePaks[pak].pakname, MAX_OSPATH ))
-			{
-				if( path->pack->checksum != com_purePaks[pak].checksum )
-				{
-					Com_Printf("\n\n"
-							"**********************************************************************\n"
-							"WARNING: %s/%s.pk3 is present but its checksum (%u) is not correct.\n"
-							"**********************************************************************\n\n\n",
-							com_purePaks[pak].gamename, com_purePaks[pak].pakname, path->pack->checksum );
-
-					invalidPak |= 1<<pak;
-				}
-				else
-				{
-					// Found pk3 and its checksum matches.
-					foundPak |= 1<<pak;
-				}
+	if ( !basePaksums ) {
+		for( path = fs_searchpaths; path; path = path->next ) {
+			if ( path->pack && Q_stricmp( path->pack->pakGamename, com_basegame->string ) == 0 ) {
+				hasBaseGamePakFile = qtrue;
+				break;
 			}
 		}
+
+		if ( !hasBaseGamePakFile ) {
+			FS_AddModToList( badGames, sizeof ( badGames ), com_basegame->string );
+		}
 	}
 
-	if (((foundPak & total) != total) || invalidPak)
+	for (pak = 0; pak < fs_numPaksums; pak++) {
+		for( path = fs_searchpaths; path; path = path->next ) {
+			if ( path->pack && Q_stricmp( path->pack->pakGamename, com_purePaks[pak].gamename ) == 0
+				&& Q_stricmp( path->pack->pakBasename, com_purePaks[pak].pakname ) == 0 ) {
+				break;
+			}
+		}
+
+		if ( !path ) {
+			Com_Printf("\n\n"
+					"**********************************************************************\n"
+					"WARNING: %s/%s.pk3 is missing.\n"
+					"**********************************************************************\n\n\n",
+					com_purePaks[pak].gamename, com_purePaks[pak].pakname );
+
+			missingPak = qtrue;
+		} else if( path->pack->checksum != com_purePaks[pak].checksum ) {
+			Com_Printf("\n\n"
+					"**********************************************************************\n"
+					"WARNING: %s/%s.pk3 is present but its checksum (%u) is not correct.\n"
+					"**********************************************************************\n\n\n",
+					com_purePaks[pak].gamename, com_purePaks[pak].pakname, path->pack->checksum );
+
+			invalidPak = qtrue;
+		} else {
+			continue;
+		}
+
+		FS_AddModToList( badGames, sizeof ( badGames ), com_purePaks[pak].gamename );
+	}
+
+	if ( !basePaksums || !fs_numPaksums || missingPak || invalidPak )
 	{
-		const char *line1 = NULL;
-		const char *line2 = "You need to reinstall " PRODUCT_NAME " in order to play on pure servers.";
+#ifndef DEDICATED
+		dialogType_t type = DT_WARNING;
+#endif
+		char line1[256];
+		char line2[256];
 
 		// server can't ever be pure (sv_pure), as we're missing the pure files.
 		Cvar_Set("fs_pure", "0");
 
-		if (invalidPak)
-			line1 = "Default Pk3 file(s) are missing, corrupt, or modified.";
-		else
-			line1 = "Missing default Pk3 file(s).";
+		if ( !strlen ( badGames ) ) {
+			FS_GetModDescription( com_basegame->string, badGames, sizeof ( badGames ) );
+		}
+
+		Com_sprintf( line2, sizeof (line2), "You need to reinstall %s in order to play on pure servers.", badGames );
+
+		if ( !basePaksums ) {
+			if ( hasBaseGamePakFile ) {
+				Q_strncpyz( line1, "Found a Pk3 file, but missing file containing Pk3 checksums.", sizeof ( line1 ) );
+				Com_sprintf( line2, sizeof (line2), "You need a %s/PAKSUMS file to enable pure mode.", com_basegame->string );
+			} else {
+#ifndef DEDICATED
+				type = DT_ERROR;
+#endif
+				Q_strncpyz( line1, "Unable to locate data files.", sizeof ( line1 ) );
+			}
+		} else if ( fs_foundPaksums && !fs_numPaksums ) {
+			// found paksums, but no checksums? probably a game under development.
+			return;
+		} else if ( missingPak && invalidPak ) {
+			Q_strncpyz( line1, "Default Pk3 file(s) are missing, corrupt, or modified.", sizeof ( line1 ) );
+		} else if ( invalidPak ) {
+			Q_strncpyz( line1, "Default Pk3 file(s) are corrupt or modified.", sizeof ( line1 ) );
+		} else {
+			Q_strncpyz( line1, "Missing default Pk3 file(s).", sizeof ( line1 ) );
+		}
 
 		Com_Printf(S_COLOR_YELLOW "WARNING: %s\n%s\n", line1, line2);
 
+		if ( fs_pakMismatchWarningDialog ) {
 #ifndef DEDICATED
-		// Don't warn developers; development takes place without Pk3 files, the files are unzipped.
-		if (hasPakFile || !FS_BaseFileExists("default.cfg"))
-			Sys_Dialog( DT_WARNING, va("%s %s", line1, line2), "Unpure" );
+			Sys_Dialog( type, va("%s %s", line1, line2), "Unpure" );
 #endif
+		}
 	}
 }
 
