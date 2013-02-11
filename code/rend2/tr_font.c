@@ -500,7 +500,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 				WriteTGA(imageName, imageBuff, imageSize, imageSize);
 			}
 
-			image = R_CreateImage(imageName, imageBuff, imageSize, imageSize, qfalse, qfalse, GL_CLAMP_TO_EDGE);
+			image = R_CreateImage(imageName, imageBuff, imageSize, imageSize,  IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0 );
 			h = RE_RegisterShaderFromImage(imageName, LIGHTMAP_2D, image, qfalse);
 			Com_Memset(out, 0, imageSize*imageSize*4);
 			xOut = 0;
