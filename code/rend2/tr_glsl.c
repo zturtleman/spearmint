@@ -401,7 +401,7 @@ static int GLSL_InitGPUShader2(shaderProgram_t * program, const char *name, int 
 
 	if(strlen(name) >= MAX_QPATH)
 	{
-		ri.Error(ERR_DROP, "GLSL_InitGPUShader2: \"%s\" is too long\n", name);
+		ri.Error(ERR_DROP, "GLSL_InitGPUShader2: \"%s\" is too long", name);
 	}
 
 	Q_strncpyz(program->name, name, sizeof(program->name));
@@ -875,7 +875,7 @@ void GLSL_InitGPUShaders(void)
 
 		if (!GLSL_InitGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, extradefines, qtrue, fallbackShader_generic_vp, fallbackShader_generic_fp, GENERIC_UNIFORM_COUNT))
 		{
-			ri.Error(ERR_FATAL, "Could not load generic shader!\n");
+			ri.Error(ERR_FATAL, "Could not load generic shader!");
 		}
 
 		// There's actually no need to filter these out, since they'll
@@ -949,7 +949,7 @@ void GLSL_InitGPUShaders(void)
 
 	if (!GLSL_InitGPUShader(&tr.textureColorShader, "texturecolor", attribs, qtrue, NULL, qfalse, fallbackShader_texturecolor_vp, fallbackShader_texturecolor_fp, TEXTURECOLOR_UNIFORM_COUNT))
 	{
-		ri.Error(ERR_FATAL, "Could not load texturecolor shader!\n");
+		ri.Error(ERR_FATAL, "Could not load texturecolor shader!");
 	}
 	
 	GLSL_AddUniform(&tr.textureColorShader, TEXTURECOLOR_UNIFORM_MODELVIEWPROJECTIONMATRIX, "u_ModelViewProjectionMatrix", GLSL_MAT16);
@@ -979,7 +979,7 @@ void GLSL_InitGPUShaders(void)
 
 		if (!GLSL_InitGPUShader(&tr.fogShader[i], "fogpass", attribs, qtrue, extradefines, qtrue, fallbackShader_fogpass_vp, fallbackShader_fogpass_fp, FOGPASS_UNIFORM_COUNT))
 		{
-			ri.Error(ERR_FATAL, "Could not load fogpass shader!\n");
+			ri.Error(ERR_FATAL, "Could not load fogpass shader!");
 		}
 
 		GLSL_AddUniform(&tr.fogShader[i], FOGPASS_UNIFORM_FOGDISTANCE,               "u_FogDistance",               GLSL_VEC4);
@@ -1011,7 +1011,7 @@ void GLSL_InitGPUShaders(void)
 
 		if (!GLSL_InitGPUShader(&tr.dlightShader[i], "dlight", attribs, qtrue, extradefines, qtrue, fallbackShader_dlight_vp, fallbackShader_dlight_fp, DLIGHT_UNIFORM_COUNT))
 		{
-			ri.Error(ERR_FATAL, "Could not load dlight shader!\n");
+			ri.Error(ERR_FATAL, "Could not load dlight shader!");
 		}
 
 		GLSL_AddUniform(&tr.dlightShader[i], DLIGHT_UNIFORM_DLIGHTINFO,                "u_DlightInfo",                GLSL_VEC4);
@@ -1174,7 +1174,7 @@ void GLSL_InitGPUShaders(void)
 
 		if (!GLSL_InitGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, extradefines, qtrue, fallbackShader_lightall_vp, fallbackShader_lightall_fp, GENERIC_UNIFORM_COUNT))
 		{
-			ri.Error(ERR_FATAL, "Could not load lightall shader!\n");
+			ri.Error(ERR_FATAL, "Could not load lightall shader!");
 		}
 
 		GLSL_AddUniform(&tr.lightallShader[i], GENERIC_UNIFORM_MODELVIEWPROJECTIONMATRIX, "u_ModelViewProjectionMatrix", GLSL_MAT16);
@@ -1227,7 +1227,7 @@ void GLSL_InitGPUShaders(void)
 
 	if (!GLSL_InitGPUShader(&tr.shadowmapShader, "shadowfill", attribs, qtrue, extradefines, qtrue, fallbackShader_shadowfill_vp, fallbackShader_shadowfill_fp, GENERIC_UNIFORM_COUNT))
 	{
-		ri.Error(ERR_FATAL, "Could not load shadowfill shader!\n");
+		ri.Error(ERR_FATAL, "Could not load shadowfill shader!");
 	}
 
 	GLSL_AddUniform(&tr.shadowmapShader, GENERIC_UNIFORM_DEFORMGEN,                 "u_DeformGen",                 GLSL_INT);
@@ -1252,7 +1252,7 @@ void GLSL_InitGPUShaders(void)
 
 	if (!GLSL_InitGPUShader(&tr.pshadowShader, "pshadow", attribs, qtrue, extradefines, qtrue, fallbackShader_pshadow_vp, fallbackShader_pshadow_fp, PSHADOW_UNIFORM_COUNT))
 	{
-		ri.Error(ERR_FATAL, "Could not load pshadow shader!\n");
+		ri.Error(ERR_FATAL, "Could not load pshadow shader!");
 	}
 	
 	GLSL_AddUniform(&tr.pshadowShader, PSHADOW_UNIFORM_MODELVIEWPROJECTIONMATRIX, "u_ModelViewProjectionMatrix", GLSL_MAT16);
@@ -1278,7 +1278,7 @@ void GLSL_InitGPUShaders(void)
 
 	if (!GLSL_InitGPUShader(&tr.down4xShader, "down4x", attribs, qtrue, extradefines, qtrue, fallbackShader_down4x_vp, fallbackShader_down4x_fp, TEXTURECOLOR_UNIFORM_COUNT))
 	{
-		ri.Error(ERR_FATAL, "Could not load down4x shader!\n");
+		ri.Error(ERR_FATAL, "Could not load down4x shader!");
 	}
 	
 	GLSL_AddUniform(&tr.down4xShader, TEXTURECOLOR_UNIFORM_MODELVIEWPROJECTIONMATRIX, "u_ModelViewProjectionMatrix", GLSL_MAT16);
@@ -1302,7 +1302,7 @@ void GLSL_InitGPUShaders(void)
 
 	if (!GLSL_InitGPUShader(&tr.bokehShader, "bokeh", attribs, qtrue, extradefines, qtrue, fallbackShader_bokeh_vp, fallbackShader_bokeh_fp, TEXTURECOLOR_UNIFORM_COUNT))
 	{
-		ri.Error(ERR_FATAL, "Could not load bokeh shader!\n");
+		ri.Error(ERR_FATAL, "Could not load bokeh shader!");
 	}
 	
 	GLSL_AddUniform(&tr.bokehShader, TEXTURECOLOR_UNIFORM_MODELVIEWPROJECTIONMATRIX, "u_ModelViewProjectionMatrix", GLSL_MAT16);
@@ -1327,7 +1327,7 @@ void GLSL_InitGPUShaders(void)
 
 	if (!GLSL_InitGPUShader(&tr.tonemapShader, "tonemap", attribs, qtrue, extradefines, qtrue, fallbackShader_tonemap_vp, fallbackShader_tonemap_fp, TEXTURECOLOR_UNIFORM_COUNT))
 	{
-		ri.Error(ERR_FATAL, "Could not load tonemap shader!\n");
+		ri.Error(ERR_FATAL, "Could not load tonemap shader!");
 	}
 	
 	GLSL_AddUniform(&tr.tonemapShader, TEXTURECOLOR_UNIFORM_MODELVIEWPROJECTIONMATRIX, "u_ModelViewProjectionMatrix", GLSL_MAT16);
@@ -1360,7 +1360,7 @@ void GLSL_InitGPUShaders(void)
 
 		if (!GLSL_InitGPUShader(&tr.calclevels4xShader[i], "calclevels4x", attribs, qtrue, extradefines, qtrue, fallbackShader_calclevels4x_vp, fallbackShader_calclevels4x_fp, TEXTURECOLOR_UNIFORM_COUNT))
 		{
-			ri.Error(ERR_FATAL, "Could not load calclevels4x shader!\n");
+			ri.Error(ERR_FATAL, "Could not load calclevels4x shader!");
 		}
 
 		GLSL_AddUniform(&tr.calclevels4xShader[i], TEXTURECOLOR_UNIFORM_MODELVIEWPROJECTIONMATRIX, "u_ModelViewProjectionMatrix", GLSL_MAT16);
@@ -1398,7 +1398,7 @@ void GLSL_InitGPUShaders(void)
 
 	if (!GLSL_InitGPUShader(&tr.shadowmaskShader, "shadowmask", attribs, qtrue, extradefines, qtrue, fallbackShader_shadowmask_vp, fallbackShader_shadowmask_fp, SHADOWMASK_UNIFORM_COUNT))
 	{
-		ri.Error(ERR_FATAL, "Could not load shadowmask shader!\n");
+		ri.Error(ERR_FATAL, "Could not load shadowmask shader!");
 	}
 	
 	GLSL_AddUniform(&tr.shadowmaskShader, SHADOWMASK_UNIFORM_SHADOWMVP,  "u_ShadowMvp",   GLSL_MAT16);
@@ -1434,7 +1434,7 @@ void GLSL_InitGPUShaders(void)
 
 	if (!GLSL_InitGPUShader(&tr.ssaoShader, "ssao", attribs, qtrue, extradefines, qtrue, fallbackShader_ssao_vp, fallbackShader_ssao_fp, SSAO_UNIFORM_COUNT))
 	{
-		ri.Error(ERR_FATAL, "Could not load ssao shader!\n");
+		ri.Error(ERR_FATAL, "Could not load ssao shader!");
 	}
 	
 	GLSL_AddUniform(&tr.ssaoShader, SSAO_UNIFORM_VIEWINFO,   "u_ViewInfo",    GLSL_VEC4);
@@ -1465,7 +1465,7 @@ void GLSL_InitGPUShaders(void)
 
 		if (!GLSL_InitGPUShader(&tr.depthBlurShader[i], "depthBlur", attribs, qtrue, extradefines, qtrue, fallbackShader_depthblur_vp, fallbackShader_depthblur_fp, DEPTHBLUR_UNIFORM_COUNT))
 		{
-			ri.Error(ERR_FATAL, "Could not load depthBlur shader!\n");
+			ri.Error(ERR_FATAL, "Could not load depthBlur shader!");
 		}
 		
 		GLSL_AddUniform(&tr.depthBlurShader[i], DEPTHBLUR_UNIFORM_VIEWINFO,   "u_ViewInfo",    GLSL_VEC4);

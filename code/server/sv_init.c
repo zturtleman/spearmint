@@ -273,10 +273,10 @@ static void SV_Startup( void ) {
 	svs.clients = Z_Malloc (sizeof(client_t) * sv_maxclients->integer );
 	svs.players = Z_Malloc (sizeof(player_t) * sv_maxclients->integer );
 	if ( !Com_GameIsSinglePlayer() ) {
-		svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * 64;
+		svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES;
 	} else {
 		// we don't need nearly as many when playing locally
-		svs.numSnapshotEntities = sv_maxclients->integer * 4 * 64;
+		svs.numSnapshotEntities = sv_maxclients->integer * 4 * MAX_SNAPSHOT_ENTITIES;
 	}
 	svs.initialized = qtrue;
 
@@ -385,10 +385,10 @@ void SV_ChangeMaxClients( void ) {
 	
 	// allocate new snapshot entities
 	if ( !Com_GameIsSinglePlayer() ) {
-		svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * 64;
+		svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES;
 	} else {
 		// we don't need nearly as many when playing locally
-		svs.numSnapshotEntities = sv_maxclients->integer * 4 * 64;
+		svs.numSnapshotEntities = sv_maxclients->integer * 4 * MAX_SNAPSHOT_ENTITIES;
 	}
 }
 

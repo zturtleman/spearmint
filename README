@@ -535,6 +535,12 @@ QuakeLive mouse acceleration (patch and this text written by TTimo from id)
 
 ---------------------------------------------------- README for Developers -----
 
+pk3dir
+  Spearmint has a useful new feature for mappers. Paths in a game directory with
+  the extension ".pk3dir" are treated like pk3 files. This means you can keep
+  all files specific to your map in one directory tree and easily zip this
+  folder for distribution.
+ 
 Creating standalone games
   Have you finished the daunting task of removing all dependencies on the Q3
   game data? You probably now want to give your users the opportunity to play

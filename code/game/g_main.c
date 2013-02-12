@@ -388,6 +388,7 @@ void G_RegisterCvars( void ) {
 		G_Printf( "g_gametype %i is out of range, defaulting to 0\n", g_gametype.integer );
 		g_gametype.integer = 0;
 		trap_Cvar_Set( "g_gametype", "0" );
+		trap_Cvar_Update( &g_gametype );
 	}
 
 	// Don't allow single player gametype to be used in multiplayer.

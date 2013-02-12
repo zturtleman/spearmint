@@ -248,7 +248,7 @@ typedef struct {
 
 	client_t	*clients;					// [sv_maxclients->integer];
 	player_t	*players;					// [sv_maxclients->integer]; // a single client can have multiple players
-	int			numSnapshotEntities;		// sv_maxclients->integer*PACKET_BACKUP*MAX_PACKET_ENTITIES
+	int			numSnapshotEntities;		// sv_maxclients->integer*PACKET_BACKUP*MAX_SNAPSHOT_ENTITIES
 	int			nextSnapshotEntities;		// next snapshotEntities to use
 	darray_t	snapshotEntities;			// [numSnapshotEntities*gameEntityStateSize]
 	int			nextHeartbeatTime;
