@@ -3630,10 +3630,6 @@ static void FS_CheckPaks( void )
 	char			badGames[512];
 	int				pak;
 
-	// If we're not pure don't check
-	if (com_fs_pure && !com_fs_pure->integer)
-		return;
-
 	FS_ClearPakChecksums();
 	basePaksums = FS_LoadPakChecksums( com_basegame->string );
 	FS_LoadPakChecksums( fs_basegame->string );
@@ -3683,15 +3679,17 @@ static void FS_CheckPaks( void )
 		FS_AddModToList( badGames, sizeof ( badGames ), com_purePaks[pak].gamename );
 	}
 
-	if ( !basePaksums || !fs_numPaksums || missingPak || invalidPak )
-	{
+	if ( basePaksums && fs_numPaksums > 0 && !missingPak && !invalidPak ) {
+		// have basegame pure list and pure pk3s
+		Cvar_Set( "fs_pure", "1" );
+	} else {
 #ifndef DEDICATED
 		dialogType_t type = DT_WARNING;
 #endif
 		char line1[256];
 		char line2[256];
 
-		// server can't ever be pure (sv_pure), as we're missing the pure files.
+		// missing basegame pure list or pure pk3s
 		Cvar_Set("fs_pure", "0");
 
 		if ( !strlen ( badGames ) ) {
@@ -3704,6 +3702,9 @@ static void FS_CheckPaks( void )
 			if ( hasBaseGamePakFile ) {
 				Q_strncpyz( line1, "Found a Pk3 file, but missing file containing Pk3 checksums.", sizeof ( line1 ) );
 				Com_sprintf( line2, sizeof (line2), "You need a %s/PAKSUMS file to enable pure mode.", com_basegame->string );
+			} else if ( FS_ReadFile( "default.cfg", NULL ) > 0 ) {
+				// found default.cfg, but no pk3s/checksums? probably a game under development.
+				return;
 			} else {
 #ifndef DEDICATED
 				type = DT_ERROR;
@@ -3714,11 +3715,11 @@ static void FS_CheckPaks( void )
 			// found paksums, but no checksums? probably a game under development.
 			return;
 		} else if ( missingPak && invalidPak ) {
-			Q_strncpyz( line1, "Default Pk3 file(s) are missing, corrupt, or modified.", sizeof ( line1 ) );
+			Q_strncpyz( line1, "Default Pk3 %s missing, corrupt, or modified.", sizeof ( line1 ), fs_numPaksums == 1 ? "file is" : "files are" );
 		} else if ( invalidPak ) {
-			Q_strncpyz( line1, "Default Pk3 file(s) are corrupt or modified.", sizeof ( line1 ) );
+			Q_strncpyz( line1, "Default Pk3 %s corrupt or modified.", sizeof ( line1 ), fs_numPaksums == 1 ? "file is" : "files are" );
 		} else {
-			Q_strncpyz( line1, "Missing default Pk3 file(s).", sizeof ( line1 ) );
+			Q_strncpyz( line1, "Missing default Pk3 %s.", sizeof ( line1 ), fs_numPaksums == 1 ? "file" : "files" );
 		}
 
 		Com_Printf(S_COLOR_YELLOW "WARNING: %s\n%s\n", line1, line2);

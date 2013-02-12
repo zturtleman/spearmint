@@ -2691,7 +2691,7 @@ void Com_Init( char *commandLine ) {
 	// done early so bind command exists
 	CL_InitKeyCommands();
 
-	com_fs_pure = Cvar_Get ("fs_pure", "1", CVAR_ROM);
+	com_fs_pure = Cvar_Get ("fs_pure", "", CVAR_ROM);
 
 	com_basegame = Cvar_Get("com_basegame", BASEGAME, CVAR_INIT);
 	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT);
