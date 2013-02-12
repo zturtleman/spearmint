@@ -3789,11 +3789,11 @@ static void FS_CheckPaks( void )
 			// found paksums, but no checksums? probably a game under development.
 			return;
 		} else if ( missingPak && invalidPak ) {
-			Q_strncpyz( line1, "Default Pk3 %s missing, corrupt, or modified.", sizeof ( line1 ), fs_numPaksums == 1 ? "file is" : "files are" );
+			Com_sprintf( line1, sizeof ( line1 ), "Default Pk3 %s missing, corrupt, or modified.", fs_numPaksums == 1 ? "file is" : "files are" );
 		} else if ( invalidPak ) {
-			Q_strncpyz( line1, "Default Pk3 %s corrupt or modified.", sizeof ( line1 ), fs_numPaksums == 1 ? "file is" : "files are" );
+			Com_sprintf( line1, sizeof ( line1 ), "Default Pk3 %s corrupt or modified.", fs_numPaksums == 1 ? "file is" : "files are" );
 		} else {
-			Q_strncpyz( line1, "Missing default Pk3 %s.", sizeof ( line1 ), fs_numPaksums == 1 ? "file" : "files" );
+			Com_sprintf( line1, sizeof ( line1 ), "Missing default Pk3 %s.", fs_numPaksums == 1 ? "file" : "files" );
 		}
 
 		Com_Printf(S_COLOR_YELLOW "WARNING: %s\n%s\n", line1, line2);
