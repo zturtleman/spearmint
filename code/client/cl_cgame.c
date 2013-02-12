@@ -124,7 +124,7 @@ qboolean	CL_GetParseEntityState( int parseEntityNumber, void *state ) {
 	}
 
 	// can't return anything that has been overwritten in the circular buffer
-	if ( parseEntityNumber <= cl.parseEntitiesNum - MAX_PARSE_ENTITIES ) {
+	if ( parseEntityNumber <= cl.parseEntitiesNum - cl.parseEntities.maxElements ) {
 		return qfalse;
 	}
 
@@ -168,7 +168,7 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerS
 
 	// if the entities in the frame have fallen out of their
 	// circular buffer, we can't return it
-	if ( cl.parseEntitiesNum - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
+	if ( cl.parseEntitiesNum - clSnap->parseEntitiesNum >= cl.parseEntities.maxElements ) {
 		return qfalse;
 	}
 
@@ -950,7 +950,12 @@ void CL_InitCGame( void ) {
 	// entityBaselines and parseEntities are saved across vid_restart
 	if ( !cl.entityBaselines.pointer && !cl.parseEntities.pointer ) {
 		DA_Init( &cl.entityBaselines, MAX_GENTITIES, cl.cgameEntityStateSize, qtrue );
-		DA_Init( &cl.parseEntities, MAX_PARSE_ENTITIES, cl.cgameEntityStateSize, qtrue );
+
+		if ( !Com_GameIsSinglePlayer() ) {
+			DA_Init( &cl.parseEntities, CL_MAX_SPLITVIEW * PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES, cl.cgameEntityStateSize, qtrue );
+		} else {
+			DA_Init( &cl.parseEntities, CL_MAX_SPLITVIEW * 4 * MAX_SNAPSHOT_ENTITIES, cl.cgameEntityStateSize, qtrue );
+		}
 	}
 
 	// reset any CVAR_CHEAT cvars registered by cgame

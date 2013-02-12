@@ -318,7 +318,8 @@ Build a client snapshot structure
 
 typedef struct {
 	int		numSnapshotEntities;
-	int		snapshotEntities[MAX_SNAPSHOT_ENTITIES];	
+	int		maxSnapshotEntities;
+	int		snapshotEntities[MAX_SNAPSHOT_ENTITIES * MAX_SPLITVIEW];	
 } snapshotEntityNumbers_t;
 
 /*
@@ -359,7 +360,7 @@ static void SV_AddEntToSnapshot( clientSnapshot_t *frame, svEntity_t *svEnt, sha
 	svEnt->snapshotCounter = sv.snapshotCounter;
 
 	// if we are full, silently discard entities
-	if ( eNums->numSnapshotEntities == MAX_SNAPSHOT_ENTITIES ) {
+	if ( eNums->numSnapshotEntities == eNums->maxSnapshotEntities ) {
 		return;
 	}
 
@@ -598,6 +599,9 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		// find the client's viewpoint
 		VectorCopy( SV_SnapshotPlayer(frame, i)->origin, org );
 		org[2] += SV_SnapshotPlayer(frame, i)->viewheight;
+
+		// allow MAX_SNAPSHOT_ENTITIES to be added for this view point
+		entityNumbers.maxSnapshotEntities = entityNumbers.numSnapshotEntities + MAX_SNAPSHOT_ENTITIES;
 
 		// add all the entities directly visible to the eye, which
 		// may include portal entities that merge other viewpoints

@@ -102,11 +102,6 @@ typedef struct {
 	int		p_realtime;			// cls.realtime when packet was sent
 } outPacket_t;
 
-// the parseEntities array must be large enough to hold PACKET_BACKUP frames of
-// entities, so that when a delta compressed message arives from the server
-// it can be un-deltad from the original 
-#define	MAX_PARSE_ENTITIES	( PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES )
-
 extern int g_console_field_width;
 
 // Client Active Local Client
@@ -165,7 +160,10 @@ typedef struct {
 
 	darray_t		entityBaselines; // entityState_t [MAX_GENTITIES], for delta compression when not in previous frame
 
-	darray_t		parseEntities; // entityState_t [MAX_PARSE_ENTITIES]
+	// the parseEntities array must be large enough to hold PACKET_BACKUP frames of
+	// entities, so that when a delta compressed message arives from the server
+	// it can be un-deltad from the original 
+	darray_t		parseEntities; // entityState_t [CL_MAX_SPLITVIEW * PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES]
 
 	int				cgameEntityStateSize;
 	int				cgamePlayerStateSize;

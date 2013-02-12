@@ -39,7 +39,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // needs to be larger than PACKET_BACKUP
 
 
-#define	MAX_ENTITIES_IN_SNAPSHOT	256
+#define	MAX_ENTITIES_IN_SNAPSHOT	256 * MAX_SPLITVIEW
 
 // snapshots are a view of the server at a given time
 
