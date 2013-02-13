@@ -660,13 +660,6 @@ void Team_CheckDroppedItem( gentity_t *dropped );
 qboolean CheckObeliskAttack( gentity_t *obelisk, gentity_t *attacker );
 
 //
-// g_mem.c
-//
-void *G_Alloc( int size );
-void G_InitMemory( void );
-void Svcmd_GameMem_f( void );
-
-//
 // g_session.c
 //
 void G_ReadSessionData( gclient_t *client );

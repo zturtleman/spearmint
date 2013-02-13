@@ -480,7 +480,6 @@ struct svcmd
   { "botlist", qfalse, Svcmd_BotList_f },
   { "entityList", qfalse, Svcmd_EntityList_f },
   { "forceTeam", qfalse, Svcmd_ForceTeam_f },
-  { "game_memory", qfalse, Svcmd_GameMem_f },
   { "listip", qfalse, Svcmd_ListIPs_f },
   { "removeip", qfalse, Svcmd_RemoveIP_f },
   //{ "say", qtrue, Svcmd_Say_f },
