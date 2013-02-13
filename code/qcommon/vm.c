@@ -43,6 +43,7 @@ and one exported function: Perform
 
 #include "vm_local.h"
 
+cvar_t	*vm_minQvmHunkKB;
 
 vm_t	*currentVM = NULL;
 vm_t	*lastVM    = NULL;
@@ -81,6 +82,9 @@ void VM_Init( void ) {
 	Cvar_Get( "vm_cgame", "0", CVAR_ARCHIVE );
 	Cvar_Get( "vm_game", "0", CVAR_ARCHIVE );
 	Cvar_Get( "vm_ui", "0", CVAR_ARCHIVE );
+
+	vm_minQvmHunkKB = Cvar_Get( "vm_minQvmHunkKB", "48", CVAR_ARCHIVE );
+	Cvar_CheckRange( vm_minQvmHunkKB, 0, 24 * 1024, qtrue );
 
 	Cmd_AddCommand ("vmprofile", VM_VmProfile_f );
 	Cmd_AddCommand ("vminfo", VM_VmInfo_f );
@@ -441,11 +445,14 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 
 	// round up to next power of 2 so all data operations can
 	// be mask protected
-	dataLength = header.h->dataLength + header.h->litLength +
+	vm->dataAlloc = vm->dataLength = dataLength = header.h->dataLength + header.h->litLength +
 		header.h->bssLength;
 	for ( i = 0 ; dataLength > ( 1 << i ) ; i++ ) {
 	}
 	dataLength = 1 << i;
+
+	if ( dataLength - vm->dataLength < vm_minQvmHunkKB->integer * 1024 )
+		dataLength <<= 1;
 
 	if(alloc)
 	{
@@ -881,10 +888,10 @@ intptr_t VM_APISafeSystemCalls( intptr_t *args ) {
 // Makes a VM_Call where the vm cannot make any system calls.
 // If vm tries to make a system call, it errors.
 // Probably only useful for getting api version.
-int QDECL VM_SafeCall( vm_t *vm, int callnum )
+intptr_t QDECL VM_SafeCall( vm_t *vm, int callnum )
 {
 	intptr_t	(*savedSystemCall)( intptr_t *parms );
-	int			value;
+	intptr_t	value;
 
 	safeVM = vm;
 	savedSystemCall = vm->systemCall;
@@ -893,7 +900,7 @@ int QDECL VM_SafeCall( vm_t *vm, int callnum )
 	vm->systemCall = VM_APISafeSystemCalls;
 
 	// Make the call.
-	value = (int)VM_Call(vm, callnum);
+	value = VM_Call( vm, callnum );
 
 	// Restore systemCall pointer
 	vm->systemCall = savedSystemCall;
@@ -994,6 +1001,10 @@ void VM_VmInfo_f( void ) {
 		Com_Printf( "    code length : %7i\n", vm->codeLength );
 		Com_Printf( "    table length: %7i\n", vm->instructionCount*4 );
 		Com_Printf( "    data length : %7i\n", vm->dataMask + 1 );
+		Com_Printf( "    trap_Alloc info:\n" );
+		Com_Printf( "      total memory: %7i\n", vm->dataMask + 1 - vm->dataLength );
+		Com_Printf( "      free memory : %7i\n", vm->dataMask + 1 - vm->dataAlloc );
+		Com_Printf( "      used memory : %7i\n", vm->dataAlloc - vm->dataLength );
 	}
 }
 
@@ -1036,4 +1047,89 @@ void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
 	}
 
 	Com_Memcpy(currentVM->dataBase + dest, currentVM->dataBase + src, n);
+}
+
+/*
+=================
+QVM_Alloc
+=================
+*/
+unsigned int QVM_Alloc( vm_t *vm, int size ) {
+	unsigned int pointer;
+
+	if ( vm->dataAlloc + size > vm->dataMask+1 ) {
+		Com_Error( ERR_DROP, "QVM_Alloc: %s failed on allocation of %i bytes", vm->name, size );
+		return 0;
+	}
+
+	pointer = vm->dataAlloc;
+	vm->dataAlloc += size;
+
+	// only needed if it's possible to free memory, dataBase is set to 0s on QVM load.
+	//Com_Memset( vm->dataBase + pointer, 0, size );
+
+	return pointer;
+}
+
+/*
+=================
+VM_ExplicitAlloc
+=================
+*/
+typedef struct {
+	vm_t		*vm;
+	intptr_t	pointer;
+	char		*tag;
+	int			size;
+} vmMemoryTag_t;
+
+#define MAX_VM_MEMORY_TAGS 128
+static vmMemoryTag_t vmMemoryTags[MAX_VM_MEMORY_TAGS];
+int numVMMemoryTags = 0;
+
+intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag ) {
+	intptr_t	ptr;
+	int			i;
+
+	if (size < 1)
+		Com_Error( ERR_DROP, "VM %s tried to allocate %d bytes of memory", vm->name, size );
+
+	// Check if memory with this tag and size already allocated, if so return it.
+	if ( tag ) {
+		for ( i = 0; i < numVMMemoryTags; i++ ) {
+			if ( ( ( vm->dllHandle && !vmMemoryTags[i].vm ) || vmMemoryTags[i].vm == vm ) && vmMemoryTags[i].size == size && strcmp( tag, vmMemoryTags[i].tag ) == 0 ) {
+				return vmMemoryTags[i].pointer;
+			}
+		}
+	}
+
+	if ( vm->dllHandle ) {
+		ptr = (intptr_t)Hunk_Alloc( size, h_high );
+	} else {
+		ptr = QVM_Alloc( vm, size );
+	}
+
+	if ( tag ) {
+		if ( numVMMemoryTags < MAX_VM_MEMORY_TAGS ) {
+			vmMemoryTags[numVMMemoryTags].vm = vm->dllHandle ? NULL : vm;
+			vmMemoryTags[numVMMemoryTags].pointer = ptr;
+			vmMemoryTags[numVMMemoryTags].tag = S_Malloc(strlen(tag)+1);
+			Q_strncpyz(vmMemoryTags[numVMMemoryTags].tag, tag, strlen(tag)+1);
+			vmMemoryTags[numVMMemoryTags].size = size;
+			numVMMemoryTags++;
+		} else {
+			Com_Error( ERR_DROP, "Out of free VM memory tags" );
+		}
+	}
+
+	return ptr;
+}
+
+/*
+=================
+VM_Alloc
+=================
+*/
+intptr_t VM_Alloc( int size, const char *tag ) {
+	return VM_ExplicitAlloc( currentVM, size, tag );
 }

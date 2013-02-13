@@ -301,10 +301,12 @@ New cvars
   cg_teamDmLeadAnnouncements        - Set to 0 to disable the team lead change
                                       announcements in Team Deathmatch (quake3
                                       1.32 had no lead announcements in TDM).
-
-
   cg_consoleLatency                 - controls how long messages stay in cgame
                                       notify area in miliseconds (default 3000)
+
+  vm_minQvmHunkKB                   - minimum memory pool size for each QVM's
+                                      trap_Alloc. DLLs use shared memory pool
+                                      and are limited by com_hunkMegs.
 
 New commands
   video [filename]        - start video capture (use with demo command)

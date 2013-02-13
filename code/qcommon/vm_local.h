@@ -179,6 +179,9 @@ struct vm_s {
 	byte		*dataBase;
 	int			dataMask;
 
+	int			dataLength;			// length of QVMs data
+	int			dataAlloc;			// QVM's current allocate point
+
 	int			stackBottom;		// if programStack < stackBottom, error
 
 	int			numSymbols;

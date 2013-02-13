@@ -1145,3 +1145,5 @@ int		trap_PC_FreeSource( int handle );
 int		trap_PC_ReadToken( int handle, pc_token_t *pc_token );
 void	trap_PC_UnreadToken( int handle );
 int		trap_PC_SourceFileAndLine( int handle, char *filename, int *line );
+
+void	*trap_Alloc( int size, const char *tag );

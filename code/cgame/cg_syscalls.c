@@ -550,6 +550,10 @@ int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 	return syscall( CG_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
 }
 
+void *trap_Alloc( int size, const char *tag ) {
+	return (void *)syscall( CG_ALLOC, size, tag );
+}
+
 int trap_RealTime(qtime_t *qtime) {
 	return syscall( CG_REAL_TIME, qtime );
 }

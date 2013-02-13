@@ -55,6 +55,8 @@ equ trap_PC_ReadToken					-55
 equ trap_PC_UnreadToken					-56
 equ trap_PC_SourceFileAndLine			-57
 
+equ trap_Alloc							-58
+
 
 
 equ	trap_GetClipboardData				-101

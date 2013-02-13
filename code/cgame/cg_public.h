@@ -135,6 +135,8 @@ typedef enum {
 	CG_PC_UNREAD_TOKEN,
 	CG_PC_SOURCE_FILE_AND_LINE,
 
+	CG_ALLOC,
+
 	//=========== client game specific functionality =============
 
 	CG_GETCLIPBOARDDATA = 100,

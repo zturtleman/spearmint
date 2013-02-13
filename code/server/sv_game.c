@@ -541,6 +541,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		BotImport_DebugPolygonDelete( args[1] );
 		return 0;
 
+	case G_ALLOC:
+		return VM_Alloc( args[1], VMA(2) );
+
 		//====================================
 
 	case BOTLIB_SETUP:

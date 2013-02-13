@@ -454,6 +454,10 @@ int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 	return syscall( UI_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
 }
 
+void *trap_Alloc( int size, const char *tag ) {
+	return (void *)syscall( UI_ALLOC, size, tag );
+}
+
 void trap_S_StopBackgroundTrack( void ) {
 	syscall( UI_S_STOPBACKGROUNDTRACK );
 }

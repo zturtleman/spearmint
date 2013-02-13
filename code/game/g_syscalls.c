@@ -857,3 +857,7 @@ void trap_PC_UnreadToken( int handle ) {
 int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 	return syscall( G_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
 }
+
+void *trap_Alloc( int size, const char *tag ) {
+	return (void *)syscall( G_ALLOC, size, tag );
+}

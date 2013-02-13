@@ -165,6 +165,8 @@ typedef enum {
 	G_PC_UNREAD_TOKEN,
 	G_PC_SOURCE_FILE_AND_LINE,
 
+	G_ALLOC,			// ( int size, const char *tag );
+
 	//=========== server specific functionality =============
 
 	G_LOCATE_GAME_DATA = 100,		// ( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t,
