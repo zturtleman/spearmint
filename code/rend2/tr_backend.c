@@ -1696,6 +1696,10 @@ const void	*RB_DrawBuffer( const void *data ) {
 
 	cmd = (const drawBufferCommand_t *)data;
 
+	// finish any 2D drawing if needed
+	if(tess.numIndexes)
+		RB_EndSurface();
+
 	if (glRefConfig.framebufferObject)
 		FBO_Bind(NULL);
 
@@ -1779,6 +1783,10 @@ const void *RB_ColorMask(const void *data)
 {
 	const colorMaskCommand_t *cmd = data;
 
+	// finish any 2D drawing if needed
+	if(tess.numIndexes)
+		RB_EndSurface();
+
 	if (glRefConfig.framebufferObject)
 	{
 		// reverse color mask, so 0 0 0 0 is the default
@@ -1803,6 +1811,7 @@ const void *RB_ClearDepth(const void *data)
 {
 	const clearDepthCommand_t *cmd = data;
 	
+	// finish any 2D drawing if needed
 	if(tess.numIndexes)
 		RB_EndSurface();
 
@@ -1934,6 +1943,10 @@ const void *RB_CapShadowMap(const void *data)
 {
 	const capShadowmapCommand_t *cmd = data;
 
+	// finish any 2D drawing if needed
+	if(tess.numIndexes)
+		RB_EndSurface();
+
 	if (cmd->map != -1)
 	{
 		GL_SelectTexture(0);
@@ -1965,6 +1978,10 @@ const void *RB_PostProcess(const void *data)
 	const postProcessCommand_t *cmd = data;
 	FBO_t *srcFbo;
 	qboolean autoExposure;
+
+	// finish any 2D drawing if needed
+	if(tess.numIndexes)
+		RB_EndSurface();
 
 	if (!glRefConfig.framebufferObject || !r_postProcess->integer)
 	{
@@ -2107,6 +2124,10 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			break;
 		case RC_END_OF_LIST:
 		default:
+			// finish any 2D drawing if needed
+			if(tess.numIndexes)
+				RB_EndSurface();
+
 			// stop rendering
 			t2 = ri.Milliseconds ();
 			backEnd.pc.msec = t2 - t1;
