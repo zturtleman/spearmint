@@ -377,6 +377,7 @@ static ID_INLINE float _vmf(intptr_t x)
 }
 #define	VMF(x)	_vmf(args[x])
 
+void VM_ClearMemoryTags( void );
 intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag );
 intptr_t VM_Alloc( int size, const char *tag );
 

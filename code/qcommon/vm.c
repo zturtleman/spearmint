@@ -1127,6 +1127,16 @@ intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag ) {
 
 /*
 =================
+VM_ClearMemoryTags
+=================
+*/
+void VM_ClearMemoryTags( void ) {
+	Com_Memset( vmMemoryTags, 0, sizeof ( vmMemoryTags ) );
+	numVMMemoryTags = 0;
+}
+
+/*
+=================
 VM_Alloc
 =================
 */
