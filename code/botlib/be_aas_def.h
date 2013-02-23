@@ -41,13 +41,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define AAS_DEBUG
 
 #define	MAX_CLIENTS			64
-#define	MAX_MODELS			256		// these are sent over the net as 8 bits
-#define	MAX_SOUNDS			256		// so they cannot be blindly increased
-#define	MAX_CONFIGSTRINGS	1024
-
-#define	CS_SCORES			32
-#define	CS_MODELS			(CS_SCORES+MAX_CLIENTS)
-#define	CS_SOUNDS			(CS_MODELS+MAX_MODELS)
 
 #define DF_AASENTNUMBER(x)		(x - aasworld.entities)
 #define DF_NUMBERAASENT(x)		(&aasworld.entities[x])
