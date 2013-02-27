@@ -39,7 +39,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include <stdlib.h>
 #include <math.h>
 
-#include "../renderer/tr_local.h"
+#include "../renderercommon/tr_common.h"
 #include "../sys/sys_local.h"
 #include "sdl_icon.h"
 
@@ -93,9 +93,6 @@ void GLimp_Shutdown( void )
 
 	SDL_QuitSubSystem( SDL_INIT_VIDEO );
 	screen = NULL;
-
-	Com_Memset( &glConfig, 0, sizeof( glConfig ) );
-	Com_Memset( &glState, 0, sizeof( glState ) );
 }
 
 /*

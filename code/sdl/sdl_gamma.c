@@ -34,7 +34,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #	include <SDL.h>
 #endif
 
-#include "../renderer/tr_local.h"
+#include "../renderercommon/tr_common.h"
 #include "../qcommon/qcommon.h"
 
 /*

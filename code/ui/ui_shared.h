@@ -32,7 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 
 #include "../qcommon/q_shared.h"
-#include "../renderer/tr_types.h"
+#include "../renderercommon/tr_types.h"
 #include "../client/keycodes.h"
 
 #include "../../ui/menudef.h"

@@ -27,7 +27,7 @@ terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
 Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
-#include "../renderer/tr_local.h"
+#include "tr_common.h"
 
 
 qboolean ( * qwglSwapIntervalEXT)( int interval );

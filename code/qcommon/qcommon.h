@@ -1119,8 +1119,6 @@ void	Sys_Print( const char *msg );
 // any game related timing information should come from event timestamps
 int		Sys_Milliseconds (void);
 
-void	Sys_SnapVector( float *v );
-
 qboolean Sys_RandomBytes( byte *string, int len );
 
 // the system console is shown when a dedicated server is running
@@ -1138,6 +1136,7 @@ qboolean	Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );
 qboolean	Sys_IsLANAddress (netadr_t adr);
 void		Sys_ShowIP(void);
 
+FILE	*Sys_FOpen( const char *ospath, const char *mode );
 qboolean Sys_Mkdir( const char *path );
 qboolean Sys_Rmdir( const char *path );
 FILE	*Sys_Mkfifo( const char *ospath );
