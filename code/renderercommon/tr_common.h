@@ -86,6 +86,9 @@ extern cvar_t *r_stereoEnabled;
 
 qboolean	R_GetModeInfo( int *width, int *height, float *windowAspect, int mode );
 
+float R_NoiseGet4f( float x, float y, float z, float t );
+int R_RandomOn( float t );
+void  R_NoiseInit( void );
 
 /*
 ====================================================================
