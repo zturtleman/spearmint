@@ -209,7 +209,7 @@
 			<Add directory="../../code/freetype-2.4.11/include" />
 			<Add directory="../../code/libvorbis/include" />
 			<Add directory="../../code/libvorbis/lib" />
-			<Add directory="../../code/libogg/include" />
+			<Add directory="../../code/libogg-1.3.0/include" />
 			<Add directory="../../code/jpeg-8c" />
 		</Compiler>
 		<Linker>
@@ -755,12 +755,12 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/jpeg-8c/jversion.h" />
-		<Unit filename="../../code/libogg/include/ogg/ogg.h" />
-		<Unit filename="../../code/libogg/include/ogg/os_types.h" />
-		<Unit filename="../../code/libogg/src/bitwise.c">
+		<Unit filename="../../code/libogg-1.3.0/include/ogg/ogg.h" />
+		<Unit filename="../../code/libogg-1.3.0/include/ogg/os_types.h" />
+		<Unit filename="../../code/libogg-1.3.0/src/bitwise.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/libogg/src/framing.c">
+		<Unit filename="../../code/libogg-1.3.0/src/framing.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/libspeex/_kiss_fft_guts.h" />
