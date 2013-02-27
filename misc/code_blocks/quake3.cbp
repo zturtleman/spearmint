@@ -1108,96 +1108,97 @@
 			<Option target="Release Linux x86_64" />
 			<Option target="Debug Linux x86_64" />
 		</Unit>
-		<Unit filename="../../code/renderer/iqm.h" />
-		<Unit filename="../../code/renderer/qgl.h" />
-		<Unit filename="../../code/renderer/tr_animation.c">
+		<Unit filename="../../code/renderercommon/iqm.h" />
+		<Unit filename="../../code/renderercommon/qgl.h" />
+		<Unit filename="../../code/renderercommon/tr_common.h" />
+		<Unit filename="../../code/renderercommon/tr_image_bmp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_backend.c">
+		<Unit filename="../../code/renderercommon/tr_image_jpg.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_bsp.c">
+		<Unit filename="../../code/renderercommon/tr_image_pcx.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_cmds.c">
+		<Unit filename="../../code/renderercommon/tr_image_png.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_curve.c">
+		<Unit filename="../../code/renderercommon/tr_image_tga.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_flares.c">
+		<Unit filename="../../code/renderercommon/tr_noise.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_font.c">
+		<Unit filename="../../code/renderercommon/tr_public.h" />
+		<Unit filename="../../code/renderercommon/tr_types.h" />
+		<Unit filename="../../code/renderergl1/tr_animation.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_image.c">
+		<Unit filename="../../code/renderergl1/tr_backend.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_image_bmp.c">
+		<Unit filename="../../code/renderergl1/tr_bsp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_image_jpg.c">
+		<Unit filename="../../code/renderergl1/tr_cmds.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_image_pcx.c">
+		<Unit filename="../../code/renderergl1/tr_curve.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_image_png.c">
+		<Unit filename="../../code/renderergl1/tr_flares.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_image_tga.c">
+		<Unit filename="../../code/renderergl1/tr_font.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_init.c">
+		<Unit filename="../../code/renderergl1/tr_image.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_light.c">
+		<Unit filename="../../code/renderergl1/tr_init.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_local.h" />
-		<Unit filename="../../code/renderer/tr_main.c">
+		<Unit filename="../../code/renderergl1/tr_light.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_marks.c">
+		<Unit filename="../../code/renderergl1/tr_local.h" />
+		<Unit filename="../../code/renderergl1/tr_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_mesh.c">
+		<Unit filename="../../code/renderergl1/tr_marks.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_model.c">
+		<Unit filename="../../code/renderergl1/tr_mesh.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_model_iqm.c">
+		<Unit filename="../../code/renderergl1/tr_model.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_noise.c">
+		<Unit filename="../../code/renderergl1/tr_model_iqm.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_public.h" />
-		<Unit filename="../../code/renderer/tr_scene.c">
+		<Unit filename="../../code/renderergl1/tr_scene.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_shade.c">
+		<Unit filename="../../code/renderergl1/tr_shade.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_shade_calc.c">
+		<Unit filename="../../code/renderergl1/tr_shade_calc.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_shader.c">
+		<Unit filename="../../code/renderergl1/tr_shader.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_shadows.c">
+		<Unit filename="../../code/renderergl1/tr_shadows.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_sky.c">
+		<Unit filename="../../code/renderergl1/tr_sky.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_surface.c">
+		<Unit filename="../../code/renderergl1/tr_surface.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderer/tr_types.h" />
-		<Unit filename="../../code/renderer/tr_world.c">
+		<Unit filename="../../code/renderergl1/tr_world.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/sdl/sdl_gamma.c">
