@@ -17,13 +17,9 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
-					<Add option="-DWIN32" />
+					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DUI_EXPORTS" />
 					<Add option="-DMISSIONPACK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug TA_UI Win32">
@@ -38,14 +34,8 @@
 					<Add option="-g" />
 					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-DWIN32" />
-					<Add option="-D_DEBUG" />
-					<Add option="-DDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DUI_EXPORTS" />
+					<Add option="-DUI" />
 					<Add option="-DMISSIONPACK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA_UI Linux i386">
@@ -60,11 +50,9 @@
 					<Add option="-O2" />
 					<Add option="-fPIC" />
 					<Add option="-W" />
+					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DUI_EXPORTS" />
 					<Add option="-DMISSIONPACK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug TA_UI Linux i386">
@@ -80,12 +68,8 @@
 					<Add option="-fPIC" />
 					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-D_DEBUG" />
-					<Add option="-DDEBUG" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DUI_EXPORTS" />
+					<Add option="-DUI" />
 					<Add option="-DMISSIONPACK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA_UI Linux x86_64">
@@ -100,11 +84,9 @@
 					<Add option="-O2" />
 					<Add option="-fPIC" />
 					<Add option="-W" />
+					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DUI_EXPORTS" />
 					<Add option="-DMISSIONPACK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug TA_UI Linux x86_64">
@@ -120,12 +102,8 @@
 					<Add option="-fPIC" />
 					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-D_DEBUG" />
-					<Add option="-DDEBUG" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DUI_EXPORTS" />
+					<Add option="-DUI" />
 					<Add option="-DMISSIONPACK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 		</Build>

@@ -18,11 +18,7 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-DGAME" />
-					<Add option="-DWIN32" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Win32">
@@ -39,11 +35,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
-					<Add option="-DWIN32" />
-					<Add option="-D_DEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA Win32">
@@ -58,11 +49,7 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-DGAME" />
-					<Add option="-DWIN32" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
@@ -79,13 +66,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
-					<Add option="-DWIN32" />
-					<Add option="-D_DEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-DBUILDING_REF_GL" />
-					<Add option="-DDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
@@ -103,8 +83,6 @@
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Linux i386">
@@ -121,11 +99,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
-					<Add option="-D_DEBUG" />
-					<Add option="-DBUILDING_REF_GL" />
-					<Add option="-DDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA Linux i386">
@@ -142,8 +115,6 @@
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
@@ -161,11 +132,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
-					<Add option="-D_DEBUG" />
-					<Add option="-DBUILDING_REF_GL" />
-					<Add option="-DDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
@@ -183,8 +149,6 @@
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Linux x86_64">
@@ -201,11 +165,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
-					<Add option="-D_DEBUG" />
-					<Add option="-DBUILDING_REF_GL" />
-					<Add option="-DDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA Linux x86_64">
@@ -222,8 +181,6 @@
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
@@ -241,11 +198,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
-					<Add option="-D_DEBUG" />
-					<Add option="-DBUILDING_REF_GL" />
-					<Add option="-DDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>

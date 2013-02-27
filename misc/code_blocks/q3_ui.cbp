@@ -17,12 +17,8 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
-					<Add option="-DWIN32" />
+					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DQ3_UI_EXPORTS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Win32">
@@ -34,15 +30,10 @@
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
-					<Add option="-W" />
 					<Add option="-g" />
+					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-DWIN32" />
-					<Add option="-D_DEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DQ3_UI_EXPORTS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DUI" />
 				</Compiler>
 			</Target>
 			<Target title="Release Linux i386">
@@ -57,10 +48,8 @@
 					<Add option="-O2" />
 					<Add option="-fPIC" />
 					<Add option="-W" />
+					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DQ3_UI_EXPORTS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Linux i386">
@@ -76,11 +65,7 @@
 					<Add option="-fPIC" />
 					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-D_DEBUG" />
-					<Add option="-DDEBUG" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DQ3_UI_EXPORTS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DUI" />
 				</Compiler>
 			</Target>
 			<Target title="Release Linux x86_64">
@@ -95,10 +80,8 @@
 					<Add option="-O2" />
 					<Add option="-fPIC" />
 					<Add option="-W" />
+					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DQ3_UI_EXPORTS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Linux x86_64">
@@ -114,11 +97,7 @@
 					<Add option="-fPIC" />
 					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-D_DEBUG" />
-					<Add option="-DDEBUG" />
-					<Add option="-D_USRDLL" />
-					<Add option="-DQ3_UI_EXPORTS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DUI" />
 				</Compiler>
 			</Target>
 		</Build>

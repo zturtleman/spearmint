@@ -35,7 +35,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
-					<Add option="-D_DEBUG" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA_UI Win32">
@@ -69,7 +68,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
-					<Add option="-D_DEBUG" />
 					<Add option="-DMISSIONPACK" />
 					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
@@ -105,7 +103,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
-					<Add option="-D_DEBUG" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA_UI Linux i386">
@@ -141,7 +138,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
-					<Add option="-D_DEBUG" />
 					<Add option="-DMISSIONPACK" />
 					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
@@ -177,7 +173,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
-					<Add option="-D_DEBUG" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA_UI Linux x86_64">
@@ -213,7 +208,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
-					<Add option="-D_DEBUG" />
 					<Add option="-DMISSIONPACK" />
 					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
