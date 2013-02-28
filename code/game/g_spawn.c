@@ -316,7 +316,7 @@ char *G_NewString( const char *string ) {
 	
 	l = strlen(string) + 1;
 
-	newb = trap_Alloc( l, NULL );
+	newb = G_Alloc( l );
 
 	new_p = newb;
 
