@@ -3503,6 +3503,10 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	image_t		*image;
 	shader_t	*sh;
 
+	if ( refHeadless ) {
+		return tr.defaultShader;
+	}
+
 	if ( name[0] == 0 ) {
 		return tr.defaultShader;
 	}

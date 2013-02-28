@@ -430,6 +430,24 @@ static void SV_TouchCGame(void) {
 	}
 }
 
+#ifdef DEDICATED
+/*
+================
+SV_InitDedicatedRef
+================
+*/
+static void SV_InitDedicatedRef( void ) {
+	refimport_t ri;
+
+	Com_ShutdownRef();
+
+	Com_Memset( &ri, 0, sizeof ( refimport_t ) );
+	Com_InitRef( &ri );
+
+	re.BeginRegistration( NULL );
+}
+#endif
+
 /*
 ================
 SV_SpawnServer
@@ -463,8 +481,10 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	// clear the whole hunk because we're (re)loading the server
 	Hunk_Clear();
 
-#ifndef DEDICATED
 	// Restart renderer
+#ifdef DEDICATED
+	SV_InitDedicatedRef();
+#else
 	CL_StartHunkUsers( qtrue );
 #endif
 
@@ -816,6 +836,10 @@ void SV_Shutdown( char *finalmsg ) {
 	SV_RemoveOperatorCommands();
 	SV_MasterShutdown();
 	SV_ShutdownGameProgs();
+
+#ifdef DEDICATED
+	Com_ShutdownRef();
+#endif
 
 	// free current level
 	SV_ClearServer();

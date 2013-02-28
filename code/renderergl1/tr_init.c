@@ -31,6 +31,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "tr_local.h"
 
+qboolean	refHeadless;
+
 glconfig_t  glConfig;
 
 glstate_t	glState;
@@ -1194,6 +1196,17 @@ void R_Init( void ) {
 
 //	Swap_Init();
 
+	if ( refHeadless ) {
+		// dummy shader
+		tr.defaultShader = ri.Hunk_Alloc( sizeof( shader_t ), h_low );
+		tr.defaultShader->defaultShader = qtrue;
+		Q_strncpyz(tr.defaultShader->name, "<default>", MAX_QPATH);
+
+		// dedicated server only uses model data
+		R_ModelInit();
+		return;
+	}
+
 	if ( (intptr_t)tess.xyz & 15 ) {
 		ri.Printf( PRINT_WARNING, "tess.xyz not 16 byte aligned\n" );
 	}
@@ -1291,6 +1304,11 @@ void RE_Shutdown( qboolean destroyWindow ) {
 
 	ri.Printf(PRINT_DEVELOPER, "RE_Shutdown( %i )\n", destroyWindow);
 
+	if ( refHeadless ) {
+		tr.registered = qfalse;
+		return;
+	}
+
 	ri.Cmd_RemoveCommand ("modellist");
 	ri.Cmd_RemoveCommand ("screenshotJPEG");
 	ri.Cmd_RemoveCommand ("screenshot");
@@ -1344,14 +1362,16 @@ GetRefAPI
 @@@@@@@@@@@@@@@@@@@@@
 */
 #ifdef USE_RENDERER_DLOPEN
-Q_EXPORT refexport_t* QDECL GetRefAPI ( int apiVersion, refimport_t *rimp ) {
+Q_EXPORT refexport_t* QDECL GetRefAPI ( int apiVersion, refimport_t *rimp, qboolean headless ) {
 #else
-refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
+refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp, qboolean headless ) {
 #endif
 
 	static refexport_t	re;
 
 	ri = *rimp;
+
+	refHeadless = headless;
 
 	Com_Memset( &re, 0, sizeof( re ) );
 

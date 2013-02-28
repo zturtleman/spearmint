@@ -285,6 +285,19 @@ void trap_RemoveCommand( const char *cmdName ) {
 	syscall( G_REMOVECOMMAND, cmdName );
 }
 
+qhandle_t trap_R_RegisterModel( const char *name ) {
+	return syscall( G_R_REGISTERMODEL, name );
+}
+
+int trap_R_LerpTag( orientation_t *tag, clipHandle_t handle, int startFrame, int endFrame,
+					   float frac, const char *tagName ) {
+	return syscall( G_R_LERPTAG, tag, handle, startFrame, endFrame, PASSFLOAT(frac), tagName );
+}
+
+void trap_R_ModelBounds( clipHandle_t handle, vec3_t mins, vec3_t maxs ) {
+	syscall( G_R_MODELBOUNDS, handle, mins, maxs );
+}
+
 // BotLib traps start here
 int trap_BotLibSetup( void ) {
 	return syscall( BOTLIB_SETUP );

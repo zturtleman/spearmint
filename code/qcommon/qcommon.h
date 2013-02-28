@@ -32,6 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define _QCOMMON_H_
 
 #include "../qcommon/cm_public.h"
+#include "../renderercommon/tr_public.h"
 
 //Ignore __attribute__ on non-gcc platforms
 #ifndef __GNUC__
@@ -886,6 +887,10 @@ extern	cvar_t	*com_protocol;
 extern	cvar_t	*com_legacyprotocol;
 #endif
 
+#ifdef USE_RENDERER_DLOPEN
+extern	cvar_t	*com_renderer;
+#endif
+
 // com_speeds times
 extern	int		time_game;
 extern	int		time_frontend;
@@ -986,6 +991,18 @@ void Com_Init( char *commandLine );
 void Com_Frame( void );
 void Com_Shutdown( void );
 
+/*
+==============================================================
+
+REFRESH DLL
+
+==============================================================
+*/
+
+extern	refexport_t		re;		// interface to refresh .dll
+
+void Com_ShutdownRef( void );
+void Com_InitRef( refimport_t *ri );
 
 /*
 ==============================================================

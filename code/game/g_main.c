@@ -195,6 +195,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart );
 void G_RunFrame( int levelTime );
 void G_ShutdownGame( int restart );
 qboolean G_SnapshotCallback( int entityNum, int clientNum );
+void G_VidRestart( void );
 void CheckExitRules( void );
 
 
@@ -240,6 +241,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return ConsoleCommand();
 	case GAME_SNAPSHOT_CALLBACK:
 		return G_SnapshotCallback( arg0, arg1 );
+	case GAME_VID_RESTART:
+		G_VidRestart();
+		return 0;
 	case BOTAI_START_FRAME:
 		return BotAIStartFrame( arg0 );
 	}
@@ -602,6 +606,17 @@ qboolean G_SnapshotCallback( int entityNum, int clientNum ) {
 	}
 
 	return qtrue;
+}
+
+/*
+=================
+G_VidRestart
+
+Model handles are no longer valid, re-register all models.
+=================
+*/
+void G_VidRestart( void ) {
+
 }
 
 //===================================================================

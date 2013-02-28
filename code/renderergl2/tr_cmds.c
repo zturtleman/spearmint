@@ -95,6 +95,10 @@ R_IssueRenderCommands
 void R_IssueRenderCommands( qboolean runPerformanceCounters ) {
 	renderCommandList_t	*cmdList;
 
+	if ( refHeadless ) {
+		return;
+	}
+
 	cmdList = &backEndData->commands;
 	assert(cmdList);
 	// add an end-of-list command

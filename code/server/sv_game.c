@@ -544,6 +544,14 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_ALLOC:
 		return VM_Alloc( args[1], VMA(2) );
 
+	case G_R_REGISTERMODEL:
+		return re.RegisterModel( VMA(1) );
+	case G_R_LERPTAG:
+		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
+	case G_R_MODELBOUNDS:
+		re.ModelBounds( args[1], VMA(2), VMA(3) );
+		return 0;
+
 		//====================================
 
 	case BOTLIB_SETUP:
@@ -1031,5 +1039,19 @@ qboolean SV_GameCommand( void ) {
 	}
 
 	return VM_Call( gvm, GAME_CONSOLE_COMMAND );
+}
+
+/*
+===============
+SV_GameVidRestart
+
+Called every time client restarts renderer while running server
+===============
+*/
+void SV_GameVidRestart( void ) {
+	if ( !gvm ) {
+		return;
+	}
+	VM_Call( gvm, GAME_VID_RESTART );
 }
 

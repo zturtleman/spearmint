@@ -1050,7 +1050,9 @@ void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 
 	R_Init();
 
-	*glconfigOut = glConfig;
+	if ( glconfigOut ) {
+		*glconfigOut = glConfig;
+	}
 
 	R_IssuePendingRenderCommands();
 

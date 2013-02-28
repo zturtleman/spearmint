@@ -796,6 +796,11 @@ qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
 int		trap_DebugPolygonCreate(int color, int numPoints, vec3_t *points);
 void	trap_DebugPolygonDelete(int id);
 
+qhandle_t trap_R_RegisterModel( const char *name );
+void trap_R_ModelBounds( clipHandle_t handle, vec3_t mins, vec3_t maxs );
+int trap_R_LerpTag( orientation_t *tag, clipHandle_t handle, int startFrame, int endFrame,
+					   float frac, const char *tagName );
+
 int		trap_BotLibSetup( void );
 int		trap_BotLibShutdown( void );
 int		trap_BotLibVarSet(char *var_name, char *value);

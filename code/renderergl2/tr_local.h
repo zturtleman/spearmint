@@ -2013,6 +2013,7 @@ typedef struct {
 	float					fogTable[FOG_TABLE_SIZE];
 } trGlobals_t;
 
+extern qboolean		refHeadless;	// qtrue if loaded by dedicated server, no rendering will be done.
 extern backEndState_t	backEnd;
 extern trGlobals_t	tr;
 extern glstate_t	glState;		// outside of TR since it shouldn't be cleared during ref re-init

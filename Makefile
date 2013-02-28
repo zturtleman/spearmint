@@ -226,6 +226,10 @@ ifndef USE_RENDERER_DLOPEN
 USE_RENDERER_DLOPEN=1
 endif
 
+ifndef SERVER_USE_RENDERER_DLOPEN
+SERVER_USE_RENDERER_DLOPEN=0
+endif
+
 ifndef DEBUG_CFLAGS
 DEBUG_CFLAGS=-g -O0
 endif
@@ -972,6 +976,10 @@ endif
 
 ifeq ($(USE_RENDERER_DLOPEN),1)
   CLIENT_CFLAGS += -DUSE_RENDERER_DLOPEN
+endif
+
+ifeq ($(SERVER_USE_RENDERER_DLOPEN),1)
+  SERVER_CFLAGS += -DUSE_RENDERER_DLOPEN
 endif
 
 ifeq ($(USE_MUMBLE),1)
@@ -2181,6 +2189,13 @@ Q3DOBJ = \
   $(B)/ded/con_log.o \
   $(B)/ded/sys_main.o
 
+ifneq ($(SERVER_USE_RENDERER_DLOPEN),1)
+  Q3DOBJ += \
+    $(B)/ded/sv_ref.o \
+    $(B)/ded/tr_model.o \
+    $(B)/ded/tr_model_iqm.o
+endif
+
 ifeq ($(ARCH),i386)
   Q3DOBJ += \
       $(B)/ded/matha.o \
@@ -2768,6 +2783,9 @@ $(B)/ded/%.o: $(SYSDIR)/%.rc
 	$(DO_WINDRES)
 
 $(B)/ded/%.o: $(NDIR)/%.c
+	$(DO_DED_CC)
+
+$(B)/ded/%.o: $(RGL1DIR)/%.c
 	$(DO_DED_CC)
 
 # Extra dependencies to ensure the git version is incorporated
