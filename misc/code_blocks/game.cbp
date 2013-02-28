@@ -271,6 +271,9 @@
 		<Unit filename="../../code/game/g_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/game/g_mem.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/game/g_misc.c">
 			<Option compilerVar="CC" />
 		</Unit>
