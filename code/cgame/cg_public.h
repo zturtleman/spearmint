@@ -296,7 +296,10 @@ typedef enum {
 
 	CG_VOIP_STRING,
 //  char *(*CG_VoIPString)( void );
-//  returns a string of comma-delimited clientnums based on args
+	// pass voip target token unknown by client to cgame to convert into clientNums
+	// use Cmd_Argc() / Cmd_Argv() to read the target token, return a
+	// string of comma-delimited clientnums based on target token or
+	// NULL if unknown token.
 
 	CG_KEY_EVENT, 
 //	void	(*CG_KeyEvent)( int key, qboolean down );
