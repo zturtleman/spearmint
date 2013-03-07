@@ -31,9 +31,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 ** QGL.H
 */
 
-#ifdef DEDICATED
+#if defined DEDICATED && !defined defined __QGL_H__
+#define __QGL_H__
+
 typedef unsigned int GLuint;
 typedef qboolean GLboolean;
+
 #elif !defined __QGL_H__
 #define __QGL_H__
 
