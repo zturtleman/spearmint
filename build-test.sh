@@ -6,7 +6,7 @@ failed=0;
 (make clean release) || failed=1;
 
 # Test additional options
-(make clean release USE_CODEC_VORBIS=1 USE_FREETYPE=1 CFLAGS=-DRAVENMD4) || failed=1;
+(make clean release CFLAGS=-DRAVENMD4) || failed=1;
 
 # Test mingw
 if [ "$CC" = "clang" ]; then
