@@ -2602,27 +2602,6 @@ void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, fl
 void RE_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, float g, float b );
 void RE_RenderScene( const refdef_t *fd );
 
-#ifdef RAVENMD4
-/*
-=============================================================
-
-UNCOMPRESSING BONES
-
-=============================================================
-*/
-
-#define MC_BITS_X (16)
-#define MC_BITS_Y (16)
-#define MC_BITS_Z (16)
-#define MC_BITS_VECT (16)
-
-#define MC_SCALE_X (1.0f/64)
-#define MC_SCALE_Y (1.0f/64)
-#define MC_SCALE_Z (1.0f/64)
-
-void MC_UnCompress(float mat[3][4],const unsigned char * comp);
-#endif
-
 /*
 =============================================================
 
@@ -2637,6 +2616,7 @@ void RB_SurfaceAnim( md4Surface_t *surfType );
 #ifdef RAVENMD4
 void R_MDRAddAnimSurfaces( trRefEntity_t *ent );
 void RB_MDRSurfaceAnim( md4Surface_t *surface );
+void MC_UnCompress(float mat[3][4],const unsigned char * comp);
 #endif
 qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name );
 void R_AddIQMSurfaces( trRefEntity_t *ent );
