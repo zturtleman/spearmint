@@ -1071,19 +1071,21 @@ void CL_ReadDemoMessage( void ) {
 CL_WalkDemoExt
 ====================
 */
-static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
+static int CL_WalkDemoExt(char *arg, char *name, int *demofile, int *demoLength)
 {
 	int i = 0;
+	int length;
 	*demofile = 0;
 
 #ifdef LEGACY_PROTOCOL
 	if(com_legacyprotocol->integer > 0)
 	{
 		Com_sprintf(name, MAX_OSPATH, "demos/%s.%s%d", arg, DEMOEXT, com_legacyprotocol->integer);
-		FS_FOpenFileRead(name, demofile, qtrue);
+		length = FS_FOpenFileRead(name, demofile, qtrue);
 		
 		if (*demofile)
 		{
+			*demoLength = length;
 			Com_Printf("Demo file: %s\n", name);
 			return com_legacyprotocol->integer;
 		}
@@ -1093,10 +1095,11 @@ static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
 #endif
 	{
 		Com_sprintf(name, MAX_OSPATH, "demos/%s.%s%d", arg, DEMOEXT, com_protocol->integer);
-		FS_FOpenFileRead(name, demofile, qtrue);
+		length = FS_FOpenFileRead(name, demofile, qtrue);
 
 		if (*demofile)
 		{
+			*demoLength = length;
 			Com_Printf("Demo file: %s\n", name);
 			return com_protocol->integer;
 		}
@@ -1117,6 +1120,7 @@ static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
 		FS_FOpenFileRead( name, demofile, qtrue );
 		if (*demofile)
 		{
+			*demoLength = length;
 			Com_Printf("Demo file: %s\n", name);
 
 			return demo_protocols[i];
@@ -1126,6 +1130,7 @@ static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
 		i++;
 	}
 	
+	*demoLength = 0;
 	return -1;
 }
 
@@ -1193,7 +1198,7 @@ void CL_PlayDemo_f( void ) {
 		  )
 		{
 			Com_sprintf(name, sizeof(name), "demos/%s", arg);
-			FS_FOpenFileRead(name, &clc.demofile, qtrue);
+			clc.demoLength = FS_FOpenFileRead(name, &clc.demofile, qtrue);
 		}
 		else
 		{
@@ -1207,11 +1212,11 @@ void CL_PlayDemo_f( void ) {
 
 			Q_strncpyz(retry, arg, len + 1);
 			retry[len] = '\0';
-			protocol = CL_WalkDemoExt(retry, name, &clc.demofile);
+			protocol = CL_WalkDemoExt(retry, name, &clc.demofile, &clc.demoLength);
 		}
 	}
 	else
-		protocol = CL_WalkDemoExt(arg, name, &clc.demofile);
+		protocol = CL_WalkDemoExt(arg, name, &clc.demofile, &clc.demoLength);
 	
 	if (!clc.demofile) {
 		Com_Error( ERR_DROP, "couldn't open %s", name);
@@ -1306,6 +1311,21 @@ Returns the current position of the demo
 int CL_DemoPos( void ) {
 	if( clc.demoplaying || clc.demorecording ) {
 		return FS_FTell( clc.demofile );
+	} else {
+		return 0;
+	}
+}
+
+/*
+==================
+CL_DemoLength
+
+Returns the length of the playing demo
+==================
+*/
+int CL_DemoLength( void ) {
+	if( clc.demoplaying ) {
+		return clc.demoLength;
 	} else {
 		return 0;
 	}

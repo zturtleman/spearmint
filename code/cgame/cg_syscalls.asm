@@ -81,6 +81,7 @@ equ	trap_SetNetFields					-159
 equ	trap_GetDemoState					-160
 equ	trap_GetDemoPos						-161
 equ	trap_GetDemoName					-162
+equ	trap_GetDemoLength					-163
 
 
 

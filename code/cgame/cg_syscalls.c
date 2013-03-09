@@ -490,6 +490,10 @@ void		trap_GetDemoName( char *buffer, int size ) {
   syscall( CG_GETDEMONAME, buffer, size );
 }
 
+int			trap_GetDemoLength( void ) {
+  return syscall( CG_GETDEMOLENGTH );
+}
+
 int trap_MemoryRemaining( void ) {
 	return syscall( CG_MEMORY_REMAINING );
 }

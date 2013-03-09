@@ -795,6 +795,8 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETDEMONAME:
 		CL_DemoName( VMA(1), args[2] );
 		return 0;
+	case CG_GETDEMOLENGTH:
+		return CL_DemoLength();
 	case CG_MEMORY_REMAINING:
 		return Hunk_MemoryRemaining();
   case CG_KEY_ISDOWN:

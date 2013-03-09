@@ -162,6 +162,7 @@ typedef enum {
 	CG_GETDEMOSTATE,
 	CG_GETDEMOPOS,
 	CG_GETDEMONAME,
+	CG_GETDEMOLENGTH,
 
 
 	// these are not available in ui

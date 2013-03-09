@@ -1709,6 +1709,7 @@ void		trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, i
 int			trap_GetDemoState( void );
 int			trap_GetDemoPos( void );
 void		trap_GetDemoName( char *buffer, int size );
+int			trap_GetDemoLength( void );
 
 // model collision
 void		trap_CM_LoadMap( const char *mapname );
