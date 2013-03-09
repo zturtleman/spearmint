@@ -5,9 +5,6 @@ failed=0;
 # Default Build
 (make clean release) || failed=1;
 
-# Test additional options
-(make clean release CFLAGS=-DRAVENMD4) || failed=1;
-
 # Test mingw
 if [ "$CC" = "clang" ]; then
 	# skip mingw if travis-ci clang build
