@@ -478,6 +478,18 @@ void		trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, i
 	syscall( CG_SET_NET_FIELDS, entityStateSize, entityStateFields, numEntityStateFields, playerStateSize, playerStateFields, numPlayerStateFields );
 }
 
+int			trap_GetDemoState( void ) {
+  return syscall( CG_GETDEMOSTATE );
+}
+
+int			trap_GetDemoPos( void ) {
+  return syscall( CG_GETDEMOPOS );
+}
+
+void		trap_GetDemoName( char *buffer, int size ) {
+  syscall( CG_GETDEMONAME, buffer, size );
+}
+
 int trap_MemoryRemaining( void ) {
 	return syscall( CG_MEMORY_REMAINING );
 }

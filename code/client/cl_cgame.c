@@ -788,6 +788,13 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_SET_NET_FIELDS:
 		CL_SetNetFields( args[1], VMA(2), args[3], args[4], VMA(5), args[6] );
 		return 0;
+	case CG_GETDEMOSTATE:
+		return CL_DemoState();
+	case CG_GETDEMOPOS:
+		return CL_DemoPos();
+	case CG_GETDEMONAME:
+		CL_DemoName( VMA(1), args[2] );
+		return 0;
 	case CG_MEMORY_REMAINING:
 		return Hunk_MemoryRemaining();
   case CG_KEY_ISDOWN:

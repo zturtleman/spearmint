@@ -1347,6 +1347,15 @@ typedef enum _flag_status {
 	FLAG_DROPPED
 } flagStatus_t;
 
+typedef enum {
+	DS_NONE,
+
+	DS_PLAYBACK,
+	DS_RECORDING,
+
+	DS_NUM_DEMO_STATES
+} demoState_t;
+
 
 
 #define	MAX_GLOBAL_SERVERS				4096

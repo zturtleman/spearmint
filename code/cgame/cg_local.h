@@ -1706,6 +1706,10 @@ void		trap_SendClientCommand( const char *s );
 void		trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
 						int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields );
 
+int			trap_GetDemoState( void );
+int			trap_GetDemoPos( void );
+void		trap_GetDemoName( char *buffer, int size );
+
 // model collision
 void		trap_CM_LoadMap( const char *mapname );
 int			trap_CM_NumInlineModels( void );

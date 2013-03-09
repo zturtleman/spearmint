@@ -159,6 +159,9 @@ typedef enum {
 	CG_SETUSERCMDVALUE,
 	CG_SENDCLIENTCOMMAND,
 	CG_SET_NET_FIELDS,
+	CG_GETDEMOSTATE,
+	CG_GETDEMOPOS,
+	CG_GETDEMONAME,
 
 
 	// these are not available in ui
