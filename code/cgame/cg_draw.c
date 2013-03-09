@@ -3078,9 +3078,11 @@ void CG_DrawDemoRecording( void ) {
 	if ( trap_GetDemoState() != DS_RECORDING ) {
 		return;
 	}
-	if ( trap_Cvar_VariableIntegerValue("ui_recordSPDemo") ) {
+#ifdef MISSIONPACK
+	if ( cg_recordSPDemo.integer ) {
 		return;
 	}
+#endif
 
 	trap_GetDemoName( demoName, sizeof( demoName ) );
 	pos = trap_GetDemoPos();
