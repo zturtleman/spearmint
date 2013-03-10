@@ -739,7 +739,6 @@ void CL_StopRecord_f( void ) {
 	FS_FCloseFile (clc.demofile);
 	clc.demofile = 0;
 	clc.demorecording = qfalse;
-	clc.spDemoRecording = qfalse;
 	Com_Printf ("Stopped demo.\n");
 }
 
@@ -791,9 +790,7 @@ void CL_Record_f( void ) {
 	}
 
 	if ( clc.demorecording ) {
-		if (!clc.spDemoRecording) {
-			Com_Printf ("Already recording.\n");
-		}
+		Com_Printf ("Already recording.\n");
 		return;
 	}
 
@@ -843,11 +840,6 @@ void CL_Record_f( void ) {
 		return;
 	}
 	clc.demorecording = qtrue;
-	if (Cvar_VariableValue("ui_recordSPDemo")) {
-	  clc.spDemoRecording = qtrue;
-	} else {
-	  clc.spDemoRecording = qfalse;
-	}
 
 	Q_strncpyz( clc.demoName, demoName, sizeof( clc.demoName ) );
 

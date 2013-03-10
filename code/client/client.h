@@ -245,7 +245,6 @@ typedef struct {
 
 	// demo information
 	char		demoName[MAX_QPATH];
-	qboolean	spDemoRecording;
 	qboolean	demorecording;
 	qboolean	demoplaying;
 	qboolean	demowaiting;	// don't record until a non-delta message is received
