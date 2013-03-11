@@ -234,10 +234,6 @@ ifndef DEBUG_CFLAGS
 DEBUG_CFLAGS=-g -O0
 endif
 
-ifndef USE_OLD_VM64
-USE_OLD_VM64=0
-endif
-
 #############################################################################
 
 BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
@@ -2016,34 +2012,16 @@ ifeq ($(HAVE_VM_COMPILED),true)
       $(B)/client/vm_x86.o
   endif
   ifeq ($(ARCH),x86_64)
-    ifeq ($(USE_OLD_VM64),1)
-      Q3OBJ += \
-        $(B)/client/vm_x86_64.o \
-        $(B)/client/vm_x86_64_assembler.o
-    else
-      Q3OBJ += \
-        $(B)/client/vm_x86.o
-    endif
+    Q3OBJ += \
+      $(B)/client/vm_x86.o
   endif
   ifeq ($(ARCH),amd64)
-    ifeq ($(USE_OLD_VM64),1)
-      Q3OBJ += \
-        $(B)/client/vm_x86_64.o \
-        $(B)/client/vm_x86_64_assembler.o
-    else
-      Q3OBJ += \
-        $(B)/client/vm_x86.o
-    endif
+    Q3OBJ += \
+      $(B)/client/vm_x86.o
   endif
   ifeq ($(ARCH),x64)
-    ifeq ($(USE_OLD_VM64),1)
-      Q3OBJ += \
-        $(B)/client/vm_x86_64.o \
-        $(B)/client/vm_x86_64_assembler.o
-    else
-      Q3OBJ += \
-        $(B)/client/vm_x86.o
-    endif
+    Q3OBJ += \
+      $(B)/client/vm_x86.o
   endif
   ifeq ($(ARCH),ppc)
     Q3OBJ += $(B)/client/vm_powerpc.o $(B)/client/vm_powerpc_asm.o
@@ -2244,34 +2222,16 @@ ifeq ($(HAVE_VM_COMPILED),true)
       $(B)/ded/vm_x86.o
   endif
   ifeq ($(ARCH),x86_64)
-    ifeq ($(USE_OLD_VM64),1)
-      Q3DOBJ += \
-        $(B)/ded/vm_x86_64.o \
-        $(B)/ded/vm_x86_64_assembler.o
-    else
-      Q3DOBJ += \
-        $(B)/ded/vm_x86.o
-    endif
+    Q3DOBJ += \
+      $(B)/ded/vm_x86.o
   endif
   ifeq ($(ARCH),amd64)
-    ifeq ($(USE_OLD_VM64),1)
-      Q3DOBJ += \
-        $(B)/ded/vm_x86_64.o \
-        $(B)/ded/vm_x86_64_assembler.o
-    else
-      Q3DOBJ += \
-        $(B)/ded/vm_x86.o
-    endif
+    Q3DOBJ += \
+      $(B)/ded/vm_x86.o
   endif
   ifeq ($(ARCH),x64)
-    ifeq ($(USE_OLD_VM64),1)
-      Q3DOBJ += \
-        $(B)/ded/vm_x86_64.o \
-        $(B)/ded/vm_x86_64_assembler.o
-    else
-      Q3DOBJ += \
-        $(B)/ded/vm_x86.o
-    endif
+    Q3DOBJ += \
+      $(B)/ded/vm_x86.o
   endif
   ifeq ($(ARCH),ppc)
     Q3DOBJ += $(B)/ded/vm_powerpc.o $(B)/ded/vm_powerpc_asm.o

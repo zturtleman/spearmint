@@ -116,8 +116,6 @@ Makefile.local:
   USE_MUMBLE         - enable Mumble support
   USE_VOIP           - enable built-in VoIP support
   USE_FREETYPE       - enable FreeType support for rendering fonts
-  USE_OLD_VM64       - use Ludwig Nussel's old JIT compiler implementation
-                       for x86_64
   USE_INTERNAL_SPEEX - build internal speex library instead of dynamically
                        linking against system libspeex
   USE_INTERNAL_FREETYPE - build and link against internal FreeType library
