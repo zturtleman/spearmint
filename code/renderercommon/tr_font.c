@@ -67,7 +67,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // uncheck the exclude from build check box in the FreeType2 area of the Renderer project. 
 
 
-#include "tr_local.h"
+#include "tr_common.h"
 #include "../qcommon/qcommon.h"
 
 #ifdef BUILD_FREETYPE

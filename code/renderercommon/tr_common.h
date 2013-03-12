@@ -31,8 +31,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define TR_COMMON_H
 
 #include "../qcommon/q_shared.h"
-/*#include "../qcommon/qfiles.h"*/
-/*#include "../qcommon/qcommon.h"*/
 #include "../renderercommon/tr_public.h"
 #include "qgl.h"
 
@@ -89,6 +87,9 @@ qboolean	R_GetModeInfo( int *width, int *height, float *windowAspect, int mode )
 float R_NoiseGet4f( float x, float y, float z, float t );
 int R_RandomOn( float t );
 void  R_NoiseInit( void );
+
+void R_IssuePendingRenderCommands( void );
+qhandle_t		 RE_RegisterShaderNoMip( const char *name );
 
 /*
 ====================================================================

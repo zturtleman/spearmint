@@ -42,7 +42,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "tr_fbo.h"
 #include "tr_postprocess.h"
 #include "../renderercommon/iqm.h"
-#include "qgl2.h"
+#include "../renderercommon/qgl.h"
 
 #define GL_INDEX_TYPE		GL_UNSIGNED_INT
 typedef unsigned int glIndex_t;
