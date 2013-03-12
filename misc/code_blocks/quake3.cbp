@@ -1111,6 +1111,9 @@
 		<Unit filename="../../code/renderercommon/iqm.h" />
 		<Unit filename="../../code/renderercommon/qgl.h" />
 		<Unit filename="../../code/renderercommon/tr_common.h" />
+		<Unit filename="../../code/renderercommon/tr_font.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/renderercommon/tr_image_bmp.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1147,9 +1150,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/renderergl1/tr_flares.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/renderergl1/tr_font.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/renderergl1/tr_image.c">
