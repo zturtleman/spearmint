@@ -2376,6 +2376,8 @@ CG_DrawVote
 static void CG_DrawVote(void) {
 	char	*s;
 	int		sec;
+	char	yesKeys[64];
+	char	noKeys[64];
 
 	if ( !cgs.voteTime ) {
 		return;
@@ -2393,14 +2395,17 @@ static void CG_DrawVote(void) {
 	if ( sec < 0 ) {
 		sec = 0;
 	}
-#ifdef MISSIONPACK_HUD // ZTM: TODO: Add vote to Q3 ingame menu?
-	s = va("VOTE(%i):%s yes:%i no:%i", sec, cgs.voteString, cgs.voteYes, cgs.voteNo);
-	CG_DrawSmallString( 0, 58, s, 1.0F );
+
+	CG_KeysStringForBinding( Com_LocalClientCvarName( cg.cur_localClientNum, "vote yes" ), yesKeys, sizeof (yesKeys) );
+	CG_KeysStringForBinding( Com_LocalClientCvarName( cg.cur_localClientNum, "vote no" ), noKeys, sizeof (noKeys) );
+
+	s = va( "Vote (%i): %s", sec, cgs.voteString );
+	CG_DrawSmallString( 2, 58, s, 1.0F );
+	s = va( "Yes (%s): %i, No (%s): %i", yesKeys, cgs.voteYes, noKeys, cgs.voteNo );
+	CG_DrawSmallString( 2, 58 + SMALLCHAR_HEIGHT + 2, s, 1.0F );
+#ifdef MISSIONPACK_HUD
 	s = "or press ESC then click Vote";
-	CG_DrawSmallString( 0, 58 + SMALLCHAR_HEIGHT + 2, s, 1.0F );
-#else
-	s = va("VOTE(%i):%s yes:%i no:%i", sec, cgs.voteString, cgs.voteYes, cgs.voteNo );
-	CG_DrawSmallString( 0, 58, s, 1.0F );
+	CG_DrawSmallString( 2, 58 + ( SMALLCHAR_HEIGHT + 2 ) * 2, s, 1.0F );
 #endif
 }
 
