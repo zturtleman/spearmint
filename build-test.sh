@@ -2,18 +2,15 @@
 
 failed=0;
 
-# Default Build
-(make clean release) || failed=1;
-
-# Test mingw
-if [ "$CC" = "clang" ]; then
-	# skip mingw if travis-ci clang build
-	echo "Skipping mingw build because there is no mingw clang compiler available.";
+# check if testing mingw
+if [ "$CC" = "i686-w64-mingw32-gcc" ]; then
+	MAKE=./cross-make-mingw.sh
 else
-	# clear CC so cross-make-mingw script will set it.
-	export CC=
-	(exec ./cross-make-mingw.sh clean release) || failed=1;
+	MAKE=make
 fi
+
+# Default Build
+($MAKE clean release) || failed=1;
 
 if [ $failed -eq 1 ]; then
 	echo "Build failure.";

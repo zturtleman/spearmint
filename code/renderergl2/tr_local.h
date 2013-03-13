@@ -2826,11 +2826,6 @@ void RE_TakeVideoFrame( int width, int height,
 void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
 void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
 
-// font stuff
-void R_InitFreeType( void );
-void R_DoneFreeType( void );
-void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font);
-
 // fog stuff
 int R_DefaultFogNum( void );
 void R_FogOff( void );
