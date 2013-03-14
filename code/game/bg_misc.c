@@ -1120,6 +1120,17 @@ qboolean BG_CheckSpawnEntity( const bgEntitySpawnInfo_t *info ) {
 	}
 #endif
 
+	if( info->spawnString( "!gametype", NULL, &value ) ) {
+		if( gametype >= 0 && gametype < GT_MAX_GAME_TYPE ) {
+			gametypeName = gametypeNames[gametype];
+
+			s = strstr( value, gametypeName );
+			if( s ) {
+				return qfalse;
+			}
+		}
+	}
+
 	if( info->spawnString( "gametype", NULL, &value ) ) {
 		if( gametype >= 0 && gametype < GT_MAX_GAME_TYPE ) {
 			gametypeName = gametypeNames[gametype];
