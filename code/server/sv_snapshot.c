@@ -503,6 +503,70 @@ static void SV_AddEntitiesVisibleFromPoint( int clientNum, vec3_t origin, client
 			}
 		}
 
+		// visibility dummies
+		if ( ent->r.svFlags & SVF_VISDUMMY ) {
+			sharedEntity_t *ment = NULL;
+
+			// find master
+			ment = SV_GentityNum( ent->r.visDummyNum );
+
+			if ( ment ) {
+				svEntity_t *master = NULL;
+				master = SV_SvEntityForGentity( ment );
+
+				if ( master->snapshotCounter == sv.snapshotCounter || !ment->r.linked ) {
+					continue;
+				}
+
+				SV_AddEntToSnapshot( frame, master, ment, eNums );
+			}
+
+			// master needs to be added, but not this dummy ent
+			continue;
+		} else if ( ent->r.svFlags & SVF_VISDUMMY_MULTIPLE ) {
+			int h;
+			sharedEntity_t *ment = NULL;
+			svEntity_t *master = NULL;
+
+			for ( h = 0; h < sv.num_entities; h++ ) {
+				ment = SV_GentityNum( h );
+
+				if ( ment == ent ) {
+					continue;
+				}
+
+				if ( ment ) {
+					master = SV_SvEntityForGentity( ment );
+				} else {
+					continue;
+				}
+
+				if ( !ment->r.linked ) {
+					continue;
+				}
+
+				if ( ment->s.number != h ) {
+					Com_DPrintf( "FIXING vis dummy multiple ment->S.NUMBER!!!\n" );
+					ment->s.number = h;
+				}
+
+				if ( ment->r.svFlags & SVF_NOCLIENT ) {
+					continue;
+				}
+
+				if ( master->snapshotCounter == sv.snapshotCounter ) {
+					continue;
+				}
+
+				if ( ment->r.portalCullDistance == ent->s.number ) {
+					SV_AddEntToSnapshot( frame, master, ment, eNums );
+				}
+			}
+
+			// masters need to be added, but not this dummy ent
+			continue;
+		}
+
 		// add it
 		SV_AddEntToSnapshot( frame, svEnt, ent, eNums );
 

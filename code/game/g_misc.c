@@ -187,6 +187,57 @@ void SP_misc_gamemodel( gentity_t *ent ) {
 	G_FreeEntity( ent );
 }
 
+
+void locateMaster( gentity_t *ent ) {
+	ent->target_ent = G_PickTarget( ent->target );
+	if ( ent->target_ent ) {
+		ent->r.visDummyNum = ent->target_ent->s.number;
+	} else {
+		G_Printf( "Couldn't find target(%s) for misc_vis_dummy at %s\n", ent->target, vtos( ent->r.currentOrigin ) );
+		G_FreeEntity( ent );
+	}
+}
+
+/*QUAKED misc_vis_dummy (1 .5 0) (-8 -8 -8) (8 8 8)
+If this entity is "visible" (in player's PVS) then it's target is forced to be active whether it is in the player's PVS or not.
+This entity itself is never visible or transmitted to clients.
+For safety, you should have each dummy only point at one entity (however, it's okay to have many dummies pointing at one entity)
+*/
+void SP_misc_vis_dummy( gentity_t *ent ) {
+
+	if ( !ent->target ) {
+		G_Printf( "No target specified for misc_vis_dummy at %s\n", vtos( ent->r.currentOrigin ) );
+		G_FreeEntity( ent );
+		return;
+	}
+
+	ent->r.svFlags |= SVF_VISDUMMY;
+	G_SetOrigin( ent, ent->s.origin );
+	trap_LinkEntity( ent );
+
+	ent->think = locateMaster;
+	ent->nextthink = level.time + 1000;
+
+}
+
+/*QUAKED misc_vis_dummy_multiple (1 .5 0) (-8 -8 -8) (8 8 8)
+If this entity is "visible" (in player's PVS) then it's target is forced to be active whether it is in the player's PVS or not.
+This entity itself is never visible or transmitted to clients.
+This entity was created to have multiple speakers targeting it
+*/
+void SP_misc_vis_dummy_multiple( gentity_t *ent ) {
+	if ( !ent->targetname ) {
+		G_Printf( "misc_vis_dummy_multiple needs a targetname at %s\n", vtos( ent->r.currentOrigin ) );
+		G_FreeEntity( ent );
+		return;
+	}
+
+	ent->r.svFlags |= SVF_VISDUMMY_MULTIPLE;
+	G_SetOrigin( ent, ent->s.origin );
+	trap_LinkEntity( ent );
+
+}
+
 //===========================================================
 
 void locateCamera( gentity_t *ent ) {

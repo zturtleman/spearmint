@@ -53,6 +53,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define SVF_NOTSINGLECLIENT		0x00000200	// send entity to everyone but one client
 											// (entityShared_t->singleClient)
 
+#define SVF_VISDUMMY            0x00000400  // this ent is a "visibility dummy" and needs it's master to be sent to clients that can see it even if they can't see the master ent
+#define SVF_VISDUMMY_MULTIPLE   0x00000800  // so that one vis dummy can add to snapshot multiple speakers
+
 
 
 //===============================================================
@@ -86,6 +89,9 @@ typedef struct {
 
 	// if set, portal entities are only sent to client if distance between portal and client <= portalCullDistance
 	int			portalCullDistance;
+
+	// if SVF_VISDUMMY, number of master, else if not 0, it's the number of a target_vis_dummy_multiple.
+	int			visDummyNum;
 } entityShared_t;
 
 
