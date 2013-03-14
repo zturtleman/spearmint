@@ -113,7 +113,6 @@ char    *vtos( const vec3_t v ) {
 	return s;
 }
 
-#if 0
 void SP_misc_gamemodel( void ) {
 	char* model;
 	vec_t angle;
@@ -128,10 +127,12 @@ void SP_misc_gamemodel( void ) {
 
 	int i;
 
+#if 0 // ZTM: Note: Spearmint's game always drops misc_gamemodels. Also, RTCW has targetname set though I'm not sure what, if anything, it's used for.
 	if ( CG_SpawnString( "targetname", "", &model ) || CG_SpawnString( "scriptname", "", &model ) || CG_SpawnString( "spawnflags", "", &model ) ) {
 		// Gordon: this model may not be static, so let the server handle it
 		return;
 	}
+#endif
 
 	if ( cg.numMiscGameModels >= MAX_STATIC_GAMEMODELS ) {
 		CG_Error( "^1MAX_STATIC_GAMEMODELS(%i) hit", MAX_STATIC_GAMEMODELS );
@@ -176,7 +177,6 @@ void SP_misc_gamemodel( void ) {
 		gamemodel->radius = 0;
 	}
 }
-#endif
 
 typedef struct {
 	char    *name;
@@ -185,12 +185,10 @@ typedef struct {
 
 spawn_t spawns[] = {
 	{0, 0},
-#if 0
 	{"misc_gamemodel",               SP_misc_gamemodel},
-#endif
 };
 
-#define NUMSPAWNS   ( sizeof( spawns ) / sizeof( spawn_t ) )
+int numSpawns = ARRAY_LEN( spawns );
 
 /*
 ===================
@@ -213,7 +211,7 @@ void CG_ParseEntityFromSpawnVars( void ) {
 #endif
 
 	if ( CG_SpawnString( "classname", "", &classname ) ) {
-		for ( i = 0; i < NUMSPAWNS; i++ ) {
+		for ( i = 0; i < numSpawns; i++ ) {
 			if ( !Q_stricmp( spawns[i].name, classname ) ) {
 				spawns[i].spawn();
 				break;
@@ -317,8 +315,6 @@ void SP_worldspawn( void ) {
 	}
 
 #if 0
-	CG_ParseSpawns();
-
 	cg.mapcoordsScale[0] = 1 / ( cg.mapcoordsMaxs[0] - cg.mapcoordsMins[0] );
 	cg.mapcoordsScale[1] = 1 / ( cg.mapcoordsMaxs[1] - cg.mapcoordsMins[1] );
 
@@ -340,9 +336,7 @@ void CG_ParseEntitiesFromString( void ) {
 	// allow calls to CG_Spawn*()
 	cg.spawning = qtrue;
 	cg.numSpawnVars = 0;
-#if 0
 	cg.numMiscGameModels = 0;
-#endif
 
 	// the worldspawn is not an actual entity, but it still
 	// has a "spawn" function to perform any global setup
@@ -356,6 +350,8 @@ void CG_ParseEntitiesFromString( void ) {
 	while ( CG_ParseSpawnVars() ) {
 		CG_ParseEntityFromSpawnVars();
 	}
+
+	CG_DPrintf( "CGame loaded %d misc_gamemodels\n", cg.numMiscGameModels );
 
 	cg.spawning = qfalse;           // any future calls to CG_Spawn*() will be errors
 }

@@ -3034,6 +3034,81 @@ void CG_FogView( void ) {
 
 /*
 =====================
+CG_DrawMiscGamemodels
+=====================
+*/
+void CG_DrawMiscGamemodels( void ) {
+	int i, j;
+	refEntity_t ent;
+	int drawn = 0;
+
+	memset( &ent, 0, sizeof( ent ) );
+
+	ent.reType = RT_MODEL;
+	ent.nonNormalizedAxes = qtrue;
+
+	// ydnar: static gamemodels don't project shadows
+	ent.renderfx = RF_NOSHADOW;
+
+	for ( i = 0; i < cg.numMiscGameModels; i++ ) {
+		if ( cgs.miscGameModels[i].radius ) {
+			if ( CG_CullPointAndRadius( cgs.miscGameModels[i].org, cgs.miscGameModels[i].radius ) ) {
+				continue;
+			}
+		}
+
+		if ( !trap_R_inPVS( cg.refdef.vieworg, cgs.miscGameModels[i].org ) ) {
+			continue;
+		}
+
+		VectorCopy( cgs.miscGameModels[i].org, ent.origin );
+		VectorCopy( cgs.miscGameModels[i].org, ent.oldorigin );
+		VectorCopy( cgs.miscGameModels[i].org, ent.lightingOrigin );
+
+/*		{
+			vec3_t v;
+			vec3_t vu = { 0.f, 0.f, 1.f };
+			vec3_t vl = { 0.f, 1.f, 0.f };
+			vec3_t vf = { 1.f, 0.f, 0.f };
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, cgs.miscGameModels[i].radius, vu, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, cgs.miscGameModels[i].radius, vf, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, cgs.miscGameModels[i].radius, vl, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, -cgs.miscGameModels[i].radius, vu, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, -cgs.miscGameModels[i].radius, vf, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, -cgs.miscGameModels[i].radius, vl, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+		}*/
+
+		for ( j = 0; j < 3; j++ ) {
+			VectorCopy( cgs.miscGameModels[i].axes[j], ent.axis[j] );
+		}
+		ent.hModel = cgs.miscGameModels[i].model;
+
+		trap_R_AddRefEntityToScene( &ent );
+
+		drawn++;
+	}
+}
+
+/*
+=====================
 CG_DrawActive
 
 Perform all drawing needed to completely fill the viewport
@@ -3060,6 +3135,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		CG_DrawCrosshair3D();
 
 	CG_PB_RenderPolyBuffers();
+
+	CG_DrawMiscGamemodels();
 
 	CG_FogView();
 

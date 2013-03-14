@@ -653,6 +653,8 @@ typedef struct {
 	vec2_t mapcoordsMaxs;
 	qboolean mapcoordsValid;
 
+	int			numMiscGameModels;
+
 	int			numViewports;
 	int			viewport;
 	qboolean	singleCamera; // Rending multiple clients using one viewport
@@ -1065,6 +1067,14 @@ typedef struct {
 
 } cgMedia_t;
 
+#define MAX_STATIC_GAMEMODELS   1024
+
+typedef struct cg_gamemodel_s {
+	qhandle_t model;
+	vec3_t org;
+	vec3_t axes[3];
+	vec_t radius;
+} cg_gamemodel_t;
 
 // The client game static (cgs) structure hold everything
 // loaded or calculated from the gamestate.  It will NOT
@@ -1148,6 +1158,8 @@ typedef struct {
 	vec3_t		globalFogColor;
 	float		globalFogDepthForOpaque;
 	float		globalFogDensity;
+
+	cg_gamemodel_t miscGameModels[MAX_STATIC_GAMEMODELS];
 
 	// media
 	cgMedia_t		media;

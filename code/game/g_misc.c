@@ -174,6 +174,19 @@ void SP_misc_model( gentity_t *ent ) {
 #endif
 }
 
+/*QUAKED misc_gamemodel (1 0 0) (-16 -16 -16) (16 16 16)
+md3 placed in the game at runtime (rather than in the bsp)
+"model"			arbitrary .md3 file to display
+"modelscale"	scale multiplier (defaults to 1x, and scales uniformly)
+"modelscale_vec"	scale multiplier (defaults to 1 1 1, scales each axis as requested)
+
+"modelscale_vec" - Set scale per-axis.  Overrides "modelscale", so if you have both, the "modelscale" is ignored
+*/
+// ZTM: FIXME: Stub. Currently just loaded by cgame
+void SP_misc_gamemodel( gentity_t *ent ) {
+	G_FreeEntity( ent );
+}
+
 //===========================================================
 
 void locateCamera( gentity_t *ent ) {
