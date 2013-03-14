@@ -1073,6 +1073,69 @@ int bg_numPlayerStateFields = ARRAY_LEN(bg_playerStateFields);
 
 /*
 ==============
+BG_CheckSpawnEntity
+==============
+*/
+qboolean BG_CheckSpawnEntity( const bgEntitySpawnInfo_t *info ) {
+	int			i, gametype;
+	char		*s, *value, *gametypeName;
+	static char *gametypeNames[GT_MAX_GAME_TYPE] = {"ffa", "tournament", "single", "team", "ctf"
+#ifdef MISSIONPACK
+		, "oneflag", "obelisk", "harvester"
+#endif
+		};
+
+	gametype = info->gametype;
+
+	// check for "notsingle" flag
+	if ( gametype == GT_SINGLE_PLAYER ) {
+		info->spawnInt( "notsingle", "0", &i );
+		if ( i ) {
+			return qfalse;
+		}
+	}
+
+	// check for "notteam" flag (GT_FFA, GT_TOURNAMENT, GT_SINGLE_PLAYER)
+	if ( gametype >= GT_TEAM ) {
+		info->spawnInt( "notteam", "0", &i );
+		if ( i ) {
+			return qfalse;
+		}
+	} else {
+		info->spawnInt( "notfree", "0", &i );
+		if ( i ) {
+			return qfalse;
+		}
+	}
+
+#ifdef MISSIONPACK
+	info->spawnInt( "notta", "0", &i );
+	if ( i ) {
+			return qfalse;
+	}
+#else
+	info->spawnInt( "notq3a", "0", &i );
+	if ( i ) {
+			return qfalse;
+	}
+#endif
+
+	if( info->spawnString( "gametype", NULL, &value ) ) {
+		if( gametype >= 0 && gametype < GT_MAX_GAME_TYPE ) {
+			gametypeName = gametypeNames[gametype];
+
+			s = strstr( value, gametypeName );
+			if( !s ) {
+				return qfalse;
+			}
+		}
+	}
+
+	return qtrue;
+}
+
+/*
+==============
 BG_FindItemForPowerup
 ==============
 */

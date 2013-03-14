@@ -201,14 +201,16 @@ cg.spawnVars[], then call the class specfic spawn function
 void CG_ParseEntityFromSpawnVars( void ) {
 	int i;
 	char    *classname;
+	bgEntitySpawnInfo_t spawnInfo;
 
-#if 0
-	// check for "notteam" / "notfree" flags
-	CG_SpawnInt( "notteam", "0", &i );
-	if ( i ) {
+	spawnInfo.gametype = cgs.gametype;
+	spawnInfo.spawnInt = CG_SpawnInt;
+	spawnInfo.spawnString = CG_SpawnString;
+
+	// check "notsingle", "notfree", "notteam", etc
+	if ( !BG_CheckSpawnEntity( &spawnInfo ) ) {
 		return;
 	}
-#endif
 
 	if ( CG_SpawnString( "classname", "", &classname ) ) {
 		for ( i = 0; i < numSpawns; i++ ) {
