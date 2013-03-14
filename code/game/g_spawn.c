@@ -162,6 +162,7 @@ void SP_target_location (gentity_t *ent);
 void SP_target_push (gentity_t *ent);
 
 void SP_light (gentity_t *self);
+void SP_lightJunior (gentity_t *self);
 void SP_info_null (gentity_t *self);
 void SP_info_notnull (gentity_t *self);
 void SP_info_camp (gentity_t *self);
@@ -238,6 +239,8 @@ spawn_t	spawns[] = {
 	{"target_push", SP_target_push},
 
 	{"light", SP_light},
+	{"lightJunior", SP_lightJunior},
+
 	{"path_corner", SP_path_corner},
 
 	{"misc_teleporter_dest", SP_misc_teleporter_dest},
