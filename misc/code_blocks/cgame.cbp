@@ -18,10 +18,8 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-W" />
-					<Add option="-DWIN32" />
+					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Win32">
@@ -36,10 +34,7 @@
 					<Add option="-g" />
 					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-DWIN32" />
-					<Add option="-D_DEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DCGAME" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA_UI Win32">
@@ -54,10 +49,8 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-W" />
-					<Add option="-DWIN32" />
+					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
@@ -71,13 +64,10 @@
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
-					<Add option="-W" />
 					<Add option="-g" />
+					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-DWIN32" />
-					<Add option="-D_DEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DCGAME" />
 					<Add option="-DMISSIONPACK" />
 					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
@@ -95,10 +85,8 @@
 					<Add option="-Wall" />
 					<Add option="-fPIC" />
 					<Add option="-W" />
-					<Add option="-DWIN32" />
+					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Linux i386">
@@ -114,10 +102,7 @@
 					<Add option="-fPIC" />
 					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-DWIN32" />
-					<Add option="-D_DEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DCGAME" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA_UI Linux i386">
@@ -133,10 +118,8 @@
 					<Add option="-Wall" />
 					<Add option="-fPIC" />
 					<Add option="-W" />
-					<Add option="-DWIN32" />
+					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
@@ -154,10 +137,7 @@
 					<Add option="-fPIC" />
 					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-DWIN32" />
-					<Add option="-D_DEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DCGAME" />
 					<Add option="-DMISSIONPACK" />
 					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
@@ -175,10 +155,8 @@
 					<Add option="-Wall" />
 					<Add option="-fPIC" />
 					<Add option="-W" />
-					<Add option="-DWIN32" />
+					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Linux x86_64">
@@ -194,10 +172,7 @@
 					<Add option="-fPIC" />
 					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-DWIN32" />
-					<Add option="-D_DEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DCGAME" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA_UI Linux x86_64">
@@ -213,10 +188,8 @@
 					<Add option="-Wall" />
 					<Add option="-fPIC" />
 					<Add option="-W" />
-					<Add option="-DWIN32" />
+					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
@@ -234,10 +207,7 @@
 					<Add option="-fPIC" />
 					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-DWIN32" />
-					<Add option="-D_DEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DCGAME" />
 					<Add option="-DMISSIONPACK" />
 					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>

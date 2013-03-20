@@ -42,18 +42,12 @@ MPACK_OBJ="
 	build/release-darwin-ppc/$MPACKDIR/gameppc.dylib
 "
 RENDER_OBJ="
-	build/release-darwin-x86_64/renderer_opengl1_smp_x86_64.dylib
-	build/release-darwin-i386/renderer_opengl1_smp_i386.dylib
-	build/release-darwin-ppc/renderer_opengl1_smp_ppc.dylib
 	build/release-darwin-x86_64/renderer_opengl1_x86_64.dylib
 	build/release-darwin-i386/renderer_opengl1_i386.dylib
 	build/release-darwin-ppc/renderer_opengl1_ppc.dylib
-	build/release-darwin-x86_64/renderer_rend2_smp_x86_64.dylib
-	build/release-darwin-i386/renderer_rend2_smp_i386.dylib
-	build/release-darwin-ppc/renderer_rend2_smp_ppc.dylib
-	build/release-darwin-x86_64/renderer_rend2_x86_64.dylib
-	build/release-darwin-i386/renderer_rend2_i386.dylib
-	build/release-darwin-ppc/renderer_rend2_ppc.dylib
+	build/release-darwin-x86_64/renderer_opengl2_x86_64.dylib
+	build/release-darwin-i386/renderer_opengl2_i386.dylib
+	build/release-darwin-ppc/renderer_opengl2_ppc.dylib
 "
 
 cd `dirname $0`

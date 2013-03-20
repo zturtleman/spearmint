@@ -162,6 +162,7 @@ void SP_target_location (gentity_t *ent);
 void SP_target_push (gentity_t *ent);
 
 void SP_light (gentity_t *self);
+void SP_lightJunior (gentity_t *self);
 void SP_info_null (gentity_t *self);
 void SP_info_notnull (gentity_t *self);
 void SP_info_camp (gentity_t *self);
@@ -169,8 +170,11 @@ void SP_path_corner (gentity_t *self);
 
 void SP_misc_teleporter_dest (gentity_t *self);
 void SP_misc_model(gentity_t *ent);
+void SP_misc_gamemodel (gentity_t *ent);
 void SP_misc_portal_camera(gentity_t *ent);
 void SP_misc_portal_surface(gentity_t *ent);
+void SP_misc_vis_dummy( gentity_t *ent );
+void SP_misc_vis_dummy_multiple( gentity_t *ent );
 
 void SP_shooter_rocket( gentity_t *ent );
 void SP_shooter_plasma( gentity_t *ent );
@@ -238,12 +242,17 @@ spawn_t	spawns[] = {
 	{"target_push", SP_target_push},
 
 	{"light", SP_light},
+	{"lightJunior", SP_lightJunior},
+
 	{"path_corner", SP_path_corner},
 
 	{"misc_teleporter_dest", SP_misc_teleporter_dest},
 	{"misc_model", SP_misc_model},
+	{"misc_gamemodel", SP_misc_gamemodel},
 	{"misc_portal_surface", SP_misc_portal_surface},
 	{"misc_portal_camera", SP_misc_portal_camera},
+	{"misc_vis_dummy", SP_misc_vis_dummy},
+	{"misc_vis_dummy_multiple", SP_misc_vis_dummy_multiple},
 
 	{"shooter_rocket", SP_shooter_rocket},
 	{"shooter_grenade", SP_shooter_grenade},
@@ -405,12 +414,7 @@ level.spawnVars[], then call the class specfic spawn function
 void G_SpawnGEntityFromSpawnVars( void ) {
 	int			i;
 	gentity_t	*ent;
-	char		*s, *value, *gametypeName;
-	static char *gametypeNames[GT_MAX_GAME_TYPE] = {"ffa", "tournament", "single", "team", "ctf"
-#ifdef MISSIONPACK
-		, "oneflag", "obelisk", "harvester"
-#endif
-		};
+	bgEntitySpawnInfo_t spawnInfo;
 
 	// get the next free entity
 	ent = G_Spawn();
@@ -419,59 +423,15 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		G_ParseField( level.spawnVars[i][0], level.spawnVars[i][1], ent );
 	}
 
-	// check for "notsingle" flag
-	if ( g_gametype.integer == GT_SINGLE_PLAYER ) {
-		G_SpawnInt( "notsingle", "0", &i );
-		if ( i ) {
-			ADJUST_AREAPORTAL();
-			G_FreeEntity( ent );
-			return;
-		}
-	}
-	// check for "notteam" flag (GT_FFA, GT_TOURNAMENT, GT_SINGLE_PLAYER)
-	if ( g_gametype.integer >= GT_TEAM ) {
-		G_SpawnInt( "notteam", "0", &i );
-		if ( i ) {
-			ADJUST_AREAPORTAL();
-			G_FreeEntity( ent );
-			return;
-		}
-	} else {
-		G_SpawnInt( "notfree", "0", &i );
-		if ( i ) {
-			ADJUST_AREAPORTAL();
-			G_FreeEntity( ent );
-			return;
-		}
-	}
+	spawnInfo.gametype = g_gametype.integer;
+	spawnInfo.spawnInt = G_SpawnInt;
+	spawnInfo.spawnString = G_SpawnString;
 
-#ifdef MISSIONPACK
-	G_SpawnInt( "notta", "0", &i );
-	if ( i ) {
+	// check "notsingle", "notfree", "notteam", etc
+	if ( !BG_CheckSpawnEntity( &spawnInfo ) ) {
 		ADJUST_AREAPORTAL();
 		G_FreeEntity( ent );
 		return;
-	}
-#else
-	G_SpawnInt( "notq3a", "0", &i );
-	if ( i ) {
-		ADJUST_AREAPORTAL();
-		G_FreeEntity( ent );
-		return;
-	}
-#endif
-
-	if( G_SpawnString( "gametype", NULL, &value ) ) {
-		if( g_gametype.integer >= 0 && g_gametype.integer < GT_MAX_GAME_TYPE ) {
-			gametypeName = gametypeNames[g_gametype.integer];
-
-			s = strstr( value, gametypeName );
-			if( !s ) {
-				ADJUST_AREAPORTAL();
-				G_FreeEntity( ent );
-				return;
-			}
-		}
 	}
 
 	// move editor origin to pos

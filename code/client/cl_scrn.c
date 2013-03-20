@@ -330,31 +330,6 @@ int	SCR_GetBigStringWidth( const char *str ) {
 }
 
 
-//===============================================================================
-
-/*
-=================
-SCR_DrawDemoRecording
-=================
-*/
-void SCR_DrawDemoRecording( void ) {
-	char	string[1024];
-	int		pos;
-
-	if ( !clc.demorecording ) {
-		return;
-	}
-	if ( clc.spDemoRecording ) {
-		return;
-	}
-
-	pos = FS_FTell( clc.demofile );
-	sprintf( string, "RECORDING %s: %ik", clc.demoName, pos / 1024 );
-
-	SCR_DrawStringExt( 320 - strlen( string ) * 4, 20, 8, string, g_color_table[7], qtrue, qfalse );
-}
-
-
 
 
 /*
@@ -494,7 +469,6 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
 			CL_CGameRendering(stereoFrame);
-			SCR_DrawDemoRecording();
 			break;
 		}
 	}

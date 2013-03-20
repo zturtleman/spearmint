@@ -31,7 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
-#include "../renderer/tr_public.h"
+#include "../renderercommon/tr_public.h"
 #include "../ui/ui_public.h"
 #include "keys.h"
 #include "snd_public.h"
@@ -102,11 +102,6 @@ typedef struct {
 	int		p_realtime;			// cls.realtime when packet was sent
 } outPacket_t;
 
-// the parseEntities array must be large enough to hold PACKET_BACKUP frames of
-// entities, so that when a delta compressed message arives from the server
-// it can be un-deltad from the original 
-#define	MAX_PARSE_ENTITIES	2048
-
 extern int g_console_field_width;
 
 // Client Active Local Client
@@ -165,7 +160,10 @@ typedef struct {
 
 	darray_t		entityBaselines; // entityState_t [MAX_GENTITIES], for delta compression when not in previous frame
 
-	darray_t		parseEntities; // entityState_t [MAX_PARSE_ENTITIES]
+	// the parseEntities array must be large enough to hold PACKET_BACKUP frames of
+	// entities, so that when a delta compressed message arives from the server
+	// it can be un-deltad from the original 
+	darray_t		parseEntities; // entityState_t [CL_MAX_SPLITVIEW * PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES]
 
 	int				cgameEntityStateSize;
 	int				cgamePlayerStateSize;
@@ -247,12 +245,12 @@ typedef struct {
 
 	// demo information
 	char		demoName[MAX_QPATH];
-	qboolean	spDemoRecording;
 	qboolean	demorecording;
 	qboolean	demoplaying;
 	qboolean	demowaiting;	// don't record until a non-delta message is received
 	qboolean	firstDemoFrameSkipped;
 	fileHandle_t	demofile;
+	int			demoLength;		// size of playback demo
 
 	int			timeDemoFrames;		// counter of rendered frames
 	int			timeDemoStart;		// cls.realtime before first frame
@@ -488,6 +486,10 @@ void CL_Vid_Restart_f( void );
 void CL_Snd_Restart_f (void);
 void CL_StartDemoLoop( void );
 void CL_NextDemo( void );
+demoState_t CL_DemoState( void );
+int CL_DemoPos( void );
+void CL_DemoName( char *buffer, int size );
+int CL_DemoLength( void );
 void CL_ReadDemoMessage( void );
 void CL_StopRecord_f(void);
 
@@ -499,7 +501,6 @@ void CL_GetPingInfo( int n, char *buf, int buflen );
 void CL_ClearPing( int n );
 int CL_GetPingQueueCount( void );
 
-void CL_ShutdownRef( void );
 void CL_InitRef( void );
 int CL_ServerStatus( char *serverAddress, char *serverStatusString, int maxLen );
 
@@ -524,7 +525,7 @@ void CL_InitConnection (qboolean clear);
 void CL_ReadPackets (void);
 
 void CL_WritePacket( void );
-void IN_CenterView (void);
+void IN_CenterView( int localPlayerNum );
 
 void CL_VerifyCode( void );
 

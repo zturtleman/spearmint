@@ -174,7 +174,7 @@ void SP_target_print( gentity_t *ent ) {
 //==========================================================
 
 
-/*QUAKED target_speaker (1 0 0) (-8 -8 -8) (8 8 8) looped-on looped-off global activator
+/*QUAKED target_speaker (1 0 0) (-8 -8 -8) (8 8 8) LOOPED_ON LOOPED_OFF GLOBAL ACTIVATOR VIS_MULTIPLE
 "noise"		wav file to play
 
 A global sound will play full volume throughout the level.
@@ -201,6 +201,23 @@ void Use_Target_Speaker (gentity_t *ent, gentity_t *other, gentity_t *activator)
 			G_AddEvent( ent, EV_GENERAL_SOUND, ent->noise_index );
 		}
 	}
+}
+
+void target_speaker_multiple( gentity_t *ent ) {
+	gentity_t *vis_dummy = NULL;
+
+	if ( !ent->target ) {
+		G_Error( "target_speaker missing target at pos %s", vtos( ent->s.origin ) );
+	}
+
+	vis_dummy = G_PickTarget( ent->target );
+
+	if ( vis_dummy ) {
+		ent->r.visDummyNum = vis_dummy->s.number;
+	} else {
+		G_Error( "target_speaker cant find vis_dummy_multiple %s", vtos( ent->s.origin ) );
+	}
+
 }
 
 void SP_target_speaker( gentity_t *ent ) {
@@ -243,6 +260,11 @@ void SP_target_speaker( gentity_t *ent ) {
 
 	if (ent->spawnflags & 4) {
 		ent->r.svFlags |= SVF_BROADCAST;
+	}
+
+	if ( ent->spawnflags & 16 ) {
+		ent->think = target_speaker_multiple;
+		ent->nextthink = level.time + 50;
 	}
 
 	VectorCopy( ent->s.origin, ent->s.pos.trBase );

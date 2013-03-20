@@ -187,11 +187,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define OS_STRING "kFreeBSD"
 #endif
 
-#ifdef __clang__
-#define ID_INLINE static inline
-#else
 #define ID_INLINE inline
-#endif
 
 #define PATH_SEP '/'
 

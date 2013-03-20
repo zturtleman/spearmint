@@ -103,7 +103,7 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
   File "../../build/release-mingw32-x86/${CLIENT}"
 !ifdef USE_RENDERER_DLOPEN
   File "../../build/release-mingw32-x86/renderer_opengl1_x86.dll"
-  File "../../build/release-mingw32-x86/renderer_rend2_x86.dll"
+  File "../../build/release-mingw32-x86/renderer_opengl2_x86.dll"
 !endif
 
   File "../../COPYING.txt"
@@ -190,7 +190,7 @@ Section "Uninstall"
   Delete $INSTDIR\${SERVER}
 !ifdef USE_RENDERER_DLOPEN
   Delete $INSTDIR\renderer_opengl1_x86.dll
-  Delete $INSTDIR\renderer_rend2_x86.dll
+  Delete $INSTDIR\renderer_opengl2_x86.dll
 !endif
 
   Delete $INSTDIR\COPYING.txt

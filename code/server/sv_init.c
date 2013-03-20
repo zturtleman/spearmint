@@ -272,11 +272,11 @@ static void SV_Startup( void ) {
 
 	svs.clients = Z_Malloc (sizeof(client_t) * sv_maxclients->integer );
 	svs.players = Z_Malloc (sizeof(player_t) * sv_maxclients->integer );
-	if ( com_dedicated->integer ) {
-		svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * 64;
+	if ( !Com_GameIsSinglePlayer() ) {
+		svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES;
 	} else {
 		// we don't need nearly as many when playing locally
-		svs.numSnapshotEntities = sv_maxclients->integer * 4 * 64;
+		svs.numSnapshotEntities = sv_maxclients->integer * 4 * MAX_SNAPSHOT_ENTITIES;
 	}
 	svs.initialized = qtrue;
 
@@ -384,11 +384,11 @@ void SV_ChangeMaxClients( void ) {
 	Hunk_FreeTempMemory( oldClients );
 	
 	// allocate new snapshot entities
-	if ( com_dedicated->integer ) {
-		svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * 64;
+	if ( !Com_GameIsSinglePlayer() ) {
+		svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES;
 	} else {
 		// we don't need nearly as many when playing locally
-		svs.numSnapshotEntities = sv_maxclients->integer * 4 * 64;
+		svs.numSnapshotEntities = sv_maxclients->integer * 4 * MAX_SNAPSHOT_ENTITIES;
 	}
 }
 
@@ -430,6 +430,24 @@ static void SV_TouchCGame(void) {
 	}
 }
 
+#ifdef DEDICATED
+/*
+================
+SV_InitDedicatedRef
+================
+*/
+static void SV_InitDedicatedRef( void ) {
+	refimport_t ri;
+
+	Com_ShutdownRef();
+
+	Com_Memset( &ri, 0, sizeof ( refimport_t ) );
+	Com_InitRef( &ri );
+
+	re.BeginRegistration( NULL );
+}
+#endif
+
 /*
 ================
 SV_SpawnServer
@@ -463,8 +481,10 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	// clear the whole hunk because we're (re)loading the server
 	Hunk_Clear();
 
-#ifndef DEDICATED
 	// Restart renderer
+#ifdef DEDICATED
+	SV_InitDedicatedRef();
+#else
 	CL_StartHunkUsers( qtrue );
 #endif
 
@@ -687,9 +707,6 @@ void SV_Init (void)
 	SV_AddOperatorCommands ();
 
 	// serverinfo vars
-	Cvar_Get ("dmflags", "0", CVAR_SERVERINFO);
-	Cvar_Get ("fraglimit", "20", CVAR_SERVERINFO);
-	Cvar_Get ("timelimit", "0", CVAR_SERVERINFO);
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
 	Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO);
 	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
@@ -746,7 +763,8 @@ void SV_Init (void)
 	sv_lanForceRate = Cvar_Get ("sv_lanForceRate", "1", CVAR_ARCHIVE );
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
 
-	sv_public = Cvar_Get("sv_public", (com_dedicated->integer == 2) ? "1" : "0", 0 );
+	sv_public = Cvar_Get("sv_public", "0", 0);
+	Cvar_CheckRange(sv_public, -2, 1, qtrue);
 
 	// initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();
@@ -815,6 +833,10 @@ void SV_Shutdown( char *finalmsg ) {
 	SV_RemoveOperatorCommands();
 	SV_MasterShutdown();
 	SV_ShutdownGameProgs();
+
+#ifdef DEDICATED
+	Com_ShutdownRef();
+#endif
 
 	// free current level
 	SV_ClearServer();

@@ -91,7 +91,7 @@ Client only looks at shared part of entityState_t
 ==================
 */
 sharedEntityState_t *CL_ParseEntityState( int num ) {
-	return DA_ElementPointer( cl.parseEntities, num & ( MAX_PARSE_ENTITIES - 1 ) );
+	return DA_ElementPointer( cl.parseEntities, num % cl.parseEntities.maxElements );
 }
 
 /*
@@ -299,7 +299,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 			// The frame that the server did the delta from
 			// is too old, so we can't reconstruct it properly.
 			Com_Printf ("Delta frame too old.\n");
-		} else if ( cl.parseEntitiesNum - old->parseEntitiesNum > MAX_PARSE_ENTITIES-128 ) {
+		} else if ( cl.parseEntitiesNum - old->parseEntitiesNum > cl.parseEntities.maxElements - MAX_SNAPSHOT_ENTITIES * CL_MAX_SPLITVIEW ) {
 			Com_Printf ("Delta parseEntitiesNum too old.\n");
 		} else {
 			newSnap.valid = qtrue;	// valid delta parse

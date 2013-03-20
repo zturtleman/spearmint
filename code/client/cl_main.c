@@ -33,7 +33,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include <limits.h>
 
 #include "../sys/sys_local.h"
-#include "../sys/sys_loadlib.h"
 
 #ifdef USE_MUMBLE
 #include "libmumblelink.h"
@@ -52,10 +51,6 @@ cvar_t	*cl_voipSendTarget;
 cvar_t	*cl_voipGainDuringCapture;
 cvar_t	*cl_voipCaptureMult;
 cvar_t	*cl_voip;
-#endif
-
-#ifdef USE_RENDERER_DLOPEN
-cvar_t	*cl_renderer;
 #endif
 
 cvar_t	*cl_nodelta;
@@ -137,12 +132,6 @@ vm_t				*cgvm;
 char				cl_reconnectArgs[MAX_OSPATH];
 char				cl_oldGame[MAX_QPATH];
 qboolean			cl_oldGameSet;
-
-// Structure containing functions exported from refresh DLL
-refexport_t	re;
-#ifdef USE_RENDERER_DLOPEN
-static void	*rendererLib = NULL;
-#endif
 
 ping_t	cl_pinglist[MAX_PINGREQUESTS];
 
@@ -750,7 +739,6 @@ void CL_StopRecord_f( void ) {
 	FS_FCloseFile (clc.demofile);
 	clc.demofile = 0;
 	clc.demorecording = qfalse;
-	clc.spDemoRecording = qfalse;
 	Com_Printf ("Stopped demo.\n");
 }
 
@@ -802,9 +790,7 @@ void CL_Record_f( void ) {
 	}
 
 	if ( clc.demorecording ) {
-		if (!clc.spDemoRecording) {
-			Com_Printf ("Already recording.\n");
-		}
+		Com_Printf ("Already recording.\n");
 		return;
 	}
 
@@ -854,11 +840,6 @@ void CL_Record_f( void ) {
 		return;
 	}
 	clc.demorecording = qtrue;
-	if (Cvar_VariableValue("ui_recordSPDemo")) {
-	  clc.spDemoRecording = qtrue;
-	} else {
-	  clc.spDemoRecording = qfalse;
-	}
 
 	Q_strncpyz( clc.demoName, demoName, sizeof( clc.demoName ) );
 
@@ -1082,19 +1063,21 @@ void CL_ReadDemoMessage( void ) {
 CL_WalkDemoExt
 ====================
 */
-static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
+static int CL_WalkDemoExt(char *arg, char *name, int *demofile, int *demoLength)
 {
 	int i = 0;
+	int length;
 	*demofile = 0;
 
 #ifdef LEGACY_PROTOCOL
 	if(com_legacyprotocol->integer > 0)
 	{
 		Com_sprintf(name, MAX_OSPATH, "demos/%s.%s%d", arg, DEMOEXT, com_legacyprotocol->integer);
-		FS_FOpenFileRead(name, demofile, qtrue);
+		length = FS_FOpenFileRead(name, demofile, qtrue);
 		
 		if (*demofile)
 		{
+			*demoLength = length;
 			Com_Printf("Demo file: %s\n", name);
 			return com_legacyprotocol->integer;
 		}
@@ -1104,10 +1087,11 @@ static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
 #endif
 	{
 		Com_sprintf(name, MAX_OSPATH, "demos/%s.%s%d", arg, DEMOEXT, com_protocol->integer);
-		FS_FOpenFileRead(name, demofile, qtrue);
+		length = FS_FOpenFileRead(name, demofile, qtrue);
 
 		if (*demofile)
 		{
+			*demoLength = length;
 			Com_Printf("Demo file: %s\n", name);
 			return com_protocol->integer;
 		}
@@ -1128,6 +1112,7 @@ static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
 		FS_FOpenFileRead( name, demofile, qtrue );
 		if (*demofile)
 		{
+			*demoLength = length;
 			Com_Printf("Demo file: %s\n", name);
 
 			return demo_protocols[i];
@@ -1137,6 +1122,7 @@ static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
 		i++;
 	}
 	
+	*demoLength = 0;
 	return -1;
 }
 
@@ -1204,7 +1190,7 @@ void CL_PlayDemo_f( void ) {
 		  )
 		{
 			Com_sprintf(name, sizeof(name), "demos/%s", arg);
-			FS_FOpenFileRead(name, &clc.demofile, qtrue);
+			clc.demoLength = FS_FOpenFileRead(name, &clc.demofile, qtrue);
 		}
 		else
 		{
@@ -1218,23 +1204,23 @@ void CL_PlayDemo_f( void ) {
 
 			Q_strncpyz(retry, arg, len + 1);
 			retry[len] = '\0';
-			protocol = CL_WalkDemoExt(retry, name, &clc.demofile);
+			protocol = CL_WalkDemoExt(retry, name, &clc.demofile, &clc.demoLength);
 		}
 	}
 	else
-		protocol = CL_WalkDemoExt(arg, name, &clc.demofile);
+		protocol = CL_WalkDemoExt(arg, name, &clc.demofile, &clc.demoLength);
 	
 	if (!clc.demofile) {
 		Com_Error( ERR_DROP, "couldn't open %s", name);
 		return;
 	}
-	Q_strncpyz( clc.demoName, Cmd_Argv(1), sizeof( clc.demoName ) );
+	Q_strncpyz( clc.demoName, arg, sizeof( clc.demoName ) );
 
 	Con_Close();
 
 	clc.state = CA_CONNECTED;
 	clc.demoplaying = qtrue;
-	Q_strncpyz( clc.servername, Cmd_Argv(1), sizeof( clc.servername ) );
+	Q_strncpyz( clc.servername, arg, sizeof( clc.servername ) );
 
 #ifdef LEGACY_PROTOCOL
 	if(protocol <= com_legacyprotocol->integer)
@@ -1290,6 +1276,68 @@ void CL_NextDemo( void ) {
 	Cbuf_Execute();
 }
 
+/*
+==================
+CL_DemoState
+
+Returns the current state of the demo system
+==================
+*/
+demoState_t CL_DemoState( void ) {
+	if( clc.demoplaying ) {
+		return DS_PLAYBACK;
+	} else if( clc.demorecording ) {
+		return DS_RECORDING;
+	} else {
+		return DS_NONE;
+	}
+}
+
+/*
+==================
+CL_DemoPos
+
+Returns the current position of the demo
+==================
+*/
+int CL_DemoPos( void ) {
+	if( clc.demoplaying || clc.demorecording ) {
+		return FS_FTell( clc.demofile );
+	} else {
+		return 0;
+	}
+}
+
+/*
+==================
+CL_DemoLength
+
+Returns the length of the playing demo
+==================
+*/
+int CL_DemoLength( void ) {
+	if( clc.demoplaying ) {
+		return clc.demoLength;
+	} else {
+		return 0;
+	}
+}
+
+/*
+==================
+CL_DemoName
+
+Returns the name of the demo
+==================
+*/
+void CL_DemoName( char *buffer, int size ) {
+	if( clc.demoplaying || clc.demorecording ) {
+		Q_strncpyz( buffer, clc.demoName, size );
+	} else if( size >= 1 ) {
+		buffer[ 0 ] = '\0';
+	}
+}
+
 
 //======================================================================
 
@@ -1329,7 +1377,7 @@ void CL_ShutdownAll(qboolean shutdownRef)
 
 	// shutdown the renderer
 	if(shutdownRef)
-		CL_ShutdownRef();
+		Com_ShutdownRef();
 	else if(re.Shutdown)
 		re.Shutdown(qfalse);		// don't destroy window or context
 
@@ -1994,7 +2042,7 @@ void CL_Vid_Restart_f( void ) {
 		// shutdown the CGame
 		CL_ShutdownCGame();
 		// shutdown the renderer and clear the renderer interface
-		CL_ShutdownRef();
+		Com_ShutdownRef();
 		// clear pak references
 		FS_ClearPakReferences( FS_UI_REF | FS_CGAME_REF );
 		// reinitialize the filesystem if the game directory has changed
@@ -2012,6 +2060,13 @@ void CL_Vid_Restart_f( void ) {
 
 		// startup all the client stuff
 		CL_StartHunkUsers(qfalse);
+
+		// let server game re-register models
+		if (com_sv_running->integer) {
+			// XXX
+			extern void SV_GameVidRestart(void);
+			SV_GameVidRestart();
+		}
 
 		// start the cgame if connected
 		if(clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC)
@@ -3087,45 +3142,6 @@ void CL_Frame ( int msec ) {
 //============================================================================
 
 /*
-================
-CL_RefPrintf
-
-DLL glue
-================
-*/
-static __attribute__ ((format (printf, 2, 3))) void QDECL CL_RefPrintf( int print_level, const char *fmt, ...) {
-	va_list		argptr;
-	char		msg[MAXPRINTMSG];
-	
-	va_start (argptr,fmt);
-	Q_vsnprintf (msg, sizeof(msg), fmt, argptr);
-	va_end (argptr);
-
-	if ( print_level == PRINT_ALL ) {
-		Com_Printf ("%s", msg);
-	} else if ( print_level == PRINT_WARNING ) {
-		Com_Printf (S_COLOR_YELLOW "%s", msg);		// yellow
-	} else if ( print_level == PRINT_DEVELOPER ) {
-		Com_DPrintf (S_COLOR_RED "%s", msg);		// red
-	}
-}
-
-
-
-/*
-============
-CL_ShutdownRef
-============
-*/
-void CL_ShutdownRef( void ) {
-	if ( !re.Shutdown ) {
-		return;
-	}
-	re.Shutdown( qtrue );
-	Com_Memset( &re, 0, sizeof( re ) );
-}
-
-/*
 ==========
 CL_DrawCenteredPic
 
@@ -3266,17 +3282,9 @@ void CL_StartHunkUsers( qboolean rendererOnly ) {
 
 /*
 ============
-CL_RefMalloc
+CL_MaxSplitView
 ============
 */
-void *CL_RefMalloc( int size ) {
-	return Z_TagMalloc( size, TAG_RENDERER );
-}
-
-int CL_ScaledMilliseconds(void) {
-	return Sys_Milliseconds()*com_timescale->value;
-}
-
 int CL_MaxSplitView(void) {
 	return CL_MAX_SPLITVIEW;
 }
@@ -3287,74 +3295,9 @@ CL_InitRef
 ============
 */
 void CL_InitRef( void ) {
-	refimport_t	ri;
-	refexport_t	*ret;
-#ifdef USE_RENDERER_DLOPEN
-	GetRefAPI_t		GetRefAPI;
-	char			dllName[MAX_OSPATH];
-#endif
+	refimport_t ri;
 
-	Com_Printf( "----- Initializing Renderer ----\n" );
-
-#ifdef USE_RENDERER_DLOPEN
-	cl_renderer = Cvar_Get("cl_renderer", "opengl1", CVAR_ARCHIVE | CVAR_LATCH);
-
-	Com_sprintf(dllName, sizeof(dllName), "renderer_%s_" ARCH_STRING DLL_EXT, cl_renderer->string);
-
-	if(!(rendererLib = Sys_LoadDll(dllName, qfalse)) && strcmp(cl_renderer->string, cl_renderer->resetString))
-	{
-		Com_Printf("failed:\n\"%s\"\n", Sys_LibraryError());
-		Cvar_ForceReset("cl_renderer");
-
-		Com_sprintf(dllName, sizeof(dllName), "renderer_opengl1_" ARCH_STRING DLL_EXT);
-		rendererLib = Sys_LoadDll(dllName, qfalse);
-	}
-
-	if(!rendererLib)
-	{
-		Com_Printf("failed:\n\"%s\"\n", Sys_LibraryError());
-		Com_Error(ERR_FATAL, "Failed to load renderer");
-	}
-
-	GetRefAPI = Sys_LoadFunction(rendererLib, "GetRefAPI");
-	if(!GetRefAPI)
-	{
-		Com_Error(ERR_FATAL, "Can't load symbol GetRefAPI: '%s'",  Sys_LibraryError());
-	}
-#endif
-
-	ri.Cmd_AddCommand = Cmd_AddCommand;
-	ri.Cmd_RemoveCommand = Cmd_RemoveCommand;
-	ri.Cmd_Argc = Cmd_Argc;
-	ri.Cmd_Argv = Cmd_Argv;
-	ri.Cmd_ExecuteText = Cbuf_ExecuteText;
-	ri.Printf = CL_RefPrintf;
-	ri.Error = Com_Error;
-	ri.Milliseconds = CL_ScaledMilliseconds;
-	ri.Malloc = CL_RefMalloc;
-	ri.Free = Z_Free;
-#ifdef HUNK_DEBUG
-	ri.Hunk_AllocDebug = Hunk_AllocDebug;
-#else
-	ri.Hunk_Alloc = Hunk_Alloc;
-#endif
-	ri.Hunk_AllocateTempMemory = Hunk_AllocateTempMemory;
-	ri.Hunk_FreeTempMemory = Hunk_FreeTempMemory;
-
-	ri.CM_ClusterPVS = CM_ClusterPVS;
-	ri.CM_DrawDebugSurface = CM_DrawDebugSurface;
-
-	ri.FS_ReadFile = FS_ReadFile;
-	ri.FS_FreeFile = FS_FreeFile;
-	ri.FS_WriteFile = FS_WriteFile;
-	ri.FS_FreeFileList = FS_FreeFileList;
-	ri.FS_ListFiles = FS_ListFiles;
-	ri.FS_FileExists = FS_FileExists;
-	ri.Cvar_Get = Cvar_Get;
-	ri.Cvar_Set = Cvar_Set;
-	ri.Cvar_SetValue = Cvar_SetValue;
-	ri.Cvar_CheckRange = Cvar_CheckRange;
-	ri.Cvar_VariableIntegerValue = Cvar_VariableIntegerValue;
+	Com_Memset( &ri, 0, sizeof ( refimport_t ) );
 
 	// cinematic stuff
 
@@ -3369,26 +3312,14 @@ void CL_InitRef( void ) {
 	ri.IN_Shutdown = IN_Shutdown;
 	ri.IN_Restart = IN_Restart;
 
-	ri.ftol = Q_ftol;
-
-	ri.Sys_SetEnv = Sys_SetEnv;
 	ri.Sys_GLimpSafeInit = Sys_GLimpSafeInit;
 	ri.Sys_GLimpInit = Sys_GLimpInit;
-	ri.Sys_LowPhysicalMemory = Sys_LowPhysicalMemory;
 
-	ret = GetRefAPI( REF_API_VERSION, &ri );
+	Com_InitRef(&ri);
 
 #if defined __USEA3D && defined __A3D_GEOM
-	hA3Dg_ExportRenderGeom (ret);
+	hA3Dg_ExportRenderGeom (&re);
 #endif
-
-	Com_Printf( "-------------------------------\n");
-
-	if ( !ret ) {
-		Com_Error (ERR_FATAL, "Couldn't initialize refresh" );
-	}
-
-	re = *ret;
 
 	// unpause so the cgame definately gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );

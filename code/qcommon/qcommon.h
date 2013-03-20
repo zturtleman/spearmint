@@ -32,6 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define _QCOMMON_H_
 
 #include "../qcommon/cm_public.h"
+#include "../renderercommon/tr_public.h"
 
 //Ignore __attribute__ on non-gcc platforms
 #ifndef __GNUC__
@@ -103,9 +104,6 @@ float	MSG_ReadAngle16 (msg_t *sb);
 void	MSG_ReadData (msg_t *sb, void *buffer, int size);
 int		MSG_LookaheadByte (msg_t *msg);
 
-void MSG_WriteDeltaUsercmd( msg_t *msg, struct usercmd_s *from, struct usercmd_s *to );
-void MSG_ReadDeltaUsercmd( msg_t *msg, struct usercmd_s *from, struct usercmd_s *to );
-
 void MSG_WriteDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *to );
 void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *to );
 
@@ -146,6 +144,8 @@ NET
 #define	PACKET_MASK		(PACKET_BACKUP-1)
 
 #define	MAX_PACKET_USERCMDS		32		// max number of usercmd_t in a packet
+
+#define	MAX_SNAPSHOT_ENTITIES	256
 
 #define	PORT_ANY			-1
 
@@ -362,7 +362,7 @@ void	VM_Forced_Unload_Done(void);
 vm_t	*VM_Restart(vm_t *vm, qboolean unpure);
 
 intptr_t		QDECL VM_Call( vm_t *vm, int callNum, ... );
-int				VM_SafeCall( vm_t *vm, int callnum );
+intptr_t		QDECL VM_SafeCall( vm_t *vm, int callnum );
 
 void	VM_Debug( int level );
 
@@ -378,6 +378,9 @@ static ID_INLINE float _vmf(intptr_t x)
 }
 #define	VMF(x)	_vmf(args[x])
 
+void VM_ClearMemoryTags( void );
+intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag );
+intptr_t VM_Alloc( int size, const char *tag );
 
 /*
 ==============================================================
@@ -425,10 +428,12 @@ then searches for a command or variable that matches the first token.
 */
 
 typedef void (*xcommand_t) (void);
+typedef void (*icommand_t) (int);
 
 void	Cmd_Init (void);
 
 void	Cmd_AddCommand( const char *cmd_name, xcommand_t function );
+void	Cmd_AddIntCommand( const char *cmd_name, icommand_t function, int value );
 // called by the init functions of other parts of the program to
 // register commands and functions to call for them.
 // The cmd_name is referenced later, so it should not be in temp memory
@@ -642,6 +647,8 @@ int		FS_LoadStack( void );
 int		FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
 int		FS_GetModList(  char *listbuf, int bufsize );
 
+void	FS_GetModDescription( const char *modDir, char *description, int descriptionLen );
+
 fileHandle_t	FS_FOpenFileWrite( const char *qpath );
 fileHandle_t	FS_FOpenFileAppend( const char *filename );
 fileHandle_t	FS_FCreateOpenPipeFile( const char *filename );
@@ -727,7 +734,7 @@ void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames );
 
 qboolean FS_CheckDirTraversal(const char *checkdir);
 qboolean FS_idPak(char *pak, char *base, int numPaks);
-qboolean FS_DefaultPak( char *pak );
+qboolean FS_PakAllowDownload( char *pak );
 qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring );
 
 qboolean FS_Rename( const char *from, const char *to );
@@ -873,10 +880,15 @@ extern	cvar_t	*sv_paused;
 extern	cvar_t	*cl_packetdelay;
 extern	cvar_t	*sv_packetdelay;
 
+extern	cvar_t	*com_productName;
 extern	cvar_t	*com_gamename;
 extern	cvar_t	*com_protocol;
 #ifdef LEGACY_PROTOCOL
 extern	cvar_t	*com_legacyprotocol;
+#endif
+
+#ifdef USE_RENDERER_DLOPEN
+extern	cvar_t	*com_renderer;
 #endif
 
 // com_speeds times
@@ -979,6 +991,18 @@ void Com_Init( char *commandLine );
 void Com_Frame( void );
 void Com_Shutdown( void );
 
+/*
+==============================================================
+
+REFRESH DLL
+
+==============================================================
+*/
+
+extern	refexport_t		re;		// interface to refresh .dll
+
+void Com_ShutdownRef( void );
+void Com_InitRef( refimport_t *ri );
 
 /*
 ==============================================================
@@ -1112,8 +1136,6 @@ void	Sys_Print( const char *msg );
 // any game related timing information should come from event timestamps
 int		Sys_Milliseconds (void);
 
-void	Sys_SnapVector( float *v );
-
 qboolean Sys_RandomBytes( byte *string, int len );
 
 // the system console is shown when a dedicated server is running
@@ -1131,6 +1153,7 @@ qboolean	Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );
 qboolean	Sys_IsLANAddress (netadr_t adr);
 void		Sys_ShowIP(void);
 
+FILE	*Sys_FOpen( const char *ospath, const char *mode );
 qboolean Sys_Mkdir( const char *path );
 qboolean Sys_Rmdir( const char *path );
 FILE	*Sys_Mkfifo( const char *ospath );

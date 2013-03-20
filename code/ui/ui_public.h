@@ -92,6 +92,8 @@ typedef enum {
 	UI_PC_UNREAD_TOKEN,
 	UI_PC_SOURCE_FILE_AND_LINE,
 
+	UI_ALLOC,
+
 	//=========== client ui specific functionality =============
 
 	UI_GETCLIPBOARDDATA = 100,

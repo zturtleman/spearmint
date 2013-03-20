@@ -29,7 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 //
 #include "../qcommon/q_shared.h"
-#include "../renderer/tr_types.h"
+#include "../renderercommon/tr_types.h"
 #include "../game/bg_misc.h"
 #include "cg_public.h"
 
@@ -471,7 +471,6 @@ typedef struct
 
 #define MAX_PREDICTED_EVENTS	16
  
-// ZTM: data that use to be in cg_t but is needed for each local client
 typedef struct {
 
 	int			clientNum;
@@ -523,6 +522,15 @@ typedef struct {
 	int			voiceTime;
 	int			currentVoiceClient;
 
+	// orders
+	int			currentOrder;
+	qboolean	orderPending;
+	int			orderTime;
+	int			acceptOrderTime;
+	int			acceptTask;
+	int			acceptLeader;
+	char		acceptVoice[MAX_NAME_LENGTH];
+
 	// reward medals
 	int			rewardStack;
 	int			rewardTime;
@@ -567,6 +575,9 @@ typedef struct {
 	qboolean	renderingThirdPerson;		// during deaths, chasecams, etc
 
 	//qboolean cameraMode;		// if rendering from a loaded camera
+
+	vec3_t		lastViewPos;
+	vec3_t		lastViewAngles;
 
 	// scoreboard
 	qboolean	showScores;
@@ -641,6 +652,8 @@ typedef struct {
 	vec2_t mapcoordsMins;
 	vec2_t mapcoordsMaxs;
 	qboolean mapcoordsValid;
+
+	int			numMiscGameModels;
 
 	int			numViewports;
 	int			viewport;
@@ -1054,6 +1067,14 @@ typedef struct {
 
 } cgMedia_t;
 
+#define MAX_STATIC_GAMEMODELS   1024
+
+typedef struct cg_gamemodel_s {
+	qhandle_t model;
+	vec3_t org;
+	vec3_t axes[3];
+	vec_t radius;
+} cg_gamemodel_t;
 
 // The client game static (cgs) structure hold everything
 // loaded or calculated from the gamestate.  It will NOT
@@ -1132,20 +1153,13 @@ typedef struct {
 	void *capturedItem;
 	qhandle_t activeCursor;
 
-	// orders
-	int currentOrder;
-	qboolean orderPending;
-	int orderTime;
-	int acceptOrderTime;
-	int acceptTask;
-	int acceptLeader;
-	char acceptVoice[MAX_NAME_LENGTH];
-
 	// default global fog from bsp or fogvars in a shader
 	fogType_t	globalFogType;
 	vec3_t		globalFogColor;
 	float		globalFogDepthForOpaque;
 	float		globalFogDensity;
+
+	cg_gamemodel_t miscGameModels[MAX_STATIC_GAMEMODELS];
 
 	// media
 	cgMedia_t		media;
@@ -1262,8 +1276,8 @@ extern	vmCvar_t		cg_consoleLatency;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
 extern	vmCvar_t		cg_blueTeamName;
-extern	vmCvar_t		cg_currentSelectedPlayer;
-extern	vmCvar_t		cg_currentSelectedPlayerName;
+extern	vmCvar_t		cg_currentSelectedPlayer[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_singlePlayer;
 extern	vmCvar_t		cg_enableDust;
 extern	vmCvar_t		cg_enableBreath;
@@ -1319,16 +1333,8 @@ void CG_TestModelNextFrame_f (void);
 void CG_TestModelPrevFrame_f (void);
 void CG_TestModelNextSkin_f (void);
 void CG_TestModelPrevSkin_f (void);
-void CG_ZoomUp( int localClient );
-void CG_ZoomDown( int localClient );
-void CG_ZoomDown_f( void );
-void CG_ZoomUp_f( void );
-void CG_2ZoomDown_f( void );
-void CG_2ZoomUp_f( void );
-void CG_3ZoomDown_f( void );
-void CG_3ZoomUp_f( void );
-void CG_4ZoomDown_f( void );
-void CG_4ZoomUp_f( void );
+void CG_ZoomUp_f( int localClient );
+void CG_ZoomDown_f( int localClient );
 void CG_AddBufferedSound( sfxHandle_t sfx);
 
 void CG_SetupFrustum( void );
@@ -1378,6 +1384,7 @@ int CG_DrawStrlen( const char *str );
 float	*CG_FadeColor( int startMsec, int totalMsec );
 float *CG_TeamColor( int team );
 void CG_TileClear( void );
+void CG_KeysStringForBinding(const char *binding, char *string, int stringSize );
 void CG_ColorForHealth( vec4_t hcolor );
 void CG_GetColorForHealth( int health, int armor, vec4_t hcolor );
 
@@ -1417,8 +1424,8 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
 void CG_Text_Paint(float x, float y, float scale, vec4_t color, const char *text, float adjust, int limit, int style);
 int CG_Text_Width(const char *text, float scale, int limit);
 int CG_Text_Height(const char *text, float scale, int limit);
-void CG_SelectPrevPlayer( void );
-void CG_SelectNextPlayer( void );
+void CG_SelectPrevPlayer( int localPlayerNum );
+void CG_SelectNextPlayer( int localPlayerNum );
 float CG_GetValue(int ownerDraw);
 qboolean CG_OwnerDrawVisible(int flags);
 void CG_RunMenuScript(char **args);
@@ -1430,7 +1437,7 @@ const char *CG_GetGameStatusText( void );
 const char *CG_GetKillerText( void );
 void CG_Draw3DModel(float x, float y, float w, float h, qhandle_t model, qhandle_t skin, vec3_t origin, vec3_t angles);
 void CG_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader);
-void CG_CheckOrderPending( void );
+void CG_CheckOrderPending( int localPlayerNum );
 const char *CG_GameTypeString( void );
 qboolean CG_YourTeamHasFlag( void );
 qboolean CG_OtherTeamHasFlag( void );
@@ -1486,21 +1493,9 @@ qboolean CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *
 //
 // cg_weapons.c
 //
-void CG_NextWeapon_f( void );
-void CG_PrevWeapon_f( void );
-void CG_Weapon_f( void );
-
-void CG_2NextWeapon_f( void );
-void CG_2PrevWeapon_f( void );
-void CG_2Weapon_f( void );
-
-void CG_3NextWeapon_f( void );
-void CG_3PrevWeapon_f( void );
-void CG_3Weapon_f( void );
-
-void CG_4NextWeapon_f( void );
-void CG_4PrevWeapon_f( void );
-void CG_4Weapon_f( void );
+void CG_NextWeapon_f( int localClient );
+void CG_PrevWeapon_f( int localClient );
+void CG_Weapon_f( int localClient );
 
 void CG_RegisterWeapon( int weaponNum );
 void CG_RegisterItemVisuals( int itemNum );
@@ -1722,6 +1717,11 @@ void		trap_SendClientCommand( const char *s );
 //
 void		trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
 						int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields );
+
+int			trap_GetDemoState( void );
+int			trap_GetDemoPos( void );
+void		trap_GetDemoName( char *buffer, int size );
+int			trap_GetDemoLength( void );
 
 // model collision
 void		trap_CM_LoadMap( const char *mapname );

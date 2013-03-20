@@ -55,6 +55,8 @@ equ trap_PC_ReadToken					-55
 equ trap_PC_UnreadToken					-56
 equ trap_PC_SourceFileAndLine			-57
 
+equ trap_Alloc							-58
+
 
 equ	trap_LocateGameData					-101
 equ	trap_DropClient						-102
@@ -84,6 +86,9 @@ equ trap_DebugPolygonDelete				-125
 equ trap_TraceCapsule					-126
 equ trap_EntityContactCapsule			-127
 equ trap_SetNetFields					-128
+equ trap_R_RegisterModel				-129
+equ trap_R_LerpTag						-130
+equ trap_R_ModelBounds					-131
 
 
 equ trap_BotLibSetup					-201

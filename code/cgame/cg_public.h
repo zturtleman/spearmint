@@ -39,7 +39,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // needs to be larger than PACKET_BACKUP
 
 
-#define	MAX_ENTITIES_IN_SNAPSHOT	256
+#define	MAX_ENTITIES_IN_SNAPSHOT	256 * MAX_SPLITVIEW
 
 // snapshots are a view of the server at a given time
 
@@ -135,6 +135,8 @@ typedef enum {
 	CG_PC_UNREAD_TOKEN,
 	CG_PC_SOURCE_FILE_AND_LINE,
 
+	CG_ALLOC,
+
 	//=========== client game specific functionality =============
 
 	CG_GETCLIPBOARDDATA = 100,
@@ -157,6 +159,10 @@ typedef enum {
 	CG_SETUSERCMDVALUE,
 	CG_SENDCLIENTCOMMAND,
 	CG_SET_NET_FIELDS,
+	CG_GETDEMOSTATE,
+	CG_GETDEMOPOS,
+	CG_GETDEMONAME,
+	CG_GETDEMOLENGTH,
 
 
 	// these are not available in ui
@@ -294,7 +300,10 @@ typedef enum {
 
 	CG_VOIP_STRING,
 //  char *(*CG_VoIPString)( void );
-//  returns a string of comma-delimited clientnums based on args
+	// pass voip target token unknown by client to cgame to convert into clientNums
+	// use Cmd_Argc() / Cmd_Argv() to read the target token, return a
+	// string of comma-delimited clientnums based on target token or
+	// NULL if unknown token.
 
 	CG_KEY_EVENT, 
 //	void	(*CG_KeyEvent)( int key, qboolean down );

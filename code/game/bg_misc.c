@@ -1054,7 +1054,7 @@ vmNetField_t	bg_playerStateFields[] =
 { PSF(eventParms[0]), 8 },
 { PSF(eventParms[1]), 8 },
 { PSF(clientNum), 8 },
-{ PSF(weapon), 5 },
+{ PSF(weapon), WEAPONNUM_BITS },
 { PSF(viewangles[2]), 0 },
 { PSF(grapplePoint[0]), 0 },
 { PSF(grapplePoint[1]), 0 },
@@ -1070,6 +1070,80 @@ vmNetField_t	bg_playerStateFields[] =
 };
 
 int bg_numPlayerStateFields = ARRAY_LEN(bg_playerStateFields);
+
+/*
+==============
+BG_CheckSpawnEntity
+==============
+*/
+qboolean BG_CheckSpawnEntity( const bgEntitySpawnInfo_t *info ) {
+	int			i, gametype;
+	char		*s, *value, *gametypeName;
+	static char *gametypeNames[GT_MAX_GAME_TYPE] = {"ffa", "tournament", "single", "team", "ctf"
+#ifdef MISSIONPACK
+		, "oneflag", "obelisk", "harvester"
+#endif
+		};
+
+	gametype = info->gametype;
+
+	// check for "notsingle" flag
+	if ( gametype == GT_SINGLE_PLAYER ) {
+		info->spawnInt( "notsingle", "0", &i );
+		if ( i ) {
+			return qfalse;
+		}
+	}
+
+	// check for "notteam" flag (GT_FFA, GT_TOURNAMENT, GT_SINGLE_PLAYER)
+	if ( gametype >= GT_TEAM ) {
+		info->spawnInt( "notteam", "0", &i );
+		if ( i ) {
+			return qfalse;
+		}
+	} else {
+		info->spawnInt( "notfree", "0", &i );
+		if ( i ) {
+			return qfalse;
+		}
+	}
+
+#ifdef MISSIONPACK
+	info->spawnInt( "notta", "0", &i );
+	if ( i ) {
+			return qfalse;
+	}
+#else
+	info->spawnInt( "notq3a", "0", &i );
+	if ( i ) {
+			return qfalse;
+	}
+#endif
+
+	if( info->spawnString( "!gametype", NULL, &value ) ) {
+		if( gametype >= 0 && gametype < GT_MAX_GAME_TYPE ) {
+			gametypeName = gametypeNames[gametype];
+
+			s = strstr( value, gametypeName );
+			if( s ) {
+				return qfalse;
+			}
+		}
+	}
+
+	if( info->spawnString( "gametype", NULL, &value ) ) {
+		if( gametype >= 0 && gametype < GT_MAX_GAME_TYPE ) {
+			gametypeName = gametypeNames[gametype];
+
+			s = strstr( value, gametypeName );
+			if( !s ) {
+				return qfalse;
+			}
+		}
+	}
+
+	return qtrue;
+}
 
 /*
 ==============
@@ -1776,6 +1850,61 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 		SnapVector( s->mins );
 		SnapVector( s->maxs );
 	}
+}
+
+/*
+========================
+BG_ComposeBits
+========================
+*/
+void BG_ComposeBits( int *msg, int *bitsUsed, int value, int bits ) {
+	*msg |= ( value & ( ( 1 << bits ) - 1 ) ) << *bitsUsed;
+	*bitsUsed += bits;
+
+	if ( *bitsUsed > 32 ) {
+		Com_Error( ERR_DROP, "BG_ComposeBits exceeded 32 bits" );
+	}
+}
+
+/*
+========================
+BG_DecomposeBits
+========================
+*/
+void BG_DecomposeBits( int msg, int *bitsUsed, int *value, int bits ) {
+	if ( value ) {
+		*value = ( msg >> *bitsUsed ) & ( ( 1 << bits ) - 1 );
+	}
+	*bitsUsed += bits;
+
+	if ( *bitsUsed > 32 ) {
+		Com_Error( ERR_DROP, "BG_DecomposeBits exceeded 32 bits" );
+	}
+}
+
+/*
+========================
+BG_ComposeUserCmdValue
+========================
+*/
+int BG_ComposeUserCmdValue( int weapon ) {
+	int value = 0;
+	int bitsUsed = 0;
+
+	BG_ComposeBits( &value, &bitsUsed, weapon, WEAPONNUM_BITS );
+
+	return value;
+}
+
+/*
+========================
+BG_DecomposeUserCmdValue
+========================
+*/
+void BG_DecomposeUserCmdValue( int value, int *weapon ) {
+	int		bitsUsed = 0;
+
+	BG_DecomposeBits( value, &bitsUsed, weapon, WEAPONNUM_BITS );
 }
 
 int cmdcmp( const void *a, const void *b ) {

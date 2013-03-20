@@ -526,7 +526,7 @@ static void CG_OffsetFirstPersonView( void ) {
 
 //======================================================================
 
-void CG_ZoomDown( int localClientNum ) {
+void CG_ZoomDown_f( int localClientNum ) {
 	cglc_t *lc = &cg.localClients[localClientNum];
 
 	if ( lc->zoomed ) {
@@ -537,7 +537,7 @@ void CG_ZoomDown( int localClientNum ) {
 	lc->zoomTime = cg.time;
 }
 
-void CG_ZoomUp( int localClientNum ) {
+void CG_ZoomUp_f( int localClientNum ) {
 	cglc_t *lc = &cg.localClients[localClientNum];
 
 	if ( !lc->zoomed ) {
@@ -546,38 +546,6 @@ void CG_ZoomUp( int localClientNum ) {
 
 	lc->zoomed = qfalse;
 	lc->zoomTime = cg.time;
-}
-
-void CG_ZoomDown_f( void ) { 
-	CG_ZoomDown(0);
-}
-
-void CG_ZoomUp_f( void ) { 
-	CG_ZoomUp(0);
-}
-
-void CG_2ZoomDown_f( void ) { 
-	CG_ZoomDown(1);
-}
-
-void CG_2ZoomUp_f( void ) { 
-	CG_ZoomUp(1);
-}
-
-void CG_3ZoomDown_f( void ) { 
-	CG_ZoomDown(2);
-}
-
-void CG_3ZoomUp_f( void ) { 
-	CG_ZoomUp(2);
-}
-
-void CG_4ZoomDown_f( void ) { 
-	CG_ZoomDown(3);
-}
-
-void CG_4ZoomUp_f( void ) { 
-	CG_ZoomUp(3);
 }
 
 
@@ -791,7 +759,6 @@ static int CG_CalcViewValues( void ) {
 
 	if (cg_cameraOrbit.integer) {
 		if (cg.time > cg.nextOrbitTime) {
-			cg.nextOrbitTime = cg.time + cg_cameraOrbitDelay.integer;
 			cg_thirdPersonAngle[cg.cur_localClientNum].value += cg_cameraOrbit.value;
 		}
 	}
@@ -823,6 +790,14 @@ static int CG_CalcViewValues( void ) {
 	if ( cg.cur_lc->hyperspace ) {
 		cg.refdef.rdflags |= RDF_NOWORLDMODEL | RDF_HYPERSPACE;
 	}
+
+	cg.cur_lc->lastViewPos[0] = cg.refdef.vieworg[0];
+	cg.cur_lc->lastViewPos[1] = cg.refdef.vieworg[1];
+	cg.cur_lc->lastViewPos[2] = cg.refdef.vieworg[2];
+
+	cg.cur_lc->lastViewAngles[YAW] = cg.refdefViewAngles[YAW];
+	cg.cur_lc->lastViewAngles[PITCH] = cg.refdefViewAngles[PITCH];
+	cg.cur_lc->lastViewAngles[ROLL] = cg.refdefViewAngles[ROLL];
 
 	// field of view
 	return CG_CalcFov();
@@ -979,6 +954,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	int		inwater;
 	qboolean renderClientViewport[MAX_SPLITVIEW];
 	int		i;
+	int		stateValue;
 
 	cg.time = serverTime;
 	cg.demoPlayback = demoPlayback;
@@ -1041,7 +1017,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		}
 
 		// let the client system know what our weapon and zoom settings are
-		trap_SetUserCmdValue( cg.cur_lc->weaponSelect, cg.cur_lc->zoomSensitivity, cg.cur_localClientNum );
+		stateValue = BG_ComposeUserCmdValue( cg.cur_lc->weaponSelect );
+		trap_SetUserCmdValue( stateValue, cg.cur_lc->zoomSensitivity, cg.cur_localClientNum );
 
 		// update cg.predictedPlayerState
 		CG_PredictPlayerState();
@@ -1142,6 +1119,12 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 		// actually issue the rendering calls
 		CG_DrawActive( stereoView );
+	}
+
+	if (cg_cameraOrbit.integer) {
+		if (cg.time > cg.nextOrbitTime) {
+			cg.nextOrbitTime = cg.time + cg_cameraOrbitDelay.integer;
+		}
 	}
 
 	// load any models that have been deferred if a scoreboard is shown

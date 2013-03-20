@@ -1,5 +1,5 @@
 build
 Makefile.local
-misc/code_blocks/*.layout
 *.swp
 *tags
+misc/code_blocks/*.layout

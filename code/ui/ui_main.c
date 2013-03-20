@@ -81,18 +81,6 @@ static const char *netSources[] = {
 };
 static const int numNetSources = ARRAY_LEN( netSources );
 
-static const serverFilter_t serverFilters[] = {
-	{"All", "" },
-	{"Quake 3 Arena", "" },
-	{"Team Arena", BASETA },
-	{"Rocket Arena", "arena" },
-	{"Alliance", "alliance20" },
-	{"Weapons Factory Arena", "wfa" },
-	{"OSP", "osp" },
-};
-
-static const int numServerFilters = ARRAY_LEN( serverFilters );
-
 
 static const char *teamArenaGameTypes[] = {
 	"FFA",
@@ -1058,6 +1046,23 @@ int UI_SourceForLAN(void) {
 	}
 }
 
+const char *UI_FilterDescription( int value ) {
+	if ( value <= 0 || value > uiInfo.modCount ) {
+		return "All";
+	}
+
+	return uiInfo.modList[value - 1].modDescr;
+}
+
+const char *UI_FilterDir( int value ) {
+	// base game (value 1) doesn't send "game"
+	if ( value <= 1 || value > uiInfo.modCount ) {
+		return "";
+	}
+
+	return uiInfo.modList[value - 1].modName;
+}
+
 
 static const char *handicapValues[] = {"None","95","90","85","80","75","70","65","60","55","50","45","40","35","30","25","20","15","10","5",NULL};
 #ifndef MISSIONPACK
@@ -1398,10 +1403,7 @@ static void UI_DrawNetMapCinematic(rectDef_t *rect, float scale, vec4_t color) {
 
 
 static void UI_DrawNetFilter(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
-	if (ui_serverFilterType.integer < 0 || ui_serverFilterType.integer > numServerFilters) {
-		ui_serverFilterType.integer = 0;
-	}
-  Text_Paint(rect->x, rect->y, scale, color, va("Filter: %s", serverFilters[ui_serverFilterType.integer].description), 0, 0, textStyle);
+	Text_Paint(rect->x, rect->y, scale, color, va("Filter: %s", UI_FilterDescription( ui_serverFilterType.integer ) ), 0, 0, textStyle);
 }
 
 
@@ -1764,10 +1766,7 @@ static int UI_OwnerDrawWidth(int ownerDraw, float scale) {
 			s = va("Source: %s", netSources[ui_netSource.integer]);
 			break;
 		case UI_NETFILTER:
-			if (ui_serverFilterType.integer < 0 || ui_serverFilterType.integer > numServerFilters) {
-				ui_serverFilterType.integer = 0;
-			}
-			s = va("Filter: %s", serverFilters[ui_serverFilterType.integer].description );
+			s = va("Filter: %s", UI_FilterDescription( ui_serverFilterType.integer ) );
 			break;
 		case UI_TIER:
 			break;
@@ -2564,10 +2563,10 @@ static qboolean UI_NetFilter_HandleKey(int flags, float *special, int key) {
 			ui_serverFilterType.integer++;
 		}
 
-    if (ui_serverFilterType.integer >= numServerFilters) {
+    if (ui_serverFilterType.integer > uiInfo.modCount) {
       ui_serverFilterType.integer = 0;
     } else if (ui_serverFilterType.integer < 0) {
-      ui_serverFilterType.integer = numServerFilters - 1;
+      ui_serverFilterType.integer = uiInfo.modCount;
 		}
 		UI_BuildServerDisplayList(qtrue);
     return qtrue;
@@ -3349,6 +3348,8 @@ static void UI_RunMenuScript(char **args) {
 			}
 			UI_BuildServerDisplayList(qtrue);
 			UI_FeederSelection(FEEDER_SERVERS, 0);
+
+			UI_LoadMods();
 		} else if (Q_stricmp(name, "ServerStatus") == 0) {
 			trap_LAN_GetServerAddressString(UI_SourceForLAN(), uiInfo.serverStatus.displayServers[uiInfo.serverStatus.currentServer], uiInfo.serverStatusAddress, sizeof(uiInfo.serverStatusAddress));
 			UI_BuildServerStatus(qtrue);
@@ -3430,13 +3431,13 @@ static void UI_RunMenuScript(char **args) {
 		} else if (Q_stricmp(name, "addFavorite") == 0) {
 			if (ui_netSource.integer != UIAS_FAVORITES) {
 				char name[MAX_NAME_LENGTH];
-				char addr[MAX_NAME_LENGTH];
+				char addr[MAX_ADDRESSLENGTH];
 				int res;
 
 				trap_LAN_GetServerInfo(UI_SourceForLAN(), uiInfo.serverStatus.displayServers[uiInfo.serverStatus.currentServer], buff, MAX_STRING_CHARS);
 				name[0] = addr[0] = '\0';
-				Q_strncpyz(name, 	Info_ValueForKey(buff, "hostname"), MAX_NAME_LENGTH);
-				Q_strncpyz(addr, 	Info_ValueForKey(buff, "addr"), MAX_NAME_LENGTH);
+				Q_strncpyz(name, 	Info_ValueForKey(buff, "hostname"), sizeof ( name ) );
+				Q_strncpyz(addr, 	Info_ValueForKey(buff, "addr"), sizeof ( addr ) );
 				if (strlen(name) > 0 && strlen(addr) > 0) {
 					res = trap_LAN_AddServer(AS_FAVORITES, name, addr);
 					if (res == 0) {
@@ -3455,37 +3456,35 @@ static void UI_RunMenuScript(char **args) {
 			}
 		} else if (Q_stricmp(name, "deleteFavorite") == 0) {
 			if (ui_netSource.integer == UIAS_FAVORITES) {
-				char addr[MAX_NAME_LENGTH];
+				char addr[MAX_ADDRESSLENGTH];
 				trap_LAN_GetServerInfo(AS_FAVORITES, uiInfo.serverStatus.displayServers[uiInfo.serverStatus.currentServer], buff, MAX_STRING_CHARS);
 				addr[0] = '\0';
-				Q_strncpyz(addr, 	Info_ValueForKey(buff, "addr"), MAX_NAME_LENGTH);
+				Q_strncpyz(addr, 	Info_ValueForKey(buff, "addr"), sizeof ( addr ) );
 				if (strlen(addr) > 0) {
 					trap_LAN_RemoveServer(AS_FAVORITES, addr);
 				}
 			}
 		} else if (Q_stricmp(name, "createFavorite") == 0) {
-			if (ui_netSource.integer == UIAS_FAVORITES) {
-				char name[MAX_NAME_LENGTH];
-				char addr[MAX_NAME_LENGTH];
-				int res;
+			char name[MAX_NAME_LENGTH];
+			char addr[MAX_ADDRESSLENGTH];
+			int res;
 
-				name[0] = addr[0] = '\0';
-				Q_strncpyz(name, 	UI_Cvar_VariableString("ui_favoriteName"), MAX_NAME_LENGTH);
-				Q_strncpyz(addr, 	UI_Cvar_VariableString("ui_favoriteAddress"), MAX_NAME_LENGTH);
-				if (strlen(name) > 0 && strlen(addr) > 0) {
-					res = trap_LAN_AddServer(AS_FAVORITES, name, addr);
-					if (res == 0) {
-						// server already in the list
-						Com_Printf("Favorite already in list\n");
-					}
-					else if (res == -1) {
-						// list full
-						Com_Printf("Favorite list full\n");
-					}
-					else {
-						// successfully added
-						Com_Printf("Added favorite server %s\n", addr);
-					}
+			name[0] = addr[0] = '\0';
+			Q_strncpyz(name, 	UI_Cvar_VariableString("ui_favoriteName"), sizeof ( name ) );
+			Q_strncpyz(addr, 	UI_Cvar_VariableString("ui_favoriteAddress"), sizeof ( addr ) );
+			if (strlen(name) > 0 && strlen(addr) > 0) {
+				res = trap_LAN_AddServer(AS_FAVORITES, name, addr);
+				if (res == 0) {
+					// server already in the list
+					Com_Printf("Favorite already in list\n");
+				}
+				else if (res == -1) {
+					// list full
+					Com_Printf("Favorite list full\n");
+				}
+				else {
+					// successfully added
+					Com_Printf("Added favorite server %s\n", addr);
 				}
 			}
 		} else if (Q_stricmp(name, "orders") == 0) {
@@ -3819,7 +3818,7 @@ static void UI_BuildServerDisplayList(qboolean force) {
 			}
 				
 			if (ui_serverFilterType.integer > 0) {
-				if (Q_stricmp(Info_ValueForKey(info, "game"), serverFilters[ui_serverFilterType.integer].basedir) != 0) {
+				if (Q_stricmp(Info_ValueForKey(info, "game"), UI_FilterDir( ui_serverFilterType.integer ) ) != 0) {
 					trap_LAN_MarkServerVisible(lanSource, i, qfalse);
 					continue;
 				}
@@ -4743,7 +4742,7 @@ static qboolean GameType_Parse(char **p, qboolean join) {
 		}
 
 		if (token[0] == '{') {
-			// two tokens per line, character name and sex
+			// two tokens per line, gametype name and number
 			if (join) {
 				if (!String_Parse(p, &uiInfo.joinGameTypes[uiInfo.numJoinGameTypes].gameType) || !Int_Parse(p, &uiInfo.joinGameTypes[uiInfo.numJoinGameTypes].gtEnum)) {
 					return qfalse;

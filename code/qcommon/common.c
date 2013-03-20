@@ -39,6 +39,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include <winsock.h>
 #endif
 
+#include "../sys/sys_loadlib.h"
+
 // List of demo protocols that are supported for playback.
 // Also plays protocol com_protocol
 int demo_protocols[] =
@@ -64,6 +66,9 @@ static fileHandle_t pipefile;
 static fileHandle_t logfile;
 fileHandle_t	com_journalFile;			// events are written here
 fileHandle_t	com_journalDataFile;		// config files are written here
+
+// Structure containing functions exported from refresh DLL
+refexport_t	re;
 
 cvar_t	*com_fs_pure;
 cvar_t	*com_speeds;
@@ -96,6 +101,7 @@ cvar_t	*com_maxfpsUnfocused;
 cvar_t	*com_minimized;
 cvar_t	*com_maxfpsMinimized;
 cvar_t	*com_abnormalExit;
+cvar_t	*com_productName;
 cvar_t	*com_gamename;
 cvar_t	*com_protocol;
 #ifdef LEGACY_PROTOCOL
@@ -104,6 +110,10 @@ cvar_t	*com_legacyprotocol;
 cvar_t	*com_basegame;
 cvar_t  *com_homepath;
 cvar_t	*com_busyWait;
+
+#ifdef USE_RENDERER_DLOPEN
+cvar_t	*com_renderer;
+#endif
 
 #if idx64
 	int (*Q_VMftol)(void);
@@ -1640,6 +1650,7 @@ void Hunk_Clear( void ) {
 	CL_ShutdownUI();
 #endif
 	SV_ShutdownGameProgs();
+	VM_ClearMemoryTags();
 #ifndef DEDICATED
 	CIN_CloseAllVideos();
 #endif
@@ -2690,7 +2701,7 @@ void Com_Init( char *commandLine ) {
 	// done early so bind command exists
 	CL_InitKeyCommands();
 
-	com_fs_pure = Cvar_Get ("fs_pure", "1", CVAR_ROM);
+	com_fs_pure = Cvar_Get ("fs_pure", "", CVAR_ROM);
 
 	com_basegame = Cvar_Get("com_basegame", BASEGAME, CVAR_INIT);
 	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT);
@@ -2723,11 +2734,10 @@ void Com_Init( char *commandLine ) {
 
   // get dedicated here for proper hunk megs initialization
 #ifdef DEDICATED
-	com_dedicated = Cvar_Get ("dedicated", "1", CVAR_INIT);
-	Cvar_CheckRange( com_dedicated, 1, 2, qtrue );
+	com_dedicated = Cvar_Get ("dedicated", "1", CVAR_ROM);
 #else
 	com_dedicated = Cvar_Get ("dedicated", "0", CVAR_LATCH);
-	Cvar_CheckRange( com_dedicated, 0, 2, qtrue );
+	Cvar_CheckRange( com_dedicated, 0, 1, qtrue );
 #endif
 	// allocate the stack based hunk allocator
 	Com_InitHunkMemory();
@@ -2772,6 +2782,8 @@ void Com_Init( char *commandLine ) {
 
 	com_introPlayed = Cvar_Get( "com_introplayed", "0", CVAR_ARCHIVE);
 
+	com_productName = Cvar_Get( "com_productName", PRODUCT_NAME, CVAR_ROM );
+
 	s = va("%s %s %s", Q3_VERSION, PLATFORM_STRING, __DATE__ );
 	com_version = Cvar_Get ("version", s, CVAR_ROM | CVAR_SERVERINFO );
 	com_gamename = Cvar_Get("com_gamename", GAMENAME_FOR_MASTER, CVAR_SERVERINFO | CVAR_INIT);
@@ -2786,11 +2798,15 @@ void Com_Init( char *commandLine ) {
 #endif
 		Cvar_Get("protocol", com_protocol->string, CVAR_ROM);
 
+#ifdef USE_RENDERER_DLOPEN
+	com_renderer = Cvar_Get("com_renderer", "opengl1", CVAR_ARCHIVE | CVAR_LATCH);
+#endif
+
 	Sys_Init();
 
 	if( Sys_WritePIDFile( ) ) {
 #ifndef DEDICATED
-		const char *message = "The last time " CLIENT_WINDOW_TITLE " ran, "
+		const char *message = "The last time " PRODUCT_NAME " ran, "
 			"it didn't exit properly. This may be due to inappropriate video "
 			"settings. Would you like to start with \"safe\" video settings?";
 
@@ -2907,6 +2923,155 @@ void Com_ReadFromPipe( void )
 
 //==================================================================
 
+/*
+============
+Com_RefMalloc
+============
+*/
+void *Com_RefMalloc( int size ) {
+	return Z_TagMalloc( size, TAG_RENDERER );
+}
+
+int Com_ScaledMilliseconds(void) {
+	return Sys_Milliseconds()*com_timescale->value;
+}
+
+/*
+================
+Com_RefPrintf
+
+DLL glue
+================
+*/
+static __attribute__ ((format (printf, 2, 3))) void QDECL Com_RefPrintf( int print_level, const char *fmt, ...) {
+	va_list		argptr;
+	char		msg[MAXPRINTMSG];
+	
+	va_start (argptr,fmt);
+	Q_vsnprintf (msg, sizeof(msg), fmt, argptr);
+	va_end (argptr);
+
+	if ( print_level == PRINT_ALL ) {
+		Com_Printf ("%s", msg);
+	} else if ( print_level == PRINT_WARNING ) {
+		Com_Printf (S_COLOR_YELLOW "%s", msg);		// yellow
+	} else if ( print_level == PRINT_DEVELOPER ) {
+		Com_DPrintf (S_COLOR_RED "%s", msg);		// red
+	}
+}
+
+
+
+/*
+============
+Com_ShutdownRef
+============
+*/
+void Com_ShutdownRef( void ) {
+	if ( !re.Shutdown ) {
+		return;
+	}
+	re.Shutdown( qtrue );
+	Com_Memset( &re, 0, sizeof( re ) );
+}
+
+/*
+============
+Com_InitRef
+============
+*/
+void Com_InitRef( refimport_t *ri ) {
+	refexport_t	*ret;
+#ifdef USE_RENDERER_DLOPEN
+	GetRefAPI_t		GetRefAPI;
+	char			dllName[MAX_OSPATH];
+	static void			*rendererLib;
+#endif
+
+#ifndef DEDICATED
+	Com_Printf( "----- Initializing Renderer ----\n" );
+#endif
+
+#ifdef USE_RENDERER_DLOPEN
+	Com_sprintf(dllName, sizeof(dllName), "renderer_%s_" ARCH_STRING DLL_EXT, com_renderer->string);
+
+	if(!(rendererLib = Sys_LoadDll(dllName, qfalse)) && strcmp(com_renderer->string, com_renderer->resetString))
+	{
+		Com_Printf("failed:\n\"%s\"\n", Sys_LibraryError());
+		Cvar_ForceReset("com_renderer");
+
+		Com_sprintf(dllName, sizeof(dllName), "renderer_opengl1_" ARCH_STRING DLL_EXT);
+		rendererLib = Sys_LoadDll(dllName, qfalse);
+	}
+
+	if(!rendererLib)
+	{
+		Com_Printf("failed:\n\"%s\"\n", Sys_LibraryError());
+		Com_Error(ERR_FATAL, "Failed to load renderer");
+	}
+
+	GetRefAPI = Sys_LoadFunction(rendererLib, "GetRefAPI");
+	if(!GetRefAPI)
+	{
+		Com_Error(ERR_FATAL, "Can't load symbol GetRefAPI: '%s'",  Sys_LibraryError());
+	}
+#endif
+
+	ri->Cmd_AddCommand = Cmd_AddCommand;
+	ri->Cmd_RemoveCommand = Cmd_RemoveCommand;
+	ri->Cmd_Argc = Cmd_Argc;
+	ri->Cmd_Argv = Cmd_Argv;
+	ri->Cmd_ExecuteText = Cbuf_ExecuteText;
+	ri->Printf = Com_RefPrintf;
+	ri->Error = Com_Error;
+	ri->Milliseconds = Com_ScaledMilliseconds;
+	ri->Malloc = Com_RefMalloc;
+	ri->Free = Z_Free;
+#ifdef HUNK_DEBUG
+	ri->Hunk_AllocDebug = Hunk_AllocDebug;
+#else
+	ri->Hunk_Alloc = Hunk_Alloc;
+#endif
+	ri->Hunk_AllocateTempMemory = Hunk_AllocateTempMemory;
+	ri->Hunk_FreeTempMemory = Hunk_FreeTempMemory;
+
+	ri->CM_ClusterPVS = CM_ClusterPVS;
+	ri->CM_DrawDebugSurface = CM_DrawDebugSurface;
+
+	ri->FS_ReadFile = FS_ReadFile;
+	ri->FS_FreeFile = FS_FreeFile;
+	ri->FS_WriteFile = FS_WriteFile;
+	ri->FS_FreeFileList = FS_FreeFileList;
+	ri->FS_ListFiles = FS_ListFiles;
+	ri->FS_FileExists = FS_FileExists;
+	ri->Cvar_Get = Cvar_Get;
+	ri->Cvar_Set = Cvar_Set;
+	ri->Cvar_SetValue = Cvar_SetValue;
+	ri->Cvar_CheckRange = Cvar_CheckRange;
+	ri->Cvar_VariableIntegerValue = Cvar_VariableIntegerValue;
+
+	ri->ftol = Q_ftol;
+
+	ri->Sys_SetEnv = Sys_SetEnv;
+	ri->Sys_LowPhysicalMemory = Sys_LowPhysicalMemory;
+
+#ifdef DEDICATED
+	ret = GetRefAPI( REF_API_VERSION, ri, qtrue );
+#else
+	ret = GetRefAPI( REF_API_VERSION, ri, qfalse );
+
+	Com_Printf( "-------------------------------\n");
+#endif
+
+	if ( !ret ) {
+		Com_Error (ERR_FATAL, "Couldn't initialize refresh" );
+	}
+
+	re = *ret;
+}
+
+//==================================================================
+
 void Com_WriteConfigToFile( const char *filename ) {
 	fileHandle_t	f;
 
@@ -2991,24 +3156,22 @@ int Com_ModifyMsec( int msec ) {
 		msec = 1;
 	}
 
-	if ( com_dedicated->integer ) {
-		// dedicated servers don't want to clamp for a much longer
-		// period, because it would mess up all the client's views
-		// of time.
-		if (com_sv_running->integer && msec > 500)
-			Com_Printf( "Hitch warning: %i msec frame time\n", msec );
-
-		clampTime = 5000;
-	} else 
-	if ( !com_sv_running->integer ) {
-		// clients of remote servers do not want to clamp time, because
-		// it would skew their view of the server's time temporarily
-		clampTime = 5000;
-	} else {
+	if ( com_sv_running->integer && Com_GameIsSinglePlayer() ) {
 		// for local single player gaming
 		// we may want to clamp the time to prevent players from
 		// flying off edges when something hitches.
 		clampTime = 200;
+	} else {
+		// servers don't want to clamp for a much longer period,
+		// because it would mess up all the client's views of time.
+
+		// clients of remote servers do not want to clamp time, because
+		// it would skew their view of the server's time temporarily
+
+		if (com_sv_running->integer && msec > 500)
+			Com_Printf( "Hitch warning: %i msec frame time\n", msec );
+
+		clampTime = 5000;
 	}
 
 	if ( msec > clampTime ) {

@@ -183,39 +183,22 @@ or configs will never get loaded from disk!
 // every time a new pk3 file is built, this checksum must be updated.
 // the easiest way to get it is to just run the game and see what it spits out
 
-#define PAK_OPTIONAL 1	// Optional pak only used by client which isn't needed to play the game.
+#define MAX_PAKSUMS 64
 
-typedef struct
-{
-	char *gamename;
-	char *pakname;
+#define PAK_NODOWNLOAD 1
+
+typedef struct {
+	char gamename[MAX_QPATH];
+	char pakname[MAX_QPATH];
 	unsigned checksum;
 	int flags;
 } purePak_t;
 
-// Only requires paks for gamenames which are used (and aren't flagged as optional).
-const purePak_t com_purePaks[] =
-{
-	// pak3 and pak7 only contain qvms, which are over-ridden by qvms in pak8
-	{BASEQ3, "pak0", 4204185745u, 0},
-	{BASEQ3, "pak1", 4193093146u, 0},
-	{BASEQ3, "pak2", 2353701282u, 0},
-	{BASEQ3, "pak3", 3321918099u, PAK_OPTIONAL},
-	{BASEQ3, "pak4", 2809125413u, 0},
-	{BASEQ3, "pak5", 1185311901u, 0},
-	{BASEQ3, "pak6", 750524939u, 0},
-	{BASEQ3, "pak7", 2842227859u, PAK_OPTIONAL},
-	{BASEQ3, "pak8", 3662040954u, 0},
+purePak_t com_purePaks[MAX_PAKSUMS];
 
-	{"demoq3", "pak0", 1042450890u, 0},
-
-	{BASETA, "pak0", 946490770u, 0},
-	{BASETA, "pak1", 1414087181u, 0},
-	{BASETA, "pak2", 409244605u, 0},
-	{BASETA, "pak3", 648653547u, 0},
-
-	{NULL, NULL, 0, 0}
-};
+qboolean	fs_foundPaksums;
+qboolean	fs_pakMismatchWarningDialog;
+int			fs_numPaksums;
 
 // if this is defined, the executable positively won't work with any paks other
 // than the demo pak, even if productid is present.  This is only used for our
@@ -344,26 +327,6 @@ qboolean FS_Initialized( void ) {
 
 /*
 =================
-FS_PakIsOptional
-=================
-*/
-qboolean FS_PakIsOptional(pack_t *pack) {
-	int i;
-
-	for ( i = 0 ; com_purePaks[i].pakname != NULL ; i++ ) {
-		if ((com_purePaks[i].flags & PAK_OPTIONAL)
-			&& !Q_stricmp(com_purePaks[i].gamename, pack->pakGamename)
-			&& !Q_stricmp(com_purePaks[i].pakname, pack->pakBasename)
-			&& pack->checksum == com_purePaks[i].checksum) {
-			return qtrue;
-		}
-	}
-
-	return qfalse;
-}
-
-/*
-=================
 FS_PakIsPure
 =================
 */
@@ -378,10 +341,6 @@ qboolean FS_PakIsPure( pack_t *pack ) {
 			if ( pack->checksum == fs_serverPaks[i] ) {
 				return qtrue;		// on the aproved list
 			}
-		}
-
-		if (FS_PakIsOptional(pack)) {
-			return qtrue;
 		}
 		return qfalse;	// not on the pure server pak list
 	}
@@ -643,7 +602,7 @@ qboolean FS_FileInPathExists(const char *testpath)
 {
 	FILE *filep;
 
-	filep = fopen(testpath, "rb");
+	filep = Sys_FOpen(testpath, "rb");
 	
 	if(filep)
 	{
@@ -718,7 +677,7 @@ fileHandle_t FS_SV_FOpenFileWrite( const char *filename ) {
 	}
 
 	Com_DPrintf( "writing to: %s\n", ospath );
-	fsh[f].handleFiles.file.o = fopen( ospath, "wb" );
+	fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "wb" );
 
 	Q_strncpyz( fsh[f].name, filename, sizeof( fsh[f].name ) );
 
@@ -763,7 +722,7 @@ long FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp)
 		Com_Printf( "FS_SV_FOpenFileRead (fs_homepath): %s\n", ospath );
 	}
 
-	fsh[f].handleFiles.file.o = fopen( ospath, "rb" );
+	fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
 	fsh[f].handleSync = qfalse;
 	if (!fsh[f].handleFiles.file.o)
 	{
@@ -779,7 +738,7 @@ long FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp)
 				Com_Printf( "FS_SV_FOpenFileRead (fs_basepath): %s\n", ospath );
 			}
 
-			fsh[f].handleFiles.file.o = fopen( ospath, "rb" );
+			fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
 			fsh[f].handleSync = qfalse;
 		}
 
@@ -921,7 +880,7 @@ fileHandle_t FS_FOpenFileWrite( const char *filename ) {
 	// enabling the following line causes a recursive function call loop
 	// when running with +set logfile 1 +set developer 1
 	//Com_DPrintf( "writing to: %s\n", ospath );
-	fsh[f].handleFiles.file.o = fopen( ospath, "wb" );
+	fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "wb" );
 
 	Q_strncpyz( fsh[f].name, filename, sizeof( fsh[f].name ) );
 
@@ -966,7 +925,7 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 		return 0;
 	}
 
-	fsh[f].handleFiles.file.o = fopen( ospath, "ab" );
+	fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "ab" );
 	fsh[f].handleSync = qfalse;
 	if (!fsh[f].handleFiles.file.o) {
 		f = 0;
@@ -1194,7 +1153,7 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 			dir = search->dir;
 
 			netpath = FS_BuildOSPath(dir->path, dir->gamedir, filename);
-			filep = fopen (netpath, "rb");
+			filep = Sys_FOpen(netpath, "rb");
 
 			if(filep)
 			{
@@ -1329,7 +1288,7 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 		dir = search->dir;
 
 		netpath = FS_BuildOSPath(dir->path, dir->gamedir, filename);
-		filep = fopen(netpath, "rb");
+		filep = Sys_FOpen(netpath, "rb");
 
 		if (filep == NULL)
 		{
@@ -1342,8 +1301,8 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 
 		if(fs_debug->integer)
 		{
-			Com_Printf("FS_FOpenFileRead: %s (found in '%s/%s')\n", filename,
-					dir->path, dir->gamedir);
+			Com_Printf("FS_FOpenFileRead: %s (found in '%s%c%s')\n", filename,
+					dir->path, PATH_SEP, dir->gamedir);
 		}
 
 		fsh[*file].handleFiles.file.o = filep;
@@ -2650,6 +2609,50 @@ static char** Sys_ConcatenateFileLists( char **list0, char **list1 )
 
 /*
 ================
+FS_GetModDescription
+================
+*/
+void FS_GetModDescription( const char *modDir, char *description, int descriptionLen ) {
+	fileHandle_t	descHandle;
+	char			descPath[MAX_QPATH];
+	int				nDescLen;
+	FILE			*file;
+
+	descPath[0] = '\0';
+	strcpy(descPath, modDir);
+	strcat(descPath, "/description.txt");
+	nDescLen = FS_SV_FOpenFileRead( descPath, &descHandle );
+
+	if ( nDescLen > 0 && descHandle) {
+		file = FS_FileForHandle(descHandle);
+		Com_Memset( description, 0, descriptionLen );
+		nDescLen = fread(description, 1, descriptionLen, file);
+		if (nDescLen >= 0) {
+			description[nDescLen] = '\0';
+		}
+
+		// Remove \n, \r\n, and \r
+		if (nDescLen > 0 && description[nDescLen - 1] == '\n') {
+			nDescLen--;
+			description[nDescLen] = '\0';
+		}
+		if (nDescLen > 0 && description[nDescLen - 1] == '\r') {
+			nDescLen--;
+			description[nDescLen] = '\0';
+		}
+
+		FS_FCloseFile(descHandle);
+	} else if ( !Q_stricmp( modDir, BASEQ3 ) ) {
+		Q_strncpyz( description, "Quake III Arena", descriptionLen );
+	} else if ( !Q_stricmp( modDir, BASETA ) ) {
+		Q_strncpyz( description, "Quake III: Team Arena", descriptionLen );
+	} else {
+		Q_strncpyz( description, modDir, descriptionLen );
+	}
+}
+
+/*
+================
 FS_GetModList
 
 Returns a list of mod directory names
@@ -2662,8 +2665,7 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 	char **pFiles = NULL;
 	char **pPaks = NULL;
 	char *name, *path;
-	char descPath[MAX_OSPATH];
-	fileHandle_t descHandle;
+	char description[MAX_OSPATH];
 
 	int dummy;
 	char **pFiles0 = NULL;
@@ -2672,6 +2674,21 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 
 	*listbuf = 0;
 	nMods = nTotal = 0;
+
+	// add base game first
+	name = com_basegame->string;
+	nLen = strlen(name) + 1;
+	FS_GetModDescription( name, description, sizeof( description ) );
+	nDescLen = strlen(description) + 1;
+
+	if (nTotal + nLen + 1 + nDescLen + 1 < bufsize) {
+		strcpy(listbuf, name);
+		listbuf += nLen;
+		strcpy(listbuf, description);
+		listbuf += nDescLen;
+		nTotal += nLen + nDescLen;
+		nMods++;
+	}
 
 	pFiles0 = Sys_ListFiles( fs_homepath->string, NULL, NULL, &dummy, qtrue );
 	pFiles1 = Sys_ListFiles( fs_basepath->string, NULL, NULL, &dummy, qtrue );
@@ -2723,28 +2740,13 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 				nLen = strlen(name) + 1;
 				// nLen is the length of the mod path
 				// we need to see if there is a description available
-				descPath[0] = '\0';
-				strcpy(descPath, name);
-				strcat(descPath, "/description.txt");
-				nDescLen = FS_SV_FOpenFileRead( descPath, &descHandle );
-				if ( nDescLen > 0 && descHandle) {
-					FILE *file;
-					file = FS_FileForHandle(descHandle);
-					Com_Memset( descPath, 0, sizeof( descPath ) );
-					nDescLen = fread(descPath, 1, 48, file);
-					if (nDescLen >= 0) {
-						descPath[nDescLen] = '\0';
-					}
-					FS_FCloseFile(descHandle);
-				} else {
-					strcpy(descPath, name);
-				}
-				nDescLen = strlen(descPath) + 1;
+				FS_GetModDescription( name, description, sizeof( description ) );
+				nDescLen = strlen(description) + 1;
 
 				if (nTotal + nLen + 1 + nDescLen + 1 < bufsize) {
 					strcpy(listbuf, name);
 					listbuf += nLen;
-					strcpy(listbuf, descPath);
+					strcpy(listbuf, description);
 					listbuf += nDescLen;
 					nTotal += nLen + nDescLen;
 					nMods++;
@@ -3051,12 +3053,20 @@ then loads the zip headers
 */
 void FS_AddGameDirectory( const char *path, const char *dir ) {
 	searchpath_t	*sp;
-	int				i;
 	searchpath_t	*search;
 	pack_t			*pak;
 	char			curpath[MAX_OSPATH + 1], *pakfile;
 	int				numfiles;
 	char			**pakfiles;
+	int				pakfilesi;
+	char			**pakfilestmp;
+	int				numdirs;
+	char			**pakdirs;
+	int				pakdirsi;
+	char			**pakdirstmp;
+
+	int				pakwhich;
+	int				len;
 
 	// Unique
 	for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
@@ -3071,29 +3081,95 @@ void FS_AddGameDirectory( const char *path, const char *dir ) {
 	Q_strncpyz(curpath, FS_BuildOSPath(path, dir, ""), sizeof(curpath));
 	curpath[strlen(curpath) - 1] = '\0';	// strip the trailing slash
 
+	// Get .pk3 files
 	pakfiles = Sys_ListFiles(curpath, ".pk3", NULL, &numfiles, qfalse);
 
 	qsort( pakfiles, numfiles, sizeof(char*), paksort );
 
-	for ( i = 0 ; i < numfiles ; i++ ) {
-		pakfile = FS_BuildOSPath( path, dir, pakfiles[i] );
-		if ( ( pak = FS_LoadZipFile( pakfile, pakfiles[i] ) ) == 0 )
-			continue;
+	if ( fs_numServerPaks ) {
+		numdirs = 0;
+		pakdirs = NULL;
+	} else {
+		// Get top level directories (we'll filter them later since the Sys_ListFiles filtering is terrible)
+		pakdirs = Sys_ListFiles(curpath, "/", NULL, &numdirs, qfalse);
 
-		Q_strncpyz(pak->pakPathname, curpath, sizeof(pak->pakPathname));
-		// store the game name for downloading
-		Q_strncpyz(pak->pakGamename, dir, sizeof(pak->pakGamename));
+		qsort( pakdirs, numdirs, sizeof(char *), paksort );
+	}
 
-		fs_packFiles += pak->numfiles;
+	pakfilesi = 0;
+	pakdirsi = 0;
 
-		search = Z_Malloc (sizeof(searchpath_t));
-		search->pack = pak;
-		search->next = fs_searchpaths;
-		fs_searchpaths = search;
+	while((pakfilesi < numfiles) || (pakdirsi < numdirs))
+	{
+		// Check if a pakfile or pakdir comes next
+		if (pakfilesi >= numfiles) {
+			// We've used all the pakfiles, it must be a pakdir.
+			pakwhich = 0;
+		}
+		else if (pakdirsi >= numdirs) {
+			// We've used all the pakdirs, it must be a pakfile.
+			pakwhich = 1;
+		}
+		else {
+			// Could be either, compare to see which name comes first
+			// Need tmp variables for appropriate indirection for paksort()
+			pakfilestmp = &pakfiles[pakfilesi];
+			pakdirstmp = &pakdirs[pakdirsi];
+			pakwhich = (paksort(pakfilestmp, pakdirstmp) < 0);
+		}
+
+		if (pakwhich) {
+			// The next .pk3 file is before the next .pk3dir
+			pakfile = FS_BuildOSPath(path, dir, pakfiles[pakfilesi]);
+			if ((pak = FS_LoadZipFile(pakfile, pakfiles[pakfilesi])) == 0) {
+				// This isn't a .pk3! Next!
+				pakfilesi++;
+				continue;
+			}
+
+			Q_strncpyz(pak->pakPathname, curpath, sizeof(pak->pakPathname));
+			// store the game name for downloading
+			Q_strncpyz(pak->pakGamename, dir, sizeof(pak->pakGamename));
+
+			fs_packFiles += pak->numfiles;
+
+			search = Z_Malloc(sizeof(searchpath_t));
+			search->pack = pak;
+			search->next = fs_searchpaths;
+			fs_searchpaths = search;
+
+			pakfilesi++;
+		}
+		else {
+			// The next .pk3dir is before the next .pk3 file
+			// But wait, this could be any directory, we're filtering to only ending with ".pk3dir" here.
+			len = strlen(pakdirs[pakdirsi]);
+			if (!FS_IsExt(pakdirs[pakdirsi], ".pk3dir", len)) {
+				// This isn't a .pk3dir! Next!
+				pakdirsi++;
+				continue;
+			}
+
+			pakfile = FS_BuildOSPath(path, dir, pakdirs[pakdirsi]);
+
+			// add the directory to the search path
+			search = Z_Malloc(sizeof(searchpath_t));
+			search->dir = Z_Malloc(sizeof(*search->dir));
+
+			Q_strncpyz(search->dir->path, curpath, sizeof(search->dir->path));	// c:\quake3\baseq3
+			Q_strncpyz(search->dir->fullpath, pakfile, sizeof(search->dir->fullpath));	// c:\quake3\baseq3\mypak.pk3dir
+			Q_strncpyz(search->dir->gamedir, pakdirs[pakdirsi], sizeof(search->dir->gamedir)); // mypak.pk3dir
+
+			search->next = fs_searchpaths;
+			fs_searchpaths = search;
+
+			pakdirsi++;
+		}
 	}
 
 	// done
 	Sys_FreeFileList( pakfiles );
+	Sys_FreeFileList( pakdirs );
 
 	//
 	// add the directory to the search path
@@ -3131,18 +3207,18 @@ qboolean FS_idPak(char *pak, char *base, int numPaks)
 
 /*
 ================
-FS_DefaultPak
+FS_PakAllowDownload
 ================
 */
-qboolean FS_DefaultPak( char *pak ) {
+qboolean FS_PakAllowDownload( char *pak ) {
 	int i;
 
-	for (i = 0; com_purePaks[i].pakname != NULL; i++) {
-		if ( !FS_FilenameCompare(pak, va("%s/%s", com_purePaks[i].gamename, com_purePaks[i].pakname)) ) {
-			return qtrue;
+	for (i = 0; i < fs_numPaksums; i++) {
+		if ( ( com_purePaks[i].flags & PAK_NODOWNLOAD ) && !FS_FilenameCompare(pak, va("%s/%s", com_purePaks[i].gamename, com_purePaks[i].pakname)) ) {
+			return qfalse;
 		}
 	}
-	return qfalse;
+	return qtrue;
 }
 
 /*
@@ -3204,10 +3280,10 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 		// Ok, see if we have this pak file
 		havepak = qfalse;
 
-		// never autodownload any of the id or default paks
+		// never autodownload any of the id or paks which don't allow it
 		if ( FS_idPak(fs_serverReferencedPakNames[i], BASEQ3, NUM_ID_PAKS)
 			|| FS_idPak(fs_serverReferencedPakNames[i], BASETA, NUM_TA_PAKS)
-			|| FS_DefaultPak(fs_serverReferencedPakNames[i]) )
+			|| !FS_PakAllowDownload(fs_serverReferencedPakNames[i]) )
 		{
 			continue;
 		}
@@ -3402,6 +3478,7 @@ FS_Startup
 static void FS_Startup( const char *gameName, qboolean quiet )
 {
 	const char *homePath;
+	char description[MAX_QPATH];
 
 	if (!quiet) {
 		Com_Printf( "----- FS_Startup -----\n" );
@@ -3458,6 +3535,10 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 		}
 	}
 
+	FS_GetModDescription( fs_gamedir, description, sizeof ( description ) );
+	Q_CleanStr( description );
+	Cvar_Set( "com_productName", description );
+
 	// add our commands
 	Cmd_AddCommand ("path", FS_Path_f);
 	Cmd_AddCommand ("dir", FS_Dir_f );
@@ -3473,7 +3554,7 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 
 #ifdef FS_MISSING
 	if (missingFiles == NULL) {
-		missingFiles = fopen( "\\missing.txt", "ab" );
+		missingFiles = Sys_FOpen( "\\missing.txt", "ab" );
 	}
 #endif
 
@@ -3488,6 +3569,126 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 
 /*
 ===================
+FS_AddModToList
+===================
+*/
+void FS_AddModToList( char *list, int listLen, const char *gamedir ) {
+	char gameDescription[MAX_QPATH];
+
+	FS_GetModDescription( gamedir, gameDescription, sizeof ( gameDescription ) );
+
+	if ( !strstr( list, gameDescription ) ) {
+		if ( strlen( list ) ) {
+			Q_strcat( list, listLen, ", " );
+		}
+
+		Q_strcat( list, listLen, gameDescription );
+	}
+}
+
+/*
+===================
+FS_ClearPakChecksums
+===================
+*/
+void FS_ClearPakChecksums( void ) {
+	fs_foundPaksums = qfalse;
+	fs_pakMismatchWarningDialog = qtrue;
+	fs_numPaksums = 0;
+}
+
+/*
+===================
+FS_LoadPakChecksums
+
+Load checksums for pk3 files in gamedir
+===================
+*/
+static qboolean FS_LoadPakChecksums( const char *gamedir ) {
+	char			*buffer;
+	fileHandle_t	paksumsHandle;
+	char			path[MAX_OSPATH];
+	int				nPaksumsLen;
+	char			*text_p, *token;
+
+	if ( !gamedir || !*gamedir ) {
+		return qfalse;
+	}
+
+	Com_sprintf( path, sizeof ( path ), "%s/PAKSUMS", gamedir );
+	nPaksumsLen = FS_SV_FOpenFileRead( path, &paksumsHandle );
+
+	if ( nPaksumsLen <= 0 || !paksumsHandle) {
+		return qfalse;
+	}
+
+	fs_foundPaksums = qtrue;
+
+	buffer = Hunk_AllocateTempMemory(nPaksumsLen+1);
+
+	FS_Read( buffer, nPaksumsLen, paksumsHandle );
+
+	// guarantee that it will have a trailing 0 for string operations
+	buffer[nPaksumsLen] = 0;
+
+	FS_FCloseFile( paksumsHandle );
+	paksumsHandle = 0;
+
+	text_p = buffer;
+
+	while ( 1 ) {
+		token = COM_Parse( &text_p );
+		if ( !*token )
+			break;
+
+		if ( Q_stricmp( token, "config" ) == 0 ) {
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token )
+				continue;
+			if ( Q_stricmp( token, "noPakMismatchWarningDialog" ) == 0 ) {
+				fs_pakMismatchWarningDialog = qfalse;
+			} else {
+				Com_Printf( "Unknown config option '%s' in %s\n", token, path );
+			}
+		} else {
+			if ( fs_numPaksums >= MAX_PAKSUMS ) {
+				Com_Error( ERR_DROP, "Too many PAKSUMS (max is %d)", MAX_PAKSUMS );
+			}
+
+			COM_StripExtension( token, com_purePaks[fs_numPaksums].pakname, sizeof ( com_purePaks[fs_numPaksums].pakname ) );
+
+			// read checksum
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token ) {
+				Com_Printf( "'%s' missing checksum in %s\n", com_purePaks[fs_numPaksums].pakname, path );
+				continue;
+			}
+			com_purePaks[fs_numPaksums].checksum = (unsigned)atoi(token);
+
+			// read optional keywords
+			com_purePaks[fs_numPaksums].flags = 0;
+			while ( 1 ) {
+				token = COM_ParseExt( &text_p, qfalse );
+				if ( !*token )
+					break;
+				if ( Q_stricmp( token, "nodownload" ) == 0 ) {
+					com_purePaks[fs_numPaksums].flags |= PAK_NODOWNLOAD;
+				} else {
+					Com_Printf( "Unknown pak keyword '%s' in %s\n", token, path );
+				}
+			}
+
+			Q_strncpyz( com_purePaks[fs_numPaksums].gamename, gamedir, sizeof ( com_purePaks[fs_numPaksums].gamename ) );
+			fs_numPaksums++;
+		}
+	}
+
+	Hunk_FreeTempMemory( buffer );
+	return qtrue;
+}
+
+/*
+===================
 FS_CheckPaks
 
 Checks that default pk3s are present and their checksums are correct
@@ -3496,89 +3697,112 @@ Checks that default pk3s are present and their checksums are correct
 static void FS_CheckPaks( void )
 {
 	searchpath_t	*path;
-	unsigned foundPak = 0;
-	unsigned invalidPak = 0;
-#ifndef DEDICATED
-	qboolean hasPakFile = qfalse;
-#endif
-	int pak, total = 0;
+	qboolean		basePaksums;
+	qboolean		hasBaseGamePakFile = qfalse;
+	qboolean		missingPak = qfalse;
+	qboolean		invalidPak = qfalse;
+	char			badGames[512];
+	int				pak;
 
-	// If we're not pure don't check
-	if (com_fs_pure && !com_fs_pure->integer)
-		return;
+	FS_ClearPakChecksums();
+	basePaksums = FS_LoadPakChecksums( com_basegame->string );
+	FS_LoadPakChecksums( fs_basegame->string );
+	FS_LoadPakChecksums( fs_gamedirvar->string );
 
-	// Add up total value of foundPak
-	for (pak = 0; com_purePaks[pak].pakname != NULL; pak++) {
-		if (com_purePaks[pak].flags & PAK_OPTIONAL) {
-			continue;
-		}
-
-		// Only require paks that will be used
-		if (!!Q_stricmpn( com_basegame->string, com_purePaks[pak].gamename, MAX_OSPATH )
-			&& !(fs_basegame->string[0] && !Q_stricmpn( fs_basegame->string, com_purePaks[pak].gamename, MAX_OSPATH ))
-			&& !(fs_gamedirvar->string[0] && !Q_stricmpn( fs_gamedirvar->string, com_purePaks[pak].gamename, MAX_OSPATH )))
-		{
-			continue;
-		}
-
-		total += 1<<pak;
-	}
-
-	for( path = fs_searchpaths; path; path = path->next )
-	{
-		const char *pakBasename = path->pack->pakBasename;
-
-		if (!path->pack)
-			continue;
-
-#ifndef DEDICATED
-		hasPakFile = qtrue;
-#endif
-
-		for (pak = 0; com_purePaks[pak].pakname != NULL; pak++)
-		{
-			if (!Q_stricmpn( path->pack->pakGamename, com_purePaks[pak].gamename, MAX_OSPATH )
-				&& !Q_stricmpn( pakBasename, com_purePaks[pak].pakname, MAX_OSPATH ))
-			{
-				if( path->pack->checksum != com_purePaks[pak].checksum )
-				{
-					Com_Printf("\n\n"
-							"**********************************************************************\n"
-							"WARNING: %s/%s.pk3 is present but its checksum (%u) is not correct.\n"
-							"**********************************************************************\n\n\n",
-							com_purePaks[pak].gamename, com_purePaks[pak].pakname, path->pack->checksum );
-
-					invalidPak |= 1<<pak;
-				}
-				else
-				{
-					// Found pk3 and its checksum matches.
-					foundPak |= 1<<pak;
-				}
+	if ( !basePaksums ) {
+		for( path = fs_searchpaths; path; path = path->next ) {
+			if ( path->pack && Q_stricmp( path->pack->pakGamename, com_basegame->string ) == 0 ) {
+				hasBaseGamePakFile = qtrue;
+				break;
 			}
 		}
+
+		if ( !hasBaseGamePakFile ) {
+			FS_AddModToList( badGames, sizeof ( badGames ), com_basegame->string );
+		}
 	}
 
-	if (((foundPak & total) != total) || invalidPak)
-	{
-		const char *line1 = NULL;
-		const char *line2 = "You need to reinstall " PRODUCT_NAME " in order to play on pure servers.";
+	for (pak = 0; pak < fs_numPaksums; pak++) {
+		for( path = fs_searchpaths; path; path = path->next ) {
+			if ( path->pack && Q_stricmp( path->pack->pakGamename, com_purePaks[pak].gamename ) == 0
+				&& Q_stricmp( path->pack->pakBasename, com_purePaks[pak].pakname ) == 0 ) {
+				break;
+			}
+		}
 
-		// server can't ever be pure (sv_pure), as we're missing the pure files.
+		if ( !path ) {
+			Com_Printf("\n\n"
+					"**********************************************************************\n"
+					"WARNING: %s/%s.pk3 is missing.\n"
+					"**********************************************************************\n\n\n",
+					com_purePaks[pak].gamename, com_purePaks[pak].pakname );
+
+			missingPak = qtrue;
+		} else if( path->pack->checksum != com_purePaks[pak].checksum ) {
+			Com_Printf("\n\n"
+					"**********************************************************************\n"
+					"WARNING: %s/%s.pk3 is present but its checksum (%u) is not correct.\n"
+					"**********************************************************************\n\n\n",
+					com_purePaks[pak].gamename, com_purePaks[pak].pakname, path->pack->checksum );
+
+			invalidPak = qtrue;
+		} else {
+			continue;
+		}
+
+		FS_AddModToList( badGames, sizeof ( badGames ), com_purePaks[pak].gamename );
+	}
+
+	if ( basePaksums && fs_numPaksums > 0 && !missingPak && !invalidPak ) {
+		// have basegame pure list and pure pk3s
+		Cvar_Set( "fs_pure", "1" );
+	} else {
+#ifndef DEDICATED
+		dialogType_t type = DT_WARNING;
+#endif
+		char line1[256];
+		char line2[256];
+
+		// missing basegame pure list or pure pk3s
 		Cvar_Set("fs_pure", "0");
 
-		if (invalidPak)
-			line1 = "Default Pk3 file(s) are missing, corrupt, or modified.";
-		else
-			line1 = "Missing default Pk3 file(s).";
+		if ( !strlen ( badGames ) ) {
+			FS_GetModDescription( com_basegame->string, badGames, sizeof ( badGames ) );
+		}
+
+		Com_sprintf( line2, sizeof (line2), "You need to reinstall %s in order to play on pure servers.", badGames );
+
+		if ( !basePaksums ) {
+			if ( hasBaseGamePakFile ) {
+				Q_strncpyz( line1, "Found a Pk3 file, but missing file containing Pk3 checksums.", sizeof ( line1 ) );
+				Com_sprintf( line2, sizeof (line2), "You need a %s/PAKSUMS file to enable pure mode.", com_basegame->string );
+			} else if ( FS_ReadFile( "default.cfg", NULL ) > 0 ) {
+				// found default.cfg, but no pk3s/checksums? probably a game under development.
+				return;
+			} else {
+#ifndef DEDICATED
+				type = DT_ERROR;
+#endif
+				Q_strncpyz( line1, "Unable to locate data files.", sizeof ( line1 ) );
+			}
+		} else if ( fs_foundPaksums && !fs_numPaksums ) {
+			// found paksums, but no checksums? probably a game under development.
+			return;
+		} else if ( missingPak && invalidPak ) {
+			Com_sprintf( line1, sizeof ( line1 ), "Default Pk3 %s missing, corrupt, or modified.", fs_numPaksums == 1 ? "file is" : "files are" );
+		} else if ( invalidPak ) {
+			Com_sprintf( line1, sizeof ( line1 ), "Default Pk3 %s corrupt or modified.", fs_numPaksums == 1 ? "file is" : "files are" );
+		} else {
+			Com_sprintf( line1, sizeof ( line1 ), "Missing default Pk3 %s.", fs_numPaksums == 1 ? "file" : "files" );
+		}
 
 		Com_Printf(S_COLOR_YELLOW "WARNING: %s\n%s\n", line1, line2);
 
+		if ( fs_pakMismatchWarningDialog ) {
 #ifndef DEDICATED
-		// Don't warn developers; development takes place without Pk3 files, the files are unzipped.
-		if (hasPakFile || !FS_BaseFileExists("default.cfg"))
-			Sys_Dialog( DT_WARNING, va("%s %s", line1, line2), "Unpure" );
+			Sys_Dialog( type, va("%s %s", line1, line2), "Unpure" );
 #endif
+		}
 	}
 }
 

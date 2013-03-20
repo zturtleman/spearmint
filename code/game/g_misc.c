@@ -74,6 +74,19 @@ void SP_light( gentity_t *self ) {
 	G_FreeEntity( self );
 }
 
+/*QUAKED lightJunior (0 0.7 0.3) (-8 -8 -8) (8 8 8) nonlinear angle negative_spot negative_point
+Non-displayed light that only affects dynamic game models, but does not contribute to lightmaps
+"light" overrides the default 300 intensity.
+Nonlinear checkbox gives inverse square falloff instead of linear
+Angle adds light:surface angle calculations (only valid for "Linear" lights)
+Lights pointed at a target will be spotlights.
+"radius" overrides the default 64 unit radius of a spotlight at the target point.
+"fade" falloff/radius adjustment value. multiply the run of the slope by "fade" (1.0f default) (only valid for "Linear" lights)
+*/
+void SP_lightJunior( gentity_t *self ) {
+	G_FreeEntity( self );
+}
+
 
 
 /*
@@ -159,6 +172,70 @@ void SP_misc_model( gentity_t *ent ) {
 #else
 	G_FreeEntity( ent );
 #endif
+}
+
+/*QUAKED misc_gamemodel (1 0 0) (-16 -16 -16) (16 16 16)
+md3 placed in the game at runtime (rather than in the bsp)
+"model"			arbitrary .md3 file to display
+"modelscale"	scale multiplier (defaults to 1x, and scales uniformly)
+"modelscale_vec"	scale multiplier (defaults to 1 1 1, scales each axis as requested)
+
+"modelscale_vec" - Set scale per-axis.  Overrides "modelscale", so if you have both, the "modelscale" is ignored
+*/
+// ZTM: FIXME: Stub. Currently just loaded by cgame
+void SP_misc_gamemodel( gentity_t *ent ) {
+	G_FreeEntity( ent );
+}
+
+
+void locateMaster( gentity_t *ent ) {
+	ent->target_ent = G_PickTarget( ent->target );
+	if ( ent->target_ent ) {
+		ent->r.visDummyNum = ent->target_ent->s.number;
+	} else {
+		G_Printf( "Couldn't find target(%s) for misc_vis_dummy at %s\n", ent->target, vtos( ent->r.currentOrigin ) );
+		G_FreeEntity( ent );
+	}
+}
+
+/*QUAKED misc_vis_dummy (1 .5 0) (-8 -8 -8) (8 8 8)
+If this entity is "visible" (in player's PVS) then it's target is forced to be active whether it is in the player's PVS or not.
+This entity itself is never visible or transmitted to clients.
+For safety, you should have each dummy only point at one entity (however, it's okay to have many dummies pointing at one entity)
+*/
+void SP_misc_vis_dummy( gentity_t *ent ) {
+
+	if ( !ent->target ) {
+		G_Printf( "No target specified for misc_vis_dummy at %s\n", vtos( ent->r.currentOrigin ) );
+		G_FreeEntity( ent );
+		return;
+	}
+
+	ent->r.svFlags |= SVF_VISDUMMY;
+	G_SetOrigin( ent, ent->s.origin );
+	trap_LinkEntity( ent );
+
+	ent->think = locateMaster;
+	ent->nextthink = level.time + 1000;
+
+}
+
+/*QUAKED misc_vis_dummy_multiple (1 .5 0) (-8 -8 -8) (8 8 8)
+If this entity is "visible" (in player's PVS) then it's target is forced to be active whether it is in the player's PVS or not.
+This entity itself is never visible or transmitted to clients.
+This entity was created to have multiple speakers targeting it
+*/
+void SP_misc_vis_dummy_multiple( gentity_t *ent ) {
+	if ( !ent->targetname ) {
+		G_Printf( "misc_vis_dummy_multiple needs a targetname at %s\n", vtos( ent->r.currentOrigin ) );
+		G_FreeEntity( ent );
+		return;
+	}
+
+	ent->r.svFlags |= SVF_VISDUMMY_MULTIPLE;
+	G_SetOrigin( ent, ent->s.origin );
+	trap_LinkEntity( ent );
+
 }
 
 //===========================================================

@@ -53,6 +53,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define SVF_NOTSINGLECLIENT		0x00000200	// send entity to everyone but one client
 											// (entityShared_t->singleClient)
 
+#define SVF_VISDUMMY            0x00000400  // this ent is a "visibility dummy" and needs it's master to be sent to clients that can see it even if they can't see the master ent
+#define SVF_VISDUMMY_MULTIPLE   0x00000800  // so that one vis dummy can add to snapshot multiple speakers
+
 
 
 //===============================================================
@@ -86,6 +89,9 @@ typedef struct {
 
 	// if set, portal entities are only sent to client if distance between portal and client <= portalCullDistance
 	int			portalCullDistance;
+
+	// if SVF_VISDUMMY, number of master, else if not 0, it's the number of a target_vis_dummy_multiple.
+	int			visDummyNum;
 } entityShared_t;
 
 
@@ -164,6 +170,8 @@ typedef enum {
 	G_PC_READ_TOKEN,
 	G_PC_UNREAD_TOKEN,
 	G_PC_SOURCE_FILE_AND_LINE,
+
+	G_ALLOC,			// ( int size, const char *tag );
 
 	//=========== server specific functionality =============
 
@@ -249,6 +257,10 @@ typedef enum {
 	G_ENTITY_CONTACTCAPSULE,	// ( const vec3_t mins, const vec3_t maxs, const gentity_t *ent );
 
 	G_SET_NET_FIELDS,
+
+	G_R_REGISTERMODEL, // ( const char *name );
+	G_R_LERPTAG, // ( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, float frac, const char *tagName );
+	G_R_MODELBOUNDS, // ( qhandle_t handle, vec3_t mins, vec3_t maxs );
 
 	BOTLIB_SETUP = 200,				// ( void );
 	BOTLIB_SHUTDOWN,				// ( void );
@@ -447,5 +459,9 @@ typedef enum {
 
 	GAME_SNAPSHOT_CALLBACK,         // ( int entityNum, int clientNum );
 	// return qfalse if you don't want it to be added
+
+	GAME_VID_RESTART,				// ( void );
+	// caused by vid_restart on localhost server.
+	// model handles are no longer valid, must re-register all models.
 } gameExport_t;
 

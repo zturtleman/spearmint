@@ -1501,7 +1501,7 @@ PM_FinishWeaponChange
 static void PM_FinishWeaponChange( void ) {
 	int		weapon;
 
-	weapon = pm->cmd.weapon;
+	BG_DecomposeUserCmdValue( pm->cmd.stateValue, &weapon );
 	if ( weapon < WP_NONE || weapon >= WP_NUM_WEAPONS ) {
 		weapon = WP_NONE;
 	}
@@ -1544,6 +1544,7 @@ Generates weapon events and modifes the weapon counter
 */
 static void PM_Weapon( void ) {
 	int		addTime;
+	int		newWeapon;
 
 	// don't allow attack until all buttons are up
 	if ( pm->ps->pm_flags & PMF_RESPAWNED ) {
@@ -1588,8 +1589,9 @@ static void PM_Weapon( void ) {
 	// can't change if weapon is firing, but can change
 	// again if lowering or raising
 	if ( pm->ps->weaponTime <= 0 || pm->ps->weaponstate != WEAPON_FIRING ) {
-		if ( pm->ps->weapon != pm->cmd.weapon ) {
-			PM_BeginWeaponChange( pm->cmd.weapon );
+		BG_DecomposeUserCmdValue( pm->cmd.stateValue, &newWeapon );
+		if ( pm->ps->weapon != newWeapon ) {
+			PM_BeginWeaponChange( newWeapon );
 		}
 	}
 

@@ -863,19 +863,22 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 
 	if ( !cg_noVoiceChats.integer ) {
 		trap_S_StartLocalSound( vchat->snd, CHAN_VOICE);
-		if (vchat->clientNum != cg.snap->pss[0].clientNum) {
-			int orderTask = CG_ValidOrder(vchat->cmd);
-			if (orderTask > 0) {
-				cgs.acceptOrderTime = cg.time + 5000;
-				Q_strncpyz(cgs.acceptVoice, vchat->cmd, sizeof(cgs.acceptVoice));
-				cgs.acceptTask = orderTask;
-				cgs.acceptLeader = vchat->clientNum;
-			}
-		}
 
 		showHead = qfalse;
 		for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-			if ( vchat->localClientBits & ( 1 << i ) ) {
+			if ( ! ( vchat->localClientBits & ( 1 << i ) ) ) {
+				continue;
+			}
+
+			if ( vchat->clientNum != cg.snap->pss[cg.snap->lcIndex[i]].clientNum ) {
+				int orderTask = CG_ValidOrder(vchat->cmd);
+				if (orderTask > 0) {
+					cg.localClients[i].acceptOrderTime = cg.time + 5000;
+					Q_strncpyz(cg.localClients[i].acceptVoice, vchat->cmd, sizeof(cg.localClients[i].acceptVoice));
+					cg.localClients[i].acceptTask = orderTask;
+					cg.localClients[i].acceptLeader = vchat->clientNum;
+				}
+
 				cg.localClients[i].voiceTime = cg.time;
 				cg.localClients[i].currentVoiceClient = vchat->clientNum;
 				showHead = qtrue;

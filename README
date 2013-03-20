@@ -47,7 +47,7 @@ Some of the major ioquake3 features currently implemented are:
   * Many, many bug fixes
 
 The map editor and associated compiling tools are not included. We suggest you
-use a modern copy from http://www.qeradiant.com/.
+use a modern copy from http://icculus.org/gtkradiant/.
 
 The original id software readme that accompanied the Q3 source release has been
 renamed to id-readme.txt so as to prevent confusion. Please refer to the
@@ -97,9 +97,8 @@ Makefile.local:
   DEFAULT_BASEDIR    - extra path to search for baseq3 and such
   BUILD_SERVER       - build the 'spearmint-server' server binary
   BUILD_CLIENT       - build the 'spearmint' client binary
-  BUILD_CLIENT_SMP   - build the 'spearmint-smp' client binary
-  BUILD_BASEGAME     - build the 'baseq3' binaries, what is built depends on BUILD_GAME_SO/QVM
-  BUILD_MISSIONPACK  - build the 'missionpack' binaries, what is built depends on BUILD_GAME_SO/QVM
+  BUILD_BASEGAME     - build the 'baseq3' binaries
+  BUILD_MISSIONPACK  - build the 'missionpack' binaries
   BUILD_GAME_SO      - build the game shared libraries
   BUILD_GAME_QVM     - build the game qvms
   SERVERBIN          - rename 'spearmint-server' server binary
@@ -113,17 +112,17 @@ Makefile.local:
   USE_CURL           - use libcurl for http/ftp download support
   USE_CURL_DLOPEN    - link with libcurl at runtime
   USE_CODEC_VORBIS   - enable Ogg Vorbis support
+  USE_CODEC_OPUS     - enable Ogg Opus support
   USE_MUMBLE         - enable Mumble support
   USE_VOIP           - enable built-in VoIP support
   USE_FREETYPE       - enable FreeType support for rendering fonts
-  USE_OLD_VM64       - use Ludwig Nussel's old JIT compiler implementation
-                       for x86_64
   USE_INTERNAL_SPEEX - build internal speex library instead of dynamically
                        linking against system libspeex
   USE_INTERNAL_FREETYPE - build and link against internal FreeType library
   USE_INTERNAL_ZLIB  - build and link against internal zlib
   USE_INTERNAL_JPEG  - build and link against internal JPEG library
-  USE_INTERNAL_OGG   - build and link against internal Ogg library
+  USE_INTERNAL_OGG   - build and link against internal ogg library
+  USE_INTERNAL_OPUS  - build and link against internal opus/opusfile libraries
   USE_INTERNAL_VORBIS - build and link against internal Vorbis library
   USE_LOCAL_HEADERS  - use headers local to ioq3 instead of system ones
   DEBUG_CFLAGS       - C compiler flags to use for building debug version
@@ -302,10 +301,12 @@ New cvars
   cg_teamDmLeadAnnouncements        - Set to 0 to disable the team lead change
                                       announcements in Team Deathmatch (quake3
                                       1.32 had no lead announcements in TDM).
-
-
   cg_consoleLatency                 - controls how long messages stay in cgame
                                       notify area in miliseconds (default 3000)
+
+  vm_minQvmHunkKB                   - minimum memory pool size for each QVM's
+                                      trap_Alloc. DLLs use shared memory pool
+                                      and are limited by com_hunkMegs.
 
 New commands
   video [filename]        - start video capture (use with demo command)
@@ -536,6 +537,12 @@ QuakeLive mouse acceleration (patch and this text written by TTimo from id)
 
 ---------------------------------------------------- README for Developers -----
 
+pk3dir
+  Spearmint has a useful new feature for mappers. Paths in a game directory with
+  the extension ".pk3dir" are treated like pk3 files. This means you can keep
+  all files specific to your map in one directory tree and easily zip this
+  folder for distribution.
+ 
 Creating standalone games
   Have you finished the daunting task of removing all dependencies on the Q3
   game data? You probably now want to give your users the opportunity to play

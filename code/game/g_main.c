@@ -197,6 +197,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart );
 void G_RunFrame( int levelTime );
 void G_ShutdownGame( int restart );
 qboolean G_SnapshotCallback( int entityNum, int clientNum );
+void G_VidRestart( void );
 void CheckExitRules( void );
 
 
@@ -242,6 +243,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return ConsoleCommand();
 	case GAME_SNAPSHOT_CALLBACK:
 		return G_SnapshotCallback( arg0, arg1 );
+	case GAME_VID_RESTART:
+		G_VidRestart();
+		return 0;
 	case BOTAI_START_FRAME:
 		return BotAIStartFrame( arg0 );
 	}
@@ -388,6 +392,7 @@ void G_RegisterCvars( void ) {
 		G_Printf( "g_gametype %i is out of range, defaulting to 0\n", g_gametype.integer );
 		g_gametype.integer = 0;
 		trap_Cvar_Set( "g_gametype", "0" );
+		trap_Cvar_Update( &g_gametype );
 	}
 
 	// Don't allow single player gametype to be used in multiplayer.
@@ -605,6 +610,17 @@ qboolean G_SnapshotCallback( int entityNum, int clientNum ) {
 	}
 
 	return qtrue;
+}
+
+/*
+=================
+G_VidRestart
+
+Model handles are no longer valid, re-register all models.
+=================
+*/
+void G_VidRestart( void ) {
+
 }
 
 //===================================================================

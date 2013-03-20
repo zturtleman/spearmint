@@ -478,6 +478,22 @@ void		trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, i
 	syscall( CG_SET_NET_FIELDS, entityStateSize, entityStateFields, numEntityStateFields, playerStateSize, playerStateFields, numPlayerStateFields );
 }
 
+int			trap_GetDemoState( void ) {
+  return syscall( CG_GETDEMOSTATE );
+}
+
+int			trap_GetDemoPos( void ) {
+  return syscall( CG_GETDEMOPOS );
+}
+
+void		trap_GetDemoName( char *buffer, int size ) {
+  syscall( CG_GETDEMONAME, buffer, size );
+}
+
+int			trap_GetDemoLength( void ) {
+  return syscall( CG_GETDEMOLENGTH );
+}
+
 int trap_MemoryRemaining( void ) {
 	return syscall( CG_MEMORY_REMAINING );
 }
@@ -548,6 +564,10 @@ void trap_PC_UnreadToken( int handle ) {
 
 int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 	return syscall( CG_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
+}
+
+void *trap_Alloc( int size, const char *tag ) {
+	return (void *)syscall( CG_ALLOC, size, tag );
 }
 
 int trap_RealTime(qtime_t *qtime) {

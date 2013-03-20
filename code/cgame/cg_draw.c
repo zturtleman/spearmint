@@ -2376,6 +2376,8 @@ CG_DrawVote
 static void CG_DrawVote(void) {
 	char	*s;
 	int		sec;
+	char	yesKeys[64];
+	char	noKeys[64];
 
 	if ( !cgs.voteTime ) {
 		return;
@@ -2393,14 +2395,17 @@ static void CG_DrawVote(void) {
 	if ( sec < 0 ) {
 		sec = 0;
 	}
-#ifdef MISSIONPACK_HUD // ZTM: TODO: Add vote to Q3 ingame menu?
-	s = va("VOTE(%i):%s yes:%i no:%i", sec, cgs.voteString, cgs.voteYes, cgs.voteNo);
-	CG_DrawSmallString( 0, 58, s, 1.0F );
+
+	CG_KeysStringForBinding( Com_LocalClientCvarName( cg.cur_localClientNum, "vote yes" ), yesKeys, sizeof (yesKeys) );
+	CG_KeysStringForBinding( Com_LocalClientCvarName( cg.cur_localClientNum, "vote no" ), noKeys, sizeof (noKeys) );
+
+	s = va( "Vote (%i): %s", sec, cgs.voteString );
+	CG_DrawSmallString( 2, 58, s, 1.0F );
+	s = va( "Yes (%s): %i, No (%s): %i", yesKeys, cgs.voteYes, noKeys, cgs.voteNo );
+	CG_DrawSmallString( 2, 58 + SMALLCHAR_HEIGHT + 2, s, 1.0F );
+#ifdef MISSIONPACK_HUD
 	s = "or press ESC then click Vote";
-	CG_DrawSmallString( 0, 58 + SMALLCHAR_HEIGHT + 2, s, 1.0F );
-#else
-	s = va("VOTE(%i):%s yes:%i no:%i", sec, cgs.voteString, cgs.voteYes, cgs.voteNo );
-	CG_DrawSmallString( 0, 58, s, 1.0F );
+	CG_DrawSmallString( 2, 58 + ( SMALLCHAR_HEIGHT + 2 ) * 2, s, 1.0F );
 #endif
 }
 
@@ -2888,8 +2893,8 @@ CG_Draw2D
 static void CG_Draw2D(stereoFrame_t stereoFrame)
 {
 #ifdef MISSIONPACK
-	if (cgs.orderPending && cg.time > cgs.orderTime) {
-		CG_CheckOrderPending();
+	if (cg.cur_lc->orderPending && cg.time > cg.cur_lc->orderTime) {
+		CG_CheckOrderPending( cg.cur_localClientNum );
 	}
 #endif
 	// if we are taking a levelshot for the menu, don't draw anything
@@ -3029,6 +3034,81 @@ void CG_FogView( void ) {
 
 /*
 =====================
+CG_DrawMiscGamemodels
+=====================
+*/
+void CG_DrawMiscGamemodels( void ) {
+	int i, j;
+	refEntity_t ent;
+	int drawn = 0;
+
+	memset( &ent, 0, sizeof( ent ) );
+
+	ent.reType = RT_MODEL;
+	ent.nonNormalizedAxes = qtrue;
+
+	// ydnar: static gamemodels don't project shadows
+	ent.renderfx = RF_NOSHADOW;
+
+	for ( i = 0; i < cg.numMiscGameModels; i++ ) {
+		if ( cgs.miscGameModels[i].radius ) {
+			if ( CG_CullPointAndRadius( cgs.miscGameModels[i].org, cgs.miscGameModels[i].radius ) ) {
+				continue;
+			}
+		}
+
+		if ( !trap_R_inPVS( cg.refdef.vieworg, cgs.miscGameModels[i].org ) ) {
+			continue;
+		}
+
+		VectorCopy( cgs.miscGameModels[i].org, ent.origin );
+		VectorCopy( cgs.miscGameModels[i].org, ent.oldorigin );
+		VectorCopy( cgs.miscGameModels[i].org, ent.lightingOrigin );
+
+/*		{
+			vec3_t v;
+			vec3_t vu = { 0.f, 0.f, 1.f };
+			vec3_t vl = { 0.f, 1.f, 0.f };
+			vec3_t vf = { 1.f, 0.f, 0.f };
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, cgs.miscGameModels[i].radius, vu, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, cgs.miscGameModels[i].radius, vf, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, cgs.miscGameModels[i].radius, vl, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, -cgs.miscGameModels[i].radius, vu, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, -cgs.miscGameModels[i].radius, vf, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+
+			VectorCopy( cgs.miscGameModels[i].org, v );
+			VectorMA( v, -cgs.miscGameModels[i].radius, vl, v );
+			CG_RailTrail2( NULL, cgs.miscGameModels[i].org, v );
+		}*/
+
+		for ( j = 0; j < 3; j++ ) {
+			VectorCopy( cgs.miscGameModels[i].axes[j], ent.axis[j] );
+		}
+		ent.hModel = cgs.miscGameModels[i].model;
+
+		trap_R_AddRefEntityToScene( &ent );
+
+		drawn++;
+	}
+}
+
+/*
+=====================
 CG_DrawActive
 
 Perform all drawing needed to completely fill the viewport
@@ -3056,6 +3136,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	CG_PB_RenderPolyBuffers();
 
+	CG_DrawMiscGamemodels();
+
 	CG_FogView();
 
 	// draw 3D view
@@ -3063,6 +3145,35 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	// draw status bar and other floating elements
  	CG_Draw2D(stereoView);
+}
+
+/*
+=================
+CG_DrawDemoRecording
+=================
+*/
+void CG_DrawDemoRecording( void ) {
+	char	string[1024];
+	char	demoName[MAX_QPATH];
+	int		pos;
+
+	if ( trap_GetDemoState() != DS_RECORDING ) {
+		return;
+	}
+#ifdef MISSIONPACK
+	if ( cg_recordSPDemo.integer ) {
+		return;
+	}
+#endif
+
+	trap_GetDemoName( demoName, sizeof( demoName ) );
+	pos = trap_GetDemoPos();
+	Com_sprintf( string, sizeof (string), "RECORDING %s: %ik", demoName, pos / 1024 );
+
+	CG_SetScreenPlacement( PLACE_CENTER, PLACE_TOP );
+
+	CG_DrawStringExt( ( SCREEN_WIDTH - strlen( string ) * TINYCHAR_WIDTH ) / 2, 20, string, g_color_table[ColorIndex(COLOR_WHITE)],
+			qfalse, qtrue, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0 );
 }
 
 /*
@@ -3093,6 +3204,8 @@ void CG_DrawScreen2D( stereoFrame_t stereoView ) {
 	} else {
 		CG_DrawGlobalCenterString();
 	}
+
+	CG_DrawDemoRecording();
 }
 
 
