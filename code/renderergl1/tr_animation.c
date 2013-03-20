@@ -176,8 +176,6 @@ void RB_SurfaceAnim( md4Surface_t *surface ) {
 }
 
 
-#ifdef RAVENMD4
-
 // copied and adapted from tr_mesh.c
 
 /*
@@ -565,4 +563,4 @@ void RB_MDRSurfaceAnim( md4Surface_t *surface )
 
 	tess.numVertexes += surface->numVerts;
 }
-#endif
+

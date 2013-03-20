@@ -2401,7 +2401,7 @@ static qboolean CollapseMultitexture( void ) {
 
 static void CollapseStagesToLightall(shaderStage_t *diffuse, 
 	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap, 
-	qboolean useLightVector, qboolean useLightVertex, qboolean parallax, qboolean environment)
+	qboolean useLightVector, qboolean useLightVertex, qboolean parallax, qboolean tcgen)
 {
 	int defs = 0;
 
@@ -2479,7 +2479,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 	}
 
-	if (environment || diffuse->bundle[0].numTexMods)
+	if (tcgen || diffuse->bundle[0].numTexMods)
 	{
 		defs |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
 	}
@@ -2585,7 +2585,7 @@ static qboolean CollapseStagesToGLSL(void)
 		{
 			shaderStage_t *pStage = &stages[i];
 			shaderStage_t *diffuse, *normal, *specular, *lightmap;
-			qboolean parallax, environment, diffuselit, vertexlit;
+			qboolean parallax, tcgen, diffuselit, vertexlit;
 
 			if (!pStage->active)
 				continue;
@@ -2648,10 +2648,12 @@ static qboolean CollapseStagesToGLSL(void)
 				}
 			}
 
-			environment = qfalse;
-			if (diffuse->bundle[0].tcGen == TCGEN_ENVIRONMENT_MAPPED)
+			tcgen = qfalse;
+			if (diffuse->bundle[0].tcGen == TCGEN_ENVIRONMENT_MAPPED
+			    || diffuse->bundle[0].tcGen == TCGEN_LIGHTMAP
+			    || diffuse->bundle[0].tcGen == TCGEN_VECTOR)
 			{
-				environment = qtrue;
+				tcgen = qtrue;
 			}
 
 			diffuselit = qfalse;
@@ -2666,7 +2668,7 @@ static qboolean CollapseStagesToGLSL(void)
 				vertexlit = qtrue;
 			}
 
-			CollapseStagesToLightall(diffuse, normal, specular, lightmap, diffuselit, vertexlit, parallax, environment);
+			CollapseStagesToLightall(diffuse, normal, specular, lightmap, diffuselit, vertexlit, parallax, tcgen);
 		}
 
 		// deactivate lightmap stages

@@ -2232,11 +2232,9 @@ static void R_AddEntitySurface (int entityNum)
 			case MOD_MD4:
 				R_AddAnimSurfaces( ent );
 				break;
-#ifdef RAVENMD4
 			case MOD_MDR:
 				R_MDRAddAnimSurfaces( ent );
 				break;
-#endif
 			case MOD_IQM:
 				R_AddIQMSurfaces( ent );
 				break;
@@ -2529,7 +2527,6 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 					radius = r_pshadowDist->value / 2.0f;
 				}
 				break;
-#ifdef RAVENMD4
 				case MOD_MDR:
 				{
 					// FIXME: never actually tested this
@@ -2540,7 +2537,6 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 					radius = frame->radius;
 				}
 				break;
-#endif
 				case MOD_IQM:
 				{
 					// FIXME: never actually tested this
