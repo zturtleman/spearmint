@@ -1572,7 +1572,6 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 	VectorClear( maxs );
 }
 
-#ifdef RAVENMD4
 /*
 =============================================================
 
@@ -1687,5 +1686,4 @@ void MC_UnCompress(float mat[3][4],const unsigned char * comp)
 	val-=1<<(MC_BITS_VECT-1);
 	mat[2][2]=((float)(val))*MC_SCALE_VECT;
 }
-#endif
 
