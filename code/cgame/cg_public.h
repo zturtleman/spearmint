@@ -28,6 +28,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
+#ifndef __CG_PUBLIC_H__
+#define __CG_PUBLIC_H__
 
 #define CG_API_MAJOR_VERSION	0xdead
 #define CG_API_MINOR_VERSION	0xbeef
@@ -77,6 +79,24 @@ enum {
   CGAME_EVENT_SCOREBOARD,
   CGAME_EVENT_EDITHUD
 };
+
+
+typedef struct {
+	connstate_t		connState;
+	int				connectPacketCount;
+	int				clientNums[MAX_SPLITVIEW];
+	int				psClientNums[MAX_SPLITVIEW]; // clientNums from player states, which could be followed clients.
+	char			servername[MAX_STRING_CHARS];
+	char			updateInfoString[MAX_STRING_CHARS];
+	char			messageString[MAX_STRING_CHARS];
+} uiClientState_t;
+
+// Used by LAN_CompareServers
+#define SORT_HOST			0
+#define SORT_MAP			1
+#define SORT_CLIENTS		2
+#define SORT_GAME			3
+#define SORT_PING			4
 
 
 /*
@@ -149,7 +169,7 @@ typedef enum {
 	CG_GET_VOIP_MUTE_CLIENT,
 	CG_GET_VOIP_MUTE_ALL,
 
-	// these are not available in ui
+	// note: these were not originally available in ui
 	CG_GETGAMESTATE = 150,
 	CG_GETCURRENTSNAPSHOTNUMBER,
 	CG_GETSNAPSHOT,
@@ -164,6 +184,9 @@ typedef enum {
 	CG_GETDEMONAME,
 	CG_GETDEMOLENGTH,
 
+	// note: these were not originally available in cgame
+	CG_GETCLIENTSTATE = 190,
+	CG_GETCONFIGSTRING,
 
 	// these are not available in ui
 	CG_CM_LOADMAP = 200,
@@ -204,7 +227,7 @@ typedef enum {
 	CG_R_ADDPOLYSTOSCENE,
 	CG_R_ADDPOLYBUFFERTOSCENE,
 
-	// these are not available in ui
+	// note: these were not originally available in ui
 	CG_R_LOADWORLDMAP = 350,
 	CG_GET_ENTITY_TOKEN,
 	CG_R_LIGHTFORPOINT,
@@ -220,7 +243,7 @@ typedef enum {
 	CG_S_STARTBACKGROUNDTRACK,
 	CG_S_STOPBACKGROUNDTRACK,
 
-	// these are not available in ui
+	// note: these were not originally available in ui
 	CG_S_STARTSOUND = 450,
 	CG_S_CLEARLOOPINGSOUNDS,
 	CG_S_ADDLOOPINGSOUND,
@@ -240,6 +263,28 @@ typedef enum {
 	CG_KEY_GETCATCHER,
 	CG_KEY_SETCATCHER,
 	CG_KEY_GETKEY,
+
+
+	CG_LAN_GETPINGQUEUECOUNT = 550,
+	CG_LAN_CLEARPING,
+	CG_LAN_GETPING,
+	CG_LAN_GETPINGINFO,
+
+	CG_LAN_GETSERVERCOUNT,
+	CG_LAN_GETSERVERADDRESSSTRING,
+	CG_LAN_GETSERVERINFO,
+	CG_LAN_MARKSERVERVISIBLE,
+	CG_LAN_UPDATEVISIBLEPINGS,
+	CG_LAN_RESETPINGS,
+	CG_LAN_LOADCACHEDSERVERS,
+	CG_LAN_SAVECACHEDSERVERS,
+	CG_LAN_ADDSERVER,
+	CG_LAN_REMOVESERVER,
+
+	CG_LAN_SERVERSTATUS,
+	CG_LAN_GETSERVERPING,
+	CG_LAN_SERVERISVISIBLE,
+	CG_LAN_COMPARESERVERS,
 
 
  	CG_CIN_PLAYCINEMATIC = 600,
@@ -324,4 +369,4 @@ typedef enum {
 
 } cgameExport_t;
 
-//----------------------------------------------
+#endif

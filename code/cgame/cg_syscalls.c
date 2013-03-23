@@ -34,7 +34,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 #error "Do not use in VM build"
 #endif
 
-#include "cg_local.h"
+#include "../qcommon/q_shared.h"
+#include "../renderercommon/tr_types.h"
+#include "../game/bg_misc.h"
+#include "cg_public.h"
+#include "cg_syscalls.h"
 
 static intptr_t (QDECL *syscall)( intptr_t arg, ... ) = (intptr_t (QDECL *)( intptr_t, ...))-1;
 
@@ -494,6 +498,14 @@ int			trap_GetDemoLength( void ) {
   return syscall( CG_GETDEMOLENGTH );
 }
 
+void trap_GetClientState( uiClientState_t *state ) {
+	syscall( CG_GETCLIENTSTATE, state );
+}
+
+int trap_GetConfigString( int index, char* buff, int buffsize ) {
+	return syscall( CG_GETCONFIGSTRING, index, buff, buffsize );
+}
+
 int trap_MemoryRemaining( void ) {
 	return syscall( CG_MEMORY_REMAINING );
 }
@@ -536,6 +548,78 @@ void trap_Key_SetOverstrikeMode( qboolean state ) {
 
 qboolean trap_Key_GetOverstrikeMode( void ) {
   return syscall( CG_KEY_GETOVERSTRIKEMODE );
+}
+
+int trap_LAN_GetPingQueueCount( void ) {
+	return syscall( CG_LAN_GETPINGQUEUECOUNT );
+}
+
+void trap_LAN_ClearPing( int n ) {
+	syscall( CG_LAN_CLEARPING, n );
+}
+
+void trap_LAN_GetPing( int n, char *buf, int buflen, int *pingtime ) {
+	syscall( CG_LAN_GETPING, n, buf, buflen, pingtime );
+}
+
+void trap_LAN_GetPingInfo( int n, char *buf, int buflen ) {
+	syscall( CG_LAN_GETPINGINFO, n, buf, buflen );
+}
+
+int	trap_LAN_GetServerCount( int source ) {
+	return syscall( CG_LAN_GETSERVERCOUNT, source );
+}
+
+void trap_LAN_GetServerAddressString( int source, int n, char *buf, int buflen ) {
+	syscall( CG_LAN_GETSERVERADDRESSSTRING, source, n, buf, buflen );
+}
+
+void trap_LAN_GetServerInfo( int source, int n, char *buf, int buflen ) {
+	syscall( CG_LAN_GETSERVERINFO, source, n, buf, buflen );
+}
+
+int trap_LAN_GetServerPing( int source, int n ) {
+	return syscall( CG_LAN_GETSERVERPING, source, n );
+}
+
+int trap_LAN_ServerStatus( const char *serverAddress, char *serverStatus, int maxLen ) {
+	return syscall( CG_LAN_SERVERSTATUS, serverAddress, serverStatus, maxLen );
+}
+
+void trap_LAN_SaveCachedServers( void ) {
+	syscall( CG_LAN_SAVECACHEDSERVERS );
+}
+
+void trap_LAN_LoadCachedServers( void ) {
+	syscall( CG_LAN_LOADCACHEDSERVERS );
+}
+
+void trap_LAN_ResetPings(int n) {
+	syscall( CG_LAN_RESETPINGS, n );
+}
+
+void trap_LAN_MarkServerVisible( int source, int n, qboolean visible ) {
+	syscall( CG_LAN_MARKSERVERVISIBLE, source, n, visible );
+}
+
+int trap_LAN_ServerIsVisible( int source, int n) {
+	return syscall( CG_LAN_SERVERISVISIBLE, source, n );
+}
+
+qboolean trap_LAN_UpdateVisiblePings( int source ) {
+	return syscall( CG_LAN_UPDATEVISIBLEPINGS, source );
+}
+
+int trap_LAN_AddServer(int source, const char *name, const char *addr) {
+	return syscall( CG_LAN_ADDSERVER, source, name, addr );
+}
+
+void trap_LAN_RemoveServer(int source, const char *addr) {
+	syscall( CG_LAN_REMOVESERVER, source, addr );
+}
+
+int trap_LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int s2 ) {
+	return syscall( CG_LAN_COMPARESERVERS, source, sortKey, sortDir, s1, s2 );
 }
 
 int trap_PC_AddGlobalDefine( char *define ) {

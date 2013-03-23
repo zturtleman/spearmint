@@ -107,6 +107,10 @@
 				</Compiler>
 			</Target>
 		</Build>
+		<Unit filename="../../code/cgame/cg_syscalls.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/cgame/cg_syscalls.h" />
 		<Unit filename="../../code/client/keycodes.h" />
 		<Unit filename="../../code/game/bg_lib.c">
 			<Option compilerVar="CC" />
@@ -141,9 +145,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/ui/ui_shared.h" />
-		<Unit filename="../../code/ui/ui_syscalls.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../../code/../ui/menudef.h" />
 		<Extensions>
 			<code_completion />

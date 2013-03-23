@@ -101,6 +101,10 @@
 				</Compiler>
 			</Target>
 		</Build>
+		<Unit filename="../../code/cgame/cg_syscalls.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/cgame/cg_syscalls.h" />
 		<Unit filename="../../code/client/keycodes.h" />
 		<Unit filename="../../code/game/bg_lib.c">
 			<Option compilerVar="CC" />
@@ -246,9 +250,6 @@
 		</Unit>
 		<Unit filename="../../code/qcommon/q_shared.h" />
 		<Unit filename="../../code/ui/ui_public.h" />
-		<Unit filename="../../code/ui/ui_syscalls.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Extensions>
 			<code_completion />
 			<debugger />

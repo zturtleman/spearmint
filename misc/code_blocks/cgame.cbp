@@ -275,6 +275,7 @@
 		<Unit filename="../../code/cgame/cg_syscalls.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/cgame/cg_syscalls.h" />
 		<Unit filename="../../code/cgame/cg_view.c">
 			<Option compilerVar="CC" />
 		</Unit>

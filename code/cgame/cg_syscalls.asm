@@ -83,6 +83,9 @@ equ	trap_GetDemoPos						-161
 equ	trap_GetDemoName					-162
 equ	trap_GetDemoLength					-163
 
+equ	trap_GetClientState					-191
+equ	trap_GetConfigString				-192
+
 
 
 equ	trap_CM_LoadMap						-201
@@ -160,6 +163,29 @@ equ trap_Key_ClearStates				-507
 equ trap_Key_GetCatcher					-508
 equ trap_Key_SetCatcher					-509
 equ trap_Key_GetKey						-510
+
+
+
+equ	trap_LAN_GetPingQueueCount			-551
+equ	trap_LAN_ClearPing					-552
+equ	trap_LAN_GetPing					-553
+equ	trap_LAN_GetPingInfo				-554
+
+equ trap_LAN_GetServerCount				-555
+equ trap_LAN_GetServerAddressString		-556
+equ trap_LAN_GetServerInfo				-557
+equ trap_LAN_MarkServerVisible 			-558
+equ trap_LAN_UpdateVisiblePings			-559
+equ trap_LAN_ResetPings					-560
+equ trap_LAN_LoadCachedServers			-561
+equ trap_LAN_SaveCachedServers			-562
+equ trap_LAN_AddServer					-563
+equ trap_LAN_RemoveServer	 			-564
+
+equ trap_LAN_ServerStatus				-565
+equ trap_LAN_GetServerPing				-566
+equ trap_LAN_ServerIsVisible			-567
+equ trap_LAN_CompareServers				-568
 
 
 
