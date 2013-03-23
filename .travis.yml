@@ -12,4 +12,6 @@ before_install:
   - sudo apt-get install -q -y libgl1-mesa-dev libsdl1.2-dev mingw-w64
 
 notifications:
-  email: false
+  irc: "irc.freenode.org#spearmint"
+  on_success: change
+  on_failure: always
