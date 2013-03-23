@@ -6,24 +6,15 @@
 
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
-COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/i386/)
+COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/x86/)
 
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
-  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/i386/)
+  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
 endif
 ifeq ($(COMPILE_PLATFORM),darwin)
   # Apple does some things a little differently...
-  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/i386/)
-endif
-
-ifeq ($(COMPILE_PLATFORM),mingw32)
-  ifeq ($(COMPILE_ARCH),i386)
-    COMPILE_ARCH=x86
-  endif
-  ifeq ($(COMPILE_ARCH),x86_64)
-    COMPILE_ARCH=x64
-  endif
+  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
 endif
 
 ifndef BUILD_CLIENT
@@ -66,11 +57,26 @@ PLATFORM=$(COMPILE_PLATFORM)
 endif
 export PLATFORM
 
+ifeq ($(COMPILE_ARCH),i86pc)
+  COMPILE_ARCH=x86
+endif
+
+ifeq ($(COMPILE_ARCH),amd64)
+  COMPILE_ARCH=x86_64
+endif
+ifeq ($(COMPILE_ARCH),x64)
+  COMPILE_ARCH=x86_64
+endif
+
 ifeq ($(COMPILE_ARCH),powerpc)
   COMPILE_ARCH=ppc
 endif
 ifeq ($(COMPILE_ARCH),powerpc64)
   COMPILE_ARCH=ppc64
+endif
+
+ifeq ($(COMPILE_ARCH),axp)
+  COMPILE_ARCH=alpha
 endif
 
 ifndef ARCH
@@ -322,9 +328,6 @@ MKDIR=mkdir
 
 ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
 
-  ifeq ($(ARCH),axp)
-    ARCH=alpha
-  else
   ifeq ($(ARCH),x86_64)
     LIB=lib64
   else
@@ -333,7 +336,6 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
   else
   ifeq ($(ARCH),s390x)
     LIB=lib64
-  endif
   endif
   endif
   endif
@@ -352,7 +354,7 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED = true
   else
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     OPTIMIZEVM = -O3 -march=i586 -fomit-frame-pointer \
       -funroll-loops -falign-loops=2 -falign-jumps=2 \
       -falign-functions=2 -fstrength-reduce
@@ -412,7 +414,7 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
     endif
   endif
 
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     # linux32 make ...
     BASE_CFLAGS += -m32
   else
@@ -442,7 +444,7 @@ ifeq ($(PLATFORM),darwin)
   ifeq ($(ARCH),ppc64)
     BASE_CFLAGS += -arch ppc64 -faltivec -mmacosx-version-min=10.2
   endif
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     OPTIMIZEVM += -march=prescott -mfpmath=sse
     # x86 vm will crash without -mstackrealign since MMX instructions will be
     # used no matter what and they corrupt the frame pointer in VM calls
@@ -506,14 +508,40 @@ else # ifeq darwin
 
 ifeq ($(PLATFORM),mingw32)
 
-  # Some MinGW installations define CC to cc, but don't actually provide cc,
-  # so explicitly use gcc instead (which is the only option anyway)
-  ifeq ($(call bin_path, $(CC)),)
-    CC=gcc
-  endif
+  ifeq ($(CROSS_COMPILING),1)
+    # If CC is already set to something generic, we probably want to use
+    # something more specific
+    ifneq ($(findstring $(strip $(CC)),cc gcc),)
+      CC=
+    endif
 
-  ifndef WINDRES
-    WINDRES=windres
+    # We need to figure out the correct gcc and windres
+    ifeq ($(ARCH),x86_64)
+      MINGW_PREFIXES=amd64-mingw32msvc x86_64-w64-mingw32
+    endif
+    ifeq ($(ARCH),x86)
+      MINGW_PREFIXES=i586-mingw32msvc i686-w64-mingw32
+    endif
+
+    ifndef CC
+      CC=$(strip $(foreach MINGW_PREFIX, $(MINGW_PREFIXES), \
+         $(call bin_path, $(MINGW_PREFIX)-gcc)))
+    endif
+
+    ifndef WINDRES
+      WINDRES=$(strip $(foreach MINGW_PREFIX, $(MINGW_PREFIXES), \
+         $(call bin_path, $(MINGW_PREFIX)-windres)))
+    endif
+  else
+    # Some MinGW installations define CC to cc, but don't actually provide cc,
+    # so check that CC points to a real binary and use gcc if it doesn't
+    ifeq ($(call bin_path, $(CC)),)
+      CC=gcc
+    endif
+
+    ifndef WINDRES
+      WINDRES=windres
+    endif
   endif
 
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
@@ -531,7 +559,7 @@ ifeq ($(PLATFORM),mingw32)
     endif
   endif
 
-  ifeq ($(ARCH),x64)
+  ifeq ($(ARCH),x86_64)
     OPTIMIZEVM = -O3 -fno-omit-frame-pointer \
       -falign-loops=2 -funroll-loops -falign-jumps=2 -falign-functions=2 \
       -fstrength-reduce
@@ -563,18 +591,16 @@ ifeq ($(PLATFORM),mingw32)
     endif
   endif
 
-  ifeq ($(ARCH),x64)
-    WINLIBDIR=$(LIBSDIR)/win64
-  else
-    WINLIBDIR=$(LIBSDIR)/win32
-  endif
-
   ifeq ($(USE_CURL),1)
     CLIENT_CFLAGS += $(CURL_CFLAGS)
     ifneq ($(USE_CURL_DLOPEN),1)
       ifeq ($(USE_LOCAL_HEADERS),1)
         CLIENT_CFLAGS += -DCURL_STATICLIB
-        CLIENT_LIBS += $(WINLIBDIR)/libcurl.a
+        ifeq ($(ARCH),x86_64)
+          CLIENT_LIBS += $(LIBSDIR)/win64/libcurl.a
+        else
+          CLIENT_LIBS += $(LIBSDIR)/win32/libcurl.a
+        endif
       else
         CLIENT_LIBS += $(CURL_LIBS)
       endif
@@ -594,20 +620,18 @@ ifeq ($(PLATFORM),mingw32)
 
   ifeq ($(USE_LOCAL_HEADERS),1)
     CLIENT_CFLAGS += -I$(SDLHDIR)/include
-    CLIENT_LIBS += $(WINLIBDIR)/libSDLmain.a
-    ifeq ($(ARCH),x64)
-      CLIENT_LIBS += $(WINLIBDIR)/libSDL64.dll.a
+    ifeq ($(ARCH),x86)
+    CLIENT_LIBS += $(LIBSDIR)/win32/libSDLmain.a \
+                      $(LIBSDIR)/win32/libSDL.dll.a
+    RENDERER_LIBS += $(LIBSDIR)/win32/libSDLmain.a \
+                      $(LIBSDIR)/win32/libSDL.dll.a
+    SDLDLL=SDL.dll
     else
-      CLIENT_LIBS += $(WINLIBDIR)/libSDL.dll.a
-    endif
-
-    RENDERER_LIBS += $(WINLIBDIR)/libSDLmain.a
-    ifeq ($(ARCH),x64)
-      RENDERER_LIBS += $(WINLIBDIR)/libSDL64.dll.a
-      SDLDLL=SDL64.dll
-    else
-      RENDERER_LIBS += $(WINLIBDIR)/libSDL.dll.a
-      SDLDLL=SDL.dll
+    CLIENT_LIBS += $(LIBSDIR)/win64/libSDLmain.a \
+                      $(LIBSDIR)/win64/libSDL64.dll.a
+    RENDERER_LIBS += $(LIBSDIR)/win64/libSDLmain.a \
+                      $(LIBSDIR)/win64/libSDL64.dll.a
+    SDLDLL=SDL64.dll
     endif
   else
     CLIENT_CFLAGS += $(SDL_CFLAGS)
@@ -661,17 +685,16 @@ ifeq ($(PLATFORM),freebsd)
   endif
 
   # cross-compiling tweaks
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     ifeq ($(CROSS_COMPILING),1)
       BASE_CFLAGS += -m32
     endif
   endif
-  ifeq ($(ARCH),amd64)
+  ifeq ($(ARCH),x86_64)
     ifeq ($(CROSS_COMPILING),1)
       BASE_CFLAGS += -m64
     endif
   endif
-
 else # ifeq freebsd
 
 #############################################################################
@@ -679,8 +702,6 @@ else # ifeq freebsd
 #############################################################################
 
 ifeq ($(PLATFORM),openbsd)
-
-  ARCH=$(shell uname -m)
 
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
     -DUSE_ICON -DMAP_ANONYMOUS=MAP_ANON
@@ -717,7 +738,6 @@ ifeq ($(PLATFORM),openbsd)
       CLIENT_LIBS += -lcurl
     endif
   endif
-
 else # ifeq openbsd
 
 #############################################################################
@@ -725,10 +745,6 @@ else # ifeq openbsd
 #############################################################################
 
 ifeq ($(PLATFORM),netbsd)
-
-  ifeq ($(shell uname -m),i386)
-    ARCH=i386
-  endif
 
   LIBS=-lm
   SHLIBEXT=so
@@ -738,12 +754,11 @@ ifeq ($(PLATFORM),netbsd)
 
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes
 
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     HAVE_VM_COMPILED=true
   endif
 
   BUILD_CLIENT = 0
-
 else # ifeq netbsd
 
 #############################################################################
@@ -785,13 +800,7 @@ ifeq ($(PLATFORM),sunos)
   MKDIR=gmkdir
   COPYDIR="/usr/local/share/games/quake3"
 
-  ifneq (,$(findstring i86pc,$(shell uname -m)))
-    ARCH=i386
-  else #default to sparc
-    ARCH=sparc
-  endif
-
-  ifneq ($(ARCH),i386)
+  ifneq ($(ARCH),x86)
     ifneq ($(ARCH),sparc)
       $(error arch $(ARCH) is currently not supported)
     endif
@@ -809,7 +818,7 @@ ifeq ($(PLATFORM),sunos)
       -mtune=ultrasparc3 -mv8plus -mno-faster-structs
     HAVE_VM_COMPILED=true
   else
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     OPTIMIZEVM += -march=i586 -fomit-frame-pointer \
       -falign-loops=2 -falign-jumps=2 \
       -falign-functions=2 -fstrength-reduce
@@ -1175,6 +1184,9 @@ targets: makedirs
 	@echo "  COMPILE_PLATFORM: $(COMPILE_PLATFORM)"
 	@echo "  COMPILE_ARCH: $(COMPILE_ARCH)"
 	@echo "  CC: $(CC)"
+ifeq ($(PLATFORM),mingw32)
+	@echo "  WINDRES: $(WINDRES)"
+endif
 	@echo ""
 	@echo "  CFLAGS:"
 	-@for i in $(CFLAGS); \
@@ -1223,7 +1235,9 @@ targets: makedirs
 	done
 	@echo ""
 ifneq ($(TARGETS),)
-	@$(MAKE) $(TARGETS) V=$(V)
+  ifndef DEBUG_MAKEFILE
+		@$(MAKE) $(TARGETS) V=$(V)
+  endif
 endif
 
 makedirs:
@@ -1765,13 +1779,6 @@ ifneq ($(USE_INTERNAL_FREETYPE),0)
 endif
 endif
 
-ifeq ($(ARCH),i386)
-  Q3OBJ += \
-    $(B)/client/snd_mixa.o \
-    $(B)/client/matha.o \
-    $(B)/client/snapvector.o \
-    $(B)/client/ftola.o
-endif
 ifeq ($(ARCH),x86)
   Q3OBJ += \
     $(B)/client/snd_mixa.o \
@@ -1780,16 +1787,6 @@ ifeq ($(ARCH),x86)
     $(B)/client/ftola.o
 endif
 ifeq ($(ARCH),x86_64)
-  Q3OBJ += \
-    $(B)/client/snapvector.o \
-    $(B)/client/ftola.o
-endif
-ifeq ($(ARCH),amd64)
-  Q3OBJ += \
-    $(B)/client/snapvector.o \
-    $(B)/client/ftola.o
-endif
-ifeq ($(ARCH),x64)
   Q3OBJ += \
     $(B)/client/snapvector.o \
     $(B)/client/ftola.o
@@ -2003,30 +2000,11 @@ Q3OBJ += \
 endif
 
 ifeq ($(HAVE_VM_COMPILED),true)
-  ifeq ($(ARCH),i386)
+  ifneq ($(findstring $(ARCH),x86 x86_64),)
     Q3OBJ += \
       $(B)/client/vm_x86.o
   endif
-  ifeq ($(ARCH),x86)
-    Q3OBJ += \
-      $(B)/client/vm_x86.o
-  endif
-  ifeq ($(ARCH),x86_64)
-    Q3OBJ += \
-      $(B)/client/vm_x86.o
-  endif
-  ifeq ($(ARCH),amd64)
-    Q3OBJ += \
-      $(B)/client/vm_x86.o
-  endif
-  ifeq ($(ARCH),x64)
-    Q3OBJ += \
-      $(B)/client/vm_x86.o
-  endif
-  ifeq ($(ARCH),ppc)
-    Q3OBJ += $(B)/client/vm_powerpc.o $(B)/client/vm_powerpc_asm.o
-  endif
-  ifeq ($(ARCH),ppc64)
+  ifneq ($(findstring $(ARCH),ppc ppc64),)
     Q3OBJ += $(B)/client/vm_powerpc.o $(B)/client/vm_powerpc_asm.o
   endif
   ifeq ($(ARCH),sparc)
@@ -2174,29 +2152,13 @@ ifneq ($(SERVER_USE_RENDERER_DLOPEN),1)
     $(B)/ded/tr_model_iqm.o
 endif
 
-ifeq ($(ARCH),i386)
-  Q3DOBJ += \
-      $(B)/ded/matha.o \
-      $(B)/ded/snapvector.o \
-      $(B)/ded/ftola.o
-endif
 ifeq ($(ARCH),x86)
   Q3DOBJ += \
       $(B)/ded/matha.o \
       $(B)/ded/snapvector.o \
-      $(B)/ded/ftola.o 
+      $(B)/ded/ftola.o
 endif
 ifeq ($(ARCH),x86_64)
-  Q3DOBJ += \
-      $(B)/ded/snapvector.o \
-      $(B)/ded/ftola.o
-endif
-ifeq ($(ARCH),amd64)
-  Q3DOBJ += \
-      $(B)/ded/snapvector.o \
-      $(B)/ded/ftola.o
-endif
-ifeq ($(ARCH),x64)
   Q3DOBJ += \
       $(B)/ded/snapvector.o \
       $(B)/ded/ftola.o
@@ -2213,30 +2175,11 @@ Q3DOBJ += \
 endif
 
 ifeq ($(HAVE_VM_COMPILED),true)
-  ifeq ($(ARCH),i386)
+  ifneq ($(findstring $(ARCH),x86 x86_64),)
     Q3DOBJ += \
       $(B)/ded/vm_x86.o
   endif
-  ifeq ($(ARCH),x86)
-    Q3DOBJ += \
-      $(B)/ded/vm_x86.o
-  endif
-  ifeq ($(ARCH),x86_64)
-    Q3DOBJ += \
-      $(B)/ded/vm_x86.o
-  endif
-  ifeq ($(ARCH),amd64)
-    Q3DOBJ += \
-      $(B)/ded/vm_x86.o
-  endif
-  ifeq ($(ARCH),x64)
-    Q3DOBJ += \
-      $(B)/ded/vm_x86.o
-  endif
-  ifeq ($(ARCH),ppc)
-    Q3DOBJ += $(B)/ded/vm_powerpc.o $(B)/ded/vm_powerpc_asm.o
-  endif
-  ifeq ($(ARCH),ppc64)
+  ifneq ($(findstring $(ARCH),ppc ppc64),)
     Q3DOBJ += $(B)/ded/vm_powerpc.o $(B)/ded/vm_powerpc_asm.o
   endif
   ifeq ($(ARCH),sparc)
