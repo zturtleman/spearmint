@@ -61,7 +61,9 @@ void GL_Bind2( image_t *image, GLenum type ) {
 	}
 
 	if ( glState.currenttextures[glState.currenttmu] != texnum ) {
-		image->frameUsed = tr.frameCount;
+		if ( image ) {
+			image->frameUsed = tr.frameCount;
+		}
 		glState.currenttextures[glState.currenttmu] = texnum;
 		qglBindTexture (type, texnum);
 	}
@@ -259,7 +261,7 @@ void GL_State( unsigned long stateBits )
 	//
 	if ( diff & ( GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS ) )
 	{
-		GLenum srcFactor, dstFactor;
+		GLenum srcFactor = GL_ONE, dstFactor = GL_ONE;
 
 		if ( stateBits & ( GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS ) )
 		{
@@ -293,7 +295,6 @@ void GL_State( unsigned long stateBits )
 				srcFactor = GL_SRC_ALPHA_SATURATE;
 				break;
 			default:
-				srcFactor = GL_ONE;		// to get warning to shut up
 				ri.Error( ERR_DROP, "GL_State: invalid src blend state bits" );
 				break;
 			}
@@ -325,7 +326,6 @@ void GL_State( unsigned long stateBits )
 				dstFactor = GL_ONE_MINUS_DST_ALPHA;
 				break;
 			default:
-				dstFactor = GL_ONE;		// to get warning to shut up
 				ri.Error( ERR_DROP, "GL_State: invalid dst blend state bits" );
 				break;
 			}
@@ -629,7 +629,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldPshadowed = qfalse;
 	oldSortOrder = -1;
 	oldSort = -1;
-	depthRange = qfalse;
 
 	depth[0] = 0.f;
 	depth[1] = 1.f;
@@ -652,10 +651,9 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		// change the tess parameters if needed
 		// a "entityMergable" shader is a shader that can have surfaces from seperate
 		// entities merged into a single batch, like smoke and blood puff sprites
-		if (shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted 
+		if ( shader != NULL && ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted || pshadowed != oldPshadowed
 			|| sortOrder != oldSortOrder
-			|| pshadowed != oldPshadowed
-			|| ( entityNum != oldEntityNum && !shader->entityMergable ) ) {
+			|| ( entityNum != oldEntityNum && !shader->entityMergable ) ) ) {
 			if (oldShader != NULL) {
 				RB_EndSurface();
 			}
@@ -781,7 +779,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	}
 
 	if (inQuery) {
-		inQuery = qfalse;
 		qglEndQueryARB(GL_SAMPLES_PASSED_ARB);
 	}
 

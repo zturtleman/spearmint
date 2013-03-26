@@ -1787,7 +1787,6 @@ int FS_Seek( fileHandle_t f, long offset, int origin ) {
 			_origin = SEEK_SET;
 			break;
 		default:
-			_origin = SEEK_CUR;
 			Com_Error( ERR_FATAL, "Bad origin in FS_Seek" );
 			break;
 		}
