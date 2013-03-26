@@ -498,6 +498,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_GET_CONFIGSTRING:
 		SV_GetConfigstring( args[1], VMA(2), args[3] );
 		return 0;
+	case G_SET_CONFIGSTRING_RESTRICTIONS:
+		SV_SetConfigstringRestrictions( args[1], VMA(2) );
+		return 0;
 	case G_SET_USERINFO:
 		SV_SetUserinfo( args[1], VMA(2) );
 		return 0;

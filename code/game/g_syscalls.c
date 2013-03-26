@@ -180,6 +180,10 @@ void trap_GetConfigstring( int num, char *buffer, int bufferSize ) {
 	syscall( G_GET_CONFIGSTRING, num, buffer, bufferSize );
 }
 
+void trap_SetConfigstringRestrictions( int num, const clientList_t *clientList ) {
+	syscall( G_SET_CONFIGSTRING_RESTRICTIONS, num, clientList );
+}
+
 void trap_GetUserinfo( int num, char *buffer, int bufferSize ) {
 	syscall( G_GET_USERINFO, num, buffer, bufferSize );
 }
