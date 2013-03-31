@@ -259,6 +259,9 @@
 		<Unit filename="../../code/cgame/cg_playerstate.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/cgame/cg_polybus.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/cgame/cg_predict.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -270,6 +273,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/cgame/cg_snapshot.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/cgame/cg_spawn.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/cgame/cg_syscalls.c">
@@ -313,6 +319,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger />
+			<envvars />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
