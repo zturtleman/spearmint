@@ -139,7 +139,12 @@ static uniformInfo_t uniformsInfo[] =
 
 	{ "u_InvTexRes",           GLSL_VEC2 },
 	{ "u_AutoExposureMinMax",  GLSL_VEC2 },
-	{ "u_ToneMinAvgMaxLinear", GLSL_VEC3 }
+	{ "u_ToneMinAvgMaxLinear", GLSL_VEC3 },
+
+	{ "u_PrimaryLightOrigin",  GLSL_VEC4  },
+	{ "u_PrimaryLightColor",   GLSL_VEC3  },
+	{ "u_PrimaryLightAmbient", GLSL_VEC3  },
+	{ "u_PrimaryLightRadius",  GLSL_FLOAT }
 };
 
 
@@ -1016,7 +1021,8 @@ void GLSL_InitGPUShaders(void)
 		if (!(i & LIGHTDEF_USE_NORMALMAP) && (i & LIGHTDEF_USE_PARALLAXMAP))
 			continue;
 
-		if (!((i & LIGHTDEF_LIGHTTYPE_MASK) == LIGHTDEF_USE_LIGHT_VECTOR))
+		//if (!((i & LIGHTDEF_LIGHTTYPE_MASK) == LIGHTDEF_USE_LIGHT_VECTOR))
+		if (!(i & LIGHTDEF_LIGHTTYPE_MASK))
 		{
 			if (i & LIGHTDEF_USE_SHADOWMAP)
 				continue;
@@ -1113,7 +1119,14 @@ void GLSL_InitGPUShaders(void)
 			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 
 		if (i & LIGHTDEF_USE_SHADOWMAP)
+		{
 			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
+
+			if (r_sunlightMode->integer == 1)
+				Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
+			else if (r_sunlightMode->integer == 2)
+				Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
+		}
 
 		if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
 		{
