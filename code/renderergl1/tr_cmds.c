@@ -475,10 +475,10 @@ qboolean R_PointInBrush( const vec3_t point, const bmodel_t *bmodel ) {
 
 /*
 ====================
-RE_GetWaterFog
+RE_GetViewFog
 ====================
 */
-void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
+void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
 	fogType_t			fogType = FT_NONE;
 	vec3_t				fogColor = { 0, 0, 0 };
 	float				fogDepthForOpaque = 0;
@@ -500,14 +500,14 @@ void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *
 					continue;
 				}
 
-				if ( surface->shader->waterFogParms.fogType != FT_NONE
-						|| surface->shader->waterFogParms.color[0]
-						|| surface->shader->waterFogParms.color[1]
-						|| surface->shader->waterFogParms.color[2] ) {
-					fogType = surface->shader->waterFogParms.fogType;
-					VectorCopy( surface->shader->waterFogParms.color, fogColor );
-					fogDepthForOpaque = surface->shader->waterFogParms.depthForOpaque;
-					fogDensity = surface->shader->waterFogParms.density;
+				if ( surface->shader->viewFogParms.fogType != FT_NONE
+						|| surface->shader->viewFogParms.color[0]
+						|| surface->shader->viewFogParms.color[1]
+						|| surface->shader->viewFogParms.color[2] ) {
+					fogType = surface->shader->viewFogParms.fogType;
+					VectorCopy( surface->shader->viewFogParms.color, fogColor );
+					fogDepthForOpaque = surface->shader->viewFogParms.depthForOpaque;
+					fogDensity = surface->shader->viewFogParms.density;
 					break;
 				}
 			}

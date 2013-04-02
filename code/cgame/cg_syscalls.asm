@@ -133,7 +133,7 @@ equ trap_R_LightForPoint				-353
 equ trap_R_inPVS						-354
 equ trap_R_AddAdditiveLightToScene		-355
 equ trap_R_GetGlobalFog					-356
-equ trap_R_GetWaterFog					-357
+equ trap_R_GetViewFog					-357
 
 
 

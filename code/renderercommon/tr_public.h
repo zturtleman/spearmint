@@ -113,7 +113,7 @@ typedef struct {
 	void (*TakeVideoFrame)( int h, int w, byte* captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 
 	void (*GetGlobalFog)( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
-	void (*GetWaterFog)( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
+	void (*GetViewFog)( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
 } refexport_t;
 
 //

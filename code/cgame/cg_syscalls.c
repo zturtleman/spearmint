@@ -413,8 +413,8 @@ void trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, 
 	syscall( CG_R_GET_GLOBAL_FOG, type, color, depthForOpaque, density );
 }
 
-void trap_R_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
-	syscall( CG_R_GET_WATER_FOG, origin, type, color, depthForOpaque, density );
+void trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
+	syscall( CG_R_GET_VIEW_FOG, origin, type, color, depthForOpaque, density );
 }
 
 void		trap_GetClipboardData( char *buf, int bufsize ) {

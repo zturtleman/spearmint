@@ -175,7 +175,7 @@ int			trap_R_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int 
 void		trap_R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset );
 qboolean	trap_R_inPVS( const vec3_t p1, const vec3_t p2 );
 void		trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
-void		trap_R_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
+void		trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
 
 // normal sounds will have their volume dynamically changed as their entity
 // moves and the listener moves
