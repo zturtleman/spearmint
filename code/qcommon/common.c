@@ -2795,10 +2795,6 @@ void Com_Init( char *commandLine ) {
 #endif
 		Cvar_Get("protocol", com_protocol->string, CVAR_ROM);
 
-#ifdef USE_RENDERER_DLOPEN
-	com_renderer = Cvar_Get("com_renderer", "opengl1", CVAR_ARCHIVE | CVAR_LATCH);
-#endif
-
 	Sys_Init();
 
 	if( Sys_WritePIDFile( ) ) {
@@ -2990,6 +2986,8 @@ void Com_InitRef( refimport_t *ri ) {
 #endif
 
 #ifdef USE_RENDERER_DLOPEN
+	com_renderer = Cvar_Get("com_renderer", "opengl1", CVAR_ARCHIVE | CVAR_LATCH);
+
 	Com_sprintf(dllName, sizeof(dllName), "renderer_%s_" ARCH_STRING DLL_EXT, com_renderer->string);
 
 	if(!(rendererLib = Sys_LoadDll(dllName, qfalse)) && strcmp(com_renderer->string, com_renderer->resetString))
