@@ -3013,23 +3013,21 @@ CG_FogView
 =====================
 */
 void CG_FogView( void ) {
-	if ( cg.refdef.rdflags & RDF_UNDERWATER ) {
-		trap_R_GetWaterFog( cg.refdef.vieworg, &cg.refdef.fogType, cg.refdef.fogColor, &cg.refdef.fogDepthForOpaque, &cg.refdef.fogDensity );
+	trap_R_GetWaterFog( cg.refdef.vieworg, &cg.refdef.fogType, cg.refdef.fogColor, &cg.refdef.fogDepthForOpaque, &cg.refdef.fogDensity );
 
-		// Check if using global fog for everything except color.
-		if ( cg.refdef.fogType == FT_NONE && ( cg.refdef.fogColor[0] || cg.refdef.fogColor[1] || cg.refdef.fogColor[2] ) ) {
-			cg.refdef.fogType = cgs.globalFogType;
-			cg.refdef.fogDepthForOpaque = cgs.globalFogDepthForOpaque;
-			cg.refdef.fogDensity = cgs.globalFogDensity;
-		}
-		return;
+	if ( cg.refdef.fogType == FT_NONE && ( cg.refdef.fogColor[0] || cg.refdef.fogColor[1] || cg.refdef.fogColor[2] ) ) {
+		// use global fog with custom color
+		cg.refdef.fogType = cgs.globalFogType;
+		cg.refdef.fogDepthForOpaque = cgs.globalFogDepthForOpaque;
+		cg.refdef.fogDensity = cgs.globalFogDensity;
+	} else if ( cg.refdef.fogType == FT_NONE ) {
+		// no water fog, use global fog
+		cg.refdef.fogType = cgs.globalFogType;
+		cg.refdef.fogDepthForOpaque = cgs.globalFogDepthForOpaque;
+		cg.refdef.fogDensity = cgs.globalFogDensity;
+
+		VectorCopy( cgs.globalFogColor, cg.refdef.fogColor );
 	}
-
-	// Use global fog from bsp or fogvars in shader.
-	cg.refdef.fogType = cgs.globalFogType;
-	VectorCopy( cgs.globalFogColor, cg.refdef.fogColor );
-	cg.refdef.fogDepthForOpaque = cgs.globalFogDepthForOpaque;
-	cg.refdef.fogDensity = cgs.globalFogDensity;
 }
 
 /*
