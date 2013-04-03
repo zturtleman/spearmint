@@ -8,12 +8,10 @@
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/q3_ui_release/uix86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/q3_ui_release" />
+				<Option output="../../build/release-codeblocks-x86/baseq3/uix86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseq3/ui" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-m32" />
@@ -26,12 +24,10 @@
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/q3_ui_debug/uix86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/q3_ui_debug" />
+				<Option output="../../build/debug-codeblocks-x86/baseq3/uix86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseq3/ui" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-m32" />
@@ -43,14 +39,12 @@
 					<Add option="-m32" />
 				</Linker>
 			</Target>
-			<Target title="Release Linux i386">
+			<Target title="Release Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/q3_ui_release/uii386.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/q3_ui_release" />
+				<Option output="../../build/release-codeblocks-x86/baseq3/uix86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseq3/ui" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-fPIC" />
@@ -58,14 +52,12 @@
 					<Add option="-DNDEBUG" />
 				</Compiler>
 			</Target>
-			<Target title="Debug Linux i386">
+			<Target title="Debug Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/q3_ui_debug/uii386.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/q3_ui_debug" />
+				<Option output="../../build/debug-codeblocks-x86/baseq3/uix86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseq3/ui" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
@@ -75,12 +67,10 @@
 			</Target>
 			<Target title="Release Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/q3_ui_release/uix86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/q3_ui_release" />
+				<Option output="../../build/release-codeblocks-x86_64/baseq3/uix86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86_64/baseq3/ui" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-fPIC" />
@@ -90,12 +80,10 @@
 			</Target>
 			<Target title="Debug Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/q3_ui_debug/uix86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/q3_ui_debug" />
+				<Option output="../../build/debug-codeblocks-x86_64/baseq3/uix86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86_64/baseq3/ui" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />

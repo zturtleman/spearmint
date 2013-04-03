@@ -8,8 +8,8 @@
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/spearmint_release/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_release" />
+				<Option output="../../build/release-codeblocks-x86/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -44,8 +44,8 @@
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/spearmint_debug/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_debug" />
+				<Option output="../../build/debug-codeblocks-x86/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -78,10 +78,10 @@
 					<Add directory="../../code/libs/win32" />
 				</Linker>
 			</Target>
-			<Target title="Release Linux i386">
+			<Target title="Release Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/spearmint_release/spearmint.i386" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_release" />
+				<Option output="../../build/debug-codeblocks-x86/spearmint.x86" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -98,10 +98,10 @@
 					<Add library="GL" />
 				</Linker>
 			</Target>
-			<Target title="Debug Linux i386">
+			<Target title="Debug Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/spearmint_debug/spearmint.i386" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_debug" />
+				<Option output="../../build/debug-codeblocks-x86/spearmint.x86" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -120,8 +120,8 @@
 			</Target>
 			<Target title="Release Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/spearmint_release/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_release" />
+				<Option output="../../build/release-codeblocks-x86_64/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86_64/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -140,8 +140,8 @@
 			</Target>
 			<Target title="Debug Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/spearmint_debug/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_debug" />
+				<Option output="../../build/debug-codeblocks-x86_64/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86_64/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -210,8 +210,8 @@
 			<Option compiler="gcc" use="1" buildCommand="$compiler -g $options -x assembler-with-cpp $includes -c $file -o $object" />
 			<Option target="Release Win32" />
 			<Option target="Debug Win32" />
-			<Option target="Release Linux i386" />
-			<Option target="Debug Linux i386" />
+			<Option target="Release Linux x86" />
+			<Option target="Debug Linux x86" />
 		</Unit>
 		<Unit filename="../../code/asm/qasm-inline.h" />
 		<Unit filename="../../code/asm/qasm.h" />
@@ -228,8 +228,8 @@
 			<Option compiler="gcc" use="1" buildCommand="$compiler -g $options -x assembler-with-cpp $includes -c $file -o $object" />
 			<Option target="Release Win32" />
 			<Option target="Debug Win32" />
-			<Option target="Release Linux i386" />
-			<Option target="Debug Linux i386" />
+			<Option target="Release Linux x86" />
+			<Option target="Debug Linux x86" />
 		</Unit>
 		<Unit filename="../../code/asm/vm_x86_64.asm">
 			<Option compile="0" />
@@ -1235,8 +1235,8 @@
 		</Unit>
 		<Unit filename="../../code/sys/sys_unix.c">
 			<Option compilerVar="CC" />
-			<Option target="Release Linux i386" />
-			<Option target="Debug Linux i386" />
+			<Option target="Release Linux x86" />
+			<Option target="Debug Linux x86" />
 			<Option target="Release Linux x86_64" />
 			<Option target="Debug Linux x86_64" />
 		</Unit>

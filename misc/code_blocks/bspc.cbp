@@ -8,8 +8,8 @@
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/bspc-release/bspc.x86.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/bspc-release/" />
+				<Option output="../../build/release-codeblocks-x86/bspc.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/bspc" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -27,8 +27,8 @@
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/bspc-debug/bspc.x86.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/bspc-debug/" />
+				<Option output="../../build/debug-codeblocks-x86/bspc.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/bspc" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -45,10 +45,10 @@
 					<Add option="-m32" />
 				</Linker>
 			</Target>
-			<Target title="Release Linux">
-				<Option platforms="Unix;Mac;" />
-				<Option output="../../build/bspc-release/bspc" prefix_auto="1" extension_auto="1" />
-				<Option object_output="../../build/bspc-release/" />
+			<Target title="Release Linux x86">
+				<Option platforms="Unix;" />
+				<Option output="../../build/release-codeblocks-x86/bspc.x86" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/bspc" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -66,10 +66,53 @@
 					<Add library="pthread" />
 				</Linker>
 			</Target>
-			<Target title="Debug Linux">
-				<Option platforms="Unix;Mac;" />
-				<Option output="../../build/bspc-debug/bspc" prefix_auto="1" extension_auto="1" />
-				<Option object_output="../../build/bspc-debug/" />
+			<Target title="Debug Linux x86">
+				<Option platforms="Unix;" />
+				<Option output="../../build/debug-codeblocks-x86/bspc.x86" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/bspc" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-O0" />
+					<Add option="-Dstricmp=strcasecmp" />
+					<Add option="-DLINUX" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add option="-DBSPC" />
+					<Add option="-DNO_GZIP" />
+				</Compiler>
+				<Linker>
+					<Add library="dl" />
+					<Add library="m" />
+					<Add library="pthread" />
+				</Linker>
+			</Target>
+			<Target title="Release Linux x86_64">
+				<Option platforms="Unix;" />
+				<Option output="../../build/release-codeblocks-x86_64/bspc.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86_64/bspc" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Dstricmp=strcasecmp" />
+					<Add option="-DLINUX" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add option="-DBSPC" />
+					<Add option="-DNO_GZIP" />
+				</Compiler>
+				<Linker>
+					<Add library="dl" />
+					<Add library="m" />
+					<Add library="pthread" />
+				</Linker>
+			</Target>
+			<Target title="Debug Linux x86_64">
+				<Option platforms="Unix;" />
+				<Option output="../../build/debug-codeblocks-x86_64/bspc.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86_64/bspc" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
