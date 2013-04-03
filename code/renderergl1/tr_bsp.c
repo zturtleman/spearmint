@@ -152,7 +152,7 @@ float R_ProcessLightmap( byte **pic, int in_padding, int width, int height, byte
 			float g = ( *pic )[j * in_padding + 1];
 			float b = ( *pic )[j * in_padding + 2];
 			float intensity;
-			float out[3];
+			float out[3] = {0.0, 0.0, 0.0};
 
 			intensity = 0.33f * r + 0.685f * g + 0.063f * b;
 
