@@ -331,6 +331,12 @@
 		<Unit filename="../../code/qcommon/surfaceflags.h" />
 		<Unit filename="../../code/ui/ui_shared.c">
 			<Option compilerVar="CC" />
+			<Option target="Release TA_UI Win32" />
+			<Option target="Debug TA_UI Win32" />
+			<Option target="Release TA_UI Linux i386" />
+			<Option target="Debug TA_UI Linux i386" />
+			<Option target="Release TA_UI Linux x86_64" />
+			<Option target="Debug TA_UI Linux x86_64" />
 		</Unit>
 		<Extensions>
 			<code_completion />
