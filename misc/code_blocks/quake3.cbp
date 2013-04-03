@@ -80,8 +80,8 @@
 			</Target>
 			<Target title="Release Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86/spearmint.x86" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/debug-codeblocks-x86/client" />
+				<Option output="../../build/release-codeblocks-x86/spearmint.x86" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />

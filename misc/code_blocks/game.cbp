@@ -25,7 +25,7 @@
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/debug-codeblocks-x86/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86/baseq3/gamex86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
