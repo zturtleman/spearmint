@@ -751,6 +751,45 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 			}
 		}
 		//
+		// lightmap <name>
+		//
+		else if ( !Q_stricmp( token, "lightmap" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( !token[0] ) {
+				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for 'lightmap' keyword in shader '%s'\n", shader.name );
+				return qfalse;
+			}
+
+//----(SA)	fixes startup error and allows polygon shadows to work again
+			if ( !Q_stricmp( token, "$whiteimage" ) || !Q_stricmp( token, "*white" ) ) {
+//----(SA)	end
+				stage->bundle[0].image[0] = tr.whiteImage;
+				continue;
+			}
+//----(SA) added
+			else if ( !Q_stricmp( token, "$dlight" ) ) {
+				stage->bundle[0].image[0] = tr.dlightImage;
+				continue;
+			}
+//----(SA) end
+			else if ( !Q_stricmp( token, "$lightmap" ) ) {
+				stage->bundle[0].isLightmap = qtrue;
+				if ( shader.lightmapIndex < 0 ) {
+					stage->bundle[0].image[0] = tr.whiteImage;
+				} else {
+					stage->bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex];
+				}
+				continue;
+			} else {
+				stage->bundle[0].image[0] = R_FindImageFile( token, IMGTYPE_COLORALPHA, IMGFLAG_LIGHTMAP | IMGFLAG_CLAMPTOEDGE );
+				if ( !stage->bundle[0].image[0] ) {
+					ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
+					return qfalse;
+				}
+				stage->bundle[0].isLightmap = qtrue;
+			}
+		}
+		//
 		// animMap <frequency> <image1> .... <imageN>
 		//
 		else if ( !Q_stricmp( token, "animMap" ) )
