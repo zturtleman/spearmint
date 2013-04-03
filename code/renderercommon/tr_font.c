@@ -625,7 +625,7 @@ void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
 #ifdef BUILD_FREETYPE
 	ri.Printf( PRINT_WARNING, "RE_RegisterFont: Failed to register font %s.\n", fontName );
 #else
-	ri.Printf(PRINT_WARNING, "RE_RegisterFont: Failed to register font %s (Note: FreeType code is not available).\n");
+	ri.Printf( PRINT_WARNING, "RE_RegisterFont: Failed to register font %s (Note: FreeType code is not available).\n", fontName );
 #endif
 }
 
