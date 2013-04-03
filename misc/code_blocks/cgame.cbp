@@ -17,10 +17,14 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wall" />
+					<Add option="-m32" />
 					<Add option="-W" />
 					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
 				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+				</Linker>
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
@@ -32,10 +36,14 @@
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
+					<Add option="-m32" />
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
 				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+				</Linker>
 			</Target>
 			<Target title="Release TA_UI Win32">
 				<Option platforms="Windows;" />
@@ -48,12 +56,16 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wall" />
+					<Add option="-m32" />
 					<Add option="-W" />
 					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
 					<Add option="-DMISSIONPACK" />
 					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+				</Linker>
 			</Target>
 			<Target title="Debug TA_UI Win32">
 				<Option platforms="Windows;" />
@@ -65,12 +77,16 @@
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
+					<Add option="-m32" />
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
 					<Add option="-DMISSIONPACK" />
 					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+				</Linker>
 			</Target>
 			<Target title="Release Linux i386">
 				<Option platforms="Unix;" />
