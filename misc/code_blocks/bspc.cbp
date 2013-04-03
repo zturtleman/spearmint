@@ -15,7 +15,6 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-m32" />
-					<Add option="-W" />
 					<Add option="-DWIN32" />
 					<Add option="-DNDEBUG" />
 					<Add option="-D_CONSOLE" />
@@ -35,7 +34,6 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-m32" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DWIN32" />
 					<Add option="-D_DEBUG" />
@@ -94,6 +92,15 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-Wformat=2" />
+			<Add option="-Wno-format-zero-length" />
+			<Add option="-Wformat-security" />
+			<Add option="-Wno-format-nonliteral" />
+			<Add option="-Wstrict-aliasing=2" />
+			<Add option="-Wmissing-format-attribute" />
+			<Add option="-Wdisabled-optimization" />
+			<Add option="-fno-strict-aliasing" />
 			<Add option="-DCom_Memcpy=memcpy" />
 			<Add option="-DCom_Memset=memset" />
 			<Add option="-DUSE_LOCAL_HEADERS" />

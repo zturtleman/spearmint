@@ -17,7 +17,6 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-m32" />
-					<Add option="-W" />
 					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
 				</Compiler>
@@ -109,6 +108,18 @@
 				</Compiler>
 			</Target>
 		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-Wformat=2" />
+			<Add option="-Wno-format-zero-length" />
+			<Add option="-Wformat-security" />
+			<Add option="-Wno-format-nonliteral" />
+			<Add option="-Wstrict-aliasing=2" />
+			<Add option="-Wmissing-format-attribute" />
+			<Add option="-Wdisabled-optimization" />
+			<Add option="-Werror-implicit-function-declaration" />
+			<Add option="-fno-strict-aliasing" />
+		</Compiler>
 		<Unit filename="../../code/cgame/cg_syscalls.c">
 			<Option compilerVar="CC" />
 		</Unit>
