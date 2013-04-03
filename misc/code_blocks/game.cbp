@@ -110,7 +110,6 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 				</Compiler>
@@ -125,7 +124,6 @@
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-Wall" />
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
@@ -143,7 +141,6 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 					<Add option="-DMISSIONPACK" />
@@ -159,7 +156,6 @@
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-Wall" />
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
@@ -176,7 +172,6 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 				</Compiler>
@@ -191,7 +186,6 @@
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-Wall" />
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
@@ -209,7 +203,6 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 					<Add option="-DMISSIONPACK" />

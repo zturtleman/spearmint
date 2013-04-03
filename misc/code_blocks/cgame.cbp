@@ -96,7 +96,6 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
 				</Compiler>
@@ -112,7 +111,6 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
 				</Compiler>
@@ -129,7 +127,6 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
 					<Add option="-DMISSIONPACK" />
@@ -147,7 +144,6 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
 					<Add option="-DMISSIONPACK" />
@@ -166,7 +162,6 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
 				</Compiler>
@@ -182,7 +177,6 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
 				</Compiler>
@@ -199,7 +193,6 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-DCGAME" />
 					<Add option="-DNDEBUG" />
 					<Add option="-DMISSIONPACK" />
@@ -217,7 +210,6 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DCGAME" />
 					<Add option="-DMISSIONPACK" />

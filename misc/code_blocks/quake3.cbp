@@ -89,17 +89,10 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
-					<Add option="-DBOTLIB" />
 					<Add option="-DUSE_ICON" />
 					<Add option="-DUSE_CURL" />
 					<Add option="-DUSE_CURL_DLOPEN" />
 					<Add option="-DUSE_LOCAL_HEADERS" />
-					<Add option="-DUSE_VOIP" />
-					<Add option="-DUSE_CODEC_VORBIS" />
-					<Add option="-DFLOATING_POINT" />
-					<Add option="-DUSE_ALLOCA" />
-					<Add option="-DFT2_BUILD_LIBRARY" />
 				</Compiler>
 				<Linker>
 					<Add library="GL" />
@@ -114,20 +107,12 @@
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-D_DEBUG" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
-					<Add option="-DBOTLIB" />
 					<Add option="-DUSE_ICON" />
 					<Add option="-DUSE_CURL" />
 					<Add option="-DUSE_CURL_DLOPEN" />
 					<Add option="-DUSE_LOCAL_HEADERS" />
-					<Add option="-DUSE_VOIP" />
-					<Add option="-DUSE_CODEC_VORBIS" />
-					<Add option="-DFLOATING_POINT" />
-					<Add option="-DUSE_ALLOCA" />
-					<Add option="-DFT2_BUILD_LIBRARY" />
 				</Compiler>
 				<Linker>
 					<Add library="GL" />
@@ -144,17 +129,10 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
-					<Add option="-DBOTLIB" />
 					<Add option="-DUSE_ICON" />
 					<Add option="-DUSE_CURL" />
 					<Add option="-DUSE_CURL_DLOPEN" />
 					<Add option="-DUSE_LOCAL_HEADERS" />
-					<Add option="-DUSE_VOIP" />
-					<Add option="-DUSE_CODEC_VORBIS" />
-					<Add option="-DFLOATING_POINT" />
-					<Add option="-DUSE_ALLOCA" />
-					<Add option="-DFT2_BUILD_LIBRARY" />
 				</Compiler>
 				<Linker>
 					<Add library="GL" />
@@ -169,20 +147,12 @@
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-D_DEBUG" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
-					<Add option="-DBOTLIB" />
 					<Add option="-DUSE_ICON" />
 					<Add option="-DUSE_CURL" />
 					<Add option="-DUSE_CURL_DLOPEN" />
 					<Add option="-DUSE_LOCAL_HEADERS" />
-					<Add option="-DUSE_VOIP" />
-					<Add option="-DUSE_CODEC_VORBIS" />
-					<Add option="-DFLOATING_POINT" />
-					<Add option="-DUSE_ALLOCA" />
-					<Add option="-DFT2_BUILD_LIBRARY" />
 				</Compiler>
 				<Linker>
 					<Add library="GL" />

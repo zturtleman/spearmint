@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/bspc-release/bspc.x86" prefix_auto="1" extension_auto="1" />
+				<Option output="../../build/bspc-release/bspc.x86.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/bspc-release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -27,7 +27,7 @@
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/bspc-debug/bspc.x86" prefix_auto="1" extension_auto="1" />
+				<Option output="../../build/bspc-debug/bspc.x86.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/bspc-debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -53,7 +53,6 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-W" />
 					<Add option="-Dstricmp=strcasecmp" />
 					<Add option="-DLINUX" />
 					<Add option="-DNDEBUG" />
@@ -74,7 +73,6 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-W" />
 					<Add option="-g" />
 					<Add option="-O0" />
 					<Add option="-Dstricmp=strcasecmp" />

@@ -55,7 +55,6 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
 					<Add option="-DMISSIONPACK" />
@@ -72,7 +71,6 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DUI" />
 					<Add option="-DMISSIONPACK" />
@@ -89,7 +87,6 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
 					<Add option="-DMISSIONPACK" />
@@ -106,7 +103,6 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DUI" />
 					<Add option="-DMISSIONPACK" />
