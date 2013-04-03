@@ -60,6 +60,7 @@ typedef struct {
 console_t	con;
 
 cvar_t		*con_conspeed;
+cvar_t		*con_autoclear;
 
 #define	DEFAULT_CONSOLE_WIDTH	78
 
@@ -75,7 +76,10 @@ void Con_ToggleConsole_f (void) {
 		return;
 	}
 
-	Field_Clear( &g_consoleField );
+	if ( con_autoclear->integer ) {
+		Field_Clear( &g_consoleField );
+	}
+
 	g_consoleField.widthInChars = g_console_field_width;
 
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_CONSOLE );
@@ -344,6 +348,7 @@ void Con_Init (void) {
 	int		i;
 
 	con_conspeed = Cvar_Get ("scr_conspeed", "3", 0);
+	con_autoclear = Cvar_Get( "con_autoclear", "0", CVAR_ARCHIVE );
 
 	Field_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;

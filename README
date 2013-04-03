@@ -291,6 +291,10 @@ New cvars
   r_zfar							- sets z far for testing global fog
                                       distances, requires cheats to be enabled
 
+  con_autoclear                     - setting to 1 causes the console input
+                                      to be cleared when opening/closing the
+                                      console (this is the default behavior in
+                                      Quake 3, RTCW, and ET)
 
   cg_atmosphericEffects             - 0.0 to 1.0 scales the amount of rain and
                                       snow. set to 0 to disable rain/snow.
