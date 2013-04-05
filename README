@@ -295,6 +295,9 @@ New cvars
                                       to be cleared when opening/closing the
                                       console (this is the default behavior in
                                       Quake 3, RTCW, and ET)
+  con_autochat                      - causes console input without a slash at
+                                      the to beggining to be sent as chat
+                                      messages
 
   cg_atmosphericEffects             - 0.0 to 1.0 scales the amount of rain and
                                       snow. set to 0 to disable rain/snow.
