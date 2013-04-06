@@ -1719,8 +1719,7 @@ static qboolean ParseShader( char **text )
 
 			tr.skyFogType = FT_EXP;
 
-			//tr.skyFogDepthForOpaque = 5; // ZTM: FIXME: Um, what? this doesn't seems like it would work using Q3 fogging.
-			tr.skyFogDepthForOpaque = 2048;
+			tr.skyFogDepthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
 
 			tr.skyFogDensity = fogDensity;
 			VectorCopy( fogColor, tr.skyFogColor);
@@ -1763,8 +1762,7 @@ static qboolean ParseShader( char **text )
 			} else {
 				shader.viewFogParms.fogType = FT_EXP;
 				shader.viewFogParms.density = fogvar;
-				//shader.viewFogParms.depthForOpaque = 5; // ZTM: FIXME: Um, what? this doesn't seems like it would work using Q3 fogging.
-				shader.viewFogParms.depthForOpaque = 2048;
+				shader.viewFogParms.depthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
 			}
 
 			VectorCopy( viewColor, shader.viewFogParms.color );
@@ -1796,8 +1794,7 @@ static qboolean ParseShader( char **text )
 			} else {
 				tr.globalFogType = FT_EXP;
 				tr.globalFogDensity = fogvar;
-				tr.globalFogDepthForOpaque = 5; // ZTM: FIXME: Um, what? this doesn't seems like it would work using Q3 fogging.
-				//tr.globalFogDepthForOpaque = 2048;
+				tr.globalFogDepthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
 			}
 
 			VectorCopy( fogColor, tr.globalFogColor );
