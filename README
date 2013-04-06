@@ -291,12 +291,12 @@ New cvars
   r_zfar							- sets z far for testing global fog
                                       distances, requires cheats to be enabled
 
-  con_autoclear                     - setting to 1 causes the console input
-                                      to be cleared when opening/closing the
-                                      console (this is the default behavior in
-                                      Quake 3, RTCW, and ET)
+  con_autoclear                     - causes the console input to be cleared
+                                      when opening/closing the console (this is
+                                      the default behavior in Quake 3, RTCW, and
+                                      ET)
   con_autochat                      - causes console input without a slash at
-                                      the to beggining to be sent as chat
+                                      the to beginning to be sent as chat
                                       messages
 
   cg_atmosphericEffects             - 0.0 to 1.0 scales the amount of rain and
