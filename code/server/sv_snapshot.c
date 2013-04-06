@@ -558,7 +558,7 @@ static void SV_AddEntitiesVisibleFromPoint( int clientNum, vec3_t origin, client
 					continue;
 				}
 
-				if ( ment->r.portalCullDistance == ent->s.number ) {
+				if ( ment->r.visDummyNum == ent->s.number ) {
 					SV_AddEntToSnapshot( frame, master, ment, eNums );
 				}
 			}
