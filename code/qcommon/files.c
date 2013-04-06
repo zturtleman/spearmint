@@ -1484,6 +1484,7 @@ int FS_DeleteDir( char *dirname, qboolean nonEmpty, qboolean recursive ) {
 	char    *ospath;
 	char    **pFiles = NULL;
 	int     i, nFiles = 0;
+	char	fileName[MAX_QPATH];
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
@@ -1520,7 +1521,8 @@ int FS_DeleteDir( char *dirname, qboolean nonEmpty, qboolean recursive ) {
 		ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, dirname );
 		pFiles = Sys_ListFiles( ospath, NULL, NULL, &nFiles, qfalse );
 		for ( i = 0; i < nFiles; i++ ) {
-			ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, va( "%s/%s", dirname, pFiles[i] ) );
+			Com_sprintf( fileName, sizeof (fileName), "%s/%s", dirname, pFiles[i] );
+			ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, fileName );
 
 			if ( !FS_Remove( ospath ) ) {  // failure
 				return 0;
