@@ -1052,27 +1052,15 @@ void G_InitBots( qboolean restart ) {
 			return;
 		}
 
-		strValue = Info_ValueForKey( arenainfo, "fraglimit" );
-		fragLimit = atoi( strValue );
-		if ( fragLimit ) {
-			trap_Cvar_Set( "fraglimit", strValue );
-		}
-		else {
-			trap_Cvar_Set( "fraglimit", "0" );
-		}
-
-		strValue = Info_ValueForKey( arenainfo, "timelimit" );
-		timeLimit = atoi( strValue );
-		if ( timeLimit ) {
-			trap_Cvar_Set( "timelimit", strValue );
-		}
-		else {
-			trap_Cvar_Set( "timelimit", "0" );
-		}
+		fragLimit = atoi( Info_ValueForKey( arenainfo, "fraglimit" ) );
+		timeLimit = atoi( Info_ValueForKey( arenainfo, "timelimit" ) );
 
 		if ( !fragLimit && !timeLimit ) {
-			trap_Cvar_Set( "fraglimit", "10" );
-			trap_Cvar_Set( "timelimit", "0" );
+			trap_Cvar_SetValue( "fraglimit", 10 );
+			trap_Cvar_SetValue( "timelimit", 0 );
+		} else {
+			trap_Cvar_SetValue( "fraglimit", fragLimit );
+			trap_Cvar_SetValue( "timelimit", timeLimit );
 		}
 
 		basedelay = BOT_BEGIN_DELAY_BASE;
