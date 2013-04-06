@@ -400,6 +400,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_CVAR_INFO_STRING_BUFFER:
 		Cvar_InfoStringBuffer( args[1], VMA(2), args[3] );
 		return 0;
+	case G_CVAR_CHECK_RANGE:
+		Cvar_CheckRangeSafe( VMA(1), VMF(2), VMF(3), args[4] );
+		return 0;
 
 	case G_ARGC:
 		return Cmd_Argc();

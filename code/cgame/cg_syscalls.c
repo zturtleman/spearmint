@@ -110,6 +110,11 @@ void	trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize ) {
 	syscall( CG_CVAR_INFO_STRING_BUFFER, bit, buffer, bufsize );
 }
 
+void	trap_Cvar_CheckRange( const char *var_name, float min, float max, qboolean integral ) {
+	syscall( CG_CVAR_CHECK_RANGE, var_name, PASSFLOAT(min), PASSFLOAT(max), integral );
+}
+
+
 int		trap_Argc( void ) {
 	return syscall( CG_ARGC );
 }

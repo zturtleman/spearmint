@@ -153,6 +153,10 @@ void trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize ) {
 	syscall( G_CVAR_INFO_STRING_BUFFER, bit, buffer, bufsize );
 }
 
+void	trap_Cvar_CheckRange( const char *var_name, float min, float max, qboolean integral ) {
+	syscall( G_CVAR_CHECK_RANGE, var_name, PASSFLOAT(min), PASSFLOAT(max), integral );
+}
+
 
 void trap_LocateGameData( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t,
 						 playerState_t *clients, int sizeofGClient ) {

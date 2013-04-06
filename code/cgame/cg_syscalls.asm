@@ -37,26 +37,26 @@ equ trap_Cvar_VariableIntegerValue			-39
 equ trap_Cvar_VariableStringBuffer			-40
 equ trap_Cvar_LatchedVariableStringBuffer	-41
 equ trap_Cvar_InfoStringBuffer				-42
+equ trap_Cvar_CheckRange					-43
 
-equ trap_FS_FOpenFile					-43
-equ trap_FS_Read						-44
-equ trap_FS_Write						-45
-equ trap_FS_Seek						-46
-equ trap_FS_FCloseFile					-47
-equ trap_FS_GetFileList					-48
-equ trap_FS_Delete						-49
-equ trap_FS_Rename						-50
+equ trap_FS_FOpenFile					-44
+equ trap_FS_Read						-45
+equ trap_FS_Write						-46
+equ trap_FS_Seek						-47
+equ trap_FS_FCloseFile					-48
+equ trap_FS_GetFileList					-49
+equ trap_FS_Delete						-50
+equ trap_FS_Rename						-51
 
-equ trap_PC_AddGlobalDefine				-51
-equ trap_PC_RemoveAllGlobalDefines		-52
-equ trap_PC_LoadSource					-53
-equ trap_PC_FreeSource					-54
-equ trap_PC_ReadToken					-55
-equ trap_PC_UnreadToken					-56
-equ trap_PC_SourceFileAndLine			-57
+equ trap_PC_AddGlobalDefine				-52
+equ trap_PC_RemoveAllGlobalDefines		-53
+equ trap_PC_LoadSource					-54
+equ trap_PC_FreeSource					-55
+equ trap_PC_ReadToken					-56
+equ trap_PC_UnreadToken					-57
+equ trap_PC_SourceFileAndLine			-58
 
-equ	trap_Alloc							-58
-
+equ trap_Alloc							-59
 
 
 equ	trap_GetClipboardData				-101

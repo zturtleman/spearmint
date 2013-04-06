@@ -574,6 +574,9 @@ char	*Cvar_InfoString_Big( int bit );
 void	Cvar_InfoStringBuffer( int bit, char *buff, int buffsize );
 void Cvar_CheckRange( cvar_t *cv, float minVal, float maxVal, qboolean shouldBeIntegral );
 
+void Cvar_CheckRangeSafe( const char *varName, float min, float max, qboolean integral );
+// basically a slightly modified Cvar_CheckRange for the interpreted modules
+
 void	Cvar_Restart(qboolean unsetVM);
 void	Cvar_Restart_f( void );
 

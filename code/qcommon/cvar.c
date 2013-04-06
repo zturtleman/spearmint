@@ -393,7 +393,6 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 				var->latchedString = CopyString(var_value);
 			}
 		}
-		
 		// Make sure servers cannot mark engine-added variables as SERVER_CREATED
 		if(var->flags & CVAR_SERVER_CREATED)
 		{
@@ -672,6 +671,7 @@ void Cvar_SetSafe( const char *var_name, const char *value )
 				"modify \"%s\"", var_name );
 		return;
 	}
+
 	Cvar_Set( var_name, value );
 }
 
@@ -1251,6 +1251,38 @@ Cvar_CheckRange
 */
 void Cvar_CheckRange( cvar_t *var, float min, float max, qboolean integral )
 {
+	var->validate = qtrue;
+	var->min = min;
+	var->max = max;
+	var->integral = integral;
+
+	// Force an initial range check
+	Cvar_Set( var->name, var->string );
+}
+
+/*
+=====================
+Cvar_CheckRangeSafe
+
+basically a slightly modified Cvar_CheckRange for the interpreted modules
+=====================
+*/
+void Cvar_CheckRangeSafe( const char *varName, float min, float max, qboolean integral )
+{
+	cvar_t *var;
+
+	var = Cvar_FindVar (varName);
+
+	if ( !var ) {
+		Com_Printf( "A VM tried to add range check to unregistered cvar %s\n", varName );
+		return;
+	}
+
+	if ( !( var->flags & ( CVAR_VM_CREATED | CVAR_USER_CREATED ) ) ) {
+		Com_Printf( "A VM tried to add range check to engine cvar %s\n", varName );
+		return;
+	}
+
 	var->validate = qtrue;
 	var->min = min;
 	var->max = max;
