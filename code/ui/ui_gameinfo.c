@@ -215,6 +215,9 @@ void UI_LoadArenas( void ) {
 			break;
 		}
 	}
+
+	trap_Cvar_CheckRange( "ui_currentMap", 0, uiInfo.mapCount-1, qtrue );
+	trap_Cvar_CheckRange( "ui_currentNetMap", 0, uiInfo.mapCount-1, qtrue );
 }
 
 

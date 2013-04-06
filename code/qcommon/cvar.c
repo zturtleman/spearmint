@@ -1278,7 +1278,8 @@ void Cvar_CheckRangeSafe( const char *varName, float min, float max, qboolean in
 		return;
 	}
 
-	if ( !( var->flags & ( CVAR_VM_CREATED | CVAR_USER_CREATED ) ) ) {
+	// ZTM: FIXME: g_gametype shouldn't be setup in server...
+	if ( !( var->flags & ( CVAR_VM_CREATED | CVAR_USER_CREATED ) ) && Q_stricmp( varName, "g_gametype" ) ) {
 		Com_Printf( "A VM tried to add range check to engine cvar %s\n", varName );
 		return;
 	}

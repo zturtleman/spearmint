@@ -276,16 +276,7 @@ static void CG_CalcVrect (void) {
 	if ( cg.cur_ps->pm_type == PM_INTERMISSION ) {
 		size = 100;
 	} else {
-		// bound normal viewsize
-		if (cg_viewsize.integer < 30) {
-			size = 30;
-			trap_Cvar_SetValue( "cg_viewsize", size );
-		} else if (cg_viewsize.integer > 100) {
-			size = 100;
-			trap_Cvar_SetValue( "cg_viewsize", size );
-		} else {
-			size = cg_viewsize.integer;
-		}
+		size = cg_viewsize.integer;
 	}
 
 	// Rendered window for drawing world
@@ -578,22 +569,12 @@ static int CG_CalcFov( void ) {
 			fov_x = 90;
 		} else {
 			fov_x = cg_fov.value;
-			if ( fov_x < 1 ) {
-				fov_x = 1;
-			} else if ( fov_x > 160 ) {
-				fov_x = 160;
-			}
 		}
 
 		cg.fov = fov_x;
 
 		// account for zooms
 		zoomFov = cg_zoomFov.value;
-		if ( zoomFov < 1 ) {
-			zoomFov = 1;
-		} else if ( zoomFov > 160 ) {
-			zoomFov = 160;
-		}
 
 		if ( cg.cur_lc->zoomed ) {
 			f = ( cg.time - cg.cur_lc->zoomTime ) / (float)ZOOM_TIME;

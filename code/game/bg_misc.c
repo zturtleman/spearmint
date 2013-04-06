@@ -1964,5 +1964,6 @@ void BG_RegisterClientCvars(int maxSplitview) {
 
 	// cgame might not be initialized before menu is used
 	trap_Cvar_Register(NULL, "cg_viewsize", "100", CVAR_ARCHIVE );
+	trap_Cvar_CheckRange("cg_viewsize", 30, 100, qtrue );
 }
 #endif
