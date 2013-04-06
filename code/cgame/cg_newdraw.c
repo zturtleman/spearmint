@@ -160,7 +160,7 @@ static void CG_SetSelectedPlayerName( int localPlayerNum ) {
 		clientInfo_t *ci = cgs.clientinfo + sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer];
 		if (ci) {
 			trap_Cvar_Set(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayerName"), ci->name);
-			trap_Cvar_Set(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayer"), va("%d", sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer]));
+			trap_Cvar_SetValue(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayer"), sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer]);
 			cg.localClients[ localPlayerNum ].currentOrder = ci->teamTask;
 		}
 	} else {

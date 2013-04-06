@@ -64,7 +64,7 @@ Keybinding command
 =================
 */
 static void CG_SizeUp_f (void) {
-	trap_Cvar_Set("cg_viewsize", va("%i",(int)(cg_viewsize.integer+10)));
+	trap_Cvar_SetValue("cg_viewsize", (int)(cg_viewsize.integer+10));
 }
 
 
@@ -76,7 +76,7 @@ Keybinding command
 =================
 */
 static void CG_SizeDown_f (void) {
-	trap_Cvar_Set("cg_viewsize", va("%i",(int)(cg_viewsize.integer-10)));
+	trap_Cvar_SetValue("cg_viewsize", (int)(cg_viewsize.integer-10));
 }
 
 

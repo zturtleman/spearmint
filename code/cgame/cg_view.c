@@ -278,11 +278,11 @@ static void CG_CalcVrect (void) {
 	} else {
 		// bound normal viewsize
 		if (cg_viewsize.integer < 30) {
-			trap_Cvar_Set ("cg_viewsize","30");
 			size = 30;
+			trap_Cvar_SetValue( "cg_viewsize", size );
 		} else if (cg_viewsize.integer > 100) {
-			trap_Cvar_Set ("cg_viewsize","100");
 			size = 100;
+			trap_Cvar_SetValue( "cg_viewsize", size );
 		} else {
 			size = cg_viewsize.integer;
 		}
@@ -1113,7 +1113,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 					cg_timescale.value = cg_timescaleFadeEnd.value;
 			}
 			if (cg_timescaleFadeSpeed.value) {
-				trap_Cvar_Set("timescale", va("%f", cg_timescale.value));
+				trap_Cvar_SetValue("timescale", cg_timescale.value);
 			}
 		}
 

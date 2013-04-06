@@ -882,12 +882,12 @@ static void G_SpawnBots( char *botList, int baseDelay ) {
 
 	skill = trap_Cvar_VariableValue( "g_spSkill" );
 	if( skill < 1 ) {
-		trap_Cvar_Set( "g_spSkill", "1" );
 		skill = 1;
+		trap_Cvar_SetValue( "g_spSkill", skill );
 	}
 	else if ( skill > 5 ) {
-		trap_Cvar_Set( "g_spSkill", "5" );
 		skill = 5;
+		trap_Cvar_SetValue( "g_spSkill", skill );
 	}
 
 	Q_strncpyz( bots, botList, sizeof(bots) );

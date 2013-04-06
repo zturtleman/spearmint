@@ -289,7 +289,7 @@ void UI_MainMenu( void ) {
 #endif
 	int		style = UI_CENTER | UI_DROPSHADOW;
 
-	trap_Cvar_Set( "sv_killserver", "1" );
+	trap_Cvar_SetValue( "sv_killserver", 1 );
 
 	memset( &s_main, 0 ,sizeof(mainmenu_t) );
 	memset( &s_errorMessage, 0 ,sizeof(errorMessage_t) );

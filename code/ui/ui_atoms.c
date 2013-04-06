@@ -119,37 +119,37 @@ char *UI_Cvar_VariableString( const char *var_name ) {
 
 
 void UI_SetBestScores(postGameInfo_t *newInfo, qboolean postGame) {
-	trap_Cvar_Set("ui_scoreAccuracy",     va("%i%%", newInfo->accuracy));
-	trap_Cvar_Set("ui_scoreImpressives",	va("%i", newInfo->impressives));
-	trap_Cvar_Set("ui_scoreExcellents", 	va("%i", newInfo->excellents));
-	trap_Cvar_Set("ui_scoreDefends", 			va("%i", newInfo->defends));
-	trap_Cvar_Set("ui_scoreAssists", 			va("%i", newInfo->assists));
-	trap_Cvar_Set("ui_scoreGauntlets", 		va("%i", newInfo->gauntlets));
-	trap_Cvar_Set("ui_scoreScore", 				va("%i", newInfo->score));
-	trap_Cvar_Set("ui_scorePerfect",	 		va("%i", newInfo->perfects));
+	trap_Cvar_Set("ui_scoreAccuracy",				va("%i%%", newInfo->accuracy));
+	trap_Cvar_SetValue("ui_scoreImpressives",	newInfo->impressives);
+	trap_Cvar_SetValue("ui_scoreExcellents", 	newInfo->excellents);
+	trap_Cvar_SetValue("ui_scoreDefends", 		newInfo->defends);
+	trap_Cvar_SetValue("ui_scoreAssists", 		newInfo->assists);
+	trap_Cvar_SetValue("ui_scoreGauntlets", 	newInfo->gauntlets);
+	trap_Cvar_SetValue("ui_scoreScore", 		newInfo->score);
+	trap_Cvar_SetValue("ui_scorePerfect",	 	newInfo->perfects);
 	trap_Cvar_Set("ui_scoreTeam",					va("%i to %i", newInfo->redScore, newInfo->blueScore));
-	trap_Cvar_Set("ui_scoreBase",					va("%i", newInfo->baseScore));
-	trap_Cvar_Set("ui_scoreTimeBonus",		va("%i", newInfo->timeBonus));
-	trap_Cvar_Set("ui_scoreSkillBonus",		va("%i", newInfo->skillBonus));
-	trap_Cvar_Set("ui_scoreShutoutBonus",	va("%i", newInfo->shutoutBonus));
+	trap_Cvar_SetValue("ui_scoreBase",			newInfo->baseScore);
+	trap_Cvar_SetValue("ui_scoreTimeBonus",		newInfo->timeBonus);
+	trap_Cvar_SetValue("ui_scoreSkillBonus",	newInfo->skillBonus);
+	trap_Cvar_SetValue("ui_scoreShutoutBonus",	newInfo->shutoutBonus);
 	trap_Cvar_Set("ui_scoreTime",					va("%02i:%02i", newInfo->time / 60, newInfo->time % 60));
-	trap_Cvar_Set("ui_scoreCaptures",		va("%i", newInfo->captures));
+	trap_Cvar_SetValue("ui_scoreCaptures",		newInfo->captures);
   if (postGame) {
-		trap_Cvar_Set("ui_scoreAccuracy2",     va("%i%%", newInfo->accuracy));
-		trap_Cvar_Set("ui_scoreImpressives2",	va("%i", newInfo->impressives));
-		trap_Cvar_Set("ui_scoreExcellents2", 	va("%i", newInfo->excellents));
-		trap_Cvar_Set("ui_scoreDefends2", 			va("%i", newInfo->defends));
-		trap_Cvar_Set("ui_scoreAssists2", 			va("%i", newInfo->assists));
-		trap_Cvar_Set("ui_scoreGauntlets2", 		va("%i", newInfo->gauntlets));
-		trap_Cvar_Set("ui_scoreScore2", 				va("%i", newInfo->score));
-		trap_Cvar_Set("ui_scorePerfect2",	 		va("%i", newInfo->perfects));
+		trap_Cvar_Set("ui_scoreAccuracy2",				va("%i%%", newInfo->accuracy));
+		trap_Cvar_SetValue("ui_scoreImpressives2",	newInfo->impressives);
+		trap_Cvar_SetValue("ui_scoreExcellents2",	newInfo->excellents);
+		trap_Cvar_SetValue("ui_scoreDefends2",		newInfo->defends);
+		trap_Cvar_SetValue("ui_scoreAssists2",		newInfo->assists);
+		trap_Cvar_SetValue("ui_scoreGauntlets2",	newInfo->gauntlets);
+		trap_Cvar_SetValue("ui_scoreScore2",		newInfo->score);
+		trap_Cvar_SetValue("ui_scorePerfect2",		newInfo->perfects);
 		trap_Cvar_Set("ui_scoreTeam2",					va("%i to %i", newInfo->redScore, newInfo->blueScore));
-		trap_Cvar_Set("ui_scoreBase2",					va("%i", newInfo->baseScore));
-		trap_Cvar_Set("ui_scoreTimeBonus2",		va("%i", newInfo->timeBonus));
-		trap_Cvar_Set("ui_scoreSkillBonus2",		va("%i", newInfo->skillBonus));
-		trap_Cvar_Set("ui_scoreShutoutBonus2",	va("%i", newInfo->shutoutBonus));
+		trap_Cvar_SetValue("ui_scoreBase2",			newInfo->baseScore);
+		trap_Cvar_SetValue("ui_scoreTimeBonus2",	newInfo->timeBonus);
+		trap_Cvar_SetValue("ui_scoreSkillBonus2",	newInfo->skillBonus);
+		trap_Cvar_SetValue("ui_scoreShutoutBonus2",	newInfo->shutoutBonus);
 		trap_Cvar_Set("ui_scoreTime2",					va("%02i:%02i", newInfo->time / 60, newInfo->time % 60));
-		trap_Cvar_Set("ui_scoreCaptures2",		va("%i", newInfo->captures));
+		trap_Cvar_SetValue("ui_scoreCaptures2",		newInfo->captures);
 	}
 }
 
@@ -325,13 +325,13 @@ static void UI_CalcPostGameStats( void ) {
 	}
  
 	// put back all the ui overrides
-	trap_Cvar_Set("capturelimit", UI_Cvar_VariableString("ui_saveCaptureLimit"));
-	trap_Cvar_Set("fraglimit", UI_Cvar_VariableString("ui_saveFragLimit"));
-	trap_Cvar_Set("cg_drawTimer", UI_Cvar_VariableString("ui_drawTimer"));
-	trap_Cvar_Set("g_doWarmup", UI_Cvar_VariableString("ui_doWarmup"));
-	trap_Cvar_Set("g_Warmup", UI_Cvar_VariableString("ui_Warmup"));
-	trap_Cvar_Set("sv_pure", UI_Cvar_VariableString("ui_pure"));
-	trap_Cvar_Set("g_friendlyFire", UI_Cvar_VariableString("ui_friendlyFire"));
+	trap_Cvar_SetValue("capturelimit", trap_Cvar_VariableValue("ui_saveCaptureLimit"));
+	trap_Cvar_SetValue("fraglimit", trap_Cvar_VariableValue("ui_saveFragLimit"));
+	trap_Cvar_SetValue("cg_drawTimer", trap_Cvar_VariableValue("ui_drawTimer"));
+	trap_Cvar_SetValue("g_doWarmup", trap_Cvar_VariableValue("ui_doWarmup"));
+	trap_Cvar_SetValue("g_Warmup", trap_Cvar_VariableValue("ui_Warmup"));
+	trap_Cvar_SetValue("sv_pure", trap_Cvar_VariableValue("ui_pure"));
+	trap_Cvar_SetValue("g_friendlyFire", trap_Cvar_VariableValue("ui_friendlyFire"));
 
 	UI_SetBestScores(&newInfo, qtrue);
 	UI_ShowPostGame(newHigh);

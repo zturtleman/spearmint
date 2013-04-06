@@ -192,7 +192,7 @@ G_WriteSessionData
 void G_WriteSessionData( void ) {
 	int		i;
 
-	trap_Cvar_Set( "session", va("%i", g_gametype.integer) );
+	trap_Cvar_SetValue( "session", g_gametype.integer );
 
 	for ( i = 0 ; i < level.maxclients ; i++ ) {
 		if ( level.clients[i].pers.connected == CON_CONNECTED ) {

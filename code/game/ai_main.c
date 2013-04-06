@@ -664,7 +664,7 @@ void BotInterbreeding(void) {
 	if (!strlen(bot_interbreedchar.string)) return;
 	//make sure we are in tournament mode
 	if (gametype != GT_TOURNAMENT) {
-		trap_Cvar_Set("g_gametype", va("%d", GT_TOURNAMENT));
+		trap_Cvar_SetValue("g_gametype", GT_TOURNAMENT);
 		ExitLevel();
 		return;
 	}
@@ -1423,7 +1423,7 @@ int BotAIStartFrame(int time) {
 
 	if (bot_report.integer) {
 //		BotTeamplayReport();
-//		trap_Cvar_Set("bot_report", "0");
+//		trap_Cvar_SetValue("bot_report", 0);
 		BotUpdateInfoConfigStrings();
 	}
 
@@ -1448,17 +1448,17 @@ int BotAIStartFrame(int time) {
 
 	if (bot_memorydump.integer) {
 		trap_BotLibVarSet("memorydump", "1");
-		trap_Cvar_Set("bot_memorydump", "0");
+		trap_Cvar_SetValue("bot_memorydump", 0);
 	}
 	if (bot_saveroutingcache.integer) {
 		trap_BotLibVarSet("saveroutingcache", "1");
-		trap_Cvar_Set("bot_saveroutingcache", "0");
+		trap_Cvar_SetValue("bot_saveroutingcache", 0);
 	}
 	//check if bot interbreeding is activated
 	BotInterbreeding();
 	//cap the bot think time
 	if (bot_thinktime.integer > 200) {
-		trap_Cvar_Set("bot_thinktime", "200");
+		trap_Cvar_SetValue("bot_thinktime", 200);
 	}
 	//if the bot think time changed we should reschedule the bots
 	if (bot_thinktime.integer != lastbotthink_time) {

@@ -455,9 +455,9 @@ void CG_UpdateCvars( void ) {
 		drawTeamOverlayModificationCount = cg_drawTeamOverlay.modificationCount;
 
 		if ( cg_drawTeamOverlay.integer > 0 ) {
-			trap_Cvar_Set( "teamoverlay", "1" );
+			trap_Cvar_SetValue( "teamoverlay", 1 );
 		} else {
-			trap_Cvar_Set( "teamoverlay", "0" );
+			trap_Cvar_SetValue( "teamoverlay", 0 );
 		}
 	}
 
