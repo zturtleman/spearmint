@@ -595,6 +595,7 @@ void R_CalcSurfaceTrianglePlanes(int numTriangles, srfTriangle_t * triangles, sr
 
 // fog stuff
 qboolean fogIsOn = qfalse;
+fogType_t lastGlfogType = FT_NONE;
 
 /*
 =================
@@ -616,28 +617,31 @@ void RB_Fog( int fogNum ) {
 
 	if ( !r_useGlFog->integer ) {
 		R_FogOff();
+		lastGlfogType = FT_NONE;
 		return;
 	}
 
 	if ( tr.world && fogNum == tr.world->globalFog ) {
+		lastGlfogType = backEnd.refdef.fogType;
+
 		switch ( backEnd.refdef.fogType ) {
 			case FT_LINEAR:
 				fogMode = GL_LINEAR;
-				end = backEnd.refdef.fogDepthForOpaque;
 				break;
 
 			case FT_EXP:
 				fogMode = GL_EXP;
-				end = 5; // ZTM: ???
 				break;
 
 			default:
 				R_FogOff();
+				lastGlfogType = FT_NONE;
 				return;
 		}
 
 		VectorCopy( backEnd.refdef.fogColor, color );
 
+		end = backEnd.refdef.fogDepthForOpaque;
 		density = backEnd.refdef.fogDensity;
 
 	} else {
@@ -647,18 +651,19 @@ void RB_Fog( int fogNum ) {
 
 		if ( !fog->shader ) {
 			R_FogOff();
+			lastGlfogType = FT_NONE;
 			return;
 		}
+
+		lastGlfogType = fog->shader->fogParms.fogType;
 
 		switch ( fog->shader->fogParms.fogType ) {
 			case FT_LINEAR:
 				fogMode = GL_LINEAR;
-				end = backEnd.refdef.fogDepthForOpaque;
 				break;
 
 			case FT_EXP:
 				fogMode = GL_EXP;
-				end = 5; // ZTM: ???
 				break;
 
 			default:
@@ -738,10 +743,9 @@ void RB_FogOn( void ) {
 		return;
 	}
 
-	// ZTM: FIXME:
-	//if ( backEnd.refdef.fogType == FT_NONE ) {
-	//	return;
-	//}
+	if ( lastGlfogType == FT_NONE ) {
+		return;
+	}
 
 	qglEnable( GL_FOG );
 	fogIsOn = qtrue;
