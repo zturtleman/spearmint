@@ -12,15 +12,16 @@ The intent of this project is to provide a version of ioquake3 which may be used
 for further development of standalone games.
 Some of the major Spearmint features currently implemented are:
 
-  * Four player splitscreen, with support for connecting to network servers
-  * Improvements not compatible with quake3 1.32b
-  * Better Virtual Machine (QVM/DLL/SO/DYLIB) API handling
-  * Improved Virtual Machine system calls (unified shared calls and acos)
-  * Modified pure pk3 system
+  * Four player splitscreen, offline and in network games
+  * Extended API for game, cgame, and ui, includes some of the features from
+           RTCW, WolfET, Tremulous, and World of Padman
+  * Capsule collision support, enabled for players by default.
+  * Modified pure pk3 system, see PAKSUMS wiki page
+  * Improved game, cgame, and ui API version handling
   * Removed code not needed for standalone games
            (CD Key handling, authentication server code, and punkbuster ui code)
-  * Ogg Vorbis support enabled by default, with headers and libraries for
-           easy compiling using MinGW
+  * Ogg Opus and Ogg Vorbis support enabled by default, source and headers
+           included in local source tree for easy compiling
   * FreeType support enabled by default, source and headers included in local
            source tree for easy compiling
 
