@@ -799,7 +799,7 @@ void SV_SendClientSnapshot( client_t *client ) {
 
 	// client is awaiting gamestate (or downloading a pk3), hold off sending snapshot as it
 	// can't be loaded until after cgame is loaded
-	if ( client->gamestateMessageNum == -1 || client->oldServerTime > 0 || *client->downloadName ) {
+	if ( client->state != CS_ACTIVE ) {
 		client->needBaseline = qtrue;
 	} else {
 		// entities delta baseline
