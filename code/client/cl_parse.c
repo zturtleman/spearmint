@@ -247,7 +247,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	int			i, packetNum;
 
 	if ( !cgvm ) {
-		Com_Error( ERR_DROP, "Got snapshot before loading cgame" );
+		Com_Error( ERR_DROP, "Received unexpected snapshot" );
 	}
 
 	if ( !cl.cgamePlayerStateSize || !cl.cgamePlayerStateSize ) {
@@ -632,6 +632,14 @@ CL_ParseBaseline
 void CL_ParseBaseline( msg_t *msg ) {
 	sharedEntityState_t	*es;
 	int					newnum;
+
+	if ( !cgvm ) {
+		Com_Error( ERR_DROP, "Received unexpected baseline" );
+	}
+
+	if ( !cl.entityBaselines.pointer ) {
+		Com_Error( ERR_DROP, "cgame needs to call trap_SetNetFields" );
+	}
 
 	newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
 	if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
