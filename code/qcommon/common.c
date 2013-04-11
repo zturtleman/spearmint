@@ -832,20 +832,37 @@ int Z_AvailableMemory( void ) {
 Z_Free
 ========================
 */
-void Z_Free( void *ptr ) {
+#ifdef ZONE_DEBUG
+void Z_FreeDebug( void *ptr, char *label, char *file, int line )
+#else
+void Z_Free( void *ptr )
+#endif
+{
 	memblock_t	*block, *other;
 	memzone_t *zone;
 	
 	if (!ptr) {
+#ifdef ZONE_DEBUG
+		Com_Error( ERR_DROP, "Z_Free: NULL pointer (%s %s:%d)", label, file, line );
+#else
 		Com_Error( ERR_DROP, "Z_Free: NULL pointer" );
+#endif
 	}
 
 	block = (memblock_t *) ( (byte *)ptr - sizeof(memblock_t));
 	if (block->id != ZONEID) {
+#ifdef ZONE_DEBUG
+		Com_Error( ERR_FATAL, "Z_Free: freed a pointer without ZONEID (%s %s:%d)", label, file, line );
+#else
 		Com_Error( ERR_FATAL, "Z_Free: freed a pointer without ZONEID" );
+#endif
 	}
 	if (block->tag == 0) {
+#ifdef ZONE_DEBUG
+		Com_Error( ERR_FATAL, "Z_Free: freed a freed pointer (%s %s:%d)", label, file, line );
+#else
 		Com_Error( ERR_FATAL, "Z_Free: freed a freed pointer" );
+#endif
 	}
 	// if static memory
 	if (block->tag == TAG_STATIC) {
@@ -854,7 +871,11 @@ void Z_Free( void *ptr ) {
 
 	// check the memory trash tester
 	if ( *(int *)((byte *)block + block->size - 4 ) != ZONEID ) {
+#ifdef ZONE_DEBUG
+		Com_Error( ERR_FATAL, "Z_Free: memory block wrote past end (%s %s:%d)", label, file, line );
+#else
 		Com_Error( ERR_FATAL, "Z_Free: memory block wrote past end" );
+#endif
 	}
 
 	if (block->tag == TAG_SMALL) {
@@ -1280,8 +1301,13 @@ void Com_Meminfo_f( void ) {
 	zoneBlocks = 0;
 	for (block = mainzone->blocklist.next ; ; block = block->next) {
 		if ( Cmd_Argc() != 1 ) {
+#ifdef ZONE_DEBUG
+			Com_Printf ("block:%p    size:%7i    tag:%3i    allocSize: %7i    label: %s    where: %s:%d\n",
+				(void *)block, block->size, block->tag, block->d.allocSize, block->d.label, block->d.file, block->d.line);
+#else
 			Com_Printf ("block:%p    size:%7i    tag:%3i\n",
 				(void *)block, block->size, block->tag);
+#endif
 		}
 		if ( block->tag ) {
 			zoneBytes += block->size;
@@ -1926,10 +1952,19 @@ void DA_Init( darray_t *darray, int maxElements, int elementLength, qboolean fre
 DA_Free
 ================
 */
-void DA_Free( darray_t *darray ) {
+#ifdef ZONE_DEBUG
+void DA_FreeDebug( darray_t *darray, char *file, int line )
+#else
+void DA_Free( darray_t *darray )
+#endif
+{
 	if ( darray->pointer ) {
 		if ( darray->freeable ) {
+#ifdef ZONE_DEBUG
+			Z_FreeDebug( darray->pointer, "DA_Free", file, line );
+#else
 			Z_Free( darray->pointer );
+#endif
 		}
 		darray->pointer = NULL;
 	}
@@ -2943,6 +2978,10 @@ void *Com_RefMalloc( int size ) {
 	return Z_TagMalloc( size, TAG_RENDERER );
 }
 
+void Com_RefFree( void *pointer ) {
+	Z_Free( pointer );
+}
+
 int Com_ScaledMilliseconds(void) {
 	return Sys_Milliseconds()*com_timescale->value;
 }
@@ -3039,7 +3078,7 @@ void Com_InitRef( refimport_t *ri ) {
 	ri->Error = Com_Error;
 	ri->Milliseconds = Com_ScaledMilliseconds;
 	ri->Malloc = Com_RefMalloc;
-	ri->Free = Z_Free;
+	ri->Free = Com_RefFree;
 #ifdef HUNK_DEBUG
 	ri->Hunk_AllocDebug = Hunk_AllocDebug;
 #else
