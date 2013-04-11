@@ -2575,7 +2575,7 @@ void Com_GameRestart(qboolean disconnect)
 			CL_Shutdown("Game directory changed", disconnect, qfalse);
 		}
 
-		FS_Restart();
+		FS_Restart(qtrue);
 	
 		// Clean out any user and VM created cvars
 		Cvar_Restart(qtrue);

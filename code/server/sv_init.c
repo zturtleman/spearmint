@@ -562,7 +562,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	Cvar_Set("cl_paused", "0");
 
 	// restart the file system
-	FS_Restart();
+	FS_Restart(qfalse);
 
 	CM_LoadMap( va("maps/%s.bsp", server), qfalse, &checksum );
 

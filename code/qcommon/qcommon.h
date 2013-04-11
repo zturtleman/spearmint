@@ -622,7 +622,7 @@ void	FS_InitFilesystem ( void );
 void	FS_Shutdown( qboolean closemfp );
 
 qboolean FS_ConditionalRestart(qboolean disconnect);
-void	FS_Restart( void );
+void	FS_Restart( qboolean gameDirChanged );
 // shutdown and restart the filesystem so changes to fs_gamedir can take effect
 
 void FS_AddGameDirectory( const char *path, const char *dir );

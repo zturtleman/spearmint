@@ -3472,7 +3472,7 @@ qboolean FS_BaseFileExists( const char *file )
 }
 
 // XXX
-static void FS_CheckPaks( void );
+static void FS_CheckPaks( qboolean quiet );
 
 /*
 ================
@@ -3550,7 +3550,7 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 	Cmd_AddCommand ("touchFile", FS_TouchFile_f );
 	Cmd_AddCommand ("which", FS_Which_f );
 
-	FS_CheckPaks();
+	FS_CheckPaks( quiet );
 
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=506
 	// reorder the pure pk3 files according to server order
@@ -3761,7 +3761,7 @@ FS_CheckPaks
 Checks that default pk3s are present and their checksums are correct
 ===================
 */
-static void FS_CheckPaks( void )
+static void FS_CheckPaks( qboolean quiet )
 {
 	searchpath_t	*path;
 	qboolean		basePaksums;
@@ -3800,19 +3800,23 @@ static void FS_CheckPaks( void )
 		}
 
 		if ( !path ) {
-			Com_Printf("\n\n"
-					"**********************************************************************\n"
-					"WARNING: %s/%s.pk3 is missing.\n"
-					"**********************************************************************\n\n\n",
-					com_purePaks[pak].gamename, com_purePaks[pak].pakname );
+			if ( !quiet ) {
+				Com_Printf("\n\n"
+						"**********************************************************************\n"
+						"WARNING: %s/%s.pk3 is missing.\n"
+						"**********************************************************************\n\n\n",
+						com_purePaks[pak].gamename, com_purePaks[pak].pakname );
+			}
 
 			missingPak = qtrue;
 		} else if( path->pack->checksum != com_purePaks[pak].checksum ) {
-			Com_Printf("\n\n"
-					"**********************************************************************\n"
-					"WARNING: %s/%s.pk3 is present but its checksum (%u) is not correct.\n"
-					"**********************************************************************\n\n\n",
-					com_purePaks[pak].gamename, com_purePaks[pak].pakname, path->pack->checksum );
+			if ( !quiet ) {
+				Com_Printf("\n\n"
+						"**********************************************************************\n"
+						"WARNING: %s/%s.pk3 is present but its checksum (%u) is not correct.\n"
+						"**********************************************************************\n\n\n",
+						com_purePaks[pak].gamename, com_purePaks[pak].pakname, path->pack->checksum );
+			}
 
 			invalidPak = qtrue;
 		} else {
@@ -3834,6 +3838,10 @@ static void FS_CheckPaks( void )
 
 		// missing basegame pure list or pure pk3s
 		Cvar_Set("fs_pure", "0");
+
+		if ( quiet ) {
+			return;
+		}
 
 		if ( !strlen ( badGames ) ) {
 			FS_GetModDescription( com_basegame->string, badGames, sizeof ( badGames ) );
@@ -4046,7 +4054,7 @@ void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames ) {
 			// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=540
 			// force a restart to make sure the search order will be correct
 			Com_DPrintf( "FS search reorder is required\n" );
-			FS_Restart();
+			FS_Restart( qfalse );
 			return;
 		}
 	}
@@ -4162,7 +4170,7 @@ void FS_InitFilesystem( void ) {
 FS_Restart
 ================
 */
-void FS_Restart( void ) {
+void FS_Restart( qboolean gameDirChanged ) {
 
 	// free anything we currently have loaded
 	FS_Shutdown(qfalse);
@@ -4171,7 +4179,7 @@ void FS_Restart( void ) {
 	FS_ClearPakReferences(0);
 
 	// try to start up normally
-	FS_Startup(com_basegame->string, qtrue);
+	FS_Startup(com_basegame->string, !gameDirChanged);
 
 	// if we can't find default.cfg, assume that the paths are
 	// busted and error out now, rather than getting an unreadable
@@ -4185,7 +4193,7 @@ void FS_Restart( void ) {
 			Cvar_Set("fs_game", lastValidGame);
 			lastValidBase[0] = '\0';
 			lastValidGame[0] = '\0';
-			FS_Restart();
+			FS_Restart( qtrue );
 			Com_Error( ERR_DROP, "Invalid game folder" );
 			return;
 		}
