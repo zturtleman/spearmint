@@ -2133,7 +2133,7 @@ void RE_LoadWorldMap( const char *name ) {
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
 	}
 
-	tr.worldDir = ri.Malloc(strlen(name)+1);
+	tr.worldDir = ri.Hunk_Alloc( strlen(name)+1, h_low );
 	COM_StripExtension(name, tr.worldDir, strlen(name)+1);
 
 	// clear tr.world so if the level fails to load, the next
