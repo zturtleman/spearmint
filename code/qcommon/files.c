@@ -3471,6 +3471,9 @@ qboolean FS_BaseFileExists( const char *file )
 	return qfalse;
 }
 
+// XXX
+static void FS_CheckPaks( void );
+
 /*
 ================
 FS_Startup
@@ -3546,6 +3549,8 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 	Cmd_AddCommand ("fdir", FS_NewDir_f );
 	Cmd_AddCommand ("touchFile", FS_TouchFile_f );
 	Cmd_AddCommand ("which", FS_Which_f );
+
+	FS_CheckPaks();
 
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=506
 	// reorder the pure pk3 files according to server order
@@ -3689,6 +3694,67 @@ static qboolean FS_LoadPakChecksums( const char *gamedir ) {
 }
 
 /*
+================
+FS_PaksumsSortValue
+================
+*/
+int FS_PaksumsSortValue( const searchpath_t *s ) {
+	int pak;
+
+	if ( s->pack ) {
+		for ( pak = 0 ; pak < fs_numPaksums ; pak++ ) {
+			if ( s->pack && com_purePaks[pak].checksum == s->pack->checksum ) {
+				return pak;
+			}
+		}
+	}
+
+	return fs_numPaksums;
+}
+
+/*
+================
+FS_ReorderPaksumsPaks
+================
+*/
+static void FS_ReorderPaksumsPaks( void )
+{
+	searchpath_t	*s, *tmp, *previous_s;
+	qboolean		swapped;
+	int				pak;
+
+	// only relevant when have paksums and
+	// not relevant if connecting to pure server
+	if ( !fs_numPaksums || fs_numServerPaks )
+		return;
+
+	for ( pak = 0 ; pak < fs_numPaksums ; pak++ ) {
+		previous_s = NULL;
+		swapped = qfalse;
+		for ( s = fs_searchpaths; s && s->next; s = s->next ) {
+			// check if s should be after s->next
+			if ( s->pack && s->next->pack && ( FS_PaksumsSortValue(s) < FS_PaksumsSortValue(s->next) ) ) {
+				// swap order of s and s->next
+				tmp = s->next->next;
+				s->next->next = s;
+
+				if ( previous_s ) {
+					previous_s->next = s->next;
+				}
+
+				s->next = tmp;
+
+				swapped = qtrue;
+			}
+			previous_s = s;
+		}
+		if (!swapped) {
+			break;
+		}
+	}
+}
+
+/*
 ===================
 FS_CheckPaks
 
@@ -3709,6 +3775,8 @@ static void FS_CheckPaks( void )
 	basePaksums = FS_LoadPakChecksums( com_basegame->string );
 	FS_LoadPakChecksums( fs_basegame->string );
 	FS_LoadPakChecksums( fs_gamedirvar->string );
+
+	FS_ReorderPaksumsPaks();
 
 	if ( !basePaksums ) {
 		for( path = fs_searchpaths; path; path = path->next ) {
@@ -4077,8 +4145,6 @@ void FS_InitFilesystem( void ) {
 	// try to start up normally
 	FS_Startup(com_basegame->string, qfalse);
 
-	FS_CheckPaks();
-
 	// if we can't find default.cfg, assume that the paths are
 	// busted and error out now, rather than getting an unreadable
 	// graphics screen when the font fails to load
@@ -4106,8 +4172,6 @@ void FS_Restart( void ) {
 
 	// try to start up normally
 	FS_Startup(com_basegame->string, qtrue);
-
-	FS_CheckPaks();
 
 	// if we can't find default.cfg, assume that the paths are
 	// busted and error out now, rather than getting an unreadable
