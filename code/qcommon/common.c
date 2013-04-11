@@ -1968,6 +1968,24 @@ void DA_ClearElement( darray_t *darray, int num ) {
 
 /*
 ================
+DA_Copy
+================
+*/
+void DA_Copy( const darray_t in, darray_t *out ) {
+	if ( !out )
+		return;
+
+	assert( in.elementLength == out->elementLength );
+	assert( in.maxElements == out->maxElements );
+
+	if ( !in.pointer || !out->pointer )
+		return;
+
+	Com_Memcpy( out->pointer, in.pointer, in.elementLength * in.maxElements );
+}
+
+/*
+================
 DA_SetElement
 ================
 */

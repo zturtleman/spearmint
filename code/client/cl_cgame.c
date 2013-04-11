@@ -1565,6 +1565,7 @@ void CL_InitCGame( void ) {
 	const char			*info;
 	const char			*mapname;
 	int					t1, t2;
+	int					index;
 	unsigned int		version, major, minor;
 
 	t1 = Sys_Milliseconds();
@@ -1608,7 +1609,7 @@ void CL_InitCGame( void ) {
 	VM_Call( cgvm, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, CL_MAX_SPLITVIEW,
 			clc.clientNums[0], clc.clientNums[1], clc.clientNums[2], clc.clientNums[3] );
 
-	// entityBaselines and parseEntities are saved across vid_restart
+	// entityBaselines, parseEntities, and snapshot player states are saved across vid_restart
 	if ( !cl.entityBaselines.pointer && !cl.parseEntities.pointer ) {
 		DA_Init( &cl.entityBaselines, MAX_GENTITIES, cl.cgameEntityStateSize, qtrue );
 
@@ -1617,6 +1618,12 @@ void CL_InitCGame( void ) {
 		} else {
 			DA_Init( &cl.parseEntities, CL_MAX_SPLITVIEW * 4 * MAX_SNAPSHOT_ENTITIES, cl.cgameEntityStateSize, qtrue );
 		}
+
+		for (index = 0; index < PACKET_BACKUP; index++) {
+			DA_Init( &cl.snapshots[index].playerStates, MAX_SPLITVIEW, cl.cgamePlayerStateSize, qtrue );
+		}
+
+		DA_Init( &cl.tempSnapshotPS, MAX_SPLITVIEW, cl.cgamePlayerStateSize, qtrue );
 	}
 
 	// reset any CVAR_CHEAT cvars registered by cgame

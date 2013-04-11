@@ -1348,8 +1348,6 @@ CL_ShutdownAll
 */
 void CL_ShutdownAll(qboolean shutdownRef)
 {
-	int index;
-
 	if(CL_VideoRecording())
 		CL_CloseAVI();
 
@@ -1365,15 +1363,6 @@ void CL_ShutdownAll(qboolean shutdownRef)
 	CL_ShutdownCGame();
 	// shutdown UI
 	CL_ShutdownUI();
-
-	// free client structure
-	for (index = 0; index < ARRAY_LEN(cl.snapshots); index++) {
-		DA_Free( &cl.snapshots[index].playerStates );
-		cl.snapshots[index].valid = qfalse;
-	}
-
-	DA_Free( &cl.entityBaselines );
-	DA_Free( &cl.parseEntities );
 
 	// shutdown the renderer
 	if(shutdownRef)
@@ -1482,8 +1471,20 @@ Called before parsing a gamestate
 =====================
 */
 void CL_ClearState (void) {
+	int index;
 
 //	S_StopAllSounds();
+
+	// free client structure
+	for (index = 0; index < PACKET_BACKUP; index++) {
+		DA_Free( &cl.snapshots[index].playerStates );
+		cl.snapshots[index].valid = qfalse;
+	}
+
+	DA_Free( &cl.tempSnapshotPS );
+
+	DA_Free( &cl.entityBaselines );
+	DA_Free( &cl.parseEntities );
 
 	Com_Memset( &cl, 0, sizeof( cl ) );
 }

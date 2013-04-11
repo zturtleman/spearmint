@@ -981,6 +981,7 @@ void DA_Init( darray_t *darray, int maxElements, int elementLength, qboolean fre
 #endif
 void DA_Free( darray_t *darray );
 void DA_Clear( darray_t *darray );
+void DA_Copy( const darray_t in, darray_t *out );
 
 void DA_ClearElement( darray_t *darray, int num );
 void DA_SetElement( darray_t *darray, int num, const void *data );

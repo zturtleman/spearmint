@@ -157,6 +157,7 @@ typedef struct {
 												// can tell if it is for a prior map_restart
 	// big stuff at end of structure so most offsets are 15 bits or less
 	clSnapshot_t	snapshots[PACKET_BACKUP];
+	darray_t		tempSnapshotPS;
 
 	darray_t		entityBaselines; // entityState_t [MAX_GENTITIES], for delta compression when not in previous frame
 
