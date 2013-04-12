@@ -3013,7 +3013,11 @@ CG_FogView
 =====================
 */
 void CG_FogView( void ) {
-	trap_R_GetViewFog( cg.refdef.vieworg, &cg.refdef.fogType, cg.refdef.fogColor, &cg.refdef.fogDepthForOpaque, &cg.refdef.fogDensity );
+	qboolean inwater;
+
+	inwater = ( cg.refdef.rdflags & RDF_UNDERWATER );
+
+	trap_R_GetViewFog( cg.refdef.vieworg, &cg.refdef.fogType, cg.refdef.fogColor, &cg.refdef.fogDepthForOpaque, &cg.refdef.fogDensity, inwater );
 
 	if ( cg.refdef.fogType == FT_NONE && ( cg.refdef.fogColor[0] || cg.refdef.fogColor[1] || cg.refdef.fogColor[2] ) ) {
 		// use global fog with custom color
@@ -3021,7 +3025,7 @@ void CG_FogView( void ) {
 		cg.refdef.fogDepthForOpaque = cgs.globalFogDepthForOpaque;
 		cg.refdef.fogDensity = cgs.globalFogDensity;
 	} else if ( cg.refdef.fogType == FT_NONE ) {
-		// no water fog, use global fog
+		// no view fog, use global fog
 		cg.refdef.fogType = cgs.globalFogType;
 		cg.refdef.fogDepthForOpaque = cgs.globalFogDepthForOpaque;
 		cg.refdef.fogDensity = cgs.globalFogDensity;

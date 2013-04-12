@@ -1899,15 +1899,47 @@ static qboolean ParseShader( char **text )
 			VectorCopy( fogColor, tr.skyFogColor);
 			continue;
 		}
+		// waterfogvars ( <red> <green> <blue> ) [density <= 1 or depthForOpaque > 1]
+		else if ( !Q_stricmp( token, "waterfogvars" ) ) {
+			vec3_t waterColor;
+			float fogvar;
+
+			if ( !ParseVector( text, 3, waterColor ) ) {
+				return qfalse;
+			}
+			token = COM_ParseExt( text, qfalse );
+
+			if ( !token[0] ) {
+				ri.Printf( PRINT_WARNING, "WARNING: missing density/distance value for waterfogvars\n" );
+				continue;
+			}
+
+			fogvar = atof( token );
+
+			if ( fogvar == 0 ) {
+				// Specifies "use the map values for everything except the fog color"
+				tr.waterFogParms.fogType = FT_NONE;
+
+				if ( waterColor[0] == 0 && waterColor[1] == 0 && waterColor[2] == 0 ) {
+					// Color must be non-zero.
+					waterColor[0] = waterColor[1] = waterColor[2] = 0.00001;
+				}
+			} else if ( fogvar > 1 ) {
+				tr.waterFogParms.fogType = FT_LINEAR;
+				tr.waterFogParms.depthForOpaque = fogvar;
+				tr.waterFogParms.density = DEFAULT_FOG_LINEAR_DENSITY;
+			} else {
+				tr.waterFogParms.fogType = FT_EXP;
+				tr.waterFogParms.density = fogvar;
+				tr.waterFogParms.depthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
+			}
+
+			VectorCopy( waterColor, tr.waterFogParms.color );
+		}
 		// viewfogvars ( <red> <green> <blue> ) [density <= 1 or depthForOpaque > 1]
-		// NOTE: this is called waterfogvars in WolfET, but viewfogvars makes more sense with
-		// the way water fog is handled in Spearmint
-		else if ( !Q_stricmp( token, "viewfogvars" ) || !Q_stricmp( token, "waterfogvars" ) ) {
+		else if ( !Q_stricmp( token, "viewfogvars" ) ) {
 			vec3_t viewColor;
 			float fogvar;
-			char parmName[32];
-			
-			Q_strncpyz( parmName, token, sizeof (parmName) );
 
 			if ( !ParseVector( text, 3, viewColor ) ) {
 				return qfalse;
@@ -1915,7 +1947,7 @@ static qboolean ParseShader( char **text )
 			token = COM_ParseExt( text, qfalse );
 
 			if ( !token[0] ) {
-				ri.Printf( PRINT_WARNING, "WARNING: missing density/distance value for %s\n", parmName );
+				ri.Printf( PRINT_WARNING, "WARNING: missing density/distance value for viewfogvars\n" );
 				continue;
 			}
 

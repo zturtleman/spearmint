@@ -1051,6 +1051,8 @@ typedef struct {
 	float		skyFogDepthForOpaque;
 	float		skyFogDensity;
 
+	fogParms_t	waterFogParms;
+
 	//
 	// put large tables at the end, so most elements will be
 	// within the +/32K indexed range on risc processors
@@ -1752,7 +1754,7 @@ size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
-void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
+void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
 
 // fog stuff
 int R_DefaultFogNum( void );

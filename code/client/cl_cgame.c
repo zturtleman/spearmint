@@ -1308,7 +1308,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.GetGlobalFog( VMA(1), VMA(2), VMA(3), VMA(4) );
 		return 0;
 	case CG_R_GET_VIEW_FOG:
-		re.GetViewFog( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5) );
+		re.GetViewFog( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6] );
 		return 0;
 	case CG_GETCLIPBOARDDATA:
 		CL_GetClipboardData( VMA(1), args[2] );

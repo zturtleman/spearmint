@@ -524,11 +524,23 @@ qboolean R_PointInBrush( const vec3_t point, const bmodel_t *bmodel ) {
 RE_GetViewFog
 ====================
 */
-void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
-	fogType_t			fogType = FT_NONE;
-	vec3_t				fogColor = { 0, 0, 0 };
-	float				fogDepthForOpaque = 0;
-	float				fogDensity = 0;
+void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater ) {
+	fogType_t			fogType;
+	vec3_t				fogColor;
+	float				fogDepthForOpaque;
+	float				fogDensity;
+
+	if ( inwater ) {
+		fogType = tr.waterFogParms.fogType;
+		VectorCopy( tr.waterFogParms.color, fogColor );
+		fogDepthForOpaque = tr.waterFogParms.depthForOpaque;
+		fogDensity = tr.waterFogParms.density;
+	} else {
+		fogType = FT_NONE;
+		VectorSet( fogColor, 0, 0, 0 );
+		fogDepthForOpaque = 0;
+		fogDensity = 0;
+	}
 
 	if ( tr.world ) {
 		int					bmodelNum;
