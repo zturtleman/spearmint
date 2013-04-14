@@ -3453,26 +3453,6 @@ static void FS_ReorderPurePaks( void )
 
 /*
 ================
-FS_BaseFileExists
-================
-*/
-qboolean FS_BaseFileExists( const char *file )
-{
-	FILE *f;
-	char *testpath;
-
-	testpath = FS_BuildOSPath( fs_basepath->string, com_basegame->string, file );
-
-	f = fopen( testpath, "rb" );
-	if (f) {
-		fclose( f );
-		return qtrue;
-	}
-	return qfalse;
-}
-
-/*
-================
 FS_PortableHomePath
 
 If a settings directory exists in same directory as binary, return path to it.
