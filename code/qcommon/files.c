@@ -3471,6 +3471,25 @@ qboolean FS_BaseFileExists( const char *file )
 	return qfalse;
 }
 
+/*
+================
+FS_PortableHomePath
+
+If a settings directory exists in same directory as binary, return path to it.
+================
+*/
+const char *FS_PortableHomePath(void) {
+	static char settings[ MAX_OSPATH ];
+
+	Com_sprintf( settings, sizeof( settings ), "%s%csettings", Sys_DefaultInstallPath(), PATH_SEP );
+
+	if ( Sys_StatFile( settings ) != 1 ) {
+		return NULL;
+	}
+
+	return settings;
+}
+
 // XXX
 static void FS_CheckPaks( qboolean quiet );
 
@@ -3493,7 +3512,10 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
 	fs_basepath = Cvar_Get ("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT|CVAR_PROTECTED );
 	fs_basegame = Cvar_Get ("fs_basegame", "", CVAR_INIT );
-	homePath = Sys_DefaultHomePath();
+	homePath = FS_PortableHomePath();
+	if (!homePath || !homePath[0]) {
+		homePath = Sys_DefaultHomePath();
+	}
 	if (!homePath || !homePath[0]) {
 		homePath = fs_basepath->string;
 	}
