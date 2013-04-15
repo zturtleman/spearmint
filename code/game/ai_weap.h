@@ -121,15 +121,9 @@ int BotChooseBestFightWeapon(int weaponstate, int *inventory);
 void BotGetWeaponInfo(int weaponstate, int weapon, weaponinfo_t *weaponinfo);
 //loads the weapon weights
 int BotLoadWeaponWeights(int weaponstate, char *filename);
-//
-void BotResetWeaponState(int weaponstate);
-//
+//frees the weapon state
 void BotFreeWeaponState(int weaponstate);
-
-#define trap_BotAllocWeaponState(clientNum)	(clientNum+1)
-#define trap_BotFreeWeaponState				BotFreeWeaponState
-#define trap_BotResetWeaponState(weap)		{}// nothing
-#define trap_BotChooseBestFightWeapon		BotChooseBestFightWeapon
-#define trap_BotGetWeaponInfo				BotGetWeaponInfo
-#define trap_BotLoadWeaponWeights			BotLoadWeaponWeights
-
+//resets the whole weapon state
+void BotResetWeaponState(int weaponstate);
+//returns handle to weapon state for clientNum
+#define BotAllocWeaponState(clientNum)		(clientNum+1)

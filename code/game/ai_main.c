@@ -1283,13 +1283,13 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 		return qfalse;
 	}
 	//allocate a weapon state
-	bs->ws = trap_BotAllocWeaponState(client);
+	bs->ws = BotAllocWeaponState(client);
 	//load the weapon weights
 	trap_Characteristic_String(bs->character, CHARACTERISTIC_WEAPONWEIGHTS, filename, MAX_PATH);
-	errnum = trap_BotLoadWeaponWeights(bs->ws, filename);
+	errnum = BotLoadWeaponWeights(bs->ws, filename);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeGoalState(bs->gs);
-		trap_BotFreeWeaponState(bs->ws);
+		BotFreeWeaponState(bs->ws);
 		return qfalse;
 	}
 	//allocate a chat state
@@ -1301,7 +1301,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	if (errnum != BLERR_NOERROR) {
 		trap_BotFreeChatState(bs->cs);
 		BotFreeGoalState(bs->gs);
-		trap_BotFreeWeaponState(bs->ws);
+		BotFreeWeaponState(bs->ws);
 		return qfalse;
 	}
 	//get the gender characteristic
@@ -1366,7 +1366,7 @@ int BotAIShutdownClient(int client, qboolean restart) {
 	//free the chat file
 	trap_BotFreeChatState(bs->cs);
 	//free the weapon weights
-	trap_BotFreeWeaponState(bs->ws);
+	BotFreeWeaponState(bs->ws);
 	//free the bot character
 	trap_BotFreeCharacter(bs->character);
 	//
@@ -1432,7 +1432,7 @@ void BotResetState(bot_state_t *bs) {
 	//reset several states
 	if (bs->ms) BotResetMoveState(bs->ms);
 	if (bs->gs) BotResetGoalState(bs->gs);
-	if (bs->ws) trap_BotResetWeaponState(bs->ws);
+	if (bs->ws) BotResetWeaponState(bs->ws);
 	if (bs->gs) BotResetAvoidGoals(bs->gs);
 	if (bs->ms) BotResetAvoidReach(bs->ms);
 }
