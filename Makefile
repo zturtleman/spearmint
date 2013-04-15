@@ -1561,11 +1561,6 @@ Q3OBJ = \
   $(B)/client/be_ai_char.o \
   $(B)/client/be_ai_chat.o \
   $(B)/client/be_ai_gen.o \
-  $(B)/client/be_ai_goal.o \
-  $(B)/client/be_ai_move.o \
-  $(B)/client/be_ai_weap.o \
-  $(B)/client/be_ai_weight.o \
-  $(B)/client/be_ea.o \
   $(B)/client/be_interface.o \
   $(B)/client/l_crc.o \
   $(B)/client/l_libvar.o \
@@ -2159,11 +2154,6 @@ Q3DOBJ = \
   $(B)/ded/be_ai_char.o \
   $(B)/ded/be_ai_chat.o \
   $(B)/ded/be_ai_gen.o \
-  $(B)/ded/be_ai_goal.o \
-  $(B)/ded/be_ai_move.o \
-  $(B)/ded/be_ai_weap.o \
-  $(B)/ded/be_ai_weight.o \
-  $(B)/ded/be_ea.o \
   $(B)/ded/be_interface.o \
   $(B)/ded/l_crc.o \
   $(B)/ded/l_libvar.o \
@@ -2353,8 +2343,13 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/ai_cmd.o \
   $(B)/$(BASEGAME)/game/ai_dmnet.o \
   $(B)/$(BASEGAME)/game/ai_dmq3.o \
+  $(B)/$(BASEGAME)/game/ai_ea.o \
+  $(B)/$(BASEGAME)/game/ai_goal.o \
   $(B)/$(BASEGAME)/game/ai_main.o \
+  $(B)/$(BASEGAME)/game/ai_move.o \
   $(B)/$(BASEGAME)/game/ai_team.o \
+  $(B)/$(BASEGAME)/game/ai_weap.o \
+  $(B)/$(BASEGAME)/game/ai_weight.o \
   $(B)/$(BASEGAME)/game/ai_vcmd.o \
   $(B)/$(BASEGAME)/game/bg_misc.o \
   $(B)/$(BASEGAME)/game/bg_pmove.o \
@@ -2405,8 +2400,13 @@ MPGOBJ_ = \
   $(B)/$(MISSIONPACK)/game/ai_cmd.o \
   $(B)/$(MISSIONPACK)/game/ai_dmnet.o \
   $(B)/$(MISSIONPACK)/game/ai_dmq3.o \
+  $(B)/$(MISSIONPACK)/game/ai_ea.o \
+  $(B)/$(MISSIONPACK)/game/ai_goal.o \
   $(B)/$(MISSIONPACK)/game/ai_main.o \
+  $(B)/$(MISSIONPACK)/game/ai_move.o \
   $(B)/$(MISSIONPACK)/game/ai_team.o \
+  $(B)/$(MISSIONPACK)/game/ai_weap.o \
+  $(B)/$(MISSIONPACK)/game/ai_weight.o \
   $(B)/$(MISSIONPACK)/game/ai_vcmd.o \
   $(B)/$(MISSIONPACK)/game/bg_misc.o \
   $(B)/$(MISSIONPACK)/game/bg_pmove.o \

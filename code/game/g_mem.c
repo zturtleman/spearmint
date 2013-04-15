@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 
 
-#define POOLSIZE	(256 * 1024)
+#define POOLSIZE	(512 * 1024)
 
 static char		memoryPool[POOLSIZE];
 static int		allocPoint;

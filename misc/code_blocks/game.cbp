@@ -213,10 +213,22 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/game/ai_dmq3.h" />
+		<Unit filename="../../code/game/ai_ea.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_ea.h" />
+		<Unit filename="../../code/game/ai_goal.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_goal.h" />
 		<Unit filename="../../code/game/ai_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/game/ai_main.h" />
+		<Unit filename="../../code/game/ai_move.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_move.h" />
 		<Unit filename="../../code/game/ai_team.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -225,6 +237,14 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/game/ai_vcmd.h" />
+		<Unit filename="../../code/game/ai_weap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_weap.h" />
+		<Unit filename="../../code/game/ai_weight.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_weight.h" />
 		<Unit filename="../../code/game/bg_lib.c">
 			<Option compilerVar="CC" />
 			<Option target="&lt;{~None~}&gt;" />

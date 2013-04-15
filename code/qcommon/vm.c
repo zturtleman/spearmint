@@ -451,7 +451,7 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 	}
 	dataLength = 1 << i;
 
-	if ( dataLength - vm->dataLength < vm_minQvmHunkKB->integer * 1024 )
+	while ( dataLength - vm->dataLength < vm_minQvmHunkKB->integer * 1024 )
 		dataLength <<= 1;
 
 	if(alloc)
@@ -1056,17 +1056,24 @@ QVM_Alloc
 */
 unsigned int QVM_Alloc( vm_t *vm, int size ) {
 	unsigned int pointer;
+	int allocSize;
 
-	if ( vm->dataAlloc + size > vm->dataMask+1 ) {
+	// need to align addresses for qvm?
+	allocSize = ( size + 31 ) & ~31;
+
+	if ( allocSize < size )
+		Com_Error( ERR_DROP, "QVM_Alloc: %s failed, %d < %d", vm->name, allocSize, size );
+
+	if ( vm->dataAlloc + allocSize > vm->dataMask+1 ) {
 		Com_Error( ERR_DROP, "QVM_Alloc: %s failed on allocation of %i bytes", vm->name, size );
 		return 0;
 	}
 
 	pointer = vm->dataAlloc;
-	vm->dataAlloc += size;
+	vm->dataAlloc += allocSize;
 
 	// only needed if it's possible to free memory, dataBase is set to 0s on QVM load.
-	//Com_Memset( vm->dataBase + pointer, 0, size );
+	Com_Memset( vm->dataBase + pointer, 0, size );
 
 	return pointer;
 }

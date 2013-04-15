@@ -888,7 +888,7 @@ void UI_ParseMenu(const char *menuFile) {
 
 	Com_DPrintf("Parsing menu file:%s\n", menuFile);
 
-	handle = trap_PC_LoadSource(menuFile);
+	handle = trap_PC_LoadSource(menuFile, NULL);
 	if (!handle) {
 		return;
 	}
@@ -963,10 +963,10 @@ void UI_LoadMenus(const char *menuFile, qboolean reset) {
 
 	start = trap_Milliseconds();
 
-	handle = trap_PC_LoadSource( menuFile );
+	handle = trap_PC_LoadSource( menuFile, NULL );
 	if (!handle) {
 		Com_Printf( S_COLOR_YELLOW "menu file not found: %s, using default\n", menuFile );
-		handle = trap_PC_LoadSource( "ui/menus.txt" );
+		handle = trap_PC_LoadSource( "ui/menus.txt", NULL );
 		if (!handle) {
 			trap_Error( S_COLOR_RED "default menu file not found: ui/menus.txt, unable to continue!" );
 		}

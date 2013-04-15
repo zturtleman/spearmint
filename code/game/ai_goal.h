@@ -57,6 +57,22 @@ typedef struct bot_goal_s
 	int iteminfo;				//item information
 } bot_goal_t;
 
+//goal state
+typedef struct bot_goalstate_s
+{
+	struct weightconfig_s *itemweightconfig;	//weight config
+	int itemweightindex[MAX_ITEMS];				//index from item to weight
+	//
+	int client;									//client using this goal state
+	int lastreachabilityarea;					//last area with reachabilities the bot was in
+	//
+	bot_goal_t goalstack[MAX_GOALSTACK];		//goal stack
+	int goalstacktop;							//the top of the goal stack
+	//
+	int avoidgoals[MAX_AVOIDGOALS];				//goals to avoid
+	float avoidgoaltimes[MAX_AVOIDGOALS];		//times to avoid the goals
+} bot_goalstate_t;
+
 //reset the whole goal state, but keep the item weights
 void BotResetGoalState(int goalstate);
 //reset avoid goals
@@ -124,3 +140,34 @@ void BotFreeGoalState(int handle);
 int BotSetupGoalAI(void);
 //shut down the goal AI
 void BotShutdownGoalAI(void);
+
+#define trap_BotAllocGoalState				BotAllocGoalState
+#define trap_BotFreeGoalState				BotFreeGoalState
+#define trap_BotResetGoalState				BotResetGoalState
+#define trap_BotRemoveFromAvoidGoals		BotRemoveFromAvoidGoals
+#define trap_BotResetAvoidGoals				BotResetAvoidGoals
+#define trap_BotPushGoal					BotPushGoal
+#define trap_BotPopGoal						BotPopGoal
+#define trap_BotEmptyGoalStack				BotEmptyGoalStack
+#define trap_BotDumpAvoidGoals				BotDumpAvoidGoals
+#define trap_BotDumpGoalStack				BotDumpGoalStack
+#define trap_BotGoalName					BotGoalName
+#define trap_BotGetTopGoal					BotGetTopGoal
+#define trap_BotGetSecondGoal				BotGetSecondGoal
+#define trap_BotChooseLTGItem				BotChooseLTGItem
+#define trap_BotChooseNBGItem				BotChooseNBGItem
+#define trap_BotTouchingGoal				BotTouchingGoal
+#define trap_BotItemGoalInVisButNotVisible	BotItemGoalInVisButNotVisible
+#define trap_BotGetNextCampSpotGoal			BotGetNextCampSpotGoal
+#define trap_BotGetMapLocationGoal			BotGetMapLocationGoal
+#define trap_BotGetLevelItemGoal			BotGetLevelItemGoal
+#define trap_BotAvoidGoalTime				BotAvoidGoalTime
+#define trap_BotSetAvoidGoalTime			BotSetAvoidGoalTime
+#define trap_BotInitLevelItems				BotInitLevelItems
+#define trap_BotUpdateEntityItems			BotUpdateEntityItems
+#define trap_BotLoadItemWeights				BotLoadItemWeights
+#define trap_BotFreeItemWeights				BotFreeItemWeights
+#define trap_BotInterbreedGoalFuzzyLogic	BotInterbreedGoalFuzzyLogic
+#define trap_BotSaveGoalFuzzyLogic			BotSaveGoalFuzzyLogic
+#define trap_BotMutateGoalFuzzyLogic		BotMutateGoalFuzzyLogic
+

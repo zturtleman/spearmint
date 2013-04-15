@@ -91,6 +91,7 @@ equ trap_SetNetFields					-129
 equ trap_R_RegisterModel				-130
 equ trap_R_LerpTag						-131
 equ trap_R_ModelBounds					-132
+equ trap_ClientCommand					-133
 
 
 equ trap_BotLibSetup					-201
@@ -107,65 +108,61 @@ equ trap_BotGetServerCommand			-210
 equ trap_BotUserCommand					-211
 
 
-
-equ trap_AAS_EnableRoutingArea		-301
-equ trap_AAS_BBoxAreas				-302
-equ trap_AAS_AreaInfo				-303
-equ trap_AAS_EntityInfo					-304
-
+; there is no 301.
+equ trap_AAS_BBoxAreas					-302
+equ trap_AAS_AreaInfo					-303
+equ trap_AAS_Loaded						-304
 equ trap_AAS_Initialized				-305
 equ trap_AAS_PresenceTypeBoundingBox	-306
 equ trap_AAS_Time						-307
 
 equ trap_AAS_PointAreaNum				-308
-equ trap_AAS_TraceAreas					-309
+equ trap_AAS_TraceClientBBox			-309
+equ trap_AAS_TraceAreas					-310
 
-equ trap_AAS_PointContents				-310
-equ trap_AAS_NextBSPEntity				-311
-equ trap_AAS_ValueForBSPEpairKey		-312
-equ trap_AAS_VectorForBSPEpairKey		-313
-equ trap_AAS_FloatForBSPEpairKey		-314
-equ trap_AAS_IntForBSPEpairKey			-315
-
-equ trap_AAS_AreaReachability			-316
-
-equ trap_AAS_AreaTravelTimeToGoalArea	-317
-
-equ trap_AAS_Swimming					-318
-equ trap_AAS_PredictClientMovement		-319
-
-equ trap_AAS_BestReachableArea			-320
+equ trap_AAS_PointContents				-311
+equ trap_AAS_NextBSPEntity				-312
+equ trap_AAS_ValueForBSPEpairKey		-313
+equ trap_AAS_VectorForBSPEpairKey		-314
+equ trap_AAS_FloatForBSPEpairKey		-315
+equ trap_AAS_IntForBSPEpairKey			-316
 
 
+equ trap_AAS_PredictClientMovement		-326
+equ trap_AAS_OnGround					-327
+equ trap_AAS_Swimming					-328
+equ trap_AAS_JumpReachRunStart			-329
+equ trap_AAS_AgainstLadder				-330
+equ trap_AAS_HorizontalVelocityForJump	-331
+equ trap_AAS_DropToFloor				-332
 
-equ trap_EA_Say							-401
-equ trap_EA_SayTeam						-402
-equ trap_EA_Command						-403
+equ trap_AAS_AreaReachability			-351
+equ trap_AAS_BestReachableArea			-352
+equ trap_AAS_BestReachableFromJumpPadArea	-353
+equ trap_AAS_NextModelReachability		-354
+equ trap_AAS_AreaGroundFaceArea			-355
+equ trap_AAS_AreaCrouch					-356
+equ trap_AAS_AreaSwim					-357
+equ trap_AAS_AreaLiquid					-358
+equ trap_AAS_AreaLava					-359
+equ trap_AAS_AreaSlime					-360
+equ trap_AAS_AreaGrounded				-361
+equ trap_AAS_AreaLadder					-362
+equ trap_AAS_AreaJumpPad				-363
+equ trap_AAS_AreaDoNotEnter				-364
 
-equ trap_EA_Action						-404
-equ trap_EA_Gesture						-405
-equ trap_EA_Talk						-406
-equ trap_EA_Attack						-407
-equ trap_EA_Use							-408
-equ trap_EA_Respawn						-409
-equ trap_EA_Crouch						-410
-equ trap_EA_MoveUp						-411
-equ trap_EA_MoveDown					-412
-equ trap_EA_MoveForward					-413
-equ trap_EA_MoveBack					-414
-equ trap_EA_MoveLeft					-415
-equ trap_EA_MoveRight					-416
 
-equ trap_EA_SelectWeapon				-417
-equ trap_EA_Jump						-418
-equ trap_EA_DelayedJump					-419
-equ trap_EA_Move						-420
-equ trap_EA_View						-421
+equ trap_AAS_TravelFlagForType			-401
+equ trap_AAS_AreaContentsTravelFlags	-402
+equ trap_AAS_NextAreaReachability		-403
+equ trap_AAS_ReachabilityFromNum		-404
+equ trap_AAS_RandomGoalArea				-405
+equ trap_AAS_EnableRoutingArea			-406
+equ trap_AAS_AreaTravelTime				-407
+equ trap_AAS_AreaTravelTimeToGoalArea	-409
+equ trap_AAS_PredictRoute				-410
 
-equ trap_EA_EndRegular					-422
-equ trap_EA_GetInput					-423
-equ trap_EA_ResetInput					-424
-
+equ trap_AAS_AlternativeRouteGoals		-421
 
 
 equ trap_BotLoadCharacter				-501
@@ -175,6 +172,7 @@ equ trap_Characteristic_BFloat			-504
 equ trap_Characteristic_Integer			-505
 equ trap_Characteristic_BInteger		-506
 equ trap_Characteristic_String			-507
+
 
 equ trap_BotAllocChatState				-508
 equ trap_BotFreeChatState				-509
@@ -194,60 +192,10 @@ equ trap_BotReplaceSynonyms				-522
 equ trap_BotLoadChatFile				-523
 equ trap_BotSetChatGender				-524
 equ trap_BotSetChatName					-525
+equ trap_BotNumInitialChats				-526
+equ trap_BotGetChatMessage				-527
 
-equ trap_BotResetGoalState				-526
-equ trap_BotResetAvoidGoals				-527
-equ trap_BotPushGoal					-528
-equ trap_BotPopGoal						-529
-equ trap_BotEmptyGoalStack				-530
-equ trap_BotDumpAvoidGoals				-531
-equ trap_BotDumpGoalStack				-532
-equ trap_BotGoalName					-533
-equ trap_BotGetTopGoal					-534
-equ trap_BotGetSecondGoal				-535
-equ trap_BotChooseLTGItem				-536
-equ trap_BotChooseNBGItem				-537
-equ trap_BotTouchingGoal				-538
-equ trap_BotItemGoalInVisButNotVisible	-539
-equ trap_BotGetLevelItemGoal			-540
-equ trap_BotAvoidGoalTime				-541
-equ trap_BotInitLevelItems				-542
-equ trap_BotUpdateEntityItems			-543
-equ trap_BotLoadItemWeights				-544
-equ trap_BotFreeItemWeights				-546
-equ trap_BotSaveGoalFuzzyLogic			-546
-equ trap_BotAllocGoalState				-547
-equ trap_BotFreeGoalState				-548
+equ trap_GeneticParentsAndChildSelection	-528
 
-equ trap_BotResetMoveState				-549
-equ trap_BotMoveToGoal					-550
-equ trap_BotMoveInDirection				-551
-equ trap_BotResetAvoidReach				-552
-equ trap_BotResetLastAvoidReach			-553
-equ trap_BotReachabilityArea			-554
-equ trap_BotMovementViewTarget			-555
-equ trap_BotAllocMoveState				-556
-equ trap_BotFreeMoveState				-557
-equ trap_BotInitMoveState				-558
-
-equ trap_BotChooseBestFightWeapon		-559
-equ trap_BotGetWeaponInfo				-560
-equ trap_BotLoadWeaponWeights			-561
-equ trap_BotAllocWeaponState			-562
-equ trap_BotFreeWeaponState				-563
-equ trap_BotResetWeaponState			-564
-equ trap_GeneticParentsAndChildSelection -565
-equ trap_BotInterbreedGoalFuzzyLogic	-566
-equ trap_BotMutateGoalFuzzyLogic		-567
-equ trap_BotGetNextCampSpotGoal			-568
-equ trap_BotGetMapLocationGoal			-569
-equ trap_BotNumInitialChats				-570
-equ trap_BotGetChatMessage				-571
-equ trap_BotRemoveFromAvoidGoals		-572
-equ trap_BotPredictVisiblePosition		-573
-equ trap_BotSetAvoidGoalTime			-574
-equ trap_BotAddAvoidSpot				-575
-equ trap_AAS_AlternativeRouteGoals		-576
-equ trap_AAS_PredictRoute				-577
-equ trap_AAS_PointReachabilityAreaIndex	-578
+equ trap_AAS_PointReachabilityAreaIndex	-529
 

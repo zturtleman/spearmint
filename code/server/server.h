@@ -429,6 +429,8 @@ int			SV_BotGetConsoleMessage( int client, char *buf, int size );
 int BotImport_DebugPolygonCreate(int color, int numPoints, vec3_t *points);
 void BotImport_DebugPolygonDelete(int id);
 
+void SV_ForcePlayerCommand( int playerNum, const char *command );
+
 void SV_BotInitBotLib(void);
 
 //============================================================

@@ -37,19 +37,36 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  *****************************************************************************/
 
-#include "../qcommon/q_shared.h"
-#include "l_memory.h"
-#include "l_script.h"
-#include "l_precomp.h"
-#include "l_struct.h"
-#include "botlib.h"
-#include "be_interface.h"
-#include "be_ea.h"
+#include "g_local.h"
+#include "../botlib/botlib.h"
+#include "../botlib/be_aas.h"
+#include "../botlib/be_ai_char.h"
+#include "../botlib/be_ai_chat.h"
+#include "../botlib/be_ai_gen.h"
+//
+#include "ai_ea.h"
+#include "ai_goal.h"
+#include "ai_move.h"
+#include "ai_weap.h"
+#include "ai_weight.h"
+//
+#include "ai_main.h"
+#include "ai_dmq3.h"
+#include "ai_chat.h"
+#include "ai_cmd.h"
+#include "ai_vcmd.h"
+#include "ai_dmnet.h"
+#include "ai_team.h"
+//
+#include "chars.h"				//characteristics
+#include "inv.h"				//indexes into the inventory
+#include "syn.h"				//synonyms
+#include "match.h"				//string matching types and vars
 
 #define MAX_USERMOVE				400
 #define MAX_COMMANDARGUMENTS		10
 
-bot_input_t *botinputs;
+bot_input_t botinputs[MAX_CLIENTS];
 
 //===========================================================================
 //
@@ -59,7 +76,7 @@ bot_input_t *botinputs;
 //===========================================================================
 void EA_Say(int client, char *str)
 {
-	botimport.BotClientCommand(client, va("say %s", str) );
+	trap_ClientCommand(client, va("say %s", str));
 } //end of the function EA_Say
 //===========================================================================
 //
@@ -69,7 +86,7 @@ void EA_Say(int client, char *str)
 //===========================================================================
 void EA_SayTeam(int client, char *str)
 {
-	botimport.BotClientCommand(client, va("say_team %s", str));
+	trap_ClientCommand(client, va("say_team %s", str));
 } //end of the function EA_SayTeam
 //===========================================================================
 //
@@ -79,7 +96,7 @@ void EA_SayTeam(int client, char *str)
 //===========================================================================
 void EA_Tell(int client, int clientto, char *str)
 {
-	botimport.BotClientCommand(client, va("tell %d, %s", clientto, str));
+	trap_ClientCommand(client, va("tell %d, %s", clientto, str));
 } //end of the function EA_SayTeam
 //===========================================================================
 //
@@ -89,7 +106,7 @@ void EA_Tell(int client, int clientto, char *str)
 //===========================================================================
 void EA_UseItem(int client, char *it)
 {
-	botimport.BotClientCommand(client, va("use %s", it));
+	trap_ClientCommand(client, va("use %s", it));
 } //end of the function EA_UseItem
 //===========================================================================
 //
@@ -99,7 +116,7 @@ void EA_UseItem(int client, char *it)
 //===========================================================================
 void EA_DropItem(int client, char *it)
 {
-	botimport.BotClientCommand(client, va("drop %s", it));
+	trap_ClientCommand(client, va("drop %s", it));
 } //end of the function EA_DropItem
 //===========================================================================
 //
@@ -109,7 +126,7 @@ void EA_DropItem(int client, char *it)
 //===========================================================================
 void EA_UseInv(int client, char *inv)
 {
-	botimport.BotClientCommand(client, va("invuse %s", inv));
+	trap_ClientCommand(client, va("invuse %s", inv));
 } //end of the function EA_UseInv
 //===========================================================================
 //
@@ -119,7 +136,7 @@ void EA_UseInv(int client, char *inv)
 //===========================================================================
 void EA_DropInv(int client, char *inv)
 {
-	botimport.BotClientCommand(client, va("invdrop %s", inv));
+	trap_ClientCommand(client, va("invdrop %s", inv));
 } //end of the function EA_DropInv
 //===========================================================================
 //
@@ -143,7 +160,7 @@ void EA_Gesture(int client)
 //===========================================================================
 void EA_Command(int client, char *command)
 {
-	botimport.BotClientCommand(client, command);
+	trap_ClientCommand(client, command);
 } //end of the function EA_Command
 //===========================================================================
 //
@@ -467,8 +484,7 @@ void EA_ResetInput(int client)
 int EA_Setup(void)
 {
 	//initialize the bot inputs
-	botinputs = (bot_input_t *) GetClearedHunkMemory(
-									botlibglobals.maxclients * sizeof(bot_input_t));
+	Com_Memset(botinputs, 0, sizeof (botinputs));
 	return BLERR_NOERROR;
 } //end of the function EA_Setup
 //===========================================================================
@@ -479,6 +495,5 @@ int EA_Setup(void)
 //===========================================================================
 void EA_Shutdown(void)
 {
-	FreeMemory(botinputs);
-	botinputs = NULL;
+
 } //end of the function EA_Shutdown

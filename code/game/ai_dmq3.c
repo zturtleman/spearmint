@@ -42,18 +42,20 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
-#include "../botlib/be_ea.h"
 #include "../botlib/be_ai_char.h"
 #include "../botlib/be_ai_chat.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
-#include "../botlib/be_ai_weap.h"
+//
+#include "ai_ea.h"
+#include "ai_goal.h"
+#include "ai_move.h"
+#include "ai_weap.h"
 //
 #include "ai_main.h"
 #include "ai_dmq3.h"
 #include "ai_chat.h"
 #include "ai_cmd.h"
+#include "ai_vcmd.h"
 #include "ai_dmnet.h"
 #include "ai_team.h"
 //
@@ -89,9 +91,9 @@ vmCvar_t bot_nochat;
 vmCvar_t bot_testrchat;
 vmCvar_t bot_challenge;
 vmCvar_t bot_predictobstacles;
+vmCvar_t bot_droppedweight;
+vmCvar_t bot_offhandgrapple;
 vmCvar_t g_spSkill;
-
-extern vmCvar_t bot_developer;
 
 vec3_t lastteleport_origin;		//last teleport event origin
 float lastteleport_time;		//last teleport event time
@@ -5405,6 +5407,8 @@ void BotSetupDeathmatchAI(void) {
 	trap_Cvar_Register(&bot_testrchat, "bot_testrchat", "0", 0);
 	trap_Cvar_Register(&bot_challenge, "bot_challenge", "0", 0);
 	trap_Cvar_Register(&bot_predictobstacles, "bot_predictobstacles", "1", 0);
+	trap_Cvar_Register(&bot_offhandgrapple, "bot_offhandgrapple", "0", 0);
+	trap_Cvar_Register(&bot_droppedweight, "bot_droppedweight", "1000", 0);
 	trap_Cvar_Register(&g_spSkill, "g_spSkill", "2", 0);
 	//
 	if (gametype == GT_CTF) {

@@ -3120,7 +3120,7 @@ void FreeSource(source_t *source)
 
 source_t *sourceFiles[MAX_SOURCEFILES];
 
-int PC_LoadSourceHandle(const char *filename)
+int PC_LoadSourceHandle(const char *filename, const char *basepath)
 {
 	source_t *source;
 	int i;
@@ -3132,7 +3132,7 @@ int PC_LoadSourceHandle(const char *filename)
 	} //end for
 	if (i >= MAX_SOURCEFILES)
 		return 0;
-	PS_SetBaseFolder("");
+	PS_SetBaseFolder(basepath);
 	source = LoadSourceFile(filename);
 	if (!source)
 		return 0;
@@ -3180,6 +3180,8 @@ int PC_ReadTokenHandle(int handle, pc_token_t *pc_token)
 	pc_token->floatvalue = token.floatvalue;
 	if (pc_token->type == TT_STRING)
 		StripDoubleQuotes(pc_token->string);
+	if (pc_token->type == TT_LITERAL)
+		StripSingleQuotes(pc_token->string);
 	return ret;
 } //end of the function PC_ReadTokenHandle
 //============================================================================
@@ -3224,7 +3226,7 @@ int PC_SourceFileAndLine(int handle, char *filename, int *line)
 // Returns:				-
 // Changes Globals:		-
 //============================================================================
-void PC_SetBaseFolder(char *path)
+void PC_SetBaseFolder(const char *path)
 {
 	PS_SetBaseFolder(path);
 } //end of the function PC_SetBaseFolder

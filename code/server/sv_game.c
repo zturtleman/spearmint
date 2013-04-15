@@ -442,7 +442,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		botlib_export->PC_RemoveAllGlobalDefines();
 		return 0;
 	case G_PC_LOAD_SOURCE:
-		return botlib_export->PC_LoadSourceHandle( VMA(1) );
+		return botlib_export->PC_LoadSourceHandle( VMA(1), VMA(2) );
 	case G_PC_FREE_SOURCE:
 		return botlib_export->PC_FreeSourceHandle( args[1] );
 	case G_PC_READ_TOKEN:
@@ -452,6 +452,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_PC_SOURCE_FILE_AND_LINE:
 		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
+
+	case G_ALLOC:
+		return VM_Alloc( args[1], VMA(2) );
 
 		//====================================
 
@@ -547,8 +550,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		BotImport_DebugPolygonDelete( args[1] );
 		return 0;
 
-	case G_ALLOC:
-		return VM_Alloc( args[1], VMA(2) );
+	case G_CLIENT_COMMAND:
+		SV_ForcePlayerCommand( args[1], VMA(2) );
+		return 0;
 
 	case G_R_REGISTERMODEL:
 		return re.RegisterModel( VMA(1) );
@@ -592,10 +596,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->aas.AAS_AreaInfo( args[1], VMA(2) );
 	case BOTLIB_AAS_ALTERNATIVE_ROUTE_GOAL:
 		return botlib_export->aas.AAS_AlternativeRouteGoals( VMA(1), args[2], VMA(3), args[4], args[5], VMA(6), args[7], args[8] );
-	case BOTLIB_AAS_ENTITY_INFO:
-		botlib_export->aas.AAS_EntityInfo( args[1], VMA(2) );
-		return 0;
 
+	case BOTLIB_AAS_LOADED:
+		return botlib_export->aas.AAS_Loaded();
 	case BOTLIB_AAS_INITIALIZED:
 		return botlib_export->aas.AAS_Initialized();
 	case BOTLIB_AAS_PRESENCE_TYPE_BOUNDING_BOX:
@@ -608,6 +611,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->aas.AAS_PointAreaNum( VMA(1) );
 	case BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX:
 		return botlib_export->aas.AAS_PointReachabilityAreaIndex( VMA(1) );
+	case BOTLIB_AAS_TRACE_CLIENT_BBOX:
+		botlib_export->aas.AAS_TraceClientBBox( VMA(1), VMA(2), VMA(3), args[4], args[5] );
+		return 0;
 	case BOTLIB_AAS_TRACE_AREAS:
 		return botlib_export->aas.AAS_TraceAreas( VMA(1), VMA(2), VMA(3), VMA(4), args[5] );
 
@@ -628,95 +634,67 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->aas.AAS_AreaReachability( args[1] );
 	case BOTLIB_AAS_BEST_REACHABLE_AREA:
 		return botlib_export->aas.AAS_BestReachableArea( VMA(1), VMA(2), VMA(3), VMA(4) );
+	case BOTLIB_AAS_BEST_REACHABLE_FROM_JUMP_PAD_AREA:
+		return botlib_export->aas.AAS_BestReachableFromJumpPadArea( VMA(1), VMA(2), VMA(3) );
+	case BOTLIB_AAS_NEXT_MODEL_REACHABILITY:
+		return botlib_export->aas.AAS_NextModelReachability( args[1], args[2] );
+	case BOTLIB_AAS_AREA_GROUND_FACE_AREA:
+		return FloatAsInt( botlib_export->aas.AAS_AreaGroundFaceArea( args[1] ) );
+	case BOTLIB_AAS_AREA_CROUCH:
+		return botlib_export->aas.AAS_AreaCrouch( args[1] );
+	case BOTLIB_AAS_AREA_SWIM:
+		return botlib_export->aas.AAS_AreaSwim( args[1] );
+	case BOTLIB_AAS_AREA_LIQUID:
+		return botlib_export->aas.AAS_AreaLiquid( args[1] );
+	case BOTLIB_AAS_AREA_LAVA:
+		return botlib_export->aas.AAS_AreaLava( args[1] );
+	case BOTLIB_AAS_AREA_SLIME:
+		return botlib_export->aas.AAS_AreaSlime( args[1] );
+	case BOTLIB_AAS_AREA_GROUNDED:
+		return botlib_export->aas.AAS_AreaGrounded( args[1] );
+	case BOTLIB_AAS_AREA_LADDER:
+		return botlib_export->aas.AAS_AreaLadder( args[1] );
+	case BOTLIB_AAS_AREA_JUMP_PAD:
+		return botlib_export->aas.AAS_AreaJumpPad( args[1] );
+	case BOTLIB_AAS_AREA_DO_NOT_ENTER:
+		return botlib_export->aas.AAS_AreaDoNotEnter( args[1] );
 
-	case BOTLIB_AAS_AREA_TRAVEL_TIME_TO_GOAL_AREA:
-		return botlib_export->aas.AAS_AreaTravelTimeToGoalArea( args[1], VMA(2), args[3], args[4] );
+	case BOTLIB_AAS_TRAVEL_FLAG_FOR_TYPE:
+		return botlib_export->aas.AAS_TravelFlagForType( args[1] );
+	case BOTLIB_AAS_AREA_CONTENTS_TRAVEL_FLAGS:
+		return botlib_export->aas.AAS_AreaContentsTravelFlags( args[1] );
+	case BOTLIB_AAS_NEXT_AREA_REACHABILITY:
+		return botlib_export->aas.AAS_NextAreaReachability( args[1], args[2] );
+	case BOTLIB_AAS_REACHABILITY_FROM_NUM:
+		botlib_export->aas.AAS_ReachabilityFromNum( args[1], VMA(2) );
+		return 0;
+	case BOTLIB_AAS_RANDOM_GOAL_AREA:
+		return botlib_export->aas.AAS_RandomGoalArea( args[1], args[2], VMA(3), VMA(4) );
 	case BOTLIB_AAS_ENABLE_ROUTING_AREA:
 		return botlib_export->aas.AAS_EnableRoutingArea( args[1], args[2] );
+	case BOTLIB_AAS_AREA_TRAVEL_TIME:
+		return botlib_export->aas.AAS_AreaTravelTime( args[1], VMA(2), VMA(3) );
+	case BOTLIB_AAS_AREA_TRAVEL_TIME_TO_GOAL_AREA:
+		return botlib_export->aas.AAS_AreaTravelTimeToGoalArea( args[1], VMA(2), args[3], args[4] );
 	case BOTLIB_AAS_PREDICT_ROUTE:
 		return botlib_export->aas.AAS_PredictRoute( VMA(1), args[2], VMA(3), args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11] );
 
-	case BOTLIB_AAS_SWIMMING:
-		return botlib_export->aas.AAS_Swimming( VMA(1) );
 	case BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT:
 		return botlib_export->aas.AAS_PredictClientMovement( VMA(1), args[2], VMA(3), args[4], args[5],
 			VMA(6), VMA(7), args[8], args[9], VMF(10), args[11], args[12], args[13] );
-
-	case BOTLIB_EA_SAY:
-		botlib_export->ea.EA_Say( args[1], VMA(2) );
+	case BOTLIB_AAS_ON_GROUND:
+		return botlib_export->aas.AAS_OnGround( VMA(1), args[2], args[3] );
+	case BOTLIB_AAS_SWIMMING:
+		return botlib_export->aas.AAS_Swimming( VMA(1) );
+	case BOTLIB_AAS_JUMP_REACH_RUN_START:
+		botlib_export->aas.AAS_JumpReachRunStart( VMA(1), VMA(2) );
 		return 0;
-	case BOTLIB_EA_SAY_TEAM:
-		botlib_export->ea.EA_SayTeam( args[1], VMA(2) );
-		return 0;
-	case BOTLIB_EA_COMMAND:
-		botlib_export->ea.EA_Command( args[1], VMA(2) );
-		return 0;
-
-	case BOTLIB_EA_ACTION:
-		botlib_export->ea.EA_Action( args[1], args[2] );
-		return 0;
-	case BOTLIB_EA_GESTURE:
-		botlib_export->ea.EA_Gesture( args[1] );
-		return 0;
-	case BOTLIB_EA_TALK:
-		botlib_export->ea.EA_Talk( args[1] );
-		return 0;
-	case BOTLIB_EA_ATTACK:
-		botlib_export->ea.EA_Attack( args[1] );
-		return 0;
-	case BOTLIB_EA_USE:
-		botlib_export->ea.EA_Use( args[1] );
-		return 0;
-	case BOTLIB_EA_RESPAWN:
-		botlib_export->ea.EA_Respawn( args[1] );
-		return 0;
-	case BOTLIB_EA_CROUCH:
-		botlib_export->ea.EA_Crouch( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE_UP:
-		botlib_export->ea.EA_MoveUp( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE_DOWN:
-		botlib_export->ea.EA_MoveDown( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE_FORWARD:
-		botlib_export->ea.EA_MoveForward( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE_BACK:
-		botlib_export->ea.EA_MoveBack( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE_LEFT:
-		botlib_export->ea.EA_MoveLeft( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE_RIGHT:
-		botlib_export->ea.EA_MoveRight( args[1] );
-		return 0;
-
-	case BOTLIB_EA_SELECT_WEAPON:
-		botlib_export->ea.EA_SelectWeapon( args[1], args[2] );
-		return 0;
-	case BOTLIB_EA_JUMP:
-		botlib_export->ea.EA_Jump( args[1] );
-		return 0;
-	case BOTLIB_EA_DELAYED_JUMP:
-		botlib_export->ea.EA_DelayedJump( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE:
-		botlib_export->ea.EA_Move( args[1], VMA(2), VMF(3) );
-		return 0;
-	case BOTLIB_EA_VIEW:
-		botlib_export->ea.EA_View( args[1], VMA(2) );
-		return 0;
-
-	case BOTLIB_EA_END_REGULAR:
-		botlib_export->ea.EA_EndRegular( args[1], VMF(2) );
-		return 0;
-	case BOTLIB_EA_GET_INPUT:
-		botlib_export->ea.EA_GetInput( args[1], VMF(2), VMA(3) );
-		return 0;
-	case BOTLIB_EA_RESET_INPUT:
-		botlib_export->ea.EA_ResetInput( args[1] );
-		return 0;
+	case BOTLIB_AAS_AGAINST_LADDER:
+		return botlib_export->aas.AAS_AgainstLadder( VMA(1) );
+	case BOTLIB_AAS_HORIZONTAL_VELOCITY_FOR_JUMP:
+		return botlib_export->aas.AAS_HorizontalVelocityForJump( VMF(1), VMA(2), VMA(3), VMA(4) );
+	case BOTLIB_AAS_DROP_TO_FLOOR:
+		return botlib_export->aas.AAS_DropToFloor( VMA(1), VMA(2), VMA(3) );
 
 	case BOTLIB_AI_LOAD_CHARACTER:
 		return botlib_export->ai.BotLoadCharacter( VMA(1), VMF(2) );
@@ -785,130 +763,6 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case BOTLIB_AI_SET_CHAT_NAME:
 		botlib_export->ai.BotSetChatName( args[1], VMA(2), args[3] );
-		return 0;
-
-	case BOTLIB_AI_RESET_GOAL_STATE:
-		botlib_export->ai.BotResetGoalState( args[1] );
-		return 0;
-	case BOTLIB_AI_RESET_AVOID_GOALS:
-		botlib_export->ai.BotResetAvoidGoals( args[1] );
-		return 0;
-	case BOTLIB_AI_REMOVE_FROM_AVOID_GOALS:
-		botlib_export->ai.BotRemoveFromAvoidGoals( args[1], args[2] );
-		return 0;
-	case BOTLIB_AI_PUSH_GOAL:
-		botlib_export->ai.BotPushGoal( args[1], VMA(2) );
-		return 0;
-	case BOTLIB_AI_POP_GOAL:
-		botlib_export->ai.BotPopGoal( args[1] );
-		return 0;
-	case BOTLIB_AI_EMPTY_GOAL_STACK:
-		botlib_export->ai.BotEmptyGoalStack( args[1] );
-		return 0;
-	case BOTLIB_AI_DUMP_AVOID_GOALS:
-		botlib_export->ai.BotDumpAvoidGoals( args[1] );
-		return 0;
-	case BOTLIB_AI_DUMP_GOAL_STACK:
-		botlib_export->ai.BotDumpGoalStack( args[1] );
-		return 0;
-	case BOTLIB_AI_GOAL_NAME:
-		botlib_export->ai.BotGoalName( args[1], VMA(2), args[3] );
-		return 0;
-	case BOTLIB_AI_GET_TOP_GOAL:
-		return botlib_export->ai.BotGetTopGoal( args[1], VMA(2) );
-	case BOTLIB_AI_GET_SECOND_GOAL:
-		return botlib_export->ai.BotGetSecondGoal( args[1], VMA(2) );
-	case BOTLIB_AI_CHOOSE_LTG_ITEM:
-		return botlib_export->ai.BotChooseLTGItem( args[1], VMA(2), VMA(3), args[4] );
-	case BOTLIB_AI_CHOOSE_NBG_ITEM:
-		return botlib_export->ai.BotChooseNBGItem( args[1], VMA(2), VMA(3), args[4], VMA(5), VMF(6) );
-	case BOTLIB_AI_TOUCHING_GOAL:
-		return botlib_export->ai.BotTouchingGoal( VMA(1), VMA(2) );
-	case BOTLIB_AI_ITEM_GOAL_IN_VIS_BUT_NOT_VISIBLE:
-		return botlib_export->ai.BotItemGoalInVisButNotVisible( args[1], VMA(2), VMA(3), VMA(4) );
-	case BOTLIB_AI_GET_LEVEL_ITEM_GOAL:
-		return botlib_export->ai.BotGetLevelItemGoal( args[1], VMA(2), VMA(3) );
-	case BOTLIB_AI_GET_NEXT_CAMP_SPOT_GOAL:
-		return botlib_export->ai.BotGetNextCampSpotGoal( args[1], VMA(2) );
-	case BOTLIB_AI_GET_MAP_LOCATION_GOAL:
-		return botlib_export->ai.BotGetMapLocationGoal( VMA(1), VMA(2) );
-	case BOTLIB_AI_AVOID_GOAL_TIME:
-		return FloatAsInt( botlib_export->ai.BotAvoidGoalTime( args[1], args[2] ) );
-	case BOTLIB_AI_SET_AVOID_GOAL_TIME:
-		botlib_export->ai.BotSetAvoidGoalTime( args[1], args[2], VMF(3));
-		return 0;
-	case BOTLIB_AI_INIT_LEVEL_ITEMS:
-		botlib_export->ai.BotInitLevelItems();
-		return 0;
-	case BOTLIB_AI_UPDATE_ENTITY_ITEMS:
-		botlib_export->ai.BotUpdateEntityItems();
-		return 0;
-	case BOTLIB_AI_LOAD_ITEM_WEIGHTS:
-		return botlib_export->ai.BotLoadItemWeights( args[1], VMA(2) );
-	case BOTLIB_AI_FREE_ITEM_WEIGHTS:
-		botlib_export->ai.BotFreeItemWeights( args[1] );
-		return 0;
-	case BOTLIB_AI_INTERBREED_GOAL_FUZZY_LOGIC:
-		botlib_export->ai.BotInterbreedGoalFuzzyLogic( args[1], args[2], args[3] );
-		return 0;
-	case BOTLIB_AI_SAVE_GOAL_FUZZY_LOGIC:
-		botlib_export->ai.BotSaveGoalFuzzyLogic( args[1], VMA(2) );
-		return 0;
-	case BOTLIB_AI_MUTATE_GOAL_FUZZY_LOGIC:
-		botlib_export->ai.BotMutateGoalFuzzyLogic( args[1], VMF(2) );
-		return 0;
-	case BOTLIB_AI_ALLOC_GOAL_STATE:
-		return botlib_export->ai.BotAllocGoalState( args[1] );
-	case BOTLIB_AI_FREE_GOAL_STATE:
-		botlib_export->ai.BotFreeGoalState( args[1] );
-		return 0;
-
-	case BOTLIB_AI_RESET_MOVE_STATE:
-		botlib_export->ai.BotResetMoveState( args[1] );
-		return 0;
-	case BOTLIB_AI_ADD_AVOID_SPOT:
-		botlib_export->ai.BotAddAvoidSpot( args[1], VMA(2), VMF(3), args[4] );
-		return 0;
-	case BOTLIB_AI_MOVE_TO_GOAL:
-		botlib_export->ai.BotMoveToGoal( VMA(1), args[2], VMA(3), args[4] );
-		return 0;
-	case BOTLIB_AI_MOVE_IN_DIRECTION:
-		return botlib_export->ai.BotMoveInDirection( args[1], VMA(2), VMF(3), args[4] );
-	case BOTLIB_AI_RESET_AVOID_REACH:
-		botlib_export->ai.BotResetAvoidReach( args[1] );
-		return 0;
-	case BOTLIB_AI_RESET_LAST_AVOID_REACH:
-		botlib_export->ai.BotResetLastAvoidReach( args[1] );
-		return 0;
-	case BOTLIB_AI_REACHABILITY_AREA:
-		return botlib_export->ai.BotReachabilityArea( VMA(1), args[2] );
-	case BOTLIB_AI_MOVEMENT_VIEW_TARGET:
-		return botlib_export->ai.BotMovementViewTarget( args[1], VMA(2), args[3], VMF(4), VMA(5) );
-	case BOTLIB_AI_PREDICT_VISIBLE_POSITION:
-		return botlib_export->ai.BotPredictVisiblePosition( VMA(1), args[2], VMA(3), args[4], VMA(5) );
-	case BOTLIB_AI_ALLOC_MOVE_STATE:
-		return botlib_export->ai.BotAllocMoveState();
-	case BOTLIB_AI_FREE_MOVE_STATE:
-		botlib_export->ai.BotFreeMoveState( args[1] );
-		return 0;
-	case BOTLIB_AI_INIT_MOVE_STATE:
-		botlib_export->ai.BotInitMoveState( args[1], VMA(2) );
-		return 0;
-
-	case BOTLIB_AI_CHOOSE_BEST_FIGHT_WEAPON:
-		return botlib_export->ai.BotChooseBestFightWeapon( args[1], VMA(2) );
-	case BOTLIB_AI_GET_WEAPON_INFO:
-		botlib_export->ai.BotGetWeaponInfo( args[1], args[2], VMA(3) );
-		return 0;
-	case BOTLIB_AI_LOAD_WEAPON_WEIGHTS:
-		return botlib_export->ai.BotLoadWeaponWeights( args[1], VMA(2) );
-	case BOTLIB_AI_ALLOC_WEAPON_STATE:
-		return botlib_export->ai.BotAllocWeaponState();
-	case BOTLIB_AI_FREE_WEAPON_STATE:
-		botlib_export->ai.BotFreeWeaponState( args[1] );
-		return 0;
-	case BOTLIB_AI_RESET_WEAPON_STATE:
-		botlib_export->ai.BotResetWeaponState( args[1] );
 		return 0;
 
 	case BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION:

@@ -281,12 +281,44 @@ typedef struct bot_state_s
 	int patrolflags;								//patrol flags
 } bot_state_t;
 
+//entity info
+typedef struct aas_entityinfo_s
+{
+	int		valid;			// true if updated this frame
+	int		type;			// entity type
+	int		flags;			// entity flags
+	float	ltime;			// local time
+	float	update_time;	// time between last and current update
+	int		number;			// number of the entity
+	vec3_t	origin;			// origin of the entity
+	vec3_t	angles;			// angles of the model
+	vec3_t	old_origin;		// for lerping
+	vec3_t	lastvisorigin;	// last visible origin
+	vec3_t	mins;			// bounding box minimums
+	vec3_t	maxs;			// bounding box maximums
+	int		groundent;		// ground entity
+	int		solid;			// solid type
+	int		modelindex;		// model used
+	int		modelindex2;	// weapons, CTF flags, etc
+	int		frame;			// model frame number
+	int		event;			// impulse events -- muzzle flashes, footsteps, etc
+	int		eventParm;		// even parameter
+	int		powerups;		// bit flags
+	int		weapon;			// determines weapon and flash model, etc
+	int		legsAnim;		// mask off ANIM_TOGGLEBIT
+	int		torsoAnim;		// mask off ANIM_TOGGLEBIT
+} aas_entityinfo_t;
+
 //resets the whole bot state
 void BotResetState(bot_state_t *bs);
 //returns the number of bots in the game
 int NumBots(void);
 //returns info about the entity
 void BotEntityInfo(int entnum, aas_entityinfo_t *info);
+//returns next entity number that's valid for bot AI or 0 if no more entities left
+int BotNextEntity(int entnum);
+//returns float valud of a libvar
+float BotLibVarGetValue(const char *name);
 
 extern float floattime;
 #define FloatTime() floattime
@@ -299,3 +331,5 @@ int		BotAI_GetClientState( int clientNum, playerState_t *state );
 int		BotAI_GetEntityState( int entityNum, entityState_t *state );
 int		BotAI_GetSnapshotEntity( int clientNum, int sequence, entityState_t *state );
 int		BotTeamLeader(bot_state_t *bs);
+
+extern vmCvar_t bot_developer;

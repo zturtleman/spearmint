@@ -67,6 +67,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define CROUCH_VIEWHEIGHT	12
 #define	DEAD_VIEWHEIGHT		-16
 
+#define STEPSIZE			18
+
 //
 // config strings are a general means of communicating variable length strings
 // from the server to all connected clients.
@@ -1101,6 +1103,47 @@ int BG_GetTracemapGroundFloor( void );
 int BG_GetTracemapGroundCeil( void );
 void etpro_FinalizeTracemapClamp( int *x, int *y );
 
+void PC_SourceWarning(int handle, char *format, ...) __attribute__ ((format (printf, 2, 3)));
+void PC_SourceError(int handle, char *format, ...) __attribute__ ((format (printf, 2, 3)));
+int PC_CheckTokenString(int handle, char *string);
+int PC_ExpectTokenString(int handle, char *string);
+int PC_ExpectTokenType(int handle, int type, int subtype, pc_token_t *token);
+int PC_ExpectAnyToken(int handle, pc_token_t *token);
+
+#define MAX_STRINGFIELD				80
+//field types
+#define FT_CHAR						1			// char
+#define FT_INT							2			// int
+#define FT_FLOAT						3			// float
+#define FT_STRING						4			// char [MAX_STRINGFIELD]
+#define FT_STRUCT						6			// struct (sub structure)
+//type only mask
+#define FT_TYPE						0x00FF	// only type, clear subtype
+//sub types
+#define FT_ARRAY						0x0100	// array of type
+#define FT_BOUNDED					0x0200	// bounded value
+#define FT_UNSIGNED					0x0400
+
+//structure field definition
+typedef struct fielddef_s
+{
+	char *name;										//name of the field
+	int offset;										//offset in the structure
+	int type;										//type of the field
+	//type specific fields
+	int maxarray;									//maximum array size
+	float floatmin, floatmax;					//float min and max
+	struct structdef_s *substruct;			//sub structure
+} fielddef_t;
+
+//structure definition
+typedef struct structdef_s
+{
+	int size;
+	fielddef_t *fields;
+} structdef_t;
+
+qboolean PC_ReadStructure(int source, structdef_t *def, void *structure);
 
 //
 // System calls shared by game, cgame, and ui.
@@ -1156,7 +1199,7 @@ int		trap_FS_Rename( const char *from, const char *to );
 
 int		trap_PC_AddGlobalDefine( char *define );
 void	trap_PC_RemoveAllGlobalDefines( void );
-int		trap_PC_LoadSource( const char *filename );
+int		trap_PC_LoadSource( const char *filename, const char *basepath );
 int		trap_PC_FreeSource( int handle );
 int		trap_PC_ReadToken( int handle, pc_token_t *pc_token );
 void	trap_PC_UnreadToken( int handle );

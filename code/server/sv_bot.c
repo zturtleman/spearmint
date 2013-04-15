@@ -473,7 +473,7 @@ client_t *SV_ClientForPlayerNum( int playerNum ) {
 SV_BotClientCommand
 ==================
 */
-static void BotClientCommand( int playerNum, char *command ) {
+void SV_ForcePlayerCommand( int playerNum, const char *command ) {
 	client_t *client = SV_ClientForPlayerNum( playerNum );
 
 	if ( !client )
@@ -587,7 +587,7 @@ void SV_BotInitBotLib(void) {
 	botlib_import.inPVS = BotImport_inPVS;
 	botlib_import.BSPEntityData = BotImport_BSPEntityData;
 	botlib_import.BSPModelMinsMaxsOrigin = BotImport_BSPModelMinsMaxsOrigin;
-	botlib_import.BotClientCommand = BotClientCommand;
+	botlib_import.BotClientCommand = SV_ForcePlayerCommand;
 
 	//memory management
 	botlib_import.GetMemory = BotImport_GetMemory;

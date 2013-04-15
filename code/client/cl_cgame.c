@@ -1485,7 +1485,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		botlib_export->PC_RemoveAllGlobalDefines();
 		return 0;
 	case CG_PC_LOAD_SOURCE:
-		return botlib_export->PC_LoadSourceHandle( VMA(1) );
+		return botlib_export->PC_LoadSourceHandle( VMA(1), VMA(2) );
 	case CG_PC_FREE_SOURCE:
 		return botlib_export->PC_FreeSourceHandle( args[1] );
 	case CG_PC_READ_TOKEN:

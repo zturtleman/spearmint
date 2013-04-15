@@ -1666,9 +1666,9 @@ void CG_ParseMenu(const char *menuFile) {
 	pc_token_t token;
 	int handle;
 
-	handle = trap_PC_LoadSource(menuFile);
+	handle = trap_PC_LoadSource(menuFile, NULL);
 	if (!handle)
-		handle = trap_PC_LoadSource("ui/testhud.menu");
+		handle = trap_PC_LoadSource("ui/testhud.menu", NULL);
 	if (!handle)
 		return;
 

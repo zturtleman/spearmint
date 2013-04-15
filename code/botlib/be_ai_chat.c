@@ -50,7 +50,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "be_aas.h"
 #include "be_aas_funcs.h"
 #include "be_interface.h"
-#include "be_ea.h"
 #include "be_ai_chat.h"
 
 
@@ -2828,13 +2827,13 @@ void BotEnterChat(int chatstate, int clientto, int sendto)
 		else {
 			switch(sendto) {
 				case CHAT_TEAM:
-					EA_Command(cs->client, va("say_team %s", cs->chatmessage));
+					botimport.BotClientCommand(cs->client, va("say_team %s", cs->chatmessage));
 					break;
 				case CHAT_TELL:
-					EA_Command(cs->client, va("tell %d %s", clientto, cs->chatmessage));
+					botimport.BotClientCommand(cs->client, va("tell %d %s", clientto, cs->chatmessage));
 					break;
 				default: //CHAT_ALL
-					EA_Command(cs->client, va("say %s", cs->chatmessage));
+					botimport.BotClientCommand(cs->client, va("say %s", cs->chatmessage));
 					break;
 			}
 		}

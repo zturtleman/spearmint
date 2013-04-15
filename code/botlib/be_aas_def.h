@@ -82,8 +82,8 @@ typedef struct bsp_entdata_s
 //entity
 typedef struct aas_entity_s
 {
-	//entity info
-	aas_entityinfo_t i;
+	//entity updated this frame
+	qboolean valid;
 	//links into the AAS areas
 	aas_link_t *areas;
 	//links into the BSP leaves

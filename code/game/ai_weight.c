@@ -37,26 +37,38 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  *****************************************************************************/
 
-#include "../qcommon/q_shared.h"
-#include "l_memory.h"
-#include "l_log.h"
-#include "l_utils.h"
-#include "l_script.h"
-#include "l_precomp.h"
-#include "l_struct.h"
-#include "l_libvar.h"
-#include "aasfile.h"
-#include "botlib.h"
-#include "be_aas.h"
-#include "be_aas_funcs.h"
-#include "be_interface.h"
-#include "be_ai_weight.h"
+#include "g_local.h"
+#include "../botlib/botlib.h"
+#include "../botlib/be_aas.h"
+#include "../botlib/be_ai_char.h"
+#include "../botlib/be_ai_chat.h"
+#include "../botlib/be_ai_gen.h"
+//
+#include "ai_ea.h"
+#include "ai_goal.h"
+#include "ai_move.h"
+#include "ai_weap.h"
+#include "ai_weight.h"
+//
+#include "ai_main.h"
+#include "ai_dmq3.h"
+#include "ai_chat.h"
+#include "ai_cmd.h"
+#include "ai_vcmd.h"
+#include "ai_dmnet.h"
+#include "ai_team.h"
+//
+#include "chars.h"				//characteristics
+#include "inv.h"				//indexes into the inventory
+#include "syn.h"				//synonyms
+#include "match.h"				//string matching types and vars
+
 
 #define MAX_INVENTORYVALUE			999999
 #define EVALUATERECURSIVELY
 
 #define MAX_WEIGHT_FILES			128
-weightconfig_t	*weightFileList[MAX_WEIGHT_FILES];
+weightconfig_t	weightFileList[MAX_WEIGHT_FILES];
 
 //===========================================================================
 //
@@ -64,25 +76,25 @@ weightconfig_t	*weightFileList[MAX_WEIGHT_FILES];
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int ReadValue(source_t *source, float *value)
+int ReadValue(int source, float *value)
 {
-	token_t token;
+	pc_token_t token;
 
 	if (!PC_ExpectAnyToken(source, &token)) return qfalse;
 	if (!strcmp(token.string, "-"))
 	{
-		SourceWarning(source, "negative value set to zero");
+		PC_SourceWarning(source, "negative value set to zero");
 
 		if(!PC_ExpectAnyToken(source, &token))
 		{
-			SourceError(source, "Missing return value");
+			PC_SourceError(source, "Missing return value");
 			return qfalse;
 		}
 	}
 
 	if (token.type != TT_NUMBER)
 	{
-		SourceError(source, "invalid return value %s", token.string);
+		PC_SourceError(source, "invalid return value %s", token.string);
 		return qfalse;
 	}
 	
@@ -95,7 +107,7 @@ int ReadValue(source_t *source, float *value)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int ReadFuzzyWeight(source_t *source, fuzzyseperator_t *fs)
+int ReadFuzzyWeight(int source, fuzzyseperator_t *fs)
 {
 	if (PC_CheckTokenString(source, "balance"))
 	{
@@ -126,10 +138,12 @@ int ReadFuzzyWeight(source_t *source, fuzzyseperator_t *fs)
 //===========================================================================
 void FreeFuzzySeperators_r(fuzzyseperator_t *fs)
 {
+#if 0 // game currently can't free memory
 	if (!fs) return;
 	if (fs->child) FreeFuzzySeperators_r(fs->child);
 	if (fs->next) FreeFuzzySeperators_r(fs->next);
 	FreeMemory(fs);
+#endif
 } //end of the function FreeFuzzySeperators
 //===========================================================================
 //
@@ -144,9 +158,9 @@ void FreeWeightConfig2(weightconfig_t *config)
 	for (i = 0; i < config->numweights; i++)
 	{
 		FreeFuzzySeperators_r(config->weights[i].firstseperator);
-		if (config->weights[i].name) FreeMemory(config->weights[i].name);
 	} //end for
-	FreeMemory(config);
+	// ZTM: NOTE: weightconfig_t usually static now, and game can't free it anyway.
+	//FreeMemory(config);
 } //end of the function FreeWeightConfig2
 //===========================================================================
 //
@@ -156,7 +170,7 @@ void FreeWeightConfig2(weightconfig_t *config)
 //===========================================================================
 void FreeWeightConfig(weightconfig_t *config)
 {
-	if (!LibVarGetValue("bot_reloadcharacters")) return;
+	if (!BotLibVarGetValue("bot_reloadcharacters")) return;
 	FreeWeightConfig2(config);
 } //end of the function FreeWeightConfig
 //===========================================================================
@@ -165,10 +179,32 @@ void FreeWeightConfig(weightconfig_t *config)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-fuzzyseperator_t *ReadFuzzySeperators_r(source_t *source)
+void ErrorWeightConfig(weightconfig_t *config)
+{
+	// game can't free all the fuzzy separates, so error instead
+	Com_Error(ERR_DROP, "Failed loading weight file %s", config->filename );
+} //end of the function ErrorWeightConfig
+//===========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
+void ErrorFuzzySeperators_r(fuzzyseperator_t *fs)
+{
+	// game can't free all the fuzzy separates, so error instead
+	Com_Error(ERR_DROP, "Failed loading weight file" );
+} //end of the function ErrorFuzzySeperators_r
+//===========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
+fuzzyseperator_t *ReadFuzzySeperators_r(int source)
 {
 	int newindent, index, def, founddefault;
-	token_t token;
+	pc_token_t token;
 	fuzzyseperator_t *fs, *lastfs, *firstfs;
 
 	founddefault = qfalse;
@@ -185,7 +221,7 @@ fuzzyseperator_t *ReadFuzzySeperators_r(source_t *source)
 		def = !strcmp(token.string, "default");
 		if (def || !strcmp(token.string, "case"))
 		{
-			fs = (fuzzyseperator_t *) GetClearedMemory(sizeof(fuzzyseperator_t));
+			fs = (fuzzyseperator_t *) G_Alloc(sizeof(fuzzyseperator_t));
 			fs->index = index;
 			if (lastfs) lastfs->next = fs;
 			else firstfs = fs;
@@ -194,8 +230,8 @@ fuzzyseperator_t *ReadFuzzySeperators_r(source_t *source)
 			{
 				if (founddefault)
 				{
-					SourceError(source, "switch already has a default");
-					FreeFuzzySeperators_r(firstfs);
+					PC_SourceError(source, "switch already has a default");
+					ErrorFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 				fs->value = MAX_INVENTORYVALUE;
@@ -205,14 +241,14 @@ fuzzyseperator_t *ReadFuzzySeperators_r(source_t *source)
 			{
 				if (!PC_ExpectTokenType(source, TT_NUMBER, TT_INTEGER, &token))
 				{
-					FreeFuzzySeperators_r(firstfs);
+					ErrorFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 				fs->value = token.intvalue;
 			} //end else
 			if (!PC_ExpectTokenString(source, ":") || !PC_ExpectAnyToken(source, &token))
 			{
-				FreeFuzzySeperators_r(firstfs);
+				ErrorFuzzySeperators_r(firstfs);
 				return NULL;
 			} //end if
 			newindent = qfalse;
@@ -221,7 +257,7 @@ fuzzyseperator_t *ReadFuzzySeperators_r(source_t *source)
 				newindent = qtrue;
 				if (!PC_ExpectAnyToken(source, &token))
 				{
-					FreeFuzzySeperators_r(firstfs);
+					ErrorFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 			} //end if
@@ -229,7 +265,7 @@ fuzzyseperator_t *ReadFuzzySeperators_r(source_t *source)
 			{
 				if (!ReadFuzzyWeight(source, fs))
 				{
-					FreeFuzzySeperators_r(firstfs);
+					ErrorFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 			} //end if
@@ -238,41 +274,41 @@ fuzzyseperator_t *ReadFuzzySeperators_r(source_t *source)
 				fs->child = ReadFuzzySeperators_r(source);
 				if (!fs->child)
 				{
-					FreeFuzzySeperators_r(firstfs);
+					ErrorFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 			} //end else if
 			else
 			{
-				SourceError(source, "invalid name %s", token.string);
+				PC_SourceError(source, "invalid name %s", token.string);
 				return NULL;
 			} //end else
 			if (newindent)
 			{
 				if (!PC_ExpectTokenString(source, "}"))
 				{
-					FreeFuzzySeperators_r(firstfs);
+					ErrorFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 			} //end if
 		} //end if
 		else
 		{
-			FreeFuzzySeperators_r(firstfs);
-			SourceError(source, "invalid name %s", token.string);
+			ErrorFuzzySeperators_r(firstfs);
+			PC_SourceError(source, "invalid name %s", token.string);
 			return NULL;
 		} //end else
 		if (!PC_ExpectAnyToken(source, &token))
 		{
-			FreeFuzzySeperators_r(firstfs);
+			ErrorFuzzySeperators_r(firstfs);
 			return NULL;
 		} //end if
 	} while(strcmp(token.string, "}"));
 	//
 	if (!founddefault)
 	{
-		SourceWarning(source, "switch without default");
-		fs = (fuzzyseperator_t *) GetClearedMemory(sizeof(fuzzyseperator_t));
+		PC_SourceWarning(source, "switch without default");
+		fs = (fuzzyseperator_t *) G_Alloc(sizeof(fuzzyseperator_t));
 		fs->index = index;
 		fs->value = MAX_INVENTORYVALUE;
 		fs->weight = 0;
@@ -293,8 +329,8 @@ fuzzyseperator_t *ReadFuzzySeperators_r(source_t *source)
 weightconfig_t *ReadWeightConfig(char *filename)
 {
 	int newindent, avail = 0, n;
-	token_t token;
-	source_t *source;
+	pc_token_t token;
+	int source;
 	fuzzyseperator_t *fs;
 	weightconfig_t *config = NULL;
 #ifdef DEBUG
@@ -303,13 +339,13 @@ weightconfig_t *ReadWeightConfig(char *filename)
 	starttime = Sys_MilliSeconds();
 #endif //DEBUG
 
-	if (!LibVarGetValue("bot_reloadcharacters"))
+	if (!BotLibVarGetValue("bot_reloadcharacters"))
 	{
 		avail = -1;
 		for( n = 0; n < MAX_WEIGHT_FILES; n++ )
 		{
-			config = weightFileList[n];
-			if( !config )
+			config = &weightFileList[n];
+			if( !config->valid )
 			{
 				if( avail == -1 )
 				{
@@ -319,52 +355,58 @@ weightconfig_t *ReadWeightConfig(char *filename)
 			} //end if
 			if( strcmp( filename, config->filename ) == 0 )
 			{
-				//botimport.Print( PRT_MESSAGE, "retained %s\n", filename );
+				//BotAI_Print( PRT_MESSAGE, "retained %s\n", filename );
 				return config;
 			} //end if
 		} //end for
 
 		if( avail == -1 )
 		{
-			botimport.Print( PRT_ERROR, "weightFileList was full trying to load %s\n", filename );
+			BotAI_Print( PRT_ERROR, "weightFileList was full trying to load %s\n", filename );
 			return NULL;
 		} //end if
 	} //end if
 
-	PC_SetBaseFolder(BOTFILESBASEFOLDER);
-	source = LoadSourceFile(filename);
+	source = trap_PC_LoadSource(filename, BOTFILESBASEFOLDER);
 	if (!source)
 	{
-		botimport.Print(PRT_ERROR, "counldn't load %s\n", filename);
+		BotAI_Print(PRT_ERROR, "counldn't load %s\n", filename);
 		return NULL;
 	} //end if
 	//
-	config = (weightconfig_t *) GetClearedMemory(sizeof(weightconfig_t));
+	if (!BotLibVarGetValue("bot_reloadcharacters"))
+	{
+		config = &weightFileList[avail];
+	}
+	else
+	{
+		config = (weightconfig_t *) G_Alloc(sizeof(weightconfig_t));
+	}
+	//
+	config->valid = qfalse;
 	config->numweights = 0;
 	Q_strncpyz( config->filename, filename, sizeof(config->filename) );
 	//parse the item config file
-	while(PC_ReadToken(source, &token))
+	while(trap_PC_ReadToken(source, &token))
 	{
 		if (!strcmp(token.string, "weight"))
 		{
 			if (config->numweights >= MAX_WEIGHTS)
 			{
-				SourceWarning(source, "too many fuzzy weights");
+				PC_SourceWarning(source, "too many fuzzy weights");
 				break;
 			} //end if
 			if (!PC_ExpectTokenType(source, TT_STRING, 0, &token))
 			{
-				FreeWeightConfig(config);
-				FreeSource(source);
+				ErrorWeightConfig(config);
+				trap_PC_FreeSource(source);
 				return NULL;
 			} //end if
-			StripDoubleQuotes(token.string);
-			config->weights[config->numweights].name = (char *) GetClearedMemory(strlen(token.string) + 1);
-			strcpy(config->weights[config->numweights].name, token.string);
+			Q_strncpyz(config->weights[config->numweights].name, token.string, sizeof (config->weights[config->numweights].name));
 			if (!PC_ExpectAnyToken(source, &token))
 			{
-				FreeWeightConfig(config);
-				FreeSource(source);
+				ErrorWeightConfig(config);
+				trap_PC_FreeSource(source);
 				return NULL;
 			} //end if
 			newindent = qfalse;
@@ -373,8 +415,8 @@ weightconfig_t *ReadWeightConfig(char *filename)
 				newindent = qtrue;
 				if (!PC_ExpectAnyToken(source, &token))
 				{
-					FreeWeightConfig(config);
-					FreeSource(source);
+					ErrorWeightConfig(config);
+					trap_PC_FreeSource(source);
 					return NULL;
 				} //end if
 			} //end if
@@ -383,41 +425,44 @@ weightconfig_t *ReadWeightConfig(char *filename)
 				fs = ReadFuzzySeperators_r(source);
 				if (!fs)
 				{
-					FreeWeightConfig(config);
-					FreeSource(source);
+					ErrorWeightConfig(config);
+					trap_PC_FreeSource(source);
 					return NULL;
 				} //end if
 				config->weights[config->numweights].firstseperator = fs;
 			} //end if
 			else if (!strcmp(token.string, "return"))
 			{
-				fs = (fuzzyseperator_t *) GetClearedMemory(sizeof(fuzzyseperator_t));
-				fs->index = 0;
-				fs->value = MAX_INVENTORYVALUE;
-				fs->next = NULL;
-				fs->child = NULL;
-				if (!ReadFuzzyWeight(source, fs))
+				fuzzyseperator_t fuzzy;
+
+				Com_Memset(&fuzzy, 0, sizeof (fuzzyseperator_t));
+				fuzzy.index = 0;
+				fuzzy.value = MAX_INVENTORYVALUE;
+				fuzzy.next = NULL;
+				fuzzy.child = NULL;
+				if (!ReadFuzzyWeight(source, &fuzzy))
 				{
-					FreeMemory(fs);
-					FreeWeightConfig(config);
-					FreeSource(source);
+					ErrorWeightConfig(config);
+					trap_PC_FreeSource(source);
 					return NULL;
 				} //end if
+				fs = (fuzzyseperator_t *) G_Alloc(sizeof(fuzzyseperator_t));
+				Com_Memcpy(fs, &fuzzy, sizeof (fuzzyseperator_t));
 				config->weights[config->numweights].firstseperator = fs;
 			} //end else if
 			else
 			{
-				SourceError(source, "invalid name %s", token.string);
-				FreeWeightConfig(config);
-				FreeSource(source);
+				PC_SourceError(source, "invalid name %s", token.string);
+				ErrorWeightConfig(config);
+				trap_PC_FreeSource(source);
 				return NULL;
 			} //end else
 			if (newindent)
 			{
 				if (!PC_ExpectTokenString(source, "}"))
 				{
-					FreeWeightConfig(config);
-					FreeSource(source);
+					ErrorWeightConfig(config);
+					trap_PC_FreeSource(source);
 					return NULL;
 				} //end if
 			} //end if
@@ -425,24 +470,21 @@ weightconfig_t *ReadWeightConfig(char *filename)
 		} //end if
 		else
 		{
-			SourceError(source, "invalid name %s", token.string);
-			FreeWeightConfig(config);
-			FreeSource(source);
+			PC_SourceError(source, "invalid name %s", token.string);
+			ErrorWeightConfig(config);
+			trap_PC_FreeSource(source);
 			return NULL;
 		} //end else
 	} //end while
 	//free the source at the end of a pass
-	FreeSource(source);
+	trap_PC_FreeSource(source);
 	//if the file was located in a pak file
-	botimport.Print(PRT_DEVELOPER, "loaded %s\n", filename);
+	BotAI_Print(PRT_DEVELOPER, "loaded %s\n", filename);
 #ifdef DEBUG
-	botimport.Print(PRT_DEVELOPER, "weights loaded in %d msec\n", Sys_MilliSeconds() - starttime);
+	BotAI_Print(PRT_DEVELOPER, "weights loaded in %d msec\n", Sys_MilliSeconds() - starttime);
 #endif //DEBUG
 	//
-	if (!LibVarGetValue("bot_reloadcharacters"))
-	{
-		weightFileList[avail] = config;
-	} //end if
+	config->valid = qtrue;
 	//
 	return config;
 } //end of the function ReadWeightConfig
@@ -565,7 +607,7 @@ qboolean WriteWeightConfig(char *filename, weightconfig_t *config)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int FindFuzzyWeight(weightconfig_t *wc, char *name)
+int FindFuzzyWeight(weightconfig_t *wc, const char *name)
 {
 	int i;
 
@@ -850,7 +892,7 @@ int InterbreedFuzzySeperator_r(fuzzyseperator_t *fs1, fuzzyseperator_t *fs2,
 	{
 		if (!fs2->child || !fsout->child)
 		{
-			botimport.Print(PRT_ERROR, "cannot interbreed weight configs, unequal child\n");
+			BotAI_Print(PRT_ERROR, "cannot interbreed weight configs, unequal child\n");
 			return qfalse;
 		} //end if
 		if (!InterbreedFuzzySeperator_r(fs2->child, fs2->child, fsout->child))
@@ -862,7 +904,7 @@ int InterbreedFuzzySeperator_r(fuzzyseperator_t *fs1, fuzzyseperator_t *fs2,
 	{
 		if (fs2->type != WT_BALANCE || fsout->type != WT_BALANCE)
 		{
-			botimport.Print(PRT_ERROR, "cannot interbreed weight configs, unequal balance\n");
+			BotAI_Print(PRT_ERROR, "cannot interbreed weight configs, unequal balance\n");
 			return qfalse;
 		} //end if
 		fsout->weight = (fs1->weight + fs2->weight) / 2;
@@ -873,7 +915,7 @@ int InterbreedFuzzySeperator_r(fuzzyseperator_t *fs1, fuzzyseperator_t *fs2,
 	{
 		if (!fs2->next || !fsout->next)
 		{
-			botimport.Print(PRT_ERROR, "cannot interbreed weight configs, unequal next\n");
+			BotAI_Print(PRT_ERROR, "cannot interbreed weight configs, unequal next\n");
 			return qfalse;
 		} //end if
 		if (!InterbreedFuzzySeperator_r(fs1->next, fs2->next, fsout->next))
@@ -898,7 +940,7 @@ void InterbreedWeightConfigs(weightconfig_t *config1, weightconfig_t *config2,
 	if (config1->numweights != config2->numweights ||
 		config1->numweights != configout->numweights)
 	{
-		botimport.Print(PRT_ERROR, "cannot interbreed weight configs, unequal numweights\n");
+		BotAI_Print(PRT_ERROR, "cannot interbreed weight configs, unequal numweights\n");
 		return;
 	} //end if
 	for (i = 0; i < config1->numweights; i++)
@@ -920,10 +962,9 @@ void BotShutdownWeights(void)
 
 	for( i = 0; i < MAX_WEIGHT_FILES; i++ )
 	{
-		if (weightFileList[i])
+		if (weightFileList[i].valid)
 		{
-			FreeWeightConfig2(weightFileList[i]);
-			weightFileList[i] = NULL;
+			FreeWeightConfig2(&weightFileList[i]);
 		} //end if
 	} //end for
 } //end of the function BotShutdownWeights

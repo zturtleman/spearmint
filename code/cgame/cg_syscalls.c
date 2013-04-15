@@ -635,8 +635,8 @@ void trap_PC_RemoveAllGlobalDefines( void ) {
 	syscall( CG_PC_REMOVE_ALL_GLOBAL_DEFINES );
 }
 
-int trap_PC_LoadSource( const char *filename ) {
-	return syscall( CG_PC_LOAD_SOURCE, filename );
+int trap_PC_LoadSource( const char *filename, const char *basepath ) {
+	return syscall( CG_PC_LOAD_SOURCE, filename, basepath );
 }
 
 int trap_PC_FreeSource( int handle ) {

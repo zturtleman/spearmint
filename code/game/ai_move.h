@@ -30,11 +30,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 
 /*****************************************************************************
- * name:		be_ai_move.h
+ * name:		ai_move.h
  *
  * desc:		movement AI
  *
- * $Archive: /source/code/botlib/be_ai_move.h $
+ * $Archive: /source/code/game/ai_move.h $
  *
  *****************************************************************************/
 
@@ -117,6 +117,40 @@ typedef struct bot_avoidspot_s
 	int type;
 } bot_avoidspot_t;
 
+//movement state
+//NOTE: the moveflags MFL_ONGROUND, MFL_TELEPORTED, MFL_WATERJUMP and
+//		MFL_GRAPPLEPULL must be set outside the movement code
+typedef struct bot_movestate_s
+{
+	//input vars (all set outside the movement code)
+	vec3_t origin;								//origin of the bot
+	vec3_t velocity;							//velocity of the bot
+	vec3_t viewoffset;							//view offset
+	int entitynum;								//entity number of the bot
+	int client;									//client number of the bot
+	float thinktime;							//time the bot thinks
+	int presencetype;							//presencetype of the bot
+	vec3_t viewangles;							//view angles of the bot
+	//state vars
+	int areanum;								//area the bot is in
+	int lastareanum;							//last area the bot was in
+	int lastgoalareanum;						//last goal area number
+	int lastreachnum;							//last reachability number
+	vec3_t lastorigin;							//origin previous cycle
+	int reachareanum;							//area number of the reachabilty
+	int moveflags;								//movement flags
+	int jumpreach;								//set when jumped
+	float grapplevisible_time;					//last time the grapple was visible
+	float lastgrappledist;						//last distance to the grapple end
+	float reachability_time;					//time to use current reachability
+	int avoidreach[MAX_AVOIDREACH];				//reachabilities to avoid
+	float avoidreachtimes[MAX_AVOIDREACH];		//times to avoid the reachabilities
+	int avoidreachtries[MAX_AVOIDREACH];		//number of tries before avoiding
+	//
+	bot_avoidspot_t avoidspots[MAX_AVOIDSPOTS];	//spots to avoid
+	int numavoidspots;
+} bot_movestate_t;
+
 //resets the whole move state
 void BotResetMoveState(int movestate);
 //moves the bot to the given goal
@@ -133,10 +167,6 @@ int BotReachabilityArea(vec3_t origin, int client);
 int BotMovementViewTarget(int movestate, bot_goal_t *goal, int travelflags, float lookahead, vec3_t target);
 //predict the position of a player based on movement towards a goal
 int BotPredictVisiblePosition(vec3_t origin, int areanum, bot_goal_t *goal, int travelflags, vec3_t target);
-//returns the handle of a newly allocated movestate
-int BotAllocMoveState(void);
-//frees the movestate with the given handle
-void BotFreeMoveState(int handle);
 //initialize movement state before performing any movement
 void BotInitMoveState(int handle, bot_initmove_t *initmove);
 //add a spot to avoid (if type == AVOID_CLEAR all spots are removed)
@@ -147,4 +177,17 @@ void BotSetBrushModelTypes(void);
 int BotSetupMoveAI(void);
 //shutdown movement AI
 void BotShutdownMoveAI(void);
+
+#define trap_BotAllocMoveState(_client)		(_client+1)
+#define trap_BotFreeMoveState(_client)		// nothing
+#define trap_BotResetMoveState				BotResetMoveState
+#define trap_BotMoveToGoal					BotMoveToGoal
+#define trap_BotMoveInDirection				BotMoveInDirection
+#define trap_BotResetAvoidReach				BotResetAvoidReach
+#define trap_BotResetLastAvoidReach			BotResetLastAvoidReach
+#define trap_BotReachabilityArea			BotReachabilityArea
+#define trap_BotMovementViewTarget			BotMovementViewTarget
+#define trap_BotPredictVisiblePosition		BotPredictVisiblePosition
+#define trap_BotInitMoveState				BotInitMoveState
+#define trap_BotAddAvoidSpot				BotAddAvoidSpot
 

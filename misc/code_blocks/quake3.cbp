@@ -300,26 +300,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/botlib/be_ai_gen.h" />
-		<Unit filename="../../code/botlib/be_ai_goal.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/botlib/be_ai_goal.h" />
-		<Unit filename="../../code/botlib/be_ai_move.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/botlib/be_ai_move.h" />
-		<Unit filename="../../code/botlib/be_ai_weap.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/botlib/be_ai_weap.h" />
-		<Unit filename="../../code/botlib/be_ai_weight.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/botlib/be_ai_weight.h" />
-		<Unit filename="../../code/botlib/be_ea.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/botlib/be_ea.h" />
 		<Unit filename="../../code/botlib/be_interface.c">
 			<Option compilerVar="CC" />
 		</Unit>
