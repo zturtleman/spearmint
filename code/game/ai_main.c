@@ -1316,7 +1316,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	bs->entitynum = client;
 	bs->setupcount = 4;
 	bs->entergame_time = FloatTime();
-	bs->ms = trap_BotAllocMoveState(client);
+	bs->ms = BotAllocMoveState(client);
 	bs->walker = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_WALKER, 0, 1);
 	numbots++;
 
@@ -1360,7 +1360,7 @@ int BotAIShutdownClient(int client, qboolean restart) {
 		trap_BotEnterChat(bs->cs, bs->client, CHAT_ALL);
 	}
 
-	trap_BotFreeMoveState(bs->ms);
+	BotFreeMoveState(bs->ms);
 	//free the goal state`			
 	trap_BotFreeGoalState(bs->gs);
 	//free the chat file
@@ -1430,11 +1430,11 @@ void BotResetState(bot_state_t *bs) {
 	bs->character = character;
 	bs->entergame_time = entergame_time;
 	//reset several states
-	if (bs->ms) trap_BotResetMoveState(bs->ms);
+	if (bs->ms) BotResetMoveState(bs->ms);
 	if (bs->gs) trap_BotResetGoalState(bs->gs);
 	if (bs->ws) trap_BotResetWeaponState(bs->ws);
 	if (bs->gs) trap_BotResetAvoidGoals(bs->gs);
-	if (bs->ms) trap_BotResetAvoidReach(bs->ms);
+	if (bs->ms) BotResetAvoidReach(bs->ms);
 }
 
 /*

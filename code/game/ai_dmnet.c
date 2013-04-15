@@ -327,7 +327,7 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 			//trap_BotDumpAvoidGoals(bs->gs);
 			//reset the avoid goals and the avoid reach
 			trap_BotResetAvoidGoals(bs->gs);
-			trap_BotResetAvoidReach(bs->ms);
+			BotResetAvoidReach(bs->ms);
 		}
 		//get the goal at the top of the stack
 		return trap_BotGetTopGoal(bs->gs, goal);
@@ -373,7 +373,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			//if close just stand still there
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 			if (VectorLengthSquared(dir) < Square(100)) {
-				trap_BotResetAvoidReach(bs->ms);
+				BotResetAvoidReach(bs->ms);
 				return qfalse;
 			}
 		}
@@ -443,7 +443,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 								if (DotProduct(dir, dir2) > 0.7) {
 									// back up
 									BotSetupForMovement(bs);
-									trap_BotMoveInDirection(bs->ms, dir2, 400, MOVE_WALK);
+									BotMoveInDirection(bs->ms, dir2, 400, MOVE_WALK);
 								}
 							}
 						}
@@ -493,7 +493,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				}
 				//check if the bot wants to go for air
 				if (BotGoForAir(bs, bs->tfl, &bs->teamgoal, 400)) {
-					trap_BotResetLastAvoidReach(bs->ms);
+					BotResetLastAvoidReach(bs->ms);
 					//get the goal at the top of the stack
 					//trap_BotGetTopGoal(bs->gs, &tmpgoal);
 					//trap_BotGoalName(tmpgoal.number, buf, 144);
@@ -504,7 +504,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					return qfalse;
 				}
 				//
-				trap_BotResetAvoidReach(bs->ms);
+				BotResetAvoidReach(bs->ms);
 				return qfalse;
 			}
 		}
@@ -562,7 +562,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		//if very close... go away for some time
 		VectorSubtract(goal->origin, bs->origin, dir);
 		if (VectorLengthSquared(dir) < Square(70)) {
-			trap_BotResetAvoidReach(bs->ms);
+			BotResetAvoidReach(bs->ms);
 			bs->defendaway_time = FloatTime() + 3 + 3 * random();
 			if (BotHasPersistantPowerupAndWeapon(bs)) {
 				bs->defendaway_range = 100;
@@ -700,7 +700,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			//
 			//FIXME: move around a bit
 			//
-			trap_BotResetAvoidReach(bs->ms);
+			BotResetAvoidReach(bs->ms);
 			return qfalse;
 		}
 		return qtrue;
@@ -808,7 +808,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				//if the bot is still carrying the enemy flag then the
 				//base flag is gone, now just walk near the base a bit
 				if (BotCTFCarryingFlag(bs)) {
-					trap_BotResetAvoidReach(bs->ms);
+					BotResetAvoidReach(bs->ms);
 					bs->rushbaseaway_time = FloatTime() + 5 + 10 * random();
 					//FIXME: add chat to tell the others to get back the flag
 				}
@@ -1246,10 +1246,10 @@ AIEnter_Respawn
 void AIEnter_Respawn(bot_state_t *bs, char *s) {
 	BotRecordNodeSwitch(bs, "respawn", "", s);
 	//reset some states
-	trap_BotResetMoveState(bs->ms);
+	BotResetMoveState(bs->ms);
 	trap_BotResetGoalState(bs->gs);
 	trap_BotResetAvoidGoals(bs->gs);
-	trap_BotResetAvoidReach(bs->ms);
+	BotResetAvoidReach(bs->ms);
 	//if the bot wants to chat
 	if (BotChat_Death(bs)) {
 		bs->respawn_time = FloatTime() + BotChatTime(bs);
@@ -1574,11 +1574,11 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 		//initialize the movement state
 		BotSetupForMovement(bs);
 		//move towards the goal
-		trap_BotMoveToGoal(&moveresult, bs->ms, goal, bs->tfl);
+		BotMoveToGoal(&moveresult, bs->ms, goal, bs->tfl);
 		//if the movement failed
 		if (moveresult.failure) {
 			//reset the avoid reach, otherwise bot is stuck in current area
-			trap_BotResetAvoidReach(bs->ms);
+			BotResetAvoidReach(bs->ms);
 			//
 			bs->activatestack->time = 0;
 		}
@@ -1621,7 +1621,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 		}
 	}
 	else if (!(bs->flags & BFL_IDEALVIEWSET)) {
-		if (trap_BotMovementViewTarget(bs->ms, goal, bs->tfl, 300, target)) {
+		if (BotMovementViewTarget(bs->ms, goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			vectoangles(dir, bs->ideal_viewangles);
 		}
@@ -1640,7 +1640,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 			AIEnter_Battle_NBG(bs, "activate entity: found enemy");
 		}
 		else {
-			trap_BotResetLastAvoidReach(bs->ms);
+			BotResetLastAvoidReach(bs->ms);
 			//empty the goal stack
 			trap_BotEmptyGoalStack(bs->gs);
 			//go fight
@@ -1731,11 +1731,11 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//move towards the goal
-	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
+	BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	//if the movement failed
 	if (moveresult.failure) {
 		//reset the avoid reach, otherwise bot is stuck in current area
-		trap_BotResetAvoidReach(bs->ms);
+		BotResetAvoidReach(bs->ms);
 		bs->nbg_time = 0;
 	}
 	//check if the bot is blocked
@@ -1757,7 +1757,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	}
 	else if (!(bs->flags & BFL_IDEALVIEWSET)) {
 		if (!trap_BotGetSecondGoal(bs->gs, &goal)) trap_BotGetTopGoal(bs->gs, &goal);
-		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+		if (BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			vectoangles(dir, bs->ideal_viewangles);
 		}
@@ -1774,7 +1774,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 			AIEnter_Battle_NBG(bs, "seek nbg: found enemy");
 		}
 		else {
-			trap_BotResetLastAvoidReach(bs->ms);
+			BotResetLastAvoidReach(bs->ms);
 			//empty the goal stack
 			trap_BotEmptyGoalStack(bs->gs);
 			//go fight
@@ -1864,7 +1864,7 @@ int AINode_Seek_LTG(bot_state_t *bs)
 			return qfalse;
 		}
 		else {
-			trap_BotResetLastAvoidReach(bs->ms);
+			BotResetLastAvoidReach(bs->ms);
 			//empty the goal stack
 			trap_BotEmptyGoalStack(bs->gs);
 			//go fight
@@ -1906,7 +1906,7 @@ int AINode_Seek_LTG(bot_state_t *bs)
 #endif
 		//
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
-			trap_BotResetLastAvoidReach(bs->ms);
+			BotResetLastAvoidReach(bs->ms);
 			//get the goal at the top of the stack
 			//trap_BotGetTopGoal(bs->gs, &tmpgoal);
 			//trap_BotGoalName(tmpgoal.number, buf, 144);
@@ -1923,11 +1923,11 @@ int AINode_Seek_LTG(bot_state_t *bs)
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//move towards the goal
-	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
+	BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	//if the movement failed
 	if (moveresult.failure) {
 		//reset the avoid reach, otherwise bot is stuck in current area
-		trap_BotResetAvoidReach(bs->ms);
+		BotResetAvoidReach(bs->ms);
 		//BotAI_Print(PRT_MESSAGE, "movement failure %d\n", moveresult.traveltype);
 		bs->ltg_time = 0;
 	}
@@ -1949,7 +1949,7 @@ int AINode_Seek_LTG(bot_state_t *bs)
 		}
 	}
 	else if (!(bs->flags & BFL_IDEALVIEWSET)) {
-		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+		if (BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			vectoangles(dir, bs->ideal_viewangles);
 		}
@@ -1978,7 +1978,7 @@ AIEnter_Battle_Fight
 */
 void AIEnter_Battle_Fight(bot_state_t *bs, char *s) {
 	BotRecordNodeSwitch(bs, "battle fight", "", s);
-	trap_BotResetLastAvoidReach(bs->ms);
+	BotResetLastAvoidReach(bs->ms);
 	bs->ainode = AINode_Battle_Fight;
 	bs->flags &= ~BFL_FIGHTSUICIDAL;
 }
@@ -1990,7 +1990,7 @@ AIEnter_Battle_SuicidalFight
 */
 void AIEnter_Battle_SuicidalFight(bot_state_t *bs, char *s) {
 	BotRecordNodeSwitch(bs, "battle fight", "", s);
-	trap_BotResetLastAvoidReach(bs->ms);
+	BotResetLastAvoidReach(bs->ms);
 	bs->ainode = AINode_Battle_Fight;
 	bs->flags |= BFL_FIGHTSUICIDAL;
 }
@@ -2135,7 +2135,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	//if the movement failed
 	if (moveresult.failure) {
 		//reset the avoid reach, otherwise bot is stuck in current area
-		trap_BotResetAvoidReach(bs->ms);
+		BotResetAvoidReach(bs->ms);
 		//BotAI_Print(PRT_MESSAGE, "movement failure %d\n", moveresult.traveltype);
 		bs->ltg_time = 0;
 	}
@@ -2244,7 +2244,7 @@ int AINode_Battle_Chase(bot_state_t *bs)
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
 			//the bot gets 5 seconds to pick up the nearby goal item
 			bs->nbg_time = FloatTime() + 0.1 * range + 1;
-			trap_BotResetLastAvoidReach(bs->ms);
+			BotResetLastAvoidReach(bs->ms);
 			AIEnter_Battle_NBG(bs, "battle chase: nbg");
 			return qfalse;
 		}
@@ -2254,11 +2254,11 @@ int AINode_Battle_Chase(bot_state_t *bs)
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//move towards the goal
-	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
+	BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	//if the movement failed
 	if (moveresult.failure) {
 		//reset the avoid reach, otherwise bot is stuck in current area
-		trap_BotResetAvoidReach(bs->ms);
+		BotResetAvoidReach(bs->ms);
 		//BotAI_Print(PRT_MESSAGE, "movement failure %d\n", moveresult.traveltype);
 		bs->ltg_time = 0;
 	}
@@ -2273,7 +2273,7 @@ int AINode_Battle_Chase(bot_state_t *bs)
 			BotAimAtEnemy(bs);
 		}
 		else {
-			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+			if (BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
 				vectoangles(dir, bs->ideal_viewangles);
 			}
@@ -2432,7 +2432,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 #endif
 		//
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
-			trap_BotResetLastAvoidReach(bs->ms);
+			BotResetLastAvoidReach(bs->ms);
 			//time the bot gets to pick up the nearby goal item
 			bs->nbg_time = FloatTime() + range / 100 + 1;
 			AIEnter_Battle_NBG(bs, "battle retreat: nbg");
@@ -2442,11 +2442,11 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//move towards the goal
-	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
+	BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	//if the movement failed
 	if (moveresult.failure) {
 		//reset the avoid reach, otherwise bot is stuck in current area
-		trap_BotResetAvoidReach(bs->ms);
+		BotResetAvoidReach(bs->ms);
 		//BotAI_Print(PRT_MESSAGE, "movement failure %d\n", moveresult.traveltype);
 		bs->ltg_time = 0;
 	}
@@ -2466,7 +2466,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 			BotAimAtEnemy(bs);
 		}
 		else {
-			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+			if (BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
 				vectoangles(dir, bs->ideal_viewangles);
 			}
@@ -2586,11 +2586,11 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//move towards the goal
-	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
+	BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	//if the movement failed
 	if (moveresult.failure) {
 		//reset the avoid reach, otherwise bot is stuck in current area
-		trap_BotResetAvoidReach(bs->ms);
+		BotResetAvoidReach(bs->ms);
 		//BotAI_Print(PRT_MESSAGE, "movement failure %d\n", moveresult.traveltype);
 		bs->nbg_time = 0;
 	}
@@ -2613,7 +2613,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 			BotAimAtEnemy(bs);
 		}
 		else {
-			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+			if (BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
 				vectoangles(dir, bs->ideal_viewangles);
 			}

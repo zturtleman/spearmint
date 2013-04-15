@@ -178,16 +178,5 @@ int BotSetupMoveAI(void);
 //shutdown movement AI
 void BotShutdownMoveAI(void);
 
-#define trap_BotAllocMoveState(_client)		(_client+1)
-#define trap_BotFreeMoveState(_client)		// nothing
-#define trap_BotResetMoveState				BotResetMoveState
-#define trap_BotMoveToGoal					BotMoveToGoal
-#define trap_BotMoveInDirection				BotMoveInDirection
-#define trap_BotResetAvoidReach				BotResetAvoidReach
-#define trap_BotResetLastAvoidReach			BotResetLastAvoidReach
-#define trap_BotReachabilityArea			BotReachabilityArea
-#define trap_BotMovementViewTarget			BotMovementViewTarget
-#define trap_BotPredictVisiblePosition		BotPredictVisiblePosition
-#define trap_BotInitMoveState				BotInitMoveState
-#define trap_BotAddAvoidSpot				BotAddAvoidSpot
-
+#define BotAllocMoveState(_client)		(_client+1)
+#define BotFreeMoveState(_client)		// nothing

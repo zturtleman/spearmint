@@ -1625,7 +1625,7 @@ void BotSetupForMovement(bot_state_t *bs) {
 	//
 	VectorCopy(bs->viewangles, initmove.viewangles);
 	//
-	trap_BotInitMoveState(bs->ms, &initmove);
+	BotInitMoveState(bs->ms, &initmove);
 }
 
 /*
@@ -2667,7 +2667,7 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 		//initialize the movement state
 		BotSetupForMovement(bs);
 		//move towards the goal
-		trap_BotMoveToGoal(&moveresult, bs->ms, &goal, tfl);
+		BotMoveToGoal(&moveresult, bs->ms, &goal, tfl);
 		return moveresult;
 	}
 	//
@@ -2722,10 +2722,10 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	if (attack_skill <= 0.4) {
 		//just walk to or away from the enemy
 		if (dist > attack_dist + attack_range) {
-			if (trap_BotMoveInDirection(bs->ms, forward, 400, movetype)) return moveresult;
+			if (BotMoveInDirection(bs->ms, forward, 400, movetype)) return moveresult;
 		}
 		if (dist < attack_dist - attack_range) {
-			if (trap_BotMoveInDirection(bs->ms, backward, 400, movetype)) return moveresult;
+			if (BotMoveInDirection(bs->ms, backward, 400, movetype)) return moveresult;
 		}
 		return moveresult;
 	}
@@ -2767,7 +2767,7 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 			}
 		}
 		//perform the movement
-		if (trap_BotMoveInDirection(bs->ms, sideward, 400, movetype))
+		if (BotMoveInDirection(bs->ms, sideward, 400, movetype))
 			return moveresult;
 		//movement failed, flip the strafe direction
 		bs->flags ^= BFL_STRAFERIGHT;
@@ -3506,7 +3506,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 				VectorSet(goal.mins, -8, -8, -8);
 				VectorSet(goal.maxs, 8, 8, 8);
 				//
-				if (trap_BotPredictVisiblePosition(bs->lastenemyorigin, bs->lastenemyareanum, &goal, TFL_DEFAULT, target)) {
+				if (BotPredictVisiblePosition(bs->lastenemyorigin, bs->lastenemyareanum, &goal, TFL_DEFAULT, target)) {
 					VectorSubtract(target, bs->eye, dir);
 					if (VectorLengthSquared(dir) > Square(80)) {
 						VectorCopy(target, bestorigin);
@@ -4424,7 +4424,7 @@ void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
 	angles[2] = 0;
 	AngleVectors(angles, dir, NULL, NULL);
 
-	trap_BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK);
+	BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK);
 
 	moveresult->failure = qfalse;
 	VectorCopy(dir, moveresult->movedir);
@@ -4519,16 +4519,16 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	//
 	if (bs->flags & BFL_AVOIDRIGHT) VectorNegate(sideward, sideward);
 	// try to crouch straight forward?
-	if (movetype != MOVE_CROUCH || !trap_BotMoveInDirection(bs->ms, hordir, 400, movetype)) {
+	if (movetype != MOVE_CROUCH || !BotMoveInDirection(bs->ms, hordir, 400, movetype)) {
 		// perform the movement
-		if (!trap_BotMoveInDirection(bs->ms, sideward, 400, movetype)) {
+		if (!BotMoveInDirection(bs->ms, sideward, 400, movetype)) {
 			// flip the avoid direction flag
 			bs->flags ^= BFL_AVOIDRIGHT;
 			// flip the direction
 			// VectorNegate(sideward, sideward);
 			VectorMA(sideward, -1, hordir, sideward);
 			// move in the other direction
-			trap_BotMoveInDirection(bs->ms, sideward, 400, movetype);
+			BotMoveInDirection(bs->ms, sideward, 400, movetype);
 		}
 	}
 	//
@@ -4725,7 +4725,7 @@ void BotCheckForGrenades(bot_state_t *bs, entityState_t *state) {
 	if (state->eType != ET_MISSILE || state->weapon != WP_GRENADE_LAUNCHER)
 		return;
 	// try to avoid the grenade
-	trap_BotAddAvoidSpot(bs->ms, state->pos.trBase, 160, AVOID_ALWAYS);
+	BotAddAvoidSpot(bs->ms, state->pos.trBase, 160, AVOID_ALWAYS);
 }
 
 #ifdef MISSIONPACK
@@ -4748,7 +4748,7 @@ void BotCheckForProxMines(bot_state_t *bs, entityState_t *state) {
 		return;
 	}
 	// try to avoid the prox mine
-	trap_BotAddAvoidSpot(bs->ms, state->pos.trBase, 160, AVOID_ALWAYS);
+	BotAddAvoidSpot(bs->ms, state->pos.trBase, 160, AVOID_ALWAYS);
 	//
 	if (bs->numproxmines >= MAX_PROXMINES)
 		return;
@@ -5030,7 +5030,7 @@ void BotCheckSnapshot(bot_state_t *bs) {
 	entityState_t state;
 
 	//remove all avoid spots
-	trap_BotAddAvoidSpot(bs->ms, vec3_origin, 0, AVOID_CLEAR);
+	BotAddAvoidSpot(bs->ms, vec3_origin, 0, AVOID_CLEAR);
 	//reset kamikaze body
 	bs->kamikazebody = 0;
 	//reset number of proxmines
