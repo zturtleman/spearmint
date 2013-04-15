@@ -174,20 +174,20 @@ int BotGoForAir(bot_state_t *bs, int tfl, bot_goal_t *ltg, float range) {
 #endif //DEBUG
 		//if we can find an air goal
 		if (BotGetAirGoal(bs, &goal)) {
-			trap_BotPushGoal(bs->gs, &goal);
+			BotPushGoal(bs->gs, &goal);
 			return qtrue;
 		}
 		else {
 			//get a nearby goal outside the water
-			while(trap_BotChooseNBGItem(bs->gs, bs->origin, bs->inventory, tfl, ltg, range)) {
-				trap_BotGetTopGoal(bs->gs, &goal);
+			while(BotChooseNBGItem(bs->gs, bs->origin, bs->inventory, tfl, ltg, range)) {
+				BotGetTopGoal(bs->gs, &goal);
 				//if the goal is not in water
 				if (!(trap_AAS_PointContents(goal.origin) & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA))) {
 					return qtrue;
 				}
-				trap_BotPopGoal(bs->gs);
+				BotPopGoal(bs->gs);
 			}
-			trap_BotResetAvoidGoals(bs->gs);
+			BotResetAvoidGoals(bs->gs);
 		}
 	}
 	return qfalse;
@@ -217,14 +217,14 @@ int BotNearbyGoal(bot_state_t *bs, int tfl, bot_goal_t *ltg, float range) {
 		}
 	}
 	//
-	ret = trap_BotChooseNBGItem(bs->gs, bs->origin, bs->inventory, tfl, ltg, range);
+	ret = BotChooseNBGItem(bs->gs, bs->origin, bs->inventory, tfl, ltg, range);
 	/*
 	if (ret)
 	{
 		char buf[128];
 		//get the goal at the top of the stack
-		trap_BotGetTopGoal(bs->gs, &goal);
-		trap_BotGoalName(goal.number, buf, sizeof(buf));
+		BotGetTopGoal(bs->gs, &goal);
+		BotGoalName(goal.number, buf, sizeof(buf));
 		BotAI_Print(PRT_MESSAGE, "%1.1f: new nearby goal %s\n", FloatTime(), buf);
 	}
     */
@@ -239,19 +239,19 @@ BotReachedGoal
 int BotReachedGoal(bot_state_t *bs, bot_goal_t *goal) {
 	if (goal->flags & GFL_ITEM) {
 		//if touching the goal
-		if (trap_BotTouchingGoal(bs->origin, goal)) {
+		if (BotTouchingGoal(bs->origin, goal)) {
 			if (!(goal->flags & GFL_DROPPED)) {
-				trap_BotSetAvoidGoalTime(bs->gs, goal->number, -1);
+				BotSetAvoidGoalTime(bs->gs, goal->number, -1);
 			}
 			return qtrue;
 		}
 		//if the goal isn't there
-		if (trap_BotItemGoalInVisButNotVisible(bs->entitynum, bs->eye, bs->viewangles, goal)) {
+		if (BotItemGoalInVisButNotVisible(bs->entitynum, bs->eye, bs->viewangles, goal)) {
 			/*
 			float avoidtime;
 			int t;
 
-			avoidtime = trap_BotAvoidGoalTime(bs->gs, goal->number);
+			avoidtime = BotAvoidGoalTime(bs->gs, goal->number);
 			if (avoidtime > 0) {
 				t = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal->areanum, bs->tfl);
 				if ((float) t * 0.009 < avoidtime)
@@ -273,13 +273,13 @@ int BotReachedGoal(bot_state_t *bs, bot_goal_t *goal) {
 	}
 	else if (goal->flags & GFL_AIR) {
 		//if touching the goal
-		if (trap_BotTouchingGoal(bs->origin, goal)) return qtrue;
+		if (BotTouchingGoal(bs->origin, goal)) return qtrue;
 		//if the bot got air
 		if (bs->lastair_time > FloatTime() - 1) return qtrue;
 	}
 	else {
 		//if touching the goal
-		if (trap_BotTouchingGoal(bs->origin, goal)) return qtrue;
+		if (BotTouchingGoal(bs->origin, goal)) return qtrue;
 	}
 	return qfalse;
 }
@@ -291,7 +291,7 @@ BotGetItemLongTermGoal
 */
 int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 	//if the bot has no goal
-	if (!trap_BotGetTopGoal(bs->gs, goal)) {
+	if (!BotGetTopGoal(bs->gs, goal)) {
 		//BotAI_Print(PRT_MESSAGE, "no ltg on stack\n");
 		bs->ltg_time = 0;
 	}
@@ -303,16 +303,16 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 	//if it is time to find a new long term goal
 	if (bs->ltg_time < FloatTime()) {
 		//pop the current goal from the stack
-		trap_BotPopGoal(bs->gs);
+		BotPopGoal(bs->gs);
 		//BotAI_Print(PRT_MESSAGE, "%s: choosing new ltg\n", ClientName(bs->client, netname, sizeof(netname)));
 		//choose a new goal
 		//BotAI_Print(PRT_MESSAGE, "%6.1f client %d: BotChooseLTGItem\n", FloatTime(), bs->client);
-		if (trap_BotChooseLTGItem(bs->gs, bs->origin, bs->inventory, tfl)) {
+		if (BotChooseLTGItem(bs->gs, bs->origin, bs->inventory, tfl)) {
 			/*
 			char buf[128];
 			//get the goal at the top of the stack
-			trap_BotGetTopGoal(bs->gs, goal);
-			trap_BotGoalName(goal->number, buf, sizeof(buf));
+			BotGetTopGoal(bs->gs, goal);
+			BotGoalName(goal->number, buf, sizeof(buf));
 			BotAI_Print(PRT_MESSAGE, "%1.1f: new long term goal %s\n", FloatTime(), buf);
             */
 			bs->ltg_time = FloatTime() + 20;
@@ -324,13 +324,13 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 
 			BotAI_Print(PRT_MESSAGE, "%s: no valid ltg (probably stuck)\n", ClientName(bs->client, netname, sizeof(netname)));
 #endif
-			//trap_BotDumpAvoidGoals(bs->gs);
+			//BotDumpAvoidGoals(bs->gs);
 			//reset the avoid goals and the avoid reach
-			trap_BotResetAvoidGoals(bs->gs);
+			BotResetAvoidGoals(bs->gs);
 			BotResetAvoidReach(bs->ms);
 		}
 		//get the goal at the top of the stack
-		return trap_BotGetTopGoal(bs->gs, goal);
+		return BotGetTopGoal(bs->gs, goal);
 	}
 	return qtrue;
 }
@@ -495,8 +495,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				if (BotGoForAir(bs, bs->tfl, &bs->teamgoal, 400)) {
 					BotResetLastAvoidReach(bs->ms);
 					//get the goal at the top of the stack
-					//trap_BotGetTopGoal(bs->gs, &tmpgoal);
-					//trap_BotGoalName(tmpgoal.number, buf, 144);
+					//BotGetTopGoal(bs->gs, &tmpgoal);
+					//BotGoalName(tmpgoal.number, buf, 144);
 					//BotAI_Print(PRT_MESSAGE, "new nearby goal %s\n", buf);
 					//time the bot gets to pick up the nearby goal item
 					bs->nbg_time = FloatTime() + 8;
@@ -544,7 +544,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				bs->defendaway_time < FloatTime()) {
 		//check for bot typing status message
 		if (bs->teammessage_time && bs->teammessage_time < FloatTime()) {
-			trap_BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
+			BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
 			BotAI_BotInitialChat(bs, "defend_start", buf, NULL);
 			trap_BotEnterChat(bs->cs, 0, CHAT_TEAM);
 			BotVoiceChatOnly(bs, -1, VOICECHAT_ONDEFENSE);
@@ -554,7 +554,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		memcpy(goal, &bs->teamgoal, sizeof(bot_goal_t));
 		//stop after 2 minutes
 		if (bs->teamgoal_time < FloatTime()) {
-			trap_BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
+			BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
 			BotAI_BotInitialChat(bs, "defend_stop", buf, NULL);
 			trap_BotEnterChat(bs->cs, 0, CHAT_TEAM);
 			bs->ltgtype = 0;
@@ -601,7 +601,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 	if (bs->ltgtype == LTG_GETITEM && !retreat) {
 		//check for bot typing status message
 		if (bs->teammessage_time && bs->teammessage_time < FloatTime()) {
-			trap_BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
+			BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
 			BotAI_BotInitialChat(bs, "getitem_start", buf, NULL);
 			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
 			BotVoiceChatOnly(bs, bs->decisionmaker, VOICECHAT_YES);
@@ -615,14 +615,14 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			bs->ltgtype = 0;
 		}
 		//
-		if (trap_BotItemGoalInVisButNotVisible(bs->entitynum, bs->eye, bs->viewangles, goal)) {
-			trap_BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
+		if (BotItemGoalInVisButNotVisible(bs->entitynum, bs->eye, bs->viewangles, goal)) {
+			BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
 			BotAI_BotInitialChat(bs, "getitem_notthere", buf, NULL);
 			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
 			bs->ltgtype = 0;
 		}
 		else if (BotReachedGoal(bs, goal)) {
-			trap_BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
+			BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
 			BotAI_BotInitialChat(bs, "getitem_gotit", buf, NULL);
 			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
 			bs->ltgtype = 0;
@@ -726,7 +726,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			return qfalse;
 		}
 		//if the bot touches the current goal
-		if (trap_BotTouchingGoal(bs->origin, &bs->curpatrolpoint->goal)) {
+		if (BotTouchingGoal(bs->origin, &bs->curpatrolpoint->goal)) {
 			if (bs->patrolflags & PATROL_BACK) {
 				if (bs->curpatrolpoint->prev) {
 					bs->curpatrolpoint = bs->curpatrolpoint->prev;
@@ -777,7 +777,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				default: bs->ltgtype = 0; return qfalse;
 			}
 			//if touching the flag
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
+			if (BotTouchingGoal(bs->origin, goal)) {
 				// make sure the bot knows the flag isn't there anymore
 				switch(BotTeam(bs)) {
 					case TEAM_RED: bs->blueflagstatus = 1; break;
@@ -804,7 +804,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			//quit rushing after 2 minutes
 			if (bs->teamgoal_time < FloatTime()) bs->ltgtype = 0;
 			//if touching the base flag the bot should loose the enemy flag
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
+			if (BotTouchingGoal(bs->origin, goal)) {
 				//if the bot is still carrying the enemy flag then the
 				//base flag is gone, now just walk near the base a bit
 				if (BotCTFCarryingFlag(bs)) {
@@ -835,7 +835,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				default: bs->ltgtype = 0; return qfalse;
 			}
 			//if touching the flag
-			if (trap_BotTouchingGoal(bs->origin, goal)) bs->ltgtype = 0;
+			if (BotTouchingGoal(bs->origin, goal)) bs->ltgtype = 0;
 			//stop after 3 minutes
 			if (bs->teamgoal_time < FloatTime()) {
 				bs->ltgtype = 0;
@@ -857,7 +857,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			}
 			memcpy(goal, &ctf_neutralflag, sizeof(bot_goal_t));
 			//if touching the flag
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
+			if (BotTouchingGoal(bs->origin, goal)) {
 				bs->ltgtype = 0;
 			}
 			//stop after 3 minutes
@@ -882,7 +882,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				bs->ltgtype = 0;
 			}
 			//if touching the base flag the bot should loose the enemy flag
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
+			if (BotTouchingGoal(bs->origin, goal)) {
 				bs->ltgtype = 0;
 			}
 			BotAlternateRoute(bs, goal);
@@ -908,7 +908,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				bs->ltgtype = 0;
 			}
 			//if touching the base flag the bot should loose the enemy flag
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
+			if (BotTouchingGoal(bs->origin, goal)) {
 				bs->attackaway_time = FloatTime() + 2 + 5 * random();
 			}
 			return qtrue;
@@ -951,7 +951,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				return BotGetItemLongTermGoal(bs, tfl, goal);
 			}
 			//if touching the obelisk
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
+			if (BotTouchingGoal(bs->origin, goal)) {
 				bs->attackaway_time = FloatTime() + 3 + 5 * random();
 			}
 			// or very close to the obelisk
@@ -987,7 +987,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				return qfalse;
 			}
 			//if touching the base flag the bot should loose the enemy flag
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
+			if (BotTouchingGoal(bs->origin, goal)) {
 				BotGoHarvest(bs);
 				return qfalse;
 			}
@@ -1014,7 +1014,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				bs->ltgtype = 0;
 			}
 			//if touching the base flag the bot should loose the enemy flag
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
+			if (BotTouchingGoal(bs->origin, goal)) {
 				bs->attackaway_time = FloatTime() + 2 + 5 * random();
 			}
 			return qtrue;
@@ -1035,7 +1035,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				bs->ltgtype = 0;
 			}
 			//
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
+			if (BotTouchingGoal(bs->origin, goal)) {
 				bs->harvestaway_time = FloatTime() + 4 + 3 * random();
 			}
 			return qtrue;
@@ -1247,8 +1247,8 @@ void AIEnter_Respawn(bot_state_t *bs, char *s) {
 	BotRecordNodeSwitch(bs, "respawn", "", s);
 	//reset some states
 	BotResetMoveState(bs->ms);
-	trap_BotResetGoalState(bs->gs);
-	trap_BotResetAvoidGoals(bs->gs);
+	BotResetGoalState(bs->gs);
+	BotResetAvoidGoals(bs->gs);
 	BotResetAvoidReach(bs->ms);
 	//if the bot wants to chat
 	if (BotChat_Death(bs)) {
@@ -1550,7 +1550,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 		// if the bot does not have a shoot goal
 		else if (!bs->activatestack->shoot) {
 			//if the bot touches the current goal
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
+			if (BotTouchingGoal(bs->origin, goal)) {
 #ifdef DEBUG
 				BotAI_Print(PRT_MESSAGE, "touched button or trigger\n");
 #endif //DEBUG
@@ -1642,7 +1642,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 		else {
 			BotResetLastAvoidReach(bs->ms);
 			//empty the goal stack
-			trap_BotEmptyGoalStack(bs->gs);
+			BotEmptyGoalStack(bs->gs);
 			//go fight
 			AIEnter_Battle_Fight(bs, "activate entity: found enemy");
 		}
@@ -1660,8 +1660,8 @@ void AIEnter_Seek_NBG(bot_state_t *bs, char *s) {
 	bot_goal_t goal;
 	char buf[144];
 
-	if (trap_BotGetTopGoal(bs->gs, &goal)) {
-		trap_BotGoalName(goal.number, buf, 144);
+	if (BotGetTopGoal(bs->gs, &goal)) {
+		BotGoalName(goal.number, buf, 144);
 		BotRecordNodeSwitch(bs, "seek NBG", buf, s);
 	}
 	else {
@@ -1708,7 +1708,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	//no enemy
 	bs->enemy = -1;
 	//if the bot has no goal
-	if (!trap_BotGetTopGoal(bs->gs, &goal)) bs->nbg_time = 0;
+	if (!BotGetTopGoal(bs->gs, &goal)) bs->nbg_time = 0;
 	//if the bot touches the current goal
 	else if (BotReachedGoal(bs, &goal)) {
 		BotChooseWeapon(bs);
@@ -1717,7 +1717,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	//
 	if (bs->nbg_time < FloatTime()) {
 		//pop the current goal from the stack
-		trap_BotPopGoal(bs->gs);
+		BotPopGoal(bs->gs);
 		//check for new nearby items right away
 		//NOTE: we canNOT reset the check_time to zero because it would create an endless loop of node switches
 		bs->check_time = FloatTime() + 0.05;
@@ -1756,7 +1756,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		}
 	}
 	else if (!(bs->flags & BFL_IDEALVIEWSET)) {
-		if (!trap_BotGetSecondGoal(bs->gs, &goal)) trap_BotGetTopGoal(bs->gs, &goal);
+		if (!BotGetSecondGoal(bs->gs, &goal)) BotGetTopGoal(bs->gs, &goal);
 		if (BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			vectoangles(dir, bs->ideal_viewangles);
@@ -1776,7 +1776,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		else {
 			BotResetLastAvoidReach(bs->ms);
 			//empty the goal stack
-			trap_BotEmptyGoalStack(bs->gs);
+			BotEmptyGoalStack(bs->gs);
 			//go fight
 			AIEnter_Battle_Fight(bs, "seek nbg: found enemy");
 		}
@@ -1793,8 +1793,8 @@ void AIEnter_Seek_LTG(bot_state_t *bs, char *s) {
 	bot_goal_t goal;
 	char buf[144];
 
-	if (trap_BotGetTopGoal(bs->gs, &goal)) {
-		trap_BotGoalName(goal.number, buf, 144);
+	if (BotGetTopGoal(bs->gs, &goal)) {
+		BotGoalName(goal.number, buf, 144);
 		BotRecordNodeSwitch(bs, "seek LTG", buf, s);
 	}
 	else {
@@ -1866,7 +1866,7 @@ int AINode_Seek_LTG(bot_state_t *bs)
 		else {
 			BotResetLastAvoidReach(bs->ms);
 			//empty the goal stack
-			trap_BotEmptyGoalStack(bs->gs);
+			BotEmptyGoalStack(bs->gs);
 			//go fight
 			AIEnter_Battle_Fight(bs, "seek ltg: found enemy");
 			return qfalse;
@@ -1908,8 +1908,8 @@ int AINode_Seek_LTG(bot_state_t *bs)
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
 			BotResetLastAvoidReach(bs->ms);
 			//get the goal at the top of the stack
-			//trap_BotGetTopGoal(bs->gs, &tmpgoal);
-			//trap_BotGoalName(tmpgoal.number, buf, 144);
+			//BotGetTopGoal(bs->gs, &tmpgoal);
+			//BotGoalName(tmpgoal.number, buf, 144);
 			//BotAI_Print(PRT_MESSAGE, "new nearby goal %s\n", buf);
 			//time the bot gets to pick up the nearby goal item
 			bs->nbg_time = FloatTime() + 4 + range * 0.01;
@@ -2230,7 +2230,7 @@ int AINode_Battle_Chase(bot_state_t *bs)
 	VectorSet(goal.mins, -8, -8, -8);
 	VectorSet(goal.maxs, 8, 8, 8);
 	//if the last seen enemy spot is reached the enemy could not be found
-	if (trap_BotTouchingGoal(bs->origin, &goal)) bs->chase_time = 0;
+	if (BotTouchingGoal(bs->origin, &goal)) bs->chase_time = 0;
 	//if there's no chase time left
 	if (!bs->chase_time || bs->chase_time < FloatTime() - 10) {
 		AIEnter_Seek_LTG(bs, "battle chase: time out");
@@ -2361,7 +2361,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	//if the bot doesn't want to retreat anymore... probably picked up some nice items
 	if (BotWantsToChase(bs)) {
 		//empty the goal stack, when chasing, only the enemy is the goal
-		trap_BotEmptyGoalStack(bs->gs);
+		BotEmptyGoalStack(bs->gs);
 		//go chase the enemy
 		AIEnter_Battle_Chase(bs, "battle retreat: wants to chase");
 		return qfalse;
@@ -2565,7 +2565,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		}
 	}
 	//if the bot has no goal or touches the current goal
-	if (!trap_BotGetTopGoal(bs->gs, &goal)) {
+	if (!BotGetTopGoal(bs->gs, &goal)) {
 		bs->nbg_time = 0;
 	}
 	else if (BotReachedGoal(bs, &goal)) {
@@ -2574,9 +2574,9 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	//
 	if (bs->nbg_time < FloatTime()) {
 		//pop the current goal from the stack
-		trap_BotPopGoal(bs->gs);
+		BotPopGoal(bs->gs);
 		//if the bot still has a goal
-		if (trap_BotGetTopGoal(bs->gs, &goal))
+		if (BotGetTopGoal(bs->gs, &goal))
 			AIEnter_Battle_Retreat(bs, "battle nbg: time out");
 		else
 			AIEnter_Battle_Fight(bs, "battle nbg: time out");

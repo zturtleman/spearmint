@@ -337,13 +337,13 @@ void BotReportStatus(bot_state_t *bs) {
 		}
 		case LTG_DEFENDKEYAREA:
 		{
-			trap_BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
+			BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
 			BotAI_Print(PRT_MESSAGE, "%-20s%s%s: defending %s\n", netname, leader, flagstatus, goalname);
 			break;
 		}
 		case LTG_GETITEM:
 		{
-			trap_BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
+			BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
 			BotAI_Print(PRT_MESSAGE, "%-20s%s%s: getting item %s\n", netname, leader, flagstatus, goalname);
 			break;
 		}
@@ -485,13 +485,13 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 		}
 		case LTG_DEFENDKEYAREA:
 		{
-			trap_BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
+			BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
 			Com_sprintf(action, sizeof(action), "defending %s", goalname);
 			break;
 		}
 		case LTG_GETITEM:
 		{
-			trap_BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
+			BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
 			Com_sprintf(action, sizeof(action), "getting item %s", goalname);
 			break;
 		}
@@ -539,8 +539,8 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 		}
 		default:
 		{
-			trap_BotGetTopGoal(bs->gs, &goal);
-			trap_BotGoalName(goal.number, goalname, sizeof(goalname));
+			BotGetTopGoal(bs->gs, &goal);
+			BotGoalName(goal.number, goalname, sizeof(goalname));
 			Com_sprintf(action, sizeof(action), "roaming %s", goalname);
 			break;
 		}
@@ -595,8 +595,8 @@ void BotInterbreedBots(void) {
 	}
 
 	if (trap_GeneticParentsAndChildSelection(MAX_CLIENTS, ranks, &parent1, &parent2, &child)) {
-		trap_BotInterbreedGoalFuzzyLogic(botstates[parent1]->gs, botstates[parent2]->gs, botstates[child]->gs);
-		trap_BotMutateGoalFuzzyLogic(botstates[child]->gs, 1);
+		BotInterbreedGoalFuzzyLogic(botstates[parent1]->gs, botstates[parent2]->gs, botstates[child]->gs);
+		BotMutateGoalFuzzyLogic(botstates[child]->gs, 1);
 	}
 	// reset the kills and deaths
 	for (i = 0; i < MAX_CLIENTS; i++) {
@@ -633,7 +633,7 @@ void BotWriteInterbreeded(char *filename) {
 	}
 	if (bestbot >= 0) {
 		//write out the new goal fuzzy logic
-		trap_BotSaveGoalFuzzyLogic(botstates[bestbot]->gs, filename);
+		BotSaveGoalFuzzyLogic(botstates[bestbot]->gs, filename);
 	}
 }
 
@@ -1025,7 +1025,7 @@ BotAIRegularUpdate
 */
 void BotAIRegularUpdate(void) {
 	if (regularupdate_time < FloatTime()) {
-		trap_BotUpdateEntityItems();
+		BotUpdateEntityItems();
 		regularupdate_time = FloatTime() + 0.3;
 	}
 }
@@ -1274,12 +1274,12 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	//copy the settings
 	memcpy(&bs->settings, settings, sizeof(bot_settings_t));
 	//allocate a goal state
-	bs->gs = trap_BotAllocGoalState(client);
+	bs->gs = BotAllocGoalState(client);
 	//load the item weights
 	trap_Characteristic_String(bs->character, CHARACTERISTIC_ITEMWEIGHTS, filename, MAX_PATH);
-	errnum = trap_BotLoadItemWeights(bs->gs, filename);
+	errnum = BotLoadItemWeights(bs->gs, filename);
 	if (errnum != BLERR_NOERROR) {
-		trap_BotFreeGoalState(bs->gs);
+		BotFreeGoalState(bs->gs);
 		return qfalse;
 	}
 	//allocate a weapon state
@@ -1288,7 +1288,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	trap_Characteristic_String(bs->character, CHARACTERISTIC_WEAPONWEIGHTS, filename, MAX_PATH);
 	errnum = trap_BotLoadWeaponWeights(bs->ws, filename);
 	if (errnum != BLERR_NOERROR) {
-		trap_BotFreeGoalState(bs->gs);
+		BotFreeGoalState(bs->gs);
 		trap_BotFreeWeaponState(bs->ws);
 		return qfalse;
 	}
@@ -1300,7 +1300,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	errnum = trap_BotLoadChatFile(bs->cs, filename, name);
 	if (errnum != BLERR_NOERROR) {
 		trap_BotFreeChatState(bs->cs);
-		trap_BotFreeGoalState(bs->gs);
+		BotFreeGoalState(bs->gs);
 		trap_BotFreeWeaponState(bs->ws);
 		return qfalse;
 	}
@@ -1328,7 +1328,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	BotScheduleBotThink();
 	//if interbreeding start with a mutation
 	if (bot_interbreed) {
-		trap_BotMutateGoalFuzzyLogic(bs->gs, 1);
+		BotMutateGoalFuzzyLogic(bs->gs, 1);
 	}
 	// if we kept the bot client
 	if (restart) {
@@ -1362,7 +1362,7 @@ int BotAIShutdownClient(int client, qboolean restart) {
 
 	BotFreeMoveState(bs->ms);
 	//free the goal state`			
-	trap_BotFreeGoalState(bs->gs);
+	BotFreeGoalState(bs->gs);
 	//free the chat file
 	trap_BotFreeChatState(bs->cs);
 	//free the weapon weights
@@ -1431,9 +1431,9 @@ void BotResetState(bot_state_t *bs) {
 	bs->entergame_time = entergame_time;
 	//reset several states
 	if (bs->ms) BotResetMoveState(bs->ms);
-	if (bs->gs) trap_BotResetGoalState(bs->gs);
+	if (bs->gs) BotResetGoalState(bs->gs);
 	if (bs->ws) trap_BotResetWeaponState(bs->ws);
-	if (bs->gs) trap_BotResetAvoidGoals(bs->gs);
+	if (bs->gs) BotResetAvoidGoals(bs->gs);
 	if (bs->ms) BotResetAvoidReach(bs->ms);
 }
 

@@ -172,7 +172,7 @@ int BotGetItemTeamGoal(char *goalname, bot_goal_t *goal) {
 	if (!strlen(goalname)) return qfalse;
 	i = -1;
 	do {
-		i = trap_BotGetLevelItemGoal(i, goalname, goal);
+		i = BotGetLevelItemGoal(i, goalname, goal);
 		if (i > 0) {
 			//do NOT defend dropped items
 			if (goal->flags & GFL_DROPPED)
@@ -1404,13 +1404,13 @@ void BotMatch_WhatAreYouDoing(bot_state_t *bs, bot_match_t *match) {
 		}
 		case LTG_DEFENDKEYAREA:
 		{
-			trap_BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
+			BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
 			BotAI_BotInitialChat(bs, "defending", goalname, NULL);
 			break;
 		}
 		case LTG_GETITEM:
 		{
-			trap_BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
+			BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
 			BotAI_BotInitialChat(bs, "gettingitem", goalname, NULL);
 			break;
 		}
@@ -1499,8 +1499,8 @@ float BotNearestVisibleItem(bot_state_t *bs, char *itemname, bot_goal_t *goal) {
 	bestdist = 999999;
 	i = -1;
 	do {
-		i = trap_BotGetLevelItemGoal(i, itemname, &tmpgoal);
-		trap_BotGoalName(tmpgoal.number, name, sizeof(name));
+		i = BotGetLevelItemGoal(i, itemname, &tmpgoal);
+		BotGoalName(tmpgoal.number, name, sizeof(name));
 		if (Q_stricmp(itemname, name) != 0)
 			continue;
 		VectorSubtract(tmpgoal.origin, bs->origin, dir);
