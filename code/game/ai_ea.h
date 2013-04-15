@@ -30,11 +30,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 
 /*****************************************************************************
- * name:		be_ea.h
+ * name:		ai_ea.h
  *
  * desc:		elementary actions
  *
- * $Archive: /source/code/botlib/be_ea.h $
+ * $Archive: /source/code/game/ai_ea.h $
  *
  *****************************************************************************/
 

@@ -30,11 +30,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 
 /*****************************************************************************
- * name:		be_ai_weap.h
+ * name:		ai_weap.h
  *
  * desc:		weapon AI
  *
- * $Archive: /source/code/botlib/be_ai_weap.h $
+ * $Archive: /source/code/game/ai_weap.h $
  *
  *****************************************************************************/
 

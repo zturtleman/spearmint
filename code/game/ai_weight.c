@@ -29,11 +29,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 
 /*****************************************************************************
- * name:		be_ai_weight.c
+ * name:		ai_weight.c
  *
  * desc:		fuzzy logic
  *
- * $Archive: /MissionPack/code/botlib/be_ai_weight.c $
+ * $Archive: /MissionPack/code/game/ai_weight.c $
  *
  *****************************************************************************/
 

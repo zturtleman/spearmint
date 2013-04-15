@@ -29,11 +29,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 
 /*****************************************************************************
- * name:		be_ea.c
+ * name:		ai_ea.c
  *
  * desc:		elementary actions
  *
- * $Archive: /MissionPack/code/botlib/be_ea.c $
+ * $Archive: /MissionPack/code/game/ai_ea.c $
  *
  *****************************************************************************/
 

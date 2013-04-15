@@ -29,11 +29,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 
 /*****************************************************************************
- * name:		be_ai_weight.h
+ * name:		ai_weight.h
  *
  * desc:		fuzzy weights
  *
- * $Archive: /source/code/botlib/be_ai_weight.h $
+ * $Archive: /source/code/game/ai_weight.h $
  *
  *****************************************************************************/
 

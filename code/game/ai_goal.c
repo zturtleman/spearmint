@@ -29,11 +29,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 
 /*****************************************************************************
- * name:		be_ai_goal.c
+ * name:		ai_goal.c
  *
  * desc:		goal AI
  *
- * $Archive: /MissionPack/code/botlib/be_ai_goal.c $
+ * $Archive: /MissionPack/code/game/ai_goal.c $
  *
  *****************************************************************************/
 
