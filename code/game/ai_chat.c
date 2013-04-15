@@ -500,7 +500,7 @@ int BotChat_StartLevel(bot_state_t *bs) {
 	//don't chat in teamplay
 	if (TeamPlayIsOn()) {
 #ifdef MISSIONPACK
-	    trap_EA_Command(bs->client, "vtaunt");
+	    EA_Command(bs->client, "vtaunt");
 #endif
 	    return qfalse;
 	}
@@ -536,7 +536,7 @@ int BotChat_EndLevel(bot_state_t *bs) {
 	{
 #ifdef MISSIONPACK
 		if (BotIsFirstInRankings(bs)) {
-			trap_EA_Command(bs->client, "vtaunt");
+			EA_Command(bs->client, "vtaunt");
 		}
 #endif
 		return qtrue;
@@ -616,7 +616,7 @@ int BotChat_Death(bot_state_t *bs) {
 		//teamplay
 		if (TeamPlayIsOn()) {
 #ifdef MISSIONPACK
-			trap_EA_Command(bs->client, "vtaunt");
+			EA_Command(bs->client, "vtaunt");
 #endif
 			return qtrue;
 		}
@@ -720,7 +720,7 @@ int BotChat_Kill(bot_state_t *bs) {
 		//don't chat in teamplay
 		if (TeamPlayIsOn()) {
 #ifdef MISSIONPACK
-			trap_EA_Command(bs->client, "vtaunt");
+			EA_Command(bs->client, "vtaunt");
 #endif
 			return qfalse;			// don't wait
 		}
@@ -945,7 +945,7 @@ int BotChat_Random(bot_state_t *bs) {
 	}
 	if (TeamPlayIsOn()) {
 #ifdef MISSIONPACK
-		trap_EA_Command(bs->client, "vtaunt");
+		EA_Command(bs->client, "vtaunt");
 #endif
 		return qfalse;			// don't wait
 	}

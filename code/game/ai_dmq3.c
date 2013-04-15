@@ -490,7 +490,7 @@ void BotRefuseOrder(bot_state_t *bs) {
 		return;
 	// if the bot was ordered to do something
 	if ( bs->order_time && bs->order_time > FloatTime() - 10 ) {
-		trap_EA_Action(bs->client, ACTION_NEGATIVE);
+		EA_Action(bs->client, ACTION_NEGATIVE);
 		BotVoiceChat(bs, bs->decisionmaker, VOICECHAT_NO);
 		bs->order_time = 0;
 	}
@@ -1580,14 +1580,14 @@ void BotChooseWeapon(bot_state_t *bs) {
 
 	if (bs->cur_ps.weaponstate == WEAPON_RAISING ||
 			bs->cur_ps.weaponstate == WEAPON_DROPPING) {
-		trap_EA_SelectWeapon(bs->client, bs->weaponnum);
+		EA_SelectWeapon(bs->client, bs->weaponnum);
 	}
 	else {
 		newweaponnum = trap_BotChooseBestFightWeapon(bs->ws, bs->inventory);
 		if (bs->weaponnum != newweaponnum) bs->weaponchange_time = FloatTime();
 		bs->weaponnum = newweaponnum;
 		//BotAI_Print(PRT_MESSAGE, "bs->weaponnum = %d\n", bs->weaponnum);
-		trap_EA_SelectWeapon(bs->client, bs->weaponnum);
+		EA_SelectWeapon(bs->client, bs->weaponnum);
 	}
 }
 
@@ -1854,7 +1854,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 			BotEntityInfo(c, &entinfo);
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -1875,7 +1875,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 			BotEntityInfo(c, &entinfo);
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -1892,7 +1892,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 		if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST * 0.9)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
 			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -1914,7 +1914,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 			BotEntityInfo(c, &entinfo);
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -1923,7 +1923,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 	BotVisibleTeamMatesAndEnemies(bs, &teammates, &enemies, KAMIKAZE_DIST);
 	//
 	if (enemies > 2 && enemies > teammates+1) {
-		trap_EA_Use(bs->client);
+		EA_Use(bs->client);
 		return;
 	}
 }
@@ -1964,7 +1964,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		if (VectorLengthSquared(dir) < Square(200)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
 			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -1988,7 +1988,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		if (VectorLengthSquared(dir) < Square(200)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
 			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -2005,7 +2005,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		if (VectorLengthSquared(dir) < Square(300)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
 			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -2029,7 +2029,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		if (VectorLengthSquared(dir) < Square(200)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
 			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -2051,13 +2051,13 @@ void BotBattleUseItems(bot_state_t *bs) {
 				&& !BotHarvesterCarryingCubes(bs)
 #endif
 				) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 			}
 		}
 	}
 	if (bs->inventory[INVENTORY_HEALTH] < 60) {
 		if (bs->inventory[INVENTORY_MEDKIT] > 0) {
-			trap_EA_Use(bs->client);
+			EA_Use(bs->client);
 		}
 	}
 #ifdef MISSIONPACK
@@ -3557,7 +3557,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 			//set the view angles directly
 			if (bs->ideal_viewangles[PITCH] > 180) bs->ideal_viewangles[PITCH] -= 360;
 			VectorCopy(bs->ideal_viewangles, bs->viewangles);
-			trap_EA_View(bs->client, bs->viewangles);
+			EA_View(bs->client, bs->viewangles);
 		}
 	}
 }
@@ -3673,11 +3673,11 @@ void BotCheckAttack(bot_state_t *bs) {
 	//if fire has to be release to activate weapon
 	if (wi.flags & WFL_FIRERELEASED) {
 		if (bs->flags & BFL_ATTACKED) {
-			trap_EA_Attack(bs->client);
+			EA_Attack(bs->client);
 		}
 	}
 	else {
-		trap_EA_Attack(bs->client);
+		EA_Attack(bs->client);
 	}
 	bs->flags ^= BFL_ATTACKED;
 }
@@ -3751,7 +3751,7 @@ void BotMapScripts(bot_state_t *bs) {
 			bs->ideal_viewangles[YAW] = AngleMod(bs->ideal_viewangles[YAW]);
 			//
 			if (InFieldOfVision(bs->viewangles, 20, bs->ideal_viewangles)) {
-				trap_EA_Attack(bs->client);
+				EA_Attack(bs->client);
 			}
 		}
 	}
@@ -4408,7 +4408,7 @@ void BotPrintActivateGoalInfo(bot_state_t *bs, bot_activategoal_t *activategoal,
 						activategoal->goal.origin[2],
 						activategoal->goal.areanum);
 	}
-	trap_EA_Say(bs->client, buf);
+	EA_Say(bs->client, buf);
 }
 
 /*
@@ -4969,7 +4969,7 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 					//if the bot has a personal teleporter
 					if (bs->inventory[INVENTORY_TELEPORTER] > 0) {
 						//use the holdable item
-						trap_EA_Use(bs->client);
+						EA_Use(bs->client);
 					}
 				}
 			}

@@ -358,7 +358,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			BotAI_BotInitialChat(bs, "help_start", EasyClientName(bs->teammate, netname, sizeof(netname)), NULL);
 			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
 			BotVoiceChatOnly(bs, bs->decisionmaker, VOICECHAT_YES);
-			trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
+			EA_Action(bs->client, ACTION_AFFIRMATIVE);
 			bs->teammessage_time = 0;
 		}
 		//if trying to help the team mate for more than a minute
@@ -403,7 +403,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			BotAI_BotInitialChat(bs, "accompany_start", EasyClientName(bs->teammate, netname, sizeof(netname)), NULL);
 			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
 			BotVoiceChatOnly(bs, bs->decisionmaker, VOICECHAT_YES);
-			trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
+			EA_Action(bs->client, ACTION_AFFIRMATIVE);
 			bs->teammessage_time = 0;
 		}
 		//if accompanying the companion for 3 minutes
@@ -463,19 +463,19 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				if (bs->arrive_time < FloatTime() - 2) {
 					//if not arrived yet
 					if (!bs->arrive_time) {
-						trap_EA_Gesture(bs->client);
+						EA_Gesture(bs->client);
 						BotAI_BotInitialChat(bs, "accompany_arrive", EasyClientName(bs->teammate, netname, sizeof(netname)), NULL);
 						trap_BotEnterChat(bs->cs, bs->teammate, CHAT_TELL);
 						bs->arrive_time = FloatTime();
 					}
 					//if the bot wants to crouch
 					else if (bs->attackcrouch_time > FloatTime()) {
-						trap_EA_Crouch(bs->client);
+						EA_Crouch(bs->client);
 					}
 					//else do some model taunts
 					else if (random() < bs->thinktime * 0.05) {
 						//do a gesture :)
-						trap_EA_Gesture(bs->client);
+						EA_Gesture(bs->client);
 					}
 				}
 				//if just arrived look at the companion
@@ -605,7 +605,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			BotAI_BotInitialChat(bs, "getitem_start", buf, NULL);
 			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
 			BotVoiceChatOnly(bs, bs->decisionmaker, VOICECHAT_YES);
-			trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
+			EA_Action(bs->client, ACTION_AFFIRMATIVE);
 			bs->teammessage_time = 0;
 		}
 		//set the bot goal
@@ -637,7 +637,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				BotAI_BotInitialChat(bs, "camp_start", EasyClientName(bs->teammate, netname, sizeof(netname)), NULL);
 				trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
 				BotVoiceChatOnly(bs, bs->decisionmaker, VOICECHAT_YES);
-				trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
+				EA_Action(bs->client, ACTION_AFFIRMATIVE);
 			}
 			bs->teammessage_time = 0;
 		}
@@ -681,7 +681,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			}
 			//if the bot wants to crouch
 			if (bs->attackcrouch_time > FloatTime()) {
-				trap_EA_Crouch(bs->client);
+				EA_Crouch(bs->client);
 			}
 			//don't crouch when swimming
 			if (trap_AAS_Swimming(bs->origin)) bs->attackcrouch_time = FloatTime() - 1;
@@ -717,7 +717,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			BotAI_BotInitialChat(bs, "patrol_start", buf, NULL);
 			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
 			BotVoiceChatOnly(bs, bs->decisionmaker, VOICECHAT_YES);
-			trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
+			EA_Action(bs->client, ACTION_AFFIRMATIVE);
 			bs->teammessage_time = 0;
 		}
 		//
@@ -1227,7 +1227,7 @@ int AINode_Stand(bot_state_t *bs) {
 		bs->standfindenemy_time = FloatTime() + 1;
 	}
 	// put up chat icon
-	trap_EA_Talk(bs->client);
+	EA_Talk(bs->client);
 	// when done standing
 	if (bs->stand_time < FloatTime()) {
 		trap_BotEnterChat(bs->cs, 0, bs->chatto);
@@ -1276,14 +1276,14 @@ int AINode_Respawn(bot_state_t *bs) {
 			AIEnter_Seek_LTG(bs, "respawn: respawned");
 		}
 		else {
-			trap_EA_Respawn(bs->client);
+			EA_Respawn(bs->client);
 		}
 	}
 	else if (bs->respawn_time < FloatTime()) {
 		// wait until respawned
 		bs->respawn_wait = qtrue;
 		// elementary action respawn
-		trap_EA_Respawn(bs->client);
+		EA_Respawn(bs->client);
 		//
 		if (bs->respawnchat_time) {
 			trap_BotEnterChat(bs->cs, 0, bs->chatto);
@@ -1291,7 +1291,7 @@ int AINode_Respawn(bot_state_t *bs) {
 		}
 	}
 	if (bs->respawnchat_time && bs->respawnchat_time < FloatTime() - 0.5) {
-		trap_EA_Talk(bs->client);
+		EA_Talk(bs->client);
 	}
 	//
 	return qtrue;
@@ -1375,7 +1375,7 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 						// if the mine is visible from the current position
 						if (bsptrace.fraction >= 1.0 || bsptrace.ent == state.number) {
 							// shoot at the mine
-							trap_EA_Attack(bs->client);
+							EA_Attack(bs->client);
 						}
 					}
 				}
@@ -1432,7 +1432,7 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 						// if the mine is visible from the current position
 						if (bsptrace.fraction >= 1.0 || bsptrace.ent == state.number) {
 							// shoot at the mine
-							trap_EA_Attack(bs->client);
+							EA_Attack(bs->client);
 						}
 					}
 				}
@@ -1513,7 +1513,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 				vectoangles(dir, ideal_viewangles);
 				// if the bot is pretty close with its aim
 				if (InFieldOfVision(bs->viewangles, 20, ideal_viewangles)) {
-					trap_EA_Attack(bs->client);
+					EA_Attack(bs->client);
 				}
 			}
 		}
@@ -1853,7 +1853,7 @@ int AINode_Seek_LTG(bot_state_t *bs)
 	//
 	if (bs->killedenemy_time > FloatTime() - 2) {
 		if (random() < bs->thinktime * 1) {
-			trap_EA_Gesture(bs->client);
+			EA_Gesture(bs->client);
 		}
 	}
 	//if there is an enemy

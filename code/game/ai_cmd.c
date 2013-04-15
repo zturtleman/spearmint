@@ -329,7 +329,7 @@ int BotGetPatrolWaypoints(bot_state_t *bs, bot_match_t *match) {
 	//
 	while(1) {
 		if (!trap_BotFindMatch(keyarea, &keyareamatch, MTCONTEXT_PATROLKEYAREA)) {
-			trap_EA_SayTeam(bs->client, "what do you say?");
+			EA_SayTeam(bs->client, "what do you say?");
 			BotFreeWaypoints(newpatrolpoints);
 			bs->patrolpoints = NULL;
 			return qfalse;
@@ -375,7 +375,7 @@ int BotGetPatrolWaypoints(bot_state_t *bs, bot_match_t *match) {
 	}
 	//
 	if (!newpatrolpoints || !newpatrolpoints->next) {
-		trap_EA_SayTeam(bs->client, "I need more key points to patrol\n");
+		EA_SayTeam(bs->client, "I need more key points to patrol\n");
 		BotFreeWaypoints(newpatrolpoints);
 		newpatrolpoints = NULL;
 		return qfalse;
@@ -434,7 +434,7 @@ int BotAddressedToBot(bot_state_t *bs, bot_match_t *match) {
 			}
 		}
 		//Com_sprintf(buf, sizeof(buf), "not addressed to me but %s", addressedto);
-		//trap_EA_Say(bs->client, buf);
+		//EA_Say(bs->client, buf);
 		return qfalse;
 	}
 	else {
@@ -1064,7 +1064,7 @@ void BotMatch_TaskPreference(bot_state_t *bs, bot_match_t *match) {
 	BotAI_BotInitialChat(bs, "keepinmind", teammatename, NULL);
 	trap_BotEnterChat(bs->cs, teammate, CHAT_TELL);
 	BotVoiceChatOnly(bs, teammate, VOICECHAT_YES);
-	trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
+	EA_Action(bs->client, ACTION_AFFIRMATIVE);
 }
 
 /*
@@ -1294,13 +1294,13 @@ void BotMatch_Suicide(bot_state_t *bs, bot_match_t *match) {
 	//if not addressed to this bot
 	if (!BotAddressedToBot(bs, match)) return;
 	//
-	trap_EA_Command(bs->client, "kill");
+	EA_Command(bs->client, "kill");
 	//
 	trap_BotMatchVariable(match, NETNAME, netname, sizeof(netname));
 	client = ClientFromName(netname);
 	//
 	BotVoiceChat(bs, client, VOICECHAT_TAUNT);
-	trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
+	EA_Action(bs->client, ACTION_AFFIRMATIVE);
 }
 
 /*
@@ -1372,7 +1372,7 @@ void BotMatch_WhoIsTeamLeader(bot_state_t *bs, bot_match_t *match) {
 	ClientName(bs->client, netname, sizeof(netname));
 	//if this bot IS the team leader
 	if (!Q_stricmp(netname, bs->teamleader)) {
-		trap_EA_SayTeam(bs->client, "I'm the team leader\n");
+		EA_SayTeam(bs->client, "I'm the team leader\n");
 	}
 }
 
@@ -1911,12 +1911,12 @@ int BotMatchMessage(bot_state_t *bs, char *message) {
 		}
 		case MSG_CREATENEWFORMATION:	//start the creation of a new formation
 		{
-			trap_EA_SayTeam(bs->client, "the part of my brain to create formations has been damaged");
+			EA_SayTeam(bs->client, "the part of my brain to create formations has been damaged");
 			break;
 		}
 		case MSG_FORMATIONPOSITION:		//tell someone his/her position in the formation
 		{
-			trap_EA_SayTeam(bs->client, "the part of my brain to create formations has been damaged");
+			EA_SayTeam(bs->client, "the part of my brain to create formations has been damaged");
 			break;
 		}
 		case MSG_FORMATIONSPACE:		//set the formation space

@@ -309,10 +309,10 @@ void BotVoiceChat(bot_state_t *bs, int toclient, char *voicechat) {
 #ifdef MISSIONPACK
 	if (toclient == -1)
 		// voice only say team
-		trap_EA_Command(bs->client, va("vsay_team %s", voicechat));
+		EA_Command(bs->client, va("vsay_team %s", voicechat));
 	else
 		// voice only tell single player
-		trap_EA_Command(bs->client, va("vtell %d %s", toclient, voicechat));
+		EA_Command(bs->client, va("vtell %d %s", toclient, voicechat));
 #endif
 }
 
@@ -325,10 +325,10 @@ void BotVoiceChatOnly(bot_state_t *bs, int toclient, char *voicechat) {
 #ifdef MISSIONPACK
 	if (toclient == -1)
 		// voice only say team
-		trap_EA_Command(bs->client, va("vosay_team %s", voicechat));
+		EA_Command(bs->client, va("vosay_team %s", voicechat));
 	else
 		// voice only tell single player
-		trap_EA_Command(bs->client, va("votell %d %s", toclient, voicechat));
+		EA_Command(bs->client, va("votell %d %s", toclient, voicechat));
 #endif
 }
 

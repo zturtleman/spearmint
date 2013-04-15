@@ -33,6 +33,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/q_shared.h"
 #include "bg_misc.h"
 #include "g_public.h"
+#include "ai_ea.h"
 
 //==================================================================
 
@@ -893,35 +894,6 @@ void	trap_AAS_JumpReachRunStart(void /* struct aas_reachability_s */ *reach, vec
 int		trap_AAS_AgainstLadder(vec3_t origin);
 int		trap_AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *velocity);
 int		trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs);
-
-#include "ai_ea.h"
-#define trap_EA_Say			EA_Say
-#define trap_EA_SayTeam		EA_SayTeam
-#define trap_EA_Command		EA_Command
-
-#define trap_EA_Action		EA_Action
-#define trap_EA_Gesture		EA_Gesture
-#define trap_EA_Talk		EA_Talk
-#define trap_EA_Attack		EA_Attack
-#define trap_EA_Use			EA_Use
-#define trap_EA_Respawn		EA_Respawn
-#define trap_EA_Crouch		EA_Crouch
-#define trap_EA_MoveUp		EA_MoveUp
-#define trap_EA_MoveDown	EA_MoveDown
-#define trap_EA_MoveForward	EA_MoveForward
-#define trap_EA_MoveBack	EA_MoveBack
-#define trap_EA_MoveLeft	EA_MoveLeft
-#define trap_EA_MoveRight	EA_MoveRight
-#define trap_EA_SelectWeapon	EA_SelectWeapon
-#define trap_EA_Jump		EA_Jump
-#define trap_EA_DelayedJump	EA_DelayedJump
-#define trap_EA_Move		EA_Move
-#define trap_EA_View		EA_View
-
-#define trap_EA_EndRegular	EA_EndRegular
-#define trap_EA_GetInput	EA_GetInput
-#define trap_EA_ResetInput	EA_ResetInput
-
 
 int		trap_BotLoadCharacter(char *charfile, float skill);
 void	trap_BotFreeCharacter(int character);

@@ -477,7 +477,7 @@ void BotVoiceChat_WantOnDefense(bot_state_t *bs, int client, int mode) {
 	BotAI_BotInitialChat(bs, "keepinmind", netname, NULL);
 	trap_BotEnterChat(bs->cs, client, CHAT_TELL);
 	BotVoiceChatOnly(bs, client, VOICECHAT_YES);
-	trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
+	EA_Action(bs->client, ACTION_AFFIRMATIVE);
 }
 
 /*
@@ -498,7 +498,7 @@ void BotVoiceChat_WantOnOffense(bot_state_t *bs, int client, int mode) {
 	BotAI_BotInitialChat(bs, "keepinmind", netname, NULL);
 	trap_BotEnterChat(bs->cs, client, CHAT_TELL);
 	BotVoiceChatOnly(bs, client, VOICECHAT_YES);
-	trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
+	EA_Action(bs->client, ACTION_AFFIRMATIVE);
 }
 
 void BotVoiceChat_Dummy(bot_state_t *bs, int client, int mode) {
