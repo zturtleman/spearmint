@@ -63,9 +63,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "syn.h"				//synonyms
 #include "match.h"				//string matching types and vars
 
-entityType_t trap_AAS_EntityType(int ent);
-int trap_AAS_EntityModelindex(int ent);
-
 //#define DEBUG_AI_GOAL
 #ifdef RANDOMIZE
 #define UNDECIDEDFUZZY
@@ -901,7 +898,7 @@ void BotFindEntityForLevelItem(levelitem_t *li)
 	for (ent = BotNextEntity(0); ent; ent = BotNextEntity(ent))
 	{
 		//get the model index of the entity
-		modelindex = trap_AAS_EntityModelindex(ent);
+		modelindex = g_entities[ent].s.modelindex;
 		//
 		if (!modelindex) continue;
 		//get info about the entity
@@ -958,9 +955,9 @@ void BotUpdateEntityItems(void)
 	//
 	for (ent = BotNextEntity(0); ent; ent = BotNextEntity(ent))
 	{
-		if (trap_AAS_EntityType(ent) != ET_ITEM) continue;
+		if (g_entities[ent].s.eType != ET_ITEM) continue;
 		//get the model index of the entity
-		modelindex = trap_AAS_EntityModelindex(ent);
+		modelindex = g_entities[ent].s.modelindex;
 		//
 		if (!modelindex) continue;
 		//get info about the entity

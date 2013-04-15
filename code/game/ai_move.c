@@ -64,19 +64,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "syn.h"				//synonyms
 #include "match.h"				//string matching types and vars
 
-entityType_t trap_AAS_EntityType(int ent) { if (ent < 0 || ent >= MAX_GENTITIES) return 0; else return g_entities[ent].s.eType; }
-int trap_AAS_EntityModelindex(int ent) { if (ent < 0 || ent >= MAX_GENTITIES) return 0; else return g_entities[ent].s.modelindex; }
-#define trap_AAS_EntityModelNum trap_AAS_EntityModelindex
-
-// ai_dmnet.c just uses vectoangles directly
-#define Vector2Angles(v,a)		vectoangles(v,a)
-
-// Moved function to game instead of adding trap
-#define trap_AAS_OriginOfMoverWithModelNum BotOriginOfMoverWithModelNum
-#define trap_AAS_BSPModelMinsMaxsOrigin BotBSPModelMinsMaxsOrigin
-
-static int trap_AAS_AreaPresenceType(int areanum) { aas_areainfo_t areainfo; trap_AAS_AreaInfo(areanum, &areainfo); return areainfo.presencetype; }
-
 //#define DEBUG_AI_MOVE
 //#define DEBUG_ELEVATOR
 //#define DEBUG_GRAPPLE
@@ -157,6 +144,19 @@ void BotInitMoveState(int handle, bot_initmove_t *initmove)
 	ms->moveflags &= ~MFL_GRAPPLEPULL;
 	if (initmove->or_moveflags & MFL_GRAPPLEPULL) ms->moveflags |= MFL_GRAPPLEPULL;
 } //end of the function BotInitMoveState
+//========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//========================================================================
+int BotAreaPresenceType(int areanum) {
+	aas_areainfo_t areainfo;
+
+	trap_AAS_AreaInfo(areanum, &areainfo);
+
+	return areainfo.presencetype;
+}
 //========================================================================
 //
 // Parameter:			-
@@ -264,7 +264,7 @@ int BotReachabilityArea(vec3_t origin, int client)
 			return BotFuzzyPointReachabilityArea(origin);
 		} //end if
 
-		modelnum = trap_AAS_EntityModelindex(bsptrace.entityNum);
+		modelnum = g_entities[bsptrace.entityNum].s.modelindex;
 		modeltype = modeltypes[modelnum];
 
 		//if standing on a func_plat or func_bobbing then the bot is assumed to be
@@ -454,9 +454,9 @@ int BotOnMover(vec3_t origin, int entnum, aas_reachability_t *reach)
 
 	modelnum = reach->facenum & 0x0000FFFF;
 	//get some bsp model info
-	trap_AAS_BSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, NULL);
+	BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, NULL);
 	//
-	if (!trap_AAS_OriginOfMoverWithModelNum(modelnum, modelorigin))
+	if (!BotOriginOfMoverWithModelNum(modelnum, modelorigin))
 	{
 		BotAI_Print(PRT_MESSAGE, "no entity with model %d\n", modelnum);
 		return qfalse;
@@ -477,7 +477,7 @@ int BotOnMover(vec3_t origin, int entnum, aas_reachability_t *reach)
 	if (!trace.startsolid && !trace.allsolid)
 	{
 		//NOTE: the reachability face number is the model number of the elevator
-		if (trace.entityNum != ENTITYNUM_NONE && trap_AAS_EntityModelNum(trace.entityNum) == modelnum)
+		if (trace.entityNum != ENTITYNUM_NONE && g_entities[trace.entityNum].s.modelindex == modelnum)
 		{
 			return qtrue;
 		} //end if
@@ -498,9 +498,9 @@ int MoverDown(aas_reachability_t *reach)
 
 	modelnum = reach->facenum & 0x0000FFFF;
 	//get some bsp model info
-	trap_AAS_BSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, origin);
+	BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, origin);
 	//
-	if (!trap_AAS_OriginOfMoverWithModelNum(modelnum, origin))
+	if (!BotOriginOfMoverWithModelNum(modelnum, origin))
 	{
 		BotAI_Print(PRT_MESSAGE, "no entity with model %d\n", modelnum);
 		return qfalse;
@@ -996,9 +996,9 @@ void MoverBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter)
 
 	modelnum = reach->facenum & 0x0000FFFF;
 	//get some bsp model info
-	trap_AAS_BSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, origin);
+	BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, origin);
 	//
-	if (!trap_AAS_OriginOfMoverWithModelNum(modelnum, origin))
+	if (!BotOriginOfMoverWithModelNum(modelnum, origin))
 	{
 		BotAI_Print(PRT_MESSAGE, "no entity with model %d\n", modelnum);
 	} //end if
@@ -1367,7 +1367,7 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach)
 		dist = VectorNormalize(hordir);
 	} //end if
 	//if going towards a crouch area
-	if (!(trap_AAS_AreaPresenceType(reach->areanum) & PRESENCE_NORMAL))
+	if (!(BotAreaPresenceType(reach->areanum) & PRESENCE_NORMAL))
 	{
 		//if pretty close to the reachable area
 		if (dist < 20) EA_Crouch(ms->client);
@@ -1537,7 +1537,7 @@ bot_moveresult_t BotTravel_Swim(bot_movestate_t *ms, aas_reachability_t *reach)
 	EA_Move(ms->client, dir, 400);
 	//
 	VectorCopy(dir, result.movedir);
-	Vector2Angles(dir, result.ideal_viewangles);
+	vectoangles(dir, result.ideal_viewangles);
 	result.flags |= MOVERESULT_SWIMVIEW;
 	//
 	return result;
@@ -1568,7 +1568,7 @@ bot_moveresult_t BotTravel_WaterJump(bot_movestate_t *ms, aas_reachability_t *re
 	//move up if close to the actual out of water jump spot
 	if (dist < 40) EA_MoveUp(ms->client);
 	//set the ideal view angles
-	Vector2Angles(dir, result.ideal_viewangles);
+	vectoangles(dir, result.ideal_viewangles);
 	result.flags |= MOVERESULT_MOVEMENTVIEW;
 	//
 	VectorCopy(dir, result.movedir);
@@ -1602,7 +1602,7 @@ bot_moveresult_t BotFinishTravel_WaterJump(bot_movestate_t *ms, aas_reachability
 	//elemantary actions
 	EA_Move(ms->client, dir, 400);
 	//set the ideal view angles
-	Vector2Angles(dir, result.ideal_viewangles);
+	vectoangles(dir, result.ideal_viewangles);
 	result.flags |= MOVERESULT_MOVEMENTVIEW;
 	//
 	VectorCopy(dir, result.movedir);
@@ -1996,7 +1996,7 @@ bot_moveresult_t BotTravel_Ladder(bot_movestate_t *ms, aas_reachability_t *reach
 		viewdir[0] = dir[0];
 		viewdir[1] = dir[1];
 		viewdir[2] = 3 * dir[2];
-		Vector2Angles(viewdir, result.ideal_viewangles);
+		vectoangles(viewdir, result.ideal_viewangles);
 		//elemantary action
 		EA_Move(ms->client, origin, 0);
 		EA_MoveForward(ms->client);
@@ -2247,14 +2247,14 @@ void BotFuncBobStartEnd(aas_reachability_t *reach, vec3_t start, vec3_t end, vec
 	int num0, num1;
 
 	modelnum = reach->facenum & 0x0000FFFF;
-	if (!trap_AAS_OriginOfMoverWithModelNum(modelnum, origin))
+	if (!BotOriginOfMoverWithModelNum(modelnum, origin))
 	{
 		BotAI_Print(PRT_MESSAGE, "BotFuncBobStartEnd: no entity with model %d\n", modelnum);
 		VectorSet(start, 0, 0, 0);
 		VectorSet(end, 0, 0, 0);
 		return;
 	} //end if
-	trap_AAS_BSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, NULL);
+	BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, NULL);
 	VectorAdd(mins, maxs, mid);
 	VectorScale(mid, 0.5, mid);
 	VectorCopy(mid, start);
@@ -2521,7 +2521,7 @@ int GrappleState(bot_movestate_t *ms, aas_reachability_t *reach)
 	//or visible grapple entity
 	for (i = BotNextEntity(0); i; i = BotNextEntity(i))
 	{
-		if (trap_AAS_EntityType(i) == ET_MISSILE)
+		if (g_entities[i].s.eType == ET_MISSILE)
 		{
 			BotEntityInfo(i, &entinfo);
 			if (entinfo.weapon == WP_GRAPPLING_HOOK)
@@ -2665,7 +2665,7 @@ bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_t *reac
 		VectorSubtract(reach->end, org, viewdir);
 		//
 		dist = VectorNormalize(dir);
-		Vector2Angles(viewdir, result.ideal_viewangles);
+		vectoangles(viewdir, result.ideal_viewangles);
 		result.flags |= MOVERESULT_MOVEMENTVIEW;
 		//
 		if (dist < 5 &&
@@ -2732,7 +2732,7 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 	//
 	dist = VectorNormalize(hordir);
 	//look in the movement direction
-	Vector2Angles(hordir, result.ideal_viewangles);
+	vectoangles(hordir, result.ideal_viewangles);
 	//look straight down
 	result.ideal_viewangles[PITCH] = 90;
 	//
@@ -2759,7 +2759,7 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 		EA_Move(ms->client, hordir, speed);
 	} //end else
 	//look in the movement direction
-	Vector2Angles(hordir, result.ideal_viewangles);
+	vectoangles(hordir, result.ideal_viewangles);
 	//look straight down
 	result.ideal_viewangles[PITCH] = 90;
 	//set the view angles directly
@@ -2819,7 +2819,7 @@ bot_moveresult_t BotTravel_BFGJump(bot_movestate_t *ms, aas_reachability_t *reac
 		EA_Move(ms->client, hordir, speed);
 	} //end else
 	//look in the movement direction
-	Vector2Angles(hordir, result.ideal_viewangles);
+	vectoangles(hordir, result.ideal_viewangles);
 	//look straight down
 	result.ideal_viewangles[PITCH] = 90;
 	//set the view angles directly
@@ -3001,7 +3001,7 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal)
 	//
 	if (ms->moveflags & MFL_SWIMMING)
 	{
-		Vector2Angles(dir, result.ideal_viewangles);
+		vectoangles(dir, result.ideal_viewangles);
 		result.flags |= MOVERESULT_SWIMVIEW;
 	} //end if
 	//if (!debugline) debugline = botimport.DebugLineCreate();
@@ -3066,7 +3066,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 
 		if (ent != -1)
 		{
-			modelnum = trap_AAS_EntityModelindex(ent);
+			modelnum = g_entities[ent].s.modelindex;
 			if (modelnum >= 0 && modelnum < MAX_MODELS)
 			{
 				modeltype = modeltypes[modelnum];
