@@ -159,8 +159,8 @@ equ trap_AAS_ReachabilityFromNum		-404
 equ trap_AAS_RandomGoalArea				-405
 equ trap_AAS_EnableRoutingArea			-406
 equ trap_AAS_AreaTravelTime				-407
-equ trap_AAS_AreaTravelTimeToGoalArea	-409
-equ trap_AAS_PredictRoute				-410
+equ trap_AAS_AreaTravelTimeToGoalArea	-408
+equ trap_AAS_PredictRoute				-409
 
 equ trap_AAS_AlternativeRouteGoals		-421
 
