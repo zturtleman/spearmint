@@ -814,6 +814,10 @@ qboolean FS_Rename( const char *from, const char *to ) {
 
 	FS_CheckFilenameIsNotExecutable( to_ospath, __func__ );
 
+	if( FS_CreatePath( to_ospath ) ) {
+		return qfalse;
+	}
+
 	return rename(from_ospath, to_ospath) == 0;
 }
 
