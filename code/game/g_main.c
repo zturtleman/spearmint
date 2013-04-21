@@ -404,8 +404,8 @@ void G_RegisterCvars( void ) {
 
 	// Don't allow single player gametype to be used in multiplayer.
 	if ( g_gametype.integer == GT_SINGLE_PLAYER && !g_singlePlayer.integer) {
-		g_gametype.integer = GT_FFA;
-		trap_Cvar_Set( "g_gametype", va("%d", g_gametype.integer) );
+		trap_Cvar_SetValue( "g_gametype", GT_FFA );
+		trap_Cvar_Update( &g_gametype );
 	}
 
 	level.warmupModificationCount = g_warmup.modificationCount;
