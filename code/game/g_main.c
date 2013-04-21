@@ -436,6 +436,10 @@ void G_UpdateCvars( void ) {
 				if (cv->teamShader) {
 					remapped = qtrue;
 				}
+
+				if ( cv->vmCvar == &g_gametype ) {
+					trap_Cvar_SetValue( "sv_dorestart", 1 );
+				}
 			}
 		}
 	}

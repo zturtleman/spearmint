@@ -592,7 +592,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	svs.nextSnapshotEntities = 0;
 
 	// don't allow a map_restart if game is modified
-	sv_gametype->modified = qfalse;
+	sv_dorestart->integer = 0;
 
 	// run a few frames to allow everything to settle
 	for (i = 0;i < 3; i++)
@@ -739,7 +739,6 @@ void SV_Init (void)
 	SV_AddOperatorCommands ();
 
 	// serverinfo vars
-	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
 	Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO);
 	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
 	sv_privateClients = Cvar_Get ("sv_privateClients", "0", CVAR_SERVERINFO);
@@ -797,6 +796,8 @@ void SV_Init (void)
 
 	sv_public = Cvar_Get("sv_public", "0", 0);
 	Cvar_CheckRange(sv_public, -2, 1, qtrue);
+
+	sv_dorestart = Cvar_Get ("sv_dorestart", "0", CVAR_ROM );
 
 	// initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();
