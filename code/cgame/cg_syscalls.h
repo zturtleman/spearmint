@@ -227,6 +227,7 @@ qboolean		trap_LAN_UpdateVisiblePings( int source );
 int				trap_LAN_AddServer(int source, const char *name, const char *addr);
 void			trap_LAN_RemoveServer(int source, const char *addr);
 int				trap_LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int s2 );
+qboolean		trap_LAN_ServerIsInFavoriteList( int source, int n  );
 
 // this returns a handle.  arg0 is the name in the format "idlogo.roq", set arg1 to NULL, alteredstates to qfalse (do not alter gamestate)
 int			trap_CIN_PlayCinematic( const char *arg0, int xpos, int ypos, int width, int height, int bits);

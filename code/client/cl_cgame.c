@@ -1013,6 +1013,46 @@ int LAN_GetServerStatus( char *serverAddress, char *serverStatus, int maxLen ) {
 	return CL_ServerStatus( serverAddress, serverStatus, maxLen );
 }
 
+/*
+=======================
+LAN_ServerIsInFavoriteList
+=======================
+*/
+qboolean LAN_ServerIsInFavoriteList( int source, int n ) {
+	int i;
+	serverInfo_t *server = NULL;
+
+	switch ( source ) {
+	case AS_LOCAL:
+		if ( n >= 0 && n < MAX_OTHER_SERVERS ) {
+			server = &cls.localServers[n];
+		}
+		break;
+	case AS_GLOBAL:
+		if ( n >= 0 && n < MAX_GLOBAL_SERVERS ) {
+			server = &cls.globalServers[n];
+		}
+		break;
+	case AS_FAVORITES:
+		if ( n >= 0 && n < MAX_OTHER_SERVERS ) {
+			return qtrue;
+		}
+		break;
+	}
+
+	if ( !server ) {
+		return qfalse;
+	}
+
+	for ( i = 0; i < cls.numfavoriteservers; i++ ) {
+		if ( NET_CompareAdr( cls.favoriteServers[i].adr, server->adr ) ) {
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
 
 /*
 ====================
@@ -1454,6 +1494,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_LAN_GETSERVERINFO:
 		LAN_GetServerInfo( args[1], args[2], VMA(3), args[4] );
 		return 0;
+
+	case CG_LAN_SERVERISINFAVORITELIST:
+		return LAN_ServerIsInFavoriteList( args[1], args[2] );
 
 	case CG_LAN_GETSERVERPING:
 		return LAN_GetServerPing( args[1], args[2] );

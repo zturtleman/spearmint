@@ -627,6 +627,10 @@ int trap_LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int s
 	return syscall( CG_LAN_COMPARESERVERS, source, sortKey, sortDir, s1, s2 );
 }
 
+qboolean trap_LAN_ServerIsInFavoriteList( int source, int n  ) {
+	return syscall( CG_LAN_SERVERISINFAVORITELIST, source, n );
+}
+
 int trap_PC_AddGlobalDefine( char *define ) {
 	return syscall( CG_PC_ADD_GLOBAL_DEFINE, define );
 }

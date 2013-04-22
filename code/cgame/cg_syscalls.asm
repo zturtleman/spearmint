@@ -186,6 +186,7 @@ equ trap_LAN_ServerStatus				-565
 equ trap_LAN_GetServerPing				-566
 equ trap_LAN_ServerIsVisible			-567
 equ trap_LAN_CompareServers				-568
+equ trap_LAN_ServerIsInFavoriteList		-569
 
 
 
