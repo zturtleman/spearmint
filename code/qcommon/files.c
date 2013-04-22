@@ -2475,6 +2475,9 @@ int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int
 #ifdef USE_CODEC_VORBIS
 			, "ogg"
 #endif
+#ifdef USE_CODEC_OPUS
+			, "opus"
+#endif
 			};
 		int extNamesSize = ARRAY_LEN(extensions);
 		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, qfalse);
