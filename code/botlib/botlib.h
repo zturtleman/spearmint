@@ -390,6 +390,8 @@ name:						default:			module(s):			description:
 "bot_visualizejumppads"		"0"					be_aas_reach.c		visualize jump pads
 
 "bot_reloadcharacters"		"0"					-					reload bot character files
+"bot_testichat"				"0"					-					test ichat
+"bot_testrchat"				"0"					-					test rchat
 "synfile"					"syn.c"				be_ai_chat.c		file with synonyms
 "rndfile"					"rnd.c"				be_ai_chat.c		file with random strings
 "matchfile"					"match.c"			be_ai_chat.c		file with match strings
