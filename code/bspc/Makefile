@@ -387,7 +387,6 @@ BSPC_OBJS = \
 	$(B)/qcommon/cm_test.o\
 	$(B)/qcommon/cm_trace.o\
 	$(B)/bspc/csg.o\
-	$(B)/bspc/glfile.o\
 	$(B)/bspc/l_bsp_ent.o\
 	$(B)/bspc/l_bsp_q3.o\
 	$(B)/bspc/l_cmd.o\
@@ -406,7 +405,6 @@ BSPC_OBJS = \
 	$(B)/bspc/map.o\
 	$(B)/bspc/map_q3.o\
 	$(B)/qcommon/md4.o\
-	$(B)/bspc/nodraw.o\
 	$(B)/bspc/portals.o\
 	$(B)/bspc/tree.o\
 	$(B)/qcommon/ioapi.o\

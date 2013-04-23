@@ -29,7 +29,7 @@ csg.c						//Constructive Solid Geometry brush chopping	(*)
 leakfile.c					//leak file writing								(*)
 
 l_bsp_ent.c					//BSP entity parsing
-l_bsp_q3.c					//Quake2 BSP loading and writing
+l_bsp_q3.c					//Quake3 BSP loading and writing
 l_cmd.c						//cmd library
 l_log.c						//log file library
 l_math.c					//math library
@@ -40,15 +40,6 @@ l_threads.c					//multi-threading library
 l_utils.c					//utility library
 l_qfiles.c					//loading of quake files
 
-gldraw.c					//GL drawing									(*)
-glfile.c					//GL file writing								(*)
-nodraw.c					//no draw module								(*)
-
-bspc.c						//BSPC Win32 console version
-winbspc.c					//WinBSPC Win32 GUI version
-win32_terminal.c			//Win32 terminal output
-win32_qfiles.c				//Win32 game file management (also .pak .sin)
-win32_font.c				//Win32 fonts
-win32_folder.c				//Win32 folder dialogs
+bspc.c						//BSPC main program
 
 */

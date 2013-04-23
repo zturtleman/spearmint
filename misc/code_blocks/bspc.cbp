@@ -254,9 +254,6 @@
 		<Unit filename="../../code/bspc/csg.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/bspc/glfile.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../../code/bspc/l_bsp_ent.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -306,18 +303,12 @@
 		<Unit filename="../../code/bspc/map_q3.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/bspc/nodraw.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../../code/bspc/portals.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/bspc/q3files.h" />
 		<Unit filename="../../code/bspc/qbsp.h" />
 		<Unit filename="../../code/bspc/qfiles.h" />
-		<Unit filename="../../code/bspc/textures.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../../code/bspc/tree.c">
 			<Option compilerVar="CC" />
 		</Unit>

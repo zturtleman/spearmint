@@ -62,7 +62,6 @@ int				entity_num;
 aas_settings_t	aassettings;
 
 qboolean	noprune;			//don't prune nodes (bspc.c)
-qboolean	glview;				//create a gl view
 qboolean	nodetail;			//don't use detail brushes (map.c)
 qboolean	fulldetail;			//use but don't mark detail brushes (map.c)
 qboolean	onlyents;			//only process the entities (bspc.c)
@@ -554,15 +553,6 @@ int main (int argc, char **argv)
 			optimize = true;
 		} //end else if
 		/*
-		else if (!stricmp(argv[i],"-glview"))
-		{
-			glview = true;
-		} //end else if
-		else if (!stricmp(argv[i], "-draw"))
-		{
-			Log_Print("drawflag = true\n");
-			drawflag = true;
-		} //end else if
 		else if (!stricmp(argv[i], "-noweld"))
 		{
 			Log_Print("noweld = true\n");
@@ -982,9 +972,7 @@ int main (int argc, char **argv)
 			"   grapplereach                         = calculate grapple reachabilities\n"
 #endif
 
-/*			"   glview     = output a GL view\n"
-			"   draw       = enables drawing\n"
-			"   noweld     = disables weld\n"
+/*			"   noweld     = disables weld\n"
 			"   noshare    = disables sharing\n"
 			"   notjunc    = disables juncs\n"
 			"   nowater    = disables water brushes\n"
