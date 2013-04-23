@@ -280,3 +280,15 @@ void AAS_CalcReachAndClusters(struct quakefile_s *qf)
 	//calculate clusters
 	AAS_InitClustering();
 } //end of the function AAS_CalcReachAndClusters
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+void AAS_RecalcClusters(void)
+{
+	aasworld.numclusters = 0;
+	AAS_InitBotImport();
+	AAS_InitClustering();
+} //end of the function AAS_RecalcClusters

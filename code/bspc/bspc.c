@@ -622,9 +622,7 @@ int main (int argc, char **argv)
 							Error("error loading aas file %s\n", filename);
 						} //end if
 						//calculate the clusters
-						aasworld.numclusters = 0;
-						AAS_InitBotImport();
-						AAS_InitClustering();
+						AAS_RecalcClusters();
 					} //end if
 					else
 					{

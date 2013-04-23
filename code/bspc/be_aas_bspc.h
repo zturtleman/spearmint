@@ -28,5 +28,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
+void AAS_RecalcClusters( void );
 void AAS_CalcReachAndClusters(struct quakefile_s *qf);
 void AAS_InitBotImport( void );
