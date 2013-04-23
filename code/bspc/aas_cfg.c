@@ -37,7 +37,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../botlib/l_struct.h"
 #include "../botlib/l_libvar.h"
 
-//structure field offsets ZTM: int to size_t
+//structure field offsets
 #define BBOX_OFS(x) (size_t)&(((aas_bbox_t *)0)->x)
 #define CFG_OFS(x) (size_t)&(((cfg_t *)0)->x)
 

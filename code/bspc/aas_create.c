@@ -38,7 +38,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "aas_edgemelting.h"
 #include "aas_prunenodes.h"
 #include "aas_cfg.h"
-#include "../qcommon/surfaceflags.h" // ZTM(IOQ3): game to qcommon
+#include "../qcommon/surfaceflags.h"
 
 //#define AW_DEBUG
 //#define L_DEBUG

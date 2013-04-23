@@ -225,8 +225,6 @@ void Q3_SurfacePlane(q3_dsurface_t *surface, vec3_t normal, float *dist)
 */
 	if (VectorLength(normal) < 0.9)
 	{
-		// ZTM: Changed %d to %u and
-		//     added a cast "(unsigned int)("x")" onto surface - q3_drawSurfaces
 		printf("surface %u bogus normal vector %f %f %f\n", (unsigned int)(surface - q3_drawSurfaces), normal[0], normal[1], normal[2]);
 		printf("t1 = %f %f %f, t2 = %f %f %f\n", t1[0], t1[1], t1[2], t2[0], t2[1], t2[2]);
 		for (i = 0; i < surface->numVerts; i++)

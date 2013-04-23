@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "aas_map.h"			//AAS_CreateMapBrushes
 #include "l_bsp_q3.h"
 #include "../qcommon/cm_patch.h"
-#include "../qcommon/surfaceflags.h" // ZTM(IOQ3): game to qcommon
+#include "../qcommon/surfaceflags.h"
 
 #ifdef ME
 

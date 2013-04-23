@@ -28,7 +28,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
-#include "../qcommon/q_shared.h" // ZTM(IOQ3): game to qcommon
+#include "../qcommon/q_shared.h"
 #include "../bspc/l_log.h"
 #include "../bspc/l_qfiles.h"
 #include "../botlib/l_memory.h"
@@ -36,8 +36,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../botlib/l_precomp.h"
 #include "../botlib/l_struct.h"
 #include "../botlib/aasfile.h"
-#include "../botlib/botlib.h" // ZTM(IOQ3): game to botlib
-#include "../botlib/be_aas.h" // ZTM(IOQ3): game to botlib
+#include "../botlib/botlib.h"
+#include "../botlib/be_aas.h"
 #include "../botlib/be_aas_def.h"
 #include "../qcommon/cm_public.h"
 
@@ -225,26 +225,6 @@ void Com_DPrintf(const char *fmt, ...)
 int COM_Compress( char *data_p ) {
 	return strlen(data_p);
 }
-#if 0 // ZTM(IOQ3): Disabled
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void Com_Memset (void* dest, const int val, const size_t count) {
-	memset(dest, val, count);
-}
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void Com_Memcpy (void* dest, const void* src, const size_t count) {
-	memcpy(dest, src, count);
-}
-#endif
 //===========================================================================
 //
 // Parameter:				-

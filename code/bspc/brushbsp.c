@@ -381,7 +381,6 @@ bspbrush_t *AllocBrush (int numsides)
 	bspbrush_t	*bb;
 	int			c;
 
-	// ZTM: int to size_t
 	c = (size_t)&(((bspbrush_t *)0)->sides[numsides]);
 	bb = GetMemory(c);
 	memset (bb, 0, c);
@@ -445,7 +444,6 @@ bspbrush_t *CopyBrush (bspbrush_t *brush)
 	int			size;
 	int			i;
 
-	// ZTM: int to size_t
 	size = (size_t)&(((bspbrush_t *)0)->sides[brush->numsides]);
 
 	newbrush = AllocBrush (brush->numsides);

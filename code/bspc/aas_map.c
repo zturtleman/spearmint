@@ -33,7 +33,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../botlib/aasfile.h"		//aas_bbox_t
 #include "aas_store.h"				//AAS_MAX_BBOXES
 #include "aas_cfg.h"
-#include "../qcommon/surfaceflags.h" // ZTM(IOQ3): game to qcommon
+#include "../qcommon/surfaceflags.h"
 
 #define BBOX_NORMAL_EPSILON			0.0001
 
