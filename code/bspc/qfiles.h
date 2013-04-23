@@ -27,11 +27,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // This file must be identical in the quake and utils directories
 //
 
-#define	MAX_MAP_ENTITIES	2048
-#define	MAX_MAP_ENTSTRING	0x40000
-
-#define	MAX_MAP_AREAS		256
-#define	MAX_MAP_BRUSHSIDES	65536
+#define	MAX_MAP_ENTITIES	0x1000 // ZTM: NOTE: Using value from WolfET, it's only 0x800 in Quake3/RTCW-MP.
+#define	MAX_MAP_BRUSHSIDES	0x100000 // ZTM: NOTE: Using value from WolfET, it's only 0x20000 in Quake3/RTCW-MP.
 
 // key / value pair sizes
 
