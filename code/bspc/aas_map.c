@@ -524,13 +524,12 @@ int AAS_ValidEntity(entity_t *mapent)
 		//FIXME: easy/medium/hard/deathmatch specific?
 		return true;
 	} //end else if
-#ifdef TA_ENTSYS // BREAKABLE
-	else if (!strcmp("func_breakable", ValueForKey(mapent, "classname")))
+	else if (!strcmp("func_door", ValueForKey(mapent, "classname")))
 	{
 		return true;
 	} //end else if
-#endif
-	else if (!strcmp("func_door", ValueForKey(mapent, "classname")))
+	//func_breakable for Turtle Arena
+	else if (!strcmp("func_breakable", ValueForKey(mapent, "classname")))
 	{
 		return true;
 	} //end else if
@@ -621,7 +620,7 @@ void AAS_PositionBrush(entity_t *mapent, mapbrush_t *brush)
 		model = ValueForKey(mapent, "model");
 		brush->modelnum = atoi(model+1);
 	} //end if
-#ifdef TA_ENTSYS // BREAKABLE
+	//func_breakable for Turtle Arena
 	else if (!strcmp("func_breakable", ValueForKey(mapent, "classname")))
 	{
 		//set mover contents
@@ -630,7 +629,6 @@ void AAS_PositionBrush(entity_t *mapent, mapbrush_t *brush)
 		model = ValueForKey(mapent, "model");
 		brush->modelnum = atoi(model+1);
 	} //end if
-#endif
 } //end of the function AAS_PositionBrush
 //===========================================================================
 // uses the global cfg_t cfg

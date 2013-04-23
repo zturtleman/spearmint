@@ -288,13 +288,11 @@ int main (int argc, char **argv)
 	start_time = I_FloatTime();
 
 	Log_Open("bspc.log");		//open a log file
-	Log_Print("BSPC version "BSPC_VERSION", %s %s\n", __DATE__, __TIME__);
+	Log_Print(BSPC_NAME" version "BSPC_VERSION", %s %s\n", __DATE__, __TIME__);
 
-#ifdef TURTLEARENA
+#ifdef ZTMAUTOARGS
 	calcgrapplereach = true;
-	forcesidesvisible = true; // Currently always required. So always enable.
-	Log_Print("grapplereach = true\n");
-	Log_Print("forcesidesvisible = true\n");
+	forcesidesvisible = true; // Currently always required or BSPC fails?
 #endif
 	DefaultCfg();
 	for (i = 1; i < argc; i++)
@@ -409,7 +407,7 @@ int main (int argc, char **argv)
 			calcgrapplereach = true;
 			Log_Print("grapplereach = true\n");
 		} //end else if
-#ifdef TURTLEARENA
+#ifdef ZTMAUTOARGS
 		else if (!stricmp(argv[i], "-nograpplereach"))
 		{
 			calcgrapplereach = false;
@@ -431,7 +429,7 @@ int main (int argc, char **argv)
 			forcesidesvisible = true;
 			Log_Print("forcesidesvisible = true\n");
 		} //end else if
-#ifdef TURTLEARENA
+#ifdef ZTMAUTOARGS
 		else if (!stricmp(argv[i], "-noforcesidesvisible"))
 		{
 			forcesidesvisible = false;
@@ -717,7 +715,7 @@ int main (int argc, char **argv)
 			//"   aasall   <quake3folder>              = create AAS files for all BSPs\n"
 			"   bsp2aas  <[pakfilter/]filter.bsp>    = convert BSP to AAS\n"
 			"   reach    <filter.bsp>                = compute reachability & clusters\n"
-			"   cluster  <filter.aas>                = compute clusters\n"
+			"   cluster  <filter.bsp>                = compute clusters\n"
 			"   aasopt   <filter.aas>                = optimize aas file\n"
 			"   aasinfo  <filter.aas>                = show AAS file info\n"
 			"   output   <output path>               = set output path\n"
@@ -730,7 +728,7 @@ int main (int argc, char **argv)
 			"   noliquids                            = don't write liquids to map\n"
 			"   freetree                             = free the bsp tree\n"
 			"   nocsg                                = disables brush chopping\n"
-#ifdef TURTLEARENA
+#ifdef ZTMAUTOARGS
 			"   noforcesidesvisible                  = don't force all sides to be visible\n"
 			"   nograpplereach                       = don't calculate grapple reachabilities\n"
 #else

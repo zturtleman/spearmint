@@ -814,7 +814,7 @@ qboolean WriteMapFileSafe(FILE *fp)
 	//
 	if (fprintf(fp,"//=====================================================\n"
 			"//\n"
-			"// map file created with BSPC "BSPC_VERSION"\n"
+			"// map file created with "BSPC_NAME" "BSPC_VERSION"\n"
 			"//\n"
 			"// BSPC is designed to decompile material in which you own the copyright\n"
 			"// or have obtained permission to decompile from the copyright owner. Unless\n"

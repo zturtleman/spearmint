@@ -45,16 +45,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "l_log.h"
 #include "l_qfiles.h"
 
-#define TURTLEARENA // ZTM: Minor changes for Turtle Arena
+#define BSPC_NAME			"Spearmint BSPC"
+#define BSPC_VERSION		"2.2"
 
-#ifdef TURTLEARENA
-#define TA_ENTSYS
-#define TA_WEAPSYS
-
-#define BSPC_VERSION		"2.1h [Turtle Arena]"
-#else
-#define BSPC_VERSION		"2.1h"
-#endif
+#define ZTMAUTOARGS
 
 #define DEBUG
 #define NODELIST
