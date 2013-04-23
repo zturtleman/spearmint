@@ -379,80 +379,91 @@ void Q3_FindVisibleBrushSides(void)
 	//create planes for the planar surfaces
 	Q3_CreatePlanarSurfacePlanes();
 	Log_Print("searching visible brush sides...\n");
-	Log_Print("%6d brush sides", numsides);
 	//go over all the brushes
-	for (i = 0; i < q3_numbrushes; i++)
-	{
-		brush = &q3_dbrushes[i];
-		//go over all the sides of the brush
-		for (j = 0; j < brush->numSides; j++)
-		{
-			qprintf("\r%6d", numsides++);
-			brushside = &q3_dbrushsides[brush->firstSide + j];
-			//
-			w = Q3_BrushSideWinding(brush, brushside);
-			if (!w)
-			{
-				q3_dbrushsidetextured[brush->firstSide + j] = true;
-				continue;
+	if ( forcesidesvisible ) {
+		for ( i = 0; i < q3_numbrushsides; i++ ) {
+			if ( q3_dshaders[q3_dbrushsides[i].shaderNum].surfaceFlags & SURF_NODRAW ) {
+				q3_dbrushsidetextured[i] = false;
 			} //end if
 			else
 			{
-				//RemoveEqualPoints(w, 0.2);
-				if (WindingIsTiny(w))
+				q3_dbrushsidetextured[i] = true;
+			} // end else
+		} //end for
+	} else {
+		Log_Print("%6d brush sides", numsides);
+		for (i = 0; i < q3_numbrushes; i++)
+		{
+			brush = &q3_dbrushes[i];
+			//go over all the sides of the brush
+			for (j = 0; j < brush->numSides; j++)
+			{
+				qprintf("\r%6d", numsides++);
+				brushside = &q3_dbrushsides[brush->firstSide + j];
+				//
+				w = Q3_BrushSideWinding(brush, brushside);
+				if (!w)
 				{
-					FreeWinding(w);
 					q3_dbrushsidetextured[brush->firstSide + j] = true;
 					continue;
 				} //end if
 				else
 				{
-					we = WindingError(w);
-					if (we == WE_NOTENOUGHPOINTS
-						|| we == WE_SMALLAREA
-						|| we == WE_POINTBOGUSRANGE
-//						|| we == WE_NONCONVEX
-						)
+					//RemoveEqualPoints(w, 0.2);
+					if (WindingIsTiny(w))
 					{
 						FreeWinding(w);
 						q3_dbrushsidetextured[brush->firstSide + j] = true;
 						continue;
 					} //end if
+					else
+					{
+						we = WindingError(w);
+						if (we == WE_NOTENOUGHPOINTS
+							|| we == WE_SMALLAREA
+							|| we == WE_POINTBOGUSRANGE
+	//						|| we == WE_NONCONVEX
+							)
+						{
+							FreeWinding(w);
+							q3_dbrushsidetextured[brush->firstSide + j] = true;
+							continue;
+						} //end if
+					} //end else
 				} //end else
-			} //end else
-			if (WindingArea(w) < 20)
-			{
-				q3_dbrushsidetextured[brush->firstSide + j] = true;
-				continue;
-			} //end if
-			//find a face for texturing this brush
-			for (k = 0; k < q3_numDrawSurfaces; k++)
-			{
-				surface = &q3_drawSurfaces[k];
-				if (surface->surfaceType != MST_PLANAR) continue;
-				//
-				//Q3_SurfacePlane(surface, plane.normal, &plane.dist);
-				plane = &q3_surfaceplanes[k];
-				//the surface plane and the brush side plane should be pretty much the same
-				if (fabs(fabs(plane->dist) - fabs(q3_dplanes[brushside->planeNum].dist)) > 5) continue;
-				dot = DotProduct(plane->normal, q3_dplanes[brushside->planeNum].normal);
-				if (dot > -0.9 && dot < 0.9) continue;
-				//if the face is partly or totally on the brush side
-				if (Q3_FaceOnWinding(surface, w))
+				if (WindingArea(w) < 20)
 				{
 					q3_dbrushsidetextured[brush->firstSide + j] = true;
-					//Log_Write("Q3_FaceOnWinding");
-					break;
+					continue;
 				} //end if
+				//find a face for texturing this brush
+				for (k = 0; k < q3_numDrawSurfaces; k++)
+				{
+					surface = &q3_drawSurfaces[k];
+					if (surface->surfaceType != MST_PLANAR) continue;
+					//
+					//Q3_SurfacePlane(surface, plane.normal, &plane.dist);
+					plane = &q3_surfaceplanes[k];
+					//the surface plane and the brush side plane should be pretty much the same
+					if (fabs(fabs(plane->dist) - fabs(q3_dplanes[brushside->planeNum].dist)) > 5) continue;
+					dot = DotProduct(plane->normal, q3_dplanes[brushside->planeNum].normal);
+					if (dot > -0.9 && dot < 0.9) continue;
+					//if the face is partly or totally on the brush side
+					if (Q3_FaceOnWinding(surface, w))
+					{
+						q3_dbrushsidetextured[brush->firstSide + j] = true;
+						//Log_Write("Q3_FaceOnWinding");
+						break;
+					} //end if
+				} //end for
+				FreeWinding(w);
 			} //end for
-			FreeWinding(w);
 		} //end for
-	} //end for
-	qprintf("\r%6d brush sides\n", numsides);
+		qprintf("\r%6d brush sides\n", numsides);
+	} //end if
 	numtextured = 0;
 	for (i = 0; i < q3_numbrushsides; i++)
 	{
-		if (forcesidesvisible) q3_dbrushsidetextured[i] = true;
 		if (q3_dbrushsidetextured[i]) numtextured++;
 	} //end for
 	Log_Print("%d brush sides textured out of %d\n", numtextured, q3_numbrushsides);
