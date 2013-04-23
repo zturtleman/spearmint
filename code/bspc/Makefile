@@ -410,8 +410,6 @@ BSPC_OBJS = \
 	$(B)/qcommon/ioapi.o\
 	$(B)/qcommon/unzip.o
 
-        #tetrahedron.o
-
 ifeq ($(USE_INTERNAL_ZLIB),1)
 BSPC_OBJS += \
   $(B)/zlib/adler32.o \
