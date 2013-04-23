@@ -796,8 +796,8 @@ int main (int argc, char **argv)
 					LoadMapFromBSP(qf);
 					//create the AAS file
 					AAS_Create(filename);
-					//if it's a Quake3 map calculate the reachabilities and clusters
-					if (loadedmaptype == MAPTYPE_QUAKE3) AAS_CalcReachAndClusters(qf);
+					//calculate the reachabilities and clusters
+					AAS_CalcReachAndClusters(qf);
 					//
 					if (optimize) AAS_Optimize();
 					//
@@ -823,12 +823,10 @@ int main (int argc, char **argv)
 					//if the AAS file exists in the output directory
 					if (!access(filename, 0x04))
 					{
-						if (!AAS_LoadAASFile(filename, 0, 0))
+						if (!AAS_LoadAASFile(filename))
 						{
 							Error("error loading aas file %s\n", filename);
 						} //end if
-						//assume it's a Quake3 BSP file
-						loadedmaptype = MAPTYPE_QUAKE3;
 					} //end if
 					else
 					{
@@ -840,11 +838,8 @@ int main (int argc, char **argv)
 						//create the AAS file
 						AAS_Create(filename);
 					} //end else
-					//if it's a Quake3 map calculate the reachabilities and clusters
-					if (loadedmaptype == MAPTYPE_QUAKE3)
-					{
-						AAS_CalcReachAndClusters(qf);
-					} //end if
+					//calculate the reachabilities and clusters
+					AAS_CalcReachAndClusters(qf);
 					//
 					if (optimize) AAS_Optimize();
 					//write out the stored AAS file
@@ -869,19 +864,14 @@ int main (int argc, char **argv)
 					//if the AAS file exists in the output directory
 					if (!access(filename, 0x04))
 					{
-						if (!AAS_LoadAASFile(filename, 0, 0))
+						if (!AAS_LoadAASFile(filename))
 						{
 							Error("error loading aas file %s\n", filename);
 						} //end if
-						//assume it's a Quake3 BSP file
-						loadedmaptype = MAPTYPE_QUAKE3;
-						//if it's a Quake3 map calculate the clusters
-						if (loadedmaptype == MAPTYPE_QUAKE3)
-						{
-							aasworld.numclusters = 0;
-							AAS_InitBotImport();
-							AAS_InitClustering();
-						} //end if
+						//calculate the clusters
+						aasworld.numclusters = 0;
+						AAS_InitBotImport();
+						AAS_InitClustering();
 					} //end if
 					else
 					{
@@ -892,8 +882,8 @@ int main (int argc, char **argv)
 						LoadMapFromBSP(qf);
 						//create the AAS file
 						AAS_Create(filename);
-						//if it's a Quake3 map calculate the reachabilities and clusters
-						if (loadedmaptype == MAPTYPE_QUAKE3) AAS_CalcReachAndClusters(qf);
+						//calculate the reachabilities and clusters
+						AAS_CalcReachAndClusters(qf);
 					} //end else
 					//
 					if (optimize) AAS_Optimize();
@@ -919,7 +909,7 @@ int main (int argc, char **argv)
 					//
 					AAS_InitBotImport();
 					//
-					if (!AAS_LoadAASFile(qf->filename, qf->offset, qf->length))
+					if (!AAS_LoadAASFile(qf->filename))
 					{
 						Error("error loading aas file %s\n", qf->filename);
 					} //end if
@@ -946,7 +936,7 @@ int main (int argc, char **argv)
 					//
 					AAS_InitBotImport();
 					//
-					if (!AAS_LoadAASFile(qf->filename, qf->offset, qf->length))
+					if (!AAS_LoadAASFile(qf->filename))
 					{
 						Error("error loading aas file %s\n", qf->filename);
 					} //end if

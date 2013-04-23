@@ -49,7 +49,7 @@ void GetLeafNums (void);
 
 
 int				q3_nummodels;
-q3_dmodel_t		*q3_dmodels;//[MAX_MAP_MODELS];
+q3_dmodel_t		*q3_dmodels;//[Q3_MAX_MAP_MODELS];
 
 int				q3_numShaders;
 q3_dshader_t	*q3_dshaders;//[Q3_MAX_MAP_SHADERS];

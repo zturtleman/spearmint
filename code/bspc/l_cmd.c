@@ -37,10 +37,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include <sys/stat.h>
 #include <assert.h>
 
-#ifndef SIN
-#define SIN
-#endif //SIN
-
 #if defined(WIN32) || defined(_WIN32)
 #include <direct.h>
 #else
@@ -990,41 +986,6 @@ float	BigFloat (float l)
 	return l;
 }
 
-#ifdef SIN
-unsigned short   LittleUnsignedShort (unsigned short l)
-{
-	byte    b1,b2;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-
-	return (b1<<8) + b2;
-}
-
-unsigned short   BigUnsignedShort (unsigned short l)
-{
-	return l;
-}
-
-unsigned    LittleUnsigned (unsigned l)
-{
-	byte    b1,b2,b3,b4;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-	b3 = (l>>16)&255;
-	b4 = (l>>24)&255;
-
-	return ((unsigned)b1<<24) + ((unsigned)b2<<16) + ((unsigned)b3<<8) + b4;
-}
-
-unsigned    BigUnsigned (unsigned l)
-{
-	return l;
-}
-#endif
-
-
 #else
 
 
@@ -1078,42 +1039,6 @@ float	LittleFloat (float l)
 {
 	return l;
 }
-
-#ifdef SIN
-unsigned short   BigUnsignedShort (unsigned short l)
-{
-	byte    b1,b2;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-
-	return (b1<<8) + b2;
-}
-
-unsigned short   LittleUnsignedShort (unsigned short l)
-{
-	return l;
-}
-
-
-unsigned    BigUnsigned (unsigned l)
-{
-	byte    b1,b2,b3,b4;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-	b3 = (l>>16)&255;
-	b4 = (l>>24)&255;
-
-	return ((unsigned)b1<<24) + ((unsigned)b2<<16) + ((unsigned)b3<<8) + b4;
-}
-
-unsigned    LittleUnsigned (unsigned l)
-{
-	return l;
-}
-#endif
-
 
 #endif
 

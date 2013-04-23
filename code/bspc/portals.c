@@ -29,6 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 
 #include "qbsp.h"
+#include "l_bsp_q3.h"
 #include "l_mem.h"
 
 int		c_active_portals;
@@ -94,7 +95,7 @@ int VisibleContents (int contents)
 {
 	int		i;
 
-	for (i=1 ; i<=LAST_VISIBLE_CONTENTS ; i<<=1)
+	for (i=1 ; i<=Q3_LAST_VISIBLE_CONTENTS ; i<<=1)
 		if (contents & i )
 			return i;
 
@@ -147,9 +148,9 @@ qboolean Portal_VisFlood (portal_t *p)
 	if (!VisibleContents (c1^c2))
 		return true;
 
-	if (c1 & (CONTENTS_Q2TRANSLUCENT|CONTENTS_DETAIL))
+	if (c1 & CONTENTS_DETAIL)
 		c1 = 0;
-	if (c2 & (CONTENTS_Q2TRANSLUCENT|CONTENTS_DETAIL))
+	if (c2 & CONTENTS_DETAIL)
 		c2 = 0;
 
 	if ( (c1|c2) & CONTENTS_SOLID )

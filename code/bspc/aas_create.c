@@ -700,20 +700,6 @@ tmp_node_t *AAS_CreateArea(node_t *node)
 					tmpface->faceflags |= FACE_LIQUIDSURFACE;
 				} //end if
 			} //end else
-			//if there's ladder contents at other side of the portal
-			if ((p->nodes[pside]->contents & CONTENTS_LADDER) ||
-					(p->nodes[!pside]->contents & CONTENTS_LADDER))
-			{
-
-				//NOTE: doesn't have to be solid at the other side because
-				// when standing one can use a crouch area (which is not solid)
-				// as a ladder
-				// imagine a ladder one can walk underthrough,
-				// under the ladder against the ladder is a crouch area
-				// the (vertical) sides of this crouch area area also used as
-				// ladder sides when standing (not crouched)
-				tmpface->faceflags |= FACE_LADDER;
-			} //end if
 			//if it is possible to stand on the face
 			if (AAS_GroundFace(tmpface))
 			{

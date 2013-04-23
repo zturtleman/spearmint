@@ -29,10 +29,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 // cmdlib.h
 
-#ifndef SIN
-#define SIN
-#endif //SIN
-
 #ifndef __CMDLIB__
 #define __CMDLIB__
 
@@ -120,14 +116,6 @@ int		BigLong (int l);
 int		LittleLong (int l);
 float	BigFloat (float l);
 float	LittleFloat (float l);
-
-#ifdef SIN
-unsigned short	BigUnsignedShort (unsigned short l);
-unsigned short	LittleUnsignedShort (unsigned short l);
-unsigned	      BigUnsigned (unsigned l);
-unsigned	      LittleUnsigned (unsigned l);
-#endif
-
 
 char *COM_Parse (char *data);
 

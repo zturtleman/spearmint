@@ -95,56 +95,6 @@ typedef struct bsp_s
 bsp_t bspworld;
 
 
-#ifdef BSP_DEBUG
-typedef struct cname_s
-{
-	int value;
-	char *name;
-} cname_t;
-
-cname_t contentnames[] =
-{
-	{CONTENTS_SOLID,"CONTENTS_SOLID"},
-	{CONTENTS_WINDOW,"CONTENTS_WINDOW"},
-	{CONTENTS_AUX,"CONTENTS_AUX"},
-	{CONTENTS_LAVA,"CONTENTS_LAVA"},
-	{CONTENTS_SLIME,"CONTENTS_SLIME"},
-	{CONTENTS_WATER,"CONTENTS_WATER"},
-	{CONTENTS_MIST,"CONTENTS_MIST"},
-	{LAST_VISIBLE_CONTENTS,"LAST_VISIBLE_CONTENTS"},
-
-	{CONTENTS_AREAPORTAL,"CONTENTS_AREAPORTAL"},
-	{CONTENTS_PLAYERCLIP,"CONTENTS_PLAYERCLIP"},
-	{CONTENTS_MONSTERCLIP,"CONTENTS_MONSTERCLIP"},
-	{CONTENTS_CURRENT_0,"CONTENTS_CURRENT_0"},
-	{CONTENTS_CURRENT_90,"CONTENTS_CURRENT_90"},
-	{CONTENTS_CURRENT_180,"CONTENTS_CURRENT_180"},
-	{CONTENTS_CURRENT_270,"CONTENTS_CURRENT_270"},
-	{CONTENTS_CURRENT_UP,"CONTENTS_CURRENT_UP"},
-	{CONTENTS_CURRENT_DOWN,"CONTENTS_CURRENT_DOWN"},
-	{CONTENTS_ORIGIN,"CONTENTS_ORIGIN"},
-	{CONTENTS_MONSTER,"CONTENTS_MONSTER"},
-	{CONTENTS_DEADMONSTER,"CONTENTS_DEADMONSTER"},
-	{CONTENTS_DETAIL,"CONTENTS_DETAIL"},
-	{CONTENTS_TRANSLUCENT,"CONTENTS_TRANSLUCENT"},
-	{CONTENTS_LADDER,"CONTENTS_LADDER"},
-	{0, 0}
-};
-
-void PrintContents(int contents)
-{
-	int i;
-
-	for (i = 0; contentnames[i].value; i++)
-	{
-		if (contents & contentnames[i].value)
-		{
-			botimport.Print(PRT_MESSAGE, "%s\n", contentnames[i].name);
-		} //end if
-	} //end for
-} //end of the function PrintContents
-
-#endif // BSP_DEBUG
 //===========================================================================
 // traces axial boxes of any size through the world
 //

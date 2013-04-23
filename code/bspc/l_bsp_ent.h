@@ -28,9 +28,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
-#ifndef MAX_MAP_ENTITIES
-#define	MAX_MAP_ENTITIES	2048
-#endif
+#include "qfiles.h"
 
 typedef struct epair_s
 {
@@ -49,7 +47,6 @@ typedef struct
 	int			areaportalnum;
 	int			portalareas[2];
 	int			modelnum;	//for bsp 2 map conversion
-   qboolean		wasdetail;	//for SIN
 } entity_t;
 
 extern	int num_entities;

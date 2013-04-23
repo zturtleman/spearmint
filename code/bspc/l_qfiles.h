@@ -31,44 +31,21 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/unzip.h"
 
 #define QFILETYPE_UNKNOWN			0x8000
-#define QFILETYPE_PAK				0x0001
-#define QFILETYPE_PK3				0x0002
-#define QFILETYPE_BSP				0x0004
-#define QFILETYPE_MAP				0x0008
-#define QFILETYPE_MDL				0x0010
-#define QFILETYPE_MD2				0x0020
-#define QFILETYPE_MD3				0x0040
-#define QFILETYPE_WAL				0x0080
-#define QFILETYPE_WAV				0x0100
-#define QFILETYPE_AAS				0x4000
+#define QFILETYPE_PK3				0x0001
+#define QFILETYPE_BSP				0x0002
+#define QFILETYPE_MAP				0x0004
+#define QFILETYPE_AAS				0x0008
 
 #define QFILEEXT_UNKNOWN			""
-#define QFILEEXT_PAK				".PAK"
 #define QFILEEXT_PK3				".PK3"
-#define QFILEEXT_SIN				".SIN"
 #define QFILEEXT_BSP				".BSP"
 #define QFILEEXT_MAP				".MAP"
-#define QFILEEXT_MDL				".MDL"
-#define QFILEEXT_MD2				".MD2"
-#define QFILEEXT_MD3				".MD3"
-#define QFILEEXT_WAL				".WAL"
-#define QFILEEXT_WAV				".WAV"
 #define QFILEEXT_AAS				".AAS"
 
 //maximum path length
 #ifndef _MAX_PATH
 	#define _MAX_PATH				1024
 #endif
-
-//for Sin packs
-#define MAX_PAK_FILENAME_LENGTH 120
-#define SINPAKHEADER		(('K'<<24)+('A'<<16)+('P'<<8)+'S')
-
-typedef struct
-{
-	char	name[MAX_PAK_FILENAME_LENGTH];
-	int	filepos, filelen;
-} dsinpackfile_t;
 
 typedef struct quakefile_s
 {
@@ -77,14 +54,11 @@ typedef struct quakefile_s
 	char origname[_MAX_PATH];
 	int zipfile;
 	int type;
-	int offset;
 	int length;
 	unzFile zinfo;
 	struct quakefile_s *next;
 } quakefile_t;
 
-//returns the file extension for the given type
-char *QuakeFileTypeExtension(int type);
 //returns the file type for the given extension
 int QuakeFileExtensionType(char *extension);
 //return the Quake file type for the given file
@@ -96,4 +70,4 @@ quakefile_t *FindQuakeFiles(char *filter);
 //load the given Quake file, returns the length of the file
 int LoadQuakeFile(quakefile_t *qf, void **bufferptr);
 //read part of a Quake file into the buffer
-int ReadQuakeFile(quakefile_t *qf, void *buffer, int offset, int length);
+int ReadQuakeFile(quakefile_t *qf, void *buffer, int length);

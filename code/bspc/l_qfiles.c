@@ -50,16 +50,9 @@ typedef struct qfile_exttype_s
 qfile_exttyp_t quakefiletypes[] =
 {
 	{QFILEEXT_UNKNOWN, QFILETYPE_UNKNOWN},
-	{QFILEEXT_PAK, QFILETYPE_PAK},
 	{QFILEEXT_PK3, QFILETYPE_PK3},
-	{QFILEEXT_SIN, QFILETYPE_PAK},
 	{QFILEEXT_BSP, QFILETYPE_BSP},
 	{QFILEEXT_MAP, QFILETYPE_MAP},
-	{QFILEEXT_MDL, QFILETYPE_MDL},
-	{QFILEEXT_MD2, QFILETYPE_MD2},
-	{QFILEEXT_MD3, QFILETYPE_MD3},
-	{QFILEEXT_WAL, QFILETYPE_WAL},
-	{QFILEEXT_WAV, QFILETYPE_WAV},
 	{QFILEEXT_AAS, QFILETYPE_AAS},
 	{NULL, 0}
 };
@@ -83,25 +76,6 @@ int QuakeFileExtensionType(char *extension)
 	} //end for
 	return QFILETYPE_UNKNOWN;
 } //end of the function QuakeFileExtensionType
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-char *QuakeFileTypeExtension(int type)
-{
-	int i;
-
-	for (i = 0; quakefiletypes[i].extension; i++)
-	{
-		if (quakefiletypes[i].type == type)
-		{
-			return quakefiletypes[i].extension;
-		} //end if
-	} //end for
-	return QFILEEXT_UNKNOWN;
-} //end of the function QuakeFileExtension
 //===========================================================================
 //
 // Parameter:			-
@@ -282,7 +256,6 @@ quakefile_t *FindQuakeFilesInZip(char *zipfile, char *filter)
 			strcpy(qf->origname, filename_inzip);
 			qf->zipfile = true;
 			qf->zinfo = uf;
-			qf->offset = 0;
 			qf->length = file_info.uncompressed_size;
 			qf->type = QuakeFileType(filename_inzip);
 			//add the file ot the list
@@ -298,114 +271,6 @@ quakefile_t *FindQuakeFilesInZip(char *zipfile, char *filter)
 
 	return qfiles;
 } //end of the function FindQuakeFilesInZip
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-quakefile_t *FindQuakeFilesInPak(char *pakfile, char *filter)
-{
-	FILE *fp;
-	dpackheader_t packheader;
-	dsinpackfile_t *packfiles;
-	dpackfile_t *idpackfiles;
-	quakefile_t *qfiles, *lastqf, *qf;
-	int numpackdirs, i;
-
-	qfiles = NULL;
-	lastqf = NULL;
-	//open the pak file
-	fp = fopen(pakfile, "rb");
-	if (!fp)
-	{
-		Warning("can't open pak file %s", pakfile);
-		return NULL;
-	} //end if
-	//read pak header, check for valid pak id and seek to the dir entries
-	if ((fread(&packheader, 1, sizeof(dpackheader_t), fp) != sizeof(dpackheader_t))
-		|| (packheader.ident != IDPAKHEADER && packheader.ident != SINPAKHEADER)
-		||	(fseek(fp, LittleLong(packheader.dirofs), SEEK_SET))
-		)
-	{
-		fclose(fp);
-		Warning("invalid pak file %s", pakfile);
-		return NULL;
-	} //end if
-	//if it is a pak file from id software
-	if (packheader.ident == IDPAKHEADER)
-	{
-		//number of dir entries in the pak file
-		numpackdirs = LittleLong(packheader.dirlen) / sizeof(dpackfile_t);
-		idpackfiles = (dpackfile_t *) malloc(numpackdirs * sizeof(dpackfile_t));
-		if (!idpackfiles) Error("out of memory");
-		//read the dir entry
-		if (fread(idpackfiles, sizeof(dpackfile_t), numpackdirs, fp) != numpackdirs)
-		{
-			fclose(fp);
-			free(idpackfiles);
-			Warning("can't read the Quake pak file dir entries from %s", pakfile);
-			return NULL;
-		} //end if
-		fclose(fp);
-		//convert to sin pack files
-		packfiles = (dsinpackfile_t *) malloc(numpackdirs * sizeof(dsinpackfile_t));
-		if (!packfiles) Error("out of memory");
-		for (i = 0; i < numpackdirs; i++)
-		{
-			strcpy(packfiles[i].name, idpackfiles[i].name);
-			packfiles[i].filepos = LittleLong(idpackfiles[i].filepos);
-			packfiles[i].filelen = LittleLong(idpackfiles[i].filelen);
-		} //end for
-		free(idpackfiles);
-	} //end if
-	else //its a Sin pack file
-	{
-		//number of dir entries in the pak file
-		numpackdirs = LittleLong(packheader.dirlen) / sizeof(dsinpackfile_t);
-		packfiles = (dsinpackfile_t *) malloc(numpackdirs * sizeof(dsinpackfile_t));
-		if (!packfiles) Error("out of memory");
-		//read the dir entry
-		if (fread(packfiles, sizeof(dsinpackfile_t), numpackdirs, fp) != numpackdirs)
-		{
-			fclose(fp);
-			free(packfiles);
-			Warning("can't read the Sin pak file dir entries from %s", pakfile);
-			return NULL;
-		} //end if
-		fclose(fp);
-		for (i = 0; i < numpackdirs; i++)
-		{
-			packfiles[i].filepos = LittleLong(packfiles[i].filepos);
-			packfiles[i].filelen = LittleLong(packfiles[i].filelen);
-		} //end for
-	} //end else
-	//
-	for (i = 0; i < numpackdirs; i++)
-	{
-		ConvertPath(packfiles[i].name);
-		if (FileFilter(filter, packfiles[i].name, false))
-		{
-			qf = malloc(sizeof(quakefile_t));
-			if (!qf) Error("out of memory");
-			memset(qf, 0, sizeof(quakefile_t));
-			strcpy(qf->pakfile, pakfile);
-			strcpy(qf->filename, pakfile);
-			strcpy(qf->origname, packfiles[i].name);
-			qf->zipfile = false;
-			qf->offset = packfiles[i].filepos;
-			qf->length = packfiles[i].filelen;
-			qf->type = QuakeFileType(packfiles[i].name);
-			//add the file ot the list
-			qf->next = NULL;
-			if (lastqf) lastqf->next = qf;
-			else qfiles = qf;
-			lastqf = qf;
-		} //end if
-	} //end for
-	free(packfiles);
-	return qfiles;
-} //end of the function FindQuakeFilesInPak
 //===========================================================================
 //
 // Parameter:			-
@@ -473,7 +338,7 @@ quakefile_t *FindQuakeFilesWithPakFilter(char *pakfilter, char *filter)
 				} //end if
 				else
 				{
-					qf = FindQuakeFilesInPak(pakfile, filter);
+					qf = NULL;
 				} //end else
 				//
 				if (qf)
@@ -518,7 +383,6 @@ quakefile_t *FindQuakeFilesWithPakFilter(char *pakfilter, char *filter)
 			strcpy(qf->pakfile, "");
 			strcpy(qf->filename, filename);
 			strcpy(qf->origname, filename);
-			qf->offset = 0;
 			qf->length = 0;
 			qf->type = QuakeFileType(filename);
 			//add the file ot the list
@@ -554,12 +418,11 @@ quakefile_t *FindQuakeFiles(char *filter)
 	ConvertPath(newfilter);
 	strcpy(pakfilter, newfilter);
 
-	str = StringContains(pakfilter, ".pak", false);
-	if (!str) str = StringContains(pakfilter, ".pk3", false);
+	str = StringContains(pakfilter, ".pk3", false);
 
 	if (str)
 	{
-		str += strlen(".pak");
+		str += strlen(".pk3");
 		if (*str)
 		{
 			*str++ = '\0';
@@ -607,7 +470,6 @@ int LoadQuakeFile(quakefile_t *qf, void **bufferptr)
 	else
 	{
 		fp = SafeOpenRead(qf->filename);
-		if (qf->offset) fseek(fp, qf->offset, SEEK_SET);
 		length = qf->length;
 		if (!length) length = Q_filelength(fp);
 		buffer = GetMemory(length+1);
@@ -625,12 +487,10 @@ int LoadQuakeFile(quakefile_t *qf, void **bufferptr)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-int ReadQuakeFile(quakefile_t *qf, void *buffer, int offset, int length)
+int ReadQuakeFile(quakefile_t *qf, void *buffer, int length)
 {
 	FILE *fp;
-	int read;
 	unzFile zf;
-	char tmpbuf[1024];
 
 	if (qf->zipfile)
 	{
@@ -640,14 +500,6 @@ int ReadQuakeFile(quakefile_t *qf, void *buffer, int offset, int length)
 		qf->zinfo = zf;
 		//open the Quake file in the zip file
 		unzOpenCurrentFile(qf->zinfo);
-		//
-		while(offset > 0)
-		{
-			read = offset;
-			if (read > sizeof(tmpbuf)) read = sizeof(tmpbuf);
-			unzReadCurrentFile(qf->zinfo, tmpbuf, read);
-			offset -= read;
-		} //end while
 		//read the Quake file from the zip file
 		length = unzReadCurrentFile(qf->zinfo, buffer, length);
 		//close the Quake file in the zip file
@@ -660,8 +512,6 @@ int ReadQuakeFile(quakefile_t *qf, void *buffer, int offset, int length)
 	else
 	{
 		fp = SafeOpenRead(qf->filename);
-		if (qf->offset) fseek(fp, qf->offset, SEEK_SET);
-		if (offset) fseek(fp, offset, SEEK_CUR);
 		SafeRead(fp, buffer, length);
 		fclose(fp);
 
