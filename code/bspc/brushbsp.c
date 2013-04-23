@@ -613,7 +613,6 @@ int QuickTestBrushToPlanenum (bspbrush_t *brush, int planenum, int *numsplits)
 
 	plane = &mapplanes[planenum];
 
-#ifdef ME
 	//fast axial cases
 	if (plane->type < 3)
 	{
@@ -622,7 +621,6 @@ int QuickTestBrushToPlanenum (bspbrush_t *brush, int planenum, int *numsplits)
 		if (plane->dist - PLANESIDE_EPSILON > brush->maxs[plane->type])
 			return PSIDE_BACK;
 	} //end if
-#endif //ME*/
 
 	// if the brush actually uses the planenum,
 	// we can tell the side for sure
@@ -672,7 +670,6 @@ int TestBrushToPlanenum (bspbrush_t *brush, int planenum,
 
 	plane = &mapplanes[planenum];
 
-#ifdef ME
 	//fast axial cases
 	type = plane->type;
 	if (type < 3)
@@ -685,7 +682,6 @@ int TestBrushToPlanenum (bspbrush_t *brush, int planenum,
 	} //end if
 
 	if (s != PSIDE_BOTH)
-#endif //ME
 	{
 		// if the brush actually uses the planenum,
 		// we can tell the side for sure

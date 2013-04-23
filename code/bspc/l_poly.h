@@ -94,7 +94,6 @@ winding_t *TryMergeWinding (winding_t *f1, winding_t *f2, vec3_t planenormal);
 //the two whatsoever
 winding_t *MergeWindings(winding_t *w1, winding_t *w2, vec3_t planenormal);
 
-//#ifdef ME
 void ResetWindings(void);
 //returns the amount of winding memory
 int WindingMemory(void);
@@ -124,5 +123,4 @@ int FindPlaneSeperatingWindings(winding_t *w1, winding_t *w2, vec3_t dir,
 int WindingsNonConvex(winding_t *w1, winding_t *w2,
 							 vec3_t normal1, vec3_t normal2,
 							 float dist1, float dist2);
-//#endif //ME
 

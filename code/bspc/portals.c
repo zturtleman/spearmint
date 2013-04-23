@@ -258,7 +258,6 @@ void RemovePortalFromNode (portal_t *portal, node_t *l)
 	{
 		Error("RemovePortalFromNode: mislinked portal");
 	} //end else
-//#ifdef ME
 	n = 0;
 	for (p = l->portals; p; p = p->next[s])
 	{
@@ -274,7 +273,6 @@ void RemovePortalFromNode (portal_t *portal, node_t *l)
 		s = (p->nodes[1] == l);
 //		if (++n >= 4096) Error("RemovePortalFromNode: more than 4096 portals\n");
 	} //end for
-//#endif
 } //end of the function RemovePortalFromNode
 //===========================================================================
 //
@@ -470,11 +468,7 @@ void MakeNodePortal (node_t *node)
 
 	new_portal = AllocPortal();
 	new_portal->plane = mapplanes[node->planenum];
-
-#ifdef ME
 	new_portal->planenum = node->planenum;
-#endif //ME
-
 	new_portal->onnode = node;
 	new_portal->winding = w;
 	AddPortalToNodes (new_portal, node->children[0], node->children[1]);
@@ -621,10 +615,8 @@ void MakeTreePortals_r (node_t *node)
 {
 	int		i;
 
-#ifdef ME
 	qprintf("\r%6d", ++c_numportalizednodes);
 	if (cancelconversion) return;
-#endif //ME
 
 	CalcNodeBounds (node);
 	if (node->mins[0] >= node->maxs[0])
@@ -657,24 +649,19 @@ void MakeTreePortals_r (node_t *node)
 //===========================================================================
 void MakeTreePortals(tree_t *tree)
 {
-
-#ifdef ME
 	Log_Print("---- Node Portalization ----\n");
 	c_numportalizednodes = 0;
 	c_portalmemory = 0;
 	qprintf("%6d nodes portalized", c_numportalizednodes);
-#endif //ME
 
 	MakeHeadnodePortals(tree);
 	MakeTreePortals_r(tree->headnode);
 
-#ifdef ME
 	qprintf("\n");
 	Log_Write("%6d nodes portalized\r\n", c_numportalizednodes);
 	Log_Print("%6d tiny portals\r\n", c_tinyportals);
 	Log_Print("%6d KB of portal memory\r\n", c_portalmemory >> 10);
 	Log_Print("%6i KB of winding memory\r\n", WindingMemory() >> 10);
-#endif //ME
 } //end of the function MakeTreePortals
 
 /*

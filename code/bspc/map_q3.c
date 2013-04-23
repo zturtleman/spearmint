@@ -38,8 +38,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/cm_patch.h"
 #include "../qcommon/surfaceflags.h"
 
-#ifdef ME
-
 #define NODESTACKSIZE       1024
 
 int nodestack[NODESTACKSIZE];
@@ -48,8 +46,6 @@ int nodestacksize = 0;
 int brushmodelnumbers[MAX_MAPFILE_BRUSHES];
 int dbrushleafnums[MAX_MAPFILE_BRUSHES];
 int dplanes2mapplanes[MAX_MAPFILE_PLANES];
-
-#endif //ME
 
 typedef struct cname_s
 {

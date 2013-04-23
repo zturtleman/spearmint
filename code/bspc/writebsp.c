@@ -430,11 +430,10 @@ void EmitBrushes (void)
 			cp->texinfo = b->original_sides[j].texinfo;
 		}
 
-#ifdef ME
-	//for collision detection, bounding boxes are axial :)
-	//brushes are convex so just add dot or line touching planes on the sides of
-	//the brush parallell to the axis planes
-#endif
+		//ME: for collision detection, bounding boxes are axial :)
+		//brushes are convex so just add dot or line touching planes on the sides of
+		//the brush parallell to the axis planes
+
 		// add any axis planes not contained in the brush to bevel off corners
 		for (x=0 ; x<3 ; x++)
 			for (s=-1 ; s<=1 ; s+=2)

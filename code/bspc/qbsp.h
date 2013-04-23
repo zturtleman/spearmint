@@ -56,7 +56,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define BSPC_VERSION		"2.1h"
 #endif
 
-#define ME
 #define DEBUG
 #define NODELIST
 
@@ -120,11 +119,9 @@ typedef struct mapbrush_s
 	int		brushnum;
 
 	int		contents;
-#ifdef ME
 	int		expansionbbox;			//bbox used for expansion of the brush
 	int		leafnum;
 	int		modelnum;
-#endif
 
 	vec3_t	mins, maxs;
 
@@ -188,10 +185,8 @@ typedef struct node_s
 #ifdef NODELIST
 	struct node_s *next;			//next node in the nodelist
 #endif
-#ifdef ME
 	int expansionbboxes;			//OR of all bboxes used for expansion of the brushes
 	int modelnum;
-#endif
 } node_t;		//sizeof(node_t) = 80 bytes
 //bsp portal
 typedef struct portal_s
@@ -205,10 +200,8 @@ typedef struct portal_s
 	qboolean	sidefound;			// false if ->side hasn't been checked
 	side_t *side;					// NULL = non-visible
 	face_t *face[2];				// output face in bsp file
-#ifdef ME
 	struct tmp_face_s *tmpface;		//pointer to the tmpface created for this portal
 	int planenum;					//number of the map plane used by the portal
-#endif
 } portal_t;
 //bsp tree
 typedef struct
@@ -232,7 +225,6 @@ extern	qboolean noweld;
 extern	qboolean noshare;
 extern	qboolean notjunc;
 extern	qboolean onlyents;
-#ifdef ME
 extern	qboolean nocsg;
 extern	qboolean create_aas;
 extern	qboolean freetree;
@@ -241,7 +233,6 @@ extern	qboolean nobrushmerge;
 extern	qboolean cancelconversion;
 extern	qboolean noliquids;
 extern	qboolean capsule_collision;
-#endif //ME
 
 extern	float subdivide_size;
 extern	vec_t microvolume;
@@ -272,8 +263,6 @@ extern	int			nummapbrushsides;
 extern	side_t		brushsides[MAX_MAPFILE_BRUSHSIDES];
 extern	brush_texture_t	side_brushtextures[MAX_MAPFILE_BRUSHSIDES];
 
-#ifdef ME
-
 #define NODESTACKSIZE		1024
 
 extern	int nodestack[NODESTACKSIZE];
@@ -282,7 +271,6 @@ extern	int nodestacksize;
 extern	int brushmodelnumbers[MAX_MAPFILE_BRUSHES];
 extern	int dbrushleafnums[MAX_MAPFILE_BRUSHES];
 extern	int dplanes2mapplanes[MAX_MAPFILE_PLANES];
-#endif //ME
 
 extern	int c_boxbevels;
 extern	int c_edgebevels;

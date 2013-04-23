@@ -131,9 +131,6 @@ void ProcessWorldModel (void)
 
 	FloodAreas (tree);
 
-#ifndef ME
-	if (glview) WriteGLView(tree, source);
-#endif
 	MakeFaces(tree->headnode);
 	FixTjuncs(tree->headnode);
 
@@ -644,7 +641,6 @@ int main (int argc, char **argv)
 			Log_Print("temp output\n");
 		} //end else if
 		*/
-#ifdef ME
 		else if (!stricmp(argv[i], "-freetree"))
 		{
 			freetree = true;
@@ -747,7 +743,6 @@ int main (int argc, char **argv)
 			comp = COMP_AASOPTIMIZE;
 			qfiles = GetArgumentFiles(argc, argv, &i, "aas");
 		} //end else if
-#endif //ME
 		else
 		{
 			Log_Print("unknown parameter %s\n", argv[i]);
