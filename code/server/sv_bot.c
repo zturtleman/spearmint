@@ -509,6 +509,9 @@ int SV_BotLibSetup( void ) {
 		return -1;
 	}
 
+	botlib_export->BotLibVarSet( "basedir", Cvar_VariableString( "fs_basepath" ) );
+	botlib_export->BotLibVarSet( "homedir", Cvar_VariableString( "fs_homepath" ) );
+	botlib_export->BotLibVarSet( "gamedir", Cvar_VariableString( "fs_game" ) );
 	botlib_export->BotLibVarSet( "basegame", com_basegame->string );
 
 	return botlib_export->BotLibSetup();
