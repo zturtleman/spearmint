@@ -261,26 +261,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/bspc/l_bsp_ent.h" />
-		<Unit filename="../../code/bspc/l_bsp_hl.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/bspc/l_bsp_hl.h" />
-		<Unit filename="../../code/bspc/l_bsp_q1.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/bspc/l_bsp_q1.h" />
-		<Unit filename="../../code/bspc/l_bsp_q2.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/bspc/l_bsp_q2.h" />
 		<Unit filename="../../code/bspc/l_bsp_q3.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/bspc/l_bsp_q3.h" />
-		<Unit filename="../../code/bspc/l_bsp_sin.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/bspc/l_bsp_sin.h" />
 		<Unit filename="../../code/bspc/l_cmd.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -319,19 +303,7 @@
 		<Unit filename="../../code/bspc/map.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/bspc/map_hl.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/bspc/map_q1.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/bspc/map_q2.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../../code/bspc/map_q3.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/bspc/map_sin.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/bspc/nodraw.c">
@@ -340,10 +312,9 @@
 		<Unit filename="../../code/bspc/portals.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/bspc/q2files.h" />
 		<Unit filename="../../code/bspc/q3files.h" />
 		<Unit filename="../../code/bspc/qbsp.h" />
-		<Unit filename="../../code/bspc/sinfiles.h" />
+		<Unit filename="../../code/bspc/qfiles.h" />
 		<Unit filename="../../code/bspc/textures.c">
 			<Option compilerVar="CC" />
 		</Unit>
