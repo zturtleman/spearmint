@@ -36,7 +36,7 @@
 <li>Four player splitscreen, offline and in network games</li>
 <li>Extended API for game, cgame, and ui, includes some of the new features added in RTCW, WolfET, Turtle Arena, Tremulous, and World of Padman</li>
 <li>Capsule collision support, enabled for players by default.</li>
-<li>Modified pure pk3 system, see PAKSUMS wiki page</li>
+<li>Modified pure pk3 system, see <a href="http://github.com/zturtleman/spearmint/wiki/PAKSUMS">PAKSUMS</a> wiki page</li>
 <li>Improved game, cgame, and ui API version handling</li>
 <li>Removed code not needed for standalone games (CD Key handling, authentication server code, and punkbuster ui code)</li>
 <li>Ogg Opus and Ogg Vorbis support enabled by default, source and headers included in local source tree for easy compiling</li>
@@ -45,11 +45,20 @@
 
 <ul>
 <li>Get the source and compile it using make. The game will be in <code>build/release-YOURPLATFORM-YOURARCH/</code>.</li>
-<li>Copy your Quake III Arena pak#.pk3 into <code>build/release-YOURPLATFORM-YOURARCH/baseq3</code>.</li>
-<li>Create a textfile named <code>build/release-YOURPLATFORM-YOURARCH/PAKSUMS</code>, put baseq3 text from [[PAKSUMS]] in the file.</li>
+<li>Copy your Quake III Arena pak[0-8].pk3 into <code>build/release-YOURPLATFORM-YOURARCH/baseq3</code>. (Don't own Q3? Buy it on <a href="http://store.steampowered.com/sub/433/">Steam</a>.)</li>
+<li>Create a textfile named <code>build/release-YOURPLATFORM-YOURARCH/baseq3/PAKSUMS</code>, put baseq3 text from <a href="http://github.com/zturtleman/spearmint/wiki/PAKSUMS">PAKSUMS</a> in the file.</li>
 <li>Run <code>build/release-YOURPLATFORM-YOURARCH/spearmint.YOURARCH</code>
 </li>
 </ul><p>You can add splitscreen players using the in-game menu after you start or join a server.</p>
+
+<h3>Running Quake III: Team Arena using Spearmint</h3>
+
+<ul>
+<li>Follow the steps for Quake III Arena above.</li>
+<li>Copy your Quake III: Team Arena pak[0-3].pk3 into <code>build/release-YOURPLATFORM-YOURARCH/missionpack</code>. (Don't own Team Arena? Buy it on <a href="http://store.steampowered.com/sub/433/">Steam</a>.)</li>
+<li>Create a textfile named <code>build/release-YOURPLATFORM-YOURARCH/missionpack/PAKSUMS</code>, put missionpack text from <a href="http://github.com/zturtleman/spearmint/wiki/PAKSUMS">PAKSUMS</a> in the file.</li>
+<li>Run <code>build/release-YOURPLATFORM-YOURARCH/spearmint.YOURARCH</code> and choose Team Arena from the menu.</li>
+</ul>
       </section>
     </div>
 
