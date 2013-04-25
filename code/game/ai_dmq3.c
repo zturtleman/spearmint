@@ -1617,6 +1617,14 @@ void BotSetupForMovement(bot_state_t *bs) {
 	if ((bs->cur_ps.pm_flags & PMF_TIME_WATERJUMP) && (bs->cur_ps.pm_time > 0)) {
 		initmove.or_moveflags |= MFL_WATERJUMP;
 	}
+	//set the grapple pull flag
+	if (bs->cur_ps.pm_flags & PMF_GRAPPLE_PULL) {
+		initmove.or_moveflags |= MFL_GRAPPLEPULL;
+	}
+	//set the grapple exists flag
+	if (g_entities[bs->entitynum].client->hook) {
+		initmove.or_moveflags |= MFL_GRAPPLEEXISTS;
+	}
 	//set presence type
 	if (bs->cur_ps.pm_flags & PMF_DUCKED) initmove.presencetype = PRESENCE_CROUCH;
 	else initmove.presencetype = PRESENCE_NORMAL;

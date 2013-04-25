@@ -143,6 +143,8 @@ void BotInitMoveState(int handle, bot_initmove_t *initmove)
 	if (initmove->or_moveflags & MFL_WALK) ms->moveflags |= MFL_WALK;
 	ms->moveflags &= ~MFL_GRAPPLEPULL;
 	if (initmove->or_moveflags & MFL_GRAPPLEPULL) ms->moveflags |= MFL_GRAPPLEPULL;
+	ms->moveflags &= ~MFL_GRAPPLEEXISTS;
+	if (initmove->or_moveflags & MFL_GRAPPLEEXISTS) ms->moveflags |= MFL_GRAPPLEEXISTS;
 } //end of the function BotInitMoveState
 //========================================================================
 //
@@ -2511,25 +2513,12 @@ bot_moveresult_t BotFinishTravel_FuncBobbing(bot_movestate_t *ms, aas_reachabili
 //===========================================================================
 int GrappleState(bot_movestate_t *ms, aas_reachability_t *reach)
 {
-	int i;
-	aas_entityinfo_t entinfo;
-
 	//if the grapple hook is pulling
 	if (ms->moveflags & MFL_GRAPPLEPULL)
 		return 2;
-	//check for a visible grapple missile entity
-	//or visible grapple entity
-	for (i = BotNextEntity(0); i; i = BotNextEntity(i))
-	{
-		if (g_entities[i].s.eType == ET_MISSILE)
-		{
-			BotEntityInfo(i, &entinfo);
-			if (entinfo.weapon == WP_GRAPPLING_HOOK)
-			{
-				return 1;
-			} //end if
-		} //end if
-	} //end for
+	//if the grapple hook entity exists
+	if (ms->moveflags & MFL_GRAPPLEEXISTS)
+		return 1;
 	//no valid grapple at all
 	return 0;
 } //end of the function GrappleState

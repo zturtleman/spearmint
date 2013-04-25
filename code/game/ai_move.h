@@ -53,9 +53,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define MFL_WATERJUMP					16		//bot is waterjumping
 #define MFL_TELEPORTED					32		//bot is being teleported
 #define MFL_GRAPPLEPULL					64		//bot is being pulled by the grapple
-#define MFL_ACTIVEGRAPPLE				128		//bot is using the grapple hook
-#define MFL_GRAPPLERESET				256		//bot has reset the grapple
-#define MFL_WALK						512		//bot should walk slowly
+#define	MFL_GRAPPLEEXISTS				128		//bot grappling hook entity exists
+#define MFL_ACTIVEGRAPPLE				256		//bot is using the grapple hook
+#define MFL_GRAPPLERESET				512		//bot has reset the grapple
+#define MFL_WALK						1024	//bot should walk slowly
 // move result flags
 #define MOVERESULT_MOVEMENTVIEW			1		//bot uses view for movement
 #define MOVERESULT_SWIMVIEW				2		//bot uses view for swimming
@@ -118,8 +119,8 @@ typedef struct bot_avoidspot_s
 } bot_avoidspot_t;
 
 //movement state
-//NOTE: the moveflags MFL_ONGROUND, MFL_TELEPORTED, MFL_WATERJUMP and
-//		MFL_GRAPPLEPULL must be set outside the movement code
+//NOTE: the moveflags MFL_ONGROUND, MFL_TELEPORTED, MFL_WATERJUMP,
+//		MFL_GRAPPLEPULL, and MFL_GRAPPLEEXISTS must be set outside the movement code
 typedef struct bot_movestate_s
 {
 	//input vars (all set outside the movement code)
