@@ -227,28 +227,28 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 		Com_Memcpy( &sVideoInfo, videoInfo, sizeof( SDL_VideoInfo ) );
 		sVideoInfo.vfmt = &sPixelFormat;
 		videoInfo = &sVideoInfo;
+	}
 
-		if( videoInfo->current_h > 0 )
-		{
-			glConfig.displayWidth = videoInfo->current_w;
-			glConfig.displayHeight = videoInfo->current_h;
+	if( videoInfo->current_h > 0 )
+	{
+		glConfig.displayWidth = videoInfo->current_w;
+		glConfig.displayHeight = videoInfo->current_h;
 
-			// Guess the display aspect ratio through the desktop resolution
-			// by assuming (relatively safely) that it is set at or close to
-			// the display's native aspect ratio
-			glConfig.displayAspect = (float)videoInfo->current_w / (float)videoInfo->current_h;
+		// Guess the display aspect ratio through the desktop resolution
+		// by assuming (relatively safely) that it is set at or close to
+		// the display's native aspect ratio
+		glConfig.displayAspect = (float)videoInfo->current_w / (float)videoInfo->current_h;
 
-			ri.Printf( PRINT_ALL, "Estimated display aspect: %.3f\n", glConfig.displayAspect );
-		}
-		else
-		{
-			glConfig.displayWidth = 480;
-			glConfig.displayHeight = 640;
-			glConfig.displayAspect = 1.333f;
+		ri.Printf( PRINT_ALL, "Estimated display aspect: %.3f\n", glConfig.displayAspect );
+	}
+	else
+	{
+		glConfig.displayWidth = 640;
+		glConfig.displayHeight = 480;
+		glConfig.displayAspect = 1.333f;
 
-			ri.Printf( PRINT_ALL,
-					"Cannot estimate display resolution/aspect, assuming 640x480/1.333\n" );
-		}
+		ri.Printf( PRINT_ALL,
+				"Cannot estimate display resolution/aspect, assuming 640x480/1.333\n" );
 	}
 
 	ri.Printf (PRINT_ALL, "...setting mode %d:", mode );
