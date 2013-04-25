@@ -209,7 +209,6 @@ static void StartServer_Update( void ) {
 		
 		info = UI_GetArenaInfoByNumber( s_startserver.maplist[ top + i ]);
 		Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
-		Q_strupr( mapname );
 
 		Com_sprintf( picname[i], sizeof(picname[i]), "levelshots/%s", mapname );
 
@@ -617,7 +616,6 @@ void StartServer_Cache( void )
 		for( i = 0; i < UI_GetNumArenas(); i++ ) {
 			info = UI_GetArenaInfoByNumber( i );
 			Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
-			Q_strupr( mapname );
 	
 			Com_sprintf( picname, sizeof(picname), "levelshots/%s", mapname );
 			trap_R_RegisterShaderNoMip(picname);

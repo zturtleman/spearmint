@@ -690,7 +690,6 @@ static void ArenaServers_Insert( char* adrstr, char* info, int pingtime )
 
 	Q_strncpyz( servernodeptr->mapname, Info_ValueForKey( info, "mapname"), MAX_MAPNAMELENGTH );
 	Q_CleanStr( servernodeptr->mapname );
-	Q_strupr( servernodeptr->mapname );
 
 	servernodeptr->numclients = atoi( Info_ValueForKey( info, "clients") );
 	servernodeptr->maxclients = atoi( Info_ValueForKey( info, "sv_maxclients") );
