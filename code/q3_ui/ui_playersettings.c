@@ -398,7 +398,7 @@ static void PlayerSettings_MenuInit( int localClient )
 	s_playersettings.banner.generic.x     = 320;
 	s_playersettings.banner.generic.y     = 16;
 	s_playersettings.banner.string = s_playersettings.bannerString;
-	s_playersettings.banner.color         = color_red;
+	s_playersettings.banner.color         = text_banner_color;
 	s_playersettings.banner.style         = UI_CENTER;
 
 	s_playersettings.framel.generic.type  = MTYPE_BITMAP;

@@ -141,7 +141,7 @@ void Options_MenuInit( void ) {
 	s_options.banner.generic.x		= 320;
 	s_options.banner.generic.y		= 16;
 	s_options.banner.string		    = "SYSTEM SETUP";
-	s_options.banner.color			= color_white;
+	s_options.banner.color			= text_banner_color;
 	s_options.banner.style			= UI_CENTER;
 
 	s_options.framel.generic.type  = MTYPE_BITMAP;
@@ -168,7 +168,7 @@ void Options_MenuInit( void ) {
 	s_options.graphics.generic.x		= 320;
 	s_options.graphics.generic.y		= y;
 	s_options.graphics.string			= "GRAPHICS";
-	s_options.graphics.color			= color_red;
+	s_options.graphics.color			= text_big_color;
 	s_options.graphics.style			= UI_CENTER;
 
 	y += VERTICAL_SPACING;
@@ -179,7 +179,7 @@ void Options_MenuInit( void ) {
 	s_options.display.generic.x			= 320;
 	s_options.display.generic.y			= y;
 	s_options.display.string			= "DISPLAY";
-	s_options.display.color				= color_red;
+	s_options.display.color				= text_big_color;
 	s_options.display.style				= UI_CENTER;
 
 	y += VERTICAL_SPACING;
@@ -190,7 +190,7 @@ void Options_MenuInit( void ) {
 	s_options.sound.generic.x			= 320;
 	s_options.sound.generic.y			= y;
 	s_options.sound.string				= "SOUND";
-	s_options.sound.color				= color_red;
+	s_options.sound.color				= text_big_color;
 	s_options.sound.style				= UI_CENTER;
 
 	y += VERTICAL_SPACING;
@@ -201,7 +201,7 @@ void Options_MenuInit( void ) {
 	s_options.network.generic.x			= 320;
 	s_options.network.generic.y			= y;
 	s_options.network.string			= "NETWORK";
-	s_options.network.color				= color_red;
+	s_options.network.color				= text_big_color;
 	s_options.network.style				= UI_CENTER;
 
 	s_options.back.generic.type	    = MTYPE_BITMAP;

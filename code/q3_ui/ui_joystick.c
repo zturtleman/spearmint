@@ -234,7 +234,7 @@ static void UI_Joystick_MenuInit( int localClient ) {
 	joystickMenu.banner.generic.x				= 320;
 	joystickMenu.banner.generic.y				= 16;
 	joystickMenu.banner.string					= "SELECT JOYSTICK";
-	joystickMenu.banner.color					= color_white;
+	joystickMenu.banner.color					= text_banner_color;
 	joystickMenu.banner.style					= UI_CENTER;
 
 	joystickMenu.framel.generic.type			= MTYPE_BITMAP;
@@ -263,7 +263,7 @@ static void UI_Joystick_MenuInit( int localClient ) {
 		joystickMenu.joysticks[i].generic.id		= ID_JOYSTICK+i;
 		joystickMenu.joysticks[i].generic.callback	= UI_JoystickMenu_Event;
 		joystickMenu.joysticks[i].string			= joystickMenu.joystickNames[i];
-		joystickMenu.joysticks[i].color				= color_red;
+		joystickMenu.joysticks[i].color				= text_big_color;
 		joystickMenu.joysticks[i].style				= UI_CENTER|UI_SMALLFONT;
 
 		if (i >= joystickMenu.numJoysticks) {

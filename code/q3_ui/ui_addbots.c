@@ -238,7 +238,7 @@ UI_AddBotsMenu_Draw
 =================
 */
 static void UI_AddBotsMenu_Draw( void ) {
-	UI_DrawBannerString( 320, 16, "ADD BOTS", UI_CENTER, color_white );
+	UI_DrawBannerString( 320, 16, "ADD BOTS", UI_CENTER, text_banner_color );
 	UI_DrawNamedPic( 320-233, 240-166, 466, 332, ART_BACKGROUND );
 
 	// standard menu drawing

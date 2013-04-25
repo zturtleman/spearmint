@@ -167,7 +167,7 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.banner.generic.x					= 320;
 	setupMenuInfo.banner.generic.y					= 16;
 	setupMenuInfo.banner.string						= "SETUP";
-	setupMenuInfo.banner.color						= color_white;
+	setupMenuInfo.banner.color						= text_banner_color;
 	setupMenuInfo.banner.style						= UI_CENTER;
 
 	setupMenuInfo.framel.generic.type				= MTYPE_BITMAP;
@@ -200,7 +200,7 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.setupplayers.generic.id			= ID_CUSTOMIZEPLAYER;
 	setupMenuInfo.setupplayers.generic.callback		= UI_SetupMenu_Event; 
 	setupMenuInfo.setupplayers.string				= (UI_MaxSplitView() == 1) ? "PLAYER": "PLAYERS";
-	setupMenuInfo.setupplayers.color					= color_red;
+	setupMenuInfo.setupplayers.color					= text_big_color;
 	setupMenuInfo.setupplayers.style					= UI_CENTER;
 
 	y += SETUP_MENU_VERTICAL_SPACING;
@@ -211,7 +211,7 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.setupcontrols.generic.id			= ID_CUSTOMIZECONTROLS;
 	setupMenuInfo.setupcontrols.generic.callback	= UI_SetupMenu_Event; 
 	setupMenuInfo.setupcontrols.string				= "CONTROLS";
-	setupMenuInfo.setupcontrols.color				= color_red;
+	setupMenuInfo.setupcontrols.color				= text_big_color;
 	setupMenuInfo.setupcontrols.style				= UI_CENTER;
 
 	y += SETUP_MENU_VERTICAL_SPACING;
@@ -222,7 +222,7 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.setupsystem.generic.id			= ID_SYSTEMCONFIG;
 	setupMenuInfo.setupsystem.generic.callback		= UI_SetupMenu_Event; 
 	setupMenuInfo.setupsystem.string				= "SYSTEM";
-	setupMenuInfo.setupsystem.color					= color_red;
+	setupMenuInfo.setupsystem.color					= text_big_color;
 	setupMenuInfo.setupsystem.style					= UI_CENTER;
 
 	y += SETUP_MENU_VERTICAL_SPACING;
@@ -233,7 +233,7 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.game.generic.id					= ID_GAME;
 	setupMenuInfo.game.generic.callback				= UI_SetupMenu_Event; 
 	setupMenuInfo.game.string						= "GAME OPTIONS";
-	setupMenuInfo.game.color						= color_red;
+	setupMenuInfo.game.color						= text_big_color;
 	setupMenuInfo.game.style						= UI_CENTER;
 
 	if( !trap_Cvar_VariableValue( "cl_paused" ) ) {
@@ -246,7 +246,7 @@ static void UI_SetupMenu_Init( void ) {
 		setupMenuInfo.load.generic.id					= ID_LOAD;
 		setupMenuInfo.load.generic.callback				= UI_SetupMenu_Event; 
 		setupMenuInfo.load.string						= "LOAD";
-		setupMenuInfo.load.color						= color_red;
+		setupMenuInfo.load.color						= text_big_color;
 		setupMenuInfo.load.style						= UI_CENTER;
 
 		y += SETUP_MENU_VERTICAL_SPACING;
@@ -257,7 +257,7 @@ static void UI_SetupMenu_Init( void ) {
 		setupMenuInfo.save.generic.id					= ID_SAVE;
 		setupMenuInfo.save.generic.callback				= UI_SetupMenu_Event; 
 		setupMenuInfo.save.string						= "SAVE";
-		setupMenuInfo.save.color						= color_red;
+		setupMenuInfo.save.color						= text_big_color;
 		setupMenuInfo.save.style						= UI_CENTER;
 #endif
 
@@ -269,7 +269,7 @@ static void UI_SetupMenu_Init( void ) {
 		setupMenuInfo.defaults.generic.id				= ID_DEFAULTS;
 		setupMenuInfo.defaults.generic.callback			= UI_SetupMenu_Event; 
 		setupMenuInfo.defaults.string					= "DEFAULTS";
-		setupMenuInfo.defaults.color					= color_red;
+		setupMenuInfo.defaults.color					= text_big_color;
 		setupMenuInfo.defaults.style					= UI_CENTER;
 	}
 

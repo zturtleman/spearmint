@@ -142,7 +142,7 @@ static void UI_SaveConfigMenu_Init( void ) {
 	saveConfig.banner.generic.x			= 320;
 	saveConfig.banner.generic.y			= 16;
 	saveConfig.banner.string			= "SAVE CONFIG";
-	saveConfig.banner.color				= color_white;
+	saveConfig.banner.color				= text_banner_color;
 	saveConfig.banner.style				= UI_CENTER;
 
 	saveConfig.background.generic.type		= MTYPE_BITMAP;

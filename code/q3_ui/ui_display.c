@@ -137,7 +137,7 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.banner.generic.x			= 320;
 	displayOptionsInfo.banner.generic.y			= 16;
 	displayOptionsInfo.banner.string			= "SYSTEM SETUP";
-	displayOptionsInfo.banner.color				= color_white;
+	displayOptionsInfo.banner.color				= text_banner_color;
 	displayOptionsInfo.banner.style				= UI_CENTER;
 
 	displayOptionsInfo.framel.generic.type		= MTYPE_BITMAP;
@@ -164,7 +164,7 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.graphics.generic.y			= 240 - 2 * PROP_HEIGHT;
 	displayOptionsInfo.graphics.string				= "GRAPHICS";
 	displayOptionsInfo.graphics.style				= UI_RIGHT;
-	displayOptionsInfo.graphics.color				= color_red;
+	displayOptionsInfo.graphics.color				= text_big_color;
 
 	displayOptionsInfo.display.generic.type			= MTYPE_PTEXT;
 	displayOptionsInfo.display.generic.flags		= QMF_RIGHT_JUSTIFY;
@@ -174,7 +174,7 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.display.generic.y			= 240 - PROP_HEIGHT;
 	displayOptionsInfo.display.string				= "DISPLAY";
 	displayOptionsInfo.display.style				= UI_RIGHT;
-	displayOptionsInfo.display.color				= color_red;
+	displayOptionsInfo.display.color				= text_big_color;
 
 	displayOptionsInfo.sound.generic.type			= MTYPE_PTEXT;
 	displayOptionsInfo.sound.generic.flags			= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -184,7 +184,7 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.sound.generic.y				= 240;
 	displayOptionsInfo.sound.string					= "SOUND";
 	displayOptionsInfo.sound.style					= UI_RIGHT;
-	displayOptionsInfo.sound.color					= color_red;
+	displayOptionsInfo.sound.color					= text_big_color;
 
 	displayOptionsInfo.network.generic.type			= MTYPE_PTEXT;
 	displayOptionsInfo.network.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -194,7 +194,7 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.network.generic.y			= 240 + PROP_HEIGHT;
 	displayOptionsInfo.network.string				= "NETWORK";
 	displayOptionsInfo.network.style				= UI_RIGHT;
-	displayOptionsInfo.network.color				= color_red;
+	displayOptionsInfo.network.color				= text_big_color;
 
 	y = 240 - 1 * (BIGCHAR_HEIGHT+2);
 	displayOptionsInfo.brightness.generic.type		= MTYPE_SLIDER;
