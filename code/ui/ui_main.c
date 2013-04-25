@@ -2327,7 +2327,7 @@ static qboolean UI_GameType_HandleKey(int flags, float *special, int key, qboole
 			}
 		}
     
-		if (uiInfo.gameTypes[ui_gameType.integer].gtEnum == GT_TOURNAMENT) {
+		if (uiInfo.gameTypes[ui_gameType.integer].gtEnum < GT_TEAM) {
 			trap_Cvar_SetValue( "ui_Q3Model", 1 );
 		} else {
 			trap_Cvar_SetValue( "ui_Q3Model", 0 );
