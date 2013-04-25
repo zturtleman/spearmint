@@ -929,8 +929,8 @@ void GraphicsOptions_MenuInit( void )
 
 	static const char *lighting_names[] =
 	{
-		"Lightmap",
-		"Vertex",
+		"Lightmap (High)",
+		"Vertex (Low)",
 		NULL
 	};
 
