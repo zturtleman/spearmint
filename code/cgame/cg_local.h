@@ -276,6 +276,8 @@ typedef struct localEntity_s {
 
 	refEntity_t		refEntity;		
 
+	int				firstPersonEntity; // don't render in firstPersonEntity's first person view
+
 	int				localClients; // 0 means all, else check if localClients & (1<<lc)
 } localEntity_t;
 

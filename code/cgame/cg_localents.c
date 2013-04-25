@@ -99,6 +99,8 @@ localEntity_t	*CG_AllocLocalEntity( void ) {
 
 	memset( le, 0, sizeof( *le ) );
 
+	le->firstPersonEntity = -1;
+
 	// link into the active list
 	le->next = cg_activeLocalEntities.next;
 	le->prev = &cg_activeLocalEntities;
@@ -815,6 +817,7 @@ CG_AddLocalEntities
 */
 void CG_AddLocalEntities( void ) {
 	localEntity_t	*le, *next;
+	qboolean forceOnlyMirror;
 
 	// walk the list backwards, so any new local entities generated
 	// (trails, marks, etc) will be present this frame
@@ -832,6 +835,14 @@ void CG_AddLocalEntities( void ) {
 		// Check if local entity should be rendered by this local client.
 		if (le->localClients && !(le->localClients & (1<<cg.cur_localClientNum))) {
 			continue;
+		}
+
+		forceOnlyMirror = (!(le->refEntity.renderfx & RF_ONLY_MIRROR) &&
+				!cg.cur_lc->renderingThirdPerson &&
+				cg.snap->pss[cg.cur_localClientNum].clientNum == le->firstPersonEntity);
+
+		if ( forceOnlyMirror ) {
+			le->refEntity.renderfx |= RF_ONLY_MIRROR;
 		}
 
 		switch ( le->leType ) {
@@ -888,6 +899,10 @@ void CG_AddLocalEntities( void ) {
 			CG_AddRefEntity( le );
 			break;
 #endif
+		}
+
+		if ( forceOnlyMirror ) {
+			le->refEntity.renderfx &= ~RF_ONLY_MIRROR;
 		}
 	}
 }
