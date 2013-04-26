@@ -711,7 +711,6 @@ void GLimp_Init( void )
 	if( ri.Cvar_VariableIntegerValue( "com_abnormalExit" ) )
 	{
 		ri.Cvar_Set( "r_mode", va( "%d", R_MODE_FALLBACK ) );
-		ri.Cvar_Set( "r_picmap", "1" );
 		ri.Cvar_Set( "r_texturebits", "0" );
 		ri.Cvar_Set( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST" );
 		ri.Cvar_Set( "r_fullscreen", "0" );
