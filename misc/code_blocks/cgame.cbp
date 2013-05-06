@@ -229,6 +229,9 @@
 		<Unit filename="../../code/cgame/cg_info.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/cgame/cg_input.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/cgame/cg_local.h" />
 		<Unit filename="../../code/cgame/cg_localents.c">
 			<Option compilerVar="CC" />

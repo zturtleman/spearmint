@@ -478,10 +478,6 @@ qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum ) {
 	return syscall( CG_GETUSERCMD, cmdNumber, ucmd, localClientNum );
 }
 
-void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int localClientNum ) {
-	syscall( CG_SETUSERCMDVALUE, stateValue, PASSFLOAT(sensitivityScale), localClientNum );
-}
-
 void		trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
 						int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
 	syscall( CG_SET_NET_FIELDS, entityStateSize, entityStateFields, numEntityStateFields, playerStateSize, playerStateFields, numPlayerStateFields );

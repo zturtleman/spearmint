@@ -370,13 +370,7 @@ void	*VM_ArgPtr( intptr_t intValue );
 void	*VM_ExplicitArgPtr( vm_t *vm, intptr_t intValue );
 
 #define	VMA(x) VM_ArgPtr(args[x])
-static ID_INLINE float _vmf(intptr_t x)
-{
-	floatint_t fi;
-	fi.i = (int) x;
-	return fi.f;
-}
-#define	VMF(x)	_vmf(args[x])
+#define	VMF(x)	IntAsFloat((int)args[x])
 
 void VM_ClearMemoryTags( void );
 intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag );
@@ -1109,8 +1103,6 @@ NON-PORTABLE SYSTEM SERVICES
 
 ==============================================================
 */
-
-#define MAX_JOYSTICK_AXIS 16
 
 void	Sys_Init (void);
 

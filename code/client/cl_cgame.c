@@ -254,16 +254,6 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerS
 }
 
 /*
-=====================
-CL_SetUserCmdValue
-=====================
-*/
-void CL_SetUserCmdValue( int userCmdValue, float sensitivityScale, int localClientNum ) {
-	cl.localClients[localClientNum].cgameUserCmdValue = userCmdValue;
-	cl.localClients[localClientNum].cgameSensitivity = sensitivityScale;
-}
-
-/*
 ===============
 CL_SetNetFields
 ===============
@@ -1072,12 +1062,6 @@ void CL_ShutdownCGame( void ) {
 	cgvm = NULL;
 }
 
-static int	FloatAsInt( float f ) {
-	floatint_t fi;
-	fi.f = f;
-	return fi.i;
-}
-
 /*
 ====================
 CL_CgameSystemCalls
@@ -1400,9 +1384,6 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return CL_GetCurrentCmdNumber();
 	case CG_GETUSERCMD:
 		return CL_GetUserCmd( args[1], VMA(2), args[3] );
-	case CG_SETUSERCMDVALUE:
-		CL_SetUserCmdValue( args[1], VMF(2), args[3] );
-		return 0;
 	case CG_SET_NET_FIELDS:
 		CL_SetNetFields( args[1], VMA(2), args[3], args[4], VMA(5), args[6] );
 		return 0;

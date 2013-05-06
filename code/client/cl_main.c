@@ -54,7 +54,6 @@ cvar_t	*cl_voip;
 #endif
 
 cvar_t	*cl_nodelta;
-cvar_t	*cl_debugMove;
 
 cvar_t	*cl_noprint;
 #ifdef UPDATE_SERVER_NAME
@@ -80,7 +79,6 @@ cvar_t	*cl_aviFrameRate;
 cvar_t	*cl_aviMotionJpeg;
 cvar_t	*cl_forceavidemo;
 
-cvar_t	*cl_freelook;
 cvar_t	*cl_sensitivity;
 
 cvar_t	*cl_mouseAccel;
@@ -88,22 +86,7 @@ cvar_t	*cl_mouseAccelOffset;
 cvar_t	*cl_mouseAccelStyle;
 cvar_t	*cl_showMouseRate;
 
-cvar_t	*m_pitch;
-cvar_t	*m_yaw;
-cvar_t	*m_forward;
-cvar_t	*m_side;
 cvar_t	*m_filter;
-
-cvar_t	*j_pitch[CL_MAX_SPLITVIEW];
-cvar_t	*j_yaw[CL_MAX_SPLITVIEW];
-cvar_t	*j_forward[CL_MAX_SPLITVIEW];
-cvar_t	*j_side[CL_MAX_SPLITVIEW];
-cvar_t	*j_up[CL_MAX_SPLITVIEW];
-cvar_t	*j_pitch_axis[CL_MAX_SPLITVIEW];
-cvar_t	*j_yaw_axis[CL_MAX_SPLITVIEW];
-cvar_t	*j_forward_axis[CL_MAX_SPLITVIEW];
-cvar_t	*j_side_axis[CL_MAX_SPLITVIEW];
-cvar_t	*j_up_axis[CL_MAX_SPLITVIEW];
 
 cvar_t	*cl_activeAction;
 
@@ -3463,8 +3446,6 @@ CL_Init
 ====================
 */
 void CL_Init( void ) {
-	int		i;
-
 	Com_Printf( "----- Client Initialization -----\n" );
 
 	Con_Init ();
@@ -3508,19 +3489,11 @@ void CL_Init( void ) {
 
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 
-	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
-		cl_yawspeed[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_yawspeed"), "140", CVAR_ARCHIVE);
-		cl_pitchspeed[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_pitchspeed"), "140", CVAR_ARCHIVE);
-		cl_anglespeedkey[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_anglespeedkey"), "1.5", 0);
-		cl_run[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_run"), "1", CVAR_ARCHIVE);
-	}
-
 	cl_maxpackets = Cvar_Get ("cl_maxpackets", "30", CVAR_ARCHIVE );
 	cl_packetdup = Cvar_Get ("cl_packetdup", "1", CVAR_ARCHIVE );
 
 	cl_sensitivity = Cvar_Get ("sensitivity", "5", CVAR_ARCHIVE);
 	cl_mouseAccel = Cvar_Get ("cl_mouseAccel", "0", CVAR_ARCHIVE);
-	cl_freelook = Cvar_Get( "cl_freelook", "1", CVAR_ARCHIVE );
 
 	// 0: legacy mouse acceleration
 	// 1: new implementation
@@ -3547,36 +3520,12 @@ void CL_Init( void ) {
 
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
 
-	m_pitch = Cvar_Get ("m_pitch", "0.022", CVAR_ARCHIVE);
-	m_yaw = Cvar_Get ("m_yaw", "0.022", CVAR_ARCHIVE);
-	m_forward = Cvar_Get ("m_forward", "0.25", CVAR_ARCHIVE);
-	m_side = Cvar_Get ("m_side", "0.25", CVAR_ARCHIVE);
 #ifdef MACOS_X
 	// Input is jittery on OS X w/o this
 	m_filter = Cvar_Get ("m_filter", "1", CVAR_ARCHIVE);
 #else
 	m_filter = Cvar_Get ("m_filter", "0", CVAR_ARCHIVE);
 #endif
-
-	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
-		j_pitch[i] =        Cvar_Get (Com_LocalClientCvarName(i, "j_pitch"),        "0.022", CVAR_ARCHIVE);
-		j_yaw[i] =          Cvar_Get (Com_LocalClientCvarName(i, "j_yaw"),          "-0.022", CVAR_ARCHIVE);
-		j_forward[i] =      Cvar_Get (Com_LocalClientCvarName(i, "j_forward"),      "-0.25", CVAR_ARCHIVE);
-		j_side[i] =         Cvar_Get (Com_LocalClientCvarName(i, "j_side"),         "0.25", CVAR_ARCHIVE);
-		j_up[i] = 	        Cvar_Get (Com_LocalClientCvarName(i, "j_up"),           "1", CVAR_ARCHIVE);
-
-		j_pitch_axis[i] =   Cvar_Get (Com_LocalClientCvarName(i, "j_pitch_axis"),   "3", CVAR_ARCHIVE);
-		j_yaw_axis[i] =     Cvar_Get (Com_LocalClientCvarName(i, "j_yaw_axis"),     "4", CVAR_ARCHIVE);
-		j_forward_axis[i] = Cvar_Get (Com_LocalClientCvarName(i, "j_forward_axis"), "1", CVAR_ARCHIVE);
-		j_side_axis[i] =    Cvar_Get (Com_LocalClientCvarName(i, "j_side_axis"),    "0", CVAR_ARCHIVE);
-		j_up_axis[i] =      Cvar_Get (Com_LocalClientCvarName(i, "j_up_axis"),      "2", CVAR_ARCHIVE);
-
-		Cvar_CheckRange(j_pitch_axis[i], 0, MAX_JOYSTICK_AXIS-1, qtrue);
-		Cvar_CheckRange(j_yaw_axis[i], 0, MAX_JOYSTICK_AXIS-1, qtrue);
-		Cvar_CheckRange(j_forward_axis[i], 0, MAX_JOYSTICK_AXIS-1, qtrue);
-		Cvar_CheckRange(j_side_axis[i], 0, MAX_JOYSTICK_AXIS-1, qtrue);
-		Cvar_CheckRange(j_up_axis[i], 0, MAX_JOYSTICK_AXIS-1, qtrue);
-	}
 
 	cl_motdString = Cvar_Get( "cl_motdString", "", CVAR_ROM );
 

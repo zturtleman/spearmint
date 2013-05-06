@@ -935,7 +935,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	int		inwater;
 	qboolean renderClientViewport[MAX_SPLITVIEW];
 	int		i;
-	int		stateValue;
 
 	cg.time = serverTime;
 	cg.demoPlayback = demoPlayback;
@@ -996,10 +995,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			cg.numViewports++;
 			renderClientViewport[i] = qtrue;
 		}
-
-		// let the client system know what our weapon and zoom settings are
-		stateValue = BG_ComposeUserCmdValue( cg.cur_lc->weaponSelect );
-		trap_SetUserCmdValue( stateValue, cg.cur_lc->zoomSensitivity, cg.cur_localClientNum );
 
 		// update cg.predictedPlayerState
 		CG_PredictPlayerState();

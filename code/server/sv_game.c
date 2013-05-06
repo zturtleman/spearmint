@@ -306,12 +306,6 @@ void SV_GetUsercmd( int playerNum, usercmd_t *cmd ) {
 
 //==============================================
 
-static int	FloatAsInt( float f ) {
-	floatint_t fi;
-	fi.f = f;
-	return fi.i;
-}
-
 /*
 ====================
 SV_GameSystemCalls

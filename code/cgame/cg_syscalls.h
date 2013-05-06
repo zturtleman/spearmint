@@ -82,9 +82,6 @@ int			trap_GetCurrentCmdNumber( void );
 
 qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum );
 
-// used for the weapon select and zoom
-void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int localClientNum );
-
 // send a string to the server over the network
 void		trap_SendClientCommand( const char *s );
 

@@ -75,13 +75,12 @@ equ	trap_GetSnapshot					-153
 equ	trap_GetServerCommand				-154
 equ	trap_GetCurrentCmdNumber			-155
 equ	trap_GetUserCmd						-156
-equ	trap_SetUserCmdValue				-157
-equ	trap_SendClientCommand				-158
-equ	trap_SetNetFields					-159
-equ	trap_GetDemoState					-160
-equ	trap_GetDemoPos						-161
-equ	trap_GetDemoName					-162
-equ	trap_GetDemoLength					-163
+equ	trap_SendClientCommand				-157
+equ	trap_SetNetFields					-158
+equ	trap_GetDemoState					-159
+equ	trap_GetDemoPos						-160
+equ	trap_GetDemoName					-161
+equ	trap_GetDemoLength					-162
 
 equ	trap_GetClientState					-191
 equ	trap_GetConfigString				-192

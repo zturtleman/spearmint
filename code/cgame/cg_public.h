@@ -177,7 +177,6 @@ typedef enum {
 	CG_GETSERVERCOMMAND,
 	CG_GETCURRENTCMDNUMBER,
 	CG_GETUSERCMD,
-	CG_SETUSERCMDVALUE,
 	CG_SENDCLIENTCOMMAND,
 	CG_SET_NET_FIELDS,
 	CG_GETDEMOSTATE,
@@ -359,6 +358,9 @@ typedef enum {
 	CG_MOUSE_EVENT,
 //	void	(*CG_MouseEvent)( int localClientNum, int dx, int dy );
 
+	CG_JOYSTICK_EVENT,
+//	void	(*CG_JoystickEvent)( int localClientNum, int axis, int value );
+
 	CG_EVENT_HANDLING,
 //	void (*CG_EventHandling)(int type);
 
@@ -367,8 +369,11 @@ typedef enum {
 //	pass text that has been printed to the console to cgame
 //	use Cmd_Argc() / Cmd_Argv() to read it
 
-	CG_WANTSBINDKEYS
+	CG_WANTSBINDKEYS,
 //	qboolean CG_WantsBindKeys( void );
+
+	CG_CREATE_USER_CMD
+//	usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, int frameMsec, float mx, float my );
 
 } cgameExport_t;
 

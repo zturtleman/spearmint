@@ -84,6 +84,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_MOUSE_EVENT:
 		CG_MouseEvent(arg0, arg1, arg2);
 		return 0;
+	case CG_JOYSTICK_EVENT:
+		CG_JoystickEvent(arg0, arg1, arg2);
+		return 0;
 	case CG_EVENT_HANDLING:
 		CG_EventHandling(arg0);
 		return 0;
@@ -96,6 +99,8 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 #else
 		return qfalse;
 #endif
+	case CG_CREATE_USER_CMD:
+		return (intptr_t)CG_CreateUserCmd(arg0, arg1, arg2, IntAsFloat(arg3), IntAsFloat(arg4));
 	default:
 		CG_Error( "vmMain: unknown command %i", command );
 		break;
@@ -410,6 +415,8 @@ void CG_RegisterCvars( void ) {
 		}
 	}
 
+	CG_RegisterInputCvars();
+
 	BG_RegisterClientCvars(CG_MaxSplitView());
 
 	// see if we are also running the server on this machine
@@ -458,6 +465,8 @@ void CG_UpdateCvars( void ) {
 
 		trap_Cvar_Update( cv->vmCvar );
 	}
+
+	CG_UpdateInputCvars();
 
 	// check for modications here
 
@@ -2328,6 +2337,24 @@ void CG_KeyEvent(int key, qboolean down) {
 void CG_MouseEvent(int localClientNum, int x, int y) {
 }
 #endif
+
+/*
+=================
+CG_JoystickEvent
+
+Joystick values stay set until changed
+=================
+*/
+void CG_JoystickEvent( int localClientNum, int axis, int value ) {
+	if ( localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
+		return;
+	}
+	if ( axis < 0 || axis >= MAX_JOYSTICK_AXIS ) {
+		CG_Error( "CG_JoystickEvent: bad axis %i", axis );
+	}
+
+	cg.localClients[localClientNum].joystickAxis[axis] = value;
+}
 
 /*
 ================
