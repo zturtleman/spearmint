@@ -3101,6 +3101,7 @@ void Com_InitRef( refimport_t *ri ) {
 	ri->Cvar_SetValue = Cvar_SetValue;
 	ri->Cvar_CheckRange = Cvar_CheckRange;
 	ri->Cvar_VariableIntegerValue = Cvar_VariableIntegerValue;
+	ri->Cvar_VariableStringBuffer = Cvar_VariableStringBuffer;
 
 	ri->ftol = Q_ftol;
 

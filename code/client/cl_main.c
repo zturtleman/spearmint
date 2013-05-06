@@ -3291,6 +3291,10 @@ void CL_InitRef( void ) {
   
 	ri.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
 	ri.CL_MaxSplitView = CL_MaxSplitView;
+	ri.CL_GetMapMessage = CL_GetMapMessage;
+	ri.CL_GetClientLocation = CL_GetClientLocation;
+	ri.zlib_compress = compress;
+	ri.zlib_crc32 = crc32;
 
 	ri.IN_Init = IN_Init;
 	ri.IN_Shutdown = IN_Shutdown;
@@ -4539,3 +4543,41 @@ void CL_ShowIP_f(void) {
 	Sys_ShowIP();
 }
 
+/*
+=================
+CL_GetMapMessage
+=================
+*/
+void CL_GetMapMessage(char *buf, int bufLength) {
+	int		offset;
+
+	offset = cl.gameState.stringOffsets[CS_MESSAGE];
+	if (!offset) {
+		if( bufLength ) {
+			Q_strncpyz( buf, "Unknown", bufLength);
+		}
+		return;
+	}
+
+	Q_strncpyz( buf, cl.gameState.stringData+offset, bufLength);
+}
+
+/*
+=================
+CL_GetClientLocation
+=================
+*/
+qboolean CL_GetClientLocation(char *buf, int bufLength, int localClientNum) {
+	sharedPlayerState_t *ps;
+
+	if (!cl.snap.valid || cl.snap.lcIndex[localClientNum] == -1) {
+		Q_strncpyz(buf, "Unknown", bufLength);
+		return qfalse;
+	}
+
+	ps = DA_ElementPointer( cl.snap.playerStates, cl.snap.lcIndex[localClientNum] );
+	snprintf(buf, bufLength, "X:%d Y:%d Z:%d A:%d", (int)ps->origin[0],
+			(int)ps->origin[1], (int)ps->origin[2],
+			(int)(ps->viewangles[YAW]+360)%360);
+	return qtrue;
+}

@@ -32,6 +32,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "tr_types.h"
 
+#ifdef USE_LOCAL_HEADERS
+  #include "../zlib/zlib.h"
+#else
+  #include <zlib.h>
+#endif
+
 #define	REF_API_VERSION		8
 
 //
@@ -151,6 +157,8 @@ typedef struct {
 
 	int		(*Cvar_VariableIntegerValue) (const char *var_name);
 
+	void	(*Cvar_VariableStringBuffer) (const char *var_name, char *buffer, int bufsize);
+
 	void	(*Cmd_AddCommand)( const char *name, void(*cmd)(void) );
 	void	(*Cmd_RemoveCommand)( const char *name );
 
@@ -194,6 +202,14 @@ typedef struct {
 	void	(*Sys_GLimpSafeInit)( void );
 	void	(*Sys_GLimpInit)( void );
 	qboolean (*Sys_LowPhysicalMemory)( void );
+
+	// zlib for png screenshots
+	int (*zlib_compress) (Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen);
+	uLong (*zlib_crc32) (uLong crc, const Bytef *buf, uInt len);
+
+	// get extra info for png screenshots
+	void	(*CL_GetMapMessage)(char *buf, int bufLength);
+	qboolean (*CL_GetClientLocation)(char *buf, int bufLength, int localClientNum);
 } refimport_t;
 
 

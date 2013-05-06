@@ -622,4 +622,6 @@ qboolean CL_VideoRecording( void );
 // cl_main.c
 //
 void CL_WriteDemoMessage ( msg_t *msg, int headerBytes );
+void CL_GetMapMessage(char *buf, int bufLength);
+qboolean CL_GetClientLocation(char *buf, int bufLength, int localClientNum);
 
