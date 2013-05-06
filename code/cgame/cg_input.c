@@ -523,18 +523,6 @@ usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMs
 	// store out the final values
 	CG_FinishMove( lc, &cmd );
 
-#if 0
-	// draw debug graphs of turning for mouse testing
-	if ( cl_debugMove->integer ) {
-		if ( cl_debugMove->integer == 1 ) {
-			SCR_DebugGraph( abs(lc->viewangles[YAW] - oldAngles[YAW]) );
-		}
-		if ( cl_debugMove->integer == 2 ) {
-			SCR_DebugGraph( abs(lc->viewangles[PITCH] - oldAngles[PITCH]) );
-		}
-	}
-#endif
-
 	return &cmd;
 }
 
@@ -545,8 +533,6 @@ CG_RegisterInputCvars
 */
 void CG_RegisterInputCvars( void ) {
 	int i;
-
-	//cl_debugMove = Cvar_Get ("cl_debugMove", "0", 0);
 
 	trap_Cvar_Register( &cg_freelook, "cl_freelook", "1", CVAR_ARCHIVE );
 
