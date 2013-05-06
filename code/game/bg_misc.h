@@ -982,15 +982,11 @@ qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 // entityState_t->eType
 //
 typedef enum {
-	/* bg_public.h
-		ZTM: NOTE: Botlib expects these five in this order.
-	*/
 	ET_GENERAL,
 	ET_PLAYER,
 	ET_ITEM,
 	ET_MISSILE,
 	ET_MOVER,
-
 	ET_BEAM,
 	ET_PORTAL,
 	ET_SPEAKER,
