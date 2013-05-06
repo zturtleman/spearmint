@@ -534,7 +534,7 @@ CG_RegisterInputCvars
 void CG_RegisterInputCvars( void ) {
 	int i;
 
-	trap_Cvar_Register( &cg_freelook, "cl_freelook", "1", CVAR_ARCHIVE );
+	trap_Cvar_Register( &cg_freelook, "cl_freelook", "1", CVAR_ARCHIVE ); // ZTM: NOTE: changing name breaks team arena menu scripts
 
 	trap_Cvar_Register( &m_pitch, "m_pitch", "0.022", CVAR_ARCHIVE );
 	trap_Cvar_Register( &m_yaw, "m_yaw", "0.022", CVAR_ARCHIVE );
@@ -542,10 +542,10 @@ void CG_RegisterInputCvars( void ) {
 	trap_Cvar_Register( &m_side, "m_side", "0.25", CVAR_ARCHIVE );
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		trap_Cvar_Register( &cg_yawspeed[i], Com_LocalClientCvarName(i, "cl_yawspeed"), "140", CVAR_ARCHIVE );
-		trap_Cvar_Register( &cg_pitchspeed[i], Com_LocalClientCvarName(i, "cl_pitchspeed"), "140", CVAR_ARCHIVE );
-		trap_Cvar_Register( &cg_anglespeedkey[i], Com_LocalClientCvarName(i, "cl_anglespeedkey"), "1.5", 0 );
-		trap_Cvar_Register( &cg_run[i], Com_LocalClientCvarName(i, "cl_run"), "1", CVAR_ARCHIVE );
+		trap_Cvar_Register( &cg_yawspeed[i], Com_LocalClientCvarName(i, "cg_yawspeed"), "140", CVAR_ARCHIVE );
+		trap_Cvar_Register( &cg_pitchspeed[i], Com_LocalClientCvarName(i, "cg_pitchspeed"), "140", CVAR_ARCHIVE );
+		trap_Cvar_Register( &cg_anglespeedkey[i], Com_LocalClientCvarName(i, "cg_anglespeedkey"), "1.5", 0 );
+		trap_Cvar_Register( &cg_run[i], Com_LocalClientCvarName(i, "cl_run"), "1", CVAR_ARCHIVE ); // ZTM: NOTE: changing name breaks team arena menu scripts
 
 		trap_Cvar_Register( &j_pitch[i],	Com_LocalClientCvarName(i, "j_pitch"),        "0.022",	CVAR_ARCHIVE );
 		trap_Cvar_Register( &j_yaw[i],		Com_LocalClientCvarName(i, "j_yaw"),          "-0.022",	CVAR_ARCHIVE );
