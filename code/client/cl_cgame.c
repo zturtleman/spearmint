@@ -455,7 +455,7 @@ rescan:
 		// close the console
 		Con_Close();
 		// take a special screenshot next frame
-		Cbuf_AddText( "wait ; wait ; wait ; wait ; screenshot levelshot\n" );
+		Cbuf_AddText( va( "wait ; wait ; wait ; wait ; screenshot levelshot %s\n", Cmd_Argv(1) ) );
 		return qtrue;
 	}
 
