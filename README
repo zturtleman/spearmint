@@ -346,6 +346,9 @@ New commands
 
   tell <client num> <msg> - send message to a single client (new to server)
 
+  levelshot <size>        - spearmint allows setting levelshot size, example
+                            `levelshot 512'. defaults to 128.
+
 
 Removed cvars
   r_customPixelAspect     - it had no effect
