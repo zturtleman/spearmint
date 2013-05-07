@@ -1568,6 +1568,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_INPVS:
 		return re.inPVS( VMA(1), VMA(2) );
 
+	case CG_R_GETSKINMODEL:
+		return re.GetSkinModel( args[1], VMA( 2 ), VMA( 3 ) );
+
 	default:
 	        assert(0);
 		Com_Error( ERR_DROP, "Bad cgame system trap: %ld", (long int) args[0] );

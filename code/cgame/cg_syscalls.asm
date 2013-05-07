@@ -125,6 +125,7 @@ equ trap_R_DrawStretchPicGradient		-318
 equ trap_R_Add2dPolys					-319
 equ	trap_R_AddPolysToScene				-320
 equ	trap_R_AddPolyBufferToScene			-321
+equ trap_R_GetSkinModel					-322
 
 equ	trap_R_LoadWorldMap					-351
 equ trap_GetEntityToken					-352

@@ -460,16 +460,25 @@ typedef struct {
 
 //=================================================================================
 
+#define MAX_PART_MODELS 5
+
 // skins allow models to be retextured without modifying the model file
 typedef struct {
 	char		name[MAX_QPATH];
 	shader_t	*shader;
 } skinSurface_t;
 
+typedef struct {
+	char type[MAX_QPATH];           // md3_lower, md3_lbelt, md3_rbelt, etc.
+	char model[MAX_QPATH];          // lower.md3, belt1.md3, etc.
+} skinModel_t;
+
 typedef struct skin_s {
 	char		name[MAX_QPATH];		// game path, including extension
 	int			numSurfaces;
+	int			numModels;
 	skinSurface_t	*surfaces[MD3_MAX_SURFACES];
+	skinModel_t     *models[MAX_PART_MODELS];
 } skin_t;
 
 
@@ -1285,6 +1294,7 @@ void		RE_LoadWorldMap( const char *mapname );
 void		RE_SetWorldVisData( const byte *vis );
 qhandle_t	RE_RegisterModel( const char *name );
 qhandle_t	RE_RegisterSkin( const char *name );
+qboolean    RE_GetSkinModel( qhandle_t hSkin, const char *type, char *name );
 void		RE_Shutdown( qboolean destroyWindow );
 
 qboolean	R_GetEntityToken( char *buffer, int size );

@@ -226,6 +226,7 @@ typedef enum {
 	CG_R_DRAW2DPOLYS,
 	CG_R_ADDPOLYSTOSCENE,
 	CG_R_ADDPOLYBUFFERTOSCENE,
+	CG_R_GETSKINMODEL,
 
 	// note: these were not originally available in ui
 	CG_R_LOADWORLDMAP = 350,
