@@ -442,7 +442,7 @@ void Cmd_LevelShot_f(gentity_t *ent)
 	}
 
 	BeginIntermission();
-	trap_SendServerCommand(ent-g_entities, "clientLevelShot");
+	trap_SendServerCommandEx( ent->client->pers.connectionNum, -1, "clientLevelShot" );
 }
 
 
