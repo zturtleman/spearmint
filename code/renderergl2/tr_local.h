@@ -2771,6 +2771,7 @@ void RE_SaveJPG(char * filename, int quality, int image_width, int image_height,
                 unsigned char *image_buffer, int padding);
 size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 		          int image_width, int image_height, byte *image_buffer, int padding);
+void RE_SaveTGA(char * filename, int image_width, int image_height, byte *image_buffer, int padding);
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
