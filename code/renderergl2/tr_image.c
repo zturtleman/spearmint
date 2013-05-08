@@ -3244,10 +3244,17 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 			text_p++;
 		}
 
-		if ( strstr( token, "tag_" ) ) {
+		if ( !Q_stricmpn( token, "tag_", 4 ) ) {
+			SkipRestOfLine( &text_p );
 			continue;
 		}
 		
+		// skip RTCW/ET skin settings
+		if ( !Q_stricmpn( token, "md3_", 4 ) || !Q_stricmp( token, "playerscale" ) ) {
+			SkipRestOfLine( &text_p );
+			continue;
+		}
+
 		// parse the shader name
 		token = COM_ParseExt2( &text_p, qfalse, ',' );
 		Q_strncpyz( shaderName, token, sizeof( shaderName ) );
