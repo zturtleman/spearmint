@@ -422,10 +422,6 @@ void trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, floa
 	syscall( CG_R_GET_VIEW_FOG, origin, type, color, depthForOpaque, density, inwater );
 }
 
-qboolean trap_R_GetSkinModel( qhandle_t hSkin, const char *type, char *name ) {
-	return syscall( CG_R_GETSKINMODEL, hSkin, type, name );
-}
-
 void		trap_GetClipboardData( char *buf, int bufsize ) {
 	syscall( CG_GETCLIPBOARDDATA, buf, bufsize );
 }

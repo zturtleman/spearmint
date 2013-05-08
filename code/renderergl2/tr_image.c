@@ -3161,33 +3161,6 @@ SKINS
 */
 
 /*
-==============
-RE_GetSkinModel
-==============
-*/
-qboolean RE_GetSkinModel( qhandle_t hSkin, const char *type, char *name ) {
-	int		i;
-	skin_t	*skin;
-
-	if ( hSkin < 1 || hSkin >= tr.numSkins ) {
-		return qfalse;
-	}
-
-	skin = tr.skins[hSkin];
-
-	for ( i = 0; i < skin->numModels; i++ ) {
-		if ( !Q_stricmp( skin->models[i]->type, type ) ) {
-			if ( name ) {
-				Q_strncpyz( name, skin->models[i]->model, sizeof( skin->models[i]->model ) );
-			}
-			return qtrue;
-		}
-	}
-
-	return qfalse;
-}
-
-/*
 ===============
 RE_RegisterSkin
 
@@ -3197,7 +3170,6 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 	qhandle_t	hSkin;
 	skin_t		*skin;
 	skinSurface_t	*surf;
-	skinModel_t		*model;
 	union {
 		char *c;
 		void *v;
@@ -3272,24 +3244,10 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 			text_p++;
 		}
 
-		if ( !Q_stricmpn( token, "tag_", 4 ) ) {
+		if ( strstr( token, "tag_" ) ) {
 			continue;
 		}
-
-		if ( !Q_stricmpn( token, "md3_", 4 ) ) {
-			// this is specifying a model
-			model = skin->models[ skin->numModels ] = ri.Hunk_Alloc( sizeof( *skin->models[0] ), h_low );
-			Q_strncpyz( model->type, token, sizeof( model->type ) );
-
-			// get the model name
-			token = COM_ParseExt2( &text_p, qfalse, ',' );
-
-			Q_strncpyz( model->model, token, sizeof( model->model ) );
-
-			skin->numModels++;
-			continue;
-		}
-
+		
 		// parse the shader name
 		token = COM_ParseExt2( &text_p, qfalse, ',' );
 		Q_strncpyz( shaderName, token, sizeof( shaderName ) );
