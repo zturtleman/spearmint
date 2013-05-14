@@ -224,6 +224,19 @@ qhandle_t RE_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap
 }
 
 /*
+==============
+RE_GetShaderName
+==============
+*/
+void RE_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize ) {
+	shader_t	*shader;
+
+	shader = R_GetShaderByHandle( hShader );
+
+	Q_strncpyz( buffer, shader->name, bufferSize );
+}
+
+/*
 ===============
 ParseVector
 ===============

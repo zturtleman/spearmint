@@ -177,6 +177,7 @@ void		trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, flo
 void		trap_R_SetSurfaceShader( int surfaceNum, const char *name );
 qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int withlightmap );
 qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap );
+void		trap_R_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize );
 
 // normal sounds will have their volume dynamically changed as their entity
 // moves and the listener moves

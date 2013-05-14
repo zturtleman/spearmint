@@ -124,6 +124,7 @@ typedef struct {
 	void (*SetSurfaceShader)( int surfaceNum, const char *name );
 	qhandle_t (*GetSurfaceShader)( int surfaceNum, int withlightmap );
 	qhandle_t (*GetShaderFromModel)( qhandle_t hModel, int surfnum, int withlightmap );
+	void (*GetShaderName)( qhandle_t hShader, char *buffer, int bufferSize );
 } refexport_t;
 
 //

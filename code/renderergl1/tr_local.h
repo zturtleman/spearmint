@@ -1337,6 +1337,7 @@ void    R_RemapShader(const char *oldShader, const char *newShader, const char *
 void		RE_SetSurfaceShader( int surfaceNum, const char *name );
 qhandle_t	RE_GetSurfaceShader( int surfaceNum, int withlightmap );
 qhandle_t	RE_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap );
+void		RE_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize );
 
 /*
 ====================================================================

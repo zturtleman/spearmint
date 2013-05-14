@@ -434,6 +434,10 @@ qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int withligh
 	return syscall( CG_R_GET_SHADER_FROM_MODEL, hModel, surfnum, withlightmap );
 }
 
+void		trap_R_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize ) {
+	syscall( CG_R_GET_SHADER_NAME, hShader, buffer, bufferSize );
+}
+
 void		trap_GetClipboardData( char *buf, int bufsize ) {
 	syscall( CG_GETCLIPBOARDDATA, buf, bufsize );
 }

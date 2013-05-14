@@ -1575,6 +1575,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return re.GetSurfaceShader( args[1], args[2] );
 	case CG_R_GET_SHADER_FROM_MODEL:
 		return re.GetShaderFromModel( args[1], args[2], args[3] );
+	case CG_R_GET_SHADER_NAME:
+		re.GetShaderName( args[1], VMA(2), args[3] );
+		return 0;
 
 	default:
 	        assert(0);
