@@ -174,6 +174,10 @@ qboolean	trap_R_inPVS( const vec3_t p1, const vec3_t p2 );
 void		trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
 void		trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
 
+void		trap_R_SetSurfaceShader( int surfaceNum, const char *name );
+qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int withlightmap );
+qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap );
+
 // normal sounds will have their volume dynamically changed as their entity
 // moves and the listener moves
 void		trap_S_StartSound( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx );

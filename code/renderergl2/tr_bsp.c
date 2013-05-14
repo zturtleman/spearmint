@@ -704,6 +704,7 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 		numVerts = MAX_FACE_POINTS;
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	numTriangles = LittleLong(ds->numIndexes) / 3;
 
@@ -849,6 +850,7 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	// we may have a nodraw surface, because they might still need to
 	// be around for movement clipping
@@ -946,6 +948,7 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	numVerts = LittleLong(ds->numVerts);
 	numTriangles = LittleLong(ds->numIndexes) / 3;
@@ -1073,6 +1076,7 @@ static void ParseFlare( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	//flare = ri.Hunk_Alloc( sizeof( *flare ), h_low );
 	flare = (void *)surf->data;

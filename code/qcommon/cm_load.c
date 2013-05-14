@@ -444,7 +444,121 @@ void CMod_LoadBrushSides (lump_t *l)
 			Com_Error( ERR_DROP, "CMod_LoadBrushSides: bad shaderNum: %i", out->shaderNum );
 		}
 		out->surfaceFlags = cm.shaders[out->shaderNum].surfaceFlags;
+
+		// this gets set to our best guess later using CMod_GetBestSurfaceNumForBrushSide
+		out->surfaceNum = -1;
 	}
+}
+
+/*
+=================
+CMod_GetBestSurfaceNumForBrushSide
+
+Based on NetRadiant's GetBestSurfaceTriangleMatchForBrushside in tools/quake3/q3map2/convert_map.c
+=================
+*/
+static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide, dsurface_t *bspDrawSurfaces, drawVert_t *bspDrawVerts, int *bspDrawIndexes ) {
+	const float		normalEpsilon = 0.00001f;
+	const float		distanceEpsilon = 0.01f;
+	dsurface_t		*s;
+	int				i;
+	int				t;
+	vec_t			best = 0;
+	vec_t			thisarea;
+	vec3_t			normdiff;
+	vec3_t			v1v0, v2v0, norm;
+	drawVert_t		*vert[3];
+	winding_t		*polygon;
+	cplane_t		*buildPlane = &cm.planes[buildSide->planeNum];
+	//dshader_t		*shaderInfo = &cm.shaders[buildSide->shaderNum];
+	//int			matches = 0;
+	int				bestSurfaceNum = -1;
+	int				surfnum;
+
+	// brute force through all surfaces
+	for ( s = bspDrawSurfaces, surfnum = 0; surfnum < cm.numSurfaces; ++s, ++surfnum )
+	{
+		if ( s->surfaceType != MST_PLANAR && s->surfaceType != MST_TRIANGLE_SOUP ) {
+			continue;
+		}
+		if ( buildSide->shaderNum != s->shaderNum ) {
+			continue;
+		}
+		for ( t = 0; t + 3 <= s->numIndexes; t += 3 )
+		{
+			vert[0] = &bspDrawVerts[s->firstVert + bspDrawIndexes[s->firstIndex + t + 0]];
+			vert[1] = &bspDrawVerts[s->firstVert + bspDrawIndexes[s->firstIndex + t + 1]];
+			vert[2] = &bspDrawVerts[s->firstVert + bspDrawIndexes[s->firstIndex + t + 2]];
+			if ( s->surfaceType == MST_PLANAR && VectorCompare( vert[0]->normal, vert[1]->normal ) && VectorCompare( vert[1]->normal, vert[2]->normal ) ) {
+				VectorSubtract( vert[0]->normal, buildPlane->normal, normdiff ); if ( VectorLength( normdiff ) >= normalEpsilon ) {
+					continue;
+				}
+				VectorSubtract( vert[1]->normal, buildPlane->normal, normdiff ); if ( VectorLength( normdiff ) >= normalEpsilon ) {
+					continue;
+				}
+				VectorSubtract( vert[2]->normal, buildPlane->normal, normdiff ); if ( VectorLength( normdiff ) >= normalEpsilon ) {
+					continue;
+				}
+			}
+			else
+			{
+				// this is more prone to roundoff errors, but with embedded
+				// models, there is no better way
+				VectorSubtract( vert[1]->xyz, vert[0]->xyz, v1v0 );
+				VectorSubtract( vert[2]->xyz, vert[0]->xyz, v2v0 );
+				CrossProduct( v2v0, v1v0, norm );
+				VectorNormalize( norm );
+				VectorSubtract( norm, buildPlane->normal, normdiff ); if ( VectorLength( normdiff ) >= normalEpsilon ) {
+					continue;
+				}
+			}
+			if ( abs( DotProduct( vert[0]->xyz, buildPlane->normal ) - buildPlane->dist ) >= distanceEpsilon ) {
+				continue;
+			}
+			if ( abs( DotProduct( vert[1]->xyz, buildPlane->normal ) - buildPlane->dist ) >= distanceEpsilon ) {
+				continue;
+			}
+			if ( abs( DotProduct( vert[2]->xyz, buildPlane->normal ) - buildPlane->dist ) >= distanceEpsilon ) {
+				continue;
+			}
+			// Okay. Correct surface type, correct shader, correct plane. Let's start with the business...
+			polygon = CopyWinding( buildSide->winding );
+			for ( i = 0; i < 3; ++i )
+			{
+				// 0: 1, 2
+				// 1: 2, 0
+				// 2; 0, 1
+				vec3_t *v1 = &vert[( i + 1 ) % 3]->xyz;
+				vec3_t *v2 = &vert[( i + 2 ) % 3]->xyz;
+				vec3_t triNormal;
+				vec_t triDist;
+				vec3_t sideDirection;
+				// we now need to generate triNormal and triDist so that they represent the plane spanned by normal and (v2 - v1).
+				VectorSubtract( *v2, *v1, sideDirection );
+				CrossProduct( sideDirection, buildPlane->normal, triNormal );
+				triDist = DotProduct( *v1, triNormal );
+				ChopWindingInPlace( &polygon, triNormal, triDist, distanceEpsilon );
+				if ( !polygon ) {
+					goto exwinding;
+				}
+			}
+			thisarea = WindingArea( polygon );
+			//if ( thisarea > 0 ) {
+			//	++matches;
+			//}
+			if ( thisarea > best ) {
+				best = thisarea;
+				bestSurfaceNum = surfnum;
+			}
+			FreeWinding( polygon );
+exwinding:
+			;
+		}
+	}
+	//if(Q_stricmpn(shaderInfo->shader, "textures/common/", 16) && Q_stricmp(shaderInfo->shader, "noshader"))
+	//	Com_Printf("brushside with %s: %d matches (%f area)\n", shaderInfo->shader, matches, best);
+
+	return bestSurfaceNum;
 }
 
 #define CM_EDGE_VERTEX_EPSILON 0.1f
@@ -500,7 +614,7 @@ static qboolean CMod_AddEdgeToBrush( const vec3_t p0, const vec3_t p1,
 CMod_CreateBrushSideWindings
 =================
 */
-static void CMod_CreateBrushSideWindings( void )
+static void CMod_CreateBrushSideWindings( lump_t *surfLump, lump_t *vertsLump, lump_t *indexLump )
 {
 	int						i, j, k;
 	winding_t			*w;
@@ -512,7 +626,27 @@ static void CMod_CreateBrushSideWindings( void )
 	int						edgesAlloc;
 	int						totalEdgesAlloc = 0;
 	int						totalEdges = 0;
-	
+	qboolean				isIBSP;
+	dsurface_t				*dsurfaces;
+	drawVert_t				*verts;
+	int						*indexes;
+
+	isIBSP = ( surfLump && vertsLump && indexLump );
+
+	if ( isIBSP ) {
+		dsurfaces = (void *)(cmod_base + surfLump->fileofs);
+		if (surfLump->filelen % sizeof(*dsurfaces))
+			Com_Error (ERR_DROP, "CMod_SetBrushSideSurfaceNums: funny lump size");
+
+		verts = (void *)(cmod_base + vertsLump->fileofs);
+		if (vertsLump->filelen % sizeof(*verts))
+			Com_Error (ERR_DROP, "CMod_SetBrushSideSurfaceNums: funny lump size");
+
+		indexes = (void *)(cmod_base + indexLump->fileofs);
+		if (indexLump->filelen % sizeof(*indexes))
+			Com_Error (ERR_DROP, "CMod_SetBrushSideSurfaceNums: funny lump size");
+	}
+
 	for( i = 0; i < cm.numBrushes; i++ )
 	{
 		brush = &cm.brushes[ i ];
@@ -547,6 +681,10 @@ static void CMod_CreateBrushSideWindings( void )
 
 			// set side winding
 			side->winding = w;
+
+			if ( side->winding && isIBSP ) {
+				side->surfaceNum = CMod_GetBestSurfaceNumForBrushSide( side, dsurfaces, verts, indexes );
+			}
 		}
 
 		// Allocate a temporary buffer of the maximal size
@@ -805,7 +943,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	CMod_LoadVisibility( &header.lumps[LUMP_VISIBILITY] );
 	CMod_LoadPatches( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS] );
 
-	CMod_CreateBrushSideWindings( );
+	CMod_CreateBrushSideWindings( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS], &header.lumps[LUMP_DRAWINDEXES] );
 
 	// we are NOT freeing the file, because it is cached for the ref
 	FS_FreeFile (buf.v);

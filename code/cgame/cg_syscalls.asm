@@ -133,6 +133,9 @@ equ trap_R_inPVS						-354
 equ trap_R_AddAdditiveLightToScene		-355
 equ trap_R_GetGlobalFog					-356
 equ trap_R_GetViewFog					-357
+equ trap_R_SetSurfaceShader				-358
+equ trap_R_GetSurfaceShader				-359
+equ trap_R_GetShaderFromModel			-360
 
 
 

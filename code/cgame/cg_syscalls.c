@@ -422,6 +422,18 @@ void trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, floa
 	syscall( CG_R_GET_VIEW_FOG, origin, type, color, depthForOpaque, density, inwater );
 }
 
+void		trap_R_SetSurfaceShader( int surfaceNum, const char *name ) {
+	syscall( CG_R_SET_SURFACE_SHADER, surfaceNum, name );
+}
+
+qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int withlightmap ) {
+	return syscall( CG_R_GET_SURFACE_SHADER, surfaceNum, withlightmap );
+}
+
+qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap ) {
+	return syscall( CG_R_GET_SHADER_FROM_MODEL, hModel, surfnum, withlightmap );
+}
+
 void		trap_GetClipboardData( char *buf, int bufsize ) {
 	syscall( CG_GETCLIPBOARDDATA, buf, bufsize );
 }

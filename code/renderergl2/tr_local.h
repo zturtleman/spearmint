@@ -1305,7 +1305,8 @@ typedef struct cullinfo_s {
 
 typedef struct msurface_s {
 	//int					viewCount;		// if == tr.viewCount, already added
-	struct shader_s		*shader;
+	struct shader_s		*shader;			// shader for rendering
+	struct shader_s		*originalShader;	// original shader in BSP, for resetting shader
 	int					fogIndex;
 	cullinfo_t          cullinfo;
 
@@ -1331,6 +1332,8 @@ typedef struct mnode_s {
 
 	int         firstmarksurface;
 	int			nummarksurfaces;
+
+	int			numCustomShaders;
 } mnode_t;
 
 typedef struct {
@@ -2233,6 +2236,9 @@ shader_t *R_FindShaderByName( const char *name );
 void		R_InitShaders( void );
 void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
+void		RE_SetSurfaceShader( int surfaceNum, const char *name );
+qhandle_t	RE_GetSurfaceShader( int surfaceNum, int withlightmap );
+qhandle_t	RE_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap );
 
 /*
 ====================================================================

@@ -124,6 +124,106 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 }
 
 /*
+==============
+RE_SetSurfaceShader
+
+Set shader for given world surface
+==============
+*/
+void RE_SetSurfaceShader( int surfaceNum, const char *name ) {
+	msurface_t	*surf;
+
+	// remove the plus one offset
+	surfaceNum--;
+
+	if ( !tr.world || surfaceNum < 0 || surfaceNum >= tr.world->numsurfaces ) {
+		return;
+	}
+
+	surf = &tr.world->surfaces[surfaceNum];
+
+	if ( !name ) {
+		surf->shader = surf->originalShader;
+	} else if ( surf->originalShader ) {
+		surf->shader = R_FindShader( name, surf->originalShader->lightmapIndex, qtrue );
+	} else {
+		surf->shader = R_FindShader( name, LIGHTMAP_NONE, qtrue );
+	}
+}
+
+/*
+==============
+RE_GetSurfaceShader
+
+return a shader index for a given world surface
+'withlightmap' set to '0' will create a new shader that is a copy of the one found
+on the model, without the lighmap stage, if the shader has a lightmap stage
+==============
+*/
+qhandle_t RE_GetSurfaceShader( int surfaceNum, int withlightmap ) {
+	msurface_t	*surf;
+	shader_t	*shd;
+
+	// remove the plus one offset
+	surfaceNum--;
+
+	if ( !tr.world || surfaceNum < 0 || surfaceNum >= tr.world->numsurfaces ) {
+		return 0;
+	}
+
+	surf = &tr.world->surfaces[surfaceNum];
+
+	// RF, check for null shader (can happen on func_explosive's with botclips attached)
+	if ( !surf->shader ) {
+		return 0;
+	}
+
+	if ( !withlightmap && surf->shader->lightmapIndex > LIGHTMAP_NONE ) {
+		shd = R_FindShader( surf->shader->name, LIGHTMAP_NONE, qtrue );
+		// ZTM: FIXME: I'm not sure forcing lighting diffuse is good idea...
+		//             at least allow const and waveform
+		if ( shd->stages[0]->rgbGen != CGEN_CONST && shd->stages[0]->rgbGen != CGEN_WAVEFORM ) {
+			shd->stages[0]->rgbGen = CGEN_LIGHTING_DIFFUSE; // (SA) new
+		}
+	} else {
+		shd = surf->shader;
+	}
+
+	return shd->index;
+}
+
+/*
+==============
+RE_GetShaderFromModel
+
+return a shader index for a given model's surface
+'withlightmap' set to '0' will create a new shader that is a copy of the one found
+on the model, without the lighmap stage, if the shader has a lightmap stage
+
+NOTE: only works for bmodels right now.  Could modify for other models (md3's etc.)
+==============
+*/
+qhandle_t RE_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap ) {
+	model_t		*model;
+	bmodel_t	*bmodel;
+
+	model = R_GetModelByHandle( hModel );
+
+	if ( model ) {
+		bmodel = model->bmodel;
+		if ( bmodel && bmodel->firstSurface ) {
+			if ( surfnum < 0 || surfnum >= bmodel->numSurfaces ) {
+				surfnum = 0;
+			}
+
+			return RE_GetSurfaceShader( (bmodel->firstSurface + surfnum - tr.world->surfaces) + 1, withlightmap );
+		}
+	}
+
+	return 0;
+}
+
+/*
 ===============
 ParseVector
 ===============

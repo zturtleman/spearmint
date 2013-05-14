@@ -708,7 +708,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 		fogNum = R_LeafFogNum( node );
 
 		// add merged and unmerged surfaces
-		if (tr.world->viewSurfaces)
+		if (tr.world->viewSurfaces && node->numCustomShaders == 0)
 			view = tr.world->viewSurfaces + node->firstmarksurface;
 		else
 			view = tr.world->marksurfaces + node->firstmarksurface;

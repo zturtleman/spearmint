@@ -120,6 +120,10 @@ typedef struct {
 
 	void (*GetGlobalFog)( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
 	void (*GetViewFog)( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
+
+	void (*SetSurfaceShader)( int surfaceNum, const char *name );
+	qhandle_t (*GetSurfaceShader)( int surfaceNum, int withlightmap );
+	qhandle_t (*GetShaderFromModel)( qhandle_t hModel, int surfnum, int withlightmap );
 } refexport_t;
 
 //
