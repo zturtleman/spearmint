@@ -132,6 +132,9 @@ typedef enum {
 	GT_MAX_GAME_TYPE
 } gametype_t;
 
+extern const char *bg_netGametypeNames[GT_MAX_GAME_TYPE];
+extern const char *bg_displayGametypeNames[GT_MAX_GAME_TYPE];
+
 typedef enum { GENDER_MALE, GENDER_FEMALE, GENDER_NEUTER } gender_t;
 
 /*

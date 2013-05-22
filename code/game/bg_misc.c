@@ -1071,6 +1071,33 @@ vmNetField_t	bg_playerStateFields[] =
 
 int bg_numPlayerStateFields = ARRAY_LEN(bg_playerStateFields);
 
+// may not contain spaces, dpmaster will reject the server
+const char *bg_netGametypeNames[GT_MAX_GAME_TYPE] = {
+	"FFA",
+	"Tournament",
+	"SP",
+	"TeamDM",
+	"CTF",
+#ifdef MISSIONPACK
+	"1FCTF",
+	"Overload",
+	"Harvester"
+#endif
+};
+
+const char *bg_displayGametypeNames[GT_MAX_GAME_TYPE] = {
+	"Free For All",
+	"Tournament",
+	"Single Player",
+	"Team Deathmatch",
+	"Capture the Flag",
+#ifdef MISSIONPACK
+	"One Flag CTF",
+	"Overload",
+	"Harvester"
+#endif
+};
+
 /*
 ==============
 BG_CheckSpawnEntity

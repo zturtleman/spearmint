@@ -414,6 +414,9 @@ void G_RegisterCvars( void ) {
 		trap_Cvar_Update( &g_gametype );
 	}
 
+	trap_Cvar_Set( "sv_gametypeName", bg_displayGametypeNames[g_gametype.integer] );
+	trap_Cvar_Set( "sv_gametypeNetName", bg_netGametypeNames[g_gametype.integer] );
+
 	level.warmupModificationCount = g_warmup.modificationCount;
 }
 

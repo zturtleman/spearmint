@@ -303,6 +303,8 @@ extern	cvar_t	*sv_maxRate;
 extern	cvar_t	*sv_dlRate;
 extern	cvar_t	*sv_minPing;
 extern	cvar_t	*sv_maxPing;
+extern	cvar_t	*sv_gametypeName;
+extern	cvar_t	*sv_gametypeNetName;
 extern	cvar_t	*sv_dorestart;
 extern	cvar_t	*sv_pure;
 extern	cvar_t	*sv_floodProtect;

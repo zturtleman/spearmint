@@ -1313,17 +1313,6 @@ void Cmd_Where_f( gentity_t *ent ) {
 	trap_SendServerCommand( ent-g_entities, va("print \"%s\n\"", vtos(ent->r.currentOrigin) ) );
 }
 
-static const char *gameNames[] = {
-	"Free For All",
-	"Tournament",
-	"Single Player",
-	"Team Deathmatch",
-	"Capture the Flag",
-	"One Flag CTF",
-	"Overload",
-	"Harvester"
-};
-
 /*
 ==================
 Cmd_CallVote_f
@@ -1399,7 +1388,7 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 		}
 
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %d", arg1, i );
-		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s %s", arg1, gameNames[i] );
+		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s %s", arg1, bg_displayGametypeNames[i] );
 	} else if ( !Q_stricmp( arg1, "map" ) ) {
 		// special case for map changes, we want to reset the nextmap setting
 		// this allows a player to change maps, but not upset the map rotation

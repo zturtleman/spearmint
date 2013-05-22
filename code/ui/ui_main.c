@@ -82,20 +82,6 @@ static const char *netSources[] = {
 static const int numNetSources = ARRAY_LEN( netSources );
 
 
-static const char *teamArenaGameTypes[] = {
-	"FFA",
-	"TOURNAMENT",
-	"SP",
-	"TEAM DM",
-	"CTF",
-	"1FCTF",
-	"OVERLOAD",
-	"HARVESTER"
-};
-
-static int const numTeamArenaGameTypes = ARRAY_LEN( teamArenaGameTypes );
-
-
 static char* netnames[] = {
 	"???",
 	"UDP",
@@ -3697,7 +3683,7 @@ UI_BuildServerDisplayList
 ==================
 */
 static void UI_BuildServerDisplayList(qboolean force) {
-	int i, count, clients, maxClients, ping, game, len, visible;
+	int i, count, clients, maxClients, ping, len, visible;
 	char info[MAX_STRING_CHARS];
 //	qboolean startRefresh = qtrue; TTimo: unused
 	static int numinvisible;
@@ -3772,9 +3758,9 @@ static void UI_BuildServerDisplayList(qboolean force) {
 				}
 			}
 
-			if (uiInfo.joinGameTypes[ui_joinGameType.integer].gtEnum != -1) {
-				game = atoi(Info_ValueForKey(info, "gametype"));
-				if (game != uiInfo.joinGameTypes[ui_joinGameType.integer].gtEnum) {
+			if (uiInfo.joinGameTypes[ui_joinGameType.integer].gtEnum >= 0
+				&& uiInfo.joinGameTypes[ui_joinGameType.integer].gtEnum < GT_MAX_GAME_TYPE ) {
+				if (Q_stricmp(Info_ValueForKey(info, "gametype"), bg_netGametypeNames[uiInfo.joinGameTypes[ui_joinGameType.integer].gtEnum]) != 0) {
 					trap_LAN_MarkServerVisible(lanSource, i, qfalse);
 					continue;
 				}
@@ -3818,7 +3804,9 @@ serverStatusCvar_t serverStatusCvars[] = {
 	{"sv_hostname", "Name"},
 	{"Address", ""},
 	{"gamename", "Game name"},
-	{"g_gametype", "Game type"},
+	{"sv_gametypeName", "Game type name"},
+	{"sv_gametypeNetName", "Game type short name"},
+	{"g_gametype", "Game type number"},
 	{"mapname", "Map"},
 	{"version", ""},
 	{"protocol", ""},
@@ -4264,7 +4252,7 @@ static const char *UI_FeederItemText(float feederID, int index, int column, qhan
 		return UI_SelectedMap(index, &actual);
 	} else if (feederID == FEEDER_SERVERS) {
 		if (index >= 0 && index < uiInfo.serverStatus.numDisplayServers) {
-			int ping, game;
+			int ping;
 			if (lastColumn != column || lastTime > uiInfo.uiDC.realTime + 5000) {
 				trap_LAN_GetServerInfo(UI_SourceForLAN(), uiInfo.serverStatus.displayServers[index], info, MAX_STRING_CHARS);
 				lastColumn = column;
@@ -4301,13 +4289,8 @@ static const char *UI_FeederItemText(float feederID, int index, int column, qhan
 				case SORT_CLIENTS : 
 					Com_sprintf( clientBuff, sizeof(clientBuff), "%s (%s)", Info_ValueForKey(info, "clients"), Info_ValueForKey(info, "sv_maxclients"));
 					return clientBuff;
-				case SORT_GAME : 
-					game = atoi(Info_ValueForKey(info, "gametype"));
-					if (game >= 0 && game < numTeamArenaGameTypes) {
-						return teamArenaGameTypes[game];
-					} else {
-						return "Unknown";
-					}
+				case SORT_GAME :
+					return Info_ValueForKey(info, "gametype");
 				case SORT_PING : 
 					if (ping <= 0) {
 						return "...";
