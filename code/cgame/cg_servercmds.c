@@ -181,6 +181,7 @@ void CG_ParseServerinfo( void ) {
 	char	*mapname;
 
 	info = CG_ConfigString( CS_SERVERINFO );
+	Q_strncpyz( cgs.gametypeName, Info_ValueForKey( info, "sv_gametypeName" ), sizeof (cgs.gametypeName) );
 	cgs.gametype = atoi( Info_ValueForKey( info, "g_gametype" ) );
 	trap_Cvar_SetValue("g_gametype", cgs.gametype);
 	cgs.dmflags = atoi( Info_ValueForKey( info, "dmflags" ) );
