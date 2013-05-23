@@ -670,7 +670,7 @@ typedef struct
 
 	// triangle definitions
 	int numIndexes;
-	glIndex_t       *indexes;
+	int             *indexes;
 
 	int numVerts;
 	vec4_t          *xyz;
