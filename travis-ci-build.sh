@@ -9,8 +9,25 @@ if [ "$CC" = "i686-w64-mingw32-gcc" ]; then
 	export CC=
 fi
 
-# Default Build
-(make clean release) || failed=1;
+# Game Default Build
+(make clean release) || game_failed=1;
+
+# BSPC Default Build, bot map AI compiler
+(make -C code/bspc clean release) || bspc_failed=1;
+
+if [ $game_failed -eq 1 ]; then
+	echo "Game build failure.";
+	failed=1;
+else
+	echo "Game build successful.";
+fi
+
+if [ $bspc_failed -eq 1 ]; then
+	echo "BSPC build failure.";
+	failed=1;
+else
+	echo "BSPC build successful.";
+fi
 
 if [ $failed -eq 1 ]; then
 	echo "Build failure.";
