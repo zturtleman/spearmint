@@ -116,7 +116,7 @@ void BotImport_Trace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t ma
 {
 	trace_t result;
 
-	CM_BoxTrace(&result, start, end, mins, maxs, worldmodel, contentmask, capsule_collision);
+	CM_BoxTrace(&result, start, end, mins, maxs, worldmodel, contentmask, capsule_collision ? TT_CAPSULE : TT_AABB);
 
 	bsptrace->allsolid = result.allsolid;
 	bsptrace->contents = result.contents;
