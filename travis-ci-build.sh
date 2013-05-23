@@ -1,6 +1,8 @@
 #!/bin/sh
 
 failed=0;
+game_failed=0;
+bspc_failed=0;
 
 # check if testing mingw
 if [ "$CC" = "i686-w64-mingw32-gcc" ]; then

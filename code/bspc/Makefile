@@ -6,24 +6,15 @@
 
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]')
 
-COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/i386/)
+COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/x86/)
 
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
-  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/i386/)
+  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
 endif
 ifeq ($(COMPILE_PLATFORM),darwin)
   # Apple does some things a little differently...
-  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/i386/)
-endif
-
-ifeq ($(COMPILE_PLATFORM),mingw32)
-  ifeq ($(COMPILE_ARCH),i386)
-    COMPILE_ARCH=x86
-  endif
-  ifeq ($(COMPILE_ARCH),x86_64)
-    COMPILE_ARCH=x64
-  endif
+  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
 endif
 
 
@@ -139,7 +130,7 @@ ifeq ($(PLATFORM),linux)
     ARCH=axp
   endif
 
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     # linux32 make ...
     BASE_CFLAGS += -m32
   else
@@ -149,7 +140,7 @@ ifeq ($(PLATFORM),linux)
   endif
 
   #use these cflags to optimize it
-  RELEASE_CFLAGS=$(BASE_CFLAGS) -O6 -ffast-math -funroll-loops \
+  RELEASE_CFLAGS=$(BASE_CFLAGS) -O3 -ffast-math -funroll-loops \
 	-fomit-frame-pointer -fexpensive-optimizations -falign-loops=2 \
 	-falign-jumps=2 -falign-functions=2
 
@@ -166,6 +157,8 @@ else # ifeq Linux
 
 ifeq ($(PLATFORM),darwin)
 
+  $(error platform $(PLATFORM) is currently not supported)
+
 else # ifeq darwin
 
 
@@ -175,14 +168,40 @@ else # ifeq darwin
 
 ifeq ($(PLATFORM),mingw32)
 
-  # Some MinGW installations define CC to cc, but don't actually provide cc,
-  # so explicitly use gcc instead (which is the only option anyway)
-  ifeq ($(call bin_path, $(CC)),)
-    CC=gcc
-  endif
+  ifeq ($(CROSS_COMPILING),1)
+    # If CC is already set to something generic, we probably want to use
+    # something more specific
+    ifneq ($(findstring $(strip $(CC)),cc gcc),)
+      CC=
+    endif
 
-  ifndef WINDRES
-    WINDRES=windres
+    # We need to figure out the correct gcc and windres
+    ifeq ($(ARCH),x86_64)
+      MINGW_PREFIXES=amd64-mingw32msvc x86_64-w64-mingw32
+    endif
+    ifeq ($(ARCH),x86)
+      MINGW_PREFIXES=i586-mingw32msvc i686-w64-mingw32
+    endif
+
+    ifndef CC
+      CC=$(strip $(foreach MINGW_PREFIX, $(MINGW_PREFIXES), \
+         $(call bin_path, $(MINGW_PREFIX)-gcc)))
+    endif
+
+    ifndef WINDRES
+      WINDRES=$(strip $(foreach MINGW_PREFIX, $(MINGW_PREFIXES), \
+         $(call bin_path, $(MINGW_PREFIX)-windres)))
+    endif
+  else
+    # Some MinGW installations define CC to cc, but don't actually provide cc,
+    # so check that CC points to a real binary and use gcc if it doesn't
+    ifeq ($(call bin_path, $(CC)),)
+      CC=gcc
+    endif
+
+    ifndef WINDRES
+      WINDRES=windres
+    endif
   endif
 
   BINEXT=.exe
@@ -212,11 +231,7 @@ else # ifeq mingw32
 
 ifeq ($(PLATFORM),freebsd)
 
-  ifneq (,$(findstring alpha,$(shell uname -m)))
-    ARCH=axp
-  else #default to i386
-    ARCH=i386
-  endif #alpha test
+  $(error platform $(PLATFORM) is currently not supported)
 
 else # ifeq freebsd
 
@@ -226,8 +241,7 @@ else # ifeq freebsd
 
 ifeq ($(PLATFORM),openbsd)
 
-  #default to i386, no tests done on anything else
-  ARCH=i386
+  $(error platform $(PLATFORM) is currently not supported)
 
 else # ifeq openbsd
 
@@ -237,9 +251,7 @@ else # ifeq openbsd
 
 ifeq ($(PLATFORM),netbsd)
 
-  ifeq ($(shell uname -m),i386)
-    ARCH=i386
-  endif
+  $(error platform $(PLATFORM) is currently not supported)
 
 else # ifeq netbsd
 
@@ -248,6 +260,8 @@ else # ifeq netbsd
 #############################################################################
 
 ifeq ($(PLATFORM),irix64)
+
+  $(error platform $(PLATFORM) is currently not supported)
 
   ARCH=mips  #default to MIPS
 
@@ -262,14 +276,16 @@ else # ifeq IRIX
 
 ifeq ($(PLATFORM),sunos)
 
+  $(error platform $(PLATFORM) is currently not supported)
+
   CC=gcc
   INSTALL=ginstall
   MKDIR=gmkdir
 
-  ifneq (,$(findstring i86pc,$(shell uname -m)))
-    ARCH=i386
-  else #default to sparc
-    ARCH=sparc
+  ifneq ($(ARCH),x86)
+    ifneq ($(ARCH),sparc)
+      $(error arch $(ARCH) is currently not supported)
+    endif
   endif
 
 else # ifeq sunos
@@ -277,6 +293,8 @@ else # ifeq sunos
 #############################################################################
 # SETUP AND BUILD -- GENERIC
 #############################################################################
+
+  $(error platform $(PLATFORM) is currently not supported)
 
 endif #Linux
 endif #darwin
@@ -302,6 +320,25 @@ release:
 	@$(MAKE) targets B=$(BR) CFLAGS="$(CFLAGS) $(DEPEND_CFLAGS) \
 		$(RELEASE_CFLAGS)" V=$(V)
 
+ifneq ($(call bin_path, tput),)
+  TERM_COLUMNS=$(shell echo $$((`tput cols`-4)))
+else
+  TERM_COLUMNS=76
+endif
+
+NAKED_TARGETS=$(shell echo $(TARGETS) | sed -e "s!$(B)/!!g")
+
+print_list=@for i in $(1); \
+     do \
+             echo "    $$i"; \
+     done
+
+ifneq ($(call bin_path, fmt),)
+  print_wrapped=@echo $(1) | fmt -w $(TERM_COLUMNS) | sed -e "s/^\(.*\)$$/    \1/"
+else
+  print_wrapped=$(print_list)
+endif
+
 # Create the build directories, check libraries and print out
 # an informational message, then start building
 targets: makedirs
@@ -314,28 +351,16 @@ targets: makedirs
 	@echo "  CC: $(CC)"
 	@echo ""
 	@echo "  CFLAGS:"
-	-@for i in $(CFLAGS); \
-	do \
-		echo "    $$i"; \
-	done
+	$(call print_wrapped, $(CFLAGS))
 	@echo ""
 	@echo "  LDFLAGS:"
-	-@for i in $(LDFLAGS); \
-	do \
-		echo "    $$i"; \
-	done
+	$(call print_wrapped, $(LDFLAGS))
 	@echo ""
 	@echo "  LIBS:"
-	-@for i in $(LIBS); \
-	do \
-		echo "    $$i"; \
-	done
+	$(call print_wrapped, $(LIBS))
 	@echo ""
 	@echo "  Output:"
-	-@for i in $(TARGETS); \
-	do \
-		echo "    $$i"; \
-	done
+	$(call print_list, $(NAKED_TARGETS))
 	@echo ""
 ifneq ($(TARGETS),)
 	@$(MAKE) $(TARGETS) V=$(V)
