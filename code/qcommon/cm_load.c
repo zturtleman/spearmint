@@ -71,6 +71,7 @@ byte		*cmod_base;
 cvar_t		*cm_noAreas;
 cvar_t		*cm_noCurves;
 cvar_t		*cm_playerCurveClip;
+cvar_t		*cm_betterIbspSurfaceNums;
 #endif
 
 cmodel_t	box_model;
@@ -458,6 +459,9 @@ Based on NetRadiant's GetBestSurfaceTriangleMatchForBrushside in tools/quake3/q3
 =================
 */
 static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide, dsurface_t *bspDrawSurfaces, drawVert_t *bspDrawVerts, int *bspDrawIndexes ) {
+#ifdef BSPC
+	return -1;
+#else
 	const float		normalEpsilon = 0.00001f;
 	const float		distanceEpsilon = 0.01f;
 	dsurface_t		*s;
@@ -483,6 +487,12 @@ static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide, ds
 		}
 		if ( buildSide->shaderNum != s->shaderNum ) {
 			continue;
+		}
+		// ZTM: NOTE: Unfortunately this takes longer than is acceptable on a lot of maps,
+		//      and it's only needed for trap_R_SetSurfaceShader.
+		if ( !cm_betterIbspSurfaceNums->integer ) {
+			bestSurfaceNum = surfnum;
+			break;
 		}
 		for ( t = 0; t + 3 <= s->numIndexes; t += 3 )
 		{
@@ -559,6 +569,7 @@ exwinding:
 	//	Com_Printf("brushside with %s: %d matches (%f area)\n", shaderInfo->shader, matches, best);
 
 	return bestSurfaceNum;
+#endif
 }
 
 #define CM_EDGE_VERTEX_EPSILON 0.1f
@@ -880,6 +891,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	cm_noAreas = Cvar_Get ("cm_noAreas", "0", CVAR_CHEAT);
 	cm_noCurves = Cvar_Get ("cm_noCurves", "0", CVAR_CHEAT);
 	cm_playerCurveClip = Cvar_Get ("cm_playerCurveClip", "1", CVAR_ARCHIVE|CVAR_CHEAT );
+	cm_betterIbspSurfaceNums = Cvar_Get ("cm_betterIbspSurfaceNums", "0", CVAR_LATCH );
 #endif
 	Com_DPrintf( "CM_LoadMap( %s, %i )\n", name, clientload );
 

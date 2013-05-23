@@ -312,6 +312,10 @@ New cvars
                                       trap_Alloc. DLLs use shared memory pool
                                       and are limited by com_hunkMegs.
 
+  cm_betterIbspSurfaceNums          - try to reconnect collision and draw
+                                      surface numbers. must be enabled for
+                                      trap_R_GetSurfaceShader to work correctly
+
 New commands
   video [filename]        - start video capture (use with demo command)
   stopvideo               - stop video capture
