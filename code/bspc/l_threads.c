@@ -306,7 +306,7 @@ void RunThreadsOn(int workcnt, qboolean showpacifier, void(*func)(int))
 			   NULL,	// LPSECURITY_ATTRIBUTES lpsa,
 			   0,		// DWORD cbStack,
 			   (LPTHREAD_START_ROUTINE)func,	// LPTHREAD_START_ROUTINE lpStartAddr,
-			   (LPVOID)i,	// LPVOID lpvThreadParm,
+			   (LPVOID)(intptr_t)i,	// LPVOID lpvThreadParm,
 			   0,			//   DWORD fdwCreate,
 			   &threadid[i]);
 //			printf("started thread %d\n", i);
@@ -356,7 +356,7 @@ void AddThread(void (*func)(int))
 				   NULL,	// LPSECURITY_ATTRIBUTES lpsa,
 				   0,		// DWORD cbStack,
 				   (LPTHREAD_START_ROUTINE)func,	// LPTHREAD_START_ROUTINE lpStartAddr,
-				   (LPVOID) thread->threadid,			// LPVOID lpvThreadParm,
+				   (LPVOID)(intptr_t)thread->threadid,			// LPVOID lpvThreadParm,
 					0,						// DWORD fdwCreate,
 					&thread->id);
 
