@@ -1966,7 +1966,7 @@ int R_SpriteFogNum( trRefEntity_t *ent ) {
 		}
 	}
 
-	return 0;
+	return R_DefaultFogNum();
 }
 
 /*
