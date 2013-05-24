@@ -64,8 +64,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // refdef flags
 #define RDF_NOWORLDMODEL	0x0001		// used for player configuration screen
+#define RDF_UNDERWATER		0x0002		// underwater
 #define RDF_HYPERSPACE		0x0004		// teleportation effect
-#define RDF_UNDERWATER		0x0008		// underwater
 
 typedef struct {
 	vec3_t		xyz;
