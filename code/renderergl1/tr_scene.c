@@ -96,6 +96,47 @@ DISCRETE POLYS
 */
 
 /*
+=================
+R_PolygonFogNum
+
+See if a polygon chain is inside a fog volume
+=================
+*/
+int R_PolyFogNum( srfPoly_t *poly ) {
+	int				i, j;
+	fog_t			*fog;
+	vec3_t			bounds[2];
+
+	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
+		return 0;
+	}
+
+	// find which fog volume the poly is in
+	VectorCopy( poly->verts[0].xyz, bounds[0] );
+	VectorCopy( poly->verts[0].xyz, bounds[1] );
+	for ( i = 1 ; i < poly->numVerts ; i++ ) {
+		AddPointToBounds( poly->verts[i].xyz, bounds[0], bounds[1] );
+	}
+
+	for ( i = 1 ; i < tr.world->numfogs ; i++ ) {
+		fog = &tr.world->fogs[i];
+		for ( j = 0 ; j < 3 ; j++ ) {
+			if ( bounds[0][j] >= fog->bounds[1][j] ) {
+				break;
+			}
+			if ( bounds[1][j] <= fog->bounds[0][j] ) {
+				break;
+			}
+		}
+		if ( j == 3 ) {
+			return i;
+		}
+	}
+
+	return R_DefaultFogNum();
+}
+
+/*
 =====================
 R_AddPolygonSurfaces
 
@@ -112,7 +153,7 @@ void R_AddPolygonSurfaces( void ) {
 
 	for ( i = 0, poly = tr.refdef.polys; i < tr.refdef.numPolys ; i++, poly++ ) {
 		sh = R_GetShaderByHandle( poly->hShader );
-		R_AddDrawSurf( ( void * )poly, sh, poly->fogIndex, qfalse );
+		R_AddDrawSurf( ( void * )poly, sh, R_PolyFogNum( poly ), qfalse );
 	}
 }
 
@@ -124,10 +165,7 @@ RE_AddPolyToScene
 */
 void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys ) {
 	srfPoly_t	*poly;
-	int			i, j;
-	int			fogIndex;
-	fog_t		*fog;
-	vec3_t		bounds[2];
+	int			j;
 
 	if ( !tr.registered ) {
 		return;
@@ -167,40 +205,53 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 		// done.
 		r_numpolys++;
 		r_numpolyverts += numVerts;
-
-		// if no world is loaded
-		if ( tr.world == NULL ) {
-			fogIndex = 0;
-		}
-		// see if it is in a fog volume
-		else if ( tr.world->numfogs == 1 ) {
-			fogIndex = 0;
-		} else {
-			// find which fog volume the poly is in
-			VectorCopy( poly->verts[0].xyz, bounds[0] );
-			VectorCopy( poly->verts[0].xyz, bounds[1] );
-			for ( i = 1 ; i < poly->numVerts ; i++ ) {
-				AddPointToBounds( poly->verts[i].xyz, bounds[0], bounds[1] );
-			}
-			for ( fogIndex = 1 ; fogIndex < tr.world->numfogs ; fogIndex++ ) {
-				fog = &tr.world->fogs[fogIndex]; 
-				if ( bounds[1][0] >= fog->bounds[0][0]
-					&& bounds[1][1] >= fog->bounds[0][1]
-					&& bounds[1][2] >= fog->bounds[0][2]
-					&& bounds[0][0] <= fog->bounds[1][0]
-					&& bounds[0][1] <= fog->bounds[1][1]
-					&& bounds[0][2] <= fog->bounds[1][2] ) {
-					break;
-				}
-			}
-			if ( fogIndex == tr.world->numfogs ) {
-				fogIndex = R_DefaultFogNum();
-			}
-		}
-		poly->fogIndex = fogIndex;
 	}
 }
 
+
+/*
+=================
+R_PolyBufferFogNum
+
+See if a polygon buffer is inside a fog volume
+=================
+*/
+int R_PolyBufferFogNum( srfPolyBuffer_t *pPolySurf ) {
+	int				i, j;
+	fog_t			*fog;
+	vec3_t			bounds[2];
+	polyBuffer_t	*pPolyBuffer;
+
+	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
+		return 0;
+	}
+
+	pPolyBuffer = pPolySurf->pPolyBuffer;
+
+	// find which fog volume the poly is in
+	VectorCopy( pPolyBuffer->xyz[0], bounds[0] );
+	VectorCopy( pPolyBuffer->xyz[0], bounds[1] );
+	for ( i = 1 ; i < pPolyBuffer->numVerts ; i++ ) {
+		AddPointToBounds( pPolyBuffer->xyz[i], bounds[0], bounds[1] );
+	}
+
+	for ( i = 1 ; i < tr.world->numfogs ; i++ ) {
+		fog = &tr.world->fogs[i];
+		for ( j = 0 ; j < 3 ; j++ ) {
+			if ( bounds[0][j] >= fog->bounds[1][j] ) {
+				break;
+			}
+			if ( bounds[1][j] <= fog->bounds[0][j] ) {
+				break;
+			}
+		}
+		if ( j == 3 ) {
+			return i;
+		}
+	}
+
+	return R_DefaultFogNum();
+}
 
 /*
 =====================
@@ -220,7 +271,7 @@ void R_AddPolygonBufferSurfaces( void ) {
 	for ( i = 0, polybuffer = tr.refdef.polybuffers; i < tr.refdef.numPolyBuffers ; i++, polybuffer++ ) {
 		sh = R_GetShaderByHandle( polybuffer->pPolyBuffer->shader );
 
-		R_AddDrawSurf( ( void * )polybuffer, sh, polybuffer->fogIndex, qfalse );
+		R_AddDrawSurf( ( void * )polybuffer, sh, R_PolyBufferFogNum( polybuffer ), qfalse );
 	}
 }
 
@@ -232,10 +283,6 @@ RE_AddPolyBufferToScene
 */
 void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
 	srfPolyBuffer_t*    pPolySurf;
-	int fogIndex;
-	fog_t*              fog;
-	vec3_t bounds[2];
-	int i;
 
 	if ( r_numpolybuffers >= max_polybuffers ) {
 		return;
@@ -246,28 +293,6 @@ void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
 
 	pPolySurf->surfaceType = SF_POLYBUFFER;
 	pPolySurf->pPolyBuffer = pPolyBuffer;
-
-	VectorCopy( pPolyBuffer->xyz[0], bounds[0] );
-	VectorCopy( pPolyBuffer->xyz[0], bounds[1] );
-	for ( i = 1 ; i < pPolyBuffer->numVerts ; i++ ) {
-		AddPointToBounds( pPolyBuffer->xyz[i], bounds[0], bounds[1] );
-	}
-	for ( fogIndex = 1 ; fogIndex < tr.world->numfogs ; fogIndex++ ) {
-		fog = &tr.world->fogs[fogIndex];
-		if ( bounds[1][0] >= fog->bounds[0][0]
-			 && bounds[1][1] >= fog->bounds[0][1]
-			 && bounds[1][2] >= fog->bounds[0][2]
-			 && bounds[0][0] <= fog->bounds[1][0]
-			 && bounds[0][1] <= fog->bounds[1][1]
-			 && bounds[0][2] <= fog->bounds[1][2] ) {
-			break;
-		}
-	}
-	if ( fogIndex == tr.world->numfogs ) {
-		fogIndex = R_DefaultFogNum();
-	}
-
-	pPolySurf->fogIndex = fogIndex;
 }
 
 //=================================================================================

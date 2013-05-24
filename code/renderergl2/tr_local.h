@@ -1002,14 +1002,12 @@ typedef struct drawSurf_s {
 typedef struct srfPoly_s {
 	surfaceType_t	surfaceType;
 	qhandle_t		hShader;
-	int				fogIndex;
 	int				numVerts;
 	polyVert_t		*verts;
 } srfPoly_t;
 
 typedef struct srfPolyBuffer_s {
 	surfaceType_t surfaceType;
-	int fogIndex;
 	polyBuffer_t *pPolyBuffer;
 } srfPolyBuffer_t;
 
