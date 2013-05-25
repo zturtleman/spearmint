@@ -3110,7 +3110,7 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	*newShader = shader;
 
-	if ( shader.sort <= SS_OPAQUE ) {
+	if ( shader.sort <= SS_SEE_THROUGH ) {
 		newShader->fogPass = FP_EQUAL;
 	} else if ( shader.contentFlags & CONTENTS_FOG ) {
 		newShader->fogPass = FP_LE;
