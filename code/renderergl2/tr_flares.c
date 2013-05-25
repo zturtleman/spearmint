@@ -213,8 +213,7 @@ RB_AddDlightFlares
 */
 void RB_AddDlightFlares( void ) {
 	dlight_t		*l;
-	int				i, j, k;
-	fog_t			*fog = NULL;
+	int				i;
 
 	if ( !r_flares->integer ) {
 		return;
@@ -222,33 +221,8 @@ void RB_AddDlightFlares( void ) {
 
 	l = backEnd.refdef.dlights;
 
-	if(tr.world)
-		fog = tr.world->fogs;
-
 	for (i=0 ; i<backEnd.refdef.num_dlights ; i++, l++) {
-
-		if(fog)
-		{
-			// find which fog volume the light is in 
-			for ( j = 1 ; j < tr.world->numfogs ; j++ ) {
-				fog = &tr.world->fogs[j];
-				for ( k = 0 ; k < 3 ; k++ ) {
-					if ( l->origin[k] < fog->bounds[0][k] || l->origin[k] > fog->bounds[1][k] ) {
-						break;
-					}
-				}
-				if ( k == 3 ) {
-					break;
-				}
-			}
-			if ( j == tr.world->numfogs ) {
-				j = 0;
-			}
-		}
-		else
-			j = 0;
-
-		RB_AddFlare( (void *)l, j, l->origin, l->color, NULL );
+		RB_AddFlare( (void *)l, R_PointFogNum( &backEnd.refdef, l->origin, 0 ), l->origin, l->color, NULL );
 	}
 }
 

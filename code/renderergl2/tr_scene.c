@@ -103,37 +103,20 @@ See if a polygon chain is inside a fog volume
 =================
 */
 int R_PolyFogNum( srfPoly_t *poly ) {
-	int				i, j;
-	fog_t			*fog;
-	vec3_t			bounds[2];
+	int				i;
+	vec3_t			mins, maxs;
 
 	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
 		return 0;
 	}
 
-	// find which fog volume the poly is in
-	VectorCopy( poly->verts[0].xyz, bounds[0] );
-	VectorCopy( poly->verts[0].xyz, bounds[1] );
+	VectorCopy( poly->verts[0].xyz, mins );
+	VectorCopy( poly->verts[0].xyz, maxs );
 	for ( i = 1 ; i < poly->numVerts ; i++ ) {
-		AddPointToBounds( poly->verts[i].xyz, bounds[0], bounds[1] );
+		AddPointToBounds( poly->verts[i].xyz, mins, maxs );
 	}
 
-	for ( i = 1 ; i < tr.world->numfogs ; i++ ) {
-		fog = &tr.world->fogs[i];
-		for ( j = 0 ; j < 3 ; j++ ) {
-			if ( bounds[0][j] >= fog->bounds[1][j] ) {
-				break;
-			}
-			if ( bounds[1][j] <= fog->bounds[0][j] ) {
-				break;
-			}
-		}
-		if ( j == 3 ) {
-			return i;
-		}
-	}
-
-	return R_DefaultFogNum();
+	return R_BoundsFogNum( &tr.refdef, mins, maxs );
 }
 
 /*
@@ -219,9 +202,8 @@ See if a polygon buffer is inside a fog volume
 =================
 */
 int R_PolyBufferFogNum( srfPolyBuffer_t *pPolySurf ) {
-	int				i, j;
-	fog_t			*fog;
-	vec3_t			bounds[2];
+	int				i;
+	vec3_t			mins, maxs;
 	polyBuffer_t	*pPolyBuffer;
 
 	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
@@ -230,29 +212,13 @@ int R_PolyBufferFogNum( srfPolyBuffer_t *pPolySurf ) {
 
 	pPolyBuffer = pPolySurf->pPolyBuffer;
 
-	// find which fog volume the poly is in
-	VectorCopy( pPolyBuffer->xyz[0], bounds[0] );
-	VectorCopy( pPolyBuffer->xyz[0], bounds[1] );
+	VectorCopy( pPolyBuffer->xyz[0], mins );
+	VectorCopy( pPolyBuffer->xyz[0], maxs );
 	for ( i = 1 ; i < pPolyBuffer->numVerts ; i++ ) {
-		AddPointToBounds( pPolyBuffer->xyz[i], bounds[0], bounds[1] );
+		AddPointToBounds( pPolyBuffer->xyz[i], mins, maxs );
 	}
 
-	for ( i = 1 ; i < tr.world->numfogs ; i++ ) {
-		fog = &tr.world->fogs[i];
-		for ( j = 0 ; j < 3 ; j++ ) {
-			if ( bounds[0][j] >= fog->bounds[1][j] ) {
-				break;
-			}
-			if ( bounds[1][j] <= fog->bounds[0][j] ) {
-				break;
-			}
-		}
-		if ( j == 3 ) {
-			return i;
-		}
-	}
-
-	return R_DefaultFogNum();
+	return R_BoundsFogNum( &tr.refdef, mins, maxs );
 }
 
 /*

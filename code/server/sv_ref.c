@@ -115,7 +115,7 @@ int R_CullLocalBox (vec3_t bounds[2]) {
 	return CULL_CLIP;
 }
 
-int R_DefaultFogNum( void ) {
+int R_PointFogNum( const trRefdef_t *refdef, vec3_t point, float radius ) {
 	return 0;
 }
 

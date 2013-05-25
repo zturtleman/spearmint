@@ -2781,7 +2781,8 @@ void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, floa
 void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
 
 // fog stuff
-int R_DefaultFogNum( void );
+int R_BoundsFogNum( const trRefdef_t *refdef, vec3_t mins, vec3_t maxs );
+int R_PointFogNum( const trRefdef_t *refdef, vec3_t point, float radius );
 void R_FogOff( void );
 void RB_FogOn( void );
 void RB_Fog( int fogNum );
