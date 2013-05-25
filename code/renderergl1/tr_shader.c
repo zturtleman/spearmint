@@ -3192,7 +3192,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			flags |= IMGFLAG_CLAMPTOEDGE;
 		}
 
-		image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags );
+		image = R_FindImageFile( fileName, IMGTYPE_COLORALPHA, flags );
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
 			shader.defaultShader = qtrue;
