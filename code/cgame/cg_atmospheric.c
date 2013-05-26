@@ -40,7 +40,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "cg_local.h"
 
-#define ATM_NEW // Use PolyBuffer
+//#define ATM_NEW // Use PolyBuffer
 
 #define MAX_ATMOSPHERIC_HEIGHT          MAX_MAP_SIZE    // maximum world height
 #define MIN_ATMOSPHERIC_HEIGHT          -MAX_MAP_SIZE   // minimum world height
@@ -965,7 +965,9 @@ void CG_AddAtmosphericEffects(void) {
 		cg_atmFx.dropsActive++;
 	}
 
-//	CG_RenderPolyPool();
+#ifndef ATM_NEW
+	CG_RenderPolyPool();
+#endif
 
 	cg_atmFx.lastRainTime = cg.time;
 
