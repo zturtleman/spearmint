@@ -1942,7 +1942,6 @@ static qboolean ParseShader( char **text )
 			shader.entityMergable = qtrue;
 			continue;
 		}
-		// ZTM: TODO: Use shader name set here instead of always "sun"
 		else if ( !Q_stricmp( token, "sunshader" ) ) {
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] ) {
@@ -1950,8 +1949,7 @@ static qboolean ParseShader( char **text )
 				continue;
 			}
 
-			ri.Printf( PRINT_WARNING, "Sunshader = %s\n", token );
-			//tr.sunShaderName = CopyString( token );
+			Q_strncpyz( tr.sunShaderName, token, sizeof ( tr.sunShaderName ) );
 			continue;
 		}
 		// fogParms ( <red> <green> <blue> ) <depthForOpaque>
@@ -4296,7 +4294,11 @@ static void CreateExternalShaders( void ) {
 		}
 	}
 
-	tr.sunShader = R_FindShader( "sun", LIGHTMAP_NONE, qtrue );
+	if ( !tr.sunShaderName[0] ) {
+		Q_strncpyz( tr.sunShaderName, "sun", sizeof ( tr.sunShaderName ) );
+	}
+
+	tr.sunShader = R_FindShader( tr.sunShaderName, LIGHTMAP_NONE, qtrue );
 
 	tr.sunFlareShader = R_FindShader( "gfx/2d/sunflare", LIGHTMAP_NONE, qtrue);
 
@@ -4337,6 +4339,13 @@ void R_InitShaders( void ) {
 	CreateInternalShaders();
 
 	ScanAndLoadShaderFiles();
+}
 
+/*
+==================
+R_InitExternalShaders
+==================
+*/
+void R_InitExternalShaders( void ) {
 	CreateExternalShaders();
 }

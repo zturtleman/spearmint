@@ -1006,6 +1006,7 @@ typedef struct {
 
 	shader_t				*flareShader;
 	shader_t				*sunShader;
+	char					sunShaderName[MAX_QPATH];
 
 	int						numLightmaps;
 	int						maxLightmaps;
@@ -1330,6 +1331,7 @@ shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
 shader_t *R_FindShaderByName( const char *name );
 void		R_InitShaders( void );
+void		R_InitExternalShaders( void );
 void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
 void		RE_SetSurfaceShader( int surfaceNum, const char *name );

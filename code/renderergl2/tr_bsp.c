@@ -3637,5 +3637,7 @@ void RE_LoadWorldMap( const char *name ) {
 		tr.globalFogDensity = tr.world->fogs[tr.world->globalFog].shader->fogParms.density;
 	}
 
+	R_InitExternalShaders();
+
     ri.FS_FreeFile( buffer.v );
 }
