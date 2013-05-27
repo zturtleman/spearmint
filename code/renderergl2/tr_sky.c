@@ -567,6 +567,8 @@ static void FillCloudySkySide( const int mins[2], const int maxs[2], qboolean ad
 	tHeight = maxs[1] - mins[1] + 1;
 	sWidth = maxs[0] - mins[0] + 1;
 
+	RB_CHECKOVERFLOW( ( maxs[ 0 ] - mins[ 0 ] ) * ( maxs[ 1 ] - mins[ 1 ] ), ( sWidth - 1 ) * ( tHeight - 1 ) * 6 );
+
 	for ( t = mins[1]+HALF_SKY_SUBDIVISIONS; t <= maxs[1]+HALF_SKY_SUBDIVISIONS; t++ )
 	{
 		for ( s = mins[0]+HALF_SKY_SUBDIVISIONS; s <= maxs[0]+HALF_SKY_SUBDIVISIONS; s++ )
@@ -708,7 +710,7 @@ static void FillCloudBox( const shader_t *shader, int stage )
 */
 void R_BuildCloudData( shaderCommands_t *input )
 {
-	int			i;
+	//int			i;
 	shader_t	*shader;
 
 	shader = input->shader;
@@ -725,6 +727,11 @@ void R_BuildCloudData( shaderCommands_t *input )
 
 	if ( shader->sky.cloudHeight )
 	{
+		// From WolfET:
+		// ok, this is really wierd. it's iterating through shader stages here,
+		// which is unnecessary for a multi-stage sky shader, as far as i can tell
+		// nuking this
+#if 0
 		for ( i = 0; i < MAX_SHADER_STAGES; i++ )
 		{
 			if ( !tess.xstages[i] ) {
@@ -732,6 +739,9 @@ void R_BuildCloudData( shaderCommands_t *input )
 			}
 			FillCloudBox( shader, i );
 		}
+#else
+		FillCloudBox( shader, 0 );
+#endif
 	}
 }
 
