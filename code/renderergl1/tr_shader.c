@@ -2088,7 +2088,7 @@ static void ComputeStageIteratorFunc( void )
 	if ( shader.isSky )
 	{
 		shader.optimalStageIteratorFunc = RB_StageIteratorSky;
-		goto done;
+		return;
 	}
 
 	if ( r_ignoreFastPath->integer )
@@ -2114,7 +2114,7 @@ static void ComputeStageIteratorFunc( void )
 							if ( !shader.numDeforms )
 							{
 								shader.optimalStageIteratorFunc = RB_StageIteratorVertexLitTexture;
-								goto done;
+								return;
 							}
 						}
 					}
@@ -2140,16 +2140,12 @@ static void ComputeStageIteratorFunc( void )
 						if ( shader.multitextureEnv )
 						{
 							shader.optimalStageIteratorFunc = RB_StageIteratorLightmappedMultitexture;
-							goto done;
 						}
 					}
 				}
 			}
 		}
 	}
-
-done:
-	return;
 }
 
 typedef struct {
