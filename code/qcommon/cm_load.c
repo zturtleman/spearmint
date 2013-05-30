@@ -479,6 +479,12 @@ static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide, ds
 	int				bestSurfaceNum = -1;
 	int				surfnum;
 
+	// ZTM: NOTE: Unfortunately this takes longer than is acceptable on a lot of maps,
+	//      and it's only needed for trap_R_SetSurfaceShader/trap_R_GetSurfaceShader.
+	if ( !cm_betterIbspSurfaceNums->integer ) {
+		return -1;
+	}
+
 	// brute force through all surfaces
 	for ( s = bspDrawSurfaces, surfnum = 0; surfnum < cm.numSurfaces; ++s, ++surfnum )
 	{
@@ -487,12 +493,6 @@ static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide, ds
 		}
 		if ( buildSide->shaderNum != s->shaderNum ) {
 			continue;
-		}
-		// ZTM: NOTE: Unfortunately this takes longer than is acceptable on a lot of maps,
-		//      and it's only needed for trap_R_SetSurfaceShader.
-		if ( !cm_betterIbspSurfaceNums->integer ) {
-			bestSurfaceNum = surfnum;
-			break;
 		}
 		for ( t = 0; t + 3 <= s->numIndexes; t += 3 )
 		{
