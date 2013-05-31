@@ -1556,24 +1556,22 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 	if (!(backEnd.viewParms.flags & VPF_DEPTHSHADOW))
 	{
+		float scale;
+
 		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs );
 
-		if (r_drawSun->integer)
-		{
-			float scale;
-
-			if ( r_forceSunScale->value > 0 ) {
-				scale = r_forceSunScale->value;
-			} else {
-				scale = tr.sunShaderScale;
-			}
-
-			if ( scale > 0 ) {
-				RB_DrawSun(scale * 0.2f, tr.sunShader);
-			}
+		if ( r_forceSunScale->value > 0 ) {
+			scale = r_forceSunScale->value;
+		} else {
+			scale = tr.sunShaderScale;
 		}
 
-		if (r_drawSunRays->integer)
+		if (r_drawSun->integer && scale > 0)
+		{
+			RB_DrawSun(scale * 0.2f, tr.sunShader);
+		}
+
+		if (r_drawSunRays->integer && scale > 0)
 		{
 			FBO_t *oldFbo = glState.currentFBO;
 			FBO_Bind(tr.sunRaysFbo);
@@ -1587,7 +1585,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 				qglBeginQueryARB(GL_SAMPLES_PASSED_ARB, tr.sunFlareQuery[tr.sunFlareQueryIndex]);
 			}
 
-			RB_DrawSun(0.3, tr.sunFlareShader);
+			RB_DrawSun(scale * 0.2f + 0.2f, tr.sunFlareShader);
 
 			if (glRefConfig.occlusionQuery)
 			{
