@@ -1740,14 +1740,28 @@ static qboolean ParseShader( char **text )
 			shader.entityMergable = qtrue;
 			continue;
 		}
-		else if ( !Q_stricmp( token, "sunshader" ) ) {
+		// sunShader <shader> [scale]
+		else if ( !Q_stricmp( token, "sunShader" ) ) {
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] ) {
-				ri.Printf( PRINT_WARNING, "WARNING: missing shader name for 'sunshader'\n" );
+				ri.Printf( PRINT_WARNING, "WARNING: '%s' missing shader name for 'sunShader'\n", shader.name );
 				continue;
 			}
 
 			Q_strncpyz( tr.sunShaderName, token, sizeof ( tr.sunShaderName ) );
+
+			token = COM_ParseExt( text, qfalse );
+			if ( !token[0] ) {
+				tr.sunShaderScale = 1.0f;
+				continue;
+			}
+
+			tr.sunShaderScale = atof( token );
+
+			if ( tr.sunShaderScale <= 0 ) {
+				ri.Printf( PRINT_WARNING, "WARNING: '%s' scale for 'sunShader' must be more than 0, using scale 1.0 instead.\n", shader.name );
+				tr.sunShaderScale = 1.0f;
+			}
 			continue;
 		}
 		// fogParms ( <red> <green> <blue> ) <depthForOpaque>

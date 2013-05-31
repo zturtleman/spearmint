@@ -291,6 +291,7 @@ New cvars
                                       desktop resolution.
   r_zfar							- sets z far for testing global fog
                                       distances, requires cheats to be enabled
+  r_forceSunScale                   - override sunShader scale when more than 0
 
   con_autoclear                     - causes the console input to be cleared
                                       when opening/closing the console (this is

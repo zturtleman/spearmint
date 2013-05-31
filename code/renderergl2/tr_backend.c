@@ -1560,7 +1560,17 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 		if (r_drawSun->integer)
 		{
-			RB_DrawSun(0.1, tr.sunShader);
+			float scale;
+
+			if ( r_forceSunScale->value > 0 ) {
+				scale = r_forceSunScale->value;
+			} else {
+				scale = tr.sunShaderScale;
+			}
+
+			if ( scale > 0 ) {
+				RB_DrawSun(scale * 0.2f, tr.sunShader);
+			}
 		}
 
 		if (r_drawSunRays->integer)
