@@ -3720,7 +3720,7 @@ int FS_PaksumsSortValue( const searchpath_t *s ) {
 
 	if ( s->pack ) {
 		for ( pak = 0 ; pak < fs_numPaksums ; pak++ ) {
-			if ( s->pack && com_purePaks[pak].checksum == s->pack->checksum ) {
+			if ( com_purePaks[pak].checksum == s->pack->checksum ) {
 				return pak;
 			}
 		}
@@ -3738,14 +3738,13 @@ static void FS_ReorderPaksumsPaks( void )
 {
 	searchpath_t	*s, *tmp, *previous_s;
 	qboolean		swapped;
-	int				pak;
 
 	// only relevant when have paksums and
 	// not relevant if connecting to pure server
 	if ( !fs_numPaksums || fs_numServerPaks )
 		return;
 
-	for ( pak = 0 ; pak < fs_numPaksums ; pak++ ) {
+	while ( 1 ) {
 		previous_s = NULL;
 		swapped = qfalse;
 		for ( s = fs_searchpaths; s && s->next; s = s->next ) {
