@@ -448,10 +448,7 @@ void CL_SystemInfoChanged( void ) {
 
 #ifdef USE_VOIP
 	s = Info_ValueForKey( systemInfo, "sv_voip" );
-	if ( Com_GameIsSinglePlayer() )
-		clc.voipEnabled = qfalse;
-	else
-		clc.voipEnabled = atoi(s);
+	clc.voipEnabled = atoi(s);
 #endif
 
 	s = Info_ValueForKey( systemInfo, "sv_cheats" );
