@@ -240,7 +240,7 @@ void CL_Voip_f( void )
 		reason = "Speex not initialized";
 	else if (!clc.voipEnabled)
 		reason = "Server doesn't support VoIP";
-	else if (Com_GameIsSinglePlayer())
+	else if (!clc.demoplaying && Com_GameIsSinglePlayer())
 		reason = "running in single-player mode";
 
 	if (reason != NULL) {
