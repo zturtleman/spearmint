@@ -3533,7 +3533,7 @@ void Item_Model_Paint(itemDef_t *item) {
 	refdef.width = w;
 	refdef.height = h;
 
-	DC->modelBounds( item->asset, mins, maxs );
+	DC->modelBounds( item->asset, mins, maxs, 0, 0, 0 );
 
 	origin[2] = -0.5 * ( mins[2] + maxs[2] );
 	origin[1] = 0.5 * ( mins[1] + maxs[1] );

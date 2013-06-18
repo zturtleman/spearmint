@@ -302,8 +302,8 @@ int trap_R_LerpTag( orientation_t *tag, clipHandle_t handle, int startFrame, int
 	return syscall( G_R_LERPTAG, tag, handle, startFrame, endFrame, PASSFLOAT(frac), tagName );
 }
 
-void trap_R_ModelBounds( clipHandle_t handle, vec3_t mins, vec3_t maxs ) {
-	syscall( G_R_MODELBOUNDS, handle, mins, maxs );
+int trap_R_ModelBounds( clipHandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac ) {
+	return syscall( G_R_MODELBOUNDS, handle, mins, maxs, startFrame, endFrame, PASSFLOAT(frac) );
 }
 
 void trap_ClientCommand(int playerNum, const char *command) {

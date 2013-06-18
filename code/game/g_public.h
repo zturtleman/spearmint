@@ -263,7 +263,7 @@ typedef enum {
 
 	G_R_REGISTERMODEL, // ( const char *name );
 	G_R_LERPTAG, // ( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, float frac, const char *tagName );
-	G_R_MODELBOUNDS, // ( qhandle_t handle, vec3_t mins, vec3_t maxs );
+	G_R_MODELBOUNDS, // ( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 
 	G_CLIENT_COMMAND,	// ( int playerNum, const char *command );
 

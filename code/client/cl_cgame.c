@@ -1305,8 +1305,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.Add2dPolys( VMA( 1 ), args[2], args[3] );
 		return 0;
 	case CG_R_MODELBOUNDS:
-		re.ModelBounds( args[1], VMA(2), VMA(3) );
-		return 0;
+		return re.ModelBounds( args[1], VMA(2), VMA(3), args[4], args[5], VMF(6) );
 	case CG_R_LERPTAG:
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
 	case CG_R_GET_GLOBAL_FOG:

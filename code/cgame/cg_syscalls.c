@@ -397,8 +397,8 @@ void	trap_R_Add2dPolys( polyVert_t *verts, int numverts, qhandle_t hShader ) {
 	syscall( CG_R_DRAW2DPOLYS, verts, numverts, hShader );
 }
 
-void	trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs ) {
-	syscall( CG_R_MODELBOUNDS, model, mins, maxs );
+int		trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac ) {
+	return syscall( CG_R_MODELBOUNDS, model, mins, maxs, startFrame, endFrame, PASSFLOAT(frac) );
 }
 
 int		trap_R_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int endFrame, 

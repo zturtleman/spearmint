@@ -1319,7 +1319,7 @@ static void CG_RegisterGraphics( void ) {
 
 		Com_sprintf( name, sizeof(name), "*%i", i );
 		cgs.inlineDrawModel[i] = trap_R_RegisterModel( name );
-		trap_R_ModelBounds( cgs.inlineDrawModel[i], mins, maxs );
+		trap_R_ModelBounds( cgs.inlineDrawModel[i], mins, maxs, 0, 0, 0 );
 		for ( j = 0 ; j < 3 ; j++ ) {
 			cgs.inlineModelMidpoints[i][j] = mins[j] + 0.5 * ( maxs[j] - mins[j] );
 		}

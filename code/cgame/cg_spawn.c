@@ -165,7 +165,7 @@ void SP_misc_gamemodel( void ) {
 	if ( gamemodel->model ) {
 		vec3_t mins, maxs;
 
-		trap_R_ModelBounds( gamemodel->model, mins, maxs );
+		trap_R_ModelBounds( gamemodel->model, mins, maxs, 0, 0, 0 );
 
 		for ( i = 0; i < 3; i++ ) {
 			mins[i] *= vScale[i];

@@ -616,7 +616,7 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
 			}
 
 			// offset the origin y and z to center the head
-			trap_R_ModelBounds( cm, mins, maxs );
+			trap_R_ModelBounds( cm, mins, maxs, 0, 0, 0 );
 
 			origin[2] = -0.5 * ( mins[2] + maxs[2] );
 			origin[1] = 0.5 * ( mins[1] + maxs[1] );

@@ -646,7 +646,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 	weaponInfo->weaponModel = trap_R_RegisterModel( item->world_model[0] );
 
 	// calc midpoint for rotation
-	trap_R_ModelBounds( weaponInfo->weaponModel, mins, maxs );
+	trap_R_ModelBounds( weaponInfo->weaponModel, mins, maxs, 0, 0, 0 );
 	for ( i = 0 ; i < 3 ; i++ ) {
 		weaponInfo->weaponMidpoint[i] = mins[i] + 0.5 * ( maxs[i] - mins[i] );
 	}

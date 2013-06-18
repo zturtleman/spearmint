@@ -338,7 +338,7 @@ void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t head
 		}
 
 		// offset the origin y and z to center the head
-		trap_R_ModelBounds( cm, mins, maxs );
+		trap_R_ModelBounds( cm, mins, maxs, 0, 0, 0 );
 
 		origin[2] = -0.5 * ( mins[2] + maxs[2] );
 		origin[1] = 0.5 * ( mins[1] + maxs[1] );
@@ -383,7 +383,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 		cm = cgs.media.redFlagModel;
 
 		// offset the origin y and z to center the flag
-		trap_R_ModelBounds( cm, mins, maxs );
+		trap_R_ModelBounds( cm, mins, maxs, 0, 0, 0 );
 
 		origin[2] = -0.5 * ( mins[2] + maxs[2] );
 		origin[1] = 0.5 * ( mins[1] + maxs[1] );
