@@ -108,6 +108,8 @@ void R_DlightBmodel( bmodel_t *bmodel ) {
 			((srfGridMesh_t *)surf->data)->dlightBits = mask;
 		} else if ( *surf->data == SF_TRIANGLES ) {
 			((srfTriangles_t *)surf->data)->dlightBits = mask;
+		} else if ( *surf->data == SF_FOLIAGE ) {
+			((srfFoliage_t *)surf->data)->dlightBits = mask;
 		}
 	}
 }

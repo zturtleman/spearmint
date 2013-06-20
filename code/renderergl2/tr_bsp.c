@@ -1106,6 +1106,186 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 
 /*
 ===============
+ParseFoliage
+parses a foliage drawsurface
+===============
+*/
+static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes ) {
+	int			i, j;
+	srfFoliage_t *cv;
+	srfTriangle_t  *tri;
+	int			numVerts, numTriangles, badTriangles;
+	int			numInstances;
+	vec3_t		bounds[2];
+	vec3_t		boundsTranslated[2];
+	byte		color[4];
+	float		scale;
+
+	// get fog volume
+	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+
+	// get shader
+	surf->shader = ShaderForShaderNum( ds->shaderNum, LIGHTMAP_BY_VERTEX );
+	if ( r_singleShader->integer && !surf->shader->isSky ) {
+		surf->shader = tr.defaultShader;
+	}
+	surf->originalShader = surf->shader;
+
+	numVerts = LittleLong(ds->patchHeight);
+	numTriangles = LittleLong(ds->numIndexes) / 3;
+	numInstances = LittleLong(ds->patchWidth);
+
+	//cv = ri.Hunk_Alloc(sizeof(*cv), h_low);
+	cv = (void *)surf->data;
+	cv->surfaceType = SF_FOLIAGE;
+
+	cv->numTriangles = numTriangles;
+	cv->triangles = ri.Hunk_Alloc(numTriangles * sizeof(cv->triangles[0]), h_low);
+
+	cv->numVerts = numVerts;
+	cv->verts = ri.Hunk_Alloc(numVerts * sizeof(cv->verts[0]), h_low);
+
+	cv->numInstances = numInstances;
+	cv->instances = ri.Hunk_Alloc(numInstances * sizeof(cv->instances[0]), h_low);
+
+	surf->data = (surfaceType_t *) cv;
+
+	// get foliage drawscale
+	scale = r_drawfoliage->value;
+	if ( scale < 0.0f ) {
+		scale = 1.0f;
+	} else if ( scale > 2.0f ) {
+		scale = 2.0f;
+	}
+
+	// copy vertexes
+	surf->cullinfo.type = CULLINFO_BOX;
+	ClearBounds(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]);
+	verts += LittleLong(ds->firstVert);
+	for(i = 0; i < numVerts; i++)
+	{
+		vec4_t color;
+
+		for(j = 0; j < 3; j++)
+		{
+			cv->verts[i].xyz[j] = LittleFloat(verts[i].xyz[j]);
+			cv->verts[i].normal[j] = LittleFloat(verts[i].normal[j]);
+		}
+
+		// scale height
+		cv->verts[i].xyz[2] *= scale;
+
+		AddPointToBounds( cv->verts[i].xyz, surf->cullinfo.bounds[0], surf->cullinfo.bounds[1] );
+
+		for(j = 0; j < 2; j++)
+		{
+			cv->verts[i].st[j] = LittleFloat(verts[i].st[j]);
+			cv->verts[i].lightmap[j] = LittleFloat(verts[i].lightmap[j]);
+		}
+
+		if (hdrVertColors)
+		{
+			color[0] = hdrVertColors[(ds->firstVert + i) * 3    ];
+			color[1] = hdrVertColors[(ds->firstVert + i) * 3 + 1];
+			color[2] = hdrVertColors[(ds->firstVert + i) * 3 + 2];
+		}
+		else
+		{
+			//hack: convert LDR vertex colors to HDR
+			if (r_hdr->integer)
+			{
+				color[0] = verts[i].color[0] + 1.0f;
+				color[1] = verts[i].color[1] + 1.0f;
+				color[2] = verts[i].color[2] + 1.0f;
+			}
+			else
+			{
+				color[0] = verts[i].color[0];
+				color[1] = verts[i].color[1];
+				color[2] = verts[i].color[2];
+			}
+		}
+		color[3] = verts[i].color[3] / 255.0f;
+
+		R_ColorShiftLightingFloats( color, cv->verts[i].vertexColors, 1.0f / 255.0f );
+	}
+
+	// copy triangles
+	badTriangles = 0;
+	indexes += LittleLong(ds->firstIndex);
+	for(i = 0, tri = cv->triangles; i < numTriangles; i++, tri++)
+	{
+		for(j = 0; j < 3; j++)
+		{
+			tri->indexes[j] = LittleLong(indexes[i * 3 + j]);
+
+			if(tri->indexes[j] < 0 || tri->indexes[j] >= numVerts)
+			{
+				ri.Error(ERR_DROP, "Bad index in face surface");
+			}
+		}
+
+		if ((tri->indexes[0] == tri->indexes[1]) || (tri->indexes[1] == tri->indexes[2]) || (tri->indexes[0] == tri->indexes[2]))
+		{
+			tri--;
+			badTriangles++;
+		}
+	}
+
+	if (badTriangles)
+	{
+		ri.Printf(PRINT_WARNING, "Foliage has bad triangles, originally shader %s %d tris %d verts, now %d tris\n", surf->shader->name, numTriangles, numVerts, numTriangles - badTriangles);
+		cv->numTriangles -= badTriangles;
+	}
+
+	// copy origins and colors
+	ClearBounds( bounds[ 0 ], bounds[ 1 ] );
+	verts += numVerts;
+	for ( i = 0; i < numInstances; i++ )
+	{
+		// copy xyz
+		for ( j = 0; j < 3; j++ )
+			cv->instances[ i ].origin[ j ] = LittleFloat( verts[ i ].xyz[ j ] );
+		VectorAdd( surf->cullinfo.bounds[ 0 ], cv->instances[ i ].origin, boundsTranslated[ 0 ] );
+		VectorAdd( surf->cullinfo.bounds[ 1 ], cv->instances[ i ].origin, boundsTranslated[ 1 ] );
+		AddPointToBounds( boundsTranslated[ 0 ], bounds[ 0 ], bounds[ 1 ] );
+		AddPointToBounds( boundsTranslated[ 1 ], bounds[ 0 ], bounds[ 1 ] );
+
+		// copy color
+		R_ColorShiftLightingBytes( verts[ i ].color, color );
+		for ( j = 0; j < 3; j++ )
+			cv->instances[ i ].color[ j ] = color[ j ] / 255.0f;
+	}
+
+	// replace instance bounds with bounds of all foliage instances
+	VectorCopy( bounds[0], surf->cullinfo.bounds[0] );
+	VectorCopy( bounds[1], surf->cullinfo.bounds[1] );
+
+#ifdef USE_VERT_TANGENT_SPACE
+	// Calculate tangent spaces
+	{
+		srfVert_t      *dv[3];
+
+		for(i = 0, tri = cv->triangles; i < numTriangles; i++, tri++)
+		{
+			dv[0] = &cv->verts[tri->indexes[0]];
+			dv[1] = &cv->verts[tri->indexes[1]];
+			dv[2] = &cv->verts[tri->indexes[2]];
+
+			R_CalcTangentVectors(dv);
+		}
+	}
+#endif
+
+	// finish surface
+	FinishGenericSurface( ds, cv->verts[ 0 ].xyz, &surf->cullinfo );
+
+	VectorCopy( surf->cullinfo.localOrigin, cv->origin );
+	cv->radius = surf->cullinfo.radius;
+}
+
+/*
+===============
 ParseFlare
 ===============
 */
@@ -2208,7 +2388,7 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	drawVert_t	*dv;
 	int			*indexes;
 	int			count;
-	int			numFaces, numMeshes, numTriSurfs, numFlares;
+	int			numFaces, numMeshes, numTriSurfs, numFlares, numFoliage;
 	int			i;
 	float *hdrVertColors = NULL;
 
@@ -2216,6 +2396,7 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	numMeshes = 0;
 	numTriSurfs = 0;
 	numFlares = 0;
+	numFoliage = 0;
 
 	if (surfs->filelen % sizeof(*in))
 		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
@@ -2278,7 +2459,7 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 				out->data = ri.Hunk_Alloc( sizeof(srfFlare_t), h_low);
 				break;
 			case MST_FOLIAGE:
-				ri.Printf( PRINT_ERROR, "Foliage not supported in Rend2.\n" );
+				out->data = ri.Hunk_Alloc( sizeof(srfFoliage_t), h_low);
 				break;
 			default:
 				break;
@@ -2317,6 +2498,10 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 			}
 			numFlares++;
 			break;
+		case MST_FOLIAGE:
+			ParseFoliage( in, dv, hdrVertColors, out, indexes );
+			numFoliage++;
+			break;
 		default:
 			ri.Error( ERR_DROP, "Bad surfaceType" );
 		}
@@ -2337,8 +2522,8 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	R_MovePatchSurfacesToHunk();
 #endif
 
-	ri.Printf(PRINT_DEVELOPER, "...loaded %d faces, %i meshes, %i trisurfs, %i flares\n", 
-		numFaces, numMeshes, numTriSurfs, numFlares);
+	ri.Printf(PRINT_DEVELOPER, "...loaded %d faces, %i meshes, %i trisurfs, %i flares, %i foliage\n", 
+		numFaces, numMeshes, numTriSurfs, numFlares, numFoliage );
 }
 
 
@@ -2404,13 +2589,50 @@ static	void R_LoadSubmodels( lump_t *l ) {
 R_SetParent
 =================
 */
-static	void R_SetParent (mnode_t *node, mnode_t *parent)
-{
+static	void R_SetParent (mnode_t *node, mnode_t *parent) {
+	//  set parent
 	node->parent = parent;
-	if (node->contents != -1)
+
+	// handle leaf nodes
+	if ( node->contents != -1 ) {
+		// add node surfaces to bounds
+		if ( node->nummarksurfaces > 0 ) {
+			int c;
+			msurface_t      *mark;
+			surfaceType_t   type;
+
+
+			// add node surfaces to bounds
+			mark = s_worldData.surfaces + *( s_worldData.marksurfaces + node->firstmarksurface ); // ZTM: FIXME: ### make sure this line of code works!
+			c = node->nummarksurfaces;
+			while ( c-- )
+			{
+				type = *( *mark ).data;
+				if ( type != SF_GRID &&
+					 type != SF_FACE &&
+					 type != SF_TRIANGLES &&
+					 type != SF_FOLIAGE ) {
+					continue;
+				}
+				AddPointToBounds( mark->cullinfo.bounds[ 0 ], node->surfMins, node->surfMaxs );
+				AddPointToBounds( mark->cullinfo.bounds[ 1 ], node->surfMins, node->surfMaxs );
+				mark++;
+			}
+		}
+
+		// go back
 		return;
+	}
+
+	// recurse to child nodes
 	R_SetParent (node->children[0], node);
 	R_SetParent (node->children[1], node);
+
+	// surface bounds
+	AddPointToBounds( node->children[ 0 ]->surfMins, node->surfMins, node->surfMaxs );
+	AddPointToBounds( node->children[ 0 ]->surfMins, node->surfMins, node->surfMaxs );
+	AddPointToBounds( node->children[ 1 ]->surfMins, node->surfMins, node->surfMaxs );
+	AddPointToBounds( node->children[ 1 ]->surfMaxs, node->surfMins, node->surfMaxs );
 }
 
 /*
@@ -2448,6 +2670,10 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 			out->maxs[j] = LittleLong (in->maxs[j]);
 		}
 
+		// surface bounds
+		VectorCopy( out->mins, out->surfMins );
+		VectorCopy( out->maxs, out->surfMaxs );
+
 		p = LittleLong(in->planeNum);
 		out->plane = s_worldData.planes + p;
 
@@ -2472,6 +2698,9 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 			out->mins[j] = LittleLong (inLeaf->mins[j]);
 			out->maxs[j] = LittleLong (inLeaf->maxs[j]);
 		}
+
+		// surface bounds
+		ClearBounds( out->surfMins, out->surfMaxs );
 
 		out->cluster = LittleLong(inLeaf->cluster);
 		out->area = LittleLong(inLeaf->area);
@@ -3366,6 +3595,18 @@ void R_CalcVertexLightDirs( void )
 		else if(*surface->data == SF_TRIANGLES)
 		{
 			srfTriangles_t *srf = (srfTriangles_t *) surface->data;
+
+			if(srf->numVerts)
+			{
+				for(i = 0; i < srf->numVerts; i++)
+				{
+					R_LightDirForPoint( srf->verts[i].xyz, srf->verts[i].lightdir, srf->verts[i].normal, &s_worldData );
+				}
+			}
+		}
+		else if(*surface->data == SF_FOLIAGE)
+		{
+			srfFoliage_t *srf = (srfFoliage_t *) surface->data;
 
 			if(srf->numVerts)
 			{
