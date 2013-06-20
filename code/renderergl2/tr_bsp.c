@@ -677,6 +677,44 @@ static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 
 /*
 ===============
+SphereFromBounds
+creates a bounding sphere from a bounding box
+===============
+*/
+
+static void SphereFromBounds( vec3_t mins, vec3_t maxs, vec3_t origin, float *radius ) {
+	vec3_t temp;
+
+	VectorAdd( mins, maxs, origin );
+	VectorScale( origin, 0.5, origin );
+	VectorSubtract( maxs, origin, temp );
+	*radius = VectorLength( temp );
+}
+
+
+
+/*
+===============
+FinishGenericSurface
+handles final surface classification
+===============
+*/
+
+static void FinishGenericSurface( dsurface_t *ds, vec3_t pt, cullinfo_t *cullinfo ) {
+	// set bounding sphere
+	SphereFromBounds( cullinfo->bounds[ 0 ], cullinfo->bounds[ 1 ], cullinfo->localOrigin, &cullinfo->radius );
+
+	// take the plane normal from the lightmap vector and classify it
+	cullinfo->plane.normal[ 0 ] = LittleFloat( ds->lightmapVecs[ 2 ][ 0 ] );
+	cullinfo->plane.normal[ 1 ] = LittleFloat( ds->lightmapVecs[ 2 ][ 1 ] );
+	cullinfo->plane.normal[ 2 ] = LittleFloat( ds->lightmapVecs[ 2 ][ 2 ] );
+	cullinfo->plane.dist = DotProduct( pt, cullinfo->plane.normal );
+	SetPlaneSignbits( &cullinfo->plane );
+	cullinfo->plane.type = PlaneTypeForNormal( cullinfo->plane.normal );
+}
+
+/*
+===============
 ParseFace
 ===============
 */
@@ -689,6 +727,11 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 
 	realLightmapNum = LittleLong( ds->lightmapNum );
 
+	// no lightmap
+	if (realLightmapNum == -1) {
+		realLightmapNum = LIGHTMAP_BY_VERTEX;
+	}
+
 	// get fog volume
 	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
 
@@ -697,15 +740,9 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
-
-	numVerts = LittleLong(ds->numVerts);
-	if (numVerts > MAX_FACE_POINTS) {
-		ri.Printf( PRINT_WARNING, "WARNING: MAX_FACE_POINTS exceeded: %i\n", numVerts);
-		numVerts = MAX_FACE_POINTS;
-		surf->shader = tr.defaultShader;
-	}
 	surf->originalShader = surf->shader;
 
+	numVerts = LittleLong(ds->numVerts);
 	numTriangles = LittleLong(ds->numIndexes) / 3;
 
 	//cv = ri.Hunk_Alloc(sizeof(*cv), h_low);
@@ -717,6 +754,8 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 
 	cv->numVerts = numVerts;
 	cv->verts = ri.Hunk_Alloc(numVerts * sizeof(cv->verts[0]), h_low);
+
+	surf->data = (surfaceType_t *) cv;
 
 	// copy vertexes
 	surf->cullinfo.type = CULLINFO_PLANE | CULLINFO_BOX;
@@ -796,17 +835,6 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 		cv->numTriangles -= badTriangles;
 	}
 
-	// take the plane information from the lightmap vector
-	for ( i = 0 ; i < 3 ; i++ ) {
-		cv->plane.normal[i] = LittleFloat( ds->lightmapVecs[2][i] );
-	}
-	cv->plane.dist = DotProduct( cv->verts[0].xyz, cv->plane.normal );
-	SetPlaneSignbits( &cv->plane );
-	cv->plane.type = PlaneTypeForNormal( cv->plane.normal );
-	surf->cullinfo.plane = cv->plane;
-
-	surf->data = (surfaceType_t *)cv;
-
 #ifdef USE_VERT_TANGENT_SPACE
 	// Calculate tangent spaces
 	{
@@ -822,8 +850,12 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 		}
 	}
 #endif
-}
 
+	// finish surface
+	FinishGenericSurface( ds, cv->verts[ 0 ].xyz, &surf->cullinfo );
+
+	cv->plane = surf->cullinfo.plane;
+}
 
 /*
 ===============
@@ -937,14 +969,22 @@ ParseTriSurf
 static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes ) {
 	srfTriangles_t *cv;
 	srfTriangle_t  *tri;
-	int             i, j;
-	int             numVerts, numTriangles, badTriangles;
+	int			i, j;
+	int			numVerts, numTriangles, badTriangles;
+	int			realLightmapNum;
+
+	realLightmapNum = LittleLong( ds->lightmapNum );
+
+	// Quake 3 misc_model doesn't have lightmap
+	if (realLightmapNum == -1) {
+		realLightmapNum = LIGHTMAP_BY_VERTEX;
+	}
 
 	// get fog volume
 	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
 
 	// get shader
-	surf->shader = ShaderForShaderNum( ds->shaderNum, LIGHTMAP_BY_VERTEX );
+	surf->shader = ShaderForShaderNum( ds->shaderNum, FatLightmap(realLightmapNum) );
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
@@ -984,8 +1024,10 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		for(j = 0; j < 2; j++)
 		{
 			cv->verts[i].st[j] = LittleFloat(verts[i].st[j]);
-			cv->verts[i].lightmap[j] = LittleFloat(verts[i].lightmap[j]);
+			//cv->verts[i].lightmap[j] = LittleFloat(verts[i].lightmap[j]);
 		}
+		cv->verts[i].lightmap[0] = FatPackU(LittleFloat(verts[i].lightmap[0]), realLightmapNum);
+		cv->verts[i].lightmap[1] = FatPackV(LittleFloat(verts[i].lightmap[1]), realLightmapNum);
 
 		if (hdrVertColors)
 		{
@@ -1057,6 +1099,9 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		}
 	}
 #endif
+
+	// finish surface
+	FinishGenericSurface( ds, cv->verts[ 0 ].xyz, &surf->cullinfo );
 }
 
 /*
