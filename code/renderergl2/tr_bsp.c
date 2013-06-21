@@ -2601,12 +2601,10 @@ static	void R_SetParent (mnode_t *node, mnode_t *parent) {
 			msurface_t      *mark;
 			surfaceType_t   type;
 
-
 			// add node surfaces to bounds
-			mark = s_worldData.surfaces + *( s_worldData.marksurfaces + node->firstmarksurface ); // ZTM: FIXME: ### make sure this line of code works!
-			c = node->nummarksurfaces;
-			while ( c-- )
+			for ( c = 0; c < node->nummarksurfaces; c++ )
 			{
+				mark = s_worldData.surfaces + *( s_worldData.marksurfaces + node->firstmarksurface + c );
 				type = *( *mark ).data;
 				if ( type != SF_GRID &&
 					 type != SF_FACE &&
