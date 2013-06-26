@@ -502,29 +502,17 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 
 			image = R_CreateImage(imageName, imageBuff, imageSize, imageSize,  IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0 );
 			h = RE_RegisterShaderFromImage(imageName, LIGHTMAP_2D, image, qfalse);
+			for (j = lastStart; j < i; j++) {
+				font->glyphs[j].glyph = h;
+				COM_StripExtension(imageName, font->glyphs[j].shaderName, sizeof(font->glyphs[j].shaderName));
+			}
+			lastStart = i;
 			Com_Memset(out, 0, imageSize*imageSize*4);
 			xOut = 0;
 			yOut = 0;
 			ri.Free(imageBuff);
-
 			if(i == GLYPH_END)
-			{
-				for(j = lastStart; j <= GLYPH_END; j++)
-				{
-					font->glyphs[j].glyph = h;
-					COM_StripExtension(imageName, font->glyphs[j].shaderName, sizeof(font->glyphs[j].shaderName));
-				}
-				break;
-			}
-			else
-			{
-				for(j = lastStart; j < i; j++)
-				{
-					font->glyphs[j].glyph = h;
-					COM_StripExtension(imageName, font->glyphs[j].shaderName, sizeof(font->glyphs[j].shaderName));
-				}
-				lastStart = i;
-			}
+				i++;
 		} else {
 			Com_Memcpy(&font->glyphs[i], glyph, sizeof(glyphInfo_t));
 			i++;
