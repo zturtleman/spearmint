@@ -1425,6 +1425,11 @@ SV_DropOut_f
 void SV_DropOut_f( client_t *client, int localPlayerNum ) {
 	player_t *player;
 
+	// require disconnect command to leave server
+	if ( SV_ClientNumLocalPlayers( client ) == 1 ) {
+		return;
+	}
+
 	player = client->localPlayers[localPlayerNum];
 
 	if (!player) {
