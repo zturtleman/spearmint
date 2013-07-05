@@ -180,6 +180,8 @@ or configs will never get loaded from disk!
 
 */
 
+#define MAX_GAMEDIRS 16 // max gamedirs a mod can have (read from gameconfig.txt)
+
 // every time a new pk3 file is built, this checksum must be updated.
 // the easiest way to get it is to just run the game and see what it spits out
 
@@ -256,9 +258,9 @@ static  cvar_t          *fs_apppath;
 #endif
 
 static	cvar_t		*fs_basepath;
-static	cvar_t		*fs_basegame;
 static	cvar_t		*fs_gamedirvar;
 static	searchpath_t	*fs_searchpaths;
+static	searchpath_t	*fs_stashedPath = NULL;
 static	int			fs_readCount;			// total bytes read
 static	int			fs_loadCount;			// total files read
 static	int			fs_loadStack;			// total files in memory
@@ -2692,21 +2694,6 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 	*listbuf = 0;
 	nMods = nTotal = 0;
 
-	// add base game first
-	name = com_basegame->string;
-	nLen = strlen(name) + 1;
-	FS_GetModDescription( name, description, sizeof( description ) );
-	nDescLen = strlen(description) + 1;
-
-	if (nTotal + nLen + 1 + nDescLen + 1 < bufsize) {
-		strcpy(listbuf, name);
-		listbuf += nLen;
-		strcpy(listbuf, description);
-		listbuf += nDescLen;
-		nTotal += nLen + nDescLen;
-		nMods++;
-	}
-
 	pFiles0 = Sys_ListFiles( fs_homepath->string, NULL, NULL, &dummy, qtrue );
 	pFiles1 = Sys_ListFiles( fs_basepath->string, NULL, NULL, &dummy, qtrue );
 	// we searched for mods in the three paths
@@ -2732,8 +2719,8 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 		if (bDrop) {
 			continue;
 		}
-		// we drop "baseq3" "." and ".."
-		if (Q_stricmp(name, com_basegame->string) && Q_stricmpn(name, ".", 1)) {
+		// we drop "." and ".."
+		if (Q_stricmpn(name, ".", 1)) {
 			// now we need to find some .pk3 files to validate the mod
 			// NOTE TTimo: (actually I'm not sure why .. what if it's a mod under developement with no .pk3?)
 			// we didn't keep the information when we merged the directory names, as to what OS Path it was found under
@@ -3091,8 +3078,6 @@ void FS_AddGameDirectory( const char *path, const char *dir ) {
 		}
 	}
 
-	Q_strncpyz( fs_gamedir, dir, sizeof( fs_gamedir ) );
-
 	// find all pak files in this directory
 	Q_strncpyz(curpath, FS_BuildOSPath(path, dir, ""), sizeof(curpath));
 	curpath[strlen(curpath) - 1] = '\0';	// strip the trailing slash
@@ -3427,6 +3412,44 @@ void FS_Shutdown( qboolean closemfp ) {
 }
 
 /*
+===================
+FS_StashSearchPath
+===================
+*/
+void FS_StashSearchPath(void) {
+	if ( fs_stashedPath ) {
+		Com_Error( ERR_FATAL, "FS_StashSearchPath cannot stash multiple times" );
+	}
+	fs_stashedPath = fs_searchpaths;
+	fs_searchpaths = NULL;
+}
+
+/*
+===================
+FS_UnstashSearchPath
+
+Add stashed search paths to end of current search paths
+===================
+*/
+void FS_UnstashSearchPath(void) {
+	searchpath_t *p;
+
+	if ( !fs_stashedPath ) {
+		Com_Error( ERR_FATAL, "FS_UnstashSearchPath has nothing to unstash" );
+	}
+
+	if ( fs_searchpaths ) {
+		for (p = fs_stashedPath; p->next; p = p->next) {
+		}
+
+		p->next = fs_searchpaths;
+	}
+
+	fs_searchpaths = fs_stashedPath;
+	fs_stashedPath = NULL;
+}
+
+/*
 ================
 FS_ReorderPurePaks
 NOTE TTimo: the reordering that happens here is not reflected in the cvars (\cvarlist *pak*)
@@ -3485,38 +3508,108 @@ const char *FS_PortableHomePath(void) {
 	return settings;
 }
 
+/*
+===================
+FS_LoadGameSearchPaths
+
+Load additional search paths, from current search path
+===================
+*/
+static qboolean FS_LoadGameSearchPaths( char gameDirs[MAX_GAMEDIRS][MAX_QPATH], int *pNumGameDirs ) {
+	union {
+		char *c;
+		void *v;
+	} buffer;
+	int				len;
+	int				numGameDirs;
+	char			*text_p, *token;
+
+	*pNumGameDirs = numGameDirs = 0;
+
+	len = FS_ReadFile( "gameconfig.txt", &buffer.v );
+
+	if ( len <= 0 ) {
+		return qfalse;
+	}
+
+	text_p = buffer.c;
+
+	while ( 1 ) {
+		token = COM_Parse( &text_p );
+		if ( !*token )
+			break;
+
+		if ( Q_stricmp( token, "addGameDir" ) == 0 ) {
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token )
+				continue;
+
+			if ( FS_CheckDirTraversal( token ) ) {
+				Com_Printf( S_COLOR_YELLOW "WARNING: invalid gamedir %s in gameconfig.txt\n", token );
+				SkipRestOfLine( &text_p );
+				continue;
+			}
+
+			if ( numGameDirs >= MAX_GAMEDIRS ) {
+				Com_Printf( "WARNING: Excessive game directories in gameconfig.txt (max is %d)\n", MAX_GAMEDIRS );
+			} else if ( Q_stricmp( fs_gamedirvar->string, token ) == 0 ) {
+				Com_Printf( "WARNING: Ignoring gamedir %s listed in gameconfig.txt (it's the current fs_game)\n", token );
+			} else {
+				Q_strncpyz( gameDirs[numGameDirs], token, MAX_QPATH );
+				numGameDirs++;
+			}
+
+			// skip the rest in case want to add additional options here later
+			SkipRestOfLine( &text_p );
+		} else {
+			// ignore unknown parms
+			SkipRestOfLine( &text_p );
+		}
+	}
+
+	*pNumGameDirs = numGameDirs;
+
+	FS_FreeFile( buffer.v );
+	return qtrue;
+}
+
+/*
+================
+FS_GetGameSearchPath
+
+Add gameDirs in forward search order
+
+Example: A mod for Quake III: Team Arena would have
+gameDirs[0]: missionpack
+gameDirs[1]: baseq3
+================
+*/
+static void FS_GetGameSearchPath( const char *gamedir, char gameDirs[MAX_GAMEDIRS][MAX_QPATH], int *pNumGameDirs ) {
+	if ( FS_LoadGameSearchPaths( gameDirs, pNumGameDirs ) ) {
+		return;
+	}
+
+	Com_DPrintf("failed loading gameconfig.txt\n");
+
+	// Hack so Team Arena doesn't need gameconfig.txt
+	if ( Q_stricmp( gamedir, BASETA ) == 0 ) {
+		Com_Printf("HACK: Adding %s to search path for Team Arena...\n", BASEQ3);
+		Q_strncpyz( gameDirs[0], BASEQ3, MAX_QPATH );
+		*pNumGameDirs = 1;
+	}
+}
+
 // XXX
+void FS_ClearPakChecksums( void );
+static qboolean FS_LoadPakChecksums( const char *gamedir );
 static void FS_CheckPaks( qboolean quiet );
 
 /*
 ================
-FS_Startup
+FS_AddGame
 ================
 */
-static void FS_Startup( const char *gameName, qboolean quiet )
-{
-	const char *homePath;
-	char description[MAX_QPATH];
-
-	if (!quiet) {
-		Com_Printf( "----- FS_Startup -----\n" );
-	}
-
-	fs_packFiles = 0;
-
-	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
-	fs_basepath = Cvar_Get ("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT|CVAR_PROTECTED );
-	fs_basegame = Cvar_Get ("fs_basegame", "", CVAR_INIT );
-	homePath = FS_PortableHomePath();
-	if (!homePath || !homePath[0]) {
-		homePath = Sys_DefaultHomePath();
-	}
-	if (!homePath || !homePath[0]) {
-		homePath = fs_basepath->string;
-	}
-	fs_homepath = Cvar_Get ("fs_homepath", homePath, CVAR_INIT|CVAR_PROTECTED );
-	fs_gamedirvar = Cvar_Get ("fs_game", "", CVAR_INIT|CVAR_SYSTEMINFO );
-
+static void FS_AddGame( const char *gameName ) {
 	// add search path elements in reverse priority order
 	if (fs_basepath->string[0]) {
 		FS_AddGameDirectory( fs_basepath->string, gameName );
@@ -3530,31 +3623,69 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 		FS_AddGameDirectory(fs_apppath->string, gameName);
 #endif
 
-	// NOTE: same filtering below for mods and basegame
 	if (fs_homepath->string[0] && Q_stricmp(fs_homepath->string,fs_basepath->string)) {
 		FS_CreatePath ( fs_homepath->string );
 		FS_AddGameDirectory ( fs_homepath->string, gameName );
 	}
 
-	// check for additional base game so mods can be based upon other mods
-	if ( fs_basegame->string[0] && Q_stricmp( fs_basegame->string, gameName ) ) {
-		if (fs_basepath->string[0]) {
-			FS_AddGameDirectory(fs_basepath->string, fs_basegame->string);
-		}
-		if (fs_homepath->string[0] && Q_stricmp(fs_homepath->string,fs_basepath->string)) {
-			FS_AddGameDirectory(fs_homepath->string, fs_basegame->string);
-		}
+	FS_LoadPakChecksums( gameName );
+}
+
+/*
+================
+FS_Startup
+================
+*/
+static void FS_Startup( qboolean quiet )
+{
+	const char	*homePath;
+	char		gameDirs[MAX_GAMEDIRS][MAX_QPATH];
+	int			numGameDirs;
+	char		description[MAX_QPATH];
+	int			i;
+
+	if (!quiet) {
+		Com_Printf( "----- FS_Startup -----\n" );
 	}
 
-	// check for additional game folder for mods
-	if ( fs_gamedirvar->string[0] && Q_stricmp( fs_gamedirvar->string, gameName ) ) {
-		if (fs_basepath->string[0]) {
-			FS_AddGameDirectory(fs_basepath->string, fs_gamedirvar->string);
-		}
-		if (fs_homepath->string[0] && Q_stricmp(fs_homepath->string,fs_basepath->string)) {
-			FS_AddGameDirectory(fs_homepath->string, fs_gamedirvar->string);
-		}
+	fs_packFiles = 0;
+
+	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
+	fs_basepath = Cvar_Get ("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT|CVAR_PROTECTED );
+	homePath = FS_PortableHomePath();
+	if (!homePath || !homePath[0]) {
+		homePath = Sys_DefaultHomePath();
 	}
+	if (!homePath || !homePath[0]) {
+		homePath = fs_basepath->string;
+	}
+	fs_homepath = Cvar_Get ("fs_homepath", homePath, CVAR_INIT|CVAR_PROTECTED );
+	fs_gamedirvar = Cvar_Get ("fs_game", BASEGAME, CVAR_INIT|CVAR_SYSTEMINFO );
+
+	if(!fs_gamedirvar->string[0])
+		Cvar_ForceReset("fs_game");
+
+	FS_ClearPakChecksums();
+
+	// load the game search paths so can load gameconfig.txt from a pk3.
+	FS_AddGame( fs_gamedirvar->string );
+
+	FS_GetGameSearchPath( fs_gamedirvar->string, gameDirs, &numGameDirs );
+
+	if ( numGameDirs > 0 ) {
+		// hide fs_game path
+		FS_StashSearchPath();
+
+		// add extra gamedirs in reverse order
+		for ( i = numGameDirs-1; i >= 0; --i ) {
+			FS_AddGame( gameDirs[i] );
+		}
+
+		// put fs_game at the end of list
+		FS_UnstashSearchPath();
+	}
+
+	Q_strncpyz( fs_gamedir, fs_gamedirvar->string, sizeof( fs_gamedir ) );
 
 	FS_GetModDescription( fs_gamedir, description, sizeof ( description ) );
 	Q_CleanStr( description );
@@ -3780,32 +3911,12 @@ Checks that default pk3s are present and their checksums are correct
 static void FS_CheckPaks( qboolean quiet )
 {
 	searchpath_t	*path;
-	qboolean		basePaksums;
-	qboolean		hasBaseGamePakFile = qfalse;
 	qboolean		missingPak = qfalse;
 	qboolean		invalidPak = qfalse;
 	char			badGames[512];
 	int				pak;
 
-	FS_ClearPakChecksums();
-	basePaksums = FS_LoadPakChecksums( com_basegame->string );
-	FS_LoadPakChecksums( fs_basegame->string );
-	FS_LoadPakChecksums( fs_gamedirvar->string );
-
 	FS_ReorderPaksumsPaks();
-
-	if ( !basePaksums ) {
-		for( path = fs_searchpaths; path; path = path->next ) {
-			if ( path->pack && Q_stricmp( path->pack->pakGamename, com_basegame->string ) == 0 ) {
-				hasBaseGamePakFile = qtrue;
-				break;
-			}
-		}
-
-		if ( !hasBaseGamePakFile ) {
-			FS_AddModToList( badGames, sizeof ( badGames ), com_basegame->string );
-		}
-	}
 
 	for (pak = 0; pak < fs_numPaksums; pak++) {
 		for( path = fs_searchpaths; path; path = path->next ) {
@@ -3842,8 +3953,8 @@ static void FS_CheckPaks( qboolean quiet )
 		FS_AddModToList( badGames, sizeof ( badGames ), com_purePaks[pak].gamename );
 	}
 
-	if ( basePaksums && fs_numPaksums > 0 && !missingPak && !invalidPak ) {
-		// have basegame pure list and pure pk3s
+	if ( fs_numPaksums > 0 && !missingPak && !invalidPak ) {
+		// have a pure list and pure pk3s
 		Cvar_Set( "fs_pure", "1" );
 	} else {
 #ifndef DEDICATED
@@ -3860,26 +3971,24 @@ static void FS_CheckPaks( qboolean quiet )
 		}
 
 		if ( !strlen ( badGames ) ) {
-			FS_GetModDescription( com_basegame->string, badGames, sizeof ( badGames ) );
+			FS_GetModDescription( fs_gamedirvar->string, badGames, sizeof ( badGames ) );
 		}
 
 		Com_sprintf( line2, sizeof (line2), "You need to reinstall %s in order to play on pure servers.", badGames );
 
-		if ( !basePaksums ) {
-			if ( hasBaseGamePakFile ) {
-				Q_strncpyz( line1, "Found a Pk3 file, but missing file containing Pk3 checksums.", sizeof ( line1 ) );
-				Com_sprintf( line2, sizeof (line2), "You need a %s/PAKSUMS file to enable pure mode.", com_basegame->string );
-			} else if ( FS_ReadFile( "default.cfg", NULL ) > 0 ) {
-				// found default.cfg, but no pk3s/checksums? probably a game under development.
-				return;
-			} else {
+		if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
+			// missing data files are more important than missing PAKSUMS
+			Q_strncpyz( line1, "Unable to locate data files.", sizeof ( line1 ) );
 #ifndef DEDICATED
-				type = DT_ERROR;
+			type = DT_ERROR;
 #endif
-				Q_strncpyz( line1, "Unable to locate data files.", sizeof ( line1 ) );
-			}
-		} else if ( fs_foundPaksums && !fs_numPaksums ) {
-			// found paksums, but no checksums? probably a game under development.
+		} else if ( !fs_foundPaksums ) {
+			// no PAKSUMS files found in search paths
+			Q_strncpyz( line1, "Missing file containing Pk3 checksums.", sizeof ( line1 ) );
+			Com_sprintf( line2, sizeof (line2), "You need a %s%cPAKSUMS file to enable pure mode.", fs_gamedirvar->string, PATH_SEP );
+		} else if ( !fs_numPaksums ) {
+			// only empty PAKSUMS files found, probably game under development or doesn't want pure mode
+			Com_Printf( "No Pk3 checksums found, disabling pure mode.\n");
 			return;
 		} else if ( missingPak && invalidPak ) {
 			Com_sprintf( line1, sizeof ( line1 ), "Default Pk3 %s missing, corrupt, or modified.", fs_numPaksums == 1 ? "file is" : "files are" );
@@ -3972,7 +4081,7 @@ const char *FS_ReferencedPakChecksums( void ) {
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		// is the element a pak file?
 		if ( search->pack ) {
-			if (search->pack->referenced || Q_stricmpn(search->pack->pakGamename, com_basegame->string, strlen(com_basegame->string))) {
+			if (search->pack->referenced) {
 				Q_strcat( info, sizeof( info ), va("%i ", search->pack->checksum ) );
 			}
 		}
@@ -3995,12 +4104,10 @@ const char *FS_ReferencedPakNames( void ) {
 
 	info[0] = 0;
 
-	// we want to return ALL pk3's from the fs_game path
-	// and referenced one's from baseq3
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		// is the element a pak file?
 		if ( search->pack ) {
-			if (search->pack->referenced || Q_stricmpn(search->pack->pakGamename, com_basegame->string, strlen(com_basegame->string))) {
+			if (search->pack->referenced) {
 				if (*info) {
 					Q_strcat(info, sizeof( info ), " " );
 				}
@@ -4163,11 +4270,8 @@ void FS_InitFilesystem( void ) {
 	Com_StartupVariable("fs_homepath");
 	Com_StartupVariable("fs_game");
 
-	if(!FS_FilenameCompare(Cvar_VariableString("fs_game"), com_basegame->string))
-		Cvar_Set("fs_game", "");
-
 	// try to start up normally
-	FS_Startup(com_basegame->string, qfalse);
+	FS_Startup(qfalse);
 
 	// if we can't find default.cfg, assume that the paths are
 	// busted and error out now, rather than getting an unreadable
@@ -4195,7 +4299,7 @@ void FS_Restart( qboolean gameDirChanged ) {
 	FS_ClearPakReferences(0);
 
 	// try to start up normally
-	FS_Startup(com_basegame->string, !gameDirChanged);
+	FS_Startup(!gameDirChanged);
 
 	// if we can't find default.cfg, assume that the paths are
 	// busted and error out now, rather than getting an unreadable
@@ -4241,8 +4345,7 @@ qboolean FS_ConditionalRestart(qboolean disconnect)
 	if(fs_gamedirvar->modified)
 	{
 		if(FS_FilenameCompare(lastValidGame, fs_gamedirvar->string) &&
-				(*lastValidGame || FS_FilenameCompare(fs_gamedirvar->string, com_basegame->string)) &&
-				(*fs_gamedirvar->string || FS_FilenameCompare(lastValidGame, com_basegame->string)))
+				*lastValidGame && *fs_gamedirvar->string)
 		{
 			Com_GameRestart(disconnect);
 			return qtrue;
@@ -4358,8 +4461,5 @@ void	FS_FilenameCompletion( const char *dir, const char *ext,
 
 const char *FS_GetCurrentGameDir(void)
 {
-	if(fs_gamedirvar->string[0])
-		return fs_gamedirvar->string;
-
-	return com_basegame->string;
+	return fs_gamedirvar->string;
 }

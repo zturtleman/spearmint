@@ -503,9 +503,9 @@ void CL_SystemInfoChanged( void ) {
 			Cvar_SetSafe(key, value);
 		}
 	}
-	// if game folder should not be set and it is set at the client side
-	if ( !gameSet && *Cvar_VariableString("fs_game") ) {
-		Cvar_Set( "fs_game", "" );
+	// game folder must be set
+	if ( !gameSet ) {
+		Com_Error( ERR_DROP, "fs_game not set on server" );
 	}
 }
 

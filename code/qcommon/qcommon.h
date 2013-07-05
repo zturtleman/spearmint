@@ -867,7 +867,6 @@ extern	cvar_t	*com_maxfpsUnfocused;
 extern	cvar_t	*com_minimized;
 extern	cvar_t	*com_maxfpsMinimized;
 extern	cvar_t	*com_altivec;
-extern	cvar_t	*com_basegame;
 extern	cvar_t	*com_homepath;
 
 // both client and server must agree to pause

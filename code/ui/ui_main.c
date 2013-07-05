@@ -1041,8 +1041,7 @@ const char *UI_FilterDescription( int value ) {
 }
 
 const char *UI_FilterDir( int value ) {
-	// base game (value 1) doesn't send "game"
-	if ( value <= 1 || value > uiInfo.modCount ) {
+	if ( value <= 0 || value > uiInfo.modCount ) {
 		return "";
 	}
 
@@ -3273,7 +3272,7 @@ static void UI_RunMenuScript(char **args) {
 		} else if (Q_stricmp(name, "RunDemo") == 0) {
 			trap_Cmd_ExecuteText( EXEC_APPEND, va("demo %s\n", uiInfo.demoList[uiInfo.demoIndex]));
 		} else if (Q_stricmp(name, "Quake3") == 0) {
-			trap_Cvar_Set( "fs_game", "");
+			trap_Cvar_Set( "fs_game", BASEQ3);
 			trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
 		} else if (Q_stricmp(name, "closeJoin") == 0) {
 			if (uiInfo.serverStatus.refreshActive) {

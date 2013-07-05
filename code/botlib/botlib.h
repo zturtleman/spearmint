@@ -337,8 +337,7 @@ name:						default:			module(s):			description:
 
 "basedir"					""					-					base directory
 "homedir"					""					be_interface.c		home directory
-"gamedir"					""					be_interface.c		mod game directory
-"basegame"					""					be_interface.c		base game directory
+"gamedir"					""					be_interface.c		game directory
 
 "log"						"0"					l_log.c				enable/disable creating a log file
 "maxclients"				"4"					be_interface.c		maximum number of clients
