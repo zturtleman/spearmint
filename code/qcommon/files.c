@@ -3050,7 +3050,7 @@ static int QDECL paksort( const void *a, const void *b ) {
 ================
 FS_AddGameDirectory
 
-Sets fs_gamedir, adds the directory to the head of the path,
+Adds the directory to the head of the path,
 then loads the zip headers
 ================
 */
@@ -3428,7 +3428,7 @@ void FS_StashSearchPath(void) {
 ===================
 FS_UnstashSearchPath
 
-Add stashed search paths to end of current search paths
+Add stashed search paths to head of current search paths
 ===================
 */
 void FS_UnstashSearchPath(void) {
@@ -3681,7 +3681,7 @@ static void FS_Startup( qboolean quiet )
 			FS_AddGame( gameDirs[i] );
 		}
 
-		// put fs_game at the end of list
+		// put fs_game at the head of list
 		FS_UnstashSearchPath();
 	}
 
@@ -3971,7 +3971,7 @@ static void FS_CheckPaks( qboolean quiet )
 		}
 
 		if ( !strlen ( badGames ) ) {
-			FS_GetModDescription( fs_gamedirvar->string, badGames, sizeof ( badGames ) );
+			FS_GetModDescription( fs_gamedir, badGames, sizeof ( badGames ) );
 		}
 
 		Com_sprintf( line2, sizeof (line2), "You need to reinstall %s in order to play on pure servers.", badGames );
@@ -3985,7 +3985,7 @@ static void FS_CheckPaks( qboolean quiet )
 		} else if ( !fs_foundPaksums ) {
 			// no PAKSUMS files found in search paths
 			Q_strncpyz( line1, "Missing file containing Pk3 checksums.", sizeof ( line1 ) );
-			Com_sprintf( line2, sizeof (line2), "You need a %s%cPAKSUMS file to enable pure mode.", fs_gamedirvar->string, PATH_SEP );
+			Com_sprintf( line2, sizeof (line2), "You need a %s%cPAKSUMS file to enable pure mode.", fs_gamedir, PATH_SEP );
 		} else if ( !fs_numPaksums ) {
 			// only empty PAKSUMS files found, probably game under development or doesn't want pure mode
 			Com_Printf( "No Pk3 checksums found, disabling pure mode.\n");
