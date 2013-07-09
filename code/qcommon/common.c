@@ -112,6 +112,7 @@ cvar_t	*com_busyWait;
 
 #ifdef USE_RENDERER_DLOPEN
 cvar_t	*com_renderer;
+static void	*rendererLib = NULL;
 #endif
 
 #if idx64
@@ -3006,11 +3007,18 @@ Com_ShutdownRef
 ============
 */
 void Com_ShutdownRef( void ) {
-	if ( !re.Shutdown ) {
-		return;
+	if ( re.Shutdown ) {
+		re.Shutdown( qtrue );
 	}
-	re.Shutdown( qtrue );
+
 	Com_Memset( &re, 0, sizeof( re ) );
+
+#ifdef USE_RENDERER_DLOPEN
+	if ( rendererLib ) {
+		Sys_UnloadLibrary( rendererLib );
+		rendererLib = NULL;
+	}
+#endif
 }
 
 /*
@@ -3023,7 +3031,6 @@ void Com_InitRef( refimport_t *ri ) {
 #ifdef USE_RENDERER_DLOPEN
 	GetRefAPI_t		GetRefAPI;
 	char			dllName[MAX_OSPATH];
-	static void			*rendererLib;
 #endif
 
 #ifndef DEDICATED
