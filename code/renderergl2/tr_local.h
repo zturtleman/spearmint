@@ -1992,6 +1992,7 @@ extern	cvar_t	*r_drawworld;			// disable/enable world rendering
 extern	cvar_t  *r_drawfoliage;			// disable/enable foliage rendering
 extern	cvar_t	*r_speeds;				// various levels of information display
 extern  cvar_t	*r_detailTextures;		// enables/disables detail texturing stages
+extern	cvar_t	*r_shaderlod;
 extern	cvar_t	*r_novis;				// disable/enable usage of PVS
 extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_facePlaneCull;		// enables culling of planar surfaces with back side test

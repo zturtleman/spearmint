@@ -316,17 +316,13 @@ static qboolean ParseIf( char **text, int *ifIndent, int braketLevel ) {
 	}
 	// shaderlod <float-value>
 	else if ( !Q_stricmp( token, "shaderlod" ) ) {
-		// ZTM: FIXME: I don't know what to compare <float-value> with, so use 1.
-		//				for Alice this means always return qtrue, as it uses 0.45 and 0.5.
-		float shaderlod = 1.0f;
-
 		token = COM_ParseExt( text, qfalse );
 		if ( !token[0] ) {
 			ri.Printf( PRINT_WARNING, "WARNING: missing lod value after 'if shaderlod' in shader '%s'\n", shader.name );
 			return qtrue;
 		}
 
-		if ( shaderlod >= atof( token ) ) {
+		if ( r_shaderlod->value > atof( token ) ) {
 			return qtrue;
 		}
 	} else {
