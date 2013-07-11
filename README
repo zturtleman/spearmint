@@ -200,7 +200,6 @@ New cvars
 
   com_ansiColor                     - enable use of ANSI escape codes in the tty
   com_altivec                       - enable use of altivec on PowerPC systems
-  com_basegame                      - Use a different base than baseq3.
   com_homepath                      - Specify name that is to be appended to the
                                       home path
   com_legacyprotocol                - Specify protocol version number for
@@ -318,6 +317,11 @@ New cvars
                                       trap_R_GetSurfaceShader and
                                       trap_R_SetSurfaceShader to work correctly
 
+  r_shaderlod                       - used for if-endifs in shaders
+                                      "if shaderlod 0.45" .. "endif"
+                                       check if r_shaderlod > 0.45
+
+
 New commands
   video [filename]        - start video capture (use with demo command)
   stopvideo               - stop video capture
@@ -358,6 +362,9 @@ New commands
 
 Removed cvars
   r_customPixelAspect     - it had no effect
+  com_basegame            - replaced manually setting basegame dirs with loading
+                            them from gameconfig.txt in fs_game dir
+  fs_basegame             - see above
 
 
 Removed commands
