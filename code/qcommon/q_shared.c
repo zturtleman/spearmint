@@ -133,6 +133,18 @@ void COM_DefaultExtension( char *path, int maxSize, const char *extension )
 }
 
 /*
+==================
+COM_SetExtension
+==================
+*/
+void COM_SetExtension(char *path, int maxSize, const char *extension)
+{
+	COM_StripExtension(path, path, maxSize);
+
+	Q_strcat(path, maxSize, extension);
+}
+
+/*
 ============================================================================
 
 					BYTE ORDER FUNCTIONS
