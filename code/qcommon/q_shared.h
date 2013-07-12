@@ -45,7 +45,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 
 #ifndef PRODUCT_VERSION
-	#define PRODUCT_VERSION "1.36"
+	#define PRODUCT_VERSION "Alpha"
 #endif
 
 // In the future if the client-server protocol is modified, this may allow old and new engines to play together

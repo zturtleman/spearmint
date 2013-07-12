@@ -263,9 +263,8 @@ PROTOCOL
 ==============================================================
 */
 
-#define	PROTOCOL_VERSION	71
-#define PROTOCOL_LEGACY_VERSION	68
-// 1.31 - 67
+#define	PROTOCOL_VERSION	1
+#define PROTOCOL_LEGACY_VERSION	0
 
 // maintain a list of compatible protocols for demo playing
 // NOTE: that stuff only works with two digits protocols
