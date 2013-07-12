@@ -363,6 +363,7 @@ name:						default:			module(s):			description:
 "phys_jumpvel"				"270"				be_aas_move.c		jump z velocity
 "phys_falldelta5"			"40"				be_aas_move.c
 "phys_falldelta10"			"60"				be_aas_move.c
+"phys_strafejumping"		"1"					be_aas_move.c		use strafe jump maxspeed bug
 "rs_waterjump"				"400"				be_aas_move.c
 "rs_teleport"				"50"				be_aas_move.c
 "rs_barrierjump"			"100"				be_aas_move.c

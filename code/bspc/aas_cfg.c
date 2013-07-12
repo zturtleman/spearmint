@@ -63,6 +63,7 @@ fielddef_t cfg_fields[] =
 	{"phys_maxwalkvelocity", CFG_OFS(phys_maxwalkvelocity), FT_FLOAT},
 	{"phys_maxcrouchvelocity", CFG_OFS(phys_maxcrouchvelocity), FT_FLOAT},
 	{"phys_maxswimvelocity", CFG_OFS(phys_maxswimvelocity), FT_FLOAT},
+	{"phys_strafejumping", CFG_OFS(phys_strafejumping), FT_FLOAT},
 	{"phys_walkaccelerate", CFG_OFS(phys_walkaccelerate), FT_FLOAT},
 	{"phys_airaccelerate", CFG_OFS(phys_airaccelerate), FT_FLOAT},
 	{"phys_swimaccelerate", CFG_OFS(phys_swimaccelerate), FT_FLOAT},

@@ -103,6 +103,7 @@ void AAS_InitSettings(void)
 	aassettings.phys_jumpvel				= LibVarValue("phys_jumpvel", "270");
 	aassettings.phys_falldelta5				= LibVarValue("phys_falldelta5", "40");
 	aassettings.phys_falldelta10			= LibVarValue("phys_falldelta10", "60");
+	aassettings.phys_strafejumping			= LibVarValue("phys_strafejumping", "1");
 	aassettings.rs_waterjump				= LibVarValue("rs_waterjump", "400");
 	aassettings.rs_teleport					= LibVarValue("rs_teleport", "50");
 	aassettings.rs_barrierjump				= LibVarValue("rs_barrierjump", "100");
@@ -369,24 +370,43 @@ float AAS_BFGJumpZVelocity(vec3_t origin)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void AAS_Accelerate(vec3_t velocity, float frametime, vec3_t wishdir, float wishspeed, float accel)
+void AAS_Accelerate(vec3_t velocity, float frametime, vec3_t wishdir, float wishspeed, float accel, float strafejumping)
 {
-	// q2 style
-	int			i;
-	float		addspeed, accelspeed, currentspeed;
+	if ( strafejumping ) {
+		// q2 style
+		int			i;
+		float		addspeed, accelspeed, currentspeed;
 
-	currentspeed = DotProduct(velocity, wishdir);
-	addspeed = wishspeed - currentspeed;
-	if (addspeed <= 0) {
-		return;
-	}
-	accelspeed = accel*frametime*wishspeed;
-	if (accelspeed > addspeed) {
-		accelspeed = addspeed;
-	}
+		currentspeed = DotProduct(velocity, wishdir);
+		addspeed = wishspeed - currentspeed;
+		if (addspeed <= 0) {
+			return;
+		}
+		accelspeed = accel*frametime*wishspeed;
+		if (accelspeed > addspeed) {
+			accelspeed = addspeed;
+		}
 	
-	for (i=0 ; i<3 ; i++) {
-		velocity[i] += accelspeed*wishdir[i];	
+		for (i=0 ; i<3 ; i++) {
+			velocity[i] += accelspeed*wishdir[i];
+		}
+	} else {
+		// proper way (avoids strafe jump maxspeed bug), but feels bad
+		vec3_t		wishVelocity;
+		vec3_t		pushDir;
+		float		pushLen;
+		float		canPush;
+
+		VectorScale( wishdir, wishspeed, wishVelocity );
+		VectorSubtract( wishVelocity, velocity, pushDir );
+		pushLen = VectorNormalize( pushDir );
+
+		canPush = accel*frametime*wishspeed;
+		if (canPush > pushLen) {
+			canPush = pushLen;
+		}
+
+		VectorMA( velocity, canPush, pushDir, velocity );
 	}
 } //end of the function AAS_Accelerate
 //===========================================================================
@@ -512,6 +532,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 	float phys_walkaccelerate, phys_airaccelerate, phys_swimaccelerate;
 	float phys_maxwalkvelocity, phys_maxcrouchvelocity, phys_maxswimvelocity;
 	float phys_maxstep, phys_maxsteepness, phys_jumpvel, friction;
+	float phys_strafejumping;
 	float gravity, delta, maxvel, wishspeed, accelerate;
 	//float velchange, newvel;
 	//int ax;
@@ -540,6 +561,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 	phys_maxstep = aassettings.phys_maxstep;
 	phys_maxsteepness = aassettings.phys_maxsteepness;
 	phys_jumpvel = aassettings.phys_jumpvel * frametime;
+	phys_strafejumping = aassettings.phys_strafejumping;
 	//
 	Com_Memset(move, 0, sizeof(aas_clientmove_t));
 	Com_Memset(&trace, 0, sizeof(aas_trace_t));
@@ -611,7 +633,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 			wishspeed = VectorNormalize(wishdir);
 			if (wishspeed > maxvel) wishspeed = maxvel;
 			VectorScale(frame_test_vel, 1/frametime, frame_test_vel);
-			AAS_Accelerate(frame_test_vel, frametime, wishdir, wishspeed, accelerate);
+			AAS_Accelerate(frame_test_vel, frametime, wishdir, wishspeed, accelerate, phys_strafejumping);
 			VectorScale(frame_test_vel, frametime, frame_test_vel);
 			/*
 			for (i = 0; i < ax; i++)

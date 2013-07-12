@@ -112,6 +112,7 @@ typedef struct aas_settings_s
 	float phys_jumpvel;
 	float phys_falldelta5;
 	float phys_falldelta10;
+	float phys_strafejumping;
 	float rs_waterjump;
 	float rs_teleport;
 	float rs_barrierjump;
