@@ -86,7 +86,6 @@ cvar_t	*com_logfile;		// 1 = buffer log, 2 = flush after each print
 cvar_t	*com_pipefile;
 cvar_t	*com_showtrace;
 cvar_t	*com_version;
-cvar_t	*com_blood;
 cvar_t	*com_singlePlayerActive;
 cvar_t	*com_buildScript;	// for automated data building scripts
 cvar_t	*com_introPlayed;
@@ -2790,7 +2789,6 @@ void Com_Init( char *commandLine ) {
 	//
 	com_altivec = Cvar_Get ("com_altivec", "1", CVAR_ARCHIVE);
 	com_maxfps = Cvar_Get ("com_maxfps", "85", CVAR_ARCHIVE);
-	com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE);
 	com_singlePlayerActive = Cvar_Get ("ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM);
 
 	com_logfile = Cvar_Get ("logfile", "0", CVAR_TEMP );
