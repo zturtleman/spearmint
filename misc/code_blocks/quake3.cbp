@@ -1235,10 +1235,17 @@
 		<Unit filename="../../code/zlib/adler32.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/zlib/compress.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/zlib/crc32.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/zlib/crc32.h" />
+		<Unit filename="../../code/zlib/deflate.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/deflate.h" />
 		<Unit filename="../../code/zlib/inffast.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1252,6 +1259,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/zlib/inftrees.h" />
+		<Unit filename="../../code/zlib/trees.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/trees.h" />
 		<Unit filename="../../code/zlib/zconf.h" />
 		<Unit filename="../../code/zlib/zlib.h" />
 		<Unit filename="../../code/zlib/zutil.c">
