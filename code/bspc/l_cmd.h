@@ -48,6 +48,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include <ctype.h>
 #include <time.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 #ifndef __BYTEBOOL__
 #define __BYTEBOOL__
