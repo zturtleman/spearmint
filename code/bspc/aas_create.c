@@ -361,8 +361,8 @@ void AAS_CheckArea(tmp_area_t *tmparea)
 		} //end if
 		//check if the winding plane is the same as the face plane
 		WindingPlane(face->winding, normal, &dist);
-		plane = &mapplanes[face->planenum];
 #ifdef L_DEBUG
+		plane = &mapplanes[face->planenum];
 		if (fabs(dist - plane->dist) > 0.4 ||
 				fabs(normal[0] - plane->normal[0]) > 0.0001 ||
 				fabs(normal[1] - plane->normal[1]) > 0.0001 ||
