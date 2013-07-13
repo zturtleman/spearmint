@@ -158,15 +158,15 @@ void *BotImport_GetMemory(int size)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void BotImport_Print(int type, char *fmt, ...)
+__attribute__ ((format (printf, 2, 3))) void BotImport_Print(int type, char *fmt, ...)
 {
 	va_list argptr;
 	char buf[1024];
 
 	va_start(argptr, fmt);
-	vsprintf(buf, fmt, argptr);
+	Q_vsnprintf(buf, sizeof (buf), fmt, argptr);
 	printf("%s", buf);
-	if (buf[0] != '\r') Log_Write(buf);
+	if (buf[0] != '\r') Log_Write("%s", buf);
 	va_end(argptr);
 } //end of the function BotImport_Print
 //===========================================================================
@@ -213,7 +213,7 @@ void Com_DPrintf(const char *fmt, ...)
 	va_start(argptr, fmt);
 	vsprintf(buf, fmt, argptr);
 	printf("%s", buf);
-	if (buf[0] != '\r') Log_Write(buf);
+	if (buf[0] != '\r') Log_Write("%s", buf);
 	va_end(argptr);
 } //end of the function Com_DPrintf
 //===========================================================================

@@ -407,7 +407,7 @@ int AAS_WriteAASLump(FILE *fp, aas_header_t *h, int lumpnum, void *data, int len
 	{
 		if (fwrite(data, length, 1, fp) < 1)
 		{
-			Log_Print("error writing lump %s\n", lumpnum);
+			Log_Print("error writing lump %d\n", lumpnum);
 			fclose(fp);
 			return false;
 		} //end if

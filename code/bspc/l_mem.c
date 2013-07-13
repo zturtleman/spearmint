@@ -28,6 +28,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
+#ifdef _WIN32
+#include <malloc.h>
+#endif // _WIN32
+
 #include "qbsp.h"
 #include "l_log.h"
 

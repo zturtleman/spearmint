@@ -30,6 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // cmdlib.c
 
+#include "qbsp.h"
 #include "l_cmd.h"
 #include "l_log.h"
 #include "l_mem.h"
@@ -186,11 +187,11 @@ void Error (char *error, ...)
 	char	text[1024];
 
 	va_start(argptr, error);
-	vsprintf(text, error, argptr);
+	Q_vsnprintf(text, sizeof (text), error, argptr);
 	va_end(argptr);
 	printf("ERROR: %s\n", text);
 
-	Log_Write(text);
+	Log_Write("%s", text);
 	Log_Close();
 
 	exit (1);
@@ -202,11 +203,11 @@ void Warning(char *warning, ...)
 	char text[1024];
 
 	va_start(argptr, warning);
-	vsprintf(text, warning, argptr);
+	Q_vsnprintf(text, sizeof (text), warning, argptr);
 	va_end(argptr);
 	printf("WARNING: %s\n", text);
 
-	Log_Write(text);
+	Log_Write("%s", text);
 } //end of the function Warning
 
 #endif
@@ -234,26 +235,26 @@ void qprintf(char *format, ...)
 	va_end(argptr);
 } //end of the function qprintf
 
-void Com_Error(int level, char *error, ...)
+__attribute__ ((format (printf, 2, 3))) void Com_Error(int level, char *error, ...)
 {
 	va_list argptr;
 	char text[1024];
 
 	va_start(argptr, error);
-	vsprintf(text, error, argptr);
+	Q_vsnprintf(text, sizeof (text), error, argptr);
 	va_end(argptr);
-	Error(text);
+	Error("%s", text);
 } //end of the funcion Com_Error
 
-void Com_Printf( const char *fmt, ... )
+__attribute__ ((format (printf, 1, 2))) void Com_Printf( const char *fmt, ... )
 {
 	va_list argptr;
 	char text[1024];
 
 	va_start(argptr, fmt);
-	vsprintf(text, fmt, argptr);
+	Q_vsnprintf(text, sizeof (text), fmt, argptr);
 	va_end(argptr);
-	Log_Print(text);
+	Log_Print("%s", text);
 } //end of the funcion Com_Printf
 
 /*

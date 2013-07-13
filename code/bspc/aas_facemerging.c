@@ -228,6 +228,7 @@ int AAS_CanMergePlaneFaces(tmp_area_t *tmparea, int planenum)
 	int side1, merge, faceflags;
 
 	frontarea = backarea = NULL;
+	faceflags = 0;
 	merge = false;
 	for (face1 = tmparea->tmpfaces; face1; face1 = face1->next[side1])
 	{

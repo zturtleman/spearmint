@@ -155,18 +155,18 @@ void DefaultCfg(void)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-char	* QDECL va( char *format, ... )
+__attribute__ ((format (printf, 1, 2))) char	* QDECL va( char *format, ... )
 {
 	va_list		argptr;
-	static char		string[2][32000];	// in case va is called by nested functions
-	static int		index = 0;
-	char	*buf;
+	static char string[2][32000]; // in case va is called by nested functions
+	static int	index = 0;
+	char		*buf;
 
 	buf = string[index & 1];
 	index++;
 
 	va_start (argptr, format);
-	vsprintf (buf, format,argptr);
+	Q_vsnprintf (buf, sizeof(*string), format, argptr);
 	va_end (argptr);
 
 	return buf;

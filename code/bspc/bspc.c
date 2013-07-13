@@ -279,7 +279,7 @@ int main (int argc, char **argv)
 	int i, comp = 0;
 	char outputpath[MAX_PATH] = "";
 	char filename[MAX_PATH] = "unknown";
-	quakefile_t *qfiles, *qf;
+	quakefile_t *qfiles = NULL, *qf;
 	double start_time;
 
 	myargc = argc;
