@@ -249,6 +249,7 @@
 			<Option compilerVar="CC" />
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="../../code/game/bg_lib.h" />
 		<Unit filename="../../code/game/bg_local.h" />
 		<Unit filename="../../code/game/bg_misc.c">
 			<Option compilerVar="CC" />

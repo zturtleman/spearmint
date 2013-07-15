@@ -112,6 +112,7 @@
 		<Unit filename="../../code/game/bg_lib.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/game/bg_lib.h" />
 		<Unit filename="../../code/game/bg_misc.c">
 			<Option compilerVar="CC" />
 		</Unit>
