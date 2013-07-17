@@ -3636,7 +3636,9 @@ CL_Shutdown
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 {
 	static qboolean recursive = qfalse;
+#if CL_MAX_SPLITVIEW > 1
 	int i;
+#endif
 	
 	// check whether the client is running at all.
 	if(!(com_cl_running && com_cl_running->integer))
