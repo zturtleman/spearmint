@@ -307,6 +307,9 @@ New cvars
                                       1.32 had no lead announcements in TDM).
   cg_consoleLatency                 - controls how long messages stay in cgame
                                       notify area in miliseconds (default 3000)
+  cg_drawShaderInfo                 - draw world shader name/image on HUD that
+                                      that player's crosshair is pointing at
+                                      (must enable cm_betterIbspSurfaceNums!)
 
   vm_minQvmHunkKB                   - minimum memory pool size for each QVM's
                                       trap_Alloc. DLLs use shared memory pool

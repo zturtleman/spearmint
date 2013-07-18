@@ -2349,6 +2349,57 @@ static void CG_DrawCrosshairNames( void ) {
 	}
 }
 
+/*
+=====================
+CG_DrawShaderInfo
+=====================
+*/
+static void CG_DrawShaderInfo( void ) {
+	char		name[MAX_QPATH];
+	float		x, y, width, height;
+	vec4_t		color = { 1, 1, 1, 1 };
+	qhandle_t	hShader;
+	trace_t		trace;
+	vec3_t		start, end;
+	qboolean	everything = qtrue;
+
+	if ( !cg_drawShaderInfo.integer ) {
+		return;
+	}
+
+	width = 128;
+	height = 128;
+
+	VectorCopy( cg.refdef.vieworg, start );
+	VectorMA( start, 131072, cg.refdef.viewaxis[0], end );
+
+	CG_Trace( &trace, start, vec3_origin, vec3_origin, end,
+		cg.cur_ps->clientNum, everything ? ~0 : CONTENTS_SOLID );
+
+	if ( trace.surfaceNum <= 0 )
+		return;
+
+	// scan the known entities to see if the crosshair is sighted on one
+	hShader = trap_R_GetSurfaceShader( trace.surfaceNum, -1 );
+
+	trap_R_GetShaderName( hShader, name, sizeof ( name ) );
+
+	CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+
+#ifdef MISSIONPACK_HUD
+	color[3] *= 0.5f;
+	CG_Text_Paint( 0, SCREEN_HEIGHT - height - 28, 0.3f, color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED);
+#else
+	CG_DrawBigString( 0, SCREEN_HEIGHT - height - 28, name, color[3] * 0.5f );
+#endif
+	trap_R_SetColor( NULL );
+
+	x = 0;
+	y = SCREEN_HEIGHT - height;
+
+	CG_AdjustFrom640( &x, &y, &width, &height );
+	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
+}
 
 //==============================================================================
 
@@ -2971,6 +3022,8 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 	CG_DrawLowerRight();
 	CG_DrawLowerLeft();
 #endif
+
+	CG_DrawShaderInfo();
 
 	CG_DrawFollow();
 
