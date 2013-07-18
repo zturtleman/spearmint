@@ -445,12 +445,13 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 
 	// make a 256x256 image buffer, once it is full, register it, clean it and keep going 
 	// until all glyphs are rendered
-	out = ri.Malloc(imageSize*imageSize*4);
+
+	out = ri.Malloc(imageSize*imageSize);
 	if (out == NULL) {
 		ri.Printf(PRINT_WARNING, "RE_RegisterFont: ri.Malloc failure during output image creation.\n");
 		return qfalse;
 	}
-	Com_Memset(out, 0, imageSize*imageSize*4);
+	Com_Memset(out, 0, imageSize*imageSize);
 
 	maxHeight = 0;
 
@@ -508,7 +509,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 				COM_StripExtension(imageName, font->glyphs[j].shaderName, sizeof(font->glyphs[j].shaderName));
 			}
 			lastStart = i;
-			Com_Memset(out, 0, imageSize*imageSize*4);
+			Com_Memset(out, 0, imageSize*imageSize);
 			xOut = 0;
 			yOut = 0;
 			ri.Free(imageBuff);
