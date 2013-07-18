@@ -1744,7 +1744,7 @@ void ClientCommand( int connectionNum ) {
 		cmd++;
 
 		if ( connection->localPlayerNums[localPlayerNum] == -1 ) {
-			//G_Printf("Client %d's local player %d not connected.\n", connectionNum, lc+1);
+			trap_SendServerCommandEx( connectionNum, -1, va("print \"unknown cmd %s\n\"", buf ) );
 			return;
 		}
 
