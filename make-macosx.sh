@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 
 # Let's make the user give us a target build system
@@ -30,35 +30,7 @@ if [ -z "$DARWIN_GCC_ARCH" ]; then
 fi
 
 CC=gcc-4.0
-APPBUNDLE=spearmint.app
-BINARY=spearmint.${BUILDARCH}
-DEDBIN=spearmint-server.${BUILDARCH}
-PKGINFO=APPLIOQ3
-ICNS=misc/quake3.icns
 DESTDIR=build/release-darwin-${BUILDARCH}
-BASEDIR=baseq3
-MPACKDIR=missionpack
-
-BIN_OBJ="
-	build/release-darwin-${BUILDARCH}/${BINARY}
-"
-BIN_DEDOBJ="
-	build/release-darwin-${BUILDARCH}/${DEDBIN}
-"
-BASE_OBJ="
-	build/release-darwin-${BUILDARCH}/$BASEDIR/cgame${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/$BASEDIR/ui${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/$BASEDIR/game${BUILDARCH}.dylib
-"
-MPACK_OBJ="
-	build/release-darwin-${BUILDARCH}/$MPACKDIR/cgame${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/$MPACKDIR/ui${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/$MPACKDIR/game${BUILDARCH}.dylib
-"
-RENDER_OBJ="
-	build/release-darwin-${BUILDARCH}/renderer_opengl1_${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/renderer_opengl2_${BUILDARCH}.dylib
-"
 
 cd `dirname $0`
 if [ ! -f Makefile ]; then
@@ -102,66 +74,10 @@ NCPU=`sysctl -n hw.ncpu`
 
 
 # intel client and server
-if [ -d build/release-darwin-${BUILDARCH} ]; then
-	rm -r build/release-darwin-${BUILDARCH}
-fi
+#if [ -d build/release-darwin-${BUILDARCH} ]; then
+#	rm -r build/release-darwin-${BUILDARCH}
+#fi
 (ARCH=${BUILDARCH} CFLAGS=$ARCH_CFLAGS LDFLAGS=$ARCH_LDFLAGS make -j$NCPU) || exit 1;
 
-echo "Creating .app bundle $DESTDIR/$APPBUNDLE"
-if [ ! -d $DESTDIR/$APPBUNDLE/Contents/MacOS/$BASEDIR ]; then
-	mkdir -p $DESTDIR/$APPBUNDLE/Contents/MacOS/$BASEDIR || exit 1;
-fi
-if [ ! -d $DESTDIR/$APPBUNDLE/Contents/MacOS/$MPACKDIR ]; then
-	mkdir -p $DESTDIR/$APPBUNDLE/Contents/MacOS/$MPACKDIR || exit 1;
-fi
-if [ ! -d $DESTDIR/$APPBUNDLE/Contents/Resources ]; then
-	mkdir -p $DESTDIR/$APPBUNDLE/Contents/Resources
-fi
-cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/spearmint.icns || exit 1;
-echo $PKGINFO > $DESTDIR/$APPBUNDLE/Contents/PkgInfo
-echo "
-	<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-	<!DOCTYPE plist
-		PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\"
-		\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
-	<plist version=\"1.0\">
-	<dict>
-		<key>CFBundleDevelopmentRegion</key>
-		<string>English</string>
-		<key>CFBundleExecutable</key>
-		<string>$BINARY</string>
-		<key>CFBundleGetInfoString</key>
-		<string>Spearmint $Q3_VERSION</string>
-		<key>CFBundleIconFile</key>
-		<string>spearmint.icns</string>
-		<key>CFBundleIdentifier</key>
-		<string>org.ioquake.ioquake3</string>
-		<key>CFBundleInfoDictionaryVersion</key>
-		<string>6.0</string>
-		<key>CFBundleName</key>
-		<string>Spearmint</string>
-		<key>CFBundlePackageType</key>
-		<string>APPL</string>
-		<key>CFBundleShortVersionString</key>
-		<string>$Q3_VERSION</string>
-		<key>CFBundleSignature</key>
-		<string>$PKGINFO</string>
-		<key>CFBundleVersion</key>
-		<string>$Q3_VERSION</string>
-		<key>NSExtensions</key>
-		<dict/>
-		<key>NSPrincipalClass</key>
-		<string>NSApplication</string>
-	</dict>
-	</plist>
-	" > $DESTDIR/$APPBUNDLE/Contents/Info.plist
-
-
-cp $BIN_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$BINARY
-cp $BIN_DEDOBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$DEDBIN
-cp $RENDER_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/
-cp $BASE_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$BASEDIR/
-cp $MPACK_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$MPACKDIR/
-cp code/libs/macosx/*.dylib $DESTDIR/$APPBUNDLE/Contents/MacOS/
-cp code/libs/macosx/*.dylib $DESTDIR
-
+# use the following shell script to build an application bundle
+"./make-macosx-app.sh" release ${BUILDARCH}
