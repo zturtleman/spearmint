@@ -1120,7 +1120,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				}
 				continue;
 			} else {
-				stage->bundle[0].image[0] = R_FindImageFile( token, IMGTYPE_COLORALPHA, IMGFLAG_LIGHTMAP | IMGFLAG_CLAMPTOEDGE );
+				stage->bundle[0].image[0] = R_FindImageFile( token, IMGTYPE_COLORALPHA,
+						IMGFLAG_LIGHTMAP | IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE );
 				if ( !stage->bundle[0].image[0] ) {
 					ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 					return qfalse;
@@ -3920,7 +3921,7 @@ void R_FindLightmap( int *lightmapIndex ) {
 
 	// attempt to load an external lightmap
 	Com_sprintf( fileName, sizeof (fileName), "%s/" EXTERNAL_LIGHTMAP, tr.worldDir, *lightmapIndex );
-	image = R_FindImageFile( fileName, IMGTYPE_COLORALPHA, IMGFLAG_LIGHTMAP | IMGFLAG_CLAMPTOEDGE );
+	image = R_FindImageFile( fileName, IMGTYPE_COLORALPHA, IMGFLAG_LIGHTMAP | IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE );
 	if ( image == NULL ) {
 		*lightmapIndex = LIGHTMAP_BY_VERTEX;
 		return;
