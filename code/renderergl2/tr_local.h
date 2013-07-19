@@ -2228,6 +2228,8 @@ void		RE_Shutdown( qboolean destroyWindow );
 
 qboolean	R_GetEntityToken( char *buffer, int size );
 
+float       R_ProcessLightmap( byte **pic, int in_padding, int width, int height, byte **pic_out, qboolean hdrLightmap );
+
 model_t		*R_AllocModel( void );
 
 void    	R_Init( void );

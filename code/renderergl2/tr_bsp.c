@@ -204,6 +204,115 @@ void ColorToRGBA16F(const vec3_t color, unsigned short rgba16f[4])
 
 /*
 ===============
+R_ProcessLightmap
+
+	returns maxIntensity
+===============
+*/
+float R_ProcessLightmap( byte **pic, int in_padding, int width, int height, byte **pic_out, qboolean hdrLightmap ) {
+	int j;
+	float maxIntensity = 0;
+	double sumIntensity = 0;
+	float lightScale = 1.0f;
+
+	lightScale = pow(2, r_mapOverBrightBits->integer - tr.overbrightBits - 8); //exp2(r_mapOverBrightBits->integer - tr.overbrightBits - 8);
+
+	for ( j = 0; j < width * height; j++ )
+	{
+		if (r_hdr->integer)
+		{
+			float color[3];
+
+			if (hdrLightmap)
+			{
+#if 0 // HDRFILE_RGBE
+				float exponent = exp2(( *pic )[j*4+3] - 128);
+
+				color[0] = ( *pic )[j*4+0] * exponent;
+				color[1] = ( *pic )[j*4+1] * exponent;
+				color[2] = ( *pic )[j*4+2] * exponent;
+#else // HDRFILE_FLOAT
+				memcpy(color, &( *pic )[j*12], 12);
+
+				color[0] = LittleFloat(color[0]);
+				color[1] = LittleFloat(color[1]);
+				color[2] = LittleFloat(color[2]);
+#endif
+			}
+			else
+			{
+				//hack: convert LDR lightmap to HDR one
+				color[0] = (( *pic )[j*in_padding+0] + 1.0f);
+				color[1] = (( *pic )[j*in_padding+1] + 1.0f);
+				color[2] = (( *pic )[j*in_padding+2] + 1.0f);
+
+				// if under an arbitrary value (say 12) grey it out
+				// this prevents weird splotches in dimly lit areas
+				if (color[0] + color[1] + color[2] < 12.0f)
+				{
+					float avg = (color[0] + color[1] + color[2]) * 0.3333f;
+					color[0] = avg;
+					color[1] = avg;
+					color[2] = avg;
+				}
+			}
+
+			VectorScale(color, lightScale, color);
+
+			if (glRefConfig.textureFloat && glRefConfig.halfFloatPixel)
+				ColorToRGBA16F(color, (unsigned short *)(&( *pic_out )[j*8]));
+			else
+				ColorToRGBE(color, &( *pic_out )[j*4]);
+		}
+		else
+		{
+			if ( r_lightmap->integer > 1 )
+			{	// color code by intensity as development tool	(FIXME: check range)
+				float r = ( *pic )[j*in_padding+0];
+				float g = ( *pic )[j*in_padding+1];
+				float b = ( *pic )[j*in_padding+2];
+				float intensity;
+				float out[3] = {0.0, 0.0, 0.0};
+
+				intensity = 0.33f * r + 0.685f * g + 0.063f * b;
+
+				if ( intensity > 255 )
+					intensity = 1.0f;
+				else
+					intensity /= 255.0f;
+
+				if ( intensity > maxIntensity )
+					maxIntensity = intensity;
+
+				HSVtoRGB( intensity, 1.00, 0.50, out );
+
+				if ( r_lightmap->integer == 3 ) {
+					// Arnout: artists wanted the colours to be inversed
+					( *pic_out )[j * 4 + 0] = out[2] * 255;
+					( *pic_out )[j * 4 + 1] = out[1] * 255;
+					( *pic_out )[j * 4 + 2] = out[0] * 255;
+				} else {
+					( *pic_out )[j * 4 + 0] = out[0] * 255;
+					( *pic_out )[j * 4 + 1] = out[1] * 255;
+					( *pic_out )[j * 4 + 2] = out[2] * 255;
+				}
+				( *pic_out )[j * 4 + 3] = 255;
+
+				sumIntensity += intensity;
+			}
+			else
+			{
+				R_ColorShiftLightingBytes( &( *pic )[j*in_padding], &( *pic_out )[j*4] );
+				( *pic_out )[j*4+3] = 255;
+			}
+		}
+	}
+
+	return maxIntensity;
+}
+
+/*
+===============
 R_LoadLightmaps
 
 ===============
@@ -217,10 +326,23 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 	byte		*image;
 	int			i, j, numLightmaps, textureInternalFormat = 0;
 	float maxIntensity = 0;
-	double sumIntensity = 0;
+	float intensity;
+	int			numExternalLightmaps = 0;
+
+	// ydnar: clear lightmaps first
+	tr.numLightmaps = tr.maxLightmaps = 0;
+	tr.lightmaps = NULL;
+
+	// get number of external lightmaps
+	if (tr.worldDir) {
+		ri.FS_ListFiles(tr.worldDir, ".tga", &numExternalLightmaps);
+	}
 
 	len = l->filelen;
 	if ( !len ) {
+		// Allocate data for external lightmaps.
+		tr.maxLightmaps = numExternalLightmaps;
+		tr.lightmaps = ri.Hunk_Alloc( tr.maxLightmaps * sizeof(image_t *), h_low );
 		return;
 	}
 	buf = fileBase + l->fileofs;
@@ -291,7 +413,8 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 		tr.numLightmaps = numLightmaps;
 	}
 
-	tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
+	tr.maxLightmaps = tr.numLightmaps + numExternalLightmaps;
+	tr.lightmaps = ri.Hunk_Alloc( tr.maxLightmaps * sizeof(image_t *), h_low );
 
 	if (tr.worldDeluxeMapping)
 	{
@@ -333,7 +456,6 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 		{
 			char filename[MAX_QPATH];
 			byte *hdrLightmap = NULL;
-			float lightScale = 1.0f;
 			int size = 0;
 
 			// look for hdr lightmaps
@@ -390,90 +512,9 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 					buf_p = buf + i * tr.lightmapSize * tr.lightmapSize * 3;
 			}
 
-			lightScale = pow(2, r_mapOverBrightBits->integer - tr.overbrightBits - 8); //exp2(r_mapOverBrightBits->integer - tr.overbrightBits - 8);
-
-			for ( j = 0 ; j < tr.lightmapSize * tr.lightmapSize; j++ ) 
-			{
-				if (r_hdr->integer)
-				{
-					float color[3];
-
-					if (hdrLightmap)
-					{
-#if 0 // HDRFILE_RGBE
-						float exponent = exp2(buf_p[j*4+3] - 128);
-
-						color[0] = buf_p[j*4+0] * exponent;
-						color[1] = buf_p[j*4+1] * exponent;
-						color[2] = buf_p[j*4+2] * exponent;
-#else // HDRFILE_FLOAT
-						memcpy(color, &buf_p[j*12], 12);
-
-						color[0] = LittleFloat(color[0]);
-						color[1] = LittleFloat(color[1]);
-						color[2] = LittleFloat(color[2]);
-#endif
-					}
-					else
-					{
-						//hack: convert LDR lightmap to HDR one
-						color[0] = (buf_p[j*3+0] + 1.0f);
-						color[1] = (buf_p[j*3+1] + 1.0f);
-						color[2] = (buf_p[j*3+2] + 1.0f);
-
-						// if under an arbitrary value (say 12) grey it out
-						// this prevents weird splotches in dimly lit areas
-						if (color[0] + color[1] + color[2] < 12.0f)
-						{
-							float avg = (color[0] + color[1] + color[2]) * 0.3333f;
-							color[0] = avg;
-							color[1] = avg;
-							color[2] = avg;
-						}
-					}
-
-					VectorScale(color, lightScale, color);
-
-					if (glRefConfig.textureFloat && glRefConfig.halfFloatPixel)
-						ColorToRGBA16F(color, (unsigned short *)(&image[j*8]));
-					else
-						ColorToRGBE(color, &image[j*4]);
-				}
-				else
-				{
-					if ( r_lightmap->integer == 2 )
-					{	// color code by intensity as development tool	(FIXME: check range)
-						float r = buf_p[j*3+0];
-						float g = buf_p[j*3+1];
-						float b = buf_p[j*3+2];
-						float intensity;
-						float out[3] = {0.0, 0.0, 0.0};
-
-						intensity = 0.33f * r + 0.685f * g + 0.063f * b;
-
-						if ( intensity > 255 )
-							intensity = 1.0f;
-						else
-							intensity /= 255.0f;
-
-						if ( intensity > maxIntensity )
-							maxIntensity = intensity;
-
-						HSVtoRGB( intensity, 1.00, 0.50, out );
-
-						image[j*4+0] = out[0] * 255;
-						image[j*4+1] = out[1] * 255;
-						image[j*4+2] = out[2] * 255;
-						image[j*4+3] = 255;
-
-						sumIntensity += intensity;
-					}
-					else
-					{
-						R_ColorShiftLightingBytes( &buf_p[j*3], &image[j*4] );
-						image[j*4+3] = 255;
-					}
-				}
+			intensity = R_ProcessLightmap( &buf_p, 3, tr.lightmapSize, tr.lightmapSize, &image, ( hdrLightmap != NULL ) );
+			if ( intensity > maxIntensity ) {
+				maxIntensity = intensity;
 			}
 
 			if (r_mergeLightmaps->integer)
@@ -529,11 +570,6 @@ static float FatPackU(float input, int lightmapnum)
 	if (lightmapnum < 0)
 		return input;
 
-	if (tr.fatLightmapStep == 0) {
-		ri.Printf( PRINT_WARNING, "FatPackU: tr.fatLightmapStep == 0 ???\n" );
-		return input;
-	}
-
 	if (tr.worldDeluxeMapping)
 		lightmapnum >>= 1;
 
@@ -555,11 +591,6 @@ static float FatPackV(float input, int lightmapnum)
 {
 	if (lightmapnum < 0)
 		return input;
-
-	if (tr.fatLightmapStep == 0) {
-		ri.Printf( PRINT_WARNING, "FatPackV: tr.fatLightmapStep == 0 ???\n" );
-		return input;
-	}
 
 	if (tr.worldDeluxeMapping)
 		lightmapnum >>= 1;
@@ -3664,12 +3695,16 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.toneMinAvgMaxLevel[2] = 0.0f;
 
 	tr.worldMapLoaded = qtrue;
+	tr.worldDir = NULL;
 
 	// load it
     ri.FS_ReadFile( name, &buffer.v );
 	if ( !buffer.b ) {
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
 	}
+
+	tr.worldDir = ri.Hunk_Alloc( strlen(name)+1, h_low );
+	COM_StripExtension(name, tr.worldDir, strlen(name)+1);
 
 	// clear tr.world so if the level fails to load, the next
 	// try will not look at the partially loaded version

@@ -2551,6 +2551,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	int		width, height;
 	byte	*pic;
 	long	hash;
+	int		textureInternalFormat = 0;
 
 	if (!name) {
 		return NULL;
@@ -2581,7 +2582,25 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		return NULL;
 	}
 
-	if (r_normalMapping->integer && !(type == IMGTYPE_NORMAL) && (flags & IMGFLAG_PICMIP) && (flags & IMGFLAG_MIPMAP) && (flags & IMGFLAG_GENNORMALMAP))
+	// apply lightmap coloring
+	if ( flags & IMGFLAG_LIGHTMAP ) {
+		byte *newPic;
+
+		if (r_hdr->integer && glRefConfig.textureFloat && glRefConfig.halfFloatPixel) {
+			textureInternalFormat = GL_RGBA16F_ARB;
+			newPic = ri.Malloc( width * height * 4 * 2 );
+		} else {
+			newPic = pic;
+		}
+
+		R_ProcessLightmap( &pic, 4, width, height, &newPic, qfalse );
+
+		if ( newPic != pic ) {
+			ri.Free( pic );
+			pic = newPic;
+		}
+	}
+	else if (r_normalMapping->integer && !(type == IMGTYPE_NORMAL) && (flags & IMGFLAG_PICMIP) && (flags & IMGFLAG_MIPMAP) && (flags & IMGFLAG_GENNORMALMAP))
 	{
 		char normalName[MAX_QPATH];
 		image_t *normalImage;
@@ -2628,7 +2647,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		}
 	}
 
-	image = R_CreateImage( ( char * ) name, pic, width, height, type, flags, 0 );
+	image = R_CreateImage( ( char * ) name, pic, width, height, type, flags, textureInternalFormat );
 	ri.Free( pic );
 	return image;
 }
