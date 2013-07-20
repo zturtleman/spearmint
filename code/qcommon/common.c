@@ -2607,10 +2607,13 @@ Expose possibility to change current running mod to the user
 void Com_GameRestart_f(void)
 {
 	const char *gamedir = Cmd_Argv(1);
-	if (!*gamedir)
-		Cvar_ForceReset("fs_game");
-	else
-		Cvar_Set("fs_game", gamedir);
+
+	if (!*gamedir) {
+		Com_Printf("Usage: game_restart <game directory>\n");
+		return;
+	}
+
+	Cvar_Set("fs_game", gamedir);
 
 	Com_GameRestart(qtrue);
 }
