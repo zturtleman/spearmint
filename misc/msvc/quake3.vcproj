@@ -2630,26 +2630,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\code\botlib\be_ai_goal.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\code\botlib\be_ai_move.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\code\botlib\be_ai_weap.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\code\botlib\be_ai_weight.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\code\botlib\be_ea.c"
-					>
-				</File>
-				<File
 					RelativePath="..\..\code\botlib\be_interface.c"
 					>
 				</File>
