@@ -208,6 +208,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 	int i = 0;
 	SDL_Surface *vidscreen = NULL;
 	Uint32 flags = SDL_OPENGL;
+	char windowTitle[128];
 
 	ri.Printf( PRINT_ALL, "Initializing OpenGL display\n");
 
@@ -427,8 +428,8 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 		}
 #endif
 
-		cvar_t *com_productName = ri.Cvar_Get("com_productName", PRODUCT_NAME, CVAR_ROM);
-		SDL_WM_SetCaption(com_productName->string, com_productName->string);
+		ri.Cvar_VariableStringBuffer("com_productName", windowTitle, sizeof (windowTitle));
+		SDL_WM_SetCaption(windowTitle, windowTitle);
 		SDL_ShowCursor(0);
 
 		if (!(vidscreen = SDL_SetVideoMode(glConfig.vidWidth, glConfig.vidHeight, colorbits, flags)))
