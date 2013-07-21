@@ -4578,7 +4578,7 @@ qboolean CL_GetClientLocation(char *buf, int bufLength, int localClientNum) {
 	}
 
 	ps = DA_ElementPointer( cl.snap.playerStates, cl.snap.lcIndex[localClientNum] );
-	snprintf(buf, bufLength, "X:%d Y:%d Z:%d A:%d", (int)ps->origin[0],
+	Com_sprintf(buf, bufLength, "X:%d Y:%d Z:%d A:%d", (int)ps->origin[0],
 			(int)ps->origin[1], (int)ps->origin[2],
 			(int)(ps->viewangles[YAW]+360)%360);
 	return qtrue;

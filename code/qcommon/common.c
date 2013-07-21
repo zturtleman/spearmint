@@ -1995,7 +1995,7 @@ void DA_ClearElement( darray_t *darray, int num ) {
 	if ( !darray->pointer )
 		return;
 
-	Com_Memset( darray->pointer + num * darray->elementLength, 0, darray->elementLength );
+	Com_Memset( (byte*)darray->pointer + num * darray->elementLength, 0, darray->elementLength );
 }
 
 /*
@@ -2029,7 +2029,7 @@ void DA_SetElement( darray_t *darray, int num, const void *data ) {
 	if ( !darray->pointer )
 		return;
 
-	Com_Memcpy( darray->pointer + num * darray->elementLength, data, darray->elementLength );
+	Com_Memcpy( (byte*)darray->pointer + num * darray->elementLength, data, darray->elementLength );
 }
 
 /*
@@ -2042,7 +2042,7 @@ void DA_GetElement( const darray_t darray, int num, void *data ) {
 	assert( num < darray.maxElements );
 	assert( darray.elementLength > 0 );
 
-	Com_Memcpy( data, darray.pointer + num * darray.elementLength, darray.elementLength );
+	Com_Memcpy( data, (byte*)darray.pointer + num * darray.elementLength, darray.elementLength );
 }
 
 /*
@@ -2064,7 +2064,7 @@ void *DA_ElementPointer( const darray_t darray, int num ) {
 		return NULL;
 	}
 
-	return darray.pointer + num * darray.elementLength;
+	return (byte*)darray.pointer + num * darray.elementLength;
 }
 
 /*

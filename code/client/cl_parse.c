@@ -889,6 +889,7 @@ void CL_ParseVoip ( msg_t *msg ) {
 	}
 
 	for (i = 0; i < frames; i++) {
+		const int16_t *sampptr;
 		const int len = MSG_ReadByte(msg);
 		if (len < 0) {
 			Com_DPrintf("VoIP: Short packet!\n");
@@ -918,7 +919,7 @@ void CL_ParseVoip ( msg_t *msg ) {
 		if (decio != NULL) { fwrite(decoded+written, clc.speexFrameSize*2, 1, decio); fflush(decio); }
 		#endif
 
-		const int16_t *sampptr = (const int16_t *)decoded + written;
+		sampptr = (const int16_t *)decoded + written;
 
 		// calculate the "power" of this packet...
 		for (j = 0; j < clc.speexFrameSize; j++) {

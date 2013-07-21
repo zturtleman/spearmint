@@ -235,7 +235,7 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerS
 
 	snapshot->numPSs = clSnap->numPSs;
 	for (i = 0; i < snapshot->numPSs; i++) {
-		Com_Memcpy( playerStates + i * cl.cgamePlayerStateSize, DA_ElementPointer( clSnap->playerStates, i ), cl.cgamePlayerStateSize );
+		Com_Memcpy( (byte*)playerStates + i * cl.cgamePlayerStateSize, DA_ElementPointer( clSnap->playerStates, i ), cl.cgamePlayerStateSize );
 	}
 
 	count = clSnap->numEntities;
@@ -245,7 +245,7 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerS
 	}
 	snapshot->numEntities = count;
 	for ( i = 0 ; i < count ; i++ ) {
-		Com_Memcpy( entities + i * cl.cgameEntityStateSize, CL_ParseEntityState( clSnap->parseEntitiesNum + i ), cl.cgameEntityStateSize );
+		Com_Memcpy( (byte*)entities + i * cl.cgameEntityStateSize, CL_ParseEntityState( clSnap->parseEntitiesNum + i ), cl.cgameEntityStateSize );
 	}
 
 	// FIXME: configstring changes and server commands!!!
