@@ -48,7 +48,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;MISSIONPACK"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;CGAME;MISSIONPACK"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -143,7 +143,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;CGAME"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile="$(IntDir)\cgame.pch"
@@ -240,7 +240,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;CGAME"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -335,7 +335,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;_CRT_SECURE_NO_DEPRECATE;CGAME"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile="$(IntDir)\cgame.pch"
@@ -417,7 +417,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -427,7 +427,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -438,7 +438,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -448,7 +448,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -462,7 +462,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -471,7 +471,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -481,7 +481,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -490,7 +490,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -504,7 +504,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -513,7 +513,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -523,7 +523,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -532,7 +532,53 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\game\bg_tracemap.c"
+				>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
+						BrowseInformation="1"
+
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -546,7 +592,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -555,7 +601,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -565,7 +611,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -574,7 +620,51 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\cgame\cg_atmosphere.c"
+				>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -588,7 +678,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -597,7 +687,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -607,7 +697,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -616,7 +706,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -630,7 +720,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -639,7 +729,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -649,7 +739,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -658,7 +748,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -672,7 +762,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -681,7 +771,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -691,7 +781,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -700,7 +790,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -714,7 +804,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -723,7 +813,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -733,7 +823,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -742,7 +832,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -756,7 +846,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -765,7 +855,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -775,7 +865,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -784,7 +874,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -798,7 +888,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -807,7 +897,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -817,7 +907,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -826,7 +916,50 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\cgame\cg_input.c"
+				>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -840,7 +973,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -849,7 +982,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -859,7 +992,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -868,7 +1001,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -882,7 +1015,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -891,7 +1024,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -901,7 +1034,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -910,7 +1043,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -924,7 +1057,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -933,7 +1066,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -943,7 +1076,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -952,7 +1085,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -966,7 +1099,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -975,7 +1108,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -985,7 +1118,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -994,7 +1127,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1008,7 +1141,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1018,7 +1151,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1029,7 +1162,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1038,7 +1171,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1052,7 +1185,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1061,7 +1194,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1071,7 +1204,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1080,7 +1213,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1094,7 +1227,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1103,7 +1236,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1113,7 +1246,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1122,7 +1255,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1136,7 +1269,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1145,7 +1278,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1155,7 +1288,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1164,7 +1297,50 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\cgame\cg_polybus.c"
+				>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1178,7 +1354,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1187,7 +1363,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1197,7 +1373,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1206,7 +1382,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1220,7 +1396,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1229,7 +1405,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1239,7 +1415,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1248,7 +1424,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1262,7 +1438,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1271,7 +1447,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1281,7 +1457,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1290,7 +1466,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1304,7 +1480,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1313,7 +1489,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1323,7 +1499,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1332,7 +1508,50 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\cgame\cg_spawn.c"
+				>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1346,7 +1565,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1355,7 +1574,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1365,7 +1584,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1374,7 +1593,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1388,7 +1607,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1397,7 +1616,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1407,7 +1626,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1416,7 +1635,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1430,7 +1649,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1439,7 +1658,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1449,7 +1668,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1458,7 +1677,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1480,7 +1699,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1489,7 +1708,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1499,7 +1718,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CGAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1508,7 +1727,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;MISSIONPACK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CGAME;MISSIONPACK;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
