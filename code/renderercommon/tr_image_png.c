@@ -2577,7 +2577,7 @@ static qboolean EncodeImageNonInterlaced8True(uint32_t IHDR_Width, uint32_t IHDR
 void WriteToBuffer(void **buffer, const void *data, size_t length)
 {
 	memcpy(*buffer, data, length);
-	*buffer += length;
+	*(byte**)buffer += length;
 }
 
 /*
@@ -2602,7 +2602,7 @@ void WriteChunkHeader(void **buffer, void **crcPtr, PNG_ChunkCRC *CRC, int type,
 	 */
 
 	*CRC = ri.zlib_crc32(0, Z_NULL, 0);
-	*CRC = ri.zlib_crc32(*CRC, *buffer-4, 4);
+	*CRC = ri.zlib_crc32(*CRC, *(byte**)buffer-4, 4);
 	*crcPtr = *buffer;
 }
 
@@ -2612,11 +2612,13 @@ void WriteChunkHeader(void **buffer, void **crcPtr, PNG_ChunkCRC *CRC, int type,
 
 void WriteCRC(void **buffer, void **crcPtr, PNG_ChunkCRC CRC)
 {
+	int size = (intptr_t)*buffer-(intptr_t)*crcPtr;
+
 	/*
 	 *  Update CRC
 	 */
-	if (*buffer-*crcPtr > 0)
-		CRC = ri.zlib_crc32(CRC, *crcPtr, *buffer-*crcPtr);
+	if (size > 0)
+		CRC = ri.zlib_crc32(CRC, *crcPtr, size);
 
 	/*
 	 *  Write CRC
@@ -2692,12 +2694,12 @@ void RE_SavePNG(const char *filename, int width, int height, byte *data, int pad
 	ri.CL_GetMapMessage(tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
 	numtEXt++;
 	for (i = 0; i < ri.CL_MaxSplitView(); i++) {
-		snprintf(tEXt[numtEXt].key, sizeof (tEXt[numtEXt].key), "Playername%d", i+1);
+		Com_sprintf(tEXt[numtEXt].key, sizeof (tEXt[numtEXt].key), "Playername%d", i+1);
 		ri.Cvar_VariableStringBuffer(Com_LocalClientCvarName(i, "name"), tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
 		numtEXt++;
 
 		if (ri.CL_GetClientLocation(tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text), i)) {
-			snprintf(tEXt[numtEXt].key, sizeof (tEXt[numtEXt].key), "Location%d", i+1);
+			Com_sprintf(tEXt[numtEXt].key, sizeof (tEXt[numtEXt].key), "Location%d", i+1);
 			numtEXt++;
 		}
 	}
@@ -2731,7 +2733,7 @@ void RE_SavePNG(const char *filename, int width, int height, byte *data, int pad
 	 */
 
 	CRC = ri.zlib_crc32(0, Z_NULL, 0);
-	crcPtr = buffer + PNG_Signature_Size + 4;
+	crcPtr = (byte*)buffer + PNG_Signature_Size + 4;
 
 	/*
 	 *  Header
