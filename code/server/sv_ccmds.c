@@ -327,10 +327,13 @@ static void SV_MapRestart_f( void ) {
 
 			// connect the client again, without the firstTime flag
 			denied = VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_CLIENT_CONNECT, player - svs.players, qfalse, isBot, client - svs.clients, j ) );
+			player = client->localPlayers[j]; // may be NULL if game dropped player
 			if ( denied ) {
 				// this generally shouldn't happen, because the player
 				// was connected before the level change
-				SV_DropPlayer( player, denied );
+				if ( player != NULL ) {
+					SV_DropPlayer( player, denied );
+				}
 				Com_Printf( "SV_MapRestart_f(%d): dropped client %i - denied!\n", delay, i );
 				continue;
 			}

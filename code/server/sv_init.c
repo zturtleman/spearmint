@@ -635,7 +635,8 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 
 				// connect the client again
 				denied = VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_CLIENT_CONNECT, player - svs.players, qfalse, isBot, i, j ) );	// firstTime = qfalse
-				if ( denied ) {
+				player = svs.clients[i].localPlayers[j]; // may be NULL if game dropped player
+				if ( denied && player != NULL ) {
 					// this generally shouldn't happen, because the client
 					// was connected before the level change
 					SV_DropPlayer( player, denied );
