@@ -1452,10 +1452,11 @@ int BotAILoadMap( int restart ) {
 	if (!restart) {
 		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 		trap_BotLibLoadMap( mapname.string );
-		//initialize the items in the level
-		BotInitLevelItems();		//ai_goal.h
-		BotSetBrushModelTypes();	//ai_move.h
 	}
+
+	//initialize the items in the level
+	BotInitLevelItems();		//ai_goal.h
+	BotSetBrushModelTypes();	//ai_move.h
 
 	for (i = 0; i < MAX_CLIENTS; i++) {
 		if (botstates[i] && botstates[i]->inuse) {
@@ -1763,16 +1764,15 @@ int BotAISetup( int restart ) {
 	trap_Cvar_Register(&bot_interbreedcycle, "bot_interbreedcycle", "20", 0);
 	trap_Cvar_Register(&bot_interbreedwrite, "bot_interbreedwrite", "", 0);
 
-	//if the game is restarted for a tournament
-	if (restart) {
-		return qtrue;
+	//if the game isn't restarted for a tournament
+	if (!restart) {
+		//initialize the bot states
+		memset( botstates, 0, sizeof(botstates) );
+
+		errnum = BotInitLibrary();
+		if (errnum != BLERR_NOERROR) return qfalse;
 	}
 
-	//initialize the bot states
-	memset( botstates, 0, sizeof(botstates) );
-
-	errnum = BotInitLibrary();
-	if (errnum != BLERR_NOERROR) return qfalse;
 	errnum = EA_Setup();			//ai_ea.c
 	if (errnum != BLERR_NOERROR) return qfalse;
 	errnum = BotSetupWeaponAI();	//ai_weap.c
@@ -1805,14 +1805,16 @@ int BotAIShutdown( int restart ) {
 	}
 	else {
 		trap_BotLibShutdown();
-		//
-		BotShutdownMoveAI();		//ai_move.c
-		BotShutdownGoalAI();		//ai_goal.c
-		BotShutdownWeaponAI();		//ai_weap.c
-		BotShutdownWeights();		//ai_weight.c
-		//shut down bot elemantary actions
-		EA_Shutdown();
 	}
+
+	//
+	BotShutdownMoveAI();		//ai_move.c
+	BotShutdownGoalAI();		//ai_goal.c
+	BotShutdownWeaponAI();		//ai_weap.c
+	BotShutdownWeights();		//ai_weight.c
+	//shut down bot elemantary actions
+	EA_Shutdown();
+
 	return qtrue;
 }
 
