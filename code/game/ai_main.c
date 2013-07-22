@@ -1280,6 +1280,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	errnum = BotLoadItemWeights(bs->gs, filename);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeGoalState(bs->gs);
+		BotAI_Print(PRT_FATAL, "BotLoadItemWeights failed\n");
 		return qfalse;
 	}
 	//allocate a weapon state
@@ -1290,6 +1291,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	if (errnum != BLERR_NOERROR) {
 		BotFreeGoalState(bs->gs);
 		BotFreeWeaponState(bs->ws);
+		BotAI_Print(PRT_FATAL, "BotLoadWeaponWeights failed\n");
 		return qfalse;
 	}
 	//allocate a chat state
@@ -1302,6 +1304,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 		trap_BotFreeChatState(bs->cs);
 		BotFreeGoalState(bs->gs);
 		BotFreeWeaponState(bs->ws);
+		BotAI_Print(PRT_FATAL, "trap_BotLoadChatFile failed\n");
 		return qfalse;
 	}
 	//get the gender characteristic
