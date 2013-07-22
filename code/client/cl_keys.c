@@ -1382,6 +1382,9 @@ void CL_KeyDownEvent( int key, unsigned time, qboolean onlybinds )
 		return;
 	}
 
+	// send the bound action
+	CL_ParseBinding( key, qtrue, time );
+
 	// distribute the key down event to the apropriate handler
 	if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
 		if ( !onlybinds ) {
@@ -1404,9 +1407,6 @@ void CL_KeyDownEvent( int key, unsigned time, qboolean onlybinds )
 			Console_Key( key );
 		}
 	}
-
-	// send the bound action
-	CL_ParseBinding( key, qtrue, time );
 }
 
 /*
