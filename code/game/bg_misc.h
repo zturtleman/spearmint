@@ -140,6 +140,23 @@ extern const char *bg_displayGametypeNames[GT_MAX_GAME_TYPE];
 
 typedef enum { GENDER_MALE, GENDER_FEMALE, GENDER_NEUTER } gender_t;
 
+typedef enum {
+	TR_STATIONARY,
+	TR_INTERPOLATE,				// non-parametric, but interpolate between snapshots
+	TR_LINEAR,
+	TR_LINEAR_STOP,
+	TR_SINE,					// value = base + sin( time / duration ) * delta
+	TR_GRAVITY
+} trType_t;
+
+typedef struct {
+	trType_t	trType;
+	int		trTime;
+	int		trDuration;			// if non 0, trTime + trDuration = stop time
+	vec3_t	trBase;
+	vec3_t	trDelta;			// velocity, etc
+} trajectory_t;
+
 /*
 ===================================================================================
 
