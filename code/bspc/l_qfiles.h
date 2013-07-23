@@ -54,8 +54,8 @@ typedef struct quakefile_s
 	char origname[_MAX_PATH];
 	int zipfile;
 	int type;
-	int length;
-	unzFile zinfo;
+	unsigned long length;
+	unsigned long pos;
 	struct quakefile_s *next;
 } quakefile_t;
 

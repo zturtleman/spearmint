@@ -255,7 +255,7 @@ quakefile_t *FindQuakeFilesInZip(char *zipfile, char *filter)
 			strcpy(qf->filename, zipfile);
 			strcpy(qf->origname, filename_inzip);
 			qf->zipfile = true;
-			qf->zinfo = uf;
+			qf->pos = unzGetOffset(uf);
 			qf->length = file_info.uncompressed_size;
 			qf->type = QuakeFileType(filename_inzip);
 			//add the file ot the list
@@ -450,17 +450,17 @@ int LoadQuakeFile(quakefile_t *qf, void **bufferptr)
 	{
 		//open the zip file
 		zf = unzOpen(qf->pakfile);
-		//set the file pointer
-		qf->zinfo = zf;
+		//set the file position in the zip file (also sets the current file info)
+		unzSetOffset(zf, qf->pos);
 		//open the Quake file in the zip file
-		unzOpenCurrentFile(qf->zinfo);
+		unzOpenCurrentFile(zf);
 		//allocate memory for the buffer
 		length = qf->length;
 		buffer = GetMemory(length+1);
 		//read the Quake file from the zip file
-		length = unzReadCurrentFile(qf->zinfo, buffer, length);
+		length = unzReadCurrentFile(zf, buffer, length);
 		//close the Quake file in the zip file
-		unzCloseCurrentFile(qf->zinfo);
+		unzCloseCurrentFile(zf);
 		//close the zip file
 		unzClose(zf);
 
@@ -496,14 +496,14 @@ int ReadQuakeFile(quakefile_t *qf, void *buffer, int length)
 	{
 		//open the zip file
 		zf = unzOpen(qf->pakfile);
-		//set the file pointer
-		qf->zinfo = zf;
+		//set the file position in the zip file (also sets the current file info)
+		unzSetOffset(zf, qf->pos);
 		//open the Quake file in the zip file
-		unzOpenCurrentFile(qf->zinfo);
+		unzOpenCurrentFile(zf);
 		//read the Quake file from the zip file
-		length = unzReadCurrentFile(qf->zinfo, buffer, length);
+		length = unzReadCurrentFile(zf, buffer, length);
 		//close the Quake file in the zip file
-		unzCloseCurrentFile(qf->zinfo);
+		unzCloseCurrentFile(zf);
 		//close the zip file
 		unzClose(zf);
 
