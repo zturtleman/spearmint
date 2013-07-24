@@ -72,6 +72,14 @@ ifndef USE_LOCAL_HEADERS
 USE_LOCAL_HEADERS=1
 endif
 
+ifndef DEBUG_CFLAGS
+DEBUG_CFLAGS=-g -O0
+endif
+
+ifndef RELEASE_CFLAGS
+RELEASE_CFLAGS=-O3
+endif
+
 #############################################################################
 
 BD=$(BUILD_DIR)/bspc-debug-$(PLATFORM)-$(ARCH)
@@ -139,13 +147,7 @@ ifeq ($(PLATFORM),linux)
   endif
   endif
 
-  #use these cflags to optimize it
-  RELEASE_CFLAGS=$(BASE_CFLAGS) -O3 -ffast-math -funroll-loops \
-	-fomit-frame-pointer -falign-loops=2 \
-	-falign-jumps=2 -falign-functions=2
-
-  #use these when debugging
-  DEBUG_CFLAGS=$(BASE_CFLAGS) -g
+  CFLAGS = $(BASE_CFLAGS)
 
   LIBS=-lm -lpthread
 
