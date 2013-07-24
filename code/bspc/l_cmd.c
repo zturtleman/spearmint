@@ -411,7 +411,7 @@ void Q_mkdir (char *path)
 	if (_mkdir (path) != -1)
 		return;
 #else
-	if (mkdir (path, 0777) != -1)
+	if (mkdir (path, 0750) != -1)
 		return;
 #endif
 	if (errno != EEXIST)
