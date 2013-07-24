@@ -108,7 +108,7 @@ void AASOuputFile(quakefile_t *qf, char *outputpath, char *filename)
 	} //end if
 	//
 	ExtractFileExtension(qf->filename, ext);
-	if (!stricmp(ext, "pk3") || !stricmp(ext, "pak") || !stricmp(ext, "sin"))
+	if (!stricmp(ext, "pk3"))
 	{
 		strcpy(filename, qf->filename);
 		while(strlen(filename) &&
