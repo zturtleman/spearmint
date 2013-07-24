@@ -118,9 +118,9 @@ void AASOuputFile(quakefile_t *qf, char *outputpath, char *filename)
 			filename[strlen(filename)-1] = '\0';
 		} //end while
 		strcat(filename, "maps");
+		AppendPathSeperator(filename, MAX_PATH);
 		if (access(filename, 0x04)) CreatePath(filename);
 		//append the bsp file base
-		AppendPathSeperator(filename, MAX_PATH);
 		ExtractFileBase(qf->origname, &filename[strlen(filename)]);
 		//append .aas
 		strcat(filename, ".aas");
