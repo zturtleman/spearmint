@@ -434,7 +434,7 @@ void BotInitInfoEntities(void)
 				continue;
 			} //end if
 
-			cs = (campspot_t *) G_Alloc(sizeof(campspot_t));
+			cs = (campspot_t *) trap_Alloc(sizeof(campspot_t), NULL);
 			VectorCopy(origin, cs->origin);
 			trap_AAS_ValueForBSPEpairKey(ent, "message", cs->name, sizeof(cs->name));
 			trap_AAS_FloatForBSPEpairKey(ent, "range", &cs->range);

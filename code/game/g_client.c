@@ -1011,7 +1011,7 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int conn
 	// for statistics
 //	client->areabits = areabits;
 //	if ( !client->areabits )
-//		client->areabits = G_Alloc( (trap_AAS_PointReachabilityAreaIndex( NULL ) + 7) / 8 );
+//		client->areabits = trap_Alloc( (trap_AAS_PointReachabilityAreaIndex( NULL ) + 7) / 8, NULL );
 
 	return NULL;
 }

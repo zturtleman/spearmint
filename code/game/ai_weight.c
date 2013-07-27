@@ -221,7 +221,7 @@ fuzzyseperator_t *ReadFuzzySeperators_r(int source)
 		def = !strcmp(token.string, "default");
 		if (def || !strcmp(token.string, "case"))
 		{
-			fs = (fuzzyseperator_t *) G_Alloc(sizeof(fuzzyseperator_t));
+			fs = (fuzzyseperator_t *) trap_Alloc(sizeof(fuzzyseperator_t), NULL);
 			fs->index = index;
 			if (lastfs) lastfs->next = fs;
 			else firstfs = fs;
@@ -308,7 +308,7 @@ fuzzyseperator_t *ReadFuzzySeperators_r(int source)
 	if (!founddefault)
 	{
 		PC_SourceWarning(source, "switch without default");
-		fs = (fuzzyseperator_t *) G_Alloc(sizeof(fuzzyseperator_t));
+		fs = (fuzzyseperator_t *) trap_Alloc(sizeof(fuzzyseperator_t), NULL);
 		fs->index = index;
 		fs->value = MAX_INVENTORYVALUE;
 		fs->weight = 0;
@@ -380,7 +380,7 @@ weightconfig_t *ReadWeightConfig(char *filename)
 	}
 	else
 	{
-		config = (weightconfig_t *) G_Alloc(sizeof(weightconfig_t));
+		config = (weightconfig_t *) trap_Alloc(sizeof(weightconfig_t), NULL);
 	}
 	//
 	config->valid = qfalse;
@@ -446,7 +446,7 @@ weightconfig_t *ReadWeightConfig(char *filename)
 					trap_PC_FreeSource(source);
 					return NULL;
 				} //end if
-				fs = (fuzzyseperator_t *) G_Alloc(sizeof(fuzzyseperator_t));
+				fs = (fuzzyseperator_t *) trap_Alloc(sizeof(fuzzyseperator_t), NULL);
 				Com_Memcpy(fs, &fuzzy, sizeof (fuzzyseperator_t));
 				config->weights[config->numweights].firstseperator = fs;
 			} //end else if
