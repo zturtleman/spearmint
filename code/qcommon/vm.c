@@ -443,17 +443,21 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 		return NULL;
 	}
 
-	// round up to next power of 2 so all data operations can
-	// be mask protected
+	// find size of the data
 	dataLength = header.h->dataLength + header.h->litLength +
 		header.h->bssLength;
+
+	// the stack is implicitly at the end of the image
 	vm->dataAlloc = vm->dataLength = dataLength - PROGRAM_STACK_SIZE;
+
+	// reserve additional data for dynamic memory allocation via trap_Alloc
+	dataLength += vm_minQvmHunkKB->integer * 1024;
+
+	// round up to next power of 2 so all data operations can
+	// be mask protected, extra data is used for dynamic memory allocation
 	for ( i = 0 ; dataLength > ( 1 << i ) ; i++ ) {
 	}
 	dataLength = 1 << i;
-
-	while ( dataLength - PROGRAM_STACK_SIZE - vm->dataLength < vm_minQvmHunkKB->integer * 1024 )
-		dataLength <<= 1;
 
 	if(alloc)
 	{
