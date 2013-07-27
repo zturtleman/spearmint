@@ -1153,7 +1153,7 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	int			numInstances;
 	vec3_t		bounds[2];
 	vec3_t		boundsTranslated[2];
-	byte		color[4];
+	vec4_t		color;
 	float		scale;
 
 	// get fog volume
@@ -1199,8 +1199,6 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	verts += LittleLong(ds->firstVert);
 	for(i = 0; i < numVerts; i++)
 	{
-		vec4_t color;
-
 		for(j = 0; j < 3; j++)
 		{
 			cv->verts[i].xyz[j] = LittleFloat(verts[i].xyz[j]);
@@ -1218,6 +1216,7 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 			cv->verts[i].lightmap[j] = LittleFloat(verts[i].lightmap[j]);
 		}
 
+#if 0 // ZTM: foliage doesn't use cv->verts[].vertexColors, uses foliage instance color for all verts.
 		if (hdrVertColors)
 		{
 			color[0] = hdrVertColors[(ds->firstVert + i) * 3    ];
@@ -1243,6 +1242,7 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		color[3] = verts[i].color[3] / 255.0f;
 
 		R_ColorShiftLightingFloats( color, cv->verts[i].vertexColors, 1.0f / 255.0f );
+#endif
 	}
 
 	// copy triangles
@@ -1287,9 +1287,33 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		AddPointToBounds( boundsTranslated[ 1 ], bounds[ 0 ], bounds[ 1 ] );
 
 		// copy color
-		R_ColorShiftLightingBytes( verts[ i ].color, color );
-		for ( j = 0; j < 3; j++ )
-			cv->instances[ i ].color[ j ] = color[ j ] / 255.0f;
+		if (hdrVertColors)
+		{
+			color[0] = hdrVertColors[(ds->firstVert + numVerts + i) * 3    ];
+			color[1] = hdrVertColors[(ds->firstVert + numVerts + i) * 3 + 1];
+			color[2] = hdrVertColors[(ds->firstVert + numVerts + i) * 3 + 2];
+		}
+		else
+		{
+			//hack: convert LDR vertex colors to HDR
+			if (r_hdr->integer)
+			{
+				color[0] = verts[i].color[0] + 1.0f;
+				color[1] = verts[i].color[1] + 1.0f;
+				color[2] = verts[i].color[2] + 1.0f;
+			}
+			else
+			{
+				color[0] = verts[i].color[0];
+				color[1] = verts[i].color[1];
+				color[2] = verts[i].color[2];
+			}
+		}
+		color[3] = verts[i].color[3] / 255.0f;
+
+		R_ColorShiftLightingFloats( color, color, 1.0f / 255.0f );
+
+		VectorCopy( color, cv->instances[ i ].color );
 	}
 
 	// replace instance bounds with bounds of all foliage instances
