@@ -324,6 +324,10 @@ New cvars
                                       "if shaderlod 0.45" .. "endif"
                                        check if r_shaderlod > 0.45
 
+  g_playerCapsule                   - use capsule instead of box for player
+                                      collision. each player has it set at spawn
+                                      allowing mix of capsule and box in game
+
 
 New commands
   video [filename]        - start video capture (use with demo command)
