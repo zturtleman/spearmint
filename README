@@ -15,7 +15,6 @@ Some of the major Spearmint features currently implemented are:
   * Four player splitscreen, offline and in network games
   * Extended API for game, cgame, and ui, includes some of the features from
            RTCW, WolfET, Tremulous, and World of Padman
-  * Capsule collision support, enabled for players by default.
   * Modified pure pk3 system, see PAKSUMS wiki page
   * Improved game, cgame, and ui API version handling
   * Removed code not needed for standalone games
