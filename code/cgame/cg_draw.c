@@ -1431,6 +1431,8 @@ static void CG_DrawTeamInfo( void ) {
 	if (chatHeight <= 0)
 		return; // disabled
 
+	CG_SetScreenPlacement( PLACE_LEFT, PLACE_BOTTOM );
+
 	if (cgs.teamLastChatPos != cgs.teamChatPos) {
 		if (cg.time - cgs.teamChatMsgTimes[cgs.teamLastChatPos % chatHeight] > cg_teamChatTime.integer) {
 			cgs.teamLastChatPos++;
