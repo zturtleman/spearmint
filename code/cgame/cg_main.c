@@ -319,7 +319,7 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_thirdPerson[3], "4cg_thirdPerson", "0", 0, RANGE_BOOL },
 	{ &cg_splitviewVertical, "cg_splitviewVertical", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },
 	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #ifdef MISSIONPACK
