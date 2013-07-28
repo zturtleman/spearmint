@@ -549,8 +549,16 @@ void Field_KeyDownEvent( field_t *edit, int key ) {
 		case K_DEL:
 		case K_KP_DEL:
 			if ( edit->cursor < len ) {
-				memmove( edit->buffer + edit->cursor, 
+				memmove( edit->buffer + edit->cursor,
 					edit->buffer + edit->cursor + 1, len - edit->cursor );
+			}
+			break;
+
+		case K_BACKSPACE:
+			if ( edit->cursor > 0 ) {
+				memmove( edit->buffer + edit->cursor - 1,
+						edit->buffer + edit->cursor, len + 1 - edit->cursor );
+				edit->cursor--;
 			}
 			break;
 

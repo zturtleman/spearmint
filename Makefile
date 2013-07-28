@@ -273,7 +273,7 @@ Q3LCCETCDIR=$(MOUNT_DIR)/tools/lcc/etc
 Q3LCCSRCDIR=$(MOUNT_DIR)/tools/lcc/src
 LOKISETUPDIR=misc/setup
 NSISDIR=misc/nsis
-SDLHDIR=$(MOUNT_DIR)/SDL12
+SDLHDIR=$(MOUNT_DIR)/SDL2
 LIBSDIR=$(MOUNT_DIR)/libs
 VORBISDIR=$(MOUNT_DIR)/libvorbis
 
@@ -288,15 +288,15 @@ ifneq ($(BUILD_CLIENT),0)
     CURL_LIBS=$(shell pkg-config --silence-errors --libs libcurl)
     OPENAL_CFLAGS=$(shell pkg-config --silence-errors --cflags openal)
     OPENAL_LIBS=$(shell pkg-config --silence-errors --libs openal)
-    SDL_CFLAGS=$(shell pkg-config --silence-errors --cflags sdl|sed 's/-Dmain=SDL_main//')
-    SDL_LIBS=$(shell pkg-config --silence-errors --libs sdl)
+    SDL_CFLAGS=$(shell pkg-config --silence-errors --cflags sdl2|sed 's/-Dmain=SDL_main//')
+    SDL_LIBS=$(shell pkg-config --silence-errors --libs sdl2)
     FREETYPE_CFLAGS=$(shell pkg-config --silence-errors --cflags freetype2)
   endif
   # Use sdl-config if all else fails
   ifeq ($(SDL_CFLAGS),)
-    ifneq ($(call bin_path, sdl-config),)
-      SDL_CFLAGS=$(shell sdl-config --cflags)
-      SDL_LIBS=$(shell sdl-config --libs)
+    ifneq ($(call bin_path, sdl2-config),)
+      SDL_CFLAGS=$(shell sdl2-config --cflags)
+      SDL_LIBS=$(shell sdl2-config --libs)
     endif
   endif
 endif
@@ -645,24 +645,24 @@ ifeq ($(PLATFORM),mingw32)
 
   ifeq ($(USE_LOCAL_HEADERS),1)
     CLIENT_CFLAGS += -I$(SDLHDIR)/include
-    ifeq ($(ARCH),x86)
-    CLIENT_LIBS += $(LIBSDIR)/win32/libSDLmain.a \
-                      $(LIBSDIR)/win32/libSDL.dll.a
-    RENDERER_LIBS += $(LIBSDIR)/win32/libSDLmain.a \
-                      $(LIBSDIR)/win32/libSDL.dll.a
-    SDLDLL=SDL.dll
+    ifeq ($(ARCH), x86)
+    CLIENT_LIBS += $(LIBSDIR)/win32/libSDL2main.a \
+                      $(LIBSDIR)/win32/libSDL2.dll.a
+    RENDERER_LIBS += $(LIBSDIR)/win32/libSDL2main.a \
+                      $(LIBSDIR)/win32/libSDL2.dll.a
+    SDLDLL=libSDL2.dll
     else
-    CLIENT_LIBS += $(LIBSDIR)/win64/libSDLmain.a \
-                      $(LIBSDIR)/win64/libSDL64.dll.a
-    RENDERER_LIBS += $(LIBSDIR)/win64/libSDLmain.a \
-                      $(LIBSDIR)/win64/libSDL64.dll.a
-    SDLDLL=SDL64.dll
+    CLIENT_LIBS += $(LIBSDIR)/win64/libSDL2main.a \
+                      $(LIBSDIR)/win64/libSDL2.dll.a
+    RENDERER_LIBS += $(LIBSDIR)/win64/libSDL2main.a \
+                      $(LIBSDIR)/win64/libSDL2.dll.a
+    SDLDLL=libSDL2.dll
     endif
   else
     CLIENT_CFLAGS += $(SDL_CFLAGS)
     CLIENT_LIBS += $(SDL_LIBS)
     RENDERER_LIBS += $(SDL_LIBS)
-    SDLDLL=SDL.dll
+    SDLDLL=libSDL2.dll
   endif
 
 else # ifeq mingw32
