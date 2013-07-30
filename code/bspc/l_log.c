@@ -138,7 +138,7 @@ void Log_Print(char *fmt, ...)
 	char buf[2048];
 
 	va_start(ap, fmt);
-	vsprintf(buf, fmt, ap);
+	Q_vsnprintf(buf, sizeof (buf), fmt, ap);
 	va_end(ap);
 
 	if (verbose)
@@ -170,7 +170,7 @@ void Log_Write(char *fmt, ...)
 
 	if (!logfile.fp) return;
 	va_start(ap, fmt);
-	vsprintf(buf, fmt, ap);
+	Q_vsnprintf(buf, sizeof (buf), fmt, ap);
 	va_end(ap);
 	Log_UnifyEndOfLine(buf);
 	fprintf(logfile.fp, "%s", buf);

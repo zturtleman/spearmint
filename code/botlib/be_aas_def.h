@@ -82,8 +82,8 @@ typedef struct bsp_entdata_s
 //entity
 typedef struct aas_entity_s
 {
-	//entity info
-	aas_entityinfo_t i;
+	//entity updated this frame
+	qboolean valid;
 	//links into the AAS areas
 	aas_link_t *areas;
 	//links into the BSP leaves
@@ -112,6 +112,7 @@ typedef struct aas_settings_s
 	float phys_jumpvel;
 	float phys_falldelta5;
 	float phys_falldelta10;
+	float phys_strafejumping;
 	float rs_waterjump;
 	float rs_teleport;
 	float rs_barrierjump;

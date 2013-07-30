@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="q3_ui"
 	ProjectGUID="{D454C4C7-7765-4149-ABAD-05FDEB9D94F8}"
 	TargetFrameworkVersion="131072"
@@ -47,7 +47,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;UI_EXPORTS;_CRT_SECURE_NO_DEPRECATE;MISSIONPACK"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;UI;_CRT_SECURE_NO_DEPRECATE;MISSIONPACK"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
@@ -145,7 +145,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;Q3_UI_EXPORTS;_CRT_SECURE_NO_DEPRECATE;MISSIONPACK"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;UI;_CRT_SECURE_NO_DEPRECATE;MISSIONPACK"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -238,7 +238,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;Q3_UI_EXPORTS;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;UI;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -330,7 +330,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;UI_EXPORTS;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;UI;_CRT_SECURE_NO_DEPRECATE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
@@ -338,6 +338,7 @@
 				AssemblerListingLocation="$(IntDir)\"
 				ObjectFile="$(IntDir)\"
 				ProgramDataBaseFileName="$(IntDir)\"
+
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
@@ -412,7 +413,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -424,7 +425,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -433,7 +434,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -442,7 +443,53 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\cgame\cg_syscalls.c"
+				>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -498,7 +545,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -510,7 +557,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -519,7 +566,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -528,7 +575,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -544,7 +591,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -556,7 +603,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -565,7 +612,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -574,53 +621,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\code\q3_ui\ui_cdkey.c"
-				>
-				<FileConfiguration
-					Name="Debug TA|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release TA|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -636,7 +637,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -648,7 +649,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -657,7 +658,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -666,7 +667,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -682,7 +683,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -694,7 +695,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -703,7 +704,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -712,7 +713,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -728,7 +729,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -740,7 +741,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -749,7 +750,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -758,7 +759,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -774,7 +775,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -786,7 +787,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -795,7 +796,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -804,7 +805,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -820,7 +821,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -832,7 +833,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -841,7 +842,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -850,7 +851,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -866,7 +867,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -878,7 +879,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -887,7 +888,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -896,7 +897,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -912,7 +913,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -924,7 +925,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -933,7 +934,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -942,7 +943,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -958,7 +959,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -970,7 +971,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -979,7 +980,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -988,7 +989,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1004,7 +1005,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1016,7 +1017,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1025,7 +1026,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1034,7 +1035,99 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\q3_ui\ui_ingame_selectplayer.c"
+				>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\q3_ui\ui_joystick.c"
+				>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1050,7 +1143,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1062,7 +1155,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1072,7 +1165,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1082,7 +1175,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1098,7 +1191,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1110,7 +1203,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1119,7 +1212,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1128,7 +1221,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1144,7 +1237,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1156,7 +1249,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1165,7 +1258,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1174,7 +1267,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1190,7 +1283,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1202,7 +1295,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1211,7 +1304,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1220,7 +1313,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1236,7 +1329,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1248,7 +1341,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1257,7 +1350,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1266,7 +1359,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1282,7 +1375,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1294,7 +1387,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1303,7 +1396,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1312,7 +1405,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1328,7 +1421,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1340,7 +1433,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1349,7 +1442,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1358,7 +1451,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1374,7 +1467,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1386,7 +1479,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1395,7 +1488,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1404,7 +1497,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1420,7 +1513,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1432,7 +1525,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1441,7 +1534,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1450,7 +1543,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1466,7 +1559,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1478,7 +1571,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1487,7 +1580,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1496,7 +1589,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1512,7 +1605,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1524,7 +1617,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1533,7 +1626,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1542,7 +1635,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1558,7 +1651,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1570,7 +1663,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1579,7 +1672,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1588,7 +1681,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1604,7 +1697,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1616,7 +1709,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1625,7 +1718,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1634,7 +1727,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1650,7 +1743,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1662,7 +1755,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1672,7 +1765,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1682,7 +1775,53 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\q3_ui\ui_selectplayer.c"
+				>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1698,7 +1837,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1710,7 +1849,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1719,7 +1858,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1728,7 +1867,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1744,7 +1883,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1756,7 +1895,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1765,7 +1904,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1774,7 +1913,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1790,7 +1929,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1802,7 +1941,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1811,7 +1950,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1820,7 +1959,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1836,7 +1975,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1848,7 +1987,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1857,7 +1996,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1866,7 +2005,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1882,7 +2021,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1894,7 +2033,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1903,7 +2042,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1912,7 +2051,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1928,7 +2067,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1940,7 +2079,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1949,7 +2088,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1958,7 +2097,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1974,7 +2113,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -1986,7 +2125,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1995,7 +2134,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2004,7 +2143,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2020,7 +2159,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2032,7 +2171,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2041,7 +2180,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2050,7 +2189,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2066,7 +2205,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2078,7 +2217,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2087,7 +2226,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2096,7 +2235,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2112,7 +2251,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2124,7 +2263,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2133,7 +2272,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2142,7 +2281,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2158,7 +2297,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2170,7 +2309,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2179,7 +2318,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2188,53 +2327,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\code\ui\ui_syscalls.c"
-				>
-				<FileConfiguration
-					Name="Debug TA|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release TA|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2250,7 +2343,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2262,7 +2355,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2271,7 +2364,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2280,7 +2373,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2296,7 +2389,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2308,7 +2401,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2317,7 +2410,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2326,7 +2419,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2342,7 +2435,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>
@@ -2354,7 +2447,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2363,7 +2456,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;Q3_UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -2372,7 +2465,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI_EXPORTS;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;UI;"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"
 					/>

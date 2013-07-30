@@ -344,7 +344,6 @@ static void ResampleTexture( unsigned *in, int inwidth, int inheight, unsigned *
 	for (i=0 ; i<outheight ; i++, out += outwidth) {
 		inrow = in + inwidth*(int)((i+0.25)*inheight/outheight);
 		inrow2 = in + inwidth*(int)((i+0.75)*inheight/outheight);
-		frac = fracstep >> 1;
 		for (j=0 ; j<outwidth ; j++) {
 			pix1 = (byte *)inrow + p1[j];
 			pix2 = (byte *)inrow + p2[j];
@@ -1600,10 +1599,17 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 			text_p++;
 		}
 
-		if ( strstr( token, "tag_" ) ) {
+		if ( !Q_stricmpn( token, "tag_", 4 ) ) {
+			SkipRestOfLine( &text_p );
 			continue;
 		}
 		
+		// skip RTCW/ET skin settings
+		if ( !Q_stricmpn( token, "md3_", 4 ) || !Q_stricmp( token, "playerscale" ) ) {
+			SkipRestOfLine( &text_p );
+			continue;
+		}
+
 		// parse the shader name
 		token = COM_ParseExt2( &text_p, qfalse, ',' );
 		Q_strncpyz( shaderName, token, sizeof( shaderName ) );

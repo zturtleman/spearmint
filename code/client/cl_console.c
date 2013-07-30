@@ -60,6 +60,8 @@ typedef struct {
 console_t	con;
 
 cvar_t		*con_conspeed;
+cvar_t		*con_autoclear;
+cvar_t		*con_autochat;
 
 #define	DEFAULT_CONSOLE_WIDTH	78
 
@@ -75,7 +77,10 @@ void Con_ToggleConsole_f (void) {
 		return;
 	}
 
-	Field_Clear( &g_consoleField );
+	if ( con_autoclear->integer ) {
+		Field_Clear( &g_consoleField );
+	}
+
 	g_consoleField.widthInChars = g_console_field_width;
 
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_CONSOLE );
@@ -193,14 +198,14 @@ void Con_Dump_f (void)
 	Q_strncpyz( filename, Cmd_Argv( 1 ), sizeof( filename ) );
 	COM_DefaultExtension( filename, sizeof( filename ), ".txt" );
 
-	Com_Printf ("Dumped console text to %s.\n", filename );
-
 	f = FS_FOpenFileWrite( filename );
 	if (!f)
 	{
 		Com_Printf ("ERROR: couldn't open %s.\n", filename);
 		return;
 	}
+
+	Com_Printf ("Dumped console text to %s.\n", filename );
 
 	// skip empty lines
 	for (l = con.current - con.totallines + 1 ; l <= con.current ; l++)
@@ -344,6 +349,8 @@ void Con_Init (void) {
 	int		i;
 
 	con_conspeed = Cvar_Get ("scr_conspeed", "3", 0);
+	con_autoclear = Cvar_Get( "con_autoclear", "0", CVAR_ARCHIVE );
+	con_autochat = Cvar_Get( "con_autochat", "0", CVAR_ARCHIVE );
 
 	Field_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;

@@ -29,14 +29,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 // cmdlib.h
 
-#ifndef SIN
-#define SIN
-#endif //SIN
-
 #ifndef __CMDLIB__
 #define __CMDLIB__
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #pragma warning(disable : 4244)     // MIPS
 #pragma warning(disable : 4136)     // X86
 #pragma warning(disable : 4051)     // ALPHA
@@ -52,6 +48,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include <ctype.h>
 #include <time.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 #ifndef __BYTEBOOL__
 #define __BYTEBOOL__
@@ -88,8 +85,8 @@ char *ExpandPathAndArchive (char *path);
 
 double I_FloatTime (void);
 
-void Error(char *error, ...);
-void Warning(char *warning, ...);
+void Error(char *error, ...)  __attribute__ ((noreturn, format (printf, 1, 2)));
+void Warning(char *warning, ...) __attribute__ ((format (printf, 1, 2)));
 
 int		CheckParm (char *check);
 
@@ -121,14 +118,6 @@ int		LittleLong (int l);
 float	BigFloat (float l);
 float	LittleFloat (float l);
 
-#ifdef SIN
-unsigned short	BigUnsignedShort (unsigned short l);
-unsigned short	LittleUnsignedShort (unsigned short l);
-unsigned	      BigUnsigned (unsigned l);
-unsigned	      LittleUnsigned (unsigned l);
-#endif
-
-
 char *COM_Parse (char *data);
 
 extern	char		com_token[1024];
@@ -149,7 +138,7 @@ extern	char			archivedir[1024];
 
 
 extern	qboolean verbose;
-void qprintf (char *format, ...);
+void qprintf (char *format, ...) __attribute__ ((format (printf, 1, 2)));
 
 void ExpandWildcards (int *argc, char ***argv);
 

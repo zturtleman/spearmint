@@ -127,10 +127,6 @@ static int R_DlightSurface( msurface_t *surface, int dlightBits ) {
 	float radius;
 	srfGeneric_t    *gen;
 
-
-	// get generic surface
-	gen = (srfGeneric_t*) surface->data;
-
 	// ydnar: made surface dlighting generic, inline with q3map2 surface classification
 	switch ( (surfaceType_t) *surface->data )
 	{
@@ -140,9 +136,11 @@ static int R_DlightSurface( msurface_t *surface, int dlightBits ) {
 		break;
 
 	default:
-		gen->dlightBits = 0;
 		return 0;
 	}
+
+	// get generic surface
+	gen = (srfGeneric_t*) surface->data;
 
 	// debug code
 	//%	gen->dlightBits = dlightBits;
@@ -242,27 +240,15 @@ Return positive with /any part/ of the brush falling within a fog volume
 =================
 */
 int R_BmodelFogNum( trRefEntity_t *re, bmodel_t *bmodel ) {
-	int i, j;
-	fog_t *fog;
+	int i;
+	vec3_t mins, maxs;
 
-	for ( i = 1; i < tr.world->numfogs; i++ )
-	{
-		fog = &tr.world->fogs[ i ];
-		for ( j = 0; j < 3; j++ )
-		{
-			if ( re->e.origin[ j ] + bmodel->bounds[ 0 ][ j ] >= fog->bounds[ 1 ][ j ] ) {
-				break;
-			}
-			if ( re->e.origin[ j ] + bmodel->bounds[ 1 ][ j ] <= fog->bounds[ 0 ][ j ] ) {
-				break;
-			}
-		}
-		if ( j == 3 ) {
-			return i;
-		}
+	for ( i = 0; i < 3; i++ ) {
+		mins[ i ] = re->e.origin[ i ] + bmodel->bounds[ 0 ][ i ];
+		maxs[ i ] = re->e.origin[ i ] + bmodel->bounds[ 0 ][ i ];
 	}
 
-	return R_DefaultFogNum();
+	return R_BoundsFogNum( &tr.refdef, mins, maxs );
 }
 
 /*
@@ -338,27 +324,7 @@ Return positive with /any part/ of the leaf falling within a fog volume
 =================
 */
 int R_LeafFogNum( mnode_t *node ) {
-	int i, j;
-	fog_t *fog;
-
-	for ( i = 1; i < tr.world->numfogs; i++ )
-	{
-		fog = &tr.world->fogs[ i ];
-		for ( j = 0; j < 3; j++ )
-		{
-			if ( node->mins[ j ] >= fog->bounds[ 1 ][ j ] ) {
-				break;
-			}
-			if ( node->maxs[ j ] <= fog->bounds[ 0 ][ j ] ) {
-				break;
-			}
-		}
-		if ( j == 3 ) {
-			return i;
-		}
-	}
-
-	return R_DefaultFogNum();
+	return R_BoundsFogNum( &tr.refdef, node->mins, node->maxs );
 }
 
 /*
@@ -570,7 +536,7 @@ R_ClusterPVS
 ==============
 */
 static const byte *R_ClusterPVS (int cluster) {
-	if (!tr.world || !tr.world->vis || cluster < 0 || cluster >= tr.world->numClusters ) {
+	if (!tr.world->vis || cluster < 0 || cluster >= tr.world->numClusters ) {
 		return tr.world->novis;
 	}
 

@@ -422,7 +422,6 @@ int PC_ReadDefineParms(source_t *source, define_t *define, token_t **parms, int 
 				if (indent <= 0)
 				{
 					if (lastcomma) SourceWarning(source, "too many comma's");
-					lastcomma = 1;
 					break;
 				} //end if
 			} //end if
@@ -791,7 +790,7 @@ int PC_ExpandBuiltinDefine(source_t *source, token_t *deftoken, define_t *define
 int PC_ExpandDefine(source_t *source, token_t *deftoken, define_t *define,
 										token_t **firsttoken, token_t **lasttoken)
 {
-	token_t *parms[MAX_DEFINEPARMS], *dt, *pt, *t;
+	token_t *parms[MAX_DEFINEPARMS] = { NULL }, *dt, *pt, *t;
 	token_t *t1, *t2, *first, *last, *nextpt, token;
 	int parmnum, i;
 
@@ -1217,12 +1216,6 @@ int PC_Directive_define(source_t *source)
 		//unread the define name before executing the #undef directive
 		PC_UnreadSourceToken(source, &token);
 		if (!PC_Directive_undef(source)) return qfalse;
-		//if the define was not removed (define->flags & DEFINE_FIXED)
-#if DEFINEHASHING
-		define = PC_FindHashedDefine(source->definehash, token.string);
-#else
-		define = PC_FindDefine(source->defines, token.string);
-#endif //DEFINEHASHING
 	} //end if
 	//allocate define
 	define = (define_t *) GetMemory(sizeof(define_t));
@@ -2104,7 +2097,6 @@ int PC_EvaluateTokens(source_t *source, token_t *tokens, signed long int *intval
 			if (v->prev) v->prev->next = v->next;
 			else firstvalue = v->next;
 			if (v->next) v->next->prev = v->prev;
-			else lastvalue = v->prev;
 			//FreeMemory(v);
 			FreeValue(v);
 		} //end if
@@ -2112,7 +2104,6 @@ int PC_EvaluateTokens(source_t *source, token_t *tokens, signed long int *intval
 		if (o->prev) o->prev->next = o->next;
 		else firstoperator = o->next;
 		if (o->next) o->next->prev = o->prev;
-		else lastoperator = o->prev;
 		//FreeMemory(o);
 		FreeOperator(o);
 	} //end while
@@ -3129,7 +3120,7 @@ void FreeSource(source_t *source)
 
 source_t *sourceFiles[MAX_SOURCEFILES];
 
-int PC_LoadSourceHandle(const char *filename)
+int PC_LoadSourceHandle(const char *filename, const char *basepath)
 {
 	source_t *source;
 	int i;
@@ -3141,7 +3132,7 @@ int PC_LoadSourceHandle(const char *filename)
 	} //end for
 	if (i >= MAX_SOURCEFILES)
 		return 0;
-	PS_SetBaseFolder("");
+	PS_SetBaseFolder(basepath);
 	source = LoadSourceFile(filename);
 	if (!source)
 		return 0;
@@ -3189,6 +3180,8 @@ int PC_ReadTokenHandle(int handle, pc_token_t *pc_token)
 	pc_token->floatvalue = token.floatvalue;
 	if (pc_token->type == TT_STRING)
 		StripDoubleQuotes(pc_token->string);
+	if (pc_token->type == TT_LITERAL)
+		StripSingleQuotes(pc_token->string);
 	return ret;
 } //end of the function PC_ReadTokenHandle
 //============================================================================
@@ -3233,7 +3226,7 @@ int PC_SourceFileAndLine(int handle, char *filename, int *line)
 // Returns:				-
 // Changes Globals:		-
 //============================================================================
-void PC_SetBaseFolder(char *path)
+void PC_SetBaseFolder(const char *path)
 {
 	PS_SetBaseFolder(path);
 } //end of the function PC_SetBaseFolder

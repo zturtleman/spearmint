@@ -47,7 +47,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	GIB_HEALTH			-40
 #define	ARMOR_PROTECTION	0.66
 
+#define	MAX_LOCATIONS		64
 #define	MAX_ITEMS			256
+#define	MAX_MODELS			256		// these are sent over the net as 8 bits
+#define	MAX_SOUNDS			256		// so they cannot be blindly increased
 
 #define	RANK_TIED_FLAG		0x4000
 
@@ -66,6 +69,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	DEFAULT_VIEWHEIGHT	26
 #define CROUCH_VIEWHEIGHT	12
 #define	DEAD_VIEWHEIGHT		-16
+
+#define STEPSIZE			18
 
 //
 // config strings are a general means of communicating variable length strings
@@ -130,7 +135,27 @@ typedef enum {
 	GT_MAX_GAME_TYPE
 } gametype_t;
 
+extern const char *bg_netGametypeNames[GT_MAX_GAME_TYPE];
+extern const char *bg_displayGametypeNames[GT_MAX_GAME_TYPE];
+
 typedef enum { GENDER_MALE, GENDER_FEMALE, GENDER_NEUTER } gender_t;
+
+typedef enum {
+	TR_STATIONARY,
+	TR_INTERPOLATE,				// non-parametric, but interpolate between snapshots
+	TR_LINEAR,
+	TR_LINEAR_STOP,
+	TR_SINE,					// value = base + sin( time / duration ) * delta
+	TR_GRAVITY
+} trType_t;
+
+typedef struct {
+	trType_t	trType;
+	int		trTime;
+	int		trDuration;			// if non 0, trTime + trDuration = stop time
+	vec3_t	trBase;
+	vec3_t	trDelta;			// velocity, etc
+} trajectory_t;
 
 /*
 ===================================================================================
@@ -240,9 +265,6 @@ typedef struct playerState_s {
 
 	vec3_t		origin;
 
-	int			delta_angles[3];	// add to command angles to get view direction
-									// changed by spawns, rotating objects, and teleporters
-
 	qboolean	linked;			// set by server
 
 	int			clientNum;		// ranges from 0 to MAX_CLIENTS-1
@@ -271,7 +293,7 @@ typedef struct playerState_s {
 	int			weaponTime;
 	int			gravity;
 	int			speed;
-	//int			delta_angles[3];	// add to command angles to get view direction
+	int			delta_angles[3];	// add to command angles to get view direction
 									// changed by spawns, rotating objects, and teleporters
 
 	vec3_t		mins, maxs;		// bounding box size
@@ -983,15 +1005,11 @@ qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 // entityState_t->eType
 //
 typedef enum {
-	/* bg_public.h
-		ZTM: NOTE: Botlib expects these five in this order.
-	*/
 	ET_GENERAL,
 	ET_PLAYER,
 	ET_ITEM,
 	ET_MISSILE,
 	ET_MOVER,
-
 	ET_BEAM,
 	ET_PORTAL,
 	ET_SPEAKER,
@@ -1053,15 +1071,39 @@ void	BG_DecomposeUserCmdValue( int value, int *weapon );
 #define KAMI_BOOMSPHERE_MAXRADIUS		720
 #define KAMI_SHOCKWAVE2_MAXRADIUS		704
 
+
+// font rendering values used by ui and cgame
+
+#define PROP_GAP_WIDTH			3
+#define PROP_SPACE_WIDTH		8
+#define PROP_HEIGHT				27
+#define PROP_SMALL_SIZE_SCALE	0.75
+
+#define BLINK_DIVISOR			200
+#define PULSE_DIVISOR			75
+
+#define UI_LEFT			0x00000000	// default
+#define UI_CENTER		0x00000001
+#define UI_RIGHT		0x00000002
+#define UI_FORMATMASK	0x00000007
+#define UI_SMALLFONT	0x00000010
+#define UI_BIGFONT		0x00000020	// default
+#define UI_GIANTFONT	0x00000040
+#define UI_DROPSHADOW	0x00000800
+#define UI_BLINK		0x00001000
+#define UI_INVERSE		0x00002000
+#define UI_PULSE		0x00004000
+
+#if defined CGAME || defined UI
+void BG_RegisterClientCvars(int maxSplitview);
+#endif
+
+
 typedef struct
 {
   const char *name;
 } dummyCmd_t;
 int cmdcmp( const void *a, const void *b );
-
-#if defined CGAME || defined UI
-void BG_RegisterClientCvars(int maxSplitview);
-#endif
 
 //
 typedef struct
@@ -1101,6 +1143,47 @@ int BG_GetTracemapGroundFloor( void );
 int BG_GetTracemapGroundCeil( void );
 void etpro_FinalizeTracemapClamp( int *x, int *y );
 
+void PC_SourceWarning(int handle, char *format, ...) __attribute__ ((format (printf, 2, 3)));
+void PC_SourceError(int handle, char *format, ...) __attribute__ ((format (printf, 2, 3)));
+int PC_CheckTokenString(int handle, char *string);
+int PC_ExpectTokenString(int handle, char *string);
+int PC_ExpectTokenType(int handle, int type, int subtype, pc_token_t *token);
+int PC_ExpectAnyToken(int handle, pc_token_t *token);
+
+#define MAX_STRINGFIELD				80
+//field types
+#define FT_CHAR						1			// char
+#define FT_INT							2			// int
+#define FT_FLOAT						3			// float
+#define FT_STRING						4			// char [MAX_STRINGFIELD]
+#define FT_STRUCT						6			// struct (sub structure)
+//type only mask
+#define FT_TYPE						0x00FF	// only type, clear subtype
+//sub types
+#define FT_ARRAY						0x0100	// array of type
+#define FT_BOUNDED					0x0200	// bounded value
+#define FT_UNSIGNED					0x0400
+
+//structure field definition
+typedef struct fielddef_s
+{
+	char *name;										//name of the field
+	int offset;										//offset in the structure
+	int type;										//type of the field
+	//type specific fields
+	int maxarray;									//maximum array size
+	float floatmin, floatmax;					//float min and max
+	struct structdef_s *substruct;			//sub structure
+} fielddef_t;
+
+//structure definition
+typedef struct structdef_s
+{
+	int size;
+	fielddef_t *fields;
+} structdef_t;
+
+qboolean PC_ReadStructure(int source, structdef_t *def, void *structure);
 
 //
 // System calls shared by game, cgame, and ui.
@@ -1141,12 +1224,13 @@ float	trap_Cvar_VariableValue( const char *var_name );
 void	trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 void	trap_Cvar_LatchedVariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 void	trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize );
+void	trap_Cvar_CheckRange( const char *var_name, float min, float max, qboolean integral );
 
 // filesystem access
 // returns length of file
 int		trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
-void	trap_FS_Read( void *buffer, int len, fileHandle_t f );
-void	trap_FS_Write( const void *buffer, int len, fileHandle_t f );
+int		trap_FS_Read( void *buffer, int len, fileHandle_t f );
+int		trap_FS_Write( const void *buffer, int len, fileHandle_t f );
 int		trap_FS_Seek( fileHandle_t f, long offset, int origin ); // fsOrigin_t
 void	trap_FS_FCloseFile( fileHandle_t f );
 int		trap_FS_GetFileList( const char *path, const char *extension, char *listbuf, int bufsize );
@@ -1155,7 +1239,7 @@ int		trap_FS_Rename( const char *from, const char *to );
 
 int		trap_PC_AddGlobalDefine( char *define );
 void	trap_PC_RemoveAllGlobalDefines( void );
-int		trap_PC_LoadSource( const char *filename );
+int		trap_PC_LoadSource( const char *filename, const char *basepath );
 int		trap_PC_FreeSource( int handle );
 int		trap_PC_ReadToken( int handle, pc_token_t *pc_token );
 void	trap_PC_UnreadToken( int handle );

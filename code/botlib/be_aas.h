@@ -38,6 +38,8 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  *****************************************************************************/
 
+#define MAX_EPAIRKEY 128
+
 #ifndef MAX_STRINGFIELD
 #define MAX_STRINGFIELD				80
 #endif
@@ -126,34 +128,6 @@ typedef struct bsp_trace_s
 } bsp_trace_t;
 //
 */
-
-//entity info
-typedef struct aas_entityinfo_s
-{
-	int		valid;			// true if updated this frame
-	int		type;			// entity type
-	int		flags;			// entity flags
-	float	ltime;			// local time
-	float	update_time;	// time between last and current update
-	int		number;			// number of the entity
-	vec3_t	origin;			// origin of the entity
-	vec3_t	angles;			// angles of the model
-	vec3_t	old_origin;		// for lerping
-	vec3_t	lastvisorigin;	// last visible origin
-	vec3_t	mins;			// bounding box minimums
-	vec3_t	maxs;			// bounding box maximums
-	int		groundent;		// ground entity
-	int		solid;			// solid type
-	int		modelindex;		// model used
-	int		modelindex2;	// weapons, CTF flags, etc
-	int		frame;			// model frame number
-	int		event;			// impulse events -- muzzle flashes, footsteps, etc
-	int		eventParm;		// even parameter
-	int		powerups;		// bit flags
-	int		weapon;			// determines weapon and flash model, etc
-	int		legsAnim;		// mask off ANIM_TOGGLEBIT
-	int		torsoAnim;		// mask off ANIM_TOGGLEBIT
-} aas_entityinfo_t;
 
 // area info
 typedef struct aas_areainfo_s

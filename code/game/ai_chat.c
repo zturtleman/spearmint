@@ -41,19 +41,22 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
-#include "../botlib/be_ea.h"
 #include "../botlib/be_ai_char.h"
 #include "../botlib/be_ai_chat.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
-#include "../botlib/be_ai_weap.h"
+//
+#include "ai_ea.h"
+#include "ai_goal.h"
+#include "ai_move.h"
+#include "ai_weap.h"
 //
 #include "ai_main.h"
 #include "ai_dmq3.h"
 #include "ai_chat.h"
 #include "ai_cmd.h"
+#include "ai_vcmd.h"
 #include "ai_dmnet.h"
+#include "ai_team.h"
 //
 #include "chars.h"				//characteristics
 #include "inv.h"				//indexes into the inventory
@@ -497,7 +500,7 @@ int BotChat_StartLevel(bot_state_t *bs) {
 	//don't chat in teamplay
 	if (TeamPlayIsOn()) {
 #ifdef MISSIONPACK
-	    trap_EA_Command(bs->client, "vtaunt");
+	    EA_Command(bs->client, "vtaunt");
 #endif
 	    return qfalse;
 	}
@@ -533,7 +536,7 @@ int BotChat_EndLevel(bot_state_t *bs) {
 	{
 #ifdef MISSIONPACK
 		if (BotIsFirstInRankings(bs)) {
-			trap_EA_Command(bs->client, "vtaunt");
+			EA_Command(bs->client, "vtaunt");
 		}
 #endif
 		return qtrue;
@@ -613,7 +616,7 @@ int BotChat_Death(bot_state_t *bs) {
 		//teamplay
 		if (TeamPlayIsOn()) {
 #ifdef MISSIONPACK
-			trap_EA_Command(bs->client, "vtaunt");
+			EA_Command(bs->client, "vtaunt");
 #endif
 			return qtrue;
 		}
@@ -717,7 +720,7 @@ int BotChat_Kill(bot_state_t *bs) {
 		//don't chat in teamplay
 		if (TeamPlayIsOn()) {
 #ifdef MISSIONPACK
-			trap_EA_Command(bs->client, "vtaunt");
+			EA_Command(bs->client, "vtaunt");
 #endif
 			return qfalse;			// don't wait
 		}
@@ -942,7 +945,7 @@ int BotChat_Random(bot_state_t *bs) {
 	}
 	if (TeamPlayIsOn()) {
 #ifdef MISSIONPACK
-		trap_EA_Command(bs->client, "vtaunt");
+		EA_Command(bs->client, "vtaunt");
 #endif
 		return qfalse;			// don't wait
 	}

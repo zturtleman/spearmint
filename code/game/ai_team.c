@@ -41,23 +41,28 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
-#include "../botlib/be_ea.h"
 #include "../botlib/be_ai_char.h"
 #include "../botlib/be_ai_chat.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
-#include "../botlib/be_ai_weap.h"
+//
+#include "ai_ea.h"
+#include "ai_goal.h"
+#include "ai_move.h"
+#include "ai_weap.h"
+#include "ai_weight.h"
 //
 #include "ai_main.h"
 #include "ai_dmq3.h"
 #include "ai_chat.h"
 #include "ai_cmd.h"
+#include "ai_vcmd.h"
 #include "ai_dmnet.h"
 #include "ai_team.h"
-#include "ai_vcmd.h"
-
-#include "match.h"
+//
+#include "chars.h"				//characteristics
+#include "inv.h"				//indexes into the inventory
+#include "syn.h"				//synonyms
+#include "match.h"				//string matching types and vars
 
 // for the voice chats
 #include "../../ui/menudef.h"
@@ -304,10 +309,10 @@ void BotVoiceChat(bot_state_t *bs, int toclient, char *voicechat) {
 #ifdef MISSIONPACK
 	if (toclient == -1)
 		// voice only say team
-		trap_EA_Command(bs->client, va("vsay_team %s", voicechat));
+		EA_Command(bs->client, va("vsay_team %s", voicechat));
 	else
 		// voice only tell single player
-		trap_EA_Command(bs->client, va("vtell %d %s", toclient, voicechat));
+		EA_Command(bs->client, va("vtell %d %s", toclient, voicechat));
 #endif
 }
 
@@ -320,10 +325,10 @@ void BotVoiceChatOnly(bot_state_t *bs, int toclient, char *voicechat) {
 #ifdef MISSIONPACK
 	if (toclient == -1)
 		// voice only say team
-		trap_EA_Command(bs->client, va("vosay_team %s", voicechat));
+		EA_Command(bs->client, va("vosay_team %s", voicechat));
 	else
 		// voice only tell single player
-		trap_EA_Command(bs->client, va("votell %d %s", toclient, voicechat));
+		EA_Command(bs->client, va("votell %d %s", toclient, voicechat));
 #endif
 }
 

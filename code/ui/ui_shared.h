@@ -334,7 +334,7 @@ typedef struct {
   int (*textWidth) (const char *text, float scale, int limit);
   int (*textHeight) (const char *text, float scale, int limit);
   qhandle_t (*registerModel) (const char *p);
-  void (*modelBounds) (qhandle_t model, vec3_t min, vec3_t max);
+  int (*modelBounds) (qhandle_t model, vec3_t min, vec3_t max, int startFrame, int endFrame, float frac);
   void (*fillRect) ( float x, float y, float w, float h, const vec4_t color);
   void (*drawRect) ( float x, float y, float w, float h, float size, const vec4_t color);
   void (*drawSides) (float x, float y, float w, float h, float size);

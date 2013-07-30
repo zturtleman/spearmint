@@ -706,22 +706,13 @@ void WriteBrushMap(char *name, bspbrush_t *list)
 //===========================================================================
 qboolean BrushGE (bspbrush_t *b1, bspbrush_t *b2)
 {
-#ifdef ME
 	if (create_aas)
 	{
 		if (b1->original->expansionbbox != b2->original->expansionbbox)
 		{
 			return false;
 		} //end if
-		//never have something else bite a ladder brush
-		//never have a ladder brush bite something else
-		if ( (b1->original->contents & CONTENTS_LADDER)
-			&& !(b2->original->contents & CONTENTS_LADDER))
-		{ 
-			return false;
-		} //end if
 	} //end if
-#endif //ME
 	// detail brushes never bite structural brushes
 	if ( (b1->original->contents & CONTENTS_DETAIL) 
 		&& !(b2->original->contents & CONTENTS_DETAIL) )

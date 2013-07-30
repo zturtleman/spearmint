@@ -101,9 +101,9 @@ static void DriverInfo_MenuDraw( void )
 
 	Menu_Draw( &s_driverinfo.menu );
 
-	UI_DrawString( 320, 80, "VENDOR", UI_CENTER|UI_SMALLFONT, color_red );
-	UI_DrawString( 320, 152, "PIXELFORMAT", UI_CENTER|UI_SMALLFONT, color_red );
-	UI_DrawString( 320, 192, "EXTENSIONS", UI_CENTER|UI_SMALLFONT, color_red );
+	UI_DrawString( 320, 80, "VENDOR", UI_CENTER|UI_SMALLFONT, text_small_title_color );
+	UI_DrawString( 320, 152, "PIXELFORMAT", UI_CENTER|UI_SMALLFONT, text_small_title_color );
+	UI_DrawString( 320, 192, "EXTENSIONS", UI_CENTER|UI_SMALLFONT, text_small_title_color );
 
 	UI_DrawString( 320, 80+16, uis.glconfig.vendor_string, UI_CENTER|UI_SMALLFONT, text_color_normal );
 	UI_DrawString( 320, 96+16, uis.glconfig.version_string, UI_CENTER|UI_SMALLFONT, text_color_normal );
@@ -163,7 +163,7 @@ static void UI_DriverInfo_Menu( void )
 	s_driverinfo.banner.generic.x	  = 320;
 	s_driverinfo.banner.generic.y	  = 16;
 	s_driverinfo.banner.string		  = "DRIVER INFO";
-	s_driverinfo.banner.color	      = color_white;
+	s_driverinfo.banner.color	      = text_banner_color;
 	s_driverinfo.banner.style	      = UI_CENTER;
 
 	s_driverinfo.framel.generic.type  = MTYPE_BITMAP;
@@ -305,7 +305,7 @@ static graphicsoptions_t		s_graphicsoptions;
 static InitialVideoOptions_s s_ivo_templates[] =
 {
 	{
-		6, qtrue, 3, 0, 2, 2, 1, 0, qtrue
+		6, qtrue, 3, 0, 2, 2, 1, 0, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
 	},
 	{
 		4, qtrue, 2, 0, 2, 1, 1, 0, qtrue	// JDC: this was tq 3
@@ -358,7 +358,7 @@ static const char *knownRatios[ ][2] =
 #define MAX_RESOLUTIONS	32
 
 static const char* ratios[ MAX_RESOLUTIONS ];
-static char ratioBuf[ MAX_RESOLUTIONS ][ 8 ];
+static char ratioBuf[ MAX_RESOLUTIONS ][ 14 ];
 static int ratioToRes[ MAX_RESOLUTIONS ];
 static int resToRatio[ MAX_RESOLUTIONS ];
 
@@ -379,6 +379,10 @@ static int GraphicsOptions_FindBuiltinResolution( int mode )
 
 	if( !resolutionsDetected )
 		return mode;
+
+	// Display resolution
+	if( mode == 0 )
+		return -2;
 
 	if( mode < 0 )
 		return -1;
@@ -403,6 +407,10 @@ static int GraphicsOptions_FindDetectedResolution( int mode )
 
 	if( !resolutionsDetected )
 		return mode;
+
+	// Display resolution
+	if( mode == -2 )
+		return 0;
 
 	if( mode < 0 )
 		return -1;
@@ -433,11 +441,17 @@ static void GraphicsOptions_GetAspectRatios( void )
 		char str[ sizeof(ratioBuf[0]) ];
 
 		// calculate resolution's aspect ratio
-		x = strchr( resolutions[r], 'x' ) + 1;
-		Q_strncpyz( str, resolutions[r], x-resolutions[r] );
-		w = atoi( str );
-		h = atoi( x );
-		Com_sprintf( str, sizeof(str), "%.2f:1", (float)w / (float)h );
+		if (strchr(resolutions[r], '(')) {
+			w = uis.glconfig.displayWidth;
+			h = uis.glconfig.displayHeight;
+			Com_sprintf( str, sizeof(str), "Auto (%.2f:1)", (float)w / (float)h );
+		} else {
+			x = strchr( resolutions[r], 'x' ) + 1;
+			Q_strncpyz( str, resolutions[r], x-resolutions[r] );
+			w = atoi( str );
+			h = atoi( x );
+			Com_sprintf( str, sizeof(str), "%.2f:1", (float)w / (float)h );
+		}
 
 		// rename common ratios ("1.33:1" -> "4:3")
 		for( i = 0; knownRatios[i][0]; i++ ) {
@@ -497,6 +511,15 @@ static void GraphicsOptions_GetResolutions( void )
 	{
 		char* s = resbuf;
 		unsigned int i = 0;
+		static char displayRes[64];
+
+		// Add display resolution video mode
+		Com_sprintf(displayRes, sizeof(displayRes), "Auto (%dx%d)", uis.glconfig.displayWidth, uis.glconfig.displayHeight);
+		detectedResolutions[i++] = displayRes;
+
+		// Use display resolution in "Very High Quality" template
+		s_ivo_templates[0].mode = -2;
+
 		while( s && i < ARRAY_LEN(detectedResolutions)-1 )
 		{
 			detectedResolutions[i++] = s;
@@ -929,8 +952,8 @@ void GraphicsOptions_MenuInit( void )
 
 	static const char *lighting_names[] =
 	{
-		"Lightmap",
-		"Vertex",
+		"Lightmap (High)",
+		"Vertex (Low)",
 		NULL
 	};
 
@@ -972,7 +995,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.banner.generic.x	   = 320;
 	s_graphicsoptions.banner.generic.y	   = 16;
 	s_graphicsoptions.banner.string  	   = "SYSTEM SETUP";
-	s_graphicsoptions.banner.color         = color_white;
+	s_graphicsoptions.banner.color         = text_banner_color;
 	s_graphicsoptions.banner.style         = UI_CENTER;
 
 	s_graphicsoptions.framel.generic.type  = MTYPE_BITMAP;
@@ -999,7 +1022,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.graphics.generic.y		= 240 - 2 * PROP_HEIGHT;
 	s_graphicsoptions.graphics.string			= "GRAPHICS";
 	s_graphicsoptions.graphics.style			= UI_RIGHT;
-	s_graphicsoptions.graphics.color			= color_red;
+	s_graphicsoptions.graphics.color			= text_big_color;
 
 	s_graphicsoptions.display.generic.type		= MTYPE_PTEXT;
 	s_graphicsoptions.display.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -1009,7 +1032,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.display.generic.y			= 240 - PROP_HEIGHT;
 	s_graphicsoptions.display.string			= "DISPLAY";
 	s_graphicsoptions.display.style				= UI_RIGHT;
-	s_graphicsoptions.display.color				= color_red;
+	s_graphicsoptions.display.color				= text_big_color;
 
 	s_graphicsoptions.sound.generic.type		= MTYPE_PTEXT;
 	s_graphicsoptions.sound.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -1019,7 +1042,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.sound.generic.y			= 240;
 	s_graphicsoptions.sound.string				= "SOUND";
 	s_graphicsoptions.sound.style				= UI_RIGHT;
-	s_graphicsoptions.sound.color				= color_red;
+	s_graphicsoptions.sound.color				= text_big_color;
 
 	s_graphicsoptions.network.generic.type		= MTYPE_PTEXT;
 	s_graphicsoptions.network.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -1029,7 +1052,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.network.generic.y			= 240 + PROP_HEIGHT;
 	s_graphicsoptions.network.string			= "NETWORK";
 	s_graphicsoptions.network.style				= UI_RIGHT;
-	s_graphicsoptions.network.color				= color_red;
+	s_graphicsoptions.network.color				= text_big_color;
 
 	y = 240 - 7 * (BIGCHAR_HEIGHT + 2);
 	s_graphicsoptions.list.generic.type     = MTYPE_SPINCONTROL;
@@ -1145,7 +1168,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.driverinfo.generic.y        = y;
 	s_graphicsoptions.driverinfo.string           = "Driver Info";
 	s_graphicsoptions.driverinfo.style            = UI_CENTER|UI_SMALLFONT;
-	s_graphicsoptions.driverinfo.color            = color_red;
+	s_graphicsoptions.driverinfo.color            = text_big_color;
 	y += BIGCHAR_HEIGHT+2;
 
 	s_graphicsoptions.back.generic.type	    = MTYPE_BITMAP;

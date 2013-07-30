@@ -69,7 +69,6 @@ typedef struct foundfile_s
 	char filename[MAX_PATH];		//screw LCC, array must be at end of struct
 } foundfile_t;
 
-void Vector2Angles(vec3_t value1, vec3_t angles);
 //set the correct path seperators
 void ConvertPath(char *path);
 //append a path seperator to the given path not exceeding the length

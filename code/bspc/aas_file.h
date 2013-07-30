@@ -29,5 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 
 qboolean AAS_WriteAASFile(char *filename);
-qboolean AAS_LoadAASFile(char *filename, int fpoffset, int fplength);
+qboolean AAS_LoadAASFile(char *filename);
+
+void AAS_ShowTotals(void);
 

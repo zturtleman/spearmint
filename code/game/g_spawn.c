@@ -325,7 +325,7 @@ char *G_NewString( const char *string ) {
 	
 	l = strlen(string) + 1;
 
-	newb = G_Alloc( l );
+	newb = trap_Alloc( l, NULL );
 
 	new_p = newb;
 
@@ -582,7 +582,7 @@ void SP_worldspawn( void ) {
 	// see if we want a warmup time
 	trap_SetConfigstring( CS_WARMUP, "" );
 	if ( g_restarted.integer ) {
-		trap_Cvar_Set( "g_restarted", "0" );
+		trap_Cvar_SetValue( "g_restarted", 0 );
 		level.warmupTime = 0;
 	} else if ( g_doWarmup.integer ) { // Turn it on
 		level.warmupTime = -1;

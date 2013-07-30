@@ -107,7 +107,7 @@ int G_ParseInfos( char *buf, int max, char *infos[] ) {
 			Info_SetValueForKey( info, key, token );
 		}
 		//NOTE: extra space for arena number
-		infos[count] = G_Alloc(strlen(info) + strlen("\\num\\") + strlen(va("%d", MAX_ARENAS)) + 1);
+		infos[count] = trap_Alloc(strlen(info) + strlen("\\num\\") + strlen(va("%d", MAX_ARENAS)) + 1, NULL);
 		if (infos[count]) {
 			strcpy(infos[count], info);
 			count++;
@@ -882,12 +882,12 @@ static void G_SpawnBots( char *botList, int baseDelay ) {
 
 	skill = trap_Cvar_VariableValue( "g_spSkill" );
 	if( skill < 1 ) {
-		trap_Cvar_Set( "g_spSkill", "1" );
 		skill = 1;
+		trap_Cvar_SetValue( "g_spSkill", skill );
 	}
 	else if ( skill > 5 ) {
-		trap_Cvar_Set( "g_spSkill", "5" );
 		skill = 5;
+		trap_Cvar_SetValue( "g_spSkill", skill );
 	}
 
 	Q_strncpyz( bots, botList, sizeof(bots) );
@@ -1052,27 +1052,15 @@ void G_InitBots( qboolean restart ) {
 			return;
 		}
 
-		strValue = Info_ValueForKey( arenainfo, "fraglimit" );
-		fragLimit = atoi( strValue );
-		if ( fragLimit ) {
-			trap_Cvar_Set( "fraglimit", strValue );
-		}
-		else {
-			trap_Cvar_Set( "fraglimit", "0" );
-		}
-
-		strValue = Info_ValueForKey( arenainfo, "timelimit" );
-		timeLimit = atoi( strValue );
-		if ( timeLimit ) {
-			trap_Cvar_Set( "timelimit", strValue );
-		}
-		else {
-			trap_Cvar_Set( "timelimit", "0" );
-		}
+		fragLimit = atoi( Info_ValueForKey( arenainfo, "fraglimit" ) );
+		timeLimit = atoi( Info_ValueForKey( arenainfo, "timelimit" ) );
 
 		if ( !fragLimit && !timeLimit ) {
-			trap_Cvar_Set( "fraglimit", "10" );
-			trap_Cvar_Set( "timelimit", "0" );
+			trap_Cvar_SetValue( "fraglimit", 10 );
+			trap_Cvar_SetValue( "timelimit", 0 );
+		} else {
+			trap_Cvar_SetValue( "fraglimit", fragLimit );
+			trap_Cvar_SetValue( "timelimit", timeLimit );
 		}
 
 		basedelay = BOT_BEGIN_DELAY_BASE;

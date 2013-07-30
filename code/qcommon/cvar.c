@@ -362,6 +362,18 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 	{
 		var_value = Cvar_Validate(var, var_value, qfalse);
 
+		// Make sure the game code cannot mark engine-added variables as gamecode vars
+		if(var->flags & CVAR_VM_CREATED)
+		{
+			if(!(flags & CVAR_VM_CREATED))
+				var->flags &= ~CVAR_VM_CREATED;
+		}
+		else if (!(var->flags & CVAR_USER_CREATED))
+		{
+			if(flags & CVAR_VM_CREATED)
+				flags &= ~CVAR_VM_CREATED;
+		}
+
 		// if the C code is now specifying a variable that the user already
 		// set a value for, take the new value as the reset value
 		if(var->flags & CVAR_USER_CREATED)
@@ -381,19 +393,6 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 				var->latchedString = CopyString(var_value);
 			}
 		}
-		
-		// Make sure the game code cannot mark engine-added variables as gamecode vars
-		if(var->flags & CVAR_VM_CREATED)
-		{
-			if(!(flags & CVAR_VM_CREATED))
-				var->flags &= ~CVAR_VM_CREATED;
-		}
-		else
-		{
-			if(flags & CVAR_VM_CREATED)
-				flags &= ~CVAR_VM_CREATED;
-		}
-		
 		// Make sure servers cannot mark engine-added variables as SERVER_CREATED
 		if(var->flags & CVAR_SERVER_CREATED)
 		{
@@ -672,6 +671,7 @@ void Cvar_SetSafe( const char *var_name, const char *value )
 				"modify \"%s\"", var_name );
 		return;
 	}
+
 	Cvar_Set( var_name, value );
 }
 
@@ -1251,6 +1251,38 @@ Cvar_CheckRange
 */
 void Cvar_CheckRange( cvar_t *var, float min, float max, qboolean integral )
 {
+	var->validate = qtrue;
+	var->min = min;
+	var->max = max;
+	var->integral = integral;
+
+	// Force an initial range check
+	Cvar_Set( var->name, var->string );
+}
+
+/*
+=====================
+Cvar_CheckRangeSafe
+
+basically a slightly modified Cvar_CheckRange for the interpreted modules
+=====================
+*/
+void Cvar_CheckRangeSafe( const char *varName, float min, float max, qboolean integral )
+{
+	cvar_t *var;
+
+	var = Cvar_FindVar (varName);
+
+	if ( !var ) {
+		Com_Printf( "A VM tried to add range check to unregistered cvar %s\n", varName );
+		return;
+	}
+
+	if ( !( var->flags & ( CVAR_VM_CREATED | CVAR_USER_CREATED ) ) ) {
+		Com_Printf( "A VM tried to add range check to engine cvar %s\n", varName );
+		return;
+	}
+
 	var->validate = qtrue;
 	var->min = min;
 	var->max = max;

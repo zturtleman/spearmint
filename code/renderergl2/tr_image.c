@@ -334,7 +334,6 @@ static void ResampleTexture( byte *in, int inwidth, int inheight, byte *out,
 	for (i=0 ; i<outheight ; i++) {
 		inrow = in + 4*inwidth*(int)((i+0.25)*inheight/outheight);
 		inrow2 = in + 4*inwidth*(int)((i+0.75)*inheight/outheight);
-		frac = fracstep >> 1;
 		for (j=0 ; j<outwidth ; j++) {
 			pix1 = inrow + p1[j];
 			pix2 = inrow + p2[j];
@@ -965,7 +964,7 @@ static void DoLinear(byte *in, byte *out, int width, int height)
 
 	for (y = 1; y < height - 1; y += 2)
 	{
-		byte sd[4], se[4], sh[4], si[4];
+		byte sd[4] = {0}, se[4] = {0}, sh[4] = {0}, si[4] = {0};
 		byte *line2, *line3;
 
 		x = 1;
@@ -1580,8 +1579,8 @@ static void RawImage_ScaleToPower2( byte **data, int *inout_width, int *inout_he
 {
 	int width =         *inout_width;
 	int height =        *inout_height;
-	int scaled_width =  *inout_scaled_width;
-	int scaled_height = *inout_scaled_height;
+	int scaled_width;
+	int scaled_height;
 	qboolean picmip = flags & IMGFLAG_PICMIP;
 	qboolean mipmap = flags & IMGFLAG_MIPMAP;
 	qboolean clampToEdge = flags & IMGFLAG_CLAMPTOEDGE;
@@ -1777,7 +1776,6 @@ static GLenum RawImage_GetFormat(const byte *data, int numPixels, qboolean light
 	}
 	else if(lightMap)
 	{
-		samples = 4;
 		if(r_greyscale->integer)
 			internalFormat = GL_LUMINANCE;
 		else
@@ -2553,6 +2551,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	int		width, height;
 	byte	*pic;
 	long	hash;
+	int		textureInternalFormat = 0;
 
 	if (!name) {
 		return NULL;
@@ -2583,7 +2582,25 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		return NULL;
 	}
 
-	if (r_normalMapping->integer && !(type == IMGTYPE_NORMAL) && (flags & IMGFLAG_PICMIP) && (flags & IMGFLAG_MIPMAP) && (flags & IMGFLAG_GENNORMALMAP))
+	// apply lightmap coloring
+	if ( flags & IMGFLAG_LIGHTMAP ) {
+		byte *newPic;
+
+		if (r_hdr->integer && glRefConfig.textureFloat && glRefConfig.halfFloatPixel) {
+			textureInternalFormat = GL_RGBA16F_ARB;
+			newPic = ri.Malloc( width * height * 4 * 2 );
+		} else {
+			newPic = pic;
+		}
+
+		R_ProcessLightmap( &pic, 4, width, height, &newPic, qfalse );
+
+		if ( newPic != pic ) {
+			ri.Free( pic );
+			pic = newPic;
+		}
+	}
+	else if (r_normalMapping->integer && !(type == IMGTYPE_NORMAL) && (flags & IMGFLAG_PICMIP) && (flags & IMGFLAG_MIPMAP) && (flags & IMGFLAG_GENNORMALMAP))
 	{
 		char normalName[MAX_QPATH];
 		image_t *normalImage;
@@ -2630,7 +2647,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		}
 	}
 
-	image = R_CreateImage( ( char * ) name, pic, width, height, type, flags, 0 );
+	image = R_CreateImage( ( char * ) name, pic, width, height, type, flags, textureInternalFormat );
 	ri.Free( pic );
 	return image;
 }
@@ -3246,10 +3263,17 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 			text_p++;
 		}
 
-		if ( strstr( token, "tag_" ) ) {
+		if ( !Q_stricmpn( token, "tag_", 4 ) ) {
+			SkipRestOfLine( &text_p );
 			continue;
 		}
 		
+		// skip RTCW/ET skin settings
+		if ( !Q_stricmpn( token, "md3_", 4 ) || !Q_stricmp( token, "playerscale" ) ) {
+			SkipRestOfLine( &text_p );
+			continue;
+		}
+
 		// parse the shader name
 		token = COM_ParseExt2( &text_p, qfalse, ',' );
 		Q_strncpyz( shaderName, token, sizeof( shaderName ) );

@@ -62,7 +62,6 @@ int				entity_num;
 aas_settings_t	aassettings;
 
 qboolean	noprune;			//don't prune nodes (bspc.c)
-qboolean	glview;				//create a gl view
 qboolean	nodetail;			//don't use detail brushes (map.c)
 qboolean	fulldetail;			//use but don't mark detail brushes (map.c)
 qboolean	onlyents;			//only process the entities (bspc.c)
@@ -86,241 +85,6 @@ qboolean	forcesidesvisible;	//force all brush sides to be visible when loaded fr
 qboolean	capsule_collision = 0;
 
 
-/*
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void ProcessWorldModel (void)
-{
-	entity_t	*e;
-	tree_t *tree;
-	qboolean	leaked;
-	int brush_start, brush_end;
-
-	e = &entities[entity_num];
-
-	brush_start = e->firstbrush;
-	brush_end = brush_start + e->numbrushes;
-	leaked = false;
-
-	//process the whole world in one time
-	tree = ProcessWorldBrushes(brush_start, brush_end);
-	//create the bsp tree portals
-	MakeTreePortals(tree);
-	//mark all leafs that can be reached by entities
-	if (FloodEntities(tree))
-	{
-		FillOutside(tree->headnode);
-	} //end if
-	else
-	{
-		Log_Print("**** leaked ****\n");
-		leaked = true;
-		LeakFile(tree);
-		if (leaktest)
-		{
-			Log_Print("--- MAP LEAKED ---\n");
-			exit(0);
-		} //end if
-	} //end else
-
-	MarkVisibleSides (tree, brush_start, brush_end);
-
-	FloodAreas (tree);
-
-#ifndef ME
-	if (glview) WriteGLView(tree, source);
-#endif
-	MakeFaces(tree->headnode);
-	FixTjuncs(tree->headnode);
-
-	//NOTE: Never prune the nodes because the portals
-	//		are screwed when prunning is done and as
-	//		a result portal writing will crash
-	//if (!noprune) PruneNodes(tree->headnode);
-
-	WriteBSP(tree->headnode);
-
-	if (!leaked) WritePortalFile(tree);
-
-	Tree_Free(tree);
-} //end of the function ProcessWorldModel
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void ProcessSubModel (void)
-{
-	entity_t	*e;
-	int start, end;
-	tree_t *tree;
-	bspbrush_t *list;
-	vec3_t mins, maxs;
-
-	e = &entities[entity_num];
-
-	start = e->firstbrush;
-	end = start + e->numbrushes;
-
-	mins[0] = mins[1] = mins[2] = -4096;
-	maxs[0] = maxs[1] = maxs[2] = 4096;
-	list = MakeBspBrushList(start, end, mins, maxs);
-	if (!nocsg) list = ChopBrushes (list);
-	tree = BrushBSP (list, mins, maxs);
-	MakeTreePortals (tree);
-	MarkVisibleSides (tree, start, end);
-	MakeFaces (tree->headnode);
-	FixTjuncs (tree->headnode);
-	WriteBSP (tree->headnode);
-	Tree_Free(tree);
-} //end of the function ProcessSubModel
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void ProcessModels (void)
-{
-	BeginBSPFile();
-
-	for (entity_num = 0; entity_num < num_entities; entity_num++)
-	{
-		if (!entities[entity_num].numbrushes)
-			continue;
-
-		Log_Print("############### model %i ###############\n", nummodels);
-		BeginModel();
-		if (entity_num == 0) ProcessWorldModel();
-		else ProcessSubModel();
-		EndModel();
-
-		if (!verboseentities)
-			verbose = false;	// don't bother printing submodels
-	} //end for
-	EndBSPFile();
-} //end of the function ProcessModels
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void Win_Map2Bsp(char *bspfilename)
-{
-	double start, end;
-	char path[1024];
-
-	start = I_FloatTime();
-
-	ThreadSetDefault();
-	//yeah sure Carmack
-	//numthreads = 1;		// multiple threads aren't helping...
-
-	strcpy(source, ExpandArg(bspfilename));
-	StripExtension(source);
-
-	//delete portal and line files
-	sprintf(path, "%s.prt", source);
-	remove(path);
-	sprintf(path, "%s.lin", source);
-	remove(path);
-
-	strcpy(name, ExpandArg(bspfilename));
-	DefaultExtension(name, ".map");	// might be .reg
-
-	Q2_AllocMaxBSP();
-	//
-	SetModelNumbers();
-	SetLightStyles();
-	ProcessModels();
-	//write the BSP
-	Q2_WriteBSPFile(bspfilename);
-
-	Q2_FreeMaxBSP();
-
-	end = I_FloatTime();
-	Log_Print("%5.0f seconds elapsed\n", end-start);
-} //end of the function Win_Map2Bsp
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void Map2Bsp(char *mapfilename, char *outputfilename)
-{
-	double start, end;
-	char path[1024];
-
-	start = I_FloatTime ();
-
-	ThreadSetDefault ();
-	//yeah sure Carmack
-	//numthreads = 1;		//multiple threads aren't helping...
-	//SetQdirFromPath(bspfilename);
-
-	strcpy(source, ExpandArg(mapfilename));
-	StripExtension(source);
-
-	// delete portal and line files
-	sprintf(path, "%s.prt", source);
-	remove(path);
-	sprintf(path, "%s.lin", source);
-	remove(path);
-
-	strcpy(name, ExpandArg(mapfilename));
-	DefaultExtension(name, ".map");	// might be .reg
-
-	//
-	// if onlyents, just grab the entites and resave
-	//
-	if (onlyents)
-	{
-		char out[1024];
-
-		Q2_AllocMaxBSP();
-		sprintf (out, "%s.bsp", source);
-		Q2_LoadBSPFile(out, 0, 0);
-		num_entities = 0;
-
-		Q2_LoadMapFile(name);
-		SetModelNumbers();
-		SetLightStyles();
-
-		Q2_UnparseEntities();
-
-		Q2_WriteBSPFile(out);
-		//
-		Q2_FreeMaxBSP();
-	} //end if
-	else
-	{
-		//
-		// start from scratch
-		//
-		Q2_AllocMaxBSP();
-		//load the map
-		Q2_LoadMapFile(name);
-		//create the .bsp file
-		SetModelNumbers();
-		SetLightStyles();
-		ProcessModels();
-		//write the BSP
-		Q2_WriteBSPFile(outputfilename);
-		//
-		Q2_FreeMaxBSP();
-	} //end else
-
-	end = I_FloatTime();
-	Log_Print("%5.0f seconds elapsed\n", end-start);
-} //end of the function Map2Bsp
-*/
 //===========================================================================
 //
 // Parameter:			-
@@ -344,7 +108,7 @@ void AASOuputFile(quakefile_t *qf, char *outputpath, char *filename)
 	} //end if
 	//
 	ExtractFileExtension(qf->filename, ext);
-	if (!stricmp(ext, "pk3") || !stricmp(ext, "pak") || !stricmp(ext, "sin"))
+	if (!stricmp(ext, "pk3"))
 	{
 		strcpy(filename, qf->filename);
 		while(strlen(filename) &&
@@ -354,9 +118,9 @@ void AASOuputFile(quakefile_t *qf, char *outputpath, char *filename)
 			filename[strlen(filename)-1] = '\0';
 		} //end while
 		strcat(filename, "maps");
+		AppendPathSeperator(filename, MAX_PATH);
 		if (access(filename, 0x04)) CreatePath(filename);
 		//append the bsp file base
-		AppendPathSeperator(filename, MAX_PATH);
 		ExtractFileBase(qf->origname, &filename[strlen(filename)]);
 		//append .aas
 		strcat(filename, ".aas");
@@ -515,7 +279,7 @@ int main (int argc, char **argv)
 	int i, comp = 0;
 	char outputpath[MAX_PATH] = "";
 	char filename[MAX_PATH] = "unknown";
-	quakefile_t *qfiles, *qf;
+	quakefile_t *qfiles = NULL, *qf;
 	double start_time;
 
 	myargc = argc;
@@ -524,13 +288,11 @@ int main (int argc, char **argv)
 	start_time = I_FloatTime();
 
 	Log_Open("bspc.log");		//open a log file
-	Log_Print("BSPC version "BSPC_VERSION", %s %s\n", __DATE__, __TIME__);
+	Log_Print(BSPC_NAME" version "BSPC_VERSION", %s %s\n", __DATE__, __TIME__);
 
-#ifdef TURTLEARENA
+#ifdef ZTMAUTOARGS
 	calcgrapplereach = true;
-	forcesidesvisible = true; // Currently always required. So always enable.
-	Log_Print("grapplereach = true\n");
-	Log_Print("forcesidesvisible = true\n");
+	forcesidesvisible = true; // Currently always required or BSPC fails?
 #endif
 	DefaultCfg();
 	for (i = 1; i < argc; i++)
@@ -557,15 +319,6 @@ int main (int argc, char **argv)
 			optimize = true;
 		} //end else if
 		/*
-		else if (!stricmp(argv[i],"-glview"))
-		{
-			glview = true;
-		} //end else if
-		else if (!stricmp(argv[i], "-draw"))
-		{
-			Log_Print("drawflag = true\n");
-			drawflag = true;
-		} //end else if
 		else if (!stricmp(argv[i], "-noweld"))
 		{
 			Log_Print("noweld = true\n");
@@ -644,7 +397,6 @@ int main (int argc, char **argv)
 			Log_Print("temp output\n");
 		} //end else if
 		*/
-#ifdef ME
 		else if (!stricmp(argv[i], "-freetree"))
 		{
 			freetree = true;
@@ -655,7 +407,7 @@ int main (int argc, char **argv)
 			calcgrapplereach = true;
 			Log_Print("grapplereach = true\n");
 		} //end else if
-#ifdef TURTLEARENA
+#ifdef ZTMAUTOARGS
 		else if (!stricmp(argv[i], "-nograpplereach"))
 		{
 			calcgrapplereach = false;
@@ -677,7 +429,7 @@ int main (int argc, char **argv)
 			forcesidesvisible = true;
 			Log_Print("forcesidesvisible = true\n");
 		} //end else if
-#ifdef TURTLEARENA
+#ifdef ZTMAUTOARGS
 		else if (!stricmp(argv[i], "-noforcesidesvisible"))
 		{
 			forcesidesvisible = false;
@@ -747,7 +499,6 @@ int main (int argc, char **argv)
 			comp = COMP_AASOPTIMIZE;
 			qfiles = GetArgumentFiles(argc, argv, &i, "aas");
 		} //end else if
-#endif //ME
 		else
 		{
 			Log_Print("unknown parameter %s\n", argv[i]);
@@ -796,8 +547,8 @@ int main (int argc, char **argv)
 					LoadMapFromBSP(qf);
 					//create the AAS file
 					AAS_Create(filename);
-					//if it's a Quake3 map calculate the reachabilities and clusters
-					if (loadedmaptype == MAPTYPE_QUAKE3) AAS_CalcReachAndClusters(qf);
+					//calculate the reachabilities and clusters
+					AAS_CalcReachAndClusters(qf);
 					//
 					if (optimize) AAS_Optimize();
 					//
@@ -823,12 +574,10 @@ int main (int argc, char **argv)
 					//if the AAS file exists in the output directory
 					if (!access(filename, 0x04))
 					{
-						if (!AAS_LoadAASFile(filename, 0, 0))
+						if (!AAS_LoadAASFile(filename))
 						{
 							Error("error loading aas file %s\n", filename);
 						} //end if
-						//assume it's a Quake3 BSP file
-						loadedmaptype = MAPTYPE_QUAKE3;
 					} //end if
 					else
 					{
@@ -840,11 +589,8 @@ int main (int argc, char **argv)
 						//create the AAS file
 						AAS_Create(filename);
 					} //end else
-					//if it's a Quake3 map calculate the reachabilities and clusters
-					if (loadedmaptype == MAPTYPE_QUAKE3)
-					{
-						AAS_CalcReachAndClusters(qf);
-					} //end if
+					//calculate the reachabilities and clusters
+					AAS_CalcReachAndClusters(qf);
 					//
 					if (optimize) AAS_Optimize();
 					//write out the stored AAS file
@@ -869,19 +615,12 @@ int main (int argc, char **argv)
 					//if the AAS file exists in the output directory
 					if (!access(filename, 0x04))
 					{
-						if (!AAS_LoadAASFile(filename, 0, 0))
+						if (!AAS_LoadAASFile(filename))
 						{
 							Error("error loading aas file %s\n", filename);
 						} //end if
-						//assume it's a Quake3 BSP file
-						loadedmaptype = MAPTYPE_QUAKE3;
-						//if it's a Quake3 map calculate the clusters
-						if (loadedmaptype == MAPTYPE_QUAKE3)
-						{
-							aasworld.numclusters = 0;
-							AAS_InitBotImport();
-							AAS_InitClustering();
-						} //end if
+						//calculate the clusters
+						AAS_RecalcClusters();
 					} //end if
 					else
 					{
@@ -892,8 +631,8 @@ int main (int argc, char **argv)
 						LoadMapFromBSP(qf);
 						//create the AAS file
 						AAS_Create(filename);
-						//if it's a Quake3 map calculate the reachabilities and clusters
-						if (loadedmaptype == MAPTYPE_QUAKE3) AAS_CalcReachAndClusters(qf);
+						//calculate the reachabilities and clusters
+						AAS_CalcReachAndClusters(qf);
 					} //end else
 					//
 					if (optimize) AAS_Optimize();
@@ -919,7 +658,7 @@ int main (int argc, char **argv)
 					//
 					AAS_InitBotImport();
 					//
-					if (!AAS_LoadAASFile(qf->filename, qf->offset, qf->length))
+					if (!AAS_LoadAASFile(qf->filename))
 					{
 						Error("error loading aas file %s\n", qf->filename);
 					} //end if
@@ -946,7 +685,7 @@ int main (int argc, char **argv)
 					//
 					AAS_InitBotImport();
 					//
-					if (!AAS_LoadAASFile(qf->filename, qf->offset, qf->length))
+					if (!AAS_LoadAASFile(qf->filename))
 					{
 						Error("error loading aas file %s\n", qf->filename);
 					} //end if
@@ -976,7 +715,7 @@ int main (int argc, char **argv)
 			//"   aasall   <quake3folder>              = create AAS files for all BSPs\n"
 			"   bsp2aas  <[pakfilter/]filter.bsp>    = convert BSP to AAS\n"
 			"   reach    <filter.bsp>                = compute reachability & clusters\n"
-			"   cluster  <filter.aas>                = compute clusters\n"
+			"   cluster  <filter.bsp>                = compute clusters\n"
 			"   aasopt   <filter.aas>                = optimize aas file\n"
 			"   aasinfo  <filter.aas>                = show AAS file info\n"
 			"   output   <output path>               = set output path\n"
@@ -989,7 +728,7 @@ int main (int argc, char **argv)
 			"   noliquids                            = don't write liquids to map\n"
 			"   freetree                             = free the bsp tree\n"
 			"   nocsg                                = disables brush chopping\n"
-#ifdef TURTLEARENA
+#ifdef ZTMAUTOARGS
 			"   noforcesidesvisible                  = don't force all sides to be visible\n"
 			"   nograpplereach                       = don't calculate grapple reachabilities\n"
 #else
@@ -997,9 +736,7 @@ int main (int argc, char **argv)
 			"   grapplereach                         = calculate grapple reachabilities\n"
 #endif
 
-/*			"   glview     = output a GL view\n"
-			"   draw       = enables drawing\n"
-			"   noweld     = disables weld\n"
+/*			"   noweld     = disables weld\n"
 			"   noshare    = disables sharing\n"
 			"   notjunc    = disables juncs\n"
 			"   nowater    = disables water brushes\n"

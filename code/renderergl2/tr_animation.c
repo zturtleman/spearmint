@@ -279,8 +279,6 @@ R_MDRComputeFogNum
 */
 
 int R_MDRComputeFogNum( mdrHeader_t *header, trRefEntity_t *ent ) {
-	int				i, j;
-	fog_t			*fog;
 	mdrFrame_t		*mdrFrame;
 	vec3_t			localOrigin;
 	int frameSize;
@@ -294,22 +292,8 @@ int R_MDRComputeFogNum( mdrHeader_t *header, trRefEntity_t *ent ) {
 	// FIXME: non-normalized axis issues
 	mdrFrame = ( mdrFrame_t * ) ( ( byte * ) header + header->ofsFrames + frameSize * ent->e.frame);
 	VectorAdd( ent->e.origin, mdrFrame->localOrigin, localOrigin );
-	for ( i = 1 ; i < tr.world->numfogs ; i++ ) {
-		fog = &tr.world->fogs[i];
-		for ( j = 0 ; j < 3 ; j++ ) {
-			if ( localOrigin[j] - mdrFrame->radius >= fog->bounds[1][j] ) {
-				break;
-			}
-			if ( localOrigin[j] + mdrFrame->radius <= fog->bounds[0][j] ) {
-				break;
-			}
-		}
-		if ( j == 3 ) {
-			return i;
-		}
-	}
 
-	return R_DefaultFogNum();
+	return R_PointFogNum( &tr.refdef, localOrigin, mdrFrame->radius );
 }
 
 

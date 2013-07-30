@@ -46,39 +46,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "l_mem.h"
 #endif //BOTLIB
 
-#ifdef BOTLIB
-//========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//========================================================================
-void Vector2Angles(vec3_t value1, vec3_t angles)
-{
-	float	forward;
-	float	yaw, pitch;
-	
-	if (value1[1] == 0 && value1[0] == 0)
-	{
-		yaw = 0;
-		if (value1[2] > 0) pitch = 90;
-		else pitch = 270;
-	} //end if
-	else
-	{
-		yaw = (int) (atan2(value1[1], value1[0]) * 180 / M_PI);
-		if (yaw < 0) yaw += 360;
-
-		forward = sqrt (value1[0]*value1[0] + value1[1]*value1[1]);
-		pitch = (int) (atan2(value1[2], forward) * 180 / M_PI);
-		if (pitch < 0) pitch += 360;
-	} //end else
-
-	angles[PITCH] = -pitch;
-	angles[YAW] = yaw;
-	angles[ROLL] = 0;
-} //end of the function Vector2Angles
-#endif //BOTLIB
 //===========================================================================
 //
 // Parameter:				-

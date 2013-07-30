@@ -494,7 +494,7 @@ CM_TraceThroughPatch
 ================
 */
 
-void CM_TraceThroughPatch( traceWork_t *tw, cPatch_t *patch ) {
+void CM_TraceThroughPatch( traceWork_t *tw, cPatch_t *patch, int surfnum ) {
 	float		oldFrac;
 
 	c_patch_traces++;
@@ -504,6 +504,7 @@ void CM_TraceThroughPatch( traceWork_t *tw, cPatch_t *patch ) {
 	CM_TraceThroughPatchCollide( tw, patch->pc );
 
 	if ( tw->trace.fraction < oldFrac ) {
+		tw->trace.surfaceNum = surfnum + 1;
 		tw->trace.surfaceFlags = patch->surfaceFlags;
 		tw->trace.contents = patch->contents;
 	}
@@ -752,8 +753,13 @@ void CM_TraceThroughBrush( traceWork_t *tw, cbrush_t *brush ) {
 				enterFrac = 0;
 			}
 			tw->trace.fraction = enterFrac;
-			tw->trace.plane = *clipplane;
-			tw->trace.surfaceFlags = leadside->surfaceFlags;
+			if (clipplane != NULL) {
+				tw->trace.plane = *clipplane;
+			}
+			if (leadside != NULL) {
+				tw->trace.surfaceNum = leadside->surfaceNum + 1;
+				tw->trace.surfaceFlags = leadside->surfaceFlags;
+			}
 			tw->trace.contents = brush->contents;
 		}
 	}
@@ -829,7 +835,7 @@ static void CM_ProximityToBrush( traceWork_t *tw, cbrush_t *brush )
 CM_ProximityToPatch
 ================
 */
-static void CM_ProximityToPatch( traceWork_t *tw, cPatch_t *patch )
+static void CM_ProximityToPatch( traceWork_t *tw, cPatch_t *patch, int surfnum )
 {
 	traceWork_t		tw2;
 
@@ -842,7 +848,7 @@ static void CM_ProximityToPatch( traceWork_t *tw, cPatch_t *patch )
 	VectorCopy( tw->start, tw2.start );
 	VectorCopy( tw->end, tw2.end );
 
-	CM_TraceThroughPatch( &tw2, patch );
+	CM_TraceThroughPatch( &tw2, patch, surfnum );
 
 	if( tw2.trace.fraction == 1.0f && !tw2.trace.allsolid && !tw2.trace.startsolid )
 	{
@@ -860,6 +866,7 @@ CM_TraceThroughLeaf
 void CM_TraceThroughLeaf( traceWork_t *tw, cLeaf_t *leaf ) {
 	int			k;
 	int			brushnum;
+	int			surfnum;
 	cbrush_t	*b;
 	cPatch_t	*patch;
 
@@ -898,7 +905,8 @@ void CM_TraceThroughLeaf( traceWork_t *tw, cLeaf_t *leaf ) {
 	if ( !cm_noCurves->integer ) {
 #endif
 		for ( k = 0 ; k < leaf->numLeafSurfaces ; k++ ) {
-			patch = cm.surfaces[ cm.leafsurfaces[ leaf->firstLeafSurface + k ] ];
+			surfnum = cm.leafsurfaces[ leaf->firstLeafSurface + k ];
+			patch = cm.surfaces[ surfnum ];
 			if ( !patch ) {
 				continue;
 			}
@@ -911,7 +919,7 @@ void CM_TraceThroughLeaf( traceWork_t *tw, cLeaf_t *leaf ) {
 				continue;
 			}
 			
-			CM_TraceThroughPatch( tw, patch );
+			CM_TraceThroughPatch( tw, patch, surfnum );
 
 			if ( !tw->trace.fraction ) {
 				tw->trace.lateralFraction = 0.0f;
@@ -943,14 +951,15 @@ void CM_TraceThroughLeaf( traceWork_t *tw, cLeaf_t *leaf ) {
 
 		for( k = 0; k < leaf->numLeafSurfaces; k++ )
 		{
-			patch = cm.surfaces[ cm.leafsurfaces[ leaf->firstLeafSurface + k ] ];
+			surfnum = cm.leafsurfaces[ leaf->firstLeafSurface + k ];
+			patch = cm.surfaces[ surfnum ];
 			if( !patch )
 				continue;
 
 			if( !( patch->contents & tw->contents ) )
 				continue;
 			
-			CM_ProximityToPatch( tw, patch );
+			CM_ProximityToPatch( tw, patch, surfnum );
 
 			if( !tw->trace.lateralFraction )
 				return;

@@ -164,7 +164,7 @@ static void UI_Mods_MenuInit( void ) {
 	s_mods.banner.generic.x			= 320;
 	s_mods.banner.generic.y			= 16;
 	s_mods.banner.string			= "MODS";
-	s_mods.banner.color				= color_white;
+	s_mods.banner.color				= text_banner_color;
 	s_mods.banner.style				= UI_CENTER;
 
 	s_mods.framel.generic.type		= MTYPE_BITMAP;

@@ -1071,6 +1071,33 @@ vmNetField_t	bg_playerStateFields[] =
 
 int bg_numPlayerStateFields = ARRAY_LEN(bg_playerStateFields);
 
+// may not contain spaces, dpmaster will reject the server
+const char *bg_netGametypeNames[GT_MAX_GAME_TYPE] = {
+	"FFA",
+	"Tournament",
+	"SP",
+	"TeamDM",
+	"CTF",
+#ifdef MISSIONPACK
+	"1FCTF",
+	"Overload",
+	"Harvester"
+#endif
+};
+
+const char *bg_displayGametypeNames[GT_MAX_GAME_TYPE] = {
+	"Free For All",
+	"Tournament",
+	"Single Player",
+	"Team Deathmatch",
+	"Capture the Flag",
+#ifdef MISSIONPACK
+	"One Flag CTF",
+	"Overload",
+	"Harvester"
+#endif
+};
+
 /*
 ==============
 BG_CheckSpawnEntity
@@ -1962,7 +1989,426 @@ void BG_RegisterClientCvars(int maxSplitview) {
 
 	trap_Cvar_Register(NULL, "cg_predictItems", "1", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
 
+	trap_Cvar_Register(NULL, "com_blood", "1", CVAR_ARCHIVE );
+
 	// cgame might not be initialized before menu is used
 	trap_Cvar_Register(NULL, "cg_viewsize", "100", CVAR_ARCHIVE );
+	trap_Cvar_CheckRange("cg_viewsize", 30, 100, qtrue );
 }
 #endif
+
+/*
+=================
+PC_SourceWarning
+=================
+*/
+void PC_SourceWarning(int handle, char *format, ...) {
+	int line;
+	char filename[128];
+	va_list argptr;
+	static char string[4096];
+
+	va_start (argptr, format);
+	Q_vsnprintf (string, sizeof(string), format, argptr);
+	va_end (argptr);
+
+	filename[0] = '\0';
+	line = 0;
+	trap_PC_SourceFileAndLine(handle, filename, &line);
+
+	Com_Printf(S_COLOR_YELLOW "WARNING: %s, line %d: %s\n", filename, line, string);
+}
+
+/*
+=================
+PC_SourceError
+=================
+*/
+void PC_SourceError(int handle, char *format, ...) {
+	int line;
+	char filename[128];
+	va_list argptr;
+	static char string[4096];
+
+	va_start (argptr, format);
+	Q_vsnprintf (string, sizeof(string), format, argptr);
+	va_end (argptr);
+
+	filename[0] = '\0';
+	line = 0;
+	trap_PC_SourceFileAndLine(handle, filename, &line);
+
+	Com_Printf(S_COLOR_RED "ERROR: %s, line %d: %s\n", filename, line, string);
+}
+
+/*
+=================
+PC_CheckTokenString
+=================
+*/
+int PC_CheckTokenString(int handle, char *string) {
+	pc_token_t tok;
+
+	if (!trap_PC_ReadToken(handle, &tok)) return qfalse;
+	//if the token is available
+	if (!strcmp(tok.string, string)) return qtrue;
+	//
+	trap_PC_UnreadToken(handle);
+	return qfalse;
+}
+
+/*
+=================
+PC_ExpectTokenString
+=================
+*/
+int PC_ExpectTokenString(int handle, char *string) {
+	pc_token_t token;
+
+	if (!trap_PC_ReadToken(handle, &token))
+	{
+		PC_SourceError(handle, "couldn't find expected %s", string);
+		return qfalse;
+	} //end if
+
+	if (strcmp(token.string, string))
+	{
+		PC_SourceError(handle, "expected %s, found %s", string, token.string);
+		return qfalse;
+	} //end if
+	return qtrue;
+}
+
+/*
+=================
+PC_ExpectTokenType
+=================
+*/
+int PC_ExpectTokenType(int handle, int type, int subtype, pc_token_t *token) {
+	char str[MAX_TOKENLENGTH];
+
+	if (!trap_PC_ReadToken(handle, token))
+	{
+		PC_SourceError(handle, "couldn't read expected token");
+		return qfalse;
+	}
+
+	if (token->type != type)
+	{
+		strcpy(str, "");
+		if (type == TT_STRING) strcpy(str, "string");
+		if (type == TT_LITERAL) strcpy(str, "literal");
+		if (type == TT_NUMBER) strcpy(str, "number");
+		if (type == TT_NAME) strcpy(str, "name");
+		if (type == TT_PUNCTUATION) strcpy(str, "punctuation");
+		PC_SourceError(handle, "expected a %s, found %s", str, token->string);
+		return qfalse;
+	}
+	if (token->type == TT_NUMBER)
+	{
+		if ((token->subtype & subtype) != subtype)
+		{
+			if (subtype & TT_DECIMAL) strcpy(str, "decimal");
+			if (subtype & TT_HEX) strcpy(str, "hex");
+			if (subtype & TT_OCTAL) strcpy(str, "octal");
+			if (subtype & TT_BINARY) strcpy(str, "binary");
+			if (subtype & TT_LONG) strcat(str, " long");
+			if (subtype & TT_UNSIGNED) strcat(str, " unsigned");
+			if (subtype & TT_FLOAT) strcat(str, " float");
+			if (subtype & TT_INTEGER) strcat(str, " integer");
+			PC_SourceError(handle, "expected %s, found %s", str, token->string);
+			return qfalse;
+		}
+	}
+	else if (token->type == TT_PUNCTUATION)
+	{
+		if (token->subtype != subtype)
+		{
+			PC_SourceError(handle, "found %s", token->string);
+			return qfalse;
+		}
+	}
+	return qtrue;
+}
+
+/*
+=================
+PC_ExpectAnyToken
+=================
+*/
+int PC_ExpectAnyToken(int handle, pc_token_t *token) {
+	if (!trap_PC_ReadToken(handle, token)) {
+		PC_SourceError(handle, "couldn't read expected token");
+		return qfalse;
+	} else {
+		return qtrue;
+	}
+}
+
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+fielddef_t *FindField(fielddef_t *defs, char *name)
+{
+	int i;
+
+	for (i = 0; defs[i].name; i++)
+	{
+		if (!strcmp(defs[i].name, name)) return &defs[i];
+	} //end for
+	return NULL;
+} //end of the function FindField
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+qboolean ReadNumber(int source, fielddef_t *fd, void *p)
+{
+	pc_token_t token;
+	int negative = qfalse;
+	long int intval, intmin = 0, intmax = 0;
+	double floatval;
+
+	if (!PC_ExpectAnyToken(source, &token)) return 0;
+
+	//check for minus sign
+	if (token.type == TT_PUNCTUATION)
+	{
+		if (fd->type & FT_UNSIGNED)
+		{
+			PC_SourceError(source, "expected unsigned value, found %s", token.string);
+			return 0;
+		} //end if
+		//if not a minus sign
+		if (strcmp(token.string, "-"))
+		{
+			PC_SourceError(source, "unexpected punctuation %s", token.string);
+			return 0;
+		} //end if
+		negative = qtrue;
+		//read the number
+		if (!PC_ExpectAnyToken(source, &token)) return 0;
+	} //end if
+	//check if it is a number
+	if (token.type != TT_NUMBER)
+	{
+		PC_SourceError(source, "expected number, found %s", token.string);
+		return 0;
+	} //end if
+	//check for a float value
+	if (token.subtype & TT_FLOAT)
+	{
+		if ((fd->type & FT_TYPE) != FT_FLOAT)
+		{
+			PC_SourceError(source, "unexpected float");
+			return 0;
+		} //end if
+		floatval = token.floatvalue;
+		if (negative) floatval = -floatval;
+		if (fd->type & FT_BOUNDED)
+		{
+			if (floatval < fd->floatmin || floatval > fd->floatmax)
+			{
+				PC_SourceError(source, "float out of range [%f, %f]", fd->floatmin, fd->floatmax);
+				return 0;
+			} //end if
+		} //end if
+		*(float *) p = (float) floatval;
+		return 1;
+	} //end if
+	//
+	intval = token.intvalue;
+	if (negative) intval = -intval;
+	//check bounds
+	if ((fd->type & FT_TYPE) == FT_CHAR)
+	{
+		if (fd->type & FT_UNSIGNED) {intmin = 0; intmax = 255;}
+		else {intmin = -128; intmax = 127;}
+	} //end if
+	if ((fd->type & FT_TYPE) == FT_INT)
+	{
+		if (fd->type & FT_UNSIGNED) {intmin = 0; intmax = 65535;}
+		else {intmin = -32768; intmax = 32767;}
+	} //end else if
+	if ((fd->type & FT_TYPE) == FT_CHAR || (fd->type & FT_TYPE) == FT_INT)
+	{
+		if (fd->type & FT_BOUNDED)
+		{
+			intmin = MAX(intmin, fd->floatmin);
+			intmax = MIN(intmax, fd->floatmax);
+		} //end if
+		if (intval < intmin || intval > intmax)
+		{
+			PC_SourceError(source, "value %ld out of range [%ld, %ld]", intval, intmin, intmax);
+			return 0;
+		} //end if
+	} //end if
+	else if ((fd->type & FT_TYPE) == FT_FLOAT)
+	{
+		if (fd->type & FT_BOUNDED)
+		{
+			if (intval < fd->floatmin || intval > fd->floatmax)
+			{
+				PC_SourceError(source, "value %ld out of range [%f, %f]", intval, fd->floatmin, fd->floatmax);
+				return 0;
+			} //end if
+		} //end if
+	} //end else if
+	//store the value
+	if ((fd->type & FT_TYPE) == FT_CHAR)
+	{
+		if (fd->type & FT_UNSIGNED) *(unsigned char *) p = (unsigned char) intval;
+		else *(char *) p = (char) intval;
+	} //end if
+	else if ((fd->type & FT_TYPE) == FT_INT)
+	{
+		if (fd->type & FT_UNSIGNED) *(unsigned int *) p = (unsigned int) intval;
+		else *(int *) p = (int) intval;
+	} //end else
+	else if ((fd->type & FT_TYPE) == FT_FLOAT)
+	{
+		*(float *) p = (float) intval;
+	} //end else
+	return 1;
+} //end of the function ReadNumber
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+qboolean ReadChar(int source, fielddef_t *fd, void *p)
+{
+	pc_token_t token;
+
+	if (!PC_ExpectAnyToken(source, &token)) return 0;
+
+	//take literals into account
+	if (token.type == TT_LITERAL)
+	{
+		*(char *) p = token.string[0];
+	} //end if
+	else
+	{
+		trap_PC_UnreadToken(source);
+		if (!ReadNumber(source, fd, p)) return 0;
+	} //end if
+	return 1;
+} //end of the function ReadChar
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+int ReadString(int source, fielddef_t *fd, void *p)
+{
+	pc_token_t token;
+
+	if (!PC_ExpectTokenType(source, TT_STRING, 0, &token)) return 0;
+	//copy the string
+	strncpy((char *) p, token.string, MAX_STRINGFIELD);
+	//make sure the string is closed with a zero
+	((char *)p)[MAX_STRINGFIELD-1] = '\0';
+	//
+	return 1;
+} //end of the function ReadString
+
+/*
+=================
+PC_ReadStructure
+=================
+*/
+qboolean PC_ReadStructure(int source, structdef_t *def, void *structure)
+{
+	pc_token_t token;
+	fielddef_t *fd;
+	void *p;
+	int num;
+
+	if (!PC_ExpectTokenString(source, "{")) return 0;
+	while(1)
+	{
+		if (!PC_ExpectAnyToken(source, &token)) return qfalse;
+		//if end of structure
+		if (!strcmp(token.string, "}")) break;
+		//find the field with the name
+		fd = FindField(def->fields, token.string);
+		if (!fd)
+		{
+			PC_SourceError(source, "unknown structure field %s", token.string);
+			return qfalse;
+		} //end if
+		if (fd->type & FT_ARRAY)
+		{
+			num = fd->maxarray;
+			if (!PC_ExpectTokenString(source, "{")) return qfalse;
+		} //end if
+		else
+		{
+			num = 1;
+		} //end else
+		p = (void *)((byte*)structure + fd->offset);
+		while (num-- > 0)
+		{
+			if (fd->type & FT_ARRAY)
+			{
+				if (PC_CheckTokenString(source, "}")) break;
+			} //end if
+			switch(fd->type & FT_TYPE)
+			{
+				case FT_CHAR:
+				{
+					if (!ReadChar(source, fd, p)) return qfalse;
+					p = (char *) p + sizeof(char);
+					break;
+				} //end case
+				case FT_INT:
+				{
+					if (!ReadNumber(source, fd, p)) return qfalse;
+					p = (char *) p + sizeof(int);
+					break;
+				} //end case
+				case FT_FLOAT:
+				{
+					if (!ReadNumber(source, fd, p)) return qfalse;
+					p = (char *) p + sizeof(float);
+					break;
+				} //end case
+				case FT_STRING:
+				{
+					if (!ReadString(source, fd, p)) return qfalse;
+					p = (char *) p + MAX_STRINGFIELD;
+					break;
+				} //end case
+				case FT_STRUCT:
+				{
+					if (!fd->substruct)
+					{
+						PC_SourceError(source, "BUG: no sub structure defined");
+						return qfalse;
+					} //end if
+					PC_ReadStructure(source, fd->substruct, (char *) p);
+					p = (char *) p + fd->substruct->size;
+					break;
+				} //end case
+			} //end switch
+			if (fd->type & FT_ARRAY)
+			{
+				if (!PC_ExpectAnyToken(source, &token)) return qfalse;
+				if (!strcmp(token.string, "}")) break;
+				if (strcmp(token.string, ","))
+				{
+					PC_SourceError(source, "expected a comma, found %s", token.string);
+					return qfalse;
+				} //end if
+			} //end if
+		} //end while
+	} //end while
+	return qtrue;
+} //end of the function ReadStructure

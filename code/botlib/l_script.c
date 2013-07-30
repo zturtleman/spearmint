@@ -1446,7 +1446,10 @@ void FreeScript(script_t *script)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-void PS_SetBaseFolder(char *path)
+void PS_SetBaseFolder(const char *path)
 {
-	Com_sprintf(basefolder, sizeof(basefolder), "%s", path);
+	if (path)
+		Com_sprintf(basefolder, sizeof(basefolder), "%s", path);
+	else
+		basefolder[0] = '\0';
 } //end of the function PS_SetBaseFolder

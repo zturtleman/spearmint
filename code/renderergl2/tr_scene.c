@@ -96,6 +96,30 @@ DISCRETE POLYS
 */
 
 /*
+=================
+R_PolygonFogNum
+
+See if a polygon chain is inside a fog volume
+=================
+*/
+int R_PolyFogNum( srfPoly_t *poly ) {
+	int				i;
+	vec3_t			mins, maxs;
+
+	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
+		return 0;
+	}
+
+	VectorCopy( poly->verts[0].xyz, mins );
+	VectorCopy( poly->verts[0].xyz, maxs );
+	for ( i = 1 ; i < poly->numVerts ; i++ ) {
+		AddPointToBounds( poly->verts[i].xyz, mins, maxs );
+	}
+
+	return R_BoundsFogNum( &tr.refdef, mins, maxs );
+}
+
+/*
 =====================
 R_AddPolygonSurfaces
 
@@ -106,15 +130,13 @@ void R_AddPolygonSurfaces( void ) {
 	int			i;
 	shader_t	*sh;
 	srfPoly_t	*poly;
-	int		fogMask;
 
 	tr.currentEntityNum = REFENTITYNUM_WORLD;
 	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
-	fogMask = -((tr.refdef.rdflags & RDF_NOFOG) == 0);
 
 	for ( i = 0, poly = tr.refdef.polys; i < tr.refdef.numPolys ; i++, poly++ ) {
 		sh = R_GetShaderByHandle( poly->hShader );
-		R_AddDrawSurf( ( void * )poly, sh, poly->fogIndex & fogMask, qfalse, qfalse );
+		R_AddDrawSurf( ( void * )poly, sh, R_PolyFogNum( poly ), qfalse, qfalse );
 	}
 }
 
@@ -126,10 +148,7 @@ RE_AddPolyToScene
 */
 void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys ) {
 	srfPoly_t	*poly;
-	int			i, j;
-	int			fogIndex;
-	fog_t		*fog;
-	vec3_t		bounds[2];
+	int			j;
 
 	if ( !tr.registered ) {
 		return;
@@ -171,40 +190,36 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 		// done.
 		r_numpolys++;
 		r_numpolyverts += numVerts;
-
-		// if no world is loaded
-		if ( tr.world == NULL ) {
-			fogIndex = 0;
-		}
-		// see if it is in a fog volume
-		else if ( tr.world->numfogs == 1 ) {
-			fogIndex = 0;
-		} else {
-			// find which fog volume the poly is in
-			VectorCopy( poly->verts[0].xyz, bounds[0] );
-			VectorCopy( poly->verts[0].xyz, bounds[1] );
-			for ( i = 1 ; i < poly->numVerts ; i++ ) {
-				AddPointToBounds( poly->verts[i].xyz, bounds[0], bounds[1] );
-			}
-			for ( fogIndex = 1 ; fogIndex < tr.world->numfogs ; fogIndex++ ) {
-				fog = &tr.world->fogs[fogIndex]; 
-				if ( bounds[1][0] >= fog->bounds[0][0]
-					&& bounds[1][1] >= fog->bounds[0][1]
-					&& bounds[1][2] >= fog->bounds[0][2]
-					&& bounds[0][0] <= fog->bounds[1][0]
-					&& bounds[0][1] <= fog->bounds[1][1]
-					&& bounds[0][2] <= fog->bounds[1][2] ) {
-					break;
-				}
-			}
-			if ( fogIndex == tr.world->numfogs ) {
-				fogIndex = R_DefaultFogNum();
-			}
-		}
-		poly->fogIndex = fogIndex;
 	}
 }
 
+
+/*
+=================
+R_PolyBufferFogNum
+
+See if a polygon buffer is inside a fog volume
+=================
+*/
+int R_PolyBufferFogNum( srfPolyBuffer_t *pPolySurf ) {
+	int				i;
+	vec3_t			mins, maxs;
+	polyBuffer_t	*pPolyBuffer;
+
+	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
+		return 0;
+	}
+
+	pPolyBuffer = pPolySurf->pPolyBuffer;
+
+	VectorCopy( pPolyBuffer->xyz[0], mins );
+	VectorCopy( pPolyBuffer->xyz[0], maxs );
+	for ( i = 1 ; i < pPolyBuffer->numVerts ; i++ ) {
+		AddPointToBounds( pPolyBuffer->xyz[i], mins, maxs );
+	}
+
+	return R_BoundsFogNum( &tr.refdef, mins, maxs );
+}
 
 /*
 =====================
@@ -224,7 +239,7 @@ void R_AddPolygonBufferSurfaces( void ) {
 	for ( i = 0, polybuffer = tr.refdef.polybuffers; i < tr.refdef.numPolyBuffers ; i++, polybuffer++ ) {
 		sh = R_GetShaderByHandle( polybuffer->pPolyBuffer->shader );
 
-		R_AddDrawSurf( ( void * )polybuffer, sh, polybuffer->fogIndex, qfalse, qfalse );
+		R_AddDrawSurf( ( void * )polybuffer, sh, R_PolyBufferFogNum( polybuffer ), qfalse, qfalse );
 	}
 }
 
@@ -236,10 +251,6 @@ RE_AddPolyBufferToScene
 */
 void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
 	srfPolyBuffer_t*    pPolySurf;
-	int fogIndex;
-	fog_t*              fog;
-	vec3_t bounds[2];
-	int i;
 
 	if ( r_numpolybuffers >= max_polybuffers ) {
 		return;
@@ -250,28 +261,6 @@ void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
 
 	pPolySurf->surfaceType = SF_POLYBUFFER;
 	pPolySurf->pPolyBuffer = pPolyBuffer;
-
-	VectorCopy( pPolyBuffer->xyz[0], bounds[0] );
-	VectorCopy( pPolyBuffer->xyz[0], bounds[1] );
-	for ( i = 1 ; i < pPolyBuffer->numVerts ; i++ ) {
-		AddPointToBounds( pPolyBuffer->xyz[i], bounds[0], bounds[1] );
-	}
-	for ( fogIndex = 1 ; fogIndex < tr.world->numfogs ; fogIndex++ ) {
-		fog = &tr.world->fogs[fogIndex];
-		if ( bounds[1][0] >= fog->bounds[0][0]
-			 && bounds[1][1] >= fog->bounds[0][1]
-			 && bounds[1][2] >= fog->bounds[0][2]
-			 && bounds[0][0] <= fog->bounds[1][0]
-			 && bounds[0][1] <= fog->bounds[1][1]
-			 && bounds[0][2] <= fog->bounds[1][2] ) {
-			break;
-		}
-	}
-	if ( fogIndex == tr.world->numfogs ) {
-		fogIndex = R_DefaultFogNum();
-	}
-
-	pPolySurf->fogIndex = fogIndex;
 }
 
 //=================================================================================
@@ -465,19 +454,34 @@ void RE_RenderScene( const refdef_t *fd ) {
 		VectorSet(tr.refdef.sunCol, 0, 0, 0);
 		VectorSet(tr.refdef.sunAmbCol, 0, 0, 0);
 	}
-	else if (r_forceSun->integer == 1)
-	{
-		float scale = pow(2, r_mapOverBrightBits->integer - tr.overbrightBits - 8);
-		tr.refdef.colorScale = r_forceSunMapLightScale->value;
-		VectorScale(tr.sunLight, scale * r_forceSunLightScale->value, tr.refdef.sunCol);
-		VectorScale(tr.sunLight, scale * r_forceSunAmbientScale->value, tr.refdef.sunAmbCol);
-	}
 	else
 	{
-		float scale = pow(2, r_mapOverBrightBits->integer - tr.overbrightBits - 8);
-		tr.refdef.colorScale = tr.mapLightScale;
-		VectorScale(tr.sunLight,   scale, tr.refdef.sunCol);
-		VectorScale(tr.sunAmbient, scale, tr.refdef.sunAmbCol);
+		tr.refdef.colorScale = r_forceSun->integer ? r_forceSunMapLightScale->value : tr.mapLightScale;
+
+		if (r_sunlightMode->integer == 1)
+		{
+			tr.refdef.sunCol[0] =
+			tr.refdef.sunCol[1] =
+			tr.refdef.sunCol[2] = 1.0f;
+
+			tr.refdef.sunAmbCol[0] =
+			tr.refdef.sunAmbCol[1] =
+			tr.refdef.sunAmbCol[2] = r_forceSun->integer ? r_forceSunAmbientScale->value : tr.sunShadowScale;
+		}
+		else
+		{
+			float scale = pow(2, r_mapOverBrightBits->integer - tr.overbrightBits - 8);
+			if (r_forceSun->integer)
+			{
+				VectorScale(tr.sunLight, scale * r_forceSunLightScale->value,   tr.refdef.sunCol);
+				VectorScale(tr.sunLight, scale * r_forceSunAmbientScale->value, tr.refdef.sunAmbCol);
+			}
+			else
+			{
+				VectorScale(tr.sunLight, scale,                     tr.refdef.sunCol);
+				VectorScale(tr.sunLight, scale * tr.sunShadowScale, tr.refdef.sunAmbCol);
+			}
+		}
 	}
 
 	if (r_forceAutoExposure->integer)

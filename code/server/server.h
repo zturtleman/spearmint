@@ -70,6 +70,13 @@ typedef enum {
 	SS_GAME				// actively running
 } serverState_t;
 
+typedef struct configString_s {
+	char			*s;
+
+	qboolean		restricted; // if true, don't send to clientList
+	clientList_t	clientList;
+} configString_t;
+
 typedef struct {
 	serverState_t	state;
 	qboolean		restarting;			// if true, send configstring changes during SS_LOADING
@@ -78,8 +85,7 @@ typedef struct {
 	int				snapshotCounter;	// incremented for each snapshot built
 	int				timeResidual;		// <= 1000 / sv_frame->value
 	int				nextFrameTime;		// when time > nextFrameTime, process world
-	struct cmodel_s	*models[MAX_MODELS];
-	char			*configstrings[MAX_CONFIGSTRINGS];
+	configString_t	configstrings[MAX_CONFIGSTRINGS];
 	svEntity_t		svEntities[MAX_GENTITIES];
 	darray_t		svEntitiesBaseline; // for delta compression of initial sighting
 
@@ -296,7 +302,9 @@ extern	cvar_t	*sv_maxRate;
 extern	cvar_t	*sv_dlRate;
 extern	cvar_t	*sv_minPing;
 extern	cvar_t	*sv_maxPing;
-extern	cvar_t	*sv_gametype;
+extern	cvar_t	*sv_gametypeName;
+extern	cvar_t	*sv_gametypeNetName;
+extern	cvar_t	*sv_dorestart;
 extern	cvar_t	*sv_pure;
 extern	cvar_t	*sv_floodProtect;
 extern	cvar_t	*sv_lanForceRate;
@@ -317,6 +325,28 @@ extern	cvar_t	*sv_voip;
 //
 // sv_main.c
 //
+typedef struct leakyBucket_s leakyBucket_t;
+struct leakyBucket_s {
+	netadrtype_t	type;
+
+	union {
+		byte	_4[4];
+		byte	_6[16];
+	} ipv;
+
+	int						lastTime;
+	signed char		burst;
+
+	long					hash;
+
+	leakyBucket_t *prev, *next;
+};
+
+extern leakyBucket_t outboundLeakyBucket;
+
+qboolean SVC_RateLimit( leakyBucket_t *bucket, int burst, int period );
+qboolean SVC_RateLimitAddress( netadr_t from, int burst, int period );
+
 void SV_FinalMessage (char *message);
 void QDECL SV_SendServerCommand( client_t *cl, int localPlayerNum, const char *fmt, ...) __attribute__ ((format (printf, 3, 4)));
 
@@ -335,6 +365,7 @@ int SV_RateMsec(client_t *client);
 //
 void SV_SetConfigstring( int index, const char *val );
 void SV_GetConfigstring( int index, char *buffer, int bufferSize );
+void SV_SetConfigstringRestrictions(int index, const clientList_t* clientList);
 void SV_UpdateConfigstrings( client_t *client );
 
 void SV_SetUserinfo( int index, const char *val );
@@ -420,6 +451,8 @@ int			SV_BotGetConsoleMessage( int client, char *buf, int size );
 
 int BotImport_DebugPolygonCreate(int color, int numPoints, vec3_t *points);
 void BotImport_DebugPolygonDelete(int id);
+
+void SV_ForcePlayerCommand( int playerNum, const char *command );
 
 void SV_BotInitBotLib(void);
 

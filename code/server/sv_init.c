@@ -44,7 +44,14 @@ static void SV_SendConfigstring(client_t *client, int index)
 	int maxChunkSize = MAX_STRING_CHARS - 24;
 	int len;
 
-	len = strlen(sv.configstrings[index]);
+	if( sv.configstrings[index].restricted && Com_ClientListContains(
+		&sv.configstrings[index].clientList, client - svs.clients ) ) {
+		// Send a blank config string for this client if it's listed
+		SV_SendServerCommand( client, -1, "cs %i \"\"\n", index );
+		return;
+	}
+
+	len = strlen(sv.configstrings[index].s);
 
 	if( len >= maxChunkSize ) {
 		int		sent = 0;
@@ -62,7 +69,7 @@ static void SV_SendConfigstring(client_t *client, int index)
 			else {
 				cmd = "bcs1";
 			}
-			Q_strncpyz( buf, &sv.configstrings[index][sent],
+			Q_strncpyz( buf, &sv.configstrings[index].s[sent],
 				maxChunkSize );
 
 			SV_SendServerCommand( client, -1, "%s %i \"%s\"\n", cmd,
@@ -74,7 +81,7 @@ static void SV_SendConfigstring(client_t *client, int index)
 	} else {
 		// standard cs, just send it
 		SV_SendServerCommand( client, -1, "cs %i \"%s\"\n", index,
-			sv.configstrings[index] );
+			sv.configstrings[index].s );
 	}
 }
 
@@ -119,13 +126,13 @@ void SV_SetConfigstring (int index, const char *val) {
 	}
 
 	// don't bother broadcasting an update if no change
-	if ( !strcmp( val, sv.configstrings[ index ] ) ) {
+	if ( !strcmp( val, sv.configstrings[ index ].s ) ) {
 		return;
 	}
 
 	// change the string in sv
-	Z_Free( sv.configstrings[index] );
-	sv.configstrings[index] = CopyString( val );
+	Z_Free( sv.configstrings[index].s );
+	sv.configstrings[index].s = CopyString( val );
 
 	// send it to all the clients if we aren't
 	// spawning a new server
@@ -157,12 +164,35 @@ void SV_GetConfigstring( int index, char *buffer, int bufferSize ) {
 	if ( index < 0 || index >= MAX_CONFIGSTRINGS ) {
 		Com_Error (ERR_DROP, "SV_GetConfigstring: bad index %i", index);
 	}
-	if ( !sv.configstrings[index] ) {
+	if ( !sv.configstrings[index].s ) {
 		buffer[0] = 0;
 		return;
 	}
 
-	Q_strncpyz( buffer, sv.configstrings[index], bufferSize );
+	Q_strncpyz( buffer, sv.configstrings[index].s, bufferSize );
+}
+
+/*
+===============
+SV_SetConfigstringRestrictions
+===============
+*/
+void SV_SetConfigstringRestrictions (int index, const clientList_t* clientList) {
+	int i;
+	clientList_t oldClientList = sv.configstrings[index].clientList;
+
+	sv.configstrings[index].clientList = *clientList;
+	sv.configstrings[index].restricted = qtrue;
+
+	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
+		if ( svs.clients[i].state >= CS_CONNECTED ) {
+			if ( Com_ClientListContains( &oldClientList, i ) !=
+				Com_ClientListContains( clientList, i ) ) {
+				// A client has left or joined the restricted list, so update
+				SV_SendConfigstring(&svs.clients[i], index);
+			}
+		}
+	}
 }
 
 
@@ -401,8 +431,8 @@ static void SV_ClearServer(void) {
 	int i;
 
 	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
-		if ( sv.configstrings[i] ) {
-			Z_Free( sv.configstrings[i] );
+		if ( sv.configstrings[i].s ) {
+			Z_Free( sv.configstrings[i].s );
 		}
 	}
 
@@ -523,14 +553,16 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	// wipe the entire per-level structure
 	SV_ClearServer();
 	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
-		sv.configstrings[i] = CopyString("");
+		sv.configstrings[i].s = CopyString("");
+		sv.configstrings[i].restricted = qfalse;
+		Com_Memset(&sv.configstrings[i].clientList, 0, sizeof(clientList_t));
 	}
 
 	// make sure we are not paused
 	Cvar_Set("cl_paused", "0");
 
 	// restart the file system
-	FS_Restart();
+	FS_Restart(qfalse);
 
 	CM_LoadMap( va("maps/%s.bsp", server), qfalse, &checksum );
 
@@ -560,7 +592,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	svs.nextSnapshotEntities = 0;
 
 	// don't allow a map_restart if game is modified
-	sv_gametype->modified = qfalse;
+	sv_dorestart->integer = 0;
 
 	// run a few frames to allow everything to settle
 	for (i = 0;i < 3; i++)
@@ -603,7 +635,8 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 
 				// connect the client again
 				denied = VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_CLIENT_CONNECT, player - svs.players, qfalse, isBot, i, j ) );	// firstTime = qfalse
-				if ( denied ) {
+				player = svs.clients[i].localPlayers[j]; // may be NULL if game dropped player
+				if ( denied && player != NULL ) {
 					// this generally shouldn't happen, because the client
 					// was connected before the level change
 					SV_DropPlayer( player, denied );
@@ -707,9 +740,10 @@ void SV_Init (void)
 	SV_AddOperatorCommands ();
 
 	// serverinfo vars
-	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
 	Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO);
 	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
+	sv_gametypeName = Cvar_Get ("sv_gametypeName", "Unknown Gametype", CVAR_SERVERINFO | CVAR_ROM );
+	sv_gametypeNetName = Cvar_Get ("sv_gametypeNetName", "Unknown", CVAR_SERVERINFO | CVAR_ROM );
 	sv_privateClients = Cvar_Get ("sv_privateClients", "0", CVAR_SERVERINFO);
 	sv_hostname = Cvar_Get ("sv_hostname", "noname", CVAR_SERVERINFO | CVAR_ARCHIVE );
 	sv_maxclients = Cvar_Get ("sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH);
@@ -765,6 +799,8 @@ void SV_Init (void)
 
 	sv_public = Cvar_Get("sv_public", "0", 0);
 	Cvar_CheckRange(sv_public, -2, 1, qtrue);
+
+	sv_dorestart = Cvar_Get ("sv_dorestart", "0", CVAR_ROM );
 
 	// initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();

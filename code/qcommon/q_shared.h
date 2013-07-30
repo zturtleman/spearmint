@@ -45,7 +45,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 
 #ifndef PRODUCT_VERSION
-	#define PRODUCT_VERSION "1.36"
+	#define PRODUCT_VERSION "Alpha"
 #endif
 
 // In the future if the client-server protocol is modified, this may allow old and new engines to play together
@@ -164,6 +164,8 @@ typedef int intptr_t;
   // vsnprintf is ISO/IEC 9899:1999
   // abstracting this to make it portable
   int Q_vsnprintf(char *str, size_t size, const char *format, va_list ap);
+
+  #define rint(x) (floor(x)+0.5f)
 #else
   #include <stdint.h>
 
@@ -285,28 +287,6 @@ typedef enum {
 } errorParm_t;
 
 
-// font rendering values used by ui and cgame
-
-#define PROP_GAP_WIDTH			3
-#define PROP_SPACE_WIDTH		8
-#define PROP_HEIGHT				27
-#define PROP_SMALL_SIZE_SCALE	0.75
-
-#define BLINK_DIVISOR			200
-#define PULSE_DIVISOR			75
-
-#define UI_LEFT			0x00000000	// default
-#define UI_CENTER		0x00000001
-#define UI_RIGHT		0x00000002
-#define UI_FORMATMASK	0x00000007
-#define UI_SMALLFONT	0x00000010
-#define UI_BIGFONT		0x00000020	// default
-#define UI_GIANTFONT	0x00000040
-#define UI_DROPSHADOW	0x00000800
-#define UI_BLINK		0x00001000
-#define UI_INVERSE		0x00002000
-#define UI_PULSE		0x00004000
-
 #if !defined(NDEBUG) && !defined(BSPC)
 	#define HUNK_DEBUG
 #endif
@@ -393,7 +373,7 @@ extern	vec4_t		colorMdGrey;
 extern	vec4_t		colorDkGrey;
 
 #define Q_COLOR_ESCAPE	'^'
-#define Q_IsColorString(p)	((p) && *(p) == Q_COLOR_ESCAPE && *((p)+1) && isalnum(*((p)+1))) // ^[0-9a-zA-Z]
+#define Q_IsColorString(p)	((p) && *(p) == Q_COLOR_ESCAPE && *((p)+1) && (*((p)+1) >= '0' && *((p)+1) <= '7')) // ^[0-7]
 
 #define COLOR_BLACK	'0'
 #define COLOR_RED	'1'
@@ -650,6 +630,18 @@ static ID_INLINE void CrossProduct( const vec3_t v1, const vec3_t v2, vec3_t cro
 	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
+static ID_INLINE int FloatAsInt( float f ) {
+	floatint_t fi;
+	fi.f = f;
+	return fi.i;
+}
+
+static ID_INLINE float IntAsFloat( int i ) {
+	floatint_t fi;
+	fi.i = i;
+	return fi.f;
+}
+
 #else
 int VectorCompare( const vec3_t v1, const vec3_t v2 );
 
@@ -669,6 +661,9 @@ void VectorInverse( vec3_t v );
 
 void CrossProduct( const vec3_t v1, const vec3_t v2, vec3_t cross );
 
+int FloatAsInt( float f );
+
+float IntAsFloat( int i );
 #endif
 
 vec_t VectorNormalize (vec3_t v);		// returns vector length
@@ -746,6 +741,7 @@ const char	*COM_GetExtension( const char *name );
 void	COM_StripExtension(const char *in, char *out, int destsize);
 qboolean COM_CompareExtension(const char *in, const char *ext);
 void	COM_DefaultExtension( char *path, int maxSize, const char *extension );
+void	COM_SetExtension(char *path, int maxSize, const char *extension);
 
 void	COM_BeginParseSession( const char *name );
 int		COM_GetCurrentParseLine( void );
@@ -766,6 +762,91 @@ void	COM_ParseWarning( char *format, ... ) __attribute__ ((format (printf, 1, 2)
 #define TT_NUMBER					3			// number
 #define TT_NAME						4			// name
 #define TT_PUNCTUATION				5			// punctuation
+
+//string sub type
+//---------------
+//		the length of the string
+//literal sub type
+//----------------
+//		the ASCII code of the literal
+//number sub type
+//---------------
+#define TT_DECIMAL					0x0008	// decimal number
+#define TT_HEX							0x0100	// hexadecimal number
+#define TT_OCTAL						0x0200	// octal number
+//#ifdef BINARYNUMBERS
+#define TT_BINARY						0x0400	// binary number
+//#endif //BINARYNUMBERS
+#define TT_FLOAT						0x0800	// floating point number
+#define TT_INTEGER					0x1000	// integer number
+#define TT_LONG						0x2000	// long number
+#define TT_UNSIGNED					0x4000	// unsigned number
+//punctuation sub type
+//--------------------
+#define P_RSHIFT_ASSIGN				1
+#define P_LSHIFT_ASSIGN				2
+#define P_PARMS						3
+#define P_PRECOMPMERGE				4
+
+#define P_LOGIC_AND					5
+#define P_LOGIC_OR					6
+#define P_LOGIC_GEQ					7
+#define P_LOGIC_LEQ					8
+#define P_LOGIC_EQ					9
+#define P_LOGIC_UNEQ					10
+
+#define P_MUL_ASSIGN					11
+#define P_DIV_ASSIGN					12
+#define P_MOD_ASSIGN					13
+#define P_ADD_ASSIGN					14
+#define P_SUB_ASSIGN					15
+#define P_INC							16
+#define P_DEC							17
+
+#define P_BIN_AND_ASSIGN			18
+#define P_BIN_OR_ASSIGN				19
+#define P_BIN_XOR_ASSIGN			20
+#define P_RSHIFT						21
+#define P_LSHIFT						22
+
+#define P_POINTERREF					23
+#define P_CPP1							24
+#define P_CPP2							25
+#define P_MUL							26
+#define P_DIV							27
+#define P_MOD							28
+#define P_ADD							29
+#define P_SUB							30
+#define P_ASSIGN						31
+
+#define P_BIN_AND						32
+#define P_BIN_OR						33
+#define P_BIN_XOR						34
+#define P_BIN_NOT						35
+
+#define P_LOGIC_NOT					36
+#define P_LOGIC_GREATER				37
+#define P_LOGIC_LESS					38
+
+#define P_REF							39
+#define P_COMMA						40
+#define P_SEMICOLON					41
+#define P_COLON						42
+#define P_QUESTIONMARK				43
+
+#define P_PARENTHESESOPEN			44
+#define P_PARENTHESESCLOSE			45
+#define P_BRACEOPEN					46
+#define P_BRACECLOSE					47
+#define P_SQBRACKETOPEN				48
+#define P_SQBRACKETCLOSE			49
+#define P_BACKSLASH					50
+
+#define P_PRECOMP						51
+#define P_DOLLAR						52
+//name sub type
+//-------------
+//		the length of the name
 #endif
 
 typedef struct pc_token_s
@@ -781,7 +862,7 @@ typedef struct pc_token_s
 
 void	COM_MatchToken( char**buf_p, char *match );
 
-void SkipBracedSection (char **program);
+qboolean SkipBracedSection (char **program, int depth);
 void SkipRestOfLine ( char **data );
 
 void Parse1DMatrix (char **buf_p, int x, float *m);
@@ -795,6 +876,18 @@ char *Com_SkipTokens( char *s, int numTokens, char *sep );
 char *Com_SkipCharset( char *s, char *sep );
 
 void Com_RandomBytes( byte *string, int len );
+
+typedef struct 
+{
+	unsigned int hi;
+	unsigned int lo;
+} clientList_t;
+
+qboolean Com_ClientListContains( const clientList_t *list, int clientNum );
+void Com_ClientListAdd( clientList_t *list, int clientNum );
+void Com_ClientListRemove( clientList_t *list, int clientNum );
+char *Com_ClientListString( const clientList_t *list );
+void Com_ClientListParse( clientList_t *list, const char *s );
 
 // mode parm for FS_FOpenFile
 typedef enum {
@@ -1043,6 +1136,7 @@ typedef struct {
 	float		fraction;	// time completed, 1.0 = didn't hit anything
 	vec3_t		endpos;		// final position
 	cplane_t	plane;		// surface normal at impact, transformed to world space
+	int			surfaceNum;		// the contacted surface number plus one
 	int			surfaceFlags;	// surface hit
 	int			contents;	// contents on other side of surface hit
 	int			entityNum;	// entity the contacted sirface is a part of
@@ -1111,7 +1205,6 @@ typedef enum {
 // per-level limits
 //
 #define	MAX_CLIENTS			64		// absolute limit
-#define MAX_LOCATIONS		64
 
 #define	GENTITYNUM_BITS		12		// don't need to send any more
 #define	MAX_GENTITIES		(1<<GENTITYNUM_BITS)
@@ -1122,11 +1215,6 @@ typedef enum {
 #define	ENTITYNUM_NONE		(MAX_GENTITIES-1)
 #define	ENTITYNUM_WORLD		(MAX_GENTITIES-2)
 #define	ENTITYNUM_MAX_NORMAL	(MAX_GENTITIES-2)
-
-
-#define	MAX_MODELS			256		// these are sent over the net as 8 bits
-#define	MAX_SOUNDS			256		// so they cannot be blindly increased
-
 
 #define	MAX_CONFIGSTRINGS	1024
 
@@ -1153,9 +1241,6 @@ typedef struct sharedPlayerState_s {
 	int			commandTime;	// cmd->serverTime of last executed command
 
 	vec3_t		origin;
-
-	int			delta_angles[3];	// add to command angles to get view direction
-									// changed by spawns, rotating objects, and teleporters
 
 	qboolean	linked;			// set by server
 
@@ -1208,23 +1293,6 @@ typedef struct usercmd_s {
 } usercmd_t;
 
 //===================================================================
-
-typedef enum {
-	TR_STATIONARY,
-	TR_INTERPOLATE,				// non-parametric, but interpolate between snapshots
-	TR_LINEAR,
-	TR_LINEAR_STOP,
-	TR_SINE,					// value = base + sin( time / duration ) * delta
-	TR_GRAVITY
-} trType_t;
-
-typedef struct {
-	trType_t	trType;
-	int		trTime;
-	int		trDuration;			// if non 0, trTime + trDuration = stop time
-	vec3_t	trBase;
-	vec3_t	trDelta;			// velocity, etc
-} trajectory_t;
 
 // New fields cannot be added to sharedEntityState_t without updating
 //   entityState_t in bg_misc.h (and thus breaking mod compatiblity).
@@ -1355,6 +1423,10 @@ typedef enum {
 
 	DS_NUM_DEMO_STATES
 } demoState_t;
+
+
+
+#define MAX_JOYSTICK_AXIS 16
 
 
 

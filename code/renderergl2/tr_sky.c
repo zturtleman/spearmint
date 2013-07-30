@@ -437,13 +437,13 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD);
 		GLSL_BindProgram(sp);
 		
-		GLSL_SetUniformMatrix16(sp, TEXTURECOLOR_UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		
 		color[0] = 
 		color[1] = 
 		color[2] = tr.identityLight;
 		color[3] = 1.0f;
-		GLSL_SetUniformVec4(sp, TEXTURECOLOR_UNIFORM_COLOR, color);
+		GLSL_SetUniformVec4(sp, UNIFORM_COLOR, color);
 	}
 */
 	{
@@ -453,25 +453,25 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD);
 		GLSL_BindProgram(sp);
 		
-		GLSL_SetUniformMatrix16(sp, GENERIC_UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		
 		color[0] = 
 		color[1] = 
 		color[2] = tr.identityLight;
 		color[3] = 1.0f;
-		GLSL_SetUniformVec4(sp, GENERIC_UNIFORM_BASECOLOR, color);
+		GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, color);
 
 		color[0] = 
 		color[1] = 
 		color[2] = 
 		color[3] = 0.0f;
-		GLSL_SetUniformVec4(sp, GENERIC_UNIFORM_VERTCOLOR, color);
+		GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, color);
 
 		VectorSet4(vector, 1.0, 0.0, 0.0, 1.0);
-		GLSL_SetUniformVec4(sp, GENERIC_UNIFORM_DIFFUSETEXMATRIX, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXMATRIX, vector);
 
 		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, GENERIC_UNIFORM_DIFFUSETEXOFFTURB, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, vector);
 	}
 
 	R_DrawElementsVBO(tess.numIndexes - tess.firstIndex, tess.firstIndex, tess.minIndex, tess.maxIndex);
@@ -566,6 +566,8 @@ static void FillCloudySkySide( const int mins[2], const int maxs[2], qboolean ad
 
 	tHeight = maxs[1] - mins[1] + 1;
 	sWidth = maxs[0] - mins[0] + 1;
+
+	RB_CHECKOVERFLOW( ( maxs[ 0 ] - mins[ 0 ] ) * ( maxs[ 1 ] - mins[ 1 ] ), ( sWidth - 1 ) * ( tHeight - 1 ) * 6 );
 
 	for ( t = mins[1]+HALF_SKY_SUBDIVISIONS; t <= maxs[1]+HALF_SKY_SUBDIVISIONS; t++ )
 	{
@@ -708,7 +710,7 @@ static void FillCloudBox( const shader_t *shader, int stage )
 */
 void R_BuildCloudData( shaderCommands_t *input )
 {
-	int			i;
+	//int			i;
 	shader_t	*shader;
 
 	shader = input->shader;
@@ -725,6 +727,11 @@ void R_BuildCloudData( shaderCommands_t *input )
 
 	if ( shader->sky.cloudHeight )
 	{
+		// From WolfET:
+		// ok, this is really wierd. it's iterating through shader stages here,
+		// which is unnecessary for a multi-stage sky shader, as far as i can tell
+		// nuking this
+#if 0
 		for ( i = 0; i < MAX_SHADER_STAGES; i++ )
 		{
 			if ( !tess.xstages[i] ) {
@@ -732,6 +739,9 @@ void R_BuildCloudData( shaderCommands_t *input )
 			}
 			FillCloudBox( shader, i );
 		}
+#else
+		FillCloudBox( shader, 0 );
+#endif
 	}
 }
 

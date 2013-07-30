@@ -12,15 +12,15 @@ The intent of this project is to provide a version of ioquake3 which may be used
 for further development of standalone games.
 Some of the major Spearmint features currently implemented are:
 
-  * Four player splitscreen, with support for connecting to network servers
-  * Improvements not compatible with quake3 1.32b
-  * Better Virtual Machine (QVM/DLL/SO/DYLIB) API handling
-  * Improved Virtual Machine system calls (unified shared calls and acos)
-  * Modified pure pk3 system
+  * Four player splitscreen, offline and in network games
+  * Extended API for game, cgame, and ui, includes some of the features from
+           RTCW, WolfET, Tremulous, and World of Padman
+  * Modified pure pk3 system, see PAKSUMS wiki page
+  * Improved game, cgame, and ui API version handling
   * Removed code not needed for standalone games
            (CD Key handling, authentication server code, and punkbuster ui code)
-  * Ogg Vorbis support enabled by default, with headers and libraries for
-           easy compiling using MinGW
+  * Ogg Opus and Ogg Vorbis support enabled by default, source and headers
+           included in local source tree for easy compiling
   * FreeType support enabled by default, source and headers included in local
            source tree for easy compiling
 
@@ -79,15 +79,11 @@ Installation, for *nix
      point releases.
   2. Run 'make copyfiles'.
 
-It is also possible to cross compile for Windows under *nix using MinGW. A
-script is available to build a cross compilation environment from
-http://www.libsdl.org/extras/win32/cross/build-cross.sh. The gcc/binutils
-version numbers that the script downloads may need to be altered.
-Alternatively, your distribution may have mingw32 packages available. On
-debian/Ubuntu, these are mingw32, mingw32-runtime and mingw32-binutils. Cross
-compiling is simply a case of using './cross-make-mingw.sh' in place of 'make',
-though you may find you need to change the value of the variables in this
-script to match your environment.
+It is also possible to cross compile for Windows under *nix using MinGW. Your
+distribution may have mingw32 packages available. On debian/Ubuntu, you need to
+install 'mingw-w64'. Thereafter cross compiling is simply a case running
+'PLATFORM=mingw32 ARCH=x86 make' in place of 'make'. ARCH may also be set to
+x86_64.
 
 The following variables may be set, either on the command line or in
 Makefile.local:
@@ -203,7 +199,6 @@ New cvars
 
   com_ansiColor                     - enable use of ANSI escape codes in the tty
   com_altivec                       - enable use of altivec on PowerPC systems
-  com_basegame                      - Use a different base than baseq3.
   com_homepath                      - Specify name that is to be appended to the
                                       home path
   com_legacyprotocol                - Specify protocol version number for
@@ -294,7 +289,15 @@ New cvars
                                       desktop resolution.
   r_zfar							- sets z far for testing global fog
                                       distances, requires cheats to be enabled
+  r_forceSunScale                   - override sunShader scale when more than 0
 
+  con_autoclear                     - causes the console input to be cleared
+                                      when opening/closing the console (this is
+                                      the default behavior in Quake 3, RTCW, and
+                                      ET)
+  con_autochat                      - causes console input without a slash at
+                                      the to beginning to be sent as chat
+                                      messages
 
   cg_atmosphericEffects             - 0.0 to 1.0 scales the amount of rain and
                                       snow. set to 0 to disable rain/snow.
@@ -303,10 +306,27 @@ New cvars
                                       1.32 had no lead announcements in TDM).
   cg_consoleLatency                 - controls how long messages stay in cgame
                                       notify area in miliseconds (default 3000)
+  cg_drawShaderInfo                 - draw world shader name/image on HUD that
+                                      that player's crosshair is pointing at
+                                      (must enable cm_betterIbspSurfaceNums!)
 
   vm_minQvmHunkKB                   - minimum memory pool size for each QVM's
                                       trap_Alloc. DLLs use shared memory pool
                                       and are limited by com_hunkMegs.
+
+  cm_betterIbspSurfaceNums          - try to reconnect collision and draw
+                                      surface numbers. must be enabled for
+                                      trap_R_GetSurfaceShader and
+                                      trap_R_SetSurfaceShader to work correctly
+
+  r_shaderlod                       - used for if-endifs in shaders
+                                      "if shaderlod 0.45" .. "endif"
+                                       check if r_shaderlod > 0.45
+
+  g_playerCapsule                   - use capsule instead of box for player
+                                      collision. each player has it set at spawn
+                                      allowing mix of capsule and box in game
+
 
 New commands
   video [filename]        - start video capture (use with demo command)
@@ -342,9 +362,15 @@ New commands
 
   tell <client num> <msg> - send message to a single client (new to server)
 
+  levelshot <size>        - spearmint allows setting levelshot size, example
+                            `levelshot 512'. defaults to 128.
+
 
 Removed cvars
   r_customPixelAspect     - it had no effect
+  com_basegame            - replaced manually setting basegame dirs with loading
+                            them from gameconfig.txt in fs_game dir
+  fs_basegame             - see above
 
 
 Removed commands

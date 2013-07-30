@@ -44,7 +44,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define AAS_MAX_CLUSTERS					65536
 
 #define BSPCINCLUDE
-#include "../botlib/be_aas.h" // ZTM(IOQ3): game to botlib
+#include "../botlib/be_aas.h"
 #include "../botlib/be_aas_def.h"
 
 /*

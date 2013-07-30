@@ -276,16 +276,7 @@ static void CG_CalcVrect (void) {
 	if ( cg.cur_ps->pm_type == PM_INTERMISSION ) {
 		size = 100;
 	} else {
-		// bound normal viewsize
-		if (cg_viewsize.integer < 30) {
-			trap_Cvar_Set ("cg_viewsize","30");
-			size = 30;
-		} else if (cg_viewsize.integer > 100) {
-			trap_Cvar_Set ("cg_viewsize","100");
-			size = 100;
-		} else {
-			size = cg_viewsize.integer;
-		}
+		size = cg_viewsize.integer;
 	}
 
 	// Rendered window for drawing world
@@ -578,22 +569,12 @@ static int CG_CalcFov( void ) {
 			fov_x = 90;
 		} else {
 			fov_x = cg_fov.value;
-			if ( fov_x < 1 ) {
-				fov_x = 1;
-			} else if ( fov_x > 160 ) {
-				fov_x = 160;
-			}
 		}
 
 		cg.fov = fov_x;
 
 		// account for zooms
 		zoomFov = cg_zoomFov.value;
-		if ( zoomFov < 1 ) {
-			zoomFov = 1;
-		} else if ( zoomFov > 160 ) {
-			zoomFov = 160;
-		}
 
 		if ( cg.cur_lc->zoomed ) {
 			f = ( cg.time - cg.cur_lc->zoomTime ) / (float)ZOOM_TIME;
@@ -954,7 +935,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	int		inwater;
 	qboolean renderClientViewport[MAX_SPLITVIEW];
 	int		i;
-	int		stateValue;
 
 	cg.time = serverTime;
 	cg.demoPlayback = demoPlayback;
@@ -1015,10 +995,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			cg.numViewports++;
 			renderClientViewport[i] = qtrue;
 		}
-
-		// let the client system know what our weapon and zoom settings are
-		stateValue = BG_ComposeUserCmdValue( cg.cur_lc->weaponSelect );
-		trap_SetUserCmdValue( stateValue, cg.cur_lc->zoomSensitivity, cg.cur_localClientNum );
 
 		// update cg.predictedPlayerState
 		CG_PredictPlayerState();
@@ -1113,7 +1089,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 					cg_timescale.value = cg_timescaleFadeEnd.value;
 			}
 			if (cg_timescaleFadeSpeed.value) {
-				trap_Cvar_Set("timescale", va("%f", cg_timescale.value));
+				trap_Cvar_SetValue("timescale", cg_timescale.value);
 			}
 		}
 

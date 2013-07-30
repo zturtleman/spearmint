@@ -34,7 +34,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 #error "Do not use in VM build"
 #endif
 
-#include "cg_local.h"
+#include "../qcommon/q_shared.h"
+#include "../renderercommon/tr_types.h"
+#include "../game/bg_misc.h"
+#include "cg_public.h"
+#include "cg_syscalls.h"
 
 static intptr_t (QDECL *syscall)( intptr_t arg, ... ) = (intptr_t (QDECL *)( intptr_t, ...))-1;
 
@@ -106,6 +110,11 @@ void	trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize ) {
 	syscall( CG_CVAR_INFO_STRING_BUFFER, bit, buffer, bufsize );
 }
 
+void	trap_Cvar_CheckRange( const char *var_name, float min, float max, qboolean integral ) {
+	syscall( CG_CVAR_CHECK_RANGE, var_name, PASSFLOAT(min), PASSFLOAT(max), integral );
+}
+
+
 int		trap_Argc( void ) {
 	return syscall( CG_ARGC );
 }
@@ -126,12 +135,12 @@ int		trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	return syscall( CG_FS_FOPENFILE, qpath, f, mode );
 }
 
-void	trap_FS_Read( void *buffer, int len, fileHandle_t f ) {
-	syscall( CG_FS_READ, buffer, len, f );
+int		trap_FS_Read( void *buffer, int len, fileHandle_t f ) {
+	return syscall( CG_FS_READ, buffer, len, f );
 }
 
-void	trap_FS_Write( const void *buffer, int len, fileHandle_t f ) {
-	syscall( CG_FS_WRITE, buffer, len, f );
+int		trap_FS_Write( const void *buffer, int len, fileHandle_t f ) {
+	return syscall( CG_FS_WRITE, buffer, len, f );
 }
 
 int		trap_FS_Seek( fileHandle_t f, long offset, int origin ) {
@@ -388,8 +397,8 @@ void	trap_R_Add2dPolys( polyVert_t *verts, int numverts, qhandle_t hShader ) {
 	syscall( CG_R_DRAW2DPOLYS, verts, numverts, hShader );
 }
 
-void	trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs ) {
-	syscall( CG_R_MODELBOUNDS, model, mins, maxs );
+int		trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac ) {
+	return syscall( CG_R_MODELBOUNDS, model, mins, maxs, startFrame, endFrame, PASSFLOAT(frac) );
 }
 
 int		trap_R_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int endFrame, 
@@ -409,8 +418,24 @@ void trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, 
 	syscall( CG_R_GET_GLOBAL_FOG, type, color, depthForOpaque, density );
 }
 
-void trap_R_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
-	syscall( CG_R_GET_WATER_FOG, origin, type, color, depthForOpaque, density );
+void trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater ) {
+	syscall( CG_R_GET_VIEW_FOG, origin, type, color, depthForOpaque, density, inwater );
+}
+
+void		trap_R_SetSurfaceShader( int surfaceNum, const char *name ) {
+	syscall( CG_R_SET_SURFACE_SHADER, surfaceNum, name );
+}
+
+qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int withlightmap ) {
+	return syscall( CG_R_GET_SURFACE_SHADER, surfaceNum, withlightmap );
+}
+
+qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap ) {
+	return syscall( CG_R_GET_SHADER_FROM_MODEL, hModel, surfnum, withlightmap );
+}
+
+void		trap_R_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize ) {
+	syscall( CG_R_GET_SHADER_NAME, hShader, buffer, bufferSize );
 }
 
 void		trap_GetClipboardData( char *buf, int bufsize ) {
@@ -469,10 +494,6 @@ qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum ) {
 	return syscall( CG_GETUSERCMD, cmdNumber, ucmd, localClientNum );
 }
 
-void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int localClientNum ) {
-	syscall( CG_SETUSERCMDVALUE, stateValue, PASSFLOAT(sensitivityScale), localClientNum );
-}
-
 void		trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
 						int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
 	syscall( CG_SET_NET_FIELDS, entityStateSize, entityStateFields, numEntityStateFields, playerStateSize, playerStateFields, numPlayerStateFields );
@@ -492,6 +513,14 @@ void		trap_GetDemoName( char *buffer, int size ) {
 
 int			trap_GetDemoLength( void ) {
   return syscall( CG_GETDEMOLENGTH );
+}
+
+void trap_GetClientState( uiClientState_t *state ) {
+	syscall( CG_GETCLIENTSTATE, state );
+}
+
+int trap_GetConfigString( int index, char* buff, int buffsize ) {
+	return syscall( CG_GETCONFIGSTRING, index, buff, buffsize );
 }
 
 int trap_MemoryRemaining( void ) {
@@ -538,6 +567,82 @@ qboolean trap_Key_GetOverstrikeMode( void ) {
   return syscall( CG_KEY_GETOVERSTRIKEMODE );
 }
 
+int trap_LAN_GetPingQueueCount( void ) {
+	return syscall( CG_LAN_GETPINGQUEUECOUNT );
+}
+
+void trap_LAN_ClearPing( int n ) {
+	syscall( CG_LAN_CLEARPING, n );
+}
+
+void trap_LAN_GetPing( int n, char *buf, int buflen, int *pingtime ) {
+	syscall( CG_LAN_GETPING, n, buf, buflen, pingtime );
+}
+
+void trap_LAN_GetPingInfo( int n, char *buf, int buflen ) {
+	syscall( CG_LAN_GETPINGINFO, n, buf, buflen );
+}
+
+int	trap_LAN_GetServerCount( int source ) {
+	return syscall( CG_LAN_GETSERVERCOUNT, source );
+}
+
+void trap_LAN_GetServerAddressString( int source, int n, char *buf, int buflen ) {
+	syscall( CG_LAN_GETSERVERADDRESSSTRING, source, n, buf, buflen );
+}
+
+void trap_LAN_GetServerInfo( int source, int n, char *buf, int buflen ) {
+	syscall( CG_LAN_GETSERVERINFO, source, n, buf, buflen );
+}
+
+int trap_LAN_GetServerPing( int source, int n ) {
+	return syscall( CG_LAN_GETSERVERPING, source, n );
+}
+
+int trap_LAN_ServerStatus( const char *serverAddress, char *serverStatus, int maxLen ) {
+	return syscall( CG_LAN_SERVERSTATUS, serverAddress, serverStatus, maxLen );
+}
+
+void trap_LAN_SaveCachedServers( void ) {
+	syscall( CG_LAN_SAVECACHEDSERVERS );
+}
+
+void trap_LAN_LoadCachedServers( void ) {
+	syscall( CG_LAN_LOADCACHEDSERVERS );
+}
+
+void trap_LAN_ResetPings(int n) {
+	syscall( CG_LAN_RESETPINGS, n );
+}
+
+void trap_LAN_MarkServerVisible( int source, int n, qboolean visible ) {
+	syscall( CG_LAN_MARKSERVERVISIBLE, source, n, visible );
+}
+
+int trap_LAN_ServerIsVisible( int source, int n) {
+	return syscall( CG_LAN_SERVERISVISIBLE, source, n );
+}
+
+qboolean trap_LAN_UpdateVisiblePings( int source ) {
+	return syscall( CG_LAN_UPDATEVISIBLEPINGS, source );
+}
+
+int trap_LAN_AddServer(int source, const char *name, const char *addr) {
+	return syscall( CG_LAN_ADDSERVER, source, name, addr );
+}
+
+void trap_LAN_RemoveServer(int source, const char *addr) {
+	syscall( CG_LAN_REMOVESERVER, source, addr );
+}
+
+int trap_LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int s2 ) {
+	return syscall( CG_LAN_COMPARESERVERS, source, sortKey, sortDir, s1, s2 );
+}
+
+qboolean trap_LAN_ServerIsInFavoriteList( int source, int n  ) {
+	return syscall( CG_LAN_SERVERISINFAVORITELIST, source, n );
+}
+
 int trap_PC_AddGlobalDefine( char *define ) {
 	return syscall( CG_PC_ADD_GLOBAL_DEFINE, define );
 }
@@ -546,8 +651,8 @@ void trap_PC_RemoveAllGlobalDefines( void ) {
 	syscall( CG_PC_REMOVE_ALL_GLOBAL_DEFINES );
 }
 
-int trap_PC_LoadSource( const char *filename ) {
-	return syscall( CG_PC_LOAD_SOURCE, filename );
+int trap_PC_LoadSource( const char *filename, const char *basepath ) {
+	return syscall( CG_PC_LOAD_SOURCE, filename, basepath );
 }
 
 int trap_PC_FreeSource( int handle ) {

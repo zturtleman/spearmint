@@ -209,7 +209,6 @@ static void StartServer_Update( void ) {
 		
 		info = UI_GetArenaInfoByNumber( s_startserver.maplist[ top + i ]);
 		Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
-		Q_strupr( mapname );
 
 		Com_sprintf( picname[i], sizeof(picname[i]), "levelshots/%s", mapname );
 
@@ -438,7 +437,7 @@ static void StartServer_MenuInit( qboolean multiplayer ) {
 	s_startserver.banner.generic.x	   = 320;
 	s_startserver.banner.generic.y	   = 16;
 	s_startserver.banner.string        = "GAME SERVER";
-	s_startserver.banner.color         = color_white;
+	s_startserver.banner.color         = text_banner_color;
 	s_startserver.banner.style         = UI_CENTER;
 
 	s_startserver.framel.generic.type  = MTYPE_BITMAP;
@@ -617,7 +616,6 @@ void StartServer_Cache( void )
 		for( i = 0; i < UI_GetNumArenas(); i++ ) {
 			info = UI_GetArenaInfoByNumber( i );
 			Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
-			Q_strupr( mapname );
 	
 			Com_sprintf( picname, sizeof(picname), "levelshots/%s", mapname );
 			trap_R_RegisterShaderNoMip(picname);
@@ -863,11 +861,9 @@ static void ServerOptions_Start( void ) {
 
 	// set player's team
 	if( dedicated == 0 && s_serveroptions.gametype >= GT_TEAM ) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, va( "teampref %s\n", playerTeam_list[s_serveroptions.playerTeam[0].curvalue] ) );
-
-		for (n = 1; n < UI_MaxSplitView(); ++n) {
-			if (s_serveroptions.playerType[n].curvalue == PT_HUMAN) {
-				trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s %s\n", Com_LocalClientCvarName( n, "teampref" ), playerTeam_list[s_serveroptions.playerTeam[n].curvalue] ) );
+		for ( n = 0; n < UI_MaxSplitView(); ++n ) {
+			if ( n == 0 || s_serveroptions.playerType[n].curvalue == PT_HUMAN ) {
+				trap_Cvar_Set( Com_LocalClientCvarName( n, "teampref" ), playerTeam_list[s_serveroptions.playerTeam[n].curvalue] );
 			}
 		}
 	}
@@ -1383,7 +1379,7 @@ static void ServerOptions_MenuInit( qboolean multiplayer ) {
 	s_serveroptions.banner.generic.x			= 320;
 	s_serveroptions.banner.generic.y			= 16;
 	s_serveroptions.banner.string  				= "GAME SERVER";
-	s_serveroptions.banner.color  				= color_white;
+	s_serveroptions.banner.color  				= text_banner_color;
 	s_serveroptions.banner.style  				= UI_CENTER;
 
 	s_serveroptions.mappic.generic.type			= MTYPE_BITMAP;
@@ -2013,7 +2009,7 @@ static void UI_BotSelectMenu_Init( char *bot ) {
 	botSelectInfo.banner.generic.x		= 320;
 	botSelectInfo.banner.generic.y		= 16;
 	botSelectInfo.banner.string			= "SELECT BOT";
-	botSelectInfo.banner.color			= color_white;
+	botSelectInfo.banner.color			= text_banner_color;
 	botSelectInfo.banner.style			= UI_CENTER;
 
 	y =	80;

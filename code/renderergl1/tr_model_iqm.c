@@ -150,6 +150,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	size_t			size, joint_names;
 	iqmData_t		*iqmData;
 	srfIQModel_t		*surface;
+	char			meshName[MAX_QPATH];
 
 	if( filesize < sizeof(iqmHeader_t) ) {
 		return qfalse;
@@ -213,7 +214,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	}
 	vertexarray = (iqmVertexArray_t *)((byte *)header + header->ofs_vertexarrays);
 	for( i = 0; i < header->num_vertexarrays; i++, vertexarray++ ) {
-		int	j, n, *intPtr;
+		int n, *intPtr;
 
 		if( vertexarray->size <= 0 || vertexarray->size > 4 ) {
 			return qfalse;
@@ -318,17 +319,25 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 		LL( mesh->first_triangle );
 		LL( mesh->num_triangles );
 
+		if ( mesh->name < header->num_text ) {
+			Q_strncpyz( meshName, (char*)header + header->ofs_text + mesh->name, sizeof (meshName) );
+		} else {
+			meshName[0] = '\0';
+		}
+
 		// check ioq3 limits
-		if ( mesh->num_vertexes > SHADER_MAX_VERTEXES ) 
+		if ( mesh->num_vertexes >= SHADER_MAX_VERTEXES ) 
 		{
-			ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has more than %i verts on a surface (%i).\n",
-				  mod_name, SHADER_MAX_VERTEXES, mesh->num_vertexes );
+			ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has more than %i verts on %s (%i).\n",
+				  mod_name, SHADER_MAX_VERTEXES - 1, meshName[0] ? meshName : "a surface",
+				  mesh->num_vertexes );
 			return qfalse;
 		}
-		if ( mesh->num_triangles*3 > SHADER_MAX_INDEXES ) 
+		if ( mesh->num_triangles*3 >= SHADER_MAX_INDEXES ) 
 		{
-			ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has more than %i triangles on a surface (%i).\n",
-				  mod_name, SHADER_MAX_INDEXES / 3, mesh->num_triangles );
+			ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has more than %i triangles on %s (%i).\n",
+				  mod_name, ( SHADER_MAX_INDEXES / 3 ) - 1, meshName[0] ? meshName : "a surface",
+				  mesh->num_triangles );
 			return qfalse;
 		}
 
@@ -730,8 +739,6 @@ R_ComputeIQMFogNum
 =================
 */
 int R_ComputeIQMFogNum( iqmData_t *data, trRefEntity_t *ent ) {
-	int			i, j;
-	fog_t			*fog;
 	const vec_t		*bounds;
 	const vec_t		defaultBounds[6] = { -8, -8, -8, 8, 8, 8 };
 	vec3_t			diag, center;
@@ -753,22 +760,7 @@ int R_ComputeIQMFogNum( iqmData_t *data, trRefEntity_t *ent ) {
 	VectorAdd( ent->e.origin, center, localOrigin );
 	radius = 0.5f * VectorLength( diag );
 
-	for ( i = 1 ; i < tr.world->numfogs ; i++ ) {
-		fog = &tr.world->fogs[i];
-		for ( j = 0 ; j < 3 ; j++ ) {
-			if ( localOrigin[j] - radius >= fog->bounds[1][j] ) {
-				break;
-			}
-			if ( localOrigin[j] + radius <= fog->bounds[0][j] ) {
-				break;
-			}
-		}
-		if ( j == 3 ) {
-			return i;
-		}
-	}
-
-	return R_DefaultFogNum();
+	return R_PointFogNum( &tr.refdef, localOrigin, radius );
 }
 
 /*
@@ -952,10 +944,10 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 	float		jointMats[IQM_MAX_JOINTS * 12];
 	int		i;
 
-	vec4_t		*outXYZ = &tess.xyz[tess.numVertexes];
-	vec4_t		*outNormal = &tess.normal[tess.numVertexes];
-	vec2_t		(*outTexCoord)[2] = &tess.texCoords[tess.numVertexes];
-	color4ub_t	*outColor = &tess.vertexColors[tess.numVertexes];
+	vec4_t		*outXYZ;
+	vec4_t		*outNormal;
+	vec2_t		(*outTexCoord)[2];
+	color4ub_t	*outColor;
 
 	int	frame = data->num_frames ? backEnd.currentEntity->e.frame % data->num_frames : 0;
 	int	oldframe = data->num_frames ? backEnd.currentEntity->e.oldframe % data->num_frames : 0;
@@ -966,6 +958,11 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 	glIndex_t	base;
 
 	RB_CHECKOVERFLOW( surf->num_vertexes, surf->num_triangles * 3 );
+
+	outXYZ = &tess.xyz[tess.numVertexes];
+	outNormal = &tess.normal[tess.numVertexes];
+	outTexCoord = &tess.texCoords[tess.numVertexes];
+	outColor = &tess.vertexColors[tess.numVertexes];
 
 	// compute interpolated joint matrices
 	if ( data->num_joints > 0 ) {

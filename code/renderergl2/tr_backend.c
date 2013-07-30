@@ -61,7 +61,9 @@ void GL_Bind2( image_t *image, GLenum type ) {
 	}
 
 	if ( glState.currenttextures[glState.currenttmu] != texnum ) {
-		image->frameUsed = tr.frameCount;
+		if ( image ) {
+			image->frameUsed = tr.frameCount;
+		}
 		glState.currenttextures[glState.currenttmu] = texnum;
 		qglBindTexture (type, texnum);
 	}
@@ -259,7 +261,7 @@ void GL_State( unsigned long stateBits )
 	//
 	if ( diff & ( GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS ) )
 	{
-		GLenum srcFactor, dstFactor;
+		GLenum srcFactor = GL_ONE, dstFactor = GL_ONE;
 
 		if ( stateBits & ( GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS ) )
 		{
@@ -293,7 +295,6 @@ void GL_State( unsigned long stateBits )
 				srcFactor = GL_SRC_ALPHA_SATURATE;
 				break;
 			default:
-				srcFactor = GL_ONE;		// to get warning to shut up
 				ri.Error( ERR_DROP, "GL_State: invalid src blend state bits" );
 				break;
 			}
@@ -325,7 +326,6 @@ void GL_State( unsigned long stateBits )
 				dstFactor = GL_ONE_MINUS_DST_ALPHA;
 				break;
 			default:
-				dstFactor = GL_ONE;		// to get warning to shut up
 				ri.Error( ERR_DROP, "GL_State: invalid dst blend state bits" );
 				break;
 			}
@@ -629,7 +629,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldPshadowed = qfalse;
 	oldSortOrder = -1;
 	oldSort = -1;
-	depthRange = qfalse;
 
 	depth[0] = 0.f;
 	depth[1] = 1.f;
@@ -652,10 +651,9 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		// change the tess parameters if needed
 		// a "entityMergable" shader is a shader that can have surfaces from seperate
 		// entities merged into a single batch, like smoke and blood puff sprites
-		if (shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted 
+		if ( shader != NULL && ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted || pshadowed != oldPshadowed
 			|| sortOrder != oldSortOrder
-			|| pshadowed != oldPshadowed
-			|| ( entityNum != oldEntityNum && !shader->entityMergable ) ) {
+			|| ( entityNum != oldEntityNum && !shader->entityMergable ) ) ) {
 			if (oldShader != NULL) {
 				RB_EndSurface();
 			}
@@ -781,7 +779,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	}
 
 	if (inQuery) {
-		inQuery = qfalse;
 		qglEndQueryARB(GL_SAMPLES_PASSED_ARB);
 	}
 
@@ -927,8 +924,8 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 
 	GLSL_BindProgram(&tr.textureColorShader);
 	
-	GLSL_SetUniformMatrix16(&tr.textureColorShader, TEXTURECOLOR_UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformVec4(&tr.textureColorShader, TEXTURECOLOR_UNIFORM_COLOR, colorWhite);
+	GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, colorWhite);
 
 	RB_InstantQuad2(quadVerts, texCoords);
 }
@@ -1427,11 +1424,11 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
 			GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
 
-			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, SHADOWMASK_UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
-			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, SHADOWMASK_UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
-			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, SHADOWMASK_UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
+			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
+			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
+			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
 			
-			GLSL_SetUniformVec3(&tr.shadowmaskShader, SHADOWMASK_UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
+			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 			{
 				vec4_t viewInfo;
 				vec3_t viewVector;
@@ -1443,15 +1440,15 @@ const void	*RB_DrawSurfs( const void *data ) {
 				float zmin = r_znear->value;
 
 				VectorScale(backEnd.refdef.viewaxis[0], zmax, viewVector);
-				GLSL_SetUniformVec3(&tr.shadowmaskShader, SHADOWMASK_UNIFORM_VIEWFORWARD, viewVector);
+				GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWFORWARD, viewVector);
 				VectorScale(backEnd.refdef.viewaxis[1], xmax, viewVector);
-				GLSL_SetUniformVec3(&tr.shadowmaskShader, SHADOWMASK_UNIFORM_VIEWLEFT,    viewVector);
+				GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWLEFT,    viewVector);
 				VectorScale(backEnd.refdef.viewaxis[2], ymax, viewVector);
-				GLSL_SetUniformVec3(&tr.shadowmaskShader, SHADOWMASK_UNIFORM_VIEWUP,      viewVector);
+				GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWUP,      viewVector);
 
 				VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
 
-				GLSL_SetUniformVec4(&tr.shadowmaskShader, SHADOWMASK_UNIFORM_VIEWINFO, viewInfo);
+				GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_VIEWINFO, viewInfo);
 			}
 
 
@@ -1492,7 +1489,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 				VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
 
-				GLSL_SetUniformVec4(&tr.ssaoShader, SSAO_UNIFORM_VIEWINFO, viewInfo);
+				GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_VIEWINFO, viewInfo);
 			}
 
 			RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
@@ -1516,7 +1513,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 				VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
 
-				GLSL_SetUniformVec4(&tr.depthBlurShader[0], DEPTHBLUR_UNIFORM_VIEWINFO, viewInfo);
+				GLSL_SetUniformVec4(&tr.depthBlurShader[0], UNIFORM_VIEWINFO, viewInfo);
 			}
 
 			RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
@@ -1540,7 +1537,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 				VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
 
-				GLSL_SetUniformVec4(&tr.depthBlurShader[1], DEPTHBLUR_UNIFORM_VIEWINFO, viewInfo);
+				GLSL_SetUniformVec4(&tr.depthBlurShader[1], UNIFORM_VIEWINFO, viewInfo);
 			}
 
 
@@ -1559,14 +1556,22 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 	if (!(backEnd.viewParms.flags & VPF_DEPTHSHADOW))
 	{
+		float scale;
+
 		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs );
 
-		if (r_drawSun->integer)
-		{
-			RB_DrawSun(0.1, tr.sunShader);
+		if ( r_forceSunScale->value > 0 ) {
+			scale = r_forceSunScale->value;
+		} else {
+			scale = tr.sunShaderScale;
 		}
 
-		if (r_drawSunRays->integer)
+		if (r_drawSun->integer && scale > 0)
+		{
+			RB_DrawSun(scale * 0.2f, tr.sunShader);
+		}
+
+		if (r_drawSunRays->integer && scale > 0)
 		{
 			FBO_t *oldFbo = glState.currentFBO;
 			FBO_Bind(tr.sunRaysFbo);
@@ -1580,7 +1585,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 				qglBeginQueryARB(GL_SAMPLES_PASSED_ARB, tr.sunFlareQuery[tr.sunFlareQueryIndex]);
 			}
 
-			RB_DrawSun(0.3, tr.sunFlareShader);
+			RB_DrawSun(scale * 0.2f + 0.2f, tr.sunFlareShader);
 
 			if (glRefConfig.occlusionQuery)
 			{
@@ -1765,6 +1770,7 @@ const void *RB_ClearDepth(const void *data)
 	return (const void *)(cmd + 1);
 }
 
+
 /*
 =============
 RB_SwapBuffers
@@ -1887,7 +1893,6 @@ const void *RB_CapShadowMap(const void *data)
 }
 
 
-
 /*
 =============
 RB_PostProcess
@@ -1898,6 +1903,7 @@ const void *RB_PostProcess(const void *data)
 {
 	const postProcessCommand_t *cmd = data;
 	FBO_t *srcFbo;
+	vec4i_t srcBox, dstBox;
 	qboolean autoExposure;
 
 	// finish any 2D drawing if needed
@@ -1910,29 +1916,51 @@ const void *RB_PostProcess(const void *data)
 		return (const void *)(cmd + 1);
 	}
 
+	if (cmd)
+	{
+		backEnd.refdef = cmd->refdef;
+		backEnd.viewParms = cmd->viewParms;
+	}
+
 	srcFbo = tr.renderFbo;
 	if (tr.msaaResolveFbo)
 	{
 		// Resolve the MSAA before anything else
+		// Can't resolve just part of the MSAA FBO, so multiple views will suffer a performance hit here
 		FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		srcFbo = tr.msaaResolveFbo;
 	}
 
+	dstBox[0] = backEnd.viewParms.viewportX;
+	dstBox[1] = backEnd.viewParms.viewportY;
+	dstBox[2] = backEnd.viewParms.viewportWidth;
+	dstBox[3] = backEnd.viewParms.viewportHeight;
+
 	if (r_ssao->integer)
 	{
-		FBO_BlitFromTexture(tr.screenSsaoImage, NULL, NULL, srcFbo, NULL, NULL, NULL, GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO);
+		srcBox[0] = backEnd.viewParms.viewportX      * tr.screenSsaoImage->width  / (float)glConfig.vidWidth;
+		srcBox[1] = backEnd.viewParms.viewportY      * tr.screenSsaoImage->height / (float)glConfig.vidHeight;
+		srcBox[2] = backEnd.viewParms.viewportWidth  * tr.screenSsaoImage->width  / (float)glConfig.vidWidth;
+		srcBox[3] = backEnd.viewParms.viewportHeight * tr.screenSsaoImage->height / (float)glConfig.vidHeight;
+
+		FBO_BlitFromTexture(tr.screenSsaoImage, srcBox, NULL, srcFbo, dstBox, NULL, NULL, GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO);
 	}
+
+	srcBox[0] = backEnd.viewParms.viewportX;
+	srcBox[1] = backEnd.viewParms.viewportY;
+	srcBox[2] = backEnd.viewParms.viewportWidth;
+	srcBox[3] = backEnd.viewParms.viewportHeight;
 
 	if (srcFbo)
 	{
 		if (r_hdr->integer && (r_toneMap->integer || r_forceToneMap->integer))
 		{
 			autoExposure = r_autoExposure->integer || r_forceAutoExposure->integer;
-			RB_ToneMap(srcFbo, autoExposure);
+			RB_ToneMap(srcFbo, srcBox, tr.screenScratchFbo, dstBox, autoExposure);
 		}
 		else if (r_cameraExposure->value == 0.0f)
 		{
-			FBO_FastBlit(srcFbo, NULL, tr.screenScratchFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			FBO_FastBlit(srcFbo, srcBox, tr.screenScratchFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 		else
 		{
@@ -1943,15 +1971,15 @@ const void *RB_PostProcess(const void *data)
 			color[2] = pow(2, r_cameraExposure->value); //exp2(r_cameraExposure->value);
 			color[3] = 1.0f;
 
-			FBO_Blit(srcFbo, NULL, NULL, tr.screenScratchFbo, NULL, NULL, color, 0);
+			FBO_Blit(srcFbo, NULL, NULL, tr.screenScratchFbo, dstBox, NULL, color, 0);
 		}
 	}
 
 	if (r_drawSunRays->integer)
-		RB_SunRays();
+		RB_SunRays(tr.screenScratchFbo, srcBox, tr.screenScratchFbo, dstBox);
 
 	if (1)
-		RB_BokehBlur(backEnd.refdef.blurFactor);
+		RB_BokehBlur(tr.screenScratchFbo, srcBox, tr.screenScratchFbo, dstBox, backEnd.refdef.blurFactor);
 	else
 		RB_GaussianBlur(backEnd.refdef.blurFactor);
 
@@ -1986,6 +2014,7 @@ const void *RB_PostProcess(const void *data)
 
 	return (const void *)(cmd + 1);
 }
+
 
 /*
 ====================

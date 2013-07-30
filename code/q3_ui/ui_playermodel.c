@@ -554,7 +554,7 @@ static void PlayerModel_MenuInit( int localClient )
 	s_playermodel.banner.generic.x     = 320;
 	s_playermodel.banner.generic.y     = 16;
 	s_playermodel.banner.string = s_playermodel.bannerString;
-	s_playermodel.banner.color         = color_white;
+	s_playermodel.banner.color         = text_banner_color;
 	s_playermodel.banner.style         = UI_CENTER;
 
 	s_playermodel.framel.generic.type  = MTYPE_BITMAP;

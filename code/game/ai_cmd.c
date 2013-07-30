@@ -41,18 +41,20 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
-#include "../botlib/be_ea.h"
 #include "../botlib/be_ai_char.h"
 #include "../botlib/be_ai_chat.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
-#include "../botlib/be_ai_weap.h"
+//
+#include "ai_ea.h"
+#include "ai_goal.h"
+#include "ai_move.h"
+#include "ai_weap.h"
 //
 #include "ai_main.h"
 #include "ai_dmq3.h"
 #include "ai_chat.h"
 #include "ai_cmd.h"
+#include "ai_vcmd.h"
 #include "ai_dmnet.h"
 #include "ai_team.h"
 //
@@ -170,7 +172,7 @@ int BotGetItemTeamGoal(char *goalname, bot_goal_t *goal) {
 	if (!strlen(goalname)) return qfalse;
 	i = -1;
 	do {
-		i = trap_BotGetLevelItemGoal(i, goalname, goal);
+		i = BotGetLevelItemGoal(i, goalname, goal);
 		if (i > 0) {
 			//do NOT defend dropped items
 			if (goal->flags & GFL_DROPPED)
@@ -327,7 +329,7 @@ int BotGetPatrolWaypoints(bot_state_t *bs, bot_match_t *match) {
 	//
 	while(1) {
 		if (!trap_BotFindMatch(keyarea, &keyareamatch, MTCONTEXT_PATROLKEYAREA)) {
-			trap_EA_SayTeam(bs->client, "what do you say?");
+			EA_SayTeam(bs->client, "what do you say?");
 			BotFreeWaypoints(newpatrolpoints);
 			bs->patrolpoints = NULL;
 			return qfalse;
@@ -373,7 +375,7 @@ int BotGetPatrolWaypoints(bot_state_t *bs, bot_match_t *match) {
 	}
 	//
 	if (!newpatrolpoints || !newpatrolpoints->next) {
-		trap_EA_SayTeam(bs->client, "I need more key points to patrol\n");
+		EA_SayTeam(bs->client, "I need more key points to patrol\n");
 		BotFreeWaypoints(newpatrolpoints);
 		newpatrolpoints = NULL;
 		return qfalse;
@@ -432,7 +434,7 @@ int BotAddressedToBot(bot_state_t *bs, bot_match_t *match) {
 			}
 		}
 		//Com_sprintf(buf, sizeof(buf), "not addressed to me but %s", addressedto);
-		//trap_EA_Say(bs->client, buf);
+		//EA_Say(bs->client, buf);
 		return qfalse;
 	}
 	else {
@@ -1062,7 +1064,7 @@ void BotMatch_TaskPreference(bot_state_t *bs, bot_match_t *match) {
 	BotAI_BotInitialChat(bs, "keepinmind", teammatename, NULL);
 	trap_BotEnterChat(bs->cs, teammate, CHAT_TELL);
 	BotVoiceChatOnly(bs, teammate, VOICECHAT_YES);
-	trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
+	EA_Action(bs->client, ACTION_AFFIRMATIVE);
 }
 
 /*
@@ -1292,13 +1294,13 @@ void BotMatch_Suicide(bot_state_t *bs, bot_match_t *match) {
 	//if not addressed to this bot
 	if (!BotAddressedToBot(bs, match)) return;
 	//
-	trap_EA_Command(bs->client, "kill");
+	EA_Command(bs->client, "kill");
 	//
 	trap_BotMatchVariable(match, NETNAME, netname, sizeof(netname));
 	client = ClientFromName(netname);
 	//
 	BotVoiceChat(bs, client, VOICECHAT_TAUNT);
-	trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
+	EA_Action(bs->client, ACTION_AFFIRMATIVE);
 }
 
 /*
@@ -1370,7 +1372,7 @@ void BotMatch_WhoIsTeamLeader(bot_state_t *bs, bot_match_t *match) {
 	ClientName(bs->client, netname, sizeof(netname));
 	//if this bot IS the team leader
 	if (!Q_stricmp(netname, bs->teamleader)) {
-		trap_EA_SayTeam(bs->client, "I'm the team leader\n");
+		EA_SayTeam(bs->client, "I'm the team leader\n");
 	}
 }
 
@@ -1402,13 +1404,13 @@ void BotMatch_WhatAreYouDoing(bot_state_t *bs, bot_match_t *match) {
 		}
 		case LTG_DEFENDKEYAREA:
 		{
-			trap_BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
+			BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
 			BotAI_BotInitialChat(bs, "defending", goalname, NULL);
 			break;
 		}
 		case LTG_GETITEM:
 		{
-			trap_BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
+			BotGoalName(bs->teamgoal.number, goalname, sizeof(goalname));
 			BotAI_BotInitialChat(bs, "gettingitem", goalname, NULL);
 			break;
 		}
@@ -1497,8 +1499,8 @@ float BotNearestVisibleItem(bot_state_t *bs, char *itemname, bot_goal_t *goal) {
 	bestdist = 999999;
 	i = -1;
 	do {
-		i = trap_BotGetLevelItemGoal(i, itemname, &tmpgoal);
-		trap_BotGoalName(tmpgoal.number, name, sizeof(name));
+		i = BotGetLevelItemGoal(i, itemname, &tmpgoal);
+		BotGoalName(tmpgoal.number, name, sizeof(name));
 		if (Q_stricmp(itemname, name) != 0)
 			continue;
 		VectorSubtract(tmpgoal.origin, bs->origin, dir);
@@ -1909,12 +1911,12 @@ int BotMatchMessage(bot_state_t *bs, char *message) {
 		}
 		case MSG_CREATENEWFORMATION:	//start the creation of a new formation
 		{
-			trap_EA_SayTeam(bs->client, "the part of my brain to create formations has been damaged");
+			EA_SayTeam(bs->client, "the part of my brain to create formations has been damaged");
 			break;
 		}
 		case MSG_FORMATIONPOSITION:		//tell someone his/her position in the formation
 		{
-			trap_EA_SayTeam(bs->client, "the part of my brain to create formations has been damaged");
+			EA_SayTeam(bs->client, "the part of my brain to create formations has been damaged");
 			break;
 		}
 		case MSG_FORMATIONSPACE:		//set the formation space

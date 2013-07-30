@@ -256,52 +256,6 @@ void String_Init(void) {
 	}
 }
 
-#if 0
-/*
-=================
-PC_SourceWarning
-=================
-*/
-static __attribute__ ((format (printf, 2, 3))) void PC_SourceWarning(int handle, char *format, ...) {
-	int line;
-	char filename[128];
-	va_list argptr;
-	static char string[4096];
-
-	va_start (argptr, format);
-	Q_vsnprintf (string, sizeof(string), format, argptr);
-	va_end (argptr);
-
-	filename[0] = '\0';
-	line = 0;
-	trap_PC_SourceFileAndLine(handle, filename, &line);
-
-	Com_Printf(S_COLOR_YELLOW "WARNING: %s, line %d: %s\n", filename, line, string);
-}
-#endif
-
-/*
-=================
-PC_SourceError
-=================
-*/
-static __attribute__ ((format (printf, 2, 3))) void PC_SourceError(int handle, char *format, ...) {
-	int line;
-	char filename[128];
-	va_list argptr;
-	static char string[4096];
-
-	va_start (argptr, format);
-	Q_vsnprintf (string, sizeof(string), format, argptr);
-	va_end (argptr);
-
-	filename[0] = '\0';
-	line = 0;
-	trap_PC_SourceFileAndLine(handle, filename, &line);
-
-	Com_Printf(S_COLOR_RED "ERROR: %s, line %d: %s\n", filename, line, string);
-}
-
 /*
 =================
 LerpColor
@@ -3579,7 +3533,7 @@ void Item_Model_Paint(itemDef_t *item) {
 	refdef.width = w;
 	refdef.height = h;
 
-	DC->modelBounds( item->asset, mins, maxs );
+	DC->modelBounds( item->asset, mins, maxs, 0, 0, 0 );
 
 	origin[2] = -0.5 * ( mins[2] + maxs[2] );
 	origin[1] = 0.5 * ( mins[1] + maxs[1] );

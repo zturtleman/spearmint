@@ -41,7 +41,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 void            (APIENTRY * qglDrawRangeElementsEXT) (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices);
 
 // GL_EXT_multi_draw_arrays
-void            (APIENTRY * qglMultiDrawArraysEXT) (GLenum mode, const GLint *first, const GLsizei *count, GLsizei primcount);
+void            (APIENTRY * qglMultiDrawArraysEXT) (GLenum mode, GLint *first, GLsizei *count, GLsizei primcount);
 void            (APIENTRY * qglMultiDrawElementsEXT) (GLenum mode, const GLsizei *count, GLenum type, const GLvoid **indices, GLsizei primcount);
 
 // GL_ARB_vertex_shader

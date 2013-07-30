@@ -32,6 +32,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "tr_types.h"
 
+#ifdef USE_LOCAL_HEADERS
+  #include "../zlib/zlib.h"
+#else
+  #include <zlib.h>
+#endif
+
 #define	REF_API_VERSION		8
 
 //
@@ -100,7 +106,7 @@ typedef struct {
 
 	int		(*LerpTag)( orientation_t *tag,  qhandle_t model, int startFrame, int endFrame, 
 					 float frac, const char *tagName );
-	void	(*ModelBounds)( qhandle_t model, vec3_t mins, vec3_t maxs );
+	int		(*ModelBounds)( qhandle_t model, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 
 #ifdef __USEA3D
 	void    (*A3D_RenderGeometry) (void *pVoidA3D, void *pVoidGeom, void *pVoidMat, void *pVoidGeomStatus);
@@ -113,7 +119,12 @@ typedef struct {
 	void (*TakeVideoFrame)( int h, int w, byte* captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 
 	void (*GetGlobalFog)( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
-	void (*GetWaterFog)( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
+	void (*GetViewFog)( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
+
+	void (*SetSurfaceShader)( int surfaceNum, const char *name );
+	qhandle_t (*GetSurfaceShader)( int surfaceNum, int withlightmap );
+	qhandle_t (*GetShaderFromModel)( qhandle_t hModel, int surfnum, int withlightmap );
+	void (*GetShaderName)( qhandle_t hShader, char *buffer, int bufferSize );
 } refexport_t;
 
 //
@@ -150,6 +161,8 @@ typedef struct {
 	void	(*Cvar_CheckRange)( cvar_t *cv, float minVal, float maxVal, qboolean shouldBeIntegral );
 
 	int		(*Cvar_VariableIntegerValue) (const char *var_name);
+
+	void	(*Cvar_VariableStringBuffer) (const char *var_name, char *buffer, int bufsize);
 
 	void	(*Cmd_AddCommand)( const char *name, void(*cmd)(void) );
 	void	(*Cmd_RemoveCommand)( const char *name );
@@ -194,6 +207,14 @@ typedef struct {
 	void	(*Sys_GLimpSafeInit)( void );
 	void	(*Sys_GLimpInit)( void );
 	qboolean (*Sys_LowPhysicalMemory)( void );
+
+	// zlib for png screenshots
+	int (*zlib_compress) (Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen);
+	uLong (*zlib_crc32) (uLong crc, const Bytef *buf, uInt len);
+
+	// get extra info for png screenshots
+	void	(*CL_GetMapMessage)(char *buf, int bufLength);
+	qboolean (*CL_GetClientLocation)(char *buf, int bufLength, int localClientNum);
 } refimport_t;
 
 

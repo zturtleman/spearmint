@@ -91,7 +91,7 @@ void BG_GenerateTracemap(const char *mapname, vec3_t mapcoordsMins, vec3_t mapco
 		return;
 	}
 
-	strcpy(rawmapname, mapname);
+	COM_StripExtension( mapname, rawmapname, sizeof (rawmapname) );
 
 	// Topdown tracing
 	Com_Printf( "Generating level heightmap and level mask...\n" );
@@ -442,7 +442,7 @@ void BG_GenerateTracemap(const char *mapname, vec3_t mapcoordsMins, vec3_t mapco
 	trap_FS_FCloseFile( f );
 }
 
-qboolean BG_LoadTraceMap( char *rawmapname, vec2_t world_mins, vec2_t world_maxs ) {
+qboolean BG_LoadTraceMap( char *mapname, vec2_t world_mins, vec2_t world_maxs ) {
 	int i, j;
 	fileHandle_t f;
 	byte data, datablock[TRACEMAP_SIZE][4];
@@ -450,11 +450,14 @@ qboolean BG_LoadTraceMap( char *rawmapname, vec2_t world_mins, vec2_t world_maxs
 	int ground_min, ground_max;
 	int skyground_min, skyground_max;
 	float scalefactor;
+	char rawmapname[MAX_QPATH];
 	//int startTime = trap_Milliseconds();
 
 	ground_min = ground_max = MIN_WORLD_HEIGHT;
 	skyground_min = skyground_max = MAX_WORLD_HEIGHT;
 	sky_min = sky_max = MAX_WORLD_HEIGHT;
+
+	COM_StripExtension( mapname, rawmapname, sizeof (rawmapname) );
 
 	if ( trap_FS_FOpenFile( va( "%s_tracemap.tga", Q_strlwr( rawmapname ) ), &f, FS_READ ) >= 0 ) {
 		// skip over header

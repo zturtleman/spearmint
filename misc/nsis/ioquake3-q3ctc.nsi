@@ -7,8 +7,6 @@
 !define MODDIR "q3ctc"
 !define PUBLISHER "The Spearmint Team"
 !define URL "http://github.com/zturtleman/spearmint/"
-; uncomment if the mod works without baseq3
-;!define STANDALONE
 
 !define MUI_ICON "../quake3.ico"
 
@@ -115,11 +113,8 @@ Section "${NAME}" sec_base
 
   WriteUninstaller "uninstall-${FSNAME}.exe"
 
-!ifdef STANDALONE
-!define ARGS "+set com_basegame ${MODDIR}"
-!else
-!define ARGS "+set fs_game ${MODDIR}"
-!endif
+  !define ARGS "+set fs_game ${MODDIR}"
+
   CreateShortCut "$SMPROGRAMS\${GAMENAME}\${NAME}.lnk" "$INSTDIR\${CLIENT}" "${ARGS}" "$INSTDIR\${CLIENT}" 0 "" "" "${NAME}"
 
 SectionEnd

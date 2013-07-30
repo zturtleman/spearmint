@@ -247,7 +247,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	int			i, packetNum;
 
 	if ( !cgvm ) {
-		Com_Error( ERR_DROP, "Got snapshot before loading cgame" );
+		Com_Error( ERR_DROP, "Received unexpected snapshot" );
 	}
 
 	if ( !cl.cgamePlayerStateSize || !cl.cgamePlayerStateSize ) {
@@ -317,7 +317,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	
 	MSG_ReadData( msg, &newSnap.areamask, len);
 
-	DA_Init( &newSnap.playerStates, MAX_SPLITVIEW, cl.cgamePlayerStateSize, qtrue );
+	DA_Clear( &cl.tempSnapshotPS );
 
 	// read playerinfo
 	SHOWNET( msg, "playerstate" );
@@ -342,7 +342,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
 		// Read player states
 		if (newSnap.lcIndex[i] != -1) {
-			newPS = (sharedPlayerState_t *) DA_ElementPointer( newSnap.playerStates, newSnap.lcIndex[i] );
+			newPS = (sharedPlayerState_t *) DA_ElementPointer( cl.tempSnapshotPS, newSnap.lcIndex[i] );
 
 			if ( old && old->valid && old->lcIndex[i] != -1 ) {
 				oldPS = (sharedPlayerState_t *) DA_ElementPointer( old->playerStates, old->lcIndex[i] );
@@ -370,7 +370,6 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	// if not valid, dump the entire thing now that it has
 	// been properly read
 	if ( !newSnap.valid ) {
-		DA_Free( &newSnap.playerStates );
 		return;
 	}
 
@@ -384,9 +383,12 @@ void CL_ParseSnapshot( msg_t *msg ) {
 		oldMessageNum = newSnap.messageNum - ( PACKET_BACKUP - 1 );
 	}
 	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
-		DA_Free( &cl.snapshots[oldMessageNum & PACKET_MASK].playerStates );
 		cl.snapshots[oldMessageNum & PACKET_MASK].valid = qfalse;
 	}
+
+	// copy player states from temp to snapshot
+	DA_Copy( cl.tempSnapshotPS, &cl.snapshots[newSnap.messageNum & PACKET_MASK].playerStates );
+	newSnap.playerStates = cl.snapshots[newSnap.messageNum & PACKET_MASK].playerStates;
 
 	// copy to the current good spot
 	cl.snap = newSnap;
@@ -400,8 +402,6 @@ void CL_ParseSnapshot( msg_t *msg ) {
 			break;
 		}
 	}
-	// free player states
-	DA_Free( &cl.snapshots[cl.snap.messageNum & PACKET_MASK].playerStates );
 	// save the frame off in the backup array for later delta comparisons
 	cl.snapshots[cl.snap.messageNum & PACKET_MASK] = cl.snap;
 
@@ -441,18 +441,15 @@ void CL_SystemInfoChanged( void ) {
 	// in some cases, outdated cp commands might get sent with this news serverId
 	cl.serverId = atoi( Info_ValueForKey( systemInfo, "sv_serverid" ) );
 
+#ifdef USE_VOIP
+	s = Info_ValueForKey( systemInfo, "sv_voip" );
+	clc.voipEnabled = atoi(s);
+#endif
+
 	// don't set any vars when playing a demo
 	if ( clc.demoplaying ) {
 		return;
 	}
-
-#ifdef USE_VOIP
-	s = Info_ValueForKey( systemInfo, "sv_voip" );
-	if ( Com_GameIsSinglePlayer() )
-		clc.voipEnabled = qfalse;
-	else
-		clc.voipEnabled = atoi(s);
-#endif
 
 	s = Info_ValueForKey( systemInfo, "sv_cheats" );
 	cl_connectedToCheatServer = atoi( s );
@@ -506,9 +503,9 @@ void CL_SystemInfoChanged( void ) {
 			Cvar_SetSafe(key, value);
 		}
 	}
-	// if game folder should not be set and it is set at the client side
-	if ( !gameSet && *Cvar_VariableString("fs_game") ) {
-		Cvar_Set( "fs_game", "" );
+	// game folder must be set
+	if ( !gameSet ) {
+		Com_Error( ERR_DROP, "fs_game not set on server" );
 	}
 }
 
@@ -633,6 +630,14 @@ void CL_ParseBaseline( msg_t *msg ) {
 	sharedEntityState_t	*es;
 	int					newnum;
 
+	if ( !cgvm ) {
+		Com_Error( ERR_DROP, "Received unexpected baseline" );
+	}
+
+	if ( !cl.entityBaselines.pointer ) {
+		Com_Error( ERR_DROP, "cgame needs to call trap_SetNetFields" );
+	}
+
 	newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
 	if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
 		Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
@@ -724,7 +729,7 @@ void CL_ParseDownload ( msg_t *msg ) {
 			clc.download = 0;
 
 			// rename the file
-			FS_SV_Rename ( clc.downloadTempName, clc.downloadName );
+			FS_SV_Rename ( clc.downloadTempName, clc.downloadName, qfalse );
 		}
 
 		// send intentions now
@@ -884,7 +889,7 @@ void CL_ParseVoip ( msg_t *msg ) {
 	}
 
 	for (i = 0; i < frames; i++) {
-		char encoded[256];
+		const int16_t *sampptr;
 		const int len = MSG_ReadByte(msg);
 		if (len < 0) {
 			Com_DPrintf("VoIP: Short packet!\n");
@@ -914,7 +919,7 @@ void CL_ParseVoip ( msg_t *msg ) {
 		if (decio != NULL) { fwrite(decoded+written, clc.speexFrameSize*2, 1, decio); fflush(decio); }
 		#endif
 
-		const int16_t *sampptr = (const int16_t *)decoded + written;
+		sampptr = (const int16_t *)decoded + written;
 
 		// calculate the "power" of this packet...
 		for (j = 0; j < clc.speexFrameSize; j++) {

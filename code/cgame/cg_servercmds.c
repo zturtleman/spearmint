@@ -181,8 +181,9 @@ void CG_ParseServerinfo( void ) {
 	char	*mapname;
 
 	info = CG_ConfigString( CS_SERVERINFO );
+	Q_strncpyz( cgs.gametypeName, Info_ValueForKey( info, "sv_gametypeName" ), sizeof (cgs.gametypeName) );
 	cgs.gametype = atoi( Info_ValueForKey( info, "g_gametype" ) );
-	trap_Cvar_Set("g_gametype", va("%i", cgs.gametype));
+	trap_Cvar_SetValue("g_gametype", cgs.gametype);
 	cgs.dmflags = atoi( Info_ValueForKey( info, "dmflags" ) );
 	cgs.teamflags = atoi( Info_ValueForKey( info, "teamflags" ) );
 	cgs.fraglimit = atoi( Info_ValueForKey( info, "fraglimit" ) );
@@ -504,7 +505,7 @@ static void CG_MapRestart( void ) {
 	}
 #ifdef MISSIONPACK
 	if (cg_singlePlayerActive.integer) {
-		trap_Cvar_Set("ui_matchStartTime", va("%i", cg.time));
+		trap_Cvar_SetValue("ui_matchStartTime", cg.time);
 		if (cg_recordSPDemo.integer && cg_recordSPDemoName.string && *cg_recordSPDemoName.string) {
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("set g_synchronousclients 1 ; record %s \n", cg_recordSPDemoName.string));
 		}
@@ -515,7 +516,7 @@ static void CG_MapRestart( void ) {
 		cg.localClients[lc].rewardTime = 0;
 		cg.localClients[lc].rewardStack = 0;
 
-		trap_Cvar_Set(Com_LocalClientCvarName(lc, "cg_thirdPerson"), "0");
+		trap_Cvar_SetValue( Com_LocalClientCvarName(lc, "cg_thirdPerson"), 0 );
 	}
 }
 

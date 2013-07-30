@@ -178,9 +178,6 @@ static void SV_Map_f( void ) {
 		return;
 	}
 
-	// force latched values to get set
-	Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH );
-
 	cmd = Cmd_Argv(0);
 	if ( !Q_stricmp( cmd, "devmap" ) ) {
 		cheat = qtrue;
@@ -253,7 +250,7 @@ static void SV_MapRestart_f( void ) {
 
 	// check for changes in variables that can't just be restarted
 	// check for maxclients change
-	if ( sv_maxclients->modified || sv_gametype->modified ) {
+	if ( sv_maxclients->modified || sv_dorestart->integer ) {
 		char	mapname[MAX_QPATH];
 
 		Com_Printf( "variable change -- restarting.\n" );
@@ -330,10 +327,13 @@ static void SV_MapRestart_f( void ) {
 
 			// connect the client again, without the firstTime flag
 			denied = VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_CLIENT_CONNECT, player - svs.players, qfalse, isBot, client - svs.clients, j ) );
+			player = client->localPlayers[j]; // may be NULL if game dropped player
 			if ( denied ) {
 				// this generally shouldn't happen, because the player
 				// was connected before the level change
-				SV_DropPlayer( player, denied );
+				if ( player != NULL ) {
+					SV_DropPlayer( player, denied );
+				}
 				Com_Printf( "SV_MapRestart_f(%d): dropped client %i - denied!\n", delay, i );
 				continue;
 			}

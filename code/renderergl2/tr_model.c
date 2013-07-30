@@ -503,16 +503,18 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 		LL(md3Surf->ofsXyzNormals);
 		LL(md3Surf->ofsEnd);
 
-		if(md3Surf->numVerts > SHADER_MAX_VERTEXES)
+		if(md3Surf->numVerts >= SHADER_MAX_VERTEXES)
 		{
-			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i verts on a surface (%i)",
-					 modName, SHADER_MAX_VERTEXES, md3Surf->numVerts);
+			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i verts on %s (%i).\n",
+				modName, SHADER_MAX_VERTEXES - 1, md3Surf->name[0] ? md3Surf->name : "a surface",
+				md3Surf->numVerts );
 			return qfalse;
 		}
-		if(md3Surf->numTriangles * 3 > SHADER_MAX_INDEXES)
+		if(md3Surf->numTriangles * 3 >= SHADER_MAX_INDEXES)
 		{
-			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i triangles on a surface (%i)",
-					 modName, SHADER_MAX_INDEXES / 3, md3Surf->numTriangles);
+			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i triangles on %s (%i).\n",
+				modName, ( SHADER_MAX_INDEXES / 3 ) - 1, md3Surf->name[0] ? md3Surf->name : "a surface",
+				md3Surf->numTriangles );
 			return qfalse;
 		}
 
@@ -1002,16 +1004,18 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			// numBoneReferences and BoneReferences generally seem to be unused
 			
 			// now do the checks that may fail.
-			if ( surf->numVerts > SHADER_MAX_VERTEXES ) 
+			if ( surf->numVerts >= SHADER_MAX_VERTEXES ) 
 			{
-				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i verts on a surface (%i).\n",
-					  mod_name, SHADER_MAX_VERTEXES, surf->numVerts );
+				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i verts on %s (%i).\n",
+					  mod_name, SHADER_MAX_VERTEXES - 1, surf->name[0] ? surf->name : "a surface",
+					  surf->numVerts );
 				return qfalse;
 			}
-			if ( surf->numTriangles*3 > SHADER_MAX_INDEXES ) 
+			if ( surf->numTriangles*3 >= SHADER_MAX_INDEXES ) 
 			{
-				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i triangles on a surface (%i).\n",
-					  mod_name, SHADER_MAX_INDEXES / 3, surf->numTriangles );
+				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i triangles on %s (%i).\n",
+					  mod_name, ( SHADER_MAX_INDEXES / 3 ) - 1, surf->name[0] ? surf->name : "a surface",
+					  surf->numTriangles );
 				return qfalse;
 			}
 			// lowercase the surface name so skin compares are faster
@@ -1217,14 +1221,16 @@ static qboolean R_LoadMD4( model_t *mod, void *buffer, const char *mod_name ) {
 			LL(surf->ofsVerts);
 			LL(surf->ofsEnd);
 			
-			if ( surf->numVerts > SHADER_MAX_VERTEXES ) {
-				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i verts on a surface (%i).\n",
-					mod_name, SHADER_MAX_VERTEXES, surf->numVerts );
+			if ( surf->numVerts >= SHADER_MAX_VERTEXES ) {
+				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i verts on %s (%i).\n",
+					mod_name, SHADER_MAX_VERTEXES - 1, surf->name[0] ? surf->name : "a surface",
+					surf->numVerts );
 				return qfalse;
 			}
-			if ( surf->numTriangles*3 > SHADER_MAX_INDEXES ) {
-				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i triangles on a surface (%i).\n",
-					mod_name, SHADER_MAX_INDEXES / 3, surf->numTriangles );
+			if ( surf->numTriangles*3 >= SHADER_MAX_INDEXES ) {
+				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i triangles on %s (%i).\n",
+					mod_name, ( SHADER_MAX_INDEXES / 3 ) - 1, surf->name[0] ? surf->name : "a surface",
+					surf->numTriangles );
 				return qfalse;
 			}
 
@@ -1512,8 +1518,10 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFram
 R_ModelBounds
 ====================
 */
-void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
+int R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac ) {
 	model_t		*model;
+	float		frontLerp, backLerp;
+	int			i;
 
 	model = R_GetModelByHandle( handle );
 
@@ -1521,55 +1529,103 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 		VectorCopy( model->bmodel->bounds[0], mins );
 		VectorCopy( model->bmodel->bounds[1], maxs );
 		
-		return;
+		return qtrue;
 	} else if (model->type == MOD_MESH) {
 		mdvModel_t	*header;
-		mdvFrame_t	*frame;
+		mdvFrame_t	*start, *end;
 
 		header = model->mdv[0];
-		frame = header->frames;
+		start = header->frames + startFrame % header->numFrames;
+		end = header->frames + endFrame % header->numFrames;
 
-		VectorCopy( frame->bounds[0], mins );
-		VectorCopy( frame->bounds[1], maxs );
+		if ( startFrame == endFrame ) {
+			VectorCopy( start->bounds[0], mins );
+			VectorCopy( start->bounds[1], maxs );
+		} else {
+			frontLerp = frac;
+			backLerp = 1.0f - frac;
+
+			for ( i = 0 ; i < 3 ; i++ ) {
+				mins[i] = start->bounds[0][i] * backLerp + end->bounds[0][i] * frontLerp;
+				maxs[i] = start->bounds[1][i] * backLerp + end->bounds[1][i] * frontLerp;
+			}
+		}
 		
-		return;
+		return qtrue;
 	} else if (model->type == MOD_MD4) {
 		md4Header_t	*header;
-		md4Frame_t	*frame;
+		md4Frame_t	*start, *end;
 
 		header = (md4Header_t *)model->modelData;
-		frame = (md4Frame_t *) ((byte *)header + header->ofsFrames);
+		start = (md4Frame_t *) ((byte *)header + header->ofsFrames) + startFrame % header->numFrames;
+		end = (md4Frame_t *) ((byte *)header + header->ofsFrames) + endFrame % header->numFrames;
 
-		VectorCopy( frame->bounds[0], mins );
-		VectorCopy( frame->bounds[1], maxs );
+		if ( startFrame == endFrame ) {
+			VectorCopy( start->bounds[0], mins );
+			VectorCopy( start->bounds[1], maxs );
+		} else {
+			frontLerp = frac;
+			backLerp = 1.0f - frac;
+
+			for ( i = 0 ; i < 3 ; i++ ) {
+				mins[i] = start->bounds[0][i] * backLerp + end->bounds[0][i] * frontLerp;
+				maxs[i] = start->bounds[1][i] * backLerp + end->bounds[1][i] * frontLerp;
+			}
+		}
 		
-		return;
+		return qtrue;
 	} else if (model->type == MOD_MDR) {
 		mdrHeader_t	*header;
-		mdrFrame_t	*frame;
+		mdrFrame_t	*start, *end;
 
 		header = (mdrHeader_t *)model->modelData;
-		frame = (mdrFrame_t *) ((byte *)header + header->ofsFrames);
+		start = (mdrFrame_t *) ((byte *)header + header->ofsFrames) + startFrame % header->numFrames;
+		end = (mdrFrame_t *) ((byte *)header + header->ofsFrames) + endFrame % header->numFrames;
 
-		VectorCopy( frame->bounds[0], mins );
-		VectorCopy( frame->bounds[1], maxs );
+		if ( startFrame == endFrame ) {
+			VectorCopy( start->bounds[0], mins );
+			VectorCopy( start->bounds[1], maxs );
+		} else {
+			frontLerp = frac;
+			backLerp = 1.0f - frac;
+
+			for ( i = 0 ; i < 3 ; i++ ) {
+				mins[i] = start->bounds[0][i] * backLerp + end->bounds[0][i] * frontLerp;
+				maxs[i] = start->bounds[1][i] * backLerp + end->bounds[1][i] * frontLerp;
+			}
+		}
 		
-		return;
+		return qtrue;
 	} else if(model->type == MOD_IQM) {
 		iqmData_t *iqmData;
+		vec_t *startBounds, *endBounds;
 		
 		iqmData = model->modelData;
 
 		if(iqmData->bounds)
 		{
-			VectorCopy(iqmData->bounds, mins);
-			VectorCopy(iqmData->bounds + 3, maxs);
-			return;
+			startBounds = iqmData->bounds + 6*(startFrame % iqmData->num_frames);
+			endBounds = iqmData->bounds + 6*(endFrame % iqmData->num_frames);
+
+			if ( startFrame == endFrame ) {
+				VectorCopy( startBounds, mins );
+				VectorCopy( startBounds+3, maxs );
+			} else {
+				frontLerp = frac;
+				backLerp = 1.0f - frac;
+
+				for ( i = 0 ; i < 3 ; i++ ) {
+					mins[i] = startBounds[i] * backLerp + endBounds[i] * frontLerp;
+					maxs[i] = startBounds[3+i] * backLerp + endBounds[3+i] * frontLerp;
+				}
+			}
+			return qtrue;
 		}
 	}
 
 	VectorClear( mins );
 	VectorClear( maxs );
+	return qfalse;
 }
 
 /*

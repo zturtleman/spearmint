@@ -101,7 +101,7 @@ Section "${NAME}" sec_q3a
   WriteRegDWORD SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${FSNAME}" "NoRepair" 1
   WriteUninstaller "uninstall-${FSNAME}.exe"
 
-  CreateShortCut "$SMPROGRAMS\${GAMENAME}\Quake III Arena.lnk" "$INSTDIR\${CLIENT}" "+set com_basegame baseq3" "$INSTDIR\${CLIENT}" 0 "" "" "Quake III Arena"
+  CreateShortCut "$SMPROGRAMS\${GAMENAME}\Quake III Arena.lnk" "$INSTDIR\${CLIENT}" "+set fs_game baseq3" "$INSTDIR\${CLIENT}" 0 "" "" "Quake III Arena"
 
 SectionEnd
 
@@ -147,7 +147,7 @@ Section "Quake III Team Arena" sec_q3ta
   File "missionpack/pak2.pk3"
   File "missionpack/pak3.pk3"
 
-  CreateShortCut "$SMPROGRAMS\${GAMENAME}\Team Arena.lnk" "$INSTDIR\${CLIENT}" "+set com_basegame baseq3 +set fs_game missionpack" "$INSTDIR\${CLIENT}" 0 "" "" "Team Arena"
+  CreateShortCut "$SMPROGRAMS\${GAMENAME}\Team Arena.lnk" "$INSTDIR\${CLIENT}" "+set fs_game missionpack" "$INSTDIR\${CLIENT}" 0 "" "" "Team Arena"
 
 SectionEnd
 

@@ -8,75 +8,79 @@
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/game_release/gamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_release" />
+				<Option output="../../build/release-codeblocks-x86/baseq3/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wall" />
+					<Add option="-m32" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
 				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+				</Linker>
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/game_debug/gamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_debug" />
+				<Option output="../../build/debug-codeblocks-x86/baseq3/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
-					<Add option="-W" />
+					<Add option="-m32" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+				</Linker>
 			</Target>
-			<Target title="Release TA Win32">
+			<Target title="Release Team Arena Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/game_release/gamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_release" />
+				<Option output="../../build/release-codeblocks-x86/missionpack/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wall" />
+					<Add option="-m32" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+				</Linker>
 			</Target>
-			<Target title="Debug TA Win32">
+			<Target title="Debug Team Arena Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/game_debug/gamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_debug" />
+				<Option output="../../build/debug-codeblocks-x86/missionpack/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="-W" />
+					<Add option="-m32" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+				</Linker>
 			</Target>
-			<Target title="Release Linux i386">
+			<Target title="Release Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_release/gamei386.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_release" />
+				<Option output="../../build/release-codeblocks-x86/baseq3/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wall" />
@@ -85,51 +89,42 @@
 					<Add option="-DNDEBUG" />
 				</Compiler>
 			</Target>
-			<Target title="Debug Linux i386">
+			<Target title="Debug Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_debug/gamei386.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_debug" />
+				<Option output="../../build/debug-codeblocks-x86/baseq3/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 				</Compiler>
 			</Target>
-			<Target title="Release TA Linux i386">
+			<Target title="Release Team Arena Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_release/gamei386.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_release" />
+				<Option output="../../build/release-codeblocks-x86/missionpack/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-Wall" />
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
-			<Target title="Debug TA Linux i386">
+			<Target title="Debug Team Arena Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_debug/gamei386.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_debug" />
+				<Option output="../../build/debug-codeblocks-x86/missionpack/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 					<Add option="-DMISSIONPACK" />
@@ -137,15 +132,12 @@
 			</Target>
 			<Target title="Release Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_release/gamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_release" />
+				<Option output="../../build/release-codeblocks-x86_64/baseq3/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86_64/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-Wall" />
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
@@ -153,55 +145,58 @@
 			</Target>
 			<Target title="Debug Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_debug/gamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_debug" />
+				<Option output="../../build/debug-codeblocks-x86_64/baseq3/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86_64/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 				</Compiler>
 			</Target>
-			<Target title="Release TA Linux x86_64">
+			<Target title="Release Team Arena Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_release/gamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_release" />
+				<Option output="../../build/release-codeblocks-x86_64/missionpack/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86_64/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-Wall" />
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
-			<Target title="Debug TA Linux x86_64">
+			<Target title="Debug Team Arena Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_debug/gamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_debug" />
+				<Option output="../../build/debug-codeblocks-x86_64/missionpack/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86_64/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
 		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-Wformat=2" />
+			<Add option="-Wno-format-zero-length" />
+			<Add option="-Wformat-security" />
+			<Add option="-Wno-format-nonliteral" />
+			<Add option="-Wstrict-aliasing=2" />
+			<Add option="-Wmissing-format-attribute" />
+			<Add option="-Wdisabled-optimization" />
+			<Add option="-Werror-implicit-function-declaration" />
+			<Add option="-fno-strict-aliasing" />
+		</Compiler>
 		<Unit filename="../../code/game/ai_chat.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -218,10 +213,22 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/game/ai_dmq3.h" />
+		<Unit filename="../../code/game/ai_ea.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_ea.h" />
+		<Unit filename="../../code/game/ai_goal.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_goal.h" />
 		<Unit filename="../../code/game/ai_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/game/ai_main.h" />
+		<Unit filename="../../code/game/ai_move.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_move.h" />
 		<Unit filename="../../code/game/ai_team.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -230,10 +237,19 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/game/ai_vcmd.h" />
+		<Unit filename="../../code/game/ai_weap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_weap.h" />
+		<Unit filename="../../code/game/ai_weight.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/ai_weight.h" />
 		<Unit filename="../../code/game/bg_lib.c">
 			<Option compilerVar="CC" />
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="../../code/game/bg_lib.h" />
 		<Unit filename="../../code/game/bg_local.h" />
 		<Unit filename="../../code/game/bg_misc.c">
 			<Option compilerVar="CC" />
@@ -269,9 +285,6 @@
 		</Unit>
 		<Unit filename="../../code/game/g_local.h" />
 		<Unit filename="../../code/game/g_main.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/game/g_mem.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/game/g_misc.c">
@@ -326,6 +339,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger />
+			<envvars />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

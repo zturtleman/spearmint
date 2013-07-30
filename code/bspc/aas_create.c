@@ -38,7 +38,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "aas_edgemelting.h"
 #include "aas_prunenodes.h"
 #include "aas_cfg.h"
-#include "../qcommon/surfaceflags.h" // ZTM(IOQ3): game to qcommon
+#include "../qcommon/surfaceflags.h"
 
 //#define AW_DEBUG
 //#define L_DEBUG
@@ -361,8 +361,8 @@ void AAS_CheckArea(tmp_area_t *tmparea)
 		} //end if
 		//check if the winding plane is the same as the face plane
 		WindingPlane(face->winding, normal, &dist);
-		plane = &mapplanes[face->planenum];
 #ifdef L_DEBUG
+		plane = &mapplanes[face->planenum];
 		if (fabs(dist - plane->dist) > 0.4 ||
 				fabs(normal[0] - plane->normal[0]) > 0.0001 ||
 				fabs(normal[1] - plane->normal[1]) > 0.0001 ||
@@ -700,20 +700,6 @@ tmp_node_t *AAS_CreateArea(node_t *node)
 					tmpface->faceflags |= FACE_LIQUIDSURFACE;
 				} //end if
 			} //end else
-			//if there's ladder contents at other side of the portal
-			if ((p->nodes[pside]->contents & CONTENTS_LADDER) ||
-					(p->nodes[!pside]->contents & CONTENTS_LADDER))
-			{
-
-				//NOTE: doesn't have to be solid at the other side because
-				// when standing one can use a crouch area (which is not solid)
-				// as a ladder
-				// imagine a ladder one can walk underthrough,
-				// under the ladder against the ladder is a crouch area
-				// the (vertical) sides of this crouch area area also used as
-				// ladder sides when standing (not crouched)
-				tmpface->faceflags |= FACE_LADDER;
-			} //end if
 			//if it is possible to stand on the face
 			if (AAS_GroundFace(tmpface))
 			{

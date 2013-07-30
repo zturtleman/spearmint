@@ -115,7 +115,7 @@ static void UI_SelectPlayer_MenuInit( const char *banner ) {
 	selectPlayerMenu.banner.generic.x				= 320;
 	selectPlayerMenu.banner.generic.y				= 16;
 	selectPlayerMenu.banner.string					= selectPlayerMenu.bannerString;
-	selectPlayerMenu.banner.color					= color_white;
+	selectPlayerMenu.banner.color					= text_banner_color;
 	selectPlayerMenu.banner.style					= UI_CENTER;
 
 	selectPlayerMenu.framel.generic.type			= MTYPE_BITMAP;
@@ -146,7 +146,7 @@ static void UI_SelectPlayer_MenuInit( const char *banner ) {
 		selectPlayerMenu.player[i].generic.id			= ID_CUSTOMIZECONTROLS + i;
 		selectPlayerMenu.player[i].generic.callback		= UI_SelectPlayerMenu_Event;
 		selectPlayerMenu.player[i].string				= selectPlayerMenu.playerString[i];
-		selectPlayerMenu.player[i].color				= color_red;
+		selectPlayerMenu.player[i].color				= text_big_color;
 		selectPlayerMenu.player[i].style				= UI_CENTER;
 
 		y += SETUP_MENU_VERTICAL_SPACING;

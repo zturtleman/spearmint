@@ -372,17 +372,17 @@ static void CG_TouchItem( centity_t *cent ) {
 	// We don't predict touching our own flag
 #ifdef MISSIONPACK
 	if( cgs.gametype == GT_1FCTF ) {
-		if( item->giTag != PW_NEUTRALFLAG ) {
+		if( item->giType == IT_TEAM && item->giTag != PW_NEUTRALFLAG ) {
 			return;
 		}
 	}
 #endif
 	if( cgs.gametype == GT_CTF ) {
 		if (cg.cur_lc->predictedPlayerState.persistant[PERS_TEAM] == TEAM_RED &&
-			item->giTag == PW_REDFLAG)
+			item->giType == IT_TEAM && item->giTag == PW_REDFLAG)
 			return;
 		if (cg.cur_lc->predictedPlayerState.persistant[PERS_TEAM] == TEAM_BLUE &&
-			item->giTag == PW_BLUEFLAG)
+			item->giType == IT_TEAM && item->giTag == PW_BLUEFLAG)
 			return;
 	}
 
@@ -587,10 +587,10 @@ void CG_PredictPlayerState( void ) {
 	}
 
 	if ( pmove_msec.integer < 8 ) {
-		trap_Cvar_Set("pmove_msec", "8");
+		trap_Cvar_SetValue( "pmove_msec", 8 );
 	}
-	else if (pmove_msec.integer > 33) {
-		trap_Cvar_Set("pmove_msec", "33");
+	else if ( pmove_msec.integer > 33 ) {
+		trap_Cvar_SetValue( "pmove_msec", 33 );
 	}
 
 	cg_pmove.pmove_fixed = pmove_fixed.integer;// | cg_pmove_fixed.integer;

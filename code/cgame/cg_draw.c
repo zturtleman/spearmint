@@ -338,7 +338,7 @@ void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t head
 		}
 
 		// offset the origin y and z to center the head
-		trap_R_ModelBounds( cm, mins, maxs );
+		trap_R_ModelBounds( cm, mins, maxs, 0, 0, 0 );
 
 		origin[2] = -0.5 * ( mins[2] + maxs[2] );
 		origin[1] = 0.5 * ( mins[1] + maxs[1] );
@@ -383,7 +383,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 		cm = cgs.media.redFlagModel;
 
 		// offset the origin y and z to center the flag
-		trap_R_ModelBounds( cm, mins, maxs );
+		trap_R_ModelBounds( cm, mins, maxs, 0, 0, 0 );
 
 		origin[2] = -0.5 * ( mins[2] + maxs[2] );
 		origin[1] = 0.5 * ( mins[1] + maxs[1] );
@@ -1431,6 +1431,8 @@ static void CG_DrawTeamInfo( void ) {
 	if (chatHeight <= 0)
 		return; // disabled
 
+	CG_SetScreenPlacement( PLACE_LEFT, PLACE_BOTTOM );
+
 	if (cgs.teamLastChatPos != cgs.teamChatPos) {
 		if (cg.time - cgs.teamChatMsgTimes[cgs.teamLastChatPos % chatHeight] > cg_teamChatTime.integer) {
 			cgs.teamLastChatPos++;
@@ -2349,6 +2351,57 @@ static void CG_DrawCrosshairNames( void ) {
 	}
 }
 
+/*
+=====================
+CG_DrawShaderInfo
+=====================
+*/
+static void CG_DrawShaderInfo( void ) {
+	char		name[MAX_QPATH];
+	float		x, y, width, height;
+	vec4_t		color = { 1, 1, 1, 1 };
+	qhandle_t	hShader;
+	trace_t		trace;
+	vec3_t		start, end;
+	qboolean	everything = qtrue;
+
+	if ( !cg_drawShaderInfo.integer ) {
+		return;
+	}
+
+	width = 128;
+	height = 128;
+
+	VectorCopy( cg.refdef.vieworg, start );
+	VectorMA( start, 131072, cg.refdef.viewaxis[0], end );
+
+	CG_Trace( &trace, start, vec3_origin, vec3_origin, end,
+		cg.cur_ps->clientNum, everything ? ~0 : CONTENTS_SOLID );
+
+	if ( trace.surfaceNum <= 0 )
+		return;
+
+	// scan the known entities to see if the crosshair is sighted on one
+	hShader = trap_R_GetSurfaceShader( trace.surfaceNum, -1 );
+
+	trap_R_GetShaderName( hShader, name, sizeof ( name ) );
+
+	CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+
+#ifdef MISSIONPACK_HUD
+	color[3] *= 0.5f;
+	CG_Text_Paint( 0, SCREEN_HEIGHT - height - 28, 0.3f, color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED);
+#else
+	CG_DrawBigString( 0, SCREEN_HEIGHT - height - 28, name, color[3] * 0.5f );
+#endif
+	trap_R_SetColor( NULL );
+
+	x = 0;
+	y = SCREEN_HEIGHT - height;
+
+	CG_AdjustFrom640( &x, &y, &width, &height );
+	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
+}
 
 //==============================================================================
 
@@ -2717,23 +2770,7 @@ static void CG_DrawWarmup( void ) {
 #endif
 		}
 	} else {
-		if ( cgs.gametype == GT_FFA ) {
-			s = "Free For All";
-		} else if ( cgs.gametype == GT_TEAM ) {
-			s = "Team Deathmatch";
-		} else if ( cgs.gametype == GT_CTF ) {
-			s = "Capture the Flag";
-#ifdef MISSIONPACK
-		} else if ( cgs.gametype == GT_1FCTF ) {
-			s = "One Flag CTF";
-		} else if ( cgs.gametype == GT_OBELISK ) {
-			s = "Overload";
-		} else if ( cgs.gametype == GT_HARVESTER ) {
-			s = "Harvester";
-#endif
-		} else {
-			s = "";
-		}
+		s = cgs.gametypeName;
 #ifdef MISSIONPACK_HUD
 		w = CG_Text_Width(s, 0.6f, 0);
 		CG_Text_Paint(320 - w / 2, 90, 0.6f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
@@ -2988,6 +3025,8 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 	CG_DrawLowerLeft();
 #endif
 
+	CG_DrawShaderInfo();
+
 	CG_DrawFollow();
 
 	// don't draw center string if scoreboard is up
@@ -3013,23 +3052,25 @@ CG_FogView
 =====================
 */
 void CG_FogView( void ) {
-	if ( cg.refdef.rdflags & RDF_UNDERWATER ) {
-		trap_R_GetWaterFog( cg.refdef.vieworg, &cg.refdef.fogType, cg.refdef.fogColor, &cg.refdef.fogDepthForOpaque, &cg.refdef.fogDensity );
+	qboolean inwater;
 
-		// Check if using global fog for everything except color.
-		if ( cg.refdef.fogType == FT_NONE && ( cg.refdef.fogColor[0] || cg.refdef.fogColor[1] || cg.refdef.fogColor[2] ) ) {
-			cg.refdef.fogType = cgs.globalFogType;
-			cg.refdef.fogDepthForOpaque = cgs.globalFogDepthForOpaque;
-			cg.refdef.fogDensity = cgs.globalFogDensity;
-		}
-		return;
+	inwater = ( cg.refdef.rdflags & RDF_UNDERWATER );
+
+	trap_R_GetViewFog( cg.refdef.vieworg, &cg.refdef.fogType, cg.refdef.fogColor, &cg.refdef.fogDepthForOpaque, &cg.refdef.fogDensity, inwater );
+
+	if ( cg.refdef.fogType == FT_NONE && ( cg.refdef.fogColor[0] || cg.refdef.fogColor[1] || cg.refdef.fogColor[2] ) ) {
+		// use global fog with custom color
+		cg.refdef.fogType = cgs.globalFogType;
+		cg.refdef.fogDepthForOpaque = cgs.globalFogDepthForOpaque;
+		cg.refdef.fogDensity = cgs.globalFogDensity;
+	} else if ( cg.refdef.fogType == FT_NONE ) {
+		// no view fog, use global fog
+		cg.refdef.fogType = cgs.globalFogType;
+		cg.refdef.fogDepthForOpaque = cgs.globalFogDepthForOpaque;
+		cg.refdef.fogDensity = cgs.globalFogDensity;
+
+		VectorCopy( cgs.globalFogColor, cg.refdef.fogColor );
 	}
-
-	// Use global fog from bsp or fogvars in shader.
-	cg.refdef.fogType = cgs.globalFogType;
-	VectorCopy( cgs.globalFogColor, cg.refdef.fogColor );
-	cg.refdef.fogDepthForOpaque = cgs.globalFogDepthForOpaque;
-	cg.refdef.fogDensity = cgs.globalFogDensity;
 }
 
 /*

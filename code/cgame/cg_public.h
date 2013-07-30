@@ -28,6 +28,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
+#ifndef __CG_PUBLIC_H__
+#define __CG_PUBLIC_H__
 
 #define CG_API_MAJOR_VERSION	0xdead
 #define CG_API_MINOR_VERSION	0xbeef
@@ -79,6 +81,24 @@ enum {
 };
 
 
+typedef struct {
+	connstate_t		connState;
+	int				connectPacketCount;
+	int				clientNums[MAX_SPLITVIEW];
+	int				psClientNums[MAX_SPLITVIEW]; // clientNums from player states, which could be followed clients.
+	char			servername[MAX_STRING_CHARS];
+	char			updateInfoString[MAX_STRING_CHARS];
+	char			messageString[MAX_STRING_CHARS];
+} uiClientState_t;
+
+// Used by LAN_CompareServers
+#define SORT_HOST			0
+#define SORT_MAP			1
+#define SORT_CLIENTS		2
+#define SORT_GAME			3
+#define SORT_PING			4
+
+
 /*
 ==================================================================
 
@@ -117,6 +137,7 @@ typedef enum {
 	CG_CVAR_VARIABLE_STRING_BUFFER,
 	CG_CVAR_LATCHED_VARIABLE_STRING_BUFFER,
 	CG_CVAR_INFO_STRING_BUFFER,
+	CG_CVAR_CHECK_RANGE,
 
 	CG_FS_FOPENFILE,
 	CG_FS_READ,
@@ -149,14 +170,13 @@ typedef enum {
 	CG_GET_VOIP_MUTE_CLIENT,
 	CG_GET_VOIP_MUTE_ALL,
 
-	// these are not available in ui
+	// note: these were not originally available in ui
 	CG_GETGAMESTATE = 150,
 	CG_GETCURRENTSNAPSHOTNUMBER,
 	CG_GETSNAPSHOT,
 	CG_GETSERVERCOMMAND,
 	CG_GETCURRENTCMDNUMBER,
 	CG_GETUSERCMD,
-	CG_SETUSERCMDVALUE,
 	CG_SENDCLIENTCOMMAND,
 	CG_SET_NET_FIELDS,
 	CG_GETDEMOSTATE,
@@ -164,6 +184,9 @@ typedef enum {
 	CG_GETDEMONAME,
 	CG_GETDEMOLENGTH,
 
+	// note: these were not originally available in cgame
+	CG_GETCLIENTSTATE = 190,
+	CG_GETCONFIGSTRING,
 
 	// these are not available in ui
 	CG_CM_LOADMAP = 200,
@@ -204,14 +227,18 @@ typedef enum {
 	CG_R_ADDPOLYSTOSCENE,
 	CG_R_ADDPOLYBUFFERTOSCENE,
 
-	// these are not available in ui
+	// note: these were not originally available in ui
 	CG_R_LOADWORLDMAP = 350,
 	CG_GET_ENTITY_TOKEN,
 	CG_R_LIGHTFORPOINT,
 	CG_R_INPVS,
 	CG_R_ADDADDITIVELIGHTTOSCENE,
 	CG_R_GET_GLOBAL_FOG,
-	CG_R_GET_WATER_FOG,
+	CG_R_GET_VIEW_FOG,
+	CG_R_SET_SURFACE_SHADER,
+	CG_R_GET_SURFACE_SHADER,
+	CG_R_GET_SHADER_FROM_MODEL,
+	CG_R_GET_SHADER_NAME,
 
 
 	CG_S_REGISTERSOUND = 400,
@@ -220,7 +247,7 @@ typedef enum {
 	CG_S_STARTBACKGROUNDTRACK,
 	CG_S_STOPBACKGROUNDTRACK,
 
-	// these are not available in ui
+	// note: these were not originally available in ui
 	CG_S_STARTSOUND = 450,
 	CG_S_CLEARLOOPINGSOUNDS,
 	CG_S_ADDLOOPINGSOUND,
@@ -240,6 +267,30 @@ typedef enum {
 	CG_KEY_GETCATCHER,
 	CG_KEY_SETCATCHER,
 	CG_KEY_GETKEY,
+
+
+	CG_LAN_GETPINGQUEUECOUNT = 550,
+	CG_LAN_CLEARPING,
+	CG_LAN_GETPING,
+	CG_LAN_GETPINGINFO,
+
+	CG_LAN_GETSERVERCOUNT,
+	CG_LAN_GETSERVERADDRESSSTRING,
+	CG_LAN_GETSERVERINFO,
+	CG_LAN_MARKSERVERVISIBLE,
+	CG_LAN_UPDATEVISIBLEPINGS,
+	CG_LAN_RESETPINGS,
+	CG_LAN_LOADCACHEDSERVERS,
+	CG_LAN_SAVECACHEDSERVERS,
+	CG_LAN_ADDSERVER,
+	CG_LAN_REMOVESERVER,
+
+	CG_LAN_SERVERSTATUS,
+	CG_LAN_GETSERVERPING,
+	CG_LAN_SERVERISVISIBLE,
+	CG_LAN_COMPARESERVERS,
+
+	CG_LAN_SERVERISINFAVORITELIST,
 
 
  	CG_CIN_PLAYCINEMATIC = 600,
@@ -311,6 +362,9 @@ typedef enum {
 	CG_MOUSE_EVENT,
 //	void	(*CG_MouseEvent)( int localClientNum, int dx, int dy );
 
+	CG_JOYSTICK_EVENT,
+//	void	(*CG_JoystickEvent)( int localClientNum, int axis, int value );
+
 	CG_EVENT_HANDLING,
 //	void (*CG_EventHandling)(int type);
 
@@ -319,9 +373,12 @@ typedef enum {
 //	pass text that has been printed to the console to cgame
 //	use Cmd_Argc() / Cmd_Argv() to read it
 
-	CG_WANTSBINDKEYS
+	CG_WANTSBINDKEYS,
 //	qboolean CG_WantsBindKeys( void );
+
+	CG_CREATE_USER_CMD
+//	usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, int frameMsec, float mx, float my );
 
 } cgameExport_t;
 
-//----------------------------------------------
+#endif

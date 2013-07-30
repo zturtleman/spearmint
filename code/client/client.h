@@ -108,18 +108,6 @@ extern int g_console_field_width;
 typedef struct {
 	int			mouseDx[2], mouseDy[2];	// added to by mouse events
 	int			mouseIndex;
-	int			joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
-
-	// cgame communicates a few values to the client system
-	int			cgameUserCmdValue;	// current weapon to add to usercmd_t
-	float		cgameSensitivity;
-
-	// the client maintains its own idea of view angles, which are
-	// sent to the server each frame.  It is cleared to 0 upon entering each level.
-	// the server sends a delta each frame which is added to the locally
-	// tracked view angles to account for standing on rotating objects,
-	// and teleport direction changes
-	vec3_t		viewangles;
 
 } calc_t;
 
@@ -157,6 +145,7 @@ typedef struct {
 												// can tell if it is for a prior map_restart
 	// big stuff at end of structure so most offsets are 15 bits or less
 	clSnapshot_t	snapshots[PACKET_BACKUP];
+	darray_t		tempSnapshotPS;
 
 	darray_t		entityBaselines; // entityState_t [MAX_GENTITIES], for delta compression when not in previous frame
 
@@ -326,7 +315,7 @@ typedef struct {
 	char	  	mapName[MAX_NAME_LENGTH];
 	char	  	game[MAX_NAME_LENGTH];
 	int			netType;
-	int			gameType;
+	char		gameType[MAX_NAME_LENGTH];
 	int		  	clients;
 	int		  	maxClients;
 	int			minPing;
@@ -394,7 +383,6 @@ extern	refexport_t		re;		// interface to refresh .dll
 // cvars
 //
 extern	cvar_t	*cl_nodelta;
-extern	cvar_t	*cl_debugMove;
 extern	cvar_t	*cl_noprint;
 extern	cvar_t	*cl_timegraph;
 extern	cvar_t	*cl_maxpackets;
@@ -405,35 +393,14 @@ extern	cvar_t	*cl_timeNudge;
 extern	cvar_t	*cl_showTimeDelta;
 extern	cvar_t	*cl_freezeDemo;
 
-extern	cvar_t	*cl_yawspeed[CL_MAX_SPLITVIEW];
-extern	cvar_t	*cl_pitchspeed[CL_MAX_SPLITVIEW];
-extern	cvar_t	*cl_anglespeedkey[CL_MAX_SPLITVIEW];
-extern	cvar_t	*cl_run[CL_MAX_SPLITVIEW];
-
 extern	cvar_t	*cl_sensitivity;
-extern	cvar_t	*cl_freelook;
 
 extern	cvar_t	*cl_mouseAccel;
 extern	cvar_t	*cl_mouseAccelOffset;
 extern	cvar_t	*cl_mouseAccelStyle;
 extern	cvar_t	*cl_showMouseRate;
 
-extern	cvar_t	*m_pitch;
-extern	cvar_t	*m_yaw;
-extern	cvar_t	*m_forward;
-extern	cvar_t	*m_side;
 extern	cvar_t	*m_filter;
-
-extern	cvar_t	*j_pitch[CL_MAX_SPLITVIEW];
-extern	cvar_t	*j_yaw[CL_MAX_SPLITVIEW];
-extern	cvar_t	*j_forward[CL_MAX_SPLITVIEW];
-extern	cvar_t	*j_side[CL_MAX_SPLITVIEW];
-extern	cvar_t	*j_up[CL_MAX_SPLITVIEW];
-extern	cvar_t	*j_pitch_axis[CL_MAX_SPLITVIEW];
-extern	cvar_t	*j_yaw_axis[CL_MAX_SPLITVIEW];
-extern	cvar_t	*j_forward_axis[CL_MAX_SPLITVIEW];
-extern	cvar_t	*j_side_axis[CL_MAX_SPLITVIEW];
-extern	cvar_t	*j_up_axis[CL_MAX_SPLITVIEW];
 
 extern	cvar_t	*cl_timedemo;
 extern	cvar_t	*cl_aviFrameRate;
@@ -449,6 +416,7 @@ extern	cvar_t	*cl_inGameVideo;
 extern	cvar_t	*cl_lanForcePackets;
 extern	cvar_t	*cl_autoRecordDemo;
 
+extern	cvar_t	*con_autochat;
 extern	cvar_t	*cl_consoleKeys;
 
 #ifdef USE_MUMBLE
@@ -509,14 +477,6 @@ qboolean CL_CheckPaused(void);
 //
 // cl_input
 //
-typedef struct {
-	int			down[2];		// key nums holding it down
-	unsigned	downtime;		// msec timestamp
-	unsigned	msec;			// msec down this frame if both a down and up happened
-	qboolean	active;			// current state
-	qboolean	wasPressed;		// set when down, not cleared when up
-} kbutton_t;
-
 void CL_InitInput(void);
 void CL_ShutdownInput(void);
 void CL_SendCmd (void);
@@ -525,11 +485,9 @@ void CL_InitConnection (qboolean clear);
 void CL_ReadPackets (void);
 
 void CL_WritePacket( void );
-void IN_CenterView( int localPlayerNum );
 
 void CL_VerifyCode( void );
 
-float CL_KeyState (kbutton_t *key);
 int Key_StringToKeynum( char *str );
 char *Key_KeynumToString (int keynum);
 
@@ -664,4 +622,6 @@ qboolean CL_VideoRecording( void );
 // cl_main.c
 //
 void CL_WriteDemoMessage ( msg_t *msg, int headerBytes );
+void CL_GetMapMessage(char *buf, int bufLength);
+qboolean CL_GetClientLocation(char *buf, int bufLength, int localClientNum);
 

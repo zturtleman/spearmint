@@ -39,27 +39,19 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "l_threads.h"
 #include "../botlib/l_script.h"
 #include "l_bsp_ent.h"
-#include "q2files.h"
+#include "qfiles.h"
 #include "l_mem.h"
 #include "l_utils.h"
 #include "l_log.h"
 #include "l_qfiles.h"
 
-#define TURTLEARENA // ZTM: Minor changes for Turtle Arena
+#define BSPC_NAME			"Spearmint BSPC"
+#define BSPC_VERSION		"2.2"
 
-#ifdef TURTLEARENA
-#define TA_ENTSYS
-#define TA_WEAPSYS
+#define ZTMAUTOARGS
 
-#define BSPC_VERSION		"2.1h [Turtle Arena]"
-#else
-#define BSPC_VERSION		"2.1h"
-#endif
-
-#define ME
 #define DEBUG
 #define NODELIST
-#define SIN
 
 #ifdef _MSC_VER
   // vsnprintf is ISO/IEC 9899:1999
@@ -110,7 +102,6 @@ typedef struct side_s
 	int				texinfo;		// texture reference
 	winding_t		*winding;	// winding of this side
 	struct side_s	*original;	// bspbrush_t sides will reference the mapbrush_t sides
-   int				lightinfo;	// for SIN only
 	int				contents;	// from miptex
 	int				surf;			// from miptex
 	unsigned short flags;		// side flags
@@ -122,11 +113,9 @@ typedef struct mapbrush_s
 	int		brushnum;
 
 	int		contents;
-#ifdef ME
 	int		expansionbbox;			//bbox used for expansion of the brush
 	int		leafnum;
 	int		modelnum;
-#endif
 
 	vec3_t	mins, maxs;
 
@@ -146,9 +135,6 @@ typedef struct face_s
 
 	struct portal_s	*portal;
 	int					texinfo;
-#ifdef SIN
-   int					lightinfo;
-#endif
 	int					planenum;
 	int					contents;	// faces in different contents can't merge
 	int					outputnumber;
@@ -193,10 +179,8 @@ typedef struct node_s
 #ifdef NODELIST
 	struct node_s *next;			//next node in the nodelist
 #endif
-#ifdef ME
 	int expansionbboxes;			//OR of all bboxes used for expansion of the brushes
 	int modelnum;
-#endif
 } node_t;		//sizeof(node_t) = 80 bytes
 //bsp portal
 typedef struct portal_s
@@ -210,10 +194,8 @@ typedef struct portal_s
 	qboolean	sidefound;			// false if ->side hasn't been checked
 	side_t *side;					// NULL = non-visible
 	face_t *face[2];				// output face in bsp file
-#ifdef ME
 	struct tmp_face_s *tmpface;		//pointer to the tmpface created for this portal
 	int planenum;					//number of the map plane used by the portal
-#endif
 } portal_t;
 //bsp tree
 typedef struct
@@ -237,7 +219,6 @@ extern	qboolean noweld;
 extern	qboolean noshare;
 extern	qboolean notjunc;
 extern	qboolean onlyents;
-#ifdef ME
 extern	qboolean nocsg;
 extern	qboolean create_aas;
 extern	qboolean freetree;
@@ -246,7 +227,6 @@ extern	qboolean nobrushmerge;
 extern	qboolean cancelconversion;
 extern	qboolean noliquids;
 extern	qboolean capsule_collision;
-#endif //ME
 
 extern	float subdivide_size;
 extern	vec_t microvolume;
@@ -261,7 +241,6 @@ extern	char source[1024];
 #define MAX_MAPFILE_PLANES			256000
 #define MAX_MAPFILE_BRUSHES			65535
 #define MAX_MAPFILE_BRUSHSIDES		(MAX_MAPFILE_BRUSHES*8)
-#define MAX_MAPFILE_TEXINFO			8192
 
 extern	int			entity_num;
 
@@ -278,26 +257,7 @@ extern	int			nummapbrushsides;
 extern	side_t		brushsides[MAX_MAPFILE_BRUSHSIDES];
 extern	brush_texture_t	side_brushtextures[MAX_MAPFILE_BRUSHSIDES];
 
-#ifdef ME
-
-typedef struct
-{
-	float	vecs[2][4];		// [s/t][xyz offset]
-	int		flags;			// miptex flags + overrides
-	int		value;
-	char	texture[64];	// texture name (textures/*.wal)
-	int		nexttexinfo;	// for animations, -1 = end of chain
-} map_texinfo_t;
-
-extern	map_texinfo_t		map_texinfo[MAX_MAPFILE_TEXINFO];
-extern	int					map_numtexinfo;
 #define NODESTACKSIZE		1024
-
-#define MAPTYPE_QUAKE1		1
-#define MAPTYPE_QUAKE2		2
-#define MAPTYPE_QUAKE3		3
-#define MAPTYPE_HALFLIFE	4
-#define MAPTYPE_SIN			5
 
 extern	int nodestack[NODESTACKSIZE];
 extern	int *nodestackptr;
@@ -306,14 +266,23 @@ extern	int brushmodelnumbers[MAX_MAPFILE_BRUSHES];
 extern	int dbrushleafnums[MAX_MAPFILE_BRUSHES];
 extern	int dplanes2mapplanes[MAX_MAPFILE_PLANES];
 
-extern	int loadedmaptype;
-#endif //ME
-
 extern	int c_boxbevels;
 extern	int c_edgebevels;
 extern	int c_areaportals;
 extern	int c_clipbrushes;
 extern	int c_squattbrushes;
+
+// 0-2 are axial planes
+#define	PLANE_X			0
+#define	PLANE_Y			1
+#define	PLANE_Z			2
+
+// 3-5 are non-axial planes snapped to the nearest
+#define	PLANE_ANYX		3
+#define	PLANE_ANYY		4
+#define	PLANE_ANYZ		5
+
+// planes (x&~1) and (x&~1)+1 are allways opposites
 
 //finds a float plane for the given normal and distance
 int FindFloatPlane(vec3_t normal, vec_t dist);
@@ -339,72 +308,11 @@ void PrintMapInfo(void);
 void WriteMapFile(char *filename);
 
 //=============================================================================
-// map_q2.c
-//=============================================================================
-
-void Q2_ResetMapLoading(void);
-//loads a Quake2 map file
-void Q2_LoadMapFile(char *filename);
-//loads a map from a Quake2 bsp file
-void Q2_LoadMapFromBSP(char *filename, int offset, int length);
-
-//=============================================================================
-// map_q1.c
-//=============================================================================
-
-void Q1_ResetMapLoading(void);
-//loads a Quake2 map file
-void Q1_LoadMapFile(char *filename);
-//loads a map from a Quake1 bsp file
-void Q1_LoadMapFromBSP(char *filename, int offset, int length);
-
-//=============================================================================
 // map_q3.c
 //=============================================================================
 void Q3_ResetMapLoading(void);
 //loads a map from a Quake3 bsp file
 void Q3_LoadMapFromBSP(struct quakefile_s *qf);
-
-//=============================================================================
-// map_sin.c
-//=============================================================================
-
-void Sin_ResetMapLoading(void);
-//loads a Sin map file
-void Sin_LoadMapFile(char *filename);
-//loads a map from a Sin bsp file
-void Sin_LoadMapFromBSP(char *filename, int offset, int length);
-
-//=============================================================================
-// map_hl.c
-//=============================================================================
-
-void HL_ResetMapLoading(void);
-//loads a Half-Life map file
-void HL_LoadMapFile(char *filename);
-//loads a map from a Half-Life bsp file
-void HL_LoadMapFromBSP(char *filename, int offset, int length);
-
-//=============================================================================
-// textures.c
-//=============================================================================
-
-typedef struct
-{
-	char	name[64];
-	int		flags;
-	int		value;
-	int		contents;
-	char	animname[64];
-} textureref_t;
-
-#define	MAX_MAP_TEXTURES	1024
-
-extern	textureref_t	textureref[MAX_MAP_TEXTURES];
-
-int FindMiptex(char *name);
-int TexinfoForBrushTexture(plane_t *plane, brush_texture_t *bt, vec3_t origin);
-void TextureAxisFromPlane(plane_t *pln, vec3_t xv, vec3_t yv);
 
 //=============================================================================
 // csg
@@ -462,26 +370,6 @@ void MarkVisibleSides (tree_t *tree, int start, int end);
 void FreePortal (portal_t *p);
 void EmitAreaPortals (node_t *headnode);
 void MakeTreePortals (tree_t *tree);
-
-//=============================================================================
-// glfile.c
-//=============================================================================
-
-void OutputWinding(winding_t *w, FILE *glview);
-void WriteGLView(tree_t *tree, char *source);
-
-//=============================================================================
-// gldraw.c
-//=============================================================================
-
-extern vec3_t draw_mins, draw_maxs;
-extern qboolean drawflag;
-
-void Draw_ClearWindow (void);
-void DrawWinding (winding_t *w);
-void GLS_BeginScene (void);
-void GLS_Winding (winding_t *w, int code);
-void GLS_EndScene (void);
 
 //=============================================================================
 // leakfile.c

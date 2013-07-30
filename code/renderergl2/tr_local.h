@@ -371,12 +371,12 @@ enum
 	TB_DIFFUSEMAP  = 0,
 	TB_LIGHTMAP    = 1,
 	TB_LEVELSMAP   = 1,
-	TB_SHADOWMAP   = 1,
+	TB_SHADOWMAP3  = 1,
 	TB_NORMALMAP   = 2,
 	TB_DELUXEMAP   = 3,
 	TB_SHADOWMAP2  = 3,
 	TB_SPECULARMAP = 4,
-	TB_SHADOWMAP3  = 5,
+	TB_SHADOWMAP   = 5,
 	NUM_TEXTURE_BUNDLES = 6
 };
 
@@ -469,7 +469,7 @@ typedef struct shader_s {
 	qboolean	isSky;
 	skyParms_t	sky;
 	fogParms_t	fogParms;
-	fogParms_t	waterFogParms;
+	fogParms_t	viewFogParms;
 
 	float		portalRange;			// distance to fog out at
 	qboolean	isPortal;
@@ -735,6 +735,86 @@ enum
 	GLSL_MAT16
 };
 
+typedef enum
+{
+	UNIFORM_DIFFUSEMAP = 0,
+	UNIFORM_LIGHTMAP,
+	UNIFORM_NORMALMAP,
+	UNIFORM_DELUXEMAP,
+	UNIFORM_SPECULARMAP,
+
+	UNIFORM_TEXTUREMAP,
+	UNIFORM_LEVELSMAP,
+
+	UNIFORM_SCREENIMAGEMAP,
+	UNIFORM_SCREENDEPTHMAP,
+
+	UNIFORM_SHADOWMAP,
+	UNIFORM_SHADOWMAP2,
+	UNIFORM_SHADOWMAP3,
+
+	UNIFORM_SHADOWMVP,
+	UNIFORM_SHADOWMVP2,
+	UNIFORM_SHADOWMVP3,
+
+	UNIFORM_DIFFUSETEXMATRIX,
+	UNIFORM_DIFFUSETEXOFFTURB,
+	UNIFORM_TEXTURE1ENV,
+
+	UNIFORM_TCGEN0,
+	UNIFORM_TCGEN0VECTOR0,
+	UNIFORM_TCGEN0VECTOR1,
+
+	UNIFORM_DEFORMGEN,
+	UNIFORM_DEFORMPARAMS,
+
+	UNIFORM_COLORGEN,
+	UNIFORM_ALPHAGEN,
+	UNIFORM_COLOR,
+	UNIFORM_BASECOLOR,
+	UNIFORM_VERTCOLOR,
+
+	UNIFORM_DLIGHTINFO,
+	UNIFORM_LIGHTFORWARD,
+	UNIFORM_LIGHTUP,
+	UNIFORM_LIGHTRIGHT,
+	UNIFORM_LIGHTORIGIN,
+	UNIFORM_LIGHTRADIUS,
+	UNIFORM_AMBIENTLIGHT,
+	UNIFORM_DIRECTEDLIGHT,
+
+	UNIFORM_PORTALRANGE,
+
+	UNIFORM_FOGDISTANCE,
+	UNIFORM_FOGDEPTH,
+	UNIFORM_FOGEYET,
+	UNIFORM_FOGCOLORMASK,
+
+	UNIFORM_MODELMATRIX,
+	UNIFORM_MODELVIEWPROJECTIONMATRIX,
+
+	UNIFORM_TIME,
+	UNIFORM_VERTEXLERP,
+	UNIFORM_MATERIALINFO,
+
+	UNIFORM_VIEWINFO, // znear, zfar, width/2, height/2
+	UNIFORM_VIEWORIGIN,
+	UNIFORM_VIEWFORWARD,
+	UNIFORM_VIEWLEFT,
+	UNIFORM_VIEWUP,
+
+	UNIFORM_INVTEXRES,
+	UNIFORM_AUTOEXPOSUREMINMAX,
+	UNIFORM_TONEMINAVGMAXLINEAR,
+
+	UNIFORM_PRIMARYLIGHTORIGIN,
+	UNIFORM_PRIMARYLIGHTCOLOR,
+	UNIFORM_PRIMARYLIGHTAMBIENT,
+	UNIFORM_PRIMARYLIGHTRADIUS,
+
+	UNIFORM_COUNT
+} uniform_t;
+
 // shaderProgram_t represents a pair of one
 // GLSL vertex and one GLSL fragment shader
 typedef struct shaderProgram_s
@@ -747,145 +827,10 @@ typedef struct shaderProgram_s
 	uint32_t        attribs;	// vertex array attributes
 
 	// uniform parameters
-	int   numUniforms;
-	GLint *uniforms;
-	char  *uniformTypes;         // max 127 uniform types
-	short *uniformBufferOffsets; // max 32767/64=511 uniforms
+	GLint uniforms[UNIFORM_COUNT];
+	short uniformBufferOffsets[UNIFORM_COUNT]; // max 32767/64=511 uniforms
 	char  *uniformBuffer;
 } shaderProgram_t;
-
-
-enum
-{
-	TEXTURECOLOR_UNIFORM_MODELVIEWPROJECTIONMATRIX = 0,
-	TEXTURECOLOR_UNIFORM_INVTEXRES,
-	TEXTURECOLOR_UNIFORM_AUTOEXPOSUREMINMAX,
-	TEXTURECOLOR_UNIFORM_TONEMINAVGMAXLINEAR,
-	TEXTURECOLOR_UNIFORM_TEXTUREMAP,
-	TEXTURECOLOR_UNIFORM_LEVELSMAP,
-	TEXTURECOLOR_UNIFORM_COLOR,
-	TEXTURECOLOR_UNIFORM_COUNT
-};
-
-
-enum
-{
-	FOGPASS_UNIFORM_FOGDISTANCE = 0,
-	FOGPASS_UNIFORM_FOGDEPTH,
-	FOGPASS_UNIFORM_FOGEYET,
-	FOGPASS_UNIFORM_DEFORMGEN,
-	FOGPASS_UNIFORM_DEFORMPARAMS,
-	FOGPASS_UNIFORM_TIME,
-	FOGPASS_UNIFORM_COLOR,
-	FOGPASS_UNIFORM_MODELVIEWPROJECTIONMATRIX,
-	FOGPASS_UNIFORM_VERTEXLERP,
-	FOGPASS_UNIFORM_COUNT
-};
-
-
-enum
-{
-	DLIGHT_UNIFORM_DIFFUSEMAP = 0,
-	DLIGHT_UNIFORM_DLIGHTINFO,
-	DLIGHT_UNIFORM_DEFORMGEN,
-	DLIGHT_UNIFORM_DEFORMPARAMS,
-	DLIGHT_UNIFORM_TIME,
-	DLIGHT_UNIFORM_COLOR,
-	DLIGHT_UNIFORM_MODELVIEWPROJECTIONMATRIX,
-	DLIGHT_UNIFORM_VERTEXLERP,
-	DLIGHT_UNIFORM_COUNT
-};
-
-
-enum
-{
-	PSHADOW_UNIFORM_SHADOWMAP = 0,
-	PSHADOW_UNIFORM_MODELVIEWPROJECTIONMATRIX,
-	PSHADOW_UNIFORM_LIGHTFORWARD,
-	PSHADOW_UNIFORM_LIGHTUP,
-	PSHADOW_UNIFORM_LIGHTRIGHT,
-	PSHADOW_UNIFORM_LIGHTORIGIN,
-	PSHADOW_UNIFORM_LIGHTRADIUS,
-	PSHADOW_UNIFORM_COUNT
-};
-
-
-enum
-{
-	GENERIC_UNIFORM_DIFFUSEMAP = 0,
-	GENERIC_UNIFORM_LIGHTMAP,
-	GENERIC_UNIFORM_NORMALMAP,
-	GENERIC_UNIFORM_DELUXEMAP,
-	GENERIC_UNIFORM_SPECULARMAP,
-	GENERIC_UNIFORM_SHADOWMAP,
-	GENERIC_UNIFORM_DIFFUSETEXMATRIX,
-	GENERIC_UNIFORM_DIFFUSETEXOFFTURB,
-	//GENERIC_UNIFORM_NORMALTEXMATRIX,
-	//GENERIC_UNIFORM_SPECULARTEXMATRIX,
-	GENERIC_UNIFORM_TEXTURE1ENV,
-	GENERIC_UNIFORM_VIEWORIGIN,
-	GENERIC_UNIFORM_TCGEN0,
-	GENERIC_UNIFORM_TCGEN0VECTOR0,
-	GENERIC_UNIFORM_TCGEN0VECTOR1,
-	GENERIC_UNIFORM_DEFORMGEN,
-	GENERIC_UNIFORM_DEFORMPARAMS,
-	GENERIC_UNIFORM_COLORGEN,
-	GENERIC_UNIFORM_ALPHAGEN,
-	GENERIC_UNIFORM_BASECOLOR,
-	GENERIC_UNIFORM_VERTCOLOR,
-	GENERIC_UNIFORM_AMBIENTLIGHT,
-	GENERIC_UNIFORM_DIRECTEDLIGHT,
-	GENERIC_UNIFORM_LIGHTORIGIN,
-	GENERIC_UNIFORM_LIGHTRADIUS,
-	GENERIC_UNIFORM_PORTALRANGE,
-	GENERIC_UNIFORM_FOGDISTANCE,
-	GENERIC_UNIFORM_FOGDEPTH,
-	GENERIC_UNIFORM_FOGEYET,
-	GENERIC_UNIFORM_FOGCOLORMASK,
-	GENERIC_UNIFORM_MODELMATRIX,
-	GENERIC_UNIFORM_MODELVIEWPROJECTIONMATRIX,
-	GENERIC_UNIFORM_TIME,
-	GENERIC_UNIFORM_VERTEXLERP,
-	GENERIC_UNIFORM_MATERIALINFO,
-	GENERIC_UNIFORM_COUNT
-};
-
-enum
-{
-	SHADOWMASK_UNIFORM_SCREENDEPTHMAP = 0,
-	SHADOWMASK_UNIFORM_SHADOWMAP,
-	SHADOWMASK_UNIFORM_SHADOWMAP2,
-	SHADOWMASK_UNIFORM_SHADOWMAP3,
-	SHADOWMASK_UNIFORM_SHADOWMVP,
-	SHADOWMASK_UNIFORM_SHADOWMVP2,
-	SHADOWMASK_UNIFORM_SHADOWMVP3,
-	SHADOWMASK_UNIFORM_VIEWORIGIN,
-	SHADOWMASK_UNIFORM_VIEWINFO, // znear, zfar, width/2, height/2
-	SHADOWMASK_UNIFORM_VIEWFORWARD,
-	SHADOWMASK_UNIFORM_VIEWLEFT,
-	SHADOWMASK_UNIFORM_VIEWUP,
-	SHADOWMASK_UNIFORM_COUNT
-};
-
-enum
-{
-	SSAO_UNIFORM_SCREENDEPTHMAP = 0,
-	SSAO_UNIFORM_VIEWINFO, // znear, zfar, width/2, height/2
-	SSAO_UNIFORM_COUNT
-};
-
-enum
-{
-	DEPTHBLUR_UNIFORM_SCREENIMAGEMAP = 0,
-	DEPTHBLUR_UNIFORM_SCREENDEPTHMAP,
-	DEPTHBLUR_UNIFORM_VIEWINFO, // znear, zfar, width/2, height/2
-	DEPTHBLUR_UNIFORM_COUNT
-};
-
-//
-// These are fire wall functions to avoid expensive redundant glUniform* calls
-//#define USE_UNIFORM_FIREWALL 1
-//#define LOG_GLSL_UNIFORMS 1
 
 // trRefdef_t holds everything that comes in refdef_t,
 // as well as the locally generated scene information
@@ -1026,6 +971,7 @@ typedef enum {
 	SF_FACE,
 	SF_GRID,
 	SF_TRIANGLES,
+	SF_FOLIAGE,
 	SF_POLY,
 	SF_POLYBUFFER,
 	SF_MDV,
@@ -1057,14 +1003,12 @@ typedef struct drawSurf_s {
 typedef struct srfPoly_s {
 	surfaceType_t	surfaceType;
 	qhandle_t		hShader;
-	int				fogIndex;
 	int				numVerts;
 	polyVert_t		*verts;
 } srfPoly_t;
 
 typedef struct srfPolyBuffer_s {
 	surfaceType_t surfaceType;
-	int fogIndex;
 	polyBuffer_t *pPolyBuffer;
 } srfPolyBuffer_t;
 
@@ -1220,6 +1164,36 @@ typedef struct
 	IBO_t          *ibo;
 } srfTriangles_t;
 
+// foliage surfaces are autogenerated from models into geometry lists by q3map2
+typedef struct
+{
+	vec3_t origin;
+	vec3_t color;
+} foliageInstance_t;
+
+typedef struct
+{
+	surfaceType_t	surfaceType;
+
+	// dynamic lighting information
+	int				dlightBits;
+	int             pshadowBits;
+
+	// triangle definitions
+	int             numTriangles;
+	srfTriangle_t  *triangles;
+
+	int             numVerts;
+	srfVert_t      *verts;
+
+	vec3_t			origin;
+	float			radius;
+
+	// origins
+	int				numInstances;
+	foliageInstance_t	*instances;
+} srfFoliage_t;
+
 // inter-quake-model
 typedef struct {
 	int		num_vertexes;
@@ -1360,7 +1334,8 @@ typedef struct cullinfo_s {
 
 typedef struct msurface_s {
 	//int					viewCount;		// if == tr.viewCount, already added
-	struct shader_s		*shader;
+	struct shader_s		*shader;			// shader for rendering
+	struct shader_s		*originalShader;	// original shader in BSP, for resetting shader
 	int					fogIndex;
 	cullinfo_t          cullinfo;
 
@@ -1374,6 +1349,7 @@ typedef struct mnode_s {
 	int			contents;		// -1 for nodes, to differentiate from leafs
 	int             visCounts[MAX_VISCOUNTS];	// node needs to be traversed if current
 	vec3_t		mins, maxs;		// for bounding box culling
+	vec3_t		surfMins, surfMaxs; // bounding box including surfaces
 	struct mnode_s	*parent;
 
 	// node specific
@@ -1386,6 +1362,8 @@ typedef struct mnode_s {
 
 	int         firstmarksurface;
 	int			nummarksurfaces;
+
+	int			numCustomShaders;
 } mnode_t;
 
 typedef struct {
@@ -1574,7 +1552,7 @@ void		R_ModelInit (void);
 model_t		*R_GetModelByHandle( qhandle_t hModel );
 int			R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, 
 					 float frac, const char *tagName );
-void		R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs );
+int			R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 
 void		R_Modellist_f (void);
 
@@ -1848,6 +1826,8 @@ typedef struct {
 
 	shader_t				*flareShader;
 	shader_t				*sunShader;
+	char					sunShaderName[MAX_QPATH];
+	float					sunShaderScale;
 	shader_t				*sunFlareShader;
 
 	int						numLightmaps;
@@ -1900,10 +1880,10 @@ typedef struct {
 	int						viewCluster;
 
 	float                   mapLightScale;
+	float                   sunShadowScale;
 
 	qboolean                sunShadows;
 	vec3_t					sunLight;			// from the sky shader for this level
-	vec3_t					sunAmbient;
 	vec3_t					sunDirection;
 
 	frontEndCounters_t		pc;
@@ -1922,6 +1902,8 @@ typedef struct {
 	vec3_t		skyFogColor;
 	float		skyFogDepthForOpaque;
 	float		skyFogDensity;
+
+	fogParms_t	waterFogParms;
 
 	//
 	// put large tables at the end, so most elements will be
@@ -2000,14 +1982,17 @@ extern cvar_t	*r_lodscale;
 extern cvar_t	*r_inGameVideo;				// controls whether in game video should be draw
 extern cvar_t	*r_fastsky;				// controls whether sky should be cleared or drawn
 extern cvar_t	*r_drawSun;				// controls drawing of sun quad
+extern cvar_t	*r_forceSunScale;		// controls scale of sun quad
 extern cvar_t	*r_dynamiclight;		// dynamic lights enabled/disabled
 extern cvar_t	*r_dlightBacks;			// dlight non-facing surfaces for continuity
 
 extern	cvar_t	*r_norefresh;			// bypasses the ref rendering
 extern	cvar_t	*r_drawentities;		// disable/enable entity rendering
 extern	cvar_t	*r_drawworld;			// disable/enable world rendering
+extern	cvar_t  *r_drawfoliage;			// disable/enable foliage rendering
 extern	cvar_t	*r_speeds;				// various levels of information display
 extern  cvar_t	*r_detailTextures;		// enables/disables detail texturing stages
+extern	cvar_t	*r_shaderlod;
 extern	cvar_t	*r_novis;				// disable/enable usage of PVS
 extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_facePlaneCull;		// enables culling of planar surfaces with back side test
@@ -2102,6 +2087,7 @@ extern  cvar_t  *r_forceSun;
 extern  cvar_t  *r_forceSunMapLightScale;
 extern  cvar_t  *r_forceSunLightScale;
 extern  cvar_t  *r_forceSunAmbientScale;
+extern  cvar_t  *r_sunlightMode;
 extern  cvar_t  *r_drawSunRays;
 extern  cvar_t  *r_sunShadows;
 extern  cvar_t  *r_shadowFilter;
@@ -2242,6 +2228,8 @@ void		RE_Shutdown( qboolean destroyWindow );
 
 qboolean	R_GetEntityToken( char *buffer, int size );
 
+float       R_ProcessLightmap( byte **pic, int in_padding, int width, int height, byte **pic_out, qboolean hdrLightmap );
+
 model_t		*R_AllocModel( void );
 
 void    	R_Init( void );
@@ -2258,6 +2246,9 @@ void	R_ScreenShot_f( void );
 
 #define DEFAULT_FOG_EXP_DENSITY			0.5f
 #define DEFAULT_FOG_LINEAR_DENSITY		1.1f
+
+// ZTM: FIXME: I pulled this number out of nowhere, RTCW used 5 which didn't work with software fog
+#define DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE 2048
 
 void	R_InitFogTable( void );
 float	R_FogFactor( float s, float t );
@@ -2280,8 +2271,13 @@ shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
 shader_t *R_FindShaderByName( const char *name );
 void		R_InitShaders( void );
+void		R_InitExternalShaders( void );
 void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
+void		RE_SetSurfaceShader( int surfaceNum, const char *name );
+qhandle_t	RE_GetSurfaceShader( int surfaceNum, int withlightmap );
+qhandle_t	RE_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap );
+void		RE_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize );
 
 /*
 ====================================================================
@@ -2516,8 +2512,6 @@ void GLSL_VertexAttribPointers(uint32_t attribBits);
 void GLSL_BindProgram(shaderProgram_t * program);
 void GLSL_BindNullProgram(void);
 
-void GLSL_SetNumUniforms(shaderProgram_t *program, int numUniforms);
-void GLSL_SetUniformName(shaderProgram_t *program, int uniformNum, const char *name);
 void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value);
 void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat value);
 void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_t v);
@@ -2701,6 +2695,12 @@ typedef struct {
 	int		numDrawSurfs;
 } drawSurfsCommand_t;
 
+typedef enum {
+	ST_TGA,
+	ST_JPEG,
+	ST_PNG
+} screenshotType_e;
+
 typedef struct {
 	int commandId;
 	int x;
@@ -2708,7 +2708,7 @@ typedef struct {
 	int width;
 	int height;
 	char *fileName;
-	qboolean jpeg;
+	screenshotType_e type;
 } screenshotCommand_t;
 
 typedef struct {
@@ -2788,8 +2788,6 @@ extern	int		max_polybuffers;
 
 extern	backEndData_t	*backEndData;	// the second one may not be allocated
 
-extern	volatile renderCommandList_t	*renderCommandList;
-
 
 void *R_GetCommandBuffer( int bytes );
 void RB_ExecuteRenderCommands( const void *data );
@@ -2811,17 +2809,20 @@ void RE_StretchPicGradient( float x, float y, float w, float h,
 void RE_2DPolyies( polyVert_t* verts, int numverts, qhandle_t hShader );
 void RE_BeginFrame( stereoFrame_t stereoFrame );
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec );
+void RE_SavePNG(const char *filename, int width, int height, byte *data, int padding);
 void RE_SaveJPG(char * filename, int quality, int image_width, int image_height,
                 unsigned char *image_buffer, int padding);
 size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 		          int image_width, int image_height, byte *image_buffer, int padding);
+void RE_SaveTGA(char * filename, int image_width, int image_height, byte *image_buffer, int padding);
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
-void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
+void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
 
 // fog stuff
-int R_DefaultFogNum( void );
+int R_BoundsFogNum( const trRefdef_t *refdef, vec3_t mins, vec3_t maxs );
+int R_PointFogNum( const trRefdef_t *refdef, vec3_t point, float radius );
 void R_FogOff( void );
 void RB_FogOn( void );
 void RB_Fog( int fogNum );

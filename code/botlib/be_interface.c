@@ -51,11 +51,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "be_aas_def.h"
 #include "be_interface.h"
 
-#include "be_ea.h"
-#include "be_ai_weight.h"
-#include "be_ai_goal.h"
-#include "be_ai_move.h"
-#include "be_ai_weap.h"
 #include "be_ai_chat.h"
 #include "be_ai_char.h"
 #include "be_ai_gen.h"
@@ -152,22 +147,14 @@ int Export_BotLibSetup(void)
 
 	if(botDeveloper)
 	{
-		char *homedir, *gamedir, *basedir;
+		char *homedir, *gamedir;
 		char logfilename[MAX_OSPATH];
 
 		homedir = LibVarGetString("homedir");
 		gamedir = LibVarGetString("gamedir");
-		basedir = LibVarGetString("com_basegame");
 
-		if (*homedir)
-		{
-			if(*gamedir)
-				Com_sprintf(logfilename, sizeof(logfilename), "%s%c%s%cbotlib.log", homedir, PATH_SEP, gamedir, PATH_SEP);
-			else if(*basedir)
-				Com_sprintf(logfilename, sizeof(logfilename), "%s%c%s%cbotlib.log", homedir, PATH_SEP, basedir, PATH_SEP);
-			else
-				Com_sprintf(logfilename, sizeof(logfilename), "%s%c" BASEGAME "%cbotlib.log", homedir, PATH_SEP, PATH_SEP);
-		}
+		if (*homedir && *gamedir)
+			Com_sprintf(logfilename, sizeof(logfilename), "%s%c%s%cbotlib.log", homedir, PATH_SEP, gamedir, PATH_SEP);
 		else
 			Com_sprintf(logfilename, sizeof(logfilename), "botlib.log");
 	
@@ -181,15 +168,7 @@ int Export_BotLibSetup(void)
 
 	errnum = AAS_Setup();			//be_aas_main.c
 	if (errnum != BLERR_NOERROR) return errnum;
-	errnum = EA_Setup();			//be_ea.c
-	if (errnum != BLERR_NOERROR) return errnum;
-	errnum = BotSetupWeaponAI();	//be_ai_weap.c
-	if (errnum != BLERR_NOERROR)return errnum;
-	errnum = BotSetupGoalAI();		//be_ai_goal.c
-	if (errnum != BLERR_NOERROR) return errnum;
 	errnum = BotSetupChatAI();		//be_ai_chat.c
-	if (errnum != BLERR_NOERROR) return errnum;
-	errnum = BotSetupMoveAI();		//be_ai_move.c
 	if (errnum != BLERR_NOERROR) return errnum;
 
 	botlibsetup = qtrue;
@@ -211,15 +190,9 @@ int Export_BotLibShutdown(void)
 #endif //DEMO
 	//
 	BotShutdownChatAI();		//be_ai_chat.c
-	BotShutdownMoveAI();		//be_ai_move.c
-	BotShutdownGoalAI();		//be_ai_goal.c
-	BotShutdownWeaponAI();		//be_ai_weap.c
-	BotShutdownWeights();		//be_ai_weight.c
 	BotShutdownCharacters();	//be_ai_char.c
 	//shud down aas
 	AAS_Shutdown();
-	//shut down bot elemantary actions
-	EA_Shutdown();
 	//free all libvars
 	LibVarDeAllocAll();
 	//remove all global defines from the pre compiler
@@ -296,9 +269,6 @@ int Export_BotLibLoadMap(const char *mapname)
 	//startup AAS for the current map, model and sound index
 	errnum = AAS_LoadMap(mapname);
 	if (errnum != BLERR_NOERROR) return errnum;
-	//initialize the items in the level
-	BotInitLevelItems();		//be_ai_goal.h
-	BotSetBrushModelTypes();	//be_ai_move.h
 	//
 	botimport.Print(PRT_DEVELOPER, "-------------------------------------\n");
 #ifdef DEBUG
@@ -326,6 +296,21 @@ int Export_BotLibUpdateEntity(int ent, bot_entitystate_t *state)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
+void Export_AAS_TraceClientBBox(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent)
+{
+	aas_trace_t tr;
+	if ( !trace ) return;
+	tr = AAS_TraceClientBBox(start, end, presencetype, passent);
+	Com_Memcpy(trace, &tr, sizeof (aas_trace_t));
+} //end of the function Export_AAS_TraceClientBBox
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+// ZTM: FIXME: Botlib's Test function is broken, move to game?
+#ifdef DEBUG
 void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir);
 void ElevatorBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter);
 int BotGetReachabilityToGoal(vec3_t origin, int areanum,
@@ -345,6 +330,7 @@ int BotFuzzyPointReachabilityArea(vec3_t origin);
 float BotGapDistance(vec3_t origin, vec3_t hordir, int entnum);
 
 void AAS_FloodAreas(vec3_t origin);
+#endif
 
 int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 {
@@ -686,12 +672,9 @@ Init_AAS_Export
 */
 static void Init_AAS_Export( aas_export_t *aas ) {
 	//--------------------------------------------
-	// be_aas_entity.c
-	//--------------------------------------------
-	aas->AAS_EntityInfo = AAS_EntityInfo;
-	//--------------------------------------------
 	// be_aas_main.c
 	//--------------------------------------------
+	aas->AAS_Loaded = AAS_Loaded;
 	aas->AAS_Initialized = AAS_Initialized;
 	aas->AAS_PresenceTypeBoundingBox = AAS_PresenceTypeBoundingBox;
 	aas->AAS_Time = AAS_Time;
@@ -700,6 +683,7 @@ static void Init_AAS_Export( aas_export_t *aas ) {
 	//--------------------------------------------
 	aas->AAS_PointAreaNum = AAS_PointAreaNum;
 	aas->AAS_PointReachabilityAreaIndex = AAS_PointReachabilityAreaIndex;
+	aas->AAS_TraceClientBBox = Export_AAS_TraceClientBBox;
 	aas->AAS_TraceAreas = AAS_TraceAreas;
 	aas->AAS_BBoxAreas = AAS_BBoxAreas;
 	aas->AAS_AreaInfo = AAS_AreaInfo;
@@ -717,11 +701,29 @@ static void Init_AAS_Export( aas_export_t *aas ) {
 	//--------------------------------------------
 	aas->AAS_AreaReachability = AAS_AreaReachability;
 	aas->AAS_BestReachableArea = AAS_BestReachableArea;
+	aas->AAS_BestReachableFromJumpPadArea = AAS_BestReachableFromJumpPadArea;
+	aas->AAS_NextModelReachability = AAS_NextModelReachability;
+	aas->AAS_AreaGroundFaceArea = AAS_AreaGroundFaceArea;
+	aas->AAS_AreaCrouch = AAS_AreaCrouch;
+	aas->AAS_AreaSwim = AAS_AreaSwim;
+	aas->AAS_AreaLiquid = AAS_AreaLiquid;
+	aas->AAS_AreaLava = AAS_AreaLava;
+	aas->AAS_AreaSlime = AAS_AreaSlime;
+	aas->AAS_AreaGrounded = AAS_AreaGrounded;
+	aas->AAS_AreaLadder = AAS_AreaLadder;
+	aas->AAS_AreaJumpPad = AAS_AreaJumpPad;
+	aas->AAS_AreaDoNotEnter = AAS_AreaDoNotEnter;
 	//--------------------------------------------
 	// be_aas_route.c
 	//--------------------------------------------
-	aas->AAS_AreaTravelTimeToGoalArea = AAS_AreaTravelTimeToGoalArea;
+	aas->AAS_TravelFlagForType = AAS_TravelFlagForType;
+	aas->AAS_AreaContentsTravelFlags = AAS_AreaContentsTravelFlags;
+	aas->AAS_NextAreaReachability = AAS_NextAreaReachability;
+	aas->AAS_ReachabilityFromNum = AAS_ReachabilityFromNum;
+	aas->AAS_RandomGoalArea = AAS_RandomGoalArea;
 	aas->AAS_EnableRoutingArea = AAS_EnableRoutingArea;
+	aas->AAS_AreaTravelTime = AAS_AreaTravelTime;
+	aas->AAS_AreaTravelTimeToGoalArea = AAS_AreaTravelTimeToGoalArea;
 	aas->AAS_PredictRoute = AAS_PredictRoute;
 	//--------------------------------------------
 	// be_aas_altroute.c
@@ -730,47 +732,16 @@ static void Init_AAS_Export( aas_export_t *aas ) {
 	//--------------------------------------------
 	// be_aas_move.c
 	//--------------------------------------------
-	aas->AAS_Swimming = AAS_Swimming;
 	aas->AAS_PredictClientMovement = AAS_PredictClientMovement;
+	aas->AAS_OnGround = AAS_OnGround;
+	aas->AAS_Swimming = AAS_Swimming;
+	aas->AAS_JumpReachRunStart = AAS_JumpReachRunStart;
+	aas->AAS_AgainstLadder = AAS_AgainstLadder;
+	aas->AAS_HorizontalVelocityForJump = AAS_HorizontalVelocityForJump;
+	aas->AAS_DropToFloor = AAS_DropToFloor;
 }
 
   
-/*
-============
-Init_EA_Export
-============
-*/
-static void Init_EA_Export( ea_export_t *ea ) {
-	//ClientCommand elementary actions
-	ea->EA_Command = EA_Command;
-	ea->EA_Say = EA_Say;
-	ea->EA_SayTeam = EA_SayTeam;
-
-	ea->EA_Action = EA_Action;
-	ea->EA_Gesture = EA_Gesture;
-	ea->EA_Talk = EA_Talk;
-	ea->EA_Attack = EA_Attack;
-	ea->EA_Use = EA_Use;
-	ea->EA_Respawn = EA_Respawn;
-	ea->EA_Crouch = EA_Crouch;
-	ea->EA_MoveUp = EA_MoveUp;
-	ea->EA_MoveDown = EA_MoveDown;
-	ea->EA_MoveForward = EA_MoveForward;
-	ea->EA_MoveBack = EA_MoveBack;
-	ea->EA_MoveLeft = EA_MoveLeft;
-	ea->EA_MoveRight = EA_MoveRight;
-
-	ea->EA_SelectWeapon = EA_SelectWeapon;
-	ea->EA_Jump = EA_Jump;
-	ea->EA_DelayedJump = EA_DelayedJump;
-	ea->EA_Move = EA_Move;
-	ea->EA_View = EA_View;
-	ea->EA_GetInput = EA_GetInput;
-	ea->EA_EndRegular = EA_EndRegular;
-	ea->EA_ResetInput = EA_ResetInput;
-}
-
-
 /*
 ============
 Init_AI_Export
@@ -811,62 +782,6 @@ static void Init_AI_Export( ai_export_t *ai ) {
 	ai->BotSetChatGender = BotSetChatGender;
 	ai->BotSetChatName = BotSetChatName;
 	//-----------------------------------
-	// be_ai_goal.h
-	//-----------------------------------
-	ai->BotResetGoalState = BotResetGoalState;
-	ai->BotResetAvoidGoals = BotResetAvoidGoals;
-	ai->BotRemoveFromAvoidGoals = BotRemoveFromAvoidGoals;
-	ai->BotPushGoal = BotPushGoal;
-	ai->BotPopGoal = BotPopGoal;
-	ai->BotEmptyGoalStack = BotEmptyGoalStack;
-	ai->BotDumpAvoidGoals = BotDumpAvoidGoals;
-	ai->BotDumpGoalStack = BotDumpGoalStack;
-	ai->BotGoalName = BotGoalName;
-	ai->BotGetTopGoal = BotGetTopGoal;
-	ai->BotGetSecondGoal = BotGetSecondGoal;
-	ai->BotChooseLTGItem = BotChooseLTGItem;
-	ai->BotChooseNBGItem = BotChooseNBGItem;
-	ai->BotTouchingGoal = BotTouchingGoal;
-	ai->BotItemGoalInVisButNotVisible = BotItemGoalInVisButNotVisible;
-	ai->BotGetLevelItemGoal = BotGetLevelItemGoal;
-	ai->BotGetNextCampSpotGoal = BotGetNextCampSpotGoal;
-	ai->BotGetMapLocationGoal = BotGetMapLocationGoal;
-	ai->BotAvoidGoalTime = BotAvoidGoalTime;
-	ai->BotSetAvoidGoalTime = BotSetAvoidGoalTime;
-	ai->BotInitLevelItems = BotInitLevelItems;
-	ai->BotUpdateEntityItems = BotUpdateEntityItems;
-	ai->BotLoadItemWeights = BotLoadItemWeights;
-	ai->BotFreeItemWeights = BotFreeItemWeights;
-	ai->BotInterbreedGoalFuzzyLogic = BotInterbreedGoalFuzzyLogic;
-	ai->BotSaveGoalFuzzyLogic = BotSaveGoalFuzzyLogic;
-	ai->BotMutateGoalFuzzyLogic = BotMutateGoalFuzzyLogic;
-	ai->BotAllocGoalState = BotAllocGoalState;
-	ai->BotFreeGoalState = BotFreeGoalState;
-	//-----------------------------------
-	// be_ai_move.h
-	//-----------------------------------
-	ai->BotResetMoveState = BotResetMoveState;
-	ai->BotMoveToGoal = BotMoveToGoal;
-	ai->BotMoveInDirection = BotMoveInDirection;
-	ai->BotResetAvoidReach = BotResetAvoidReach;
-	ai->BotResetLastAvoidReach = BotResetLastAvoidReach;
-	ai->BotReachabilityArea = BotReachabilityArea;
-	ai->BotMovementViewTarget = BotMovementViewTarget;
-	ai->BotPredictVisiblePosition = BotPredictVisiblePosition;
-	ai->BotAllocMoveState = BotAllocMoveState;
-	ai->BotFreeMoveState = BotFreeMoveState;
-	ai->BotInitMoveState = BotInitMoveState;
-	ai->BotAddAvoidSpot = BotAddAvoidSpot;
-	//-----------------------------------
-	// be_ai_weap.h
-	//-----------------------------------
-	ai->BotChooseBestFightWeapon = BotChooseBestFightWeapon;
-	ai->BotGetWeaponInfo = BotGetWeaponInfo;
-	ai->BotLoadWeaponWeights = BotLoadWeaponWeights;
-	ai->BotAllocWeaponState = BotAllocWeaponState;
-	ai->BotFreeWeaponState = BotFreeWeaponState;
-	ai->BotResetWeaponState = BotResetWeaponState;
-	//-----------------------------------
 	// be_ai_gen.h
 	//-----------------------------------
 	ai->GeneticParentsAndChildSelection = GeneticParentsAndChildSelection;
@@ -891,7 +806,6 @@ botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
 	}
 
 	Init_AAS_Export(&be_botlib_export.aas);
-	Init_EA_Export(&be_botlib_export.ea);
 	Init_AI_Export(&be_botlib_export.ai);
 
 	be_botlib_export.BotLibSetup = Export_BotLibSetup;

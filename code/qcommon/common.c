@@ -51,7 +51,7 @@ int demo_protocols[] =
 #define MIN_DEDICATED_COMHUNKMEGS 1
 #define MIN_COMHUNKMEGS		56
 #define DEF_COMHUNKMEGS 	128
-#define DEF_COMZONEMEGS		24
+#define DEF_COMZONEMEGS		48
 #define DEF_COMHUNKMEGS_S	XSTRING(DEF_COMHUNKMEGS)
 #define DEF_COMZONEMEGS_S	XSTRING(DEF_COMZONEMEGS)
 
@@ -86,7 +86,6 @@ cvar_t	*com_logfile;		// 1 = buffer log, 2 = flush after each print
 cvar_t	*com_pipefile;
 cvar_t	*com_showtrace;
 cvar_t	*com_version;
-cvar_t	*com_blood;
 cvar_t	*com_singlePlayerActive;
 cvar_t	*com_buildScript;	// for automated data building scripts
 cvar_t	*com_introPlayed;
@@ -107,12 +106,12 @@ cvar_t	*com_protocol;
 #ifdef LEGACY_PROTOCOL
 cvar_t	*com_legacyprotocol;
 #endif
-cvar_t	*com_basegame;
 cvar_t  *com_homepath;
 cvar_t	*com_busyWait;
 
 #ifdef USE_RENDERER_DLOPEN
 cvar_t	*com_renderer;
+static void	*rendererLib = NULL;
 #endif
 
 #if idx64
@@ -832,20 +831,37 @@ int Z_AvailableMemory( void ) {
 Z_Free
 ========================
 */
-void Z_Free( void *ptr ) {
+#ifdef ZONE_DEBUG
+void Z_FreeDebug( void *ptr, char *label, char *file, int line )
+#else
+void Z_Free( void *ptr )
+#endif
+{
 	memblock_t	*block, *other;
 	memzone_t *zone;
 	
 	if (!ptr) {
+#ifdef ZONE_DEBUG
+		Com_Error( ERR_DROP, "Z_Free: NULL pointer (%s %s:%d)", label, file, line );
+#else
 		Com_Error( ERR_DROP, "Z_Free: NULL pointer" );
+#endif
 	}
 
 	block = (memblock_t *) ( (byte *)ptr - sizeof(memblock_t));
 	if (block->id != ZONEID) {
+#ifdef ZONE_DEBUG
+		Com_Error( ERR_FATAL, "Z_Free: freed a pointer without ZONEID (%s %s:%d)", label, file, line );
+#else
 		Com_Error( ERR_FATAL, "Z_Free: freed a pointer without ZONEID" );
+#endif
 	}
 	if (block->tag == 0) {
+#ifdef ZONE_DEBUG
+		Com_Error( ERR_FATAL, "Z_Free: freed a freed pointer (%s %s:%d)", label, file, line );
+#else
 		Com_Error( ERR_FATAL, "Z_Free: freed a freed pointer" );
+#endif
 	}
 	// if static memory
 	if (block->tag == TAG_STATIC) {
@@ -854,7 +870,11 @@ void Z_Free( void *ptr ) {
 
 	// check the memory trash tester
 	if ( *(int *)((byte *)block + block->size - 4 ) != ZONEID ) {
+#ifdef ZONE_DEBUG
+		Com_Error( ERR_FATAL, "Z_Free: memory block wrote past end (%s %s:%d)", label, file, line );
+#else
 		Com_Error( ERR_FATAL, "Z_Free: memory block wrote past end" );
+#endif
 	}
 
 	if (block->tag == TAG_SMALL) {
@@ -891,9 +911,6 @@ void Z_Free( void *ptr ) {
 		block->size += other->size;
 		block->next = other->next;
 		block->next->prev = block;
-		if (other == zone->rover) {
-			zone->rover = block;
-		}
 	}
 }
 
@@ -1283,8 +1300,13 @@ void Com_Meminfo_f( void ) {
 	zoneBlocks = 0;
 	for (block = mainzone->blocklist.next ; ; block = block->next) {
 		if ( Cmd_Argc() != 1 ) {
+#ifdef ZONE_DEBUG
+			Com_Printf ("block:%p    size:%7i    tag:%3i    allocSize: %7i    label: %s    where: %s:%d\n",
+				(void *)block, block->size, block->tag, block->d.allocSize, block->d.label, block->d.file, block->d.line);
+#else
 			Com_Printf ("block:%p    size:%7i    tag:%3i\n",
 				(void *)block, block->size, block->tag);
+#endif
 		}
 		if ( block->tag ) {
 			zoneBytes += block->size;
@@ -1418,8 +1440,6 @@ void Com_InitSmallZoneMemory( void ) {
 		Com_Error( ERR_FATAL, "Small zone data failed to allocate %1.1f megs", (float)s_smallZoneTotal / (1024*1024) );
 	}
 	Z_ClearZone( smallzone, s_smallZoneTotal );
-	
-	return;
 }
 
 void Com_InitZoneMemory( void ) {
@@ -1929,10 +1949,19 @@ void DA_Init( darray_t *darray, int maxElements, int elementLength, qboolean fre
 DA_Free
 ================
 */
-void DA_Free( darray_t *darray ) {
+#ifdef ZONE_DEBUG
+void DA_FreeDebug( darray_t *darray, char *file, int line )
+#else
+void DA_Free( darray_t *darray )
+#endif
+{
 	if ( darray->pointer ) {
 		if ( darray->freeable ) {
+#ifdef ZONE_DEBUG
+			Z_FreeDebug( darray->pointer, "DA_Free", file, line );
+#else
 			Z_Free( darray->pointer );
+#endif
 		}
 		darray->pointer = NULL;
 	}
@@ -1966,7 +1995,25 @@ void DA_ClearElement( darray_t *darray, int num ) {
 	if ( !darray->pointer )
 		return;
 
-	Com_Memset( darray->pointer + num * darray->elementLength, 0, darray->elementLength );
+	Com_Memset( (byte*)darray->pointer + num * darray->elementLength, 0, darray->elementLength );
+}
+
+/*
+================
+DA_Copy
+================
+*/
+void DA_Copy( const darray_t in, darray_t *out ) {
+	if ( !out )
+		return;
+
+	assert( in.elementLength == out->elementLength );
+	assert( in.maxElements == out->maxElements );
+
+	if ( !in.pointer || !out->pointer )
+		return;
+
+	Com_Memcpy( out->pointer, in.pointer, in.elementLength * in.maxElements );
 }
 
 /*
@@ -1982,7 +2029,7 @@ void DA_SetElement( darray_t *darray, int num, const void *data ) {
 	if ( !darray->pointer )
 		return;
 
-	Com_Memcpy( darray->pointer + num * darray->elementLength, data, darray->elementLength );
+	Com_Memcpy( (byte*)darray->pointer + num * darray->elementLength, data, darray->elementLength );
 }
 
 /*
@@ -1995,7 +2042,7 @@ void DA_GetElement( const darray_t darray, int num, void *data ) {
 	assert( num < darray.maxElements );
 	assert( darray.elementLength > 0 );
 
-	Com_Memcpy( data, darray.pointer + num * darray.elementLength, darray.elementLength );
+	Com_Memcpy( data, (byte*)darray.pointer + num * darray.elementLength, darray.elementLength );
 }
 
 /*
@@ -2017,7 +2064,7 @@ void *DA_ElementPointer( const darray_t darray, int num ) {
 		return NULL;
 	}
 
-	return darray.pointer + num * darray.elementLength;
+	return (byte*)darray.pointer + num * darray.elementLength;
 }
 
 /*
@@ -2395,7 +2442,7 @@ Just throw a fatal error to
 test error shutdown procedures
 =============
 */
-static void Com_Error_f (void) {
+static void __attribute__((__noreturn__)) Com_Error_f (void) {
 	if ( Cmd_Argc() > 1 ) {
 		Com_Error( ERR_DROP, "Testing drop error" );
 	} else {
@@ -2525,7 +2572,7 @@ void Com_GameRestart(qboolean disconnect)
 			CL_Shutdown("Game directory changed", disconnect, qfalse);
 		}
 
-		FS_Restart();
+		FS_Restart(qtrue);
 	
 		// Clean out any user and VM created cvars
 		Cvar_Restart(qtrue);
@@ -2559,16 +2606,14 @@ Expose possibility to change current running mod to the user
 
 void Com_GameRestart_f(void)
 {
-	if(!FS_FilenameCompare(Cmd_Argv(1), com_basegame->string))
-	{
-		// This is the standard base game. Servers and clients should
-		// use "" and not the standard basegame name because this messes
-		// up pak file negotiation and lots of other stuff
-		
-		Cvar_Set("fs_game", "");
+	const char *gamedir = Cmd_Argv(1);
+
+	if (!*gamedir) {
+		Com_Printf("Usage: game_restart <game directory>\n");
+		return;
 	}
-	else
-		Cvar_Set("fs_game", Cmd_Argv(1));
+
+	Cvar_Set("fs_game", gamedir);
 
 	Com_GameRestart(qtrue);
 }
@@ -2703,11 +2748,7 @@ void Com_Init( char *commandLine ) {
 
 	com_fs_pure = Cvar_Get ("fs_pure", "", CVAR_ROM);
 
-	com_basegame = Cvar_Get("com_basegame", BASEGAME, CVAR_INIT);
 	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT);
-	
-	if(!com_basegame->string[0])
-		Cvar_ForceReset("com_basegame");
 
 	FS_InitFilesystem ();
 
@@ -2751,7 +2792,6 @@ void Com_Init( char *commandLine ) {
 	//
 	com_altivec = Cvar_Get ("com_altivec", "1", CVAR_ARCHIVE);
 	com_maxfps = Cvar_Get ("com_maxfps", "85", CVAR_ARCHIVE);
-	com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE);
 	com_singlePlayerActive = Cvar_Get ("ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM);
 
 	com_logfile = Cvar_Get ("logfile", "0", CVAR_TEMP );
@@ -2797,10 +2837,6 @@ void Com_Init( char *commandLine ) {
 	else
 #endif
 		Cvar_Get("protocol", com_protocol->string, CVAR_ROM);
-
-#ifdef USE_RENDERER_DLOPEN
-	com_renderer = Cvar_Get("com_renderer", "opengl1", CVAR_ARCHIVE | CVAR_LATCH);
-#endif
 
 	Sys_Init();
 
@@ -2932,6 +2968,10 @@ void *Com_RefMalloc( int size ) {
 	return Z_TagMalloc( size, TAG_RENDERER );
 }
 
+void Com_RefFree( void *pointer ) {
+	Z_Free( pointer );
+}
+
 int Com_ScaledMilliseconds(void) {
 	return Sys_Milliseconds()*com_timescale->value;
 }
@@ -2968,11 +3008,18 @@ Com_ShutdownRef
 ============
 */
 void Com_ShutdownRef( void ) {
-	if ( !re.Shutdown ) {
-		return;
+	if ( re.Shutdown ) {
+		re.Shutdown( qtrue );
 	}
-	re.Shutdown( qtrue );
+
 	Com_Memset( &re, 0, sizeof( re ) );
+
+#ifdef USE_RENDERER_DLOPEN
+	if ( rendererLib ) {
+		Sys_UnloadLibrary( rendererLib );
+		rendererLib = NULL;
+	}
+#endif
 }
 
 /*
@@ -2985,7 +3032,6 @@ void Com_InitRef( refimport_t *ri ) {
 #ifdef USE_RENDERER_DLOPEN
 	GetRefAPI_t		GetRefAPI;
 	char			dllName[MAX_OSPATH];
-	static void			*rendererLib;
 #endif
 
 #ifndef DEDICATED
@@ -2993,6 +3039,8 @@ void Com_InitRef( refimport_t *ri ) {
 #endif
 
 #ifdef USE_RENDERER_DLOPEN
+	com_renderer = Cvar_Get("com_renderer", "opengl1", CVAR_ARCHIVE | CVAR_LATCH);
+
 	Com_sprintf(dllName, sizeof(dllName), "renderer_%s_" ARCH_STRING DLL_EXT, com_renderer->string);
 
 	if(!(rendererLib = Sys_LoadDll(dllName, qfalse)) && strcmp(com_renderer->string, com_renderer->resetString))
@@ -3026,7 +3074,7 @@ void Com_InitRef( refimport_t *ri ) {
 	ri->Error = Com_Error;
 	ri->Milliseconds = Com_ScaledMilliseconds;
 	ri->Malloc = Com_RefMalloc;
-	ri->Free = Z_Free;
+	ri->Free = Com_RefFree;
 #ifdef HUNK_DEBUG
 	ri->Hunk_AllocDebug = Hunk_AllocDebug;
 #else
@@ -3049,6 +3097,7 @@ void Com_InitRef( refimport_t *ri ) {
 	ri->Cvar_SetValue = Cvar_SetValue;
 	ri->Cvar_CheckRange = Cvar_CheckRange;
 	ri->Cvar_VariableIntegerValue = Cvar_VariableIntegerValue;
+	ri->Cvar_VariableStringBuffer = Cvar_VariableStringBuffer;
 
 	ri->ftol = Q_ftol;
 

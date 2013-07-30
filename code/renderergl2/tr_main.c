@@ -595,6 +595,7 @@ void R_CalcSurfaceTrianglePlanes(int numTriangles, srfTriangle_t * triangles, sr
 
 // fog stuff
 qboolean fogIsOn = qfalse;
+fogType_t lastGlfogType = FT_NONE;
 
 /*
 =================
@@ -616,28 +617,31 @@ void RB_Fog( int fogNum ) {
 
 	if ( !r_useGlFog->integer ) {
 		R_FogOff();
+		lastGlfogType = FT_NONE;
 		return;
 	}
 
 	if ( tr.world && fogNum == tr.world->globalFog ) {
+		lastGlfogType = backEnd.refdef.fogType;
+
 		switch ( backEnd.refdef.fogType ) {
 			case FT_LINEAR:
 				fogMode = GL_LINEAR;
-				end = backEnd.refdef.fogDepthForOpaque;
 				break;
 
 			case FT_EXP:
 				fogMode = GL_EXP;
-				end = 5; // ZTM: ???
 				break;
 
 			default:
 				R_FogOff();
+				lastGlfogType = FT_NONE;
 				return;
 		}
 
 		VectorCopy( backEnd.refdef.fogColor, color );
 
+		end = backEnd.refdef.fogDepthForOpaque;
 		density = backEnd.refdef.fogDensity;
 
 	} else {
@@ -647,18 +651,19 @@ void RB_Fog( int fogNum ) {
 
 		if ( !fog->shader ) {
 			R_FogOff();
+			lastGlfogType = FT_NONE;
 			return;
 		}
+
+		lastGlfogType = fog->shader->fogParms.fogType;
 
 		switch ( fog->shader->fogParms.fogType ) {
 			case FT_LINEAR:
 				fogMode = GL_LINEAR;
-				end = backEnd.refdef.fogDepthForOpaque;
 				break;
 
 			case FT_EXP:
 				fogMode = GL_EXP;
-				end = 5; // ZTM: ???
 				break;
 
 			default:
@@ -738,10 +743,9 @@ void RB_FogOn( void ) {
 		return;
 	}
 
-	// ZTM: FIXME:
-	//if ( backEnd.refdef.fogType == FT_NONE ) {
-	//	return;
-	//}
+	if ( lastGlfogType == FT_NONE ) {
+		return;
+	}
 
 	qglEnable( GL_FOG );
 	fogIsOn = qtrue;
@@ -749,11 +753,52 @@ void RB_FogOn( void ) {
 
 /*
 =================
-R_DefaultFogNum
+R_BoundsFogNum
 =================
 */
-int R_DefaultFogNum( void ) {
-	return ( tr.world && tr.refdef.fogType != FT_NONE ) ? tr.world->globalFog : 0;
+int R_BoundsFogNum( const trRefdef_t *refdef, vec3_t mins, vec3_t maxs ) {
+	int i, j;
+	fog_t *fog;
+
+	if ( refdef->rdflags & RDF_NOWORLDMODEL ) {
+		return 0;
+	}
+
+	for ( i = 1; i < tr.world->numfogs; i++ ) {
+		fog = &tr.world->fogs[ i ];
+		for ( j = 0; j < 3; j++ ) {
+			if ( mins[ j ] >= fog->bounds[ 1 ][ j ] ||
+				 maxs[ j ] <= fog->bounds[ 0 ][ j ] ) {
+				break;
+			}
+		}
+		if ( j == 3 ) {
+			return i;
+		}
+	}
+
+	if ( refdef->fogType != FT_NONE ) {
+		return tr.world->globalFog;
+	}
+
+	return 0;
+}
+
+/*
+=================
+R_PointFogNum
+=================
+*/
+int R_PointFogNum( const trRefdef_t *refdef, vec3_t point, float radius ) {
+	int i;
+	vec3_t mins, maxs;
+
+	for ( i = 0; i < 3; i++ ) {
+		mins[i] = point[i] - radius;
+		maxs[i] = point[i] + radius;
+	}
+
+	return R_BoundsFogNum( refdef, mins, maxs );
 }
 
 /*
@@ -1744,10 +1789,6 @@ static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum )
 		// translate the original plane
 		originalPlane.dist = originalPlane.dist + DotProduct( originalPlane.normal, tr.or.origin );
 	} 
-	else 
-	{
-		plane = originalPlane;
-	}
 
 	// locate the portal entity closest to this plane.
 	// origin will be the origin of the portal, origin2 will be
@@ -1944,29 +1985,7 @@ See if a sprite is inside a fog volume
 =================
 */
 int R_SpriteFogNum( trRefEntity_t *ent ) {
-	int				i, j;
-	fog_t			*fog;
-
-	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
-		return 0;
-	}
-
-	for ( i = 1 ; i < tr.world->numfogs ; i++ ) {
-		fog = &tr.world->fogs[i];
-		for ( j = 0 ; j < 3 ; j++ ) {
-			if ( ent->e.origin[j] - ent->e.radius >= fog->bounds[1][j] ) {
-				break;
-			}
-			if ( ent->e.origin[j] + ent->e.radius <= fog->bounds[0][j] ) {
-				break;
-			}
-		}
-		if ( j == 3 ) {
-			return i;
-		}
-	}
-
-	return 0;
+	return R_PointFogNum( &tr.refdef, ent->e.origin, ent->e.radius );
 }
 
 /*

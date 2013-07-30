@@ -28,7 +28,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
-#include "../qcommon/q_shared.h" // ZTM(IOQ3): game to qcommon
+#include "../qcommon/q_shared.h"
 #include "../bspc/l_log.h"
 #include "../bspc/l_qfiles.h"
 #include "../botlib/l_memory.h"
@@ -36,8 +36,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../botlib/l_precomp.h"
 #include "../botlib/l_struct.h"
 #include "../botlib/aasfile.h"
-#include "../botlib/botlib.h" // ZTM(IOQ3): game to botlib
-#include "../botlib/be_aas.h" // ZTM(IOQ3): game to botlib
+#include "../botlib/botlib.h"
+#include "../botlib/be_aas.h"
 #include "../botlib/be_aas_def.h"
 #include "../qcommon/cm_public.h"
 
@@ -116,7 +116,7 @@ void BotImport_Trace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t ma
 {
 	trace_t result;
 
-	CM_BoxTrace(&result, start, end, mins, maxs, worldmodel, contentmask, capsule_collision);
+	CM_BoxTrace(&result, start, end, mins, maxs, worldmodel, contentmask, capsule_collision ? TT_CAPSULE : TT_AABB);
 
 	bsptrace->allsolid = result.allsolid;
 	bsptrace->contents = result.contents;
@@ -158,15 +158,15 @@ void *BotImport_GetMemory(int size)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void BotImport_Print(int type, char *fmt, ...)
+__attribute__ ((format (printf, 2, 3))) void BotImport_Print(int type, char *fmt, ...)
 {
 	va_list argptr;
 	char buf[1024];
 
 	va_start(argptr, fmt);
-	vsprintf(buf, fmt, argptr);
+	Q_vsnprintf(buf, sizeof (buf), fmt, argptr);
 	printf("%s", buf);
-	if (buf[0] != '\r') Log_Write(buf);
+	if (buf[0] != '\r') Log_Write("%s", buf);
 	va_end(argptr);
 } //end of the function BotImport_Print
 //===========================================================================
@@ -213,7 +213,7 @@ void Com_DPrintf(const char *fmt, ...)
 	va_start(argptr, fmt);
 	vsprintf(buf, fmt, argptr);
 	printf("%s", buf);
-	if (buf[0] != '\r') Log_Write(buf);
+	if (buf[0] != '\r') Log_Write("%s", buf);
 	va_end(argptr);
 } //end of the function Com_DPrintf
 //===========================================================================
@@ -225,26 +225,6 @@ void Com_DPrintf(const char *fmt, ...)
 int COM_Compress( char *data_p ) {
 	return strlen(data_p);
 }
-#if 0 // ZTM(IOQ3): Disabled
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void Com_Memset (void* dest, const int val, const size_t count) {
-	memset(dest, val, count);
-}
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void Com_Memcpy (void* dest, const void* src, const size_t count) {
-	memcpy(dest, src, count);
-}
-#endif
 //===========================================================================
 //
 // Parameter:				-
@@ -300,3 +280,15 @@ void AAS_CalcReachAndClusters(struct quakefile_s *qf)
 	//calculate clusters
 	AAS_InitClustering();
 } //end of the function AAS_CalcReachAndClusters
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+void AAS_RecalcClusters(void)
+{
+	aasworld.numclusters = 0;
+	AAS_InitBotImport();
+	AAS_InitClustering();
+} //end of the function AAS_RecalcClusters

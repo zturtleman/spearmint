@@ -72,10 +72,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #ifdef BUILD_FREETYPE
 #include <ft2build.h>
+#include FT_FREETYPE_H
 #include FT_ERRORS_H
 #include FT_SYSTEM_H
 #include FT_IMAGE_H
-#include FT_FREETYPE_H
 #include FT_OUTLINE_H
 
 #define _FLOOR(x)  ((x) & -64)
@@ -371,6 +371,7 @@ qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 			font->glyphs[i].glyph = RE_RegisterShaderNoMip(font->glyphs[i].shaderName);
 		}
 		Com_Memcpy(&registeredFont[registeredFontCount++], font, sizeof(fontInfo_t));
+		ri.FS_FreeFile(faceData);
 		return qtrue;
 	}
 
@@ -444,12 +445,13 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 
 	// make a 256x256 image buffer, once it is full, register it, clean it and keep going 
 	// until all glyphs are rendered
-	out = ri.Malloc(imageSize*imageSize*4);
+
+	out = ri.Malloc(imageSize*imageSize);
 	if (out == NULL) {
 		ri.Printf(PRINT_WARNING, "RE_RegisterFont: ri.Malloc failure during output image creation.\n");
 		return qfalse;
 	}
-	Com_Memset(out, 0, imageSize*imageSize*4);
+	Com_Memset(out, 0, imageSize*imageSize);
 
 	maxHeight = 0;
 
@@ -502,29 +504,17 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 
 			image = R_CreateImage(imageName, imageBuff, imageSize, imageSize,  IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0 );
 			h = RE_RegisterShaderFromImage(imageName, LIGHTMAP_2D, image, qfalse);
-			Com_Memset(out, 0, imageSize*imageSize*4);
+			for (j = lastStart; j < i; j++) {
+				font->glyphs[j].glyph = h;
+				COM_StripExtension(imageName, font->glyphs[j].shaderName, sizeof(font->glyphs[j].shaderName));
+			}
+			lastStart = i;
+			Com_Memset(out, 0, imageSize*imageSize);
 			xOut = 0;
 			yOut = 0;
 			ri.Free(imageBuff);
-
 			if(i == GLYPH_END)
-			{
-				for(j = lastStart; j <= GLYPH_END; j++)
-				{
-					font->glyphs[j].glyph = h;
-					COM_StripExtension(imageName, font->glyphs[j].shaderName, sizeof(font->glyphs[j].shaderName));
-				}
-				break;
-			}
-			else
-			{
-				for(j = lastStart; j < i; j++)
-				{
-					font->glyphs[j].glyph = h;
-					COM_StripExtension(imageName, font->glyphs[j].shaderName, sizeof(font->glyphs[j].shaderName));
-				}
-				lastStart = i;
-			}
+				i++;
 		} else {
 			Com_Memcpy(&font->glyphs[i], glyph, sizeof(glyphInfo_t));
 			i++;
@@ -625,7 +615,7 @@ void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
 #ifdef BUILD_FREETYPE
 	ri.Printf( PRINT_WARNING, "RE_RegisterFont: Failed to register font %s.\n", fontName );
 #else
-	ri.Printf(PRINT_WARNING, "RE_RegisterFont: Failed to register font %s (Note: FreeType code is not available).\n");
+	ri.Printf( PRINT_WARNING, "RE_RegisterFont: Failed to register font %s (Note: FreeType code is not available).\n", fontName );
 #endif
 }
 

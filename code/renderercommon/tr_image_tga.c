@@ -200,11 +200,6 @@ void R_LoadTGA ( const char *name, byte **pic, int *width, int *height)
 	else if (targa_header.image_type==10) {   // Runlength encoded RGB images
 		unsigned char red,green,blue,alphabyte,packetHeader,packetSize,j;
 
-		red = 0;
-		green = 0;
-		blue = 0;
-		alphabyte = 0xff;
-
 		for(row=rows-1; row>=0; row--) {
 			pixbuf = targa_rgba + row*columns*4;
 			for(column=0; column<columns; ) {
@@ -326,3 +321,51 @@ void R_LoadTGA ( const char *name, byte **pic, int *width, int *height)
 
   ri.FS_FreeFile (buffer.v);
 }
+
+void RE_SaveTGA(char * filename, int image_width, int image_height, byte *image_buffer, int padding) {
+	byte *srcptr, *destptr;
+	byte *endline, *endmem;
+	byte *out;
+	size_t bufSize;
+	int linelen;
+
+	bufSize = image_width * image_height * 3 + 18;
+	out = ri.Hunk_AllocateTempMemory(bufSize);
+
+	Com_Memset (out, 0, 18);
+	out[2] = 2;		// uncompressed type
+	out[12] = image_width & 255;
+	out[13] = image_width >> 8;
+	out[14] = image_height & 255;
+	out[15] = image_height >> 8;
+	out[16] = 24;	// pixel size
+
+	// swap rgb to bgr and remove padding from line endings
+	linelen = image_width * 3;
+
+	srcptr = image_buffer;
+	destptr = out + 18;
+	endmem = srcptr + (linelen + padding) * image_height;
+
+	while(srcptr < endmem)
+	{
+		endline = srcptr + linelen;
+
+		while(srcptr < endline)
+		{
+			*destptr++ = srcptr[2];
+			*destptr++ = srcptr[1];
+			*destptr++ = srcptr[0];
+			
+			srcptr += 3;
+		}
+		
+		// Skip the pad
+		srcptr += padding;
+	}
+
+	ri.FS_WriteFile(filename, out, bufSize);
+
+	ri.Hunk_FreeTempMemory(out);
+}
+

@@ -33,26 +33,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../botlib/aasfile.h"		//aas_bbox_t
 #include "aas_store.h"				//AAS_MAX_BBOXES
 #include "aas_cfg.h"
-#include "../qcommon/surfaceflags.h" // ZTM(IOQ3): game to qcommon
-
-#define SPAWNFLAG_NOT_EASY			0x00000100
-#define SPAWNFLAG_NOT_MEDIUM		0x00000200
-#define SPAWNFLAG_NOT_HARD			0x00000400
-#define SPAWNFLAG_NOT_DEATHMATCH	0x00000800
-#define SPAWNFLAG_NOT_COOP			0x00001000
-
-#define STATE_TOP				0
-#define STATE_BOTTOM			1
-#define STATE_UP				2
-#define STATE_DOWN			3
-
-#define DOOR_START_OPEN		1
-#define DOOR_REVERSE			2
-#define DOOR_CRUSHER			4
-#define DOOR_NOMONSTER		8
-#define DOOR_TOGGLE			32
-#define DOOR_X_AXIS			64
-#define DOOR_Y_AXIS			128
+#include "../qcommon/surfaceflags.h"
 
 #define BBOX_NORMAL_EPSILON			0.0001
 
@@ -165,17 +146,18 @@ void AAS_SetTexinfo(mapbrush_t *brush)
 	int n;
 	side_t *side;
 
-	if (brush->contents & (CONTENTS_LADDER
-									| CONTENTS_AREAPORTAL
-									| CONTENTS_CLUSTERPORTAL
-									| CONTENTS_TELEPORTER
-									| CONTENTS_JUMPPAD
-									| CONTENTS_DONOTENTER
-									| CONTENTS_WATER
-									| CONTENTS_LAVA
-									| CONTENTS_SLIME
-									| CONTENTS_WINDOW
-									| CONTENTS_PLAYERCLIP))
+	if ( brush->contents & ( CONTENTS_AREAPORTAL
+							 | CONTENTS_CLUSTERPORTAL
+							 | CONTENTS_TELEPORTER
+							 | CONTENTS_JUMPPAD
+							 | CONTENTS_DONOTENTER
+							 //| CONTENTS_DONOTENTER_LARGE // ZTM: TODO: Used by RTCW
+							 | CONTENTS_WATER
+							 | CONTENTS_LAVA
+							 | CONTENTS_SLIME
+							 | CONTENTS_PLAYERCLIP
+							 | CONTENTS_MONSTERCLIP
+							 | CONTENTS_MOVER ) )
 	{
 		//we just set texinfo to 0 because these brush sides MUST be used as
 		//bsp splitters textured or not textured
@@ -469,21 +451,19 @@ int AAS_AlwaysTriggered_r(char *targetname)
 		// if the entity will activate the given targetname
 		if ( !strcmp(targetname, ValueForKey(&entities[i], "target")) ) {
 			// if this activator is present in deathmatch
-			if (!(atoi(ValueForKey(&entities[i], "spawnflags")) & SPAWNFLAG_NOT_DEATHMATCH)) {
-				// if it is a trigger_always entity
-				if (!strcmp("trigger_always", ValueForKey(&entities[i], "classname"))) {
-					return true;
-				}
-				// check for possible trigger_always entities activating this entity
-				if ( mark_entities[i] ) {
-					Warning( "entity %d, classname %s has recursive targetname %s\n", i,
-										ValueForKey(&entities[i], "classname"), targetname );
-					return false;
-				}
-				mark_entities[i] = true;
-				if ( AAS_AlwaysTriggered_r(ValueForKey(&entities[i], "targetname")) ) {
-					return true;
-				}
+			// if it is a trigger_always entity
+			if (!strcmp("trigger_always", ValueForKey(&entities[i], "classname"))) {
+				return true;
+			}
+			// check for possible trigger_always entities activating this entity
+			if ( mark_entities[i] ) {
+				Warning( "entity %d, classname %s has recursive targetname %s\n", i,
+									ValueForKey(&entities[i], "classname"), targetname );
+				return false;
+			}
+			mark_entities[i] = true;
+			if ( AAS_AlwaysTriggered_r(ValueForKey(&entities[i], "targetname")) ) {
+				return true;
 			}
 		}
 	}
@@ -510,31 +490,7 @@ int AAS_ValidEntity(entity_t *mapent)
 	{
 		return true;
 	} //end if
-	//some of the func_wall brushes are also used for AAS
-	else if (!strcmp("func_wall", ValueForKey(mapent, "classname")))
-	{
-		//Log_Print("found func_wall entity %d\n", mapent - entities);
-		//if the func wall is used in deathmatch
-		if (!(atoi(ValueForKey(mapent, "spawnflags")) & SPAWNFLAG_NOT_DEATHMATCH))
-		{
-			//Log_Print("func_wall USED in deathmatch mode %d\n", atoi(ValueForKey(mapent, "spawnflags")));
-			return true;
-		} //end if
-	} //end else if
-	else if (!strcmp("func_door_rotating", ValueForKey(mapent, "classname")))
-	{
-		//if the func_door_rotating is present in deathmatch
-		if (!(atoi(ValueForKey(mapent, "spawnflags")) & SPAWNFLAG_NOT_DEATHMATCH))
-		{
-			//if the func_door_rotating is always activated in deathmatch
-			if (AAS_AlwaysTriggered(ValueForKey(mapent, "targetname")))
-			{
-				//Log_Print("found func_door_rotating in deathmatch\ntargetname %s\n", ValueForKey(mapent, "targetname"));
-				return true;
-			} //end if
-		} //end if
-	} //end else if
-	else if (!strcmp("trigger_hurt", ValueForKey(mapent, "classname")))
+	if (!strcmp("trigger_hurt", ValueForKey(mapent, "classname")))
 	{
 		//"dmg" is the damage, for instance: "dmg" "666"
 		return true;
@@ -568,13 +524,12 @@ int AAS_ValidEntity(entity_t *mapent)
 		//FIXME: easy/medium/hard/deathmatch specific?
 		return true;
 	} //end else if
-#ifdef TA_ENTSYS // BREAKABLE
-	else if (!strcmp("func_breakable", ValueForKey(mapent, "classname")))
+	else if (!strcmp("func_door", ValueForKey(mapent, "classname")))
 	{
 		return true;
 	} //end else if
-#endif
-	else if (!strcmp("func_door", ValueForKey(mapent, "classname")))
+	//func_breakable for Turtle Arena
+	else if (!strcmp("func_breakable", ValueForKey(mapent, "classname")))
 	{
 		return true;
 	} //end else if
@@ -599,59 +554,6 @@ int AAS_TransformPlane(int planenum, vec3_t origin, vec3_t angles)
 	return FindFloatPlane(normal, newdist);
 } //end of the function AAS_TransformPlane
 //===========================================================================
-// this function sets the func_rotating_door in it's final position
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-void AAS_PositionFuncRotatingBrush(entity_t *mapent, mapbrush_t *brush)
-{
-	int spawnflags, i;
-	float distance;
-	vec3_t movedir, angles, pos1, pos2;
-	side_t *s;
-
-	spawnflags = FloatForKey(mapent, "spawnflags");
-	VectorClear(movedir);
-	if (spawnflags & DOOR_X_AXIS)
-		movedir[2] = 1.0;		//roll
-	else if (spawnflags & DOOR_Y_AXIS)
-		movedir[0] = 1.0;		//pitch
-	else // Z_AXIS
-		movedir[1] = 1.0;		//yaw
-
-	// check for reverse rotation
-	if (spawnflags & DOOR_REVERSE)
-		VectorInverse(movedir);
-
-	distance = FloatForKey(mapent, "distance");
-	if (!distance) distance = 90;
-
-	GetVectorForKey(mapent, "angles", angles);
-	VectorCopy(angles, pos1);
-	VectorMA(angles, -distance, movedir, pos2);
-	// if it starts open, switch the positions
-	if (spawnflags & DOOR_START_OPEN)
-	{
-		VectorCopy(pos2, angles);
-		VectorCopy(pos1, pos2);
-		VectorCopy(angles, pos1);
-		VectorInverse(movedir);
-	} //end if
-	//
-	for (i = 0; i < brush->numsides; i++)
-	{
-		s = &brush->original_sides[i];
-		s->planenum = AAS_TransformPlane(s->planenum, mapent->origin, pos2);
-	} //end for
-	//
-	FreeBrushWindings(brush);
-	AAS_MakeBrushWindings(brush);
-	AddBrushBevels(brush);
-	FreeBrushWindings(brush);
-} //end of the function AAS_PositionFuncRotatingBrush
-//===========================================================================
 //
 // Parameter:				-
 // Returns:					-
@@ -664,77 +566,69 @@ void AAS_PositionBrush(entity_t *mapent, mapbrush_t *brush)
 	int i, notteam;
 	char *model;
 
-	if (!strcmp(ValueForKey(mapent, "classname"), "func_door_rotating"))
+	if (mapent->origin[0] || mapent->origin[1] || mapent->origin[2])
 	{
-		AAS_PositionFuncRotatingBrush(mapent, brush);
+		for (i = 0; i < brush->numsides; i++)
+		{
+			s = &brush->original_sides[i];
+			newdist = mapplanes[s->planenum].dist +
+					DotProduct(mapplanes[s->planenum].normal, mapent->origin);
+			s->planenum = FindFloatPlane(mapplanes[s->planenum].normal, newdist);
+		} //end for
 	} //end if
-	else
+	//if it's a trigger hurt
+	if (!strcmp("trigger_hurt", ValueForKey(mapent, "classname")))
 	{
-		if (mapent->origin[0] || mapent->origin[1] || mapent->origin[2])
-		{
-			for (i = 0; i < brush->numsides; i++)
-			{
-				s = &brush->original_sides[i];
-				newdist = mapplanes[s->planenum].dist +
-						DotProduct(mapplanes[s->planenum].normal, mapent->origin);
-				s->planenum = FindFloatPlane(mapplanes[s->planenum].normal, newdist);
-			} //end for
-		} //end if
-		//if it's a trigger hurt
-		if (!strcmp("trigger_hurt", ValueForKey(mapent, "classname")))
-		{
-			notteam = FloatForKey(mapent, "bot_notteam");
-			if ( notteam == 1 ) {
-				brush->contents |= CONTENTS_NOTTEAM1;
-			}
-			else if ( notteam == 2 ) {
-				brush->contents |= CONTENTS_NOTTEAM2;
-			}
-			else {
-				// always avoid so set lava contents
-				brush->contents |= CONTENTS_LAVA;
-			}
-		} //end if
-		//
-		else if (!strcmp("trigger_push", ValueForKey(mapent, "classname")))
-		{
-			//set the jumppad contents
-			brush->contents = CONTENTS_JUMPPAD;
-			//Log_Print("found trigger_push brush\n");
-		} //end if
-		//
-		else if (!strcmp("trigger_multiple", ValueForKey(mapent, "classname")))
-		{
-			//set teleporter contents
-			brush->contents = CONTENTS_TELEPORTER;
-			//Log_Print("found trigger_multiple teleporter brush\n");
-		} //end if
-		//
-		else if (!strcmp("trigger_teleport", ValueForKey(mapent, "classname")))
-		{
-			//set teleporter contents
-			brush->contents = CONTENTS_TELEPORTER;
-			//Log_Print("found trigger_teleport teleporter brush\n");
-		} //end if
-		else if (!strcmp("func_door", ValueForKey(mapent, "classname")))
-		{
-			//set mover contents
-			brush->contents = CONTENTS_MOVER;
-			//get the model number
-			model = ValueForKey(mapent, "model");
-			brush->modelnum = atoi(model+1);
-		} //end if
-#ifdef TA_ENTSYS // BREAKABLE
-		else if (!strcmp("func_breakable", ValueForKey(mapent, "classname")))
-		{
-			//set mover contents
-			brush->contents = CONTENTS_MOVER;
-			//get the model number
-			model = ValueForKey(mapent, "model");
-			brush->modelnum = atoi(model+1);
-		} //end if
-#endif
-	} //end else
+		notteam = FloatForKey(mapent, "bot_notteam");
+		if ( notteam == 1 ) {
+			brush->contents |= CONTENTS_NOTTEAM1;
+		}
+		else if ( notteam == 2 ) {
+			brush->contents |= CONTENTS_NOTTEAM2;
+		}
+		else {
+			// always avoid so set lava contents
+			brush->contents |= CONTENTS_LAVA;
+		}
+	} //end if
+	//
+	else if (!strcmp("trigger_push", ValueForKey(mapent, "classname")))
+	{
+		//set the jumppad contents
+		brush->contents = CONTENTS_JUMPPAD;
+		//Log_Print("found trigger_push brush\n");
+	} //end if
+	//
+	else if (!strcmp("trigger_multiple", ValueForKey(mapent, "classname")))
+	{
+		//set teleporter contents
+		brush->contents = CONTENTS_TELEPORTER;
+		//Log_Print("found trigger_multiple teleporter brush\n");
+	} //end if
+	//
+	else if (!strcmp("trigger_teleport", ValueForKey(mapent, "classname")))
+	{
+		//set teleporter contents
+		brush->contents = CONTENTS_TELEPORTER;
+		//Log_Print("found trigger_teleport teleporter brush\n");
+	} //end if
+	else if (!strcmp("func_door", ValueForKey(mapent, "classname")))
+	{
+		//set mover contents
+		brush->contents = CONTENTS_MOVER;
+		//get the model number
+		model = ValueForKey(mapent, "model");
+		brush->modelnum = atoi(model+1);
+	} //end if
+	//func_breakable for Turtle Arena
+	else if (!strcmp("func_breakable", ValueForKey(mapent, "classname")))
+	{
+		//set mover contents
+		brush->contents = CONTENTS_MOVER;
+		//get the model number
+		model = ValueForKey(mapent, "model");
+		brush->modelnum = atoi(model+1);
+	} //end if
 } //end of the function AAS_PositionBrush
 //===========================================================================
 // uses the global cfg_t cfg
@@ -770,11 +664,11 @@ void AAS_CreateMapBrushes(mapbrush_t *brush, entity_t *mapent, int addbevels)
 		brush->contents = CONTENTS_CLUSTERPORTAL;
 		brush->leafnum = -1;
 	} //end if
-	//window and playerclip are used for player clipping, make them solid
-	if (brush->contents & (CONTENTS_WINDOW | CONTENTS_PLAYERCLIP))
+	//playerclip is used for player clipping, make it solid
+	if (brush->contents & CONTENTS_PLAYERCLIP)
 	{
 		//
-		brush->contents &= ~(CONTENTS_WINDOW | CONTENTS_PLAYERCLIP);
+		brush->contents &= ~CONTENTS_PLAYERCLIP;
 		brush->contents |= CONTENTS_SOLID;
 		brush->leafnum = -1;
 	} //end if
@@ -789,17 +683,17 @@ void AAS_CreateMapBrushes(mapbrush_t *brush, entity_t *mapent, int addbevels)
 	//PrintContents(brush->contents);
 	//Log_Write("\r\n");
 	//if not one of the following brushes then the brush is NOT used for AAS
-	if (!(brush->contents & (CONTENTS_SOLID
-									| CONTENTS_LADDER
-									| CONTENTS_CLUSTERPORTAL
-									| CONTENTS_DONOTENTER
-									| CONTENTS_TELEPORTER
-									| CONTENTS_JUMPPAD
-									| CONTENTS_WATER
-									| CONTENTS_LAVA
-									| CONTENTS_SLIME
-									| CONTENTS_MOVER
-									)))
+	if ( !( brush->contents & ( CONTENTS_SOLID
+								| CONTENTS_CLUSTERPORTAL
+								| CONTENTS_DONOTENTER
+								//| CONTENTS_DONOTENTER_LARGE // ZTM: TODO: Used by RTCW
+								| CONTENTS_TELEPORTER
+								| CONTENTS_JUMPPAD
+								| CONTENTS_WATER
+								| CONTENTS_LAVA
+								| CONTENTS_SLIME
+								| CONTENTS_MOVER
+								) ) )
 	{
 		nummapbrushsides -= brush->numsides;
 		brush->numsides = 0;
@@ -832,6 +726,7 @@ void AAS_CreateMapBrushes(mapbrush_t *brush, entity_t *mapent, int addbevels)
 									| CONTENTS_TELEPORTER
 									| CONTENTS_JUMPPAD
 									| CONTENTS_DONOTENTER
+									//| CONTENTS_DONOTENTER_LARGE // ZTM: TODO: Used by RTCW
 									| CONTENTS_MOVER
 									))
 	{
@@ -851,9 +746,7 @@ void AAS_CreateMapBrushes(mapbrush_t *brush, entity_t *mapent, int addbevels)
 		AAS_MakeBrushWindings(brush);
 	} //end if
 	//all solid brushes are expanded for all bounding boxes
-	else if (brush->contents & (CONTENTS_SOLID
-										| CONTENTS_LADDER
-										))
+	else if ( brush->contents & CONTENTS_SOLID )
 	{
 		//brush for the first bounding box
 		bboxbrushes[0] = brush;

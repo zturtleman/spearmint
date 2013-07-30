@@ -3,3 +3,33 @@ Makefile.local
 *.swp
 *tags
 misc/code_blocks/*.layout
+
+# OS X
+####################
+.Spotlight-V100/
+.Trashes/
+._*
+.AppleDouble
+.DS_Store
+.LSOverride
+Icon?
+
+# Xcode
+####################
+*.mode1v3
+*.mode2v3
+*.pbxuser
+*.perspectivev3
+*.user
+*.xcuserstate
+*.moved-aside
+*~.nib
+.idea/
+DerivedData/
+project.xcworkspace/
+xcuserdata/
+profile
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3

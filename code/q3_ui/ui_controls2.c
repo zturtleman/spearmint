@@ -257,8 +257,6 @@ static controls_t s_controls;
 
 static qboolean waitingforkey = qfalse;
 
-static vec4_t controls_binding_color  = {1.00f, 0.43f, 0.00f, 1.00f};
-
 static bind_t g_bindings[] = 
 {
 	{"+scores",			"show scores",		ID_SHOWSCORES,	ANIM_IDLE,		K_TAB,			-1,		-1, -1},
@@ -966,8 +964,8 @@ static void Controls_DrawKeyBinding( void *self )
 		}
 		else
 		{
-			UI_DrawString( x - SMALLCHAR_WIDTH, y, g_bindings[a->generic.id].label, UI_RIGHT|UI_SMALLFONT, controls_binding_color );
-			UI_DrawString( x + SMALLCHAR_WIDTH, y, name, UI_LEFT|UI_SMALLFONT, controls_binding_color );
+			UI_DrawString( x - SMALLCHAR_WIDTH, y, g_bindings[a->generic.id].label, UI_RIGHT|UI_SMALLFONT, text_color_normal );
+			UI_DrawString( x + SMALLCHAR_WIDTH, y, name, UI_LEFT|UI_SMALLFONT, text_color_normal );
 		}
 	}
 }
@@ -1544,7 +1542,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.banner.generic.x		= 320;
 	s_controls.banner.generic.y		= 16;
 	s_controls.banner.string		= "CONTROLS";
-	s_controls.banner.color			= color_white;
+	s_controls.banner.color			= text_banner_color;
 	s_controls.banner.style			= UI_CENTER;
 
 	s_controls.framel.generic.type  = MTYPE_BITMAP;
@@ -1573,7 +1571,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.looking.generic.y	    = y;
 	s_controls.looking.string			= "LOOK";
 	s_controls.looking.style			= UI_RIGHT;
-	s_controls.looking.color			= color_red;
+	s_controls.looking.color			= text_big_color;
 
 	y += PROP_HEIGHT;
 	s_controls.movement.generic.type     = MTYPE_PTEXT;
@@ -1584,7 +1582,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.movement.generic.y	     = y;
 	s_controls.movement.string			= "MOVE";
 	s_controls.movement.style			= UI_RIGHT;
-	s_controls.movement.color			= color_red;
+	s_controls.movement.color			= text_big_color;
 
 	y += PROP_HEIGHT;
 	s_controls.weapons.generic.type	    = MTYPE_PTEXT;
@@ -1595,7 +1593,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.weapons.generic.y	    = y;
 	s_controls.weapons.string			= "SHOOT";
 	s_controls.weapons.style			= UI_RIGHT;
-	s_controls.weapons.color			= color_red;
+	s_controls.weapons.color			= text_big_color;
 
 	y += PROP_HEIGHT;
 	s_controls.misc.generic.type	 = MTYPE_PTEXT;
@@ -1606,7 +1604,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.misc.generic.y		 = y;
 	s_controls.misc.string			= "MISC";
 	s_controls.misc.style			= UI_RIGHT;
-	s_controls.misc.color			= color_red;
+	s_controls.misc.color			= text_big_color;
 
 	s_controls.back.generic.type	 = MTYPE_BITMAP;
 	s_controls.back.generic.name     = ART_BACK0;

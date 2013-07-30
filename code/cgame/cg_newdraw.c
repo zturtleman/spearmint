@@ -160,7 +160,7 @@ static void CG_SetSelectedPlayerName( int localPlayerNum ) {
 		clientInfo_t *ci = cgs.clientinfo + sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer];
 		if (ci) {
 			trap_Cvar_Set(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayerName"), ci->name);
-			trap_Cvar_Set(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayer"), va("%d", sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer]));
+			trap_Cvar_SetValue(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayer"), sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer]);
 			cg.localClients[ localPlayerNum ].currentOrder = ci->teamTask;
 		}
 	} else {
@@ -616,7 +616,7 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
 			}
 
 			// offset the origin y and z to center the head
-			trap_R_ModelBounds( cm, mins, maxs );
+			trap_R_ModelBounds( cm, mins, maxs, 0, 0, 0 );
 
 			origin[2] = -0.5 * ( mins[2] + maxs[2] );
 			origin[1] = 0.5 * ( mins[1] + maxs[1] );
@@ -1255,20 +1255,7 @@ static void CG_DrawGameStatus(rectDef_t *rect, float scale, vec4_t color, qhandl
 }
 
 const char *CG_GameTypeString(void) {
-	if ( cgs.gametype == GT_FFA ) {
-		return "Free For All";
-	} else if ( cgs.gametype == GT_TEAM ) {
-		return "Team Deathmatch";
-	} else if ( cgs.gametype == GT_CTF ) {
-		return "Capture the Flag";
-	} else if ( cgs.gametype == GT_1FCTF ) {
-		return "One Flag CTF";
-	} else if ( cgs.gametype == GT_OBELISK ) {
-		return "Overload";
-	} else if ( cgs.gametype == GT_HARVESTER ) {
-		return "Harvester";
-	}
-	return "";
+	return cgs.gametypeName;
 }
 static void CG_DrawGameType(rectDef_t *rect, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
 	CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, CG_GameTypeString(), 0, 0, textStyle);

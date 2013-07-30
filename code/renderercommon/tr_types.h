@@ -64,8 +64,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // refdef flags
 #define RDF_NOWORLDMODEL	0x0001		// used for player configuration screen
+#define RDF_UNDERWATER		0x0002		// underwater
 #define RDF_HYPERSPACE		0x0004		// teleportation effect
-#define RDF_UNDERWATER		0x0008		// underwater
 
 typedef struct {
 	vec3_t		xyz;
@@ -81,8 +81,7 @@ typedef struct poly_s {
 
 // =========================================
 // Gordon, these MUST NOT exceed the values for SHADER_MAX_VERTEXES/SHADER_MAX_INDEXES
-// ZTM: NOTE: WolfET's SHADER_MAX_VERTEXES is 1025, quake3's is only 1000.
-#define MAX_PB_VERTS    1000 // SHADER_MAX_VERTEXES
+#define MAX_PB_VERTS    1025 // SHADER_MAX_VERTEXES
 #define MAX_PB_INDICIES ( MAX_PB_VERTS * 6 )
 
 typedef struct polyBuffer_s {

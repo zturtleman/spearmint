@@ -792,10 +792,10 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 
 	if ( pmove_msec.integer < 8 ) {
-		trap_Cvar_Set("pmove_msec", "8");
+		trap_Cvar_SetValue( "pmove_msec", 8 );
 	}
-	else if (pmove_msec.integer > 33) {
-		trap_Cvar_Set("pmove_msec", "33");
+	else if ( pmove_msec.integer > 33 ) {
+		trap_Cvar_SetValue( "pmove_msec", 33 );
 	}
 
 	if ( pmove_fixed.integer || client->pers.pmoveFixed ) {

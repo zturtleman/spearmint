@@ -54,7 +54,6 @@ cvar_t	*cl_voip;
 #endif
 
 cvar_t	*cl_nodelta;
-cvar_t	*cl_debugMove;
 
 cvar_t	*cl_noprint;
 #ifdef UPDATE_SERVER_NAME
@@ -80,7 +79,6 @@ cvar_t	*cl_aviFrameRate;
 cvar_t	*cl_aviMotionJpeg;
 cvar_t	*cl_forceavidemo;
 
-cvar_t	*cl_freelook;
 cvar_t	*cl_sensitivity;
 
 cvar_t	*cl_mouseAccel;
@@ -88,22 +86,7 @@ cvar_t	*cl_mouseAccelOffset;
 cvar_t	*cl_mouseAccelStyle;
 cvar_t	*cl_showMouseRate;
 
-cvar_t	*m_pitch;
-cvar_t	*m_yaw;
-cvar_t	*m_forward;
-cvar_t	*m_side;
 cvar_t	*m_filter;
-
-cvar_t	*j_pitch[CL_MAX_SPLITVIEW];
-cvar_t	*j_yaw[CL_MAX_SPLITVIEW];
-cvar_t	*j_forward[CL_MAX_SPLITVIEW];
-cvar_t	*j_side[CL_MAX_SPLITVIEW];
-cvar_t	*j_up[CL_MAX_SPLITVIEW];
-cvar_t	*j_pitch_axis[CL_MAX_SPLITVIEW];
-cvar_t	*j_yaw_axis[CL_MAX_SPLITVIEW];
-cvar_t	*j_forward_axis[CL_MAX_SPLITVIEW];
-cvar_t	*j_side_axis[CL_MAX_SPLITVIEW];
-cvar_t	*j_up_axis[CL_MAX_SPLITVIEW];
 
 cvar_t	*cl_activeAction;
 
@@ -257,7 +240,7 @@ void CL_Voip_f( void )
 		reason = "Speex not initialized";
 	else if (!clc.voipEnabled)
 		reason = "Server doesn't support VoIP";
-	else if (Com_GameIsSinglePlayer())
+	else if (!clc.demoplaying && Com_GameIsSinglePlayer())
 		reason = "running in single-player mode";
 
 	if (reason != NULL) {
@@ -1348,8 +1331,6 @@ CL_ShutdownAll
 */
 void CL_ShutdownAll(qboolean shutdownRef)
 {
-	int index;
-
 	if(CL_VideoRecording())
 		CL_CloseAVI();
 
@@ -1365,15 +1346,6 @@ void CL_ShutdownAll(qboolean shutdownRef)
 	CL_ShutdownCGame();
 	// shutdown UI
 	CL_ShutdownUI();
-
-	// free client structure
-	for (index = 0; index < ARRAY_LEN(cl.snapshots); index++) {
-		DA_Free( &cl.snapshots[index].playerStates );
-		cl.snapshots[index].valid = qfalse;
-	}
-
-	DA_Free( &cl.entityBaselines );
-	DA_Free( &cl.parseEntities );
 
 	// shutdown the renderer
 	if(shutdownRef)
@@ -1482,8 +1454,20 @@ Called before parsing a gamestate
 =====================
 */
 void CL_ClearState (void) {
+	int index;
 
 //	S_StopAllSounds();
+
+	// free client structure
+	for (index = 0; index < PACKET_BACKUP; index++) {
+		DA_Free( &cl.snapshots[index].playerStates );
+		cl.snapshots[index].valid = qfalse;
+	}
+
+	DA_Free( &cl.tempSnapshotPS );
+
+	DA_Free( &cl.entityBaselines );
+	DA_Free( &cl.parseEntities );
 
 	Com_Memset( &cl, 0, sizeof( cl ) );
 }
@@ -2181,7 +2165,7 @@ void CL_DownloadsComplete( void ) {
 		CL_cURL_Shutdown();
 		if( clc.cURLDisconnected ) {
 			if(clc.downloadRestart) {
-				FS_Restart();
+				FS_Restart( qfalse );
 				clc.downloadRestart = qfalse;
 			}
 			clc.cURLDisconnected = qfalse;
@@ -2195,7 +2179,7 @@ void CL_DownloadsComplete( void ) {
 	if (clc.downloadRestart) {
 		clc.downloadRestart = qfalse;
 
-		FS_Restart(); // We possibly downloaded a pak, restart the file system to load it
+		FS_Restart( qfalse ); // We possibly downloaded a pak, restart the file system to load it
 
 		// inform the server so we get new gamestate info
 		CL_AddReliableCommand("donedl", qfalse);
@@ -2560,7 +2544,7 @@ void CL_InitServerInfo( serverInfo_t *server, netadr_t *address ) {
 	server->minPing = 0;
 	server->ping = -1;
 	server->game[0] = '\0';
-	server->gameType = 0;
+	server->gameType[0] = '\0';
 	server->netType = 0;
 }
 
@@ -3307,6 +3291,10 @@ void CL_InitRef( void ) {
   
 	ri.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
 	ri.CL_MaxSplitView = CL_MaxSplitView;
+	ri.CL_GetMapMessage = CL_GetMapMessage;
+	ri.CL_GetClientLocation = CL_GetClientLocation;
+	ri.zlib_compress = compress;
+	ri.zlib_crc32 = crc32;
 
 	ri.IN_Init = IN_Init;
 	ri.IN_Shutdown = IN_Shutdown;
@@ -3462,8 +3450,6 @@ CL_Init
 ====================
 */
 void CL_Init( void ) {
-	int		i;
-
 	Com_Printf( "----- Client Initialization -----\n" );
 
 	Con_Init ();
@@ -3507,19 +3493,11 @@ void CL_Init( void ) {
 
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 
-	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
-		cl_yawspeed[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_yawspeed"), "140", CVAR_ARCHIVE);
-		cl_pitchspeed[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_pitchspeed"), "140", CVAR_ARCHIVE);
-		cl_anglespeedkey[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_anglespeedkey"), "1.5", 0);
-		cl_run[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_run"), "1", CVAR_ARCHIVE);
-	}
-
 	cl_maxpackets = Cvar_Get ("cl_maxpackets", "30", CVAR_ARCHIVE );
 	cl_packetdup = Cvar_Get ("cl_packetdup", "1", CVAR_ARCHIVE );
 
 	cl_sensitivity = Cvar_Get ("sensitivity", "5", CVAR_ARCHIVE);
 	cl_mouseAccel = Cvar_Get ("cl_mouseAccel", "0", CVAR_ARCHIVE);
-	cl_freelook = Cvar_Get( "cl_freelook", "1", CVAR_ARCHIVE );
 
 	// 0: legacy mouse acceleration
 	// 1: new implementation
@@ -3546,36 +3524,12 @@ void CL_Init( void ) {
 
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
 
-	m_pitch = Cvar_Get ("m_pitch", "0.022", CVAR_ARCHIVE);
-	m_yaw = Cvar_Get ("m_yaw", "0.022", CVAR_ARCHIVE);
-	m_forward = Cvar_Get ("m_forward", "0.25", CVAR_ARCHIVE);
-	m_side = Cvar_Get ("m_side", "0.25", CVAR_ARCHIVE);
 #ifdef MACOS_X
 	// Input is jittery on OS X w/o this
 	m_filter = Cvar_Get ("m_filter", "1", CVAR_ARCHIVE);
 #else
 	m_filter = Cvar_Get ("m_filter", "0", CVAR_ARCHIVE);
 #endif
-
-	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
-		j_pitch[i] =        Cvar_Get (Com_LocalClientCvarName(i, "j_pitch"),        "0.022", CVAR_ARCHIVE);
-		j_yaw[i] =          Cvar_Get (Com_LocalClientCvarName(i, "j_yaw"),          "-0.022", CVAR_ARCHIVE);
-		j_forward[i] =      Cvar_Get (Com_LocalClientCvarName(i, "j_forward"),      "-0.25", CVAR_ARCHIVE);
-		j_side[i] =         Cvar_Get (Com_LocalClientCvarName(i, "j_side"),         "0.25", CVAR_ARCHIVE);
-		j_up[i] = 	        Cvar_Get (Com_LocalClientCvarName(i, "j_up"),           "1", CVAR_ARCHIVE);
-
-		j_pitch_axis[i] =   Cvar_Get (Com_LocalClientCvarName(i, "j_pitch_axis"),   "3", CVAR_ARCHIVE);
-		j_yaw_axis[i] =     Cvar_Get (Com_LocalClientCvarName(i, "j_yaw_axis"),     "4", CVAR_ARCHIVE);
-		j_forward_axis[i] = Cvar_Get (Com_LocalClientCvarName(i, "j_forward_axis"), "1", CVAR_ARCHIVE);
-		j_side_axis[i] =    Cvar_Get (Com_LocalClientCvarName(i, "j_side_axis"),    "0", CVAR_ARCHIVE);
-		j_up_axis[i] =      Cvar_Get (Com_LocalClientCvarName(i, "j_up_axis"),      "2", CVAR_ARCHIVE);
-
-		Cvar_CheckRange(j_pitch_axis[i], 0, MAX_JOYSTICK_AXIS-1, qtrue);
-		Cvar_CheckRange(j_yaw_axis[i], 0, MAX_JOYSTICK_AXIS-1, qtrue);
-		Cvar_CheckRange(j_forward_axis[i], 0, MAX_JOYSTICK_AXIS-1, qtrue);
-		Cvar_CheckRange(j_side_axis[i], 0, MAX_JOYSTICK_AXIS-1, qtrue);
-		Cvar_CheckRange(j_up_axis[i], 0, MAX_JOYSTICK_AXIS-1, qtrue);
-	}
 
 	cl_motdString = Cvar_Get( "cl_motdString", "", CVAR_ROM );
 
@@ -3682,7 +3636,9 @@ CL_Shutdown
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 {
 	static qboolean recursive = qfalse;
+#if CL_MAX_SPLITVIEW > 1
 	int i;
+#endif
 	
 	// check whether the client is running at all.
 	if(!(com_cl_running && com_cl_running->integer))
@@ -3752,11 +3708,11 @@ static void CL_SetServerInfo(serverInfo_t *server, const char *info, int ping) {
 	if (server) {
 		if (info) {
 			server->clients = atoi(Info_ValueForKey(info, "clients"));
-			Q_strncpyz(server->hostName,Info_ValueForKey(info, "hostname"), MAX_NAME_LENGTH);
-			Q_strncpyz(server->mapName, Info_ValueForKey(info, "mapname"), MAX_NAME_LENGTH);
+			Q_strncpyz(server->hostName,Info_ValueForKey(info, "hostname"), sizeof ( server->hostName ) );
+			Q_strncpyz(server->mapName, Info_ValueForKey(info, "mapname"), sizeof ( server->mapName ) );
 			server->maxClients = atoi(Info_ValueForKey(info, "sv_maxclients"));
-			Q_strncpyz(server->game,Info_ValueForKey(info, "game"), MAX_NAME_LENGTH);
-			server->gameType = atoi(Info_ValueForKey(info, "gametype"));
+			Q_strncpyz(server->game,Info_ValueForKey(info, "game"), sizeof ( server->game ) );
+			Q_strncpyz(server->gameType, Info_ValueForKey(info, "gametype"), sizeof (server->gameType ) );
 			server->netType = atoi(Info_ValueForKey(info, "nettype"));
 			server->minPing = atoi(Info_ValueForKey(info, "minping"));
 			server->maxPing = atoi(Info_ValueForKey(info, "maxping"));
@@ -3895,7 +3851,7 @@ void CL_ServerInfoPacket( netadr_t from, msg_t *msg ) {
 	cls.localServers[i].minPing = 0;
 	cls.localServers[i].ping = -1;
 	cls.localServers[i].game[0] = '\0';
-	cls.localServers[i].gameType = 0;
+	cls.localServers[i].gameType[0] = '\0';
 	cls.localServers[i].netType = from.type;
 	cls.localServers[i].g_humanplayers = 0;
 	cls.localServers[i].g_needpass = 0;
@@ -4589,3 +4545,41 @@ void CL_ShowIP_f(void) {
 	Sys_ShowIP();
 }
 
+/*
+=================
+CL_GetMapMessage
+=================
+*/
+void CL_GetMapMessage(char *buf, int bufLength) {
+	int		offset;
+
+	offset = cl.gameState.stringOffsets[CS_MESSAGE];
+	if (!offset) {
+		if( bufLength ) {
+			Q_strncpyz( buf, "Unknown", bufLength);
+		}
+		return;
+	}
+
+	Q_strncpyz( buf, cl.gameState.stringData+offset, bufLength);
+}
+
+/*
+=================
+CL_GetClientLocation
+=================
+*/
+qboolean CL_GetClientLocation(char *buf, int bufLength, int localClientNum) {
+	sharedPlayerState_t *ps;
+
+	if (!cl.snap.valid || cl.snap.lcIndex[localClientNum] == -1) {
+		Q_strncpyz(buf, "Unknown", bufLength);
+		return qfalse;
+	}
+
+	ps = DA_ElementPointer( cl.snap.playerStates, cl.snap.lcIndex[localClientNum] );
+	Com_sprintf(buf, bufLength, "X:%d Y:%d Z:%d A:%d", (int)ps->origin[0],
+			(int)ps->origin[1], (int)ps->origin[2],
+			(int)(ps->viewangles[YAW]+360)%360);
+	return qtrue;
+}

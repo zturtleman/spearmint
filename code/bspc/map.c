@@ -29,11 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 
 #include "qbsp.h"
-#include "l_bsp_hl.h"
-#include "l_bsp_q1.h"
-#include "l_bsp_q2.h"
 #include "l_bsp_q3.h"
-#include "l_bsp_sin.h"
 #include "l_mem.h"
 #include "../botlib/aasfile.h"		//aas_bbox_t
 #include "aas_store.h"		//AAS_MAX_BBOXES
@@ -55,14 +51,6 @@ int					mapplaneusers[MAX_MAPFILE_PLANES];
 #define				PLANE_HASHES	1024
 plane_t				*planehash[PLANE_HASHES];
 vec3_t				map_mins, map_maxs;
-
-#ifdef SIN
-textureref_t		side_newrefs[MAX_MAPFILE_BRUSHSIDES];
-#endif
-
-map_texinfo_t		map_texinfo[MAX_MAPFILE_TEXINFO];
-int					map_numtexinfo;
-int					loadedmaptype;		//loaded map type
 
 // undefine to make plane finding use linear sort
 #define	USE_HASHING
@@ -347,9 +335,6 @@ void AddBrushBevels (mapbrush_t *b)
 	int		i, j, k, l, order;
 	side_t	sidetemp;
 	brush_texture_t	tdtemp;
-#ifdef SIN
-   textureref_t trtemp;
-#endif
 	side_t	*s, *s2;
 	vec3_t	normal;
 	float	dist;
@@ -386,9 +371,6 @@ void AddBrushBevels (mapbrush_t *b)
 					dist = -b->mins[axis];
 				s->planenum = FindFloatPlane (normal, dist);
 				s->texinfo = b->original_sides[0].texinfo;
-#ifdef SIN
-				s->lightinfo = b->original_sides[0].lightinfo;
-#endif
 				s->contents = b->original_sides[0].contents;
 				s->flags |= SFL_BEVEL;
 				c_boxbevels++;
@@ -405,12 +387,6 @@ void AddBrushBevels (mapbrush_t *b)
 				tdtemp = side_brushtextures[j+order];
 				side_brushtextures[j+order] = side_brushtextures[j+i];
 				side_brushtextures[j+i] = tdtemp;
-
-#ifdef SIN
-				trtemp = side_newrefs[j+order];
-				side_newrefs[j+order] = side_newrefs[j+i];
-				side_newrefs[j+i] = trtemp;
-#endif
 			}
 		}
 	}
@@ -485,9 +461,6 @@ void AddBrushBevels (mapbrush_t *b)
 					s2 = &b->original_sides[b->numsides];
 					s2->planenum = FindFloatPlane (normal, dist);
 					s2->texinfo = b->original_sides[0].texinfo;
-#ifdef SIN
-					s2->lightinfo = b->original_sides[0].lightinfo;
-#endif
 					s2->contents = b->original_sides[0].contents;
 					s2->flags |= SFL_BEVEL;
 					c_edgebevels++;
@@ -660,10 +633,8 @@ int BrushExists(mapbrush_t *brush)
 //===========================================================================
 qboolean WriteMapBrush(FILE *fp, mapbrush_t *brush, vec3_t origin)
 {
-	int sn, rotate, shift[2], sv, tv, planenum, p1, i, j;
-	float scale[2], originshift[2], ang1, ang2, newdist;
-	vec3_t vecs[2], axis[2];
-	map_texinfo_t *ti;
+	int sn, planenum, p1, i, j;
+	float newdist;
 	winding_t *w;
 	side_t *s;
 	plane_t *plane;
@@ -724,38 +695,12 @@ qboolean WriteMapBrush(FILE *fp, mapbrush_t *brush, vec3_t origin)
 				if (brush->contents & CONTENTS_PLAYERCLIP)
 				{
 					//player clip
-					if (loadedmaptype == MAPTYPE_SIN)
-					{
-						if (fprintf(fp, "generic/misc/clip 0 0 0 1 1") < 0) return false;
-					} //end if
-					else if (loadedmaptype == MAPTYPE_QUAKE2)
-					{	//FIXME: don't always use e1u1
-						if (fprintf(fp, "e1u1/clip 0 0 0 1 1") < 0) return false;
-					} //end else
-					else if (loadedmaptype == MAPTYPE_QUAKE3)
-					{
-						if (fprintf(fp, "e1u1/clip 0 0 0 1 1") < 0) return false;
-					} //end else if
-					else
-					{
-						if (fprintf(fp, "clip 0 0 0 1 1") < 0) return false;
-					} //end else
+					if (fprintf(fp, "playerclip 0 0 0 1 1") < 0) return false;
 				} //end if
 				else if (brush->contents == CONTENTS_MONSTERCLIP)
 				{
 					//monster clip
-					if (loadedmaptype == MAPTYPE_SIN)
-					{
-						if (fprintf(fp, "generic/misc/monster 0 0 0 1 1") < 0) return false;
-					} //end if
-					else if (loadedmaptype == MAPTYPE_QUAKE2)
-					{
-						if (fprintf(fp, "e1u1/clip_mon 0 0 0 1 1") < 0) return false;
-					} //end else
-					else
-					{
-						if (fprintf(fp, "clip 0 0 0 1 1") < 0) return false;
-					} //end else
+					if (fprintf(fp, "monsterclip 0 0 0 1 1") < 0) return false;
 				} //end else
 				else
 				{
@@ -763,85 +708,10 @@ qboolean WriteMapBrush(FILE *fp, mapbrush_t *brush, vec3_t origin)
 					Log_Write("brush->contents = %d\n", brush->contents);
 				} //end else
 			} //end if
-			else if (loadedmaptype == MAPTYPE_SIN && s->texinfo == 0)
-			{
-				if (brush->contents & CONTENTS_DUMMYFENCE)
-				{
-					if (fprintf(fp, "generic/misc/fence 0 0 0 1 1") < 0) return false;
-				} //end if
-				else if (brush->contents & CONTENTS_MIST)
-				{
-					if (fprintf(fp, "generic/misc/volumetric_base 0 0 0 1 1") < 0) return false;
-				} //end if
-				else //unknown so far
-				{
-					if (fprintf(fp, "generic/misc/red 0 0 0 1 1") < 0) return false;
-				} //end else
-			} //end if
-			else if (loadedmaptype == MAPTYPE_QUAKE3)
-			{
-				//always use the same texture
-				if (fprintf(fp, "e2u3/floor1_2 0 0 0 1 1 1 0 0") < 0) return false;
-			} //end else if
 			else
 			{
-				//*
-				ti = &map_texinfo[s->texinfo];
-				//the scaling of the texture
-				scale[0] = 1 / VectorNormalize2(ti->vecs[0], vecs[0]);
-				scale[1] = 1 / VectorNormalize2(ti->vecs[1], vecs[1]);
-				//
-				TextureAxisFromPlane(plane, axis[0], axis[1]);
-				//calculate texture shift done by entity origin
-				originshift[0] = DotProduct(origin, axis[0]);
-				originshift[1] = DotProduct(origin, axis[1]);
-				//the texture shift without origin shift
-				shift[0] = ti->vecs[0][3] - originshift[0];
-				shift[1] = ti->vecs[1][3] - originshift[1];
-				//
-				if (axis[0][0]) sv = 0;
-				else if (axis[0][1]) sv = 1;
-				else sv = 2;
-				if (axis[1][0]) tv = 0;
-				else if (axis[1][1]) tv = 1;
-				else tv = 2;
-				//calculate rotation of texture
-				if (vecs[0][tv] == 0) ang1 = vecs[0][sv] > 0 ? 90.0 : -90.0;
-				else ang1 = atan2(vecs[0][sv], vecs[0][tv]) * 180 / Q_PI;
-				if (ang1 < 0) ang1 += 360;
-				if (ang1 >= 360) ang1 -= 360;
-				if (axis[0][tv] == 0) ang2 = axis[0][sv] > 0 ? 90.0 : -90.0;
-				else ang2 = atan2(axis[0][sv], axis[0][tv]) * 180 / Q_PI;
-				if (ang2 < 0) ang2 += 360;
-				if (ang2 >= 360) ang2 -= 360;
-				rotate = ang2 - ang1;
-				if (rotate < 0) rotate += 360;
-				if (rotate >= 360) rotate -= 360;
-				//write the texture info
-				if (fprintf(fp, "%s %d %d %d", ti->texture, shift[0], shift[1], rotate) < 0) return false;
-				if (fabs(scale[0] - ((int) scale[0])) < 0.001)
-				{
-					if (fprintf(fp, " %d", (int) scale[0]) < 0) return false;
-				} //end if
-				else
-				{
-					if (fprintf(fp, " %4f", scale[0]) < 0) return false;
-				} //end if
-				if (fabs(scale[1] - ((int) scale[1])) < 0.001)
-				{
-					if (fprintf(fp, " %d", (int) scale[1]) < 0) return false;
-				} //end if
-				else
-				{
-					if (fprintf(fp, " %4f", scale[1]) < 0) return false;
-				} //end else
-				//write the extra brush side info
-				if (loadedmaptype == MAPTYPE_QUAKE2)
-				{
-					// ZTM: %ld to %d
-					if (fprintf(fp, " %d %d %d", s->contents, ti->flags, ti->value) < 0) return false;
-				} //end if
-				//*/
+				//always use the same texture
+				if (fprintf(fp, "floor 0 0 0 1 1 1 0 0") < 0) return false;
 			} //end else
 			if (fprintf(fp, "\n") < 0) return false;
 		} //end if
@@ -882,25 +752,7 @@ qboolean WriteOriginBrush(FILE *fp, vec3_t origin)
 			//free the winding
 			FreeWinding(w);
 			//write origin texture:
-			// CONTENTS_ORIGIN = 16777216
-			// SURF_NODRAW = 128
-			if (loadedmaptype == MAPTYPE_SIN)
-			{
-				if (fprintf(fp, "generic/misc/origin 0 0 0 1 1") < 0) return false;
-			} //end if
-			else if (loadedmaptype == MAPTYPE_HALFLIFE)
-			{
-				if (fprintf(fp, "origin 0 0 0 1 1") < 0) return false;
-			} //end if
-			else
-			{
-				if (fprintf(fp, "e1u1/origin 0 0 0 1 1") < 0) return false;
-			} //end else
-			//Quake2 extra brush side info
-			if (loadedmaptype == MAPTYPE_QUAKE2)
-			{
-				//if (fprintf(fp, " 16777216 128 0") < 0) return false;
-			} //end if
+			if (fprintf(fp, "origin 0 0 0 1 1") < 0) return false;
 			if (fprintf(fp, "\n") < 0) return false;
 		} //end for
 	} //end for
@@ -962,7 +814,7 @@ qboolean WriteMapFileSafe(FILE *fp)
 	//
 	if (fprintf(fp,"//=====================================================\n"
 			"//\n"
-			"// map file created with BSPC "BSPC_VERSION"\n"
+			"// map file created with "BSPC_NAME" "BSPC_VERSION"\n"
 			"//\n"
 			"// BSPC is designed to decompile material in which you own the copyright\n"
 			"// or have obtained permission to decompile from the copyright owner. Unless\n"
@@ -971,11 +823,6 @@ qboolean WriteMapFileSafe(FILE *fp)
 			"// damages and other remedies. If you are uncertain about your rights, contact\n"
 			"// your legal advisor.\n"
 			"//\n") < 0) return false;
-	if (loadedmaptype == MAPTYPE_SIN)
-	{
-		if (fprintf(fp,
-						"// generic/misc/red is used for unknown textures\n") < 0) return false;
-	} //end if
 	if (fprintf(fp,"//\n"
 						"//=====================================================\n") < 0) return false;
 	//write out all the entities
@@ -988,12 +835,9 @@ qboolean WriteMapFileSafe(FILE *fp)
 		} //end if
 		if (fprintf(fp, "{\n") < 0) return false;
 		//
-		if (loadedmaptype == MAPTYPE_QUAKE3)
+		if (!stricmp(ValueForKey(mapent, "classname"), "light"))
 		{
-			if (!stricmp(ValueForKey(mapent, "classname"), "light"))
-			{
-				SetKeyValue(mapent, "light", "10000");
-			} //end if
+			SetKeyValue(mapent, "light", "10000");
 		} //end if
 		//write epairs
 		for (ep = mapent->epairs; ep; ep = ep->next)
@@ -1002,13 +846,6 @@ qboolean WriteMapFileSafe(FILE *fp)
 			StripTrailing (key);
 			strcpy(value, ep->value);
 			StripTrailing(value);
-			//
-			if (loadedmaptype == MAPTYPE_QUAKE2 ||
-					loadedmaptype == MAPTYPE_SIN)
-			{
-				//don't write an origin for BSP models
-				if (mapent->modelnum >= 0 && !strcmp(key, "origin")) continue;
-			} //end if
 			//don't write BSP model numbers
 			if (mapent->modelnum >= 0 && !strcmp(key, "model") && value[0] == '*') continue;
 			//
@@ -1132,8 +969,7 @@ void ResetMapLoading(void)
 	int i;
 	epair_t *ep, *nextep;
 
-	Q2_ResetMapLoading();
-	Sin_ResetMapLoading();
+	Q3_ResetMapLoading();
 
 	//free all map brush side windings
 	for (i = 0; i < nummapbrushsides; i++)
@@ -1156,9 +992,6 @@ void ResetMapLoading(void)
 	memset(mapplanes, 0, MAX_MAPFILE_PLANES * sizeof(plane_t));
 	//
 	memset(planehash, 0, PLANE_HASHES * sizeof(plane_t *));
-	//
-	memset(map_texinfo, 0, MAX_MAPFILE_TEXINFO * sizeof(map_texinfo_t));
-	map_numtexinfo = 0;
 	//
 	VectorClear(map_mins);
 	VectorClear(map_maxs);
@@ -1188,21 +1021,6 @@ void ResetMapLoading(void)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-#ifndef Q1_BSPVERSION
-#define Q1_BSPVERSION	29
-#endif
-#ifndef HL_BSPVERSION
-#define HL_BSPVERSION	30
-#endif
-
-#define Q2_BSPHEADER				(('P'<<24)+('S'<<16)+('B'<<8)+'I')	//IBSP
-#define Q2_BSPVERSION	38
-
-#define SINGAME_BSPHEADER		(('P'<<24)+('S'<<16)+('B'<<8)+'R')	//RBSP
-#define SINGAME_BSPVERSION		1
-
-#define SIN_BSPHEADER			(('P'<<24)+('S'<<16)+('B'<<8)+'I')	//IBSP
-#define SIN_BSPVERSION	41
 
 typedef struct
 {
@@ -1214,7 +1032,7 @@ int LoadMapFromBSP(struct quakefile_s *qf)
 {
 	idheader_t idheader;
 
-	if (ReadQuakeFile(qf, &idheader, 0, sizeof(idheader_t)) != sizeof(idheader_t))
+	if (ReadQuakeFile(qf, &idheader, sizeof(idheader_t)) != sizeof(idheader_t))
 	{
 		return false;
 	} //end if
@@ -1227,40 +1045,6 @@ int LoadMapFromBSP(struct quakefile_s *qf)
 		ResetMapLoading();
 		Q3_LoadMapFromBSP(qf);
 		Q3_FreeMaxBSP();
-	} //end if
-	//Quake2 BSP file
-	else if (idheader.ident == Q2_BSPHEADER && idheader.version == Q2_BSPVERSION)
-	{
-		ResetMapLoading();
-		Q2_AllocMaxBSP();
-		Q2_LoadMapFromBSP(qf->filename, qf->offset, qf->length);
-		Q2_FreeMaxBSP();
-	} //endif
-	//Sin BSP file
-	else if ((idheader.ident == SIN_BSPHEADER && idheader.version == SIN_BSPVERSION) ||
-				//the dorks gave the same format another ident and verions
-				(idheader.ident == SINGAME_BSPHEADER && idheader.version == SINGAME_BSPVERSION))
-	{
-		ResetMapLoading();
-		Sin_AllocMaxBSP();
-		Sin_LoadMapFromBSP(qf->filename, qf->offset, qf->length);
-		Sin_FreeMaxBSP();
-	} //end if
-	//the Quake1 bsp files don't have a ident only a version
-	else if (idheader.ident == Q1_BSPVERSION)
-	{
-		ResetMapLoading();
-		Q1_AllocMaxBSP();
-		Q1_LoadMapFromBSP(qf->filename, qf->offset, qf->length);
-		Q1_FreeMaxBSP();
-	} //end if
-	//Half-Life also only uses a version number
-	else if (idheader.ident == HL_BSPVERSION)
-	{
-		ResetMapLoading();
-		HL_AllocMaxBSP();
-		HL_LoadMapFromBSP(qf->filename, qf->offset, qf->length);
-		HL_FreeMaxBSP();
 	} //end if
 	else
 	{

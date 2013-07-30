@@ -473,7 +473,7 @@ client_t *SV_ClientForPlayerNum( int playerNum ) {
 SV_BotClientCommand
 ==================
 */
-static void BotClientCommand( int playerNum, char *command ) {
+void SV_ForcePlayerCommand( int playerNum, const char *command ) {
 	client_t *client = SV_ClientForPlayerNum( playerNum );
 
 	if ( !client )
@@ -508,6 +508,10 @@ int SV_BotLibSetup( void ) {
 		Com_Printf( S_COLOR_RED "Error: SV_BotLibSetup without SV_BotInitBotLib\n" );
 		return -1;
 	}
+
+	botlib_export->BotLibVarSet( "basedir", Cvar_VariableString( "fs_basepath" ) );
+	botlib_export->BotLibVarSet( "homedir", Cvar_VariableString( "fs_homepath" ) );
+	botlib_export->BotLibVarSet( "gamedir", Cvar_VariableString( "fs_game" ) );
 
 	return botlib_export->BotLibSetup();
 }
@@ -547,25 +551,6 @@ void SV_BotInitCvars(void) {
 	Cvar_Get("bot_forcereachability", "0", 0);			//force reachability calculations
 	Cvar_Get("bot_forcewrite", "0", 0);					//force writing aas file
 	Cvar_Get("bot_aasoptimize", "0", 0);				//no aas file optimisation
-	Cvar_Get("bot_saveroutingcache", "0", 0);			//save routing cache
-	Cvar_Get("bot_thinktime", "100", CVAR_CHEAT);		//msec the bots thinks
-	Cvar_Get("bot_reloadcharacters", "0", 0);			//reload the bot characters each time
-	Cvar_Get("bot_testichat", "0", 0);					//test ichats
-	Cvar_Get("bot_testrchat", "0", 0);					//test rchats
-	Cvar_Get("bot_testsolid", "0", CVAR_CHEAT);			//test for solid areas
-	Cvar_Get("bot_testclusters", "0", CVAR_CHEAT);		//test the AAS clusters
-	Cvar_Get("bot_fastchat", "0", 0);					//fast chatting bots
-	Cvar_Get("bot_nochat", "0", 0);						//disable chats
-	Cvar_Get("bot_pause", "0", CVAR_CHEAT);				//pause the bots thinking
-	Cvar_Get("bot_report", "0", CVAR_CHEAT);			//get a full report in ctf
-	Cvar_Get("bot_grapple", "0", 0);					//enable grapple
-	Cvar_Get("bot_rocketjump", "1", 0);					//enable rocket jumping
-	Cvar_Get("bot_challenge", "0", 0);					//challenging bot
-	Cvar_Get("bot_minplayers", "0", 0);					//minimum players in a team or the game
-	Cvar_Get("bot_interbreedchar", "", CVAR_CHEAT);		//bot character used for interbreeding
-	Cvar_Get("bot_interbreedbots", "10", CVAR_CHEAT);	//number of bots used for interbreeding
-	Cvar_Get("bot_interbreedcycle", "20", CVAR_CHEAT);	//bot interbreeding cycle
-	Cvar_Get("bot_interbreedwrite", "", CVAR_CHEAT);	//write interbreeded bots to this file
 }
 
 /*
@@ -587,7 +572,7 @@ void SV_BotInitBotLib(void) {
 	botlib_import.inPVS = BotImport_inPVS;
 	botlib_import.BSPEntityData = BotImport_BSPEntityData;
 	botlib_import.BSPModelMinsMaxsOrigin = BotImport_BSPModelMinsMaxsOrigin;
-	botlib_import.BotClientCommand = BotClientCommand;
+	botlib_import.BotClientCommand = SV_ForcePlayerCommand;
 
 	//memory management
 	botlib_import.GetMemory = BotImport_GetMemory;

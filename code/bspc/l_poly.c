@@ -333,7 +333,6 @@ winding_t *CopyWinding (winding_t *w)
 	winding_t	*c;
 
 	c = AllocWinding (w->numpoints);
-	// ZTM: int to size_t
 	size = (size_t)((winding_t *)0)->p[w->numpoints];
 	memcpy (c, w, size);
 	return c;
@@ -698,11 +697,8 @@ int WindingOnPlaneSide (winding_t *w, vec3_t normal, vec_t dist)
 	return SIDE_ON;
 }
 
-//#ifdef ME
-	#define	CONTINUOUS_EPSILON	0.005
-//#else
-//	#define	CONTINUOUS_EPSILON	0.001
-//#endif
+#define	CONTINUOUS_EPSILON	0.005
+
 
 /*
 =============
@@ -812,7 +808,6 @@ winding_t *TryMergeWinding (winding_t *f1, winding_t *f2, vec3_t planenormal)
 	return newf;
 }
 
-//#ifdef ME
 //===========================================================================
 //
 // Parameter:				-
@@ -1417,4 +1412,3 @@ winding_t *AAS_MergeWindings(winding_t *w1, winding_t *w2, vec3_t windingnormal)
 	} //end if
 	return neww;
 } //end of the function AAS_MergeWindings*/
-//#endif //ME

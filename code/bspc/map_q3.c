@@ -36,9 +36,71 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "aas_map.h"			//AAS_CreateMapBrushes
 #include "l_bsp_q3.h"
 #include "../qcommon/cm_patch.h"
-#include "../qcommon/surfaceflags.h" // ZTM(IOQ3): game to qcommon
+#include "../qcommon/surfaceflags.h"
 
-#define NODESTACKSIZE		1024
+#define NODESTACKSIZE       1024
+
+int nodestack[NODESTACKSIZE];
+int *nodestackptr;
+int nodestacksize = 0;
+int brushmodelnumbers[MAX_MAPFILE_BRUSHES];
+int dbrushleafnums[MAX_MAPFILE_BRUSHES];
+int dplanes2mapplanes[MAX_MAPFILE_PLANES];
+
+typedef struct cname_s
+{
+	int value;
+	char *name;
+} cname_t;
+
+#define STRINGIZE(x) x,#x
+
+cname_t contentnames[] =
+{
+	{ STRINGIZE( CONTENTS_SOLID ) },
+	{ STRINGIZE( CONTENTS_LAVA ) },
+	{ STRINGIZE( CONTENTS_SLIME ) },
+	{ STRINGIZE( CONTENTS_WATER ) },
+	{ STRINGIZE( CONTENTS_FOG ) },
+	{ STRINGIZE( CONTENTS_NOTTEAM1 ) },
+	{ STRINGIZE( CONTENTS_NOTTEAM2 ) },
+	{ STRINGIZE( CONTENTS_NOBOTCLIP ) },
+	{ STRINGIZE( CONTENTS_AREAPORTAL ) },
+	{ STRINGIZE( CONTENTS_PLAYERCLIP ) },
+	{ STRINGIZE( CONTENTS_MONSTERCLIP ) },
+
+	{ STRINGIZE( CONTENTS_TELEPORTER ) },
+	{ STRINGIZE( CONTENTS_JUMPPAD ) },
+	{ STRINGIZE( CONTENTS_CLUSTERPORTAL ) },
+	{ STRINGIZE( CONTENTS_DONOTENTER ) },
+	{ STRINGIZE( CONTENTS_BOTCLIP ) },
+	{ STRINGIZE( CONTENTS_MOVER ) },
+
+	{ STRINGIZE( CONTENTS_ORIGIN ) },
+
+	{ STRINGIZE( CONTENTS_BODY ) },
+	{ STRINGIZE( CONTENTS_CORPSE ) },
+	{ STRINGIZE( CONTENTS_DETAIL ) },
+	{ STRINGIZE( CONTENTS_STRUCTURAL ) },
+	{ STRINGIZE( CONTENTS_TRANSLUCENT ) },
+	{ STRINGIZE( CONTENTS_TRIGGER ) },
+	{ STRINGIZE( CONTENTS_NODROP ) },
+
+	{0, 0}
+};
+
+void PrintContents(int contents)
+{
+	int i;
+
+	for (i = 0; contentnames[i].value; i++)
+	{
+		if (contents & contentnames[i].value)
+		{
+			Log_Write("%s,", contentnames[i].name);
+		} //end if
+	} //end for
+} //end of the function PrintContents
 
 //===========================================================================
 //
@@ -46,8 +108,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void PrintContents(int contents);
-
 int	Q3_BrushContents(mapbrush_t *b)
 {
 	int contents, i, mixed, hint;
@@ -83,8 +143,8 @@ int	Q3_BrushContents(mapbrush_t *b)
 	//Log_Write("brush %d contents ", nummapbrushes);
 	//PrintContents(contents);
 	//Log_Write("\r\n");
-	//remove ladder and fog contents
-	contents &= ~(CONTENTS_LADDER|CONTENTS_FOG);
+	//remove fog contents
+	contents &= ~CONTENTS_FOG;
 	//
 	if (mixed)
 	{
@@ -282,7 +342,7 @@ void Q3_BSPBrushToMapBrush(q3_dbrush_t *bspbrush, entity_t *mapent)
 
 	// get the content for the entire brush
 	b->contents = q3_dshaders[bspbrush->shaderNum].contentFlags;
-	b->contents &= ~(CONTENTS_LADDER|CONTENTS_FOG|CONTENTS_STRUCTURAL);
+	b->contents &= ~(CONTENTS_FOG|CONTENTS_STRUCTURAL);
 //	b->contents = Q3_BrushContents(b);
 	//
 
@@ -616,8 +676,6 @@ void Q3_LoadMapFromBSP(struct quakefile_s *qf)
 	//vec3_t mins = {-1,-1,-1}, maxs = {1, 1, 1};
 
 	Log_Print("-- Q3_LoadMapFromBSP --\n");
-	//loaded map type
-	loadedmaptype = MAPTYPE_QUAKE3;
 
 	Log_Print("Loading map from %s...\n", qf->filename);
 	//load the bsp file

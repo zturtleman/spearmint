@@ -6,24 +6,15 @@
 
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
-COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/i386/)
+COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/x86/)
 
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
-  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/i386/)
+  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
 endif
 ifeq ($(COMPILE_PLATFORM),darwin)
   # Apple does some things a little differently...
-  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/i386/)
-endif
-
-ifeq ($(COMPILE_PLATFORM),mingw32)
-  ifeq ($(COMPILE_ARCH),i386)
-    COMPILE_ARCH=x86
-  endif
-  ifeq ($(COMPILE_ARCH),x86_64)
-    COMPILE_ARCH=x64
-  endif
+  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
 endif
 
 ifndef BUILD_CLIENT
@@ -66,11 +57,26 @@ PLATFORM=$(COMPILE_PLATFORM)
 endif
 export PLATFORM
 
+ifeq ($(COMPILE_ARCH),i86pc)
+  COMPILE_ARCH=x86
+endif
+
+ifeq ($(COMPILE_ARCH),amd64)
+  COMPILE_ARCH=x86_64
+endif
+ifeq ($(COMPILE_ARCH),x64)
+  COMPILE_ARCH=x86_64
+endif
+
 ifeq ($(COMPILE_ARCH),powerpc)
   COMPILE_ARCH=ppc
 endif
 ifeq ($(COMPILE_ARCH),powerpc64)
   COMPILE_ARCH=ppc64
+endif
+
+ifeq ($(COMPILE_ARCH),axp)
+  COMPILE_ARCH=alpha
 endif
 
 ifndef ARCH
@@ -90,7 +96,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=1.36
+VERSION=Alpha
 endif
 
 ifndef CLIENTBIN
@@ -322,9 +328,6 @@ MKDIR=mkdir
 
 ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
 
-  ifeq ($(ARCH),axp)
-    ARCH=alpha
-  else
   ifeq ($(ARCH),x86_64)
     LIB=lib64
   else
@@ -333,7 +336,6 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
   else
   ifeq ($(ARCH),s390x)
     LIB=lib64
-  endif
   endif
   endif
   endif
@@ -352,7 +354,7 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED = true
   else
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     OPTIMIZEVM = -O3 -march=i586 -fomit-frame-pointer \
       -funroll-loops -falign-loops=2 -falign-jumps=2 \
       -falign-functions=2 -fstrength-reduce
@@ -412,7 +414,7 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
     endif
   endif
 
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     # linux32 make ...
     BASE_CFLAGS += -m32
   else
@@ -442,7 +444,7 @@ ifeq ($(PLATFORM),darwin)
   ifeq ($(ARCH),ppc64)
     BASE_CFLAGS += -arch ppc64 -faltivec -mmacosx-version-min=10.2
   endif
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     OPTIMIZEVM += -march=prescott -mfpmath=sse
     # x86 vm will crash without -mstackrealign since MMX instructions will be
     # used no matter what and they corrupt the frame pointer in VM calls
@@ -450,6 +452,29 @@ ifeq ($(PLATFORM),darwin)
   endif
   ifeq ($(ARCH),x86_64)
     OPTIMIZEVM += -arch x86_64 -mfpmath=sse
+  endif
+
+  # When compiling on OSX for OSX, we're not cross compiling as far as the
+  # Makefile is concerned, as target architecture is specified as a compiler
+  # argument
+  ifeq ($(COMPILE_PLATFORM),darwin)
+    CROSS_COMPILING=0
+  endif
+
+  ifeq ($(CROSS_COMPILING),1)
+    ifeq ($(ARCH),ppc)
+      CC=powerpc-apple-darwin10-gcc
+      RANLIB=powerpc-apple-darwin10-ranlib
+    else
+      ifeq ($(ARCH),x86)
+        CC=i686-apple-darwin10-gcc
+        RANLIB=i686-apple-darwin10-ranlib
+      else
+        $(error Architecture $(ARCH) is not supported when cross compiling)
+      endif
+    endif
+  else
+    TOOLS_CFLAGS += -DMACOS_X
   endif
 
   BASE_CFLAGS += -fno-strict-aliasing -DMACOS_X -fno-common -pipe
@@ -495,8 +520,6 @@ ifeq ($(PLATFORM),darwin)
 
   NOTSHLIBCFLAGS=-mdynamic-no-pic
 
-  TOOLS_CFLAGS += -DMACOS_X
-
 else # ifeq darwin
 
 
@@ -506,14 +529,40 @@ else # ifeq darwin
 
 ifeq ($(PLATFORM),mingw32)
 
-  # Some MinGW installations define CC to cc, but don't actually provide cc,
-  # so explicitly use gcc instead (which is the only option anyway)
-  ifeq ($(call bin_path, $(CC)),)
-    CC=gcc
-  endif
+  ifeq ($(CROSS_COMPILING),1)
+    # If CC is already set to something generic, we probably want to use
+    # something more specific
+    ifneq ($(findstring $(strip $(CC)),cc gcc),)
+      CC=
+    endif
 
-  ifndef WINDRES
-    WINDRES=windres
+    # We need to figure out the correct gcc and windres
+    ifeq ($(ARCH),x86_64)
+      MINGW_PREFIXES=amd64-mingw32msvc x86_64-w64-mingw32
+    endif
+    ifeq ($(ARCH),x86)
+      MINGW_PREFIXES=i586-mingw32msvc i686-w64-mingw32
+    endif
+
+    ifndef CC
+      CC=$(strip $(foreach MINGW_PREFIX, $(MINGW_PREFIXES), \
+         $(call bin_path, $(MINGW_PREFIX)-gcc)))
+    endif
+
+    ifndef WINDRES
+      WINDRES=$(strip $(foreach MINGW_PREFIX, $(MINGW_PREFIXES), \
+         $(call bin_path, $(MINGW_PREFIX)-windres)))
+    endif
+  else
+    # Some MinGW installations define CC to cc, but don't actually provide cc,
+    # so check that CC points to a real binary and use gcc if it doesn't
+    ifeq ($(call bin_path, $(CC)),)
+      CC=gcc
+    endif
+
+    ifndef WINDRES
+      WINDRES=windres
+    endif
   endif
 
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
@@ -531,7 +580,7 @@ ifeq ($(PLATFORM),mingw32)
     endif
   endif
 
-  ifeq ($(ARCH),x64)
+  ifeq ($(ARCH),x86_64)
     OPTIMIZEVM = -O3 -fno-omit-frame-pointer \
       -falign-loops=2 -funroll-loops -falign-jumps=2 -falign-functions=2 \
       -fstrength-reduce
@@ -552,6 +601,10 @@ ifeq ($(PLATFORM),mingw32)
 
   BINEXT=.exe
 
+  ifeq ($(CROSS_COMPILING),0)
+    TOOLS_BINEXT=.exe
+  endif
+
   LIBS= -lws2_32 -lwinmm -lpsapi
   CLIENT_LDFLAGS += -mwindows
   CLIENT_LIBS = -lgdi32 -lole32
@@ -563,18 +616,16 @@ ifeq ($(PLATFORM),mingw32)
     endif
   endif
 
-  ifeq ($(ARCH),x64)
-    WINLIBDIR=$(LIBSDIR)/win64
-  else
-    WINLIBDIR=$(LIBSDIR)/win32
-  endif
-
   ifeq ($(USE_CURL),1)
     CLIENT_CFLAGS += $(CURL_CFLAGS)
     ifneq ($(USE_CURL_DLOPEN),1)
       ifeq ($(USE_LOCAL_HEADERS),1)
         CLIENT_CFLAGS += -DCURL_STATICLIB
-        CLIENT_LIBS += $(WINLIBDIR)/libcurl.a
+        ifeq ($(ARCH),x86_64)
+          CLIENT_LIBS += $(LIBSDIR)/win64/libcurl.a
+        else
+          CLIENT_LIBS += $(LIBSDIR)/win32/libcurl.a
+        endif
       else
         CLIENT_LIBS += $(CURL_LIBS)
       endif
@@ -659,17 +710,16 @@ ifeq ($(PLATFORM),freebsd)
   endif
 
   # cross-compiling tweaks
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     ifeq ($(CROSS_COMPILING),1)
       BASE_CFLAGS += -m32
     endif
   endif
-  ifeq ($(ARCH),amd64)
+  ifeq ($(ARCH),x86_64)
     ifeq ($(CROSS_COMPILING),1)
       BASE_CFLAGS += -m64
     endif
   endif
-
 else # ifeq freebsd
 
 #############################################################################
@@ -678,11 +728,47 @@ else # ifeq freebsd
 
 ifeq ($(PLATFORM),openbsd)
 
-  ARCH=$(shell uname -m)
-
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
-    -DUSE_ICON -DMAP_ANONYMOUS=MAP_ANON
+    -pipe -DUSE_ICON -DMAP_ANONYMOUS=MAP_ANON
   CLIENT_CFLAGS += $(SDL_CFLAGS)
+
+  OPTIMIZEVM = -O3 -funroll-loops -fomit-frame-pointer
+  OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+
+  ifeq ($(ARCH),x86_64)
+    OPTIMIZEVM = -O3 -fomit-frame-pointer -funroll-loops \
+      -falign-loops=2 -falign-jumps=2 -falign-functions=2 \
+      -fstrength-reduce
+    OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+    HAVE_VM_COMPILED = true
+  else
+  ifeq ($(ARCH),x86)
+    OPTIMIZEVM = -O3 -march=i586 -fomit-frame-pointer \
+      -funroll-loops -falign-loops=2 -falign-jumps=2 \
+      -falign-functions=2 -fstrength-reduce
+    OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+    HAVE_VM_COMPILED=true
+  else
+  ifeq ($(ARCH),ppc)
+    BASE_CFLAGS += -maltivec
+    HAVE_VM_COMPILED=true
+  endif
+  ifeq ($(ARCH),ppc64)
+    BASE_CFLAGS += -maltivec
+    HAVE_VM_COMPILED=true
+  endif
+  ifeq ($(ARCH),sparc64)
+    OPTIMIZE += -mtune=ultrasparc3 -mv8plus
+    OPTIMIZEVM += -mtune=ultrasparc3 -mv8plus
+    HAVE_VM_COMPILED=true
+  endif
+  ifeq ($(ARCH),alpha)
+    # According to http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=410555
+    # -ffast-math will cause the client to die with SIGFPE on Alpha
+    OPTIMIZE = $(OPTIMIZEVM)
+  endif
+  endif
+  endif
 
   ifeq ($(USE_CURL),1)
     CLIENT_CFLAGS += $(CURL_CFLAGS)
@@ -696,7 +782,7 @@ ifeq ($(PLATFORM),openbsd)
   SHLIBCFLAGS=-fPIC
   SHLIBLDFLAGS=-shared $(LDFLAGS)
 
-  THREAD_LIBS=-pthread
+  THREAD_LIBS=-lpthread
   LIBS=-lm
 
   CLIENT_LIBS =
@@ -706,7 +792,7 @@ ifeq ($(PLATFORM),openbsd)
 
   ifeq ($(USE_OPENAL),1)
     ifneq ($(USE_OPENAL_DLOPEN),1)
-      CLIENT_LIBS += $(THREAD_LIBS) -lossaudio -lopenal
+      CLIENT_LIBS += $(THREAD_LIBS) -lopenal
     endif
   endif
 
@@ -715,7 +801,6 @@ ifeq ($(PLATFORM),openbsd)
       CLIENT_LIBS += -lcurl
     endif
   endif
-
 else # ifeq openbsd
 
 #############################################################################
@@ -723,10 +808,6 @@ else # ifeq openbsd
 #############################################################################
 
 ifeq ($(PLATFORM),netbsd)
-
-  ifeq ($(shell uname -m),i386)
-    ARCH=i386
-  endif
 
   LIBS=-lm
   SHLIBEXT=so
@@ -736,12 +817,11 @@ ifeq ($(PLATFORM),netbsd)
 
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes
 
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     HAVE_VM_COMPILED=true
   endif
 
   BUILD_CLIENT = 0
-
 else # ifeq netbsd
 
 #############################################################################
@@ -783,13 +863,7 @@ ifeq ($(PLATFORM),sunos)
   MKDIR=gmkdir
   COPYDIR="/usr/local/share/games/quake3"
 
-  ifneq (,$(findstring i86pc,$(shell uname -m)))
-    ARCH=i386
-  else #default to sparc
-    ARCH=sparc
-  endif
-
-  ifneq ($(ARCH),i386)
+  ifneq ($(ARCH),x86)
     ifneq ($(ARCH),sparc)
       $(error arch $(ARCH) is currently not supported)
     endif
@@ -807,7 +881,7 @@ ifeq ($(PLATFORM),sunos)
       -mtune=ultrasparc3 -mv8plus -mno-faster-structs
     HAVE_VM_COMPILED=true
   else
-  ifeq ($(ARCH),i386)
+  ifeq ($(ARCH),x86)
     OPTIMIZEVM += -march=i586 -fomit-frame-pointer \
       -falign-loops=2 -falign-jumps=2 \
       -falign-functions=2 -fstrength-reduce
@@ -957,6 +1031,14 @@ endif #IRIX
 endif #SunOS
 endif #Android
 
+ifndef CC
+  CC=gcc
+endif
+
+ifndef RANLIB
+  RANLIB=ranlib
+endif
+
 ifneq ($(HAVE_VM_COMPILED),true)
   BASE_CFLAGS += -DNO_VM_COMPILED
   BUILD_GAME_QVM=0
@@ -1010,19 +1092,17 @@ ifneq ($(BUILD_GAME_SO),0)
 endif
 
 ifneq ($(BUILD_GAME_QVM),0)
-  ifneq ($(CROSS_COMPILING),1)
-    ifneq ($(BUILD_BASEGAME),0)
-      TARGETS += \
+  ifneq ($(BUILD_BASEGAME),0)
+    TARGETS += \
       $(B)/$(BASEGAME)/vm/cgame.qvm \
       $(B)/$(BASEGAME)/vm/game.qvm \
       $(B)/$(BASEGAME)/vm/ui.qvm
   endif
-    ifneq ($(BUILD_MISSIONPACK),0)
-      TARGETS += \
-      $(B)/$(MISSIONPACK)/vm/game.qvm \
+  ifneq ($(BUILD_MISSIONPACK),0)
+    TARGETS += \
       $(B)/$(MISSIONPACK)/vm/cgame.qvm \
+      $(B)/$(MISSIONPACK)/vm/game.qvm \
       $(B)/$(MISSIONPACK)/vm/ui.qvm
-    endif
   endif
 endif
 
@@ -1265,67 +1345,78 @@ release:
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" OPTIMIZEVM="-DNDEBUG $(OPTIMIZEVM)" \
 	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V)
 
+ifneq ($(call bin_path, tput),)
+  TERM_COLUMNS=$(shell echo $$((`tput cols`-4)))
+else
+  TERM_COLUMNS=76
+endif
+
+NAKED_TARGETS=$(shell echo $(TARGETS) | sed -e "s!$(B)/!!g")
+
+print_list=@for i in $(1); \
+     do \
+             echo "    $$i"; \
+     done
+
+ifneq ($(call bin_path, fmt),)
+  print_wrapped=@echo $(1) | fmt -w $(TERM_COLUMNS) | sed -e "s/^\(.*\)$$/    \1/"
+else
+  print_wrapped=$(print_list)
+endif
+
 # Create the build directories, check libraries and print out
 # an informational message, then start building
 targets: makedirs
 	@echo ""
-	@echo "Building $(CLIENTBIN) in $(B):"
-	@echo "  IOQ3_REVISION: $(IOQ3_REVISION)"
+	@echo "Building in $(B):"
 	@echo "  PLATFORM: $(PLATFORM)"
 	@echo "  ARCH: $(ARCH)"
 	@echo "  VERSION: $(VERSION)"
 	@echo "  COMPILE_PLATFORM: $(COMPILE_PLATFORM)"
 	@echo "  COMPILE_ARCH: $(COMPILE_ARCH)"
 	@echo "  CC: $(CC)"
+ifeq ($(PLATFORM),mingw32)
+	@echo "  WINDRES: $(WINDRES)"
+endif
 	@echo ""
 	@echo "  CFLAGS:"
-	-@for i in $(CFLAGS); \
-	do \
-		echo "    $$i"; \
-	done
-	-@for i in $(OPTIMIZE); \
-	do \
-		echo "    $$i"; \
-	done
+	$(call print_wrapped, $(CFLAGS) $(OPTIMIZE))
 	@echo ""
 	@echo "  CLIENT_CFLAGS:"
-	-@for i in $(CLIENT_CFLAGS); \
-	do \
-		echo "    $$i"; \
-	done
+	$(call print_wrapped, $(CLIENT_CFLAGS))
 	@echo ""
 	@echo "  SERVER_CFLAGS:"
-	-@for i in $(SERVER_CFLAGS); \
-	do \
-		echo "    $$i"; \
-	done
+	$(call print_wrapped, $(SERVER_CFLAGS))
 	@echo ""
 	@echo "  LDFLAGS:"
-	-@for i in $(LDFLAGS); \
-	do \
-		echo "    $$i"; \
-	done
+	$(call print_wrapped, $(LDFLAGS))
 	@echo ""
 	@echo "  LIBS:"
-	-@for i in $(LIBS); \
-	do \
-		echo "    $$i"; \
-	done
+	$(call print_wrapped, $(LIBS))
 	@echo ""
 	@echo "  CLIENT_LIBS:"
-	-@for i in $(CLIENT_LIBS); \
-	do \
-		echo "    $$i"; \
-	done
+	$(call print_wrapped, $(CLIENT_LIBS))
 	@echo ""
 	@echo "  Output:"
-	-@for i in $(TARGETS); \
-	do \
-		echo "    $$i"; \
-	done
+	$(call print_list, $(NAKED_TARGETS))
 	@echo ""
 ifneq ($(TARGETS),)
-	@$(MAKE) $(TARGETS) V=$(V)
+  ifndef DEBUG_MAKEFILE
+	@$(MAKE) $(TARGETS) $(B).zip V=$(V)
+  endif
+endif
+
+$(B).zip: $(TARGETS)
+ifeq ($(PLATFORM),darwin)
+  ifdef ARCHIVE
+	@("./make-macosx-app.sh" release $(ARCH); if [ "$$?" -eq 0 ] && [ -d "$(B)/ioquake3.app" ]; then rm -f $@; cd $(B) && zip --symlinks -r9 ../../$@ `find "ioquake3.app" -print | sed -e "s!$(B)/!!g"`; else rm -f $@; cd $(B) && zip -r9 ../../$@ $(NAKED_TARGETS); fi)
+  endif
+endif
+ifneq ($(PLATFORM),darwin)
+  ifdef ARCHIVE
+	@rm -f $@
+	@(cd $(B) && zip -r9 ../../$@ $(NAKED_TARGETS))
+  endif
 endif
 
 makedirs:
@@ -1361,6 +1452,11 @@ makedirs:
 # QVM BUILD TOOLS
 #############################################################################
 
+ifndef TOOLS_CC
+  # A compiler which probably produces native binaries
+  TOOLS_CC = gcc
+endif
+
 TOOLS_OPTIMIZE = -g -Wall -fno-strict-aliasing
 TOOLS_CFLAGS += $(TOOLS_OPTIMIZE) \
                 -DTEMPDIR=\"$(TEMPDIR)\" -DSYSTEM=\"\" \
@@ -1375,20 +1471,20 @@ endif
 
 define DO_TOOLS_CC
 $(echo_cmd) "TOOLS_CC $<"
-$(Q)$(CC) $(TOOLS_CFLAGS) -o $@ -c $<
+$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) -o $@ -c $<
 endef
 
 define DO_TOOLS_CC_DAGCHECK
 $(echo_cmd) "TOOLS_CC_DAGCHECK $<"
-$(Q)$(CC) $(TOOLS_CFLAGS) -Wno-unused -o $@ -c $<
+$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) -Wno-unused -o $@ -c $<
 endef
 
-LBURG       = $(B)/tools/lburg/lburg$(BINEXT)
+LBURG       = $(B)/tools/lburg/lburg$(TOOLS_BINEXT)
 DAGCHECK_C  = $(B)/tools/rcc/dagcheck.c
-Q3RCC       = $(B)/tools/q3rcc$(BINEXT)
-Q3CPP       = $(B)/tools/q3cpp$(BINEXT)
-Q3LCC       = $(B)/tools/q3lcc$(BINEXT)
-Q3ASM       = $(B)/tools/q3asm$(BINEXT)
+Q3RCC       = $(B)/tools/q3rcc$(TOOLS_BINEXT)
+Q3CPP       = $(B)/tools/q3cpp$(TOOLS_BINEXT)
+Q3LCC       = $(B)/tools/q3lcc$(TOOLS_BINEXT)
+Q3ASM       = $(B)/tools/q3asm$(TOOLS_BINEXT)
 
 LBURGOBJ= \
   $(B)/tools/lburg/lburg.o \
@@ -1399,7 +1495,7 @@ $(B)/tools/lburg/%.o: $(LBURGDIR)/%.c
 
 $(LBURG): $(LBURGOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
+	$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
 
 Q3RCCOBJ = \
   $(B)/tools/rcc/alloc.o \
@@ -1444,7 +1540,7 @@ $(B)/tools/rcc/%.o: $(Q3LCCSRCDIR)/%.c
 
 $(Q3RCC): $(Q3RCCOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
+	$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
 
 Q3CPPOBJ = \
   $(B)/tools/cpp/cpp.o \
@@ -1463,7 +1559,7 @@ $(B)/tools/cpp/%.o: $(Q3CPPDIR)/%.c
 
 $(Q3CPP): $(Q3CPPOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
+	$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
 
 Q3LCCOBJ = \
 	$(B)/tools/etc/lcc.o \
@@ -1474,7 +1570,7 @@ $(B)/tools/etc/%.o: $(Q3LCCETCDIR)/%.c
 
 $(Q3LCC): $(Q3LCCOBJ) $(Q3RCC) $(Q3CPP)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(Q3LCCOBJ) $(TOOLS_LIBS)
+	$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(Q3LCCOBJ) $(TOOLS_LIBS)
 
 define DO_Q3LCC
 $(echo_cmd) "Q3LCC $<"
@@ -1526,7 +1622,7 @@ $(B)/tools/asm/%.o: $(Q3ASMDIR)/%.c
 
 $(Q3ASM): $(Q3ASMOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
+	$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $^ $(TOOLS_LIBS)
 
 
 #############################################################################
@@ -1614,11 +1710,6 @@ Q3OBJ = \
   $(B)/client/be_ai_char.o \
   $(B)/client/be_ai_chat.o \
   $(B)/client/be_ai_gen.o \
-  $(B)/client/be_ai_goal.o \
-  $(B)/client/be_ai_move.o \
-  $(B)/client/be_ai_weap.o \
-  $(B)/client/be_ai_weight.o \
-  $(B)/client/be_ea.o \
   $(B)/client/be_interface.o \
   $(B)/client/l_crc.o \
   $(B)/client/l_libvar.o \
@@ -1867,13 +1958,6 @@ ifneq ($(USE_INTERNAL_FREETYPE),0)
 endif
 endif
 
-ifeq ($(ARCH),i386)
-  Q3OBJ += \
-    $(B)/client/snd_mixa.o \
-    $(B)/client/matha.o \
-    $(B)/client/snapvector.o \
-    $(B)/client/ftola.o
-endif
 ifeq ($(ARCH),x86)
   Q3OBJ += \
     $(B)/client/snd_mixa.o \
@@ -1882,16 +1966,6 @@ ifeq ($(ARCH),x86)
     $(B)/client/ftola.o
 endif
 ifeq ($(ARCH),x86_64)
-  Q3OBJ += \
-    $(B)/client/snapvector.o \
-    $(B)/client/ftola.o
-endif
-ifeq ($(ARCH),amd64)
-  Q3OBJ += \
-    $(B)/client/snapvector.o \
-    $(B)/client/ftola.o
-endif
-ifeq ($(ARCH),x64)
   Q3OBJ += \
     $(B)/client/snapvector.o \
     $(B)/client/ftola.o
@@ -2097,38 +2171,22 @@ endif
 ifeq ($(USE_INTERNAL_ZLIB),1)
 Q3OBJ += \
   $(B)/client/adler32.o \
+  $(B)/client/compress.o \
   $(B)/client/crc32.o \
+  $(B)/client/deflate.o \
   $(B)/client/inffast.o \
   $(B)/client/inflate.o \
   $(B)/client/inftrees.o \
+  $(B)/client/trees.o \
   $(B)/client/zutil.o
 endif
 
 ifeq ($(HAVE_VM_COMPILED),true)
-  ifeq ($(ARCH),i386)
+  ifneq ($(findstring $(ARCH),x86 x86_64),)
     Q3OBJ += \
       $(B)/client/vm_x86.o
   endif
-  ifeq ($(ARCH),x86)
-    Q3OBJ += \
-      $(B)/client/vm_x86.o
-  endif
-  ifeq ($(ARCH),x86_64)
-    Q3OBJ += \
-      $(B)/client/vm_x86.o
-  endif
-  ifeq ($(ARCH),amd64)
-    Q3OBJ += \
-      $(B)/client/vm_x86.o
-  endif
-  ifeq ($(ARCH),x64)
-    Q3OBJ += \
-      $(B)/client/vm_x86.o
-  endif
-  ifeq ($(ARCH),ppc)
-    Q3OBJ += $(B)/client/vm_powerpc.o $(B)/client/vm_powerpc_asm.o
-  endif
-  ifeq ($(ARCH),ppc64)
+  ifneq ($(findstring $(ARCH),ppc ppc64),)
     Q3OBJ += $(B)/client/vm_powerpc.o $(B)/client/vm_powerpc_asm.o
   endif
   ifeq ($(ARCH),sparc)
@@ -2199,7 +2257,7 @@ ifneq ($(strip $(LIBSDLMAIN)),)
 ifneq ($(strip $(LIBSDLMAINSRC)),)
 $(LIBSDLMAIN) : $(LIBSDLMAINSRC)
 	cp $< $@
-	ranlib $@
+	$(RANLIB) $@
 endif
 endif
 
@@ -2258,11 +2316,6 @@ Q3DOBJ = \
   $(B)/ded/be_ai_char.o \
   $(B)/ded/be_ai_chat.o \
   $(B)/ded/be_ai_gen.o \
-  $(B)/ded/be_ai_goal.o \
-  $(B)/ded/be_ai_move.o \
-  $(B)/ded/be_ai_weap.o \
-  $(B)/ded/be_ai_weight.o \
-  $(B)/ded/be_ea.o \
   $(B)/ded/be_interface.o \
   $(B)/ded/l_crc.o \
   $(B)/ded/l_libvar.o \
@@ -2286,29 +2339,13 @@ ifneq ($(SERVER_USE_RENDERER_DLOPEN),1)
     $(B)/ded/tr_model_iqm.o
 endif
 
-ifeq ($(ARCH),i386)
-  Q3DOBJ += \
-      $(B)/ded/matha.o \
-      $(B)/ded/snapvector.o \
-      $(B)/ded/ftola.o
-endif
 ifeq ($(ARCH),x86)
   Q3DOBJ += \
       $(B)/ded/matha.o \
       $(B)/ded/snapvector.o \
-      $(B)/ded/ftola.o 
+      $(B)/ded/ftola.o
 endif
 ifeq ($(ARCH),x86_64)
-  Q3DOBJ += \
-      $(B)/ded/snapvector.o \
-      $(B)/ded/ftola.o
-endif
-ifeq ($(ARCH),amd64)
-  Q3DOBJ += \
-      $(B)/ded/snapvector.o \
-      $(B)/ded/ftola.o
-endif
-ifeq ($(ARCH),x64)
   Q3DOBJ += \
       $(B)/ded/snapvector.o \
       $(B)/ded/ftola.o
@@ -2325,30 +2362,11 @@ Q3DOBJ += \
 endif
 
 ifeq ($(HAVE_VM_COMPILED),true)
-  ifeq ($(ARCH),i386)
+  ifneq ($(findstring $(ARCH),x86 x86_64),)
     Q3DOBJ += \
       $(B)/ded/vm_x86.o
   endif
-  ifeq ($(ARCH),x86)
-    Q3DOBJ += \
-      $(B)/ded/vm_x86.o
-  endif
-  ifeq ($(ARCH),x86_64)
-    Q3DOBJ += \
-      $(B)/ded/vm_x86.o
-  endif
-  ifeq ($(ARCH),amd64)
-    Q3DOBJ += \
-      $(B)/ded/vm_x86.o
-  endif
-  ifeq ($(ARCH),x64)
-    Q3DOBJ += \
-      $(B)/ded/vm_x86.o
-  endif
-  ifeq ($(ARCH),ppc)
-    Q3DOBJ += $(B)/ded/vm_powerpc.o $(B)/ded/vm_powerpc_asm.o
-  endif
-  ifeq ($(ARCH),ppc64)
+  ifneq ($(findstring $(ARCH),ppc ppc64),)
     Q3DOBJ += $(B)/ded/vm_powerpc.o $(B)/ded/vm_powerpc_asm.o
   endif
   ifeq ($(ARCH),sparc)
@@ -2398,6 +2416,7 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/cg_ents.o \
   $(B)/$(BASEGAME)/cgame/cg_event.o \
   $(B)/$(BASEGAME)/cgame/cg_info.o \
+  $(B)/$(BASEGAME)/cgame/cg_input.o \
   $(B)/$(BASEGAME)/cgame/cg_localents.o \
   $(B)/$(BASEGAME)/cgame/cg_marks.o \
   $(B)/$(BASEGAME)/cgame/cg_particles.o \
@@ -2446,6 +2465,7 @@ MPCGOBJ_ = \
   $(B)/$(MISSIONPACK)/cgame/cg_ents.o \
   $(B)/$(MISSIONPACK)/cgame/cg_event.o \
   $(B)/$(MISSIONPACK)/cgame/cg_info.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_input.o \
   $(B)/$(MISSIONPACK)/cgame/cg_localents.o \
   $(B)/$(MISSIONPACK)/cgame/cg_marks.o \
   $(B)/$(MISSIONPACK)/cgame/cg_particles.o \
@@ -2487,8 +2507,13 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/ai_cmd.o \
   $(B)/$(BASEGAME)/game/ai_dmnet.o \
   $(B)/$(BASEGAME)/game/ai_dmq3.o \
+  $(B)/$(BASEGAME)/game/ai_ea.o \
+  $(B)/$(BASEGAME)/game/ai_goal.o \
   $(B)/$(BASEGAME)/game/ai_main.o \
+  $(B)/$(BASEGAME)/game/ai_move.o \
   $(B)/$(BASEGAME)/game/ai_team.o \
+  $(B)/$(BASEGAME)/game/ai_weap.o \
+  $(B)/$(BASEGAME)/game/ai_weight.o \
   $(B)/$(BASEGAME)/game/ai_vcmd.o \
   $(B)/$(BASEGAME)/game/bg_misc.o \
   $(B)/$(BASEGAME)/game/bg_pmove.o \
@@ -2502,7 +2527,6 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/g_cmds.o \
   $(B)/$(BASEGAME)/game/g_combat.o \
   $(B)/$(BASEGAME)/game/g_items.o \
-  $(B)/$(BASEGAME)/game/g_mem.o \
   $(B)/$(BASEGAME)/game/g_misc.o \
   $(B)/$(BASEGAME)/game/g_missile.o \
   $(B)/$(BASEGAME)/game/g_mover.o \
@@ -2539,8 +2563,13 @@ MPGOBJ_ = \
   $(B)/$(MISSIONPACK)/game/ai_cmd.o \
   $(B)/$(MISSIONPACK)/game/ai_dmnet.o \
   $(B)/$(MISSIONPACK)/game/ai_dmq3.o \
+  $(B)/$(MISSIONPACK)/game/ai_ea.o \
+  $(B)/$(MISSIONPACK)/game/ai_goal.o \
   $(B)/$(MISSIONPACK)/game/ai_main.o \
+  $(B)/$(MISSIONPACK)/game/ai_move.o \
   $(B)/$(MISSIONPACK)/game/ai_team.o \
+  $(B)/$(MISSIONPACK)/game/ai_weap.o \
+  $(B)/$(MISSIONPACK)/game/ai_weight.o \
   $(B)/$(MISSIONPACK)/game/ai_vcmd.o \
   $(B)/$(MISSIONPACK)/game/bg_misc.o \
   $(B)/$(MISSIONPACK)/game/bg_pmove.o \
@@ -2554,7 +2583,6 @@ MPGOBJ_ = \
   $(B)/$(MISSIONPACK)/game/g_cmds.o \
   $(B)/$(MISSIONPACK)/game/g_combat.o \
   $(B)/$(MISSIONPACK)/game/g_items.o \
-  $(B)/$(MISSIONPACK)/game/g_mem.o \
   $(B)/$(MISSIONPACK)/game/g_misc.o \
   $(B)/$(MISSIONPACK)/game/g_missile.o \
   $(B)/$(MISSIONPACK)/game/g_mover.o \
@@ -2635,16 +2663,16 @@ Q3UIOBJ_ = \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
 
-Q3UIOBJ = $(Q3UIOBJ_) $(B)/$(MISSIONPACK)/ui/ui_syscalls.o
+Q3UIOBJ = $(Q3UIOBJ_) $(B)/$(BASEGAME)/ui/cg_syscalls.o
 Q3UIVMOBJ = $(Q3UIOBJ_:%.o=%.asm)
 
 $(B)/$(BASEGAME)/ui$(SHLIBNAME): $(Q3UIOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) -o $@ $(Q3UIOBJ) $(SHLIBLDFLAGS)
 
-$(B)/$(BASEGAME)/vm/ui.qvm: $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/ui.qvm: $(Q3UIVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ $(Q3UIVMOBJ) $(CGDIR)/cg_syscalls.asm
 
 #############################################################################
 ## MISSIONPACK UI
@@ -2663,16 +2691,16 @@ MPUIOBJ_ = \
   $(B)/$(MISSIONPACK)/qcommon/q_math.o \
   $(B)/$(MISSIONPACK)/qcommon/q_shared.o
 
-MPUIOBJ = $(MPUIOBJ_) $(B)/$(MISSIONPACK)/ui/ui_syscalls.o
+MPUIOBJ = $(MPUIOBJ_) $(B)/$(MISSIONPACK)/ui/cg_syscalls.o
 MPUIVMOBJ = $(MPUIOBJ_:%.o=%.asm)
 
 $(B)/$(MISSIONPACK)/ui$(SHLIBNAME): $(MPUIOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) -o $@ $(MPUIOBJ) $(SHLIBLDFLAGS)
 
-$(B)/$(MISSIONPACK)/vm/ui.qvm: $(MPUIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/ui.qvm: $(MPUIVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(MPUIVMOBJ) $(UIDIR)/ui_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ $(MPUIVMOBJ) $(CGDIR)/cg_syscalls.asm
 
 
 
@@ -2915,10 +2943,16 @@ $(B)/$(MISSIONPACK)/game/%.asm: $(GDIR)/%.c $(Q3LCC)
 $(B)/$(BASEGAME)/ui/bg_%.o: $(GDIR)/bg_%.c
 	$(DO_UI_CC)
 
+$(B)/$(BASEGAME)/ui/cg_%.o: $(CGDIR)/cg_%.c
+	$(DO_UI_CC)
+
 $(B)/$(BASEGAME)/ui/%.o: $(Q3UIDIR)/%.c
 	$(DO_UI_CC)
 
 $(B)/$(BASEGAME)/ui/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
+	$(DO_UI_Q3LCC)
+
+$(B)/$(BASEGAME)/ui/cg_%.asm: $(CGDIR)/cg_%.c $(Q3LCC)
 	$(DO_UI_Q3LCC)
 
 $(B)/$(BASEGAME)/ui/%.asm: $(Q3UIDIR)/%.c $(Q3LCC)
@@ -2927,10 +2961,16 @@ $(B)/$(BASEGAME)/ui/%.asm: $(Q3UIDIR)/%.c $(Q3LCC)
 $(B)/$(MISSIONPACK)/ui/bg_%.o: $(GDIR)/bg_%.c
 	$(DO_UI_CC_MISSIONPACK)
 
+$(B)/$(MISSIONPACK)/ui/cg_%.o: $(CGDIR)/cg_%.c
+	$(DO_UI_CC_MISSIONPACK)
+
 $(B)/$(MISSIONPACK)/ui/%.o: $(UIDIR)/%.c
 	$(DO_UI_CC_MISSIONPACK)
 
 $(B)/$(MISSIONPACK)/ui/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
+	$(DO_UI_Q3LCC_MISSIONPACK)
+
+$(B)/$(MISSIONPACK)/ui/cg_%.asm: $(CGDIR)/cg_%.c $(Q3LCC)
 	$(DO_UI_Q3LCC_MISSIONPACK)
 
 $(B)/$(MISSIONPACK)/ui/%.asm: $(UIDIR)/%.c $(Q3LCC)
@@ -3076,3 +3116,8 @@ endif
 	release targets \
 	toolsclean toolsclean2 toolsclean-debug toolsclean-release \
 	$(OBJ_D_FILES) $(TOOLSOBJ_D_FILES)
+
+# If the target name contains "clean", don't do a parallel build
+ifneq ($(findstring clean, $(MAKECMDGOALS)),)
+.NOTPARALLEL:
+endif

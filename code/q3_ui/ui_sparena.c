@@ -45,7 +45,7 @@ void UI_SPArena_Start( const char *arenaInfo ) {
 	txt = Info_ValueForKey( arenaInfo, "special" );
 	if( txt[0] ) {
 		if( Q_stricmp( txt, "training" ) == 0 ) {
-			level = -4;
+			level = -ARENAS_PER_TIER;
 		}
 		else if( Q_stricmp( txt, "final" ) == 0 ) {
 			level = UI_GetNumSPTiers() * ARENAS_PER_TIER;

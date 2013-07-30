@@ -42,18 +42,20 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
-#include "../botlib/be_ea.h"
 #include "../botlib/be_ai_char.h"
 #include "../botlib/be_ai_chat.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
-#include "../botlib/be_ai_weap.h"
+//
+#include "ai_ea.h"
+#include "ai_goal.h"
+#include "ai_move.h"
+#include "ai_weap.h"
 //
 #include "ai_main.h"
 #include "ai_dmq3.h"
 #include "ai_chat.h"
 #include "ai_cmd.h"
+#include "ai_vcmd.h"
 #include "ai_dmnet.h"
 #include "ai_team.h"
 //
@@ -89,9 +91,9 @@ vmCvar_t bot_nochat;
 vmCvar_t bot_testrchat;
 vmCvar_t bot_challenge;
 vmCvar_t bot_predictobstacles;
+vmCvar_t bot_droppedweight;
+vmCvar_t bot_offhandgrapple;
 vmCvar_t g_spSkill;
-
-extern vmCvar_t bot_developer;
 
 vec3_t lastteleport_origin;		//last teleport event origin
 float lastteleport_time;		//last teleport event time
@@ -488,7 +490,7 @@ void BotRefuseOrder(bot_state_t *bs) {
 		return;
 	// if the bot was ordered to do something
 	if ( bs->order_time && bs->order_time > FloatTime() - 10 ) {
-		trap_EA_Action(bs->client, ACTION_NEGATIVE);
+		EA_Action(bs->client, ACTION_NEGATIVE);
 		BotVoiceChat(bs, bs->decisionmaker, VOICECHAT_NO);
 		bs->order_time = 0;
 	}
@@ -1578,14 +1580,14 @@ void BotChooseWeapon(bot_state_t *bs) {
 
 	if (bs->cur_ps.weaponstate == WEAPON_RAISING ||
 			bs->cur_ps.weaponstate == WEAPON_DROPPING) {
-		trap_EA_SelectWeapon(bs->client, bs->weaponnum);
+		EA_SelectWeapon(bs->client, bs->weaponnum);
 	}
 	else {
-		newweaponnum = trap_BotChooseBestFightWeapon(bs->ws, bs->inventory);
+		newweaponnum = BotChooseBestFightWeapon(bs->ws, bs->inventory);
 		if (bs->weaponnum != newweaponnum) bs->weaponchange_time = FloatTime();
 		bs->weaponnum = newweaponnum;
 		//BotAI_Print(PRT_MESSAGE, "bs->weaponnum = %d\n", bs->weaponnum);
-		trap_EA_SelectWeapon(bs->client, bs->weaponnum);
+		EA_SelectWeapon(bs->client, bs->weaponnum);
 	}
 }
 
@@ -1615,6 +1617,14 @@ void BotSetupForMovement(bot_state_t *bs) {
 	if ((bs->cur_ps.pm_flags & PMF_TIME_WATERJUMP) && (bs->cur_ps.pm_time > 0)) {
 		initmove.or_moveflags |= MFL_WATERJUMP;
 	}
+	//set the grapple pull flag
+	if (bs->cur_ps.pm_flags & PMF_GRAPPLE_PULL) {
+		initmove.or_moveflags |= MFL_GRAPPLEPULL;
+	}
+	//set the grapple exists flag
+	if (g_entities[bs->entitynum].client->hook) {
+		initmove.or_moveflags |= MFL_GRAPPLEEXISTS;
+	}
 	//set presence type
 	if (bs->cur_ps.pm_flags & PMF_DUCKED) initmove.presencetype = PRESENCE_CROUCH;
 	else initmove.presencetype = PRESENCE_NORMAL;
@@ -1623,7 +1633,7 @@ void BotSetupForMovement(bot_state_t *bs) {
 	//
 	VectorCopy(bs->viewangles, initmove.viewangles);
 	//
-	trap_BotInitMoveState(bs->ms, &initmove);
+	BotInitMoveState(bs->ms, &initmove);
 }
 
 /*
@@ -1852,7 +1862,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 			BotEntityInfo(c, &entinfo);
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -1873,7 +1883,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 			BotEntityInfo(c, &entinfo);
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -1890,7 +1900,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 		if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST * 0.9)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
 			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -1912,7 +1922,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 			BotEntityInfo(c, &entinfo);
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -1921,7 +1931,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 	BotVisibleTeamMatesAndEnemies(bs, &teammates, &enemies, KAMIKAZE_DIST);
 	//
 	if (enemies > 2 && enemies > teammates+1) {
-		trap_EA_Use(bs->client);
+		EA_Use(bs->client);
 		return;
 	}
 }
@@ -1962,7 +1972,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		if (VectorLengthSquared(dir) < Square(200)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
 			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -1986,7 +1996,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		if (VectorLengthSquared(dir) < Square(200)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
 			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -2003,7 +2013,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		if (VectorLengthSquared(dir) < Square(300)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
 			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -2027,7 +2037,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		if (VectorLengthSquared(dir) < Square(200)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
 			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 				return;
 			}
 		}
@@ -2049,13 +2059,13 @@ void BotBattleUseItems(bot_state_t *bs) {
 				&& !BotHarvesterCarryingCubes(bs)
 #endif
 				) {
-				trap_EA_Use(bs->client);
+				EA_Use(bs->client);
 			}
 		}
 	}
 	if (bs->inventory[INVENTORY_HEALTH] < 60) {
 		if (bs->inventory[INVENTORY_MEDKIT] > 0) {
-			trap_EA_Use(bs->client);
+			EA_Use(bs->client);
 		}
 	}
 #ifdef MISSIONPACK
@@ -2533,7 +2543,7 @@ int BotWantsToCamp(bot_state_t *bs) {
 	}
 	//find the closest camp spot
 	besttraveltime = 99999;
-	for (cs = trap_BotGetNextCampSpotGoal(0, &goal); cs; cs = trap_BotGetNextCampSpotGoal(cs, &goal)) {
+	for (cs = BotGetNextCampSpotGoal(0, &goal); cs; cs = BotGetNextCampSpotGoal(cs, &goal)) {
 		traveltime = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal.areanum, TFL_DEFAULT);
 		if (traveltime && traveltime < besttraveltime) {
 			besttraveltime = traveltime;
@@ -2557,10 +2567,10 @@ void BotDontAvoid(bot_state_t *bs, char *itemname) {
 	bot_goal_t goal;
 	int num;
 
-	num = trap_BotGetLevelItemGoal(-1, itemname, &goal);
+	num = BotGetLevelItemGoal(-1, itemname, &goal);
 	while(num >= 0) {
-		trap_BotRemoveFromAvoidGoals(bs->gs, goal.number);
-		num = trap_BotGetLevelItemGoal(num, itemname, &goal);
+		BotRemoveFromAvoidGoals(bs->gs, goal.number);
+		num = BotGetLevelItemGoal(num, itemname, &goal);
 	}
 }
 
@@ -2665,7 +2675,7 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 		//initialize the movement state
 		BotSetupForMovement(bs);
 		//move towards the goal
-		trap_BotMoveToGoal(&moveresult, bs->ms, &goal, tfl);
+		BotMoveToGoal(&moveresult, bs->ms, &goal, tfl);
 		return moveresult;
 	}
 	//
@@ -2720,10 +2730,10 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	if (attack_skill <= 0.4) {
 		//just walk to or away from the enemy
 		if (dist > attack_dist + attack_range) {
-			if (trap_BotMoveInDirection(bs->ms, forward, 400, movetype)) return moveresult;
+			if (BotMoveInDirection(bs->ms, forward, 400, movetype)) return moveresult;
 		}
 		if (dist < attack_dist - attack_range) {
-			if (trap_BotMoveInDirection(bs->ms, backward, 400, movetype)) return moveresult;
+			if (BotMoveInDirection(bs->ms, backward, 400, movetype)) return moveresult;
 		}
 		return moveresult;
 	}
@@ -2765,7 +2775,7 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 			}
 		}
 		//perform the movement
-		if (trap_BotMoveInDirection(bs->ms, sideward, 400, movetype))
+		if (BotMoveInDirection(bs->ms, sideward, 400, movetype))
 			return moveresult;
 		//movement failed, flip the strafe direction
 		bs->flags ^= BFL_STRAFERIGHT;
@@ -3320,7 +3330,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	}
 
 	//get the weapon information
-	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
+	BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
 	//get the weapon specific aim accuracy and or aim skill
 	if (wi.number == WP_MACHINEGUN) {
 		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
@@ -3504,7 +3514,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 				VectorSet(goal.mins, -8, -8, -8);
 				VectorSet(goal.maxs, 8, 8, 8);
 				//
-				if (trap_BotPredictVisiblePosition(bs->lastenemyorigin, bs->lastenemyareanum, &goal, TFL_DEFAULT, target)) {
+				if (BotPredictVisiblePosition(bs->lastenemyorigin, bs->lastenemyareanum, &goal, TFL_DEFAULT, target)) {
 					VectorSubtract(target, bs->eye, dir);
 					if (VectorLengthSquared(dir) > Square(80)) {
 						VectorCopy(target, bestorigin);
@@ -3555,7 +3565,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 			//set the view angles directly
 			if (bs->ideal_viewangles[PITCH] > 180) bs->ideal_viewangles[PITCH] -= 360;
 			VectorCopy(bs->ideal_viewangles, bs->viewangles);
-			trap_EA_View(bs->client, bs->viewangles);
+			EA_View(bs->client, bs->viewangles);
 		}
 	}
 }
@@ -3634,7 +3644,7 @@ void BotCheckAttack(bot_state_t *bs) {
 		return;
 
 	//get the weapon info
-	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
+	BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
 	//get the start point shooting from
 	VectorCopy(bs->origin, start);
 	start[2] += bs->cur_ps.viewheight;
@@ -3671,11 +3681,11 @@ void BotCheckAttack(bot_state_t *bs) {
 	//if fire has to be release to activate weapon
 	if (wi.flags & WFL_FIRERELEASED) {
 		if (bs->flags & BFL_ATTACKED) {
-			trap_EA_Attack(bs->client);
+			EA_Attack(bs->client);
 		}
 	}
 	else {
-		trap_EA_Attack(bs->client);
+		EA_Attack(bs->client);
 	}
 	bs->flags ^= BFL_ATTACKED;
 }
@@ -3749,7 +3759,7 @@ void BotMapScripts(bot_state_t *bs) {
 			bs->ideal_viewangles[YAW] = AngleMod(bs->ideal_viewangles[YAW]);
 			//
 			if (InFieldOfVision(bs->viewangles, 20, bs->ideal_viewangles)) {
-				trap_EA_Attack(bs->client);
+				EA_Attack(bs->client);
 			}
 		}
 	}
@@ -4406,7 +4416,7 @@ void BotPrintActivateGoalInfo(bot_state_t *bs, bot_activategoal_t *activategoal,
 						activategoal->goal.origin[2],
 						activategoal->goal.areanum);
 	}
-	trap_EA_Say(bs->client, buf);
+	EA_Say(bs->client, buf);
 }
 
 /*
@@ -4422,7 +4432,7 @@ void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
 	angles[2] = 0;
 	AngleVectors(angles, dir, NULL, NULL);
 
-	trap_BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK);
+	BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK);
 
 	moveresult->failure = qfalse;
 	VectorCopy(dir, moveresult->movedir);
@@ -4517,16 +4527,16 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	//
 	if (bs->flags & BFL_AVOIDRIGHT) VectorNegate(sideward, sideward);
 	// try to crouch straight forward?
-	if (movetype != MOVE_CROUCH || !trap_BotMoveInDirection(bs->ms, hordir, 400, movetype)) {
+	if (movetype != MOVE_CROUCH || !BotMoveInDirection(bs->ms, hordir, 400, movetype)) {
 		// perform the movement
-		if (!trap_BotMoveInDirection(bs->ms, sideward, 400, movetype)) {
+		if (!BotMoveInDirection(bs->ms, sideward, 400, movetype)) {
 			// flip the avoid direction flag
 			bs->flags ^= BFL_AVOIDRIGHT;
 			// flip the direction
 			// VectorNegate(sideward, sideward);
 			VectorMA(sideward, -1, hordir, sideward);
 			// move in the other direction
-			trap_BotMoveInDirection(bs->ms, sideward, 400, movetype);
+			BotMoveInDirection(bs->ms, sideward, 400, movetype);
 		}
 	}
 	//
@@ -4723,7 +4733,7 @@ void BotCheckForGrenades(bot_state_t *bs, entityState_t *state) {
 	if (state->eType != ET_MISSILE || state->weapon != WP_GRENADE_LAUNCHER)
 		return;
 	// try to avoid the grenade
-	trap_BotAddAvoidSpot(bs->ms, state->pos.trBase, 160, AVOID_ALWAYS);
+	BotAddAvoidSpot(bs->ms, state->pos.trBase, 160, AVOID_ALWAYS);
 }
 
 #ifdef MISSIONPACK
@@ -4746,7 +4756,7 @@ void BotCheckForProxMines(bot_state_t *bs, entityState_t *state) {
 		return;
 	}
 	// try to avoid the prox mine
-	trap_BotAddAvoidSpot(bs->ms, state->pos.trBase, 160, AVOID_ALWAYS);
+	BotAddAvoidSpot(bs->ms, state->pos.trBase, 160, AVOID_ALWAYS);
 	//
 	if (bs->numproxmines >= MAX_PROXMINES)
 		return;
@@ -4967,7 +4977,7 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 					//if the bot has a personal teleporter
 					if (bs->inventory[INVENTORY_TELEPORTER] > 0) {
 						//use the holdable item
-						trap_EA_Use(bs->client);
+						EA_Use(bs->client);
 					}
 				}
 			}
@@ -5028,7 +5038,7 @@ void BotCheckSnapshot(bot_state_t *bs) {
 	entityState_t state;
 
 	//remove all avoid spots
-	trap_BotAddAvoidSpot(bs->ms, vec3_origin, 0, AVOID_CLEAR);
+	BotAddAvoidSpot(bs->ms, vec3_origin, 0, AVOID_CLEAR);
 	//reset kamikaze body
 	bs->kamikazebody = 0;
 	//reset number of proxmines
@@ -5144,7 +5154,7 @@ void BotSetupAlternativeRouteGoals(void) {
 		return;
 #ifdef MISSIONPACK
 	if (gametype == GT_CTF) {
-		if (trap_BotGetLevelItemGoal(-1, "Neutral Flag", &ctf_neutralflag) < 0)
+		if (BotGetLevelItemGoal(-1, "Neutral Flag", &ctf_neutralflag) < 0)
 			BotAI_Print(PRT_WARNING, "No alt routes without Neutral Flag\n");
 		if (ctf_neutralflag.areanum) {
 			//
@@ -5163,7 +5173,7 @@ void BotSetupAlternativeRouteGoals(void) {
 		}
 	}
 	else if (gametype == GT_1FCTF) {
-		if (trap_BotGetLevelItemGoal(-1, "Neutral Obelisk", &neutralobelisk) < 0)
+		if (BotGetLevelItemGoal(-1, "Neutral Obelisk", &neutralobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "One Flag CTF without Neutral Obelisk\n");
 		red_numaltroutegoals = trap_AAS_AlternativeRouteGoals(
 									ctf_neutralflag.origin, ctf_neutralflag.areanum,
@@ -5179,7 +5189,7 @@ void BotSetupAlternativeRouteGoals(void) {
 									ALTROUTEGOAL_VIEWPORTALS);
 	}
 	else if (gametype == GT_OBELISK) {
-		if (trap_BotGetLevelItemGoal(-1, "Neutral Obelisk", &neutralobelisk) < 0)
+		if (BotGetLevelItemGoal(-1, "Neutral Obelisk", &neutralobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "No alt routes without Neutral Obelisk\n");
 		//
 		red_numaltroutegoals = trap_AAS_AlternativeRouteGoals(
@@ -5196,7 +5206,7 @@ void BotSetupAlternativeRouteGoals(void) {
 									ALTROUTEGOAL_VIEWPORTALS);
 	}
 	else if (gametype == GT_HARVESTER) {
-		if (trap_BotGetLevelItemGoal(-1, "Neutral Obelisk", &neutralobelisk) < 0)
+		if (BotGetLevelItemGoal(-1, "Neutral Obelisk", &neutralobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "Harvester without Neutral Obelisk\n");
 		red_numaltroutegoals = trap_AAS_AlternativeRouteGoals(
 									neutralobelisk.origin, neutralobelisk.areanum,
@@ -5287,8 +5297,8 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 	if (!bs->inuse) return;
 	//if the bot executed too many AI nodes
 	if (i >= MAX_NODESWITCHES) {
-		trap_BotDumpGoalStack(bs->gs);
-		trap_BotDumpAvoidGoals(bs->gs);
+		BotDumpGoalStack(bs->gs);
+		BotDumpAvoidGoals(bs->gs);
 		BotDumpNodeSwitches(bs);
 		ClientName(bs->client, name, sizeof(name));
 		BotAI_Print(PRT_ERROR, "%s at %1.1f switched more than %d AI nodes\n", name, FloatTime(), MAX_NODESWITCHES);
@@ -5405,39 +5415,41 @@ void BotSetupDeathmatchAI(void) {
 	trap_Cvar_Register(&bot_testrchat, "bot_testrchat", "0", 0);
 	trap_Cvar_Register(&bot_challenge, "bot_challenge", "0", 0);
 	trap_Cvar_Register(&bot_predictobstacles, "bot_predictobstacles", "1", 0);
+	trap_Cvar_Register(&bot_offhandgrapple, "bot_offhandgrapple", "0", 0);
+	trap_Cvar_Register(&bot_droppedweight, "bot_droppedweight", "1000", 0);
 	trap_Cvar_Register(&g_spSkill, "g_spSkill", "2", 0);
 	//
 	if (gametype == GT_CTF) {
-		if (trap_BotGetLevelItemGoal(-1, "Red Flag", &ctf_redflag) < 0)
+		if (BotGetLevelItemGoal(-1, "Red Flag", &ctf_redflag) < 0)
 			BotAI_Print(PRT_WARNING, "CTF without Red Flag\n");
-		if (trap_BotGetLevelItemGoal(-1, "Blue Flag", &ctf_blueflag) < 0)
+		if (BotGetLevelItemGoal(-1, "Blue Flag", &ctf_blueflag) < 0)
 			BotAI_Print(PRT_WARNING, "CTF without Blue Flag\n");
 	}
 #ifdef MISSIONPACK
 	else if (gametype == GT_1FCTF) {
-		if (trap_BotGetLevelItemGoal(-1, "Neutral Flag", &ctf_neutralflag) < 0)
+		if (BotGetLevelItemGoal(-1, "Neutral Flag", &ctf_neutralflag) < 0)
 			BotAI_Print(PRT_WARNING, "One Flag CTF without Neutral Flag\n");
-		if (trap_BotGetLevelItemGoal(-1, "Red Flag", &ctf_redflag) < 0)
+		if (BotGetLevelItemGoal(-1, "Red Flag", &ctf_redflag) < 0)
 			BotAI_Print(PRT_WARNING, "One Flag CTF without Red Flag\n");
-		if (trap_BotGetLevelItemGoal(-1, "Blue Flag", &ctf_blueflag) < 0)
+		if (BotGetLevelItemGoal(-1, "Blue Flag", &ctf_blueflag) < 0)
 			BotAI_Print(PRT_WARNING, "One Flag CTF without Blue Flag\n");
 	}
 	else if (gametype == GT_OBELISK) {
-		if (trap_BotGetLevelItemGoal(-1, "Red Obelisk", &redobelisk) < 0)
+		if (BotGetLevelItemGoal(-1, "Red Obelisk", &redobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "Overload without Red Obelisk\n");
 		BotSetEntityNumForGoal(&redobelisk, "team_redobelisk");
-		if (trap_BotGetLevelItemGoal(-1, "Blue Obelisk", &blueobelisk) < 0)
+		if (BotGetLevelItemGoal(-1, "Blue Obelisk", &blueobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "Overload without Blue Obelisk\n");
 		BotSetEntityNumForGoal(&blueobelisk, "team_blueobelisk");
 	}
 	else if (gametype == GT_HARVESTER) {
-		if (trap_BotGetLevelItemGoal(-1, "Red Obelisk", &redobelisk) < 0)
+		if (BotGetLevelItemGoal(-1, "Red Obelisk", &redobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "Harvester without Red Obelisk\n");
 		BotSetEntityNumForGoal(&redobelisk, "team_redobelisk");
-		if (trap_BotGetLevelItemGoal(-1, "Blue Obelisk", &blueobelisk) < 0)
+		if (BotGetLevelItemGoal(-1, "Blue Obelisk", &blueobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "Harvester without Blue Obelisk\n");
 		BotSetEntityNumForGoal(&blueobelisk, "team_blueobelisk");
-		if (trap_BotGetLevelItemGoal(-1, "Neutral Obelisk", &neutralobelisk) < 0)
+		if (BotGetLevelItemGoal(-1, "Neutral Obelisk", &neutralobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "Harvester without Neutral Obelisk\n");
 		BotSetEntityNumForGoal(&neutralobelisk, "team_neutralobelisk");
 	}

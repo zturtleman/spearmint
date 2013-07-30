@@ -37,26 +37,26 @@ equ trap_Cvar_VariableIntegerValue			-39
 equ trap_Cvar_VariableStringBuffer			-40
 equ trap_Cvar_LatchedVariableStringBuffer	-41
 equ trap_Cvar_InfoStringBuffer				-42
+equ trap_Cvar_CheckRange					-43
 
-equ trap_FS_FOpenFile					-43
-equ trap_FS_Read						-44
-equ trap_FS_Write						-45
-equ trap_FS_Seek						-46
-equ trap_FS_FCloseFile					-47
-equ trap_FS_GetFileList					-48
-equ trap_FS_Delete						-49
-equ trap_FS_Rename						-50
+equ trap_FS_FOpenFile					-44
+equ trap_FS_Read						-45
+equ trap_FS_Write						-46
+equ trap_FS_Seek						-47
+equ trap_FS_FCloseFile					-48
+equ trap_FS_GetFileList					-49
+equ trap_FS_Delete						-50
+equ trap_FS_Rename						-51
 
-equ trap_PC_AddGlobalDefine				-51
-equ trap_PC_RemoveAllGlobalDefines		-52
-equ trap_PC_LoadSource					-53
-equ trap_PC_FreeSource					-54
-equ trap_PC_ReadToken					-55
-equ trap_PC_UnreadToken					-56
-equ trap_PC_SourceFileAndLine			-57
+equ trap_PC_AddGlobalDefine				-52
+equ trap_PC_RemoveAllGlobalDefines		-53
+equ trap_PC_LoadSource					-54
+equ trap_PC_FreeSource					-55
+equ trap_PC_ReadToken					-56
+equ trap_PC_UnreadToken					-57
+equ trap_PC_SourceFileAndLine			-58
 
-equ	trap_Alloc							-58
-
+equ trap_Alloc							-59
 
 
 equ	trap_GetClipboardData				-101
@@ -75,13 +75,15 @@ equ	trap_GetSnapshot					-153
 equ	trap_GetServerCommand				-154
 equ	trap_GetCurrentCmdNumber			-155
 equ	trap_GetUserCmd						-156
-equ	trap_SetUserCmdValue				-157
-equ	trap_SendClientCommand				-158
-equ	trap_SetNetFields					-159
-equ	trap_GetDemoState					-160
-equ	trap_GetDemoPos						-161
-equ	trap_GetDemoName					-162
-equ	trap_GetDemoLength					-163
+equ	trap_SendClientCommand				-157
+equ	trap_SetNetFields					-158
+equ	trap_GetDemoState					-159
+equ	trap_GetDemoPos						-160
+equ	trap_GetDemoName					-161
+equ	trap_GetDemoLength					-162
+
+equ	trap_GetClientState					-191
+equ	trap_GetConfigString				-192
 
 
 
@@ -130,7 +132,11 @@ equ trap_R_LightForPoint				-353
 equ trap_R_inPVS						-354
 equ trap_R_AddAdditiveLightToScene		-355
 equ trap_R_GetGlobalFog					-356
-equ trap_R_GetWaterFog					-357
+equ trap_R_GetViewFog					-357
+equ trap_R_SetSurfaceShader				-358
+equ trap_R_GetSurfaceShader				-359
+equ trap_R_GetShaderFromModel			-360
+equ trap_R_GetShaderName				-361
 
 
 
@@ -160,6 +166,30 @@ equ trap_Key_ClearStates				-507
 equ trap_Key_GetCatcher					-508
 equ trap_Key_SetCatcher					-509
 equ trap_Key_GetKey						-510
+
+
+
+equ	trap_LAN_GetPingQueueCount			-551
+equ	trap_LAN_ClearPing					-552
+equ	trap_LAN_GetPing					-553
+equ	trap_LAN_GetPingInfo				-554
+
+equ trap_LAN_GetServerCount				-555
+equ trap_LAN_GetServerAddressString		-556
+equ trap_LAN_GetServerInfo				-557
+equ trap_LAN_MarkServerVisible 			-558
+equ trap_LAN_UpdateVisiblePings			-559
+equ trap_LAN_ResetPings					-560
+equ trap_LAN_LoadCachedServers			-561
+equ trap_LAN_SaveCachedServers			-562
+equ trap_LAN_AddServer					-563
+equ trap_LAN_RemoveServer	 			-564
+
+equ trap_LAN_ServerStatus				-565
+equ trap_LAN_GetServerPing				-566
+equ trap_LAN_ServerIsVisible			-567
+equ trap_LAN_CompareServers				-568
+equ trap_LAN_ServerIsInFavoriteList		-569
 
 
 

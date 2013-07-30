@@ -37,7 +37,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 void daub4(float b[], unsigned long n, int isign)
 {
-	float wksp[4097];
+	float wksp[4097] = { 0.0f };
 	float	*a=b-1;						// numerical recipies so a[1] = b[0]
 
 	unsigned long nh,nh1,i,j;
@@ -154,7 +154,7 @@ void encodeWavelet( sfx_t *sfx, short *packets) {
 		newchunk = SND_malloc();
 		if (sfx->soundData == NULL) {
 			sfx->soundData = newchunk;
-		} else {
+		} else if (chunk != NULL) {
 			chunk->next = newchunk;
 		}
 		chunk = newchunk;
@@ -223,7 +223,7 @@ void encodeMuLaw( sfx_t *sfx, short *packets) {
 		newchunk = SND_malloc();
 		if (sfx->soundData == NULL) {
 			sfx->soundData = newchunk;
-		} else {
+		} else if (chunk != NULL) {
 			chunk->next = newchunk;
 		}
 		chunk = newchunk;

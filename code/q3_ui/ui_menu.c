@@ -289,7 +289,7 @@ void UI_MainMenu( void ) {
 #endif
 	int		style = UI_CENTER | UI_DROPSHADOW;
 
-	trap_Cvar_Set( "sv_killserver", "1" );
+	trap_Cvar_SetValue( "sv_killserver", 1 );
 
 	memset( &s_main, 0 ,sizeof(mainmenu_t) );
 	memset( &s_errorMessage, 0 ,sizeof(errorMessage_t) );
@@ -326,7 +326,7 @@ void UI_MainMenu( void ) {
 	s_main.singleplayer.generic.id			= ID_SINGLEPLAYER;
 	s_main.singleplayer.generic.callback	= Main_MenuEvent; 
 	s_main.singleplayer.string				= "SINGLE PLAYER";
-	s_main.singleplayer.color				= color_red;
+	s_main.singleplayer.color				= text_big_color;
 	s_main.singleplayer.style				= style;
 
 	y += MAIN_MENU_VERTICAL_SPACING;
@@ -337,7 +337,7 @@ void UI_MainMenu( void ) {
 	s_main.multiplayer.generic.id			= ID_MULTIPLAYER;
 	s_main.multiplayer.generic.callback		= Main_MenuEvent; 
 	s_main.multiplayer.string				= "MULTIPLAYER";
-	s_main.multiplayer.color				= color_red;
+	s_main.multiplayer.color				= text_big_color;
 	s_main.multiplayer.style				= style;
 
 	y += MAIN_MENU_VERTICAL_SPACING;
@@ -348,7 +348,7 @@ void UI_MainMenu( void ) {
 	s_main.setup.generic.id					= ID_SETUP;
 	s_main.setup.generic.callback			= Main_MenuEvent; 
 	s_main.setup.string						= "SETUP";
-	s_main.setup.color						= color_red;
+	s_main.setup.color						= text_big_color;
 	s_main.setup.style						= style;
 
 	y += MAIN_MENU_VERTICAL_SPACING;
@@ -359,7 +359,7 @@ void UI_MainMenu( void ) {
 	s_main.demos.generic.id					= ID_DEMOS;
 	s_main.demos.generic.callback			= Main_MenuEvent; 
 	s_main.demos.string						= "DEMOS";
-	s_main.demos.color						= color_red;
+	s_main.demos.color						= text_big_color;
 	s_main.demos.style						= style;
 
 	y += MAIN_MENU_VERTICAL_SPACING;
@@ -370,7 +370,7 @@ void UI_MainMenu( void ) {
 	s_main.cinematics.generic.id			= ID_CINEMATICS;
 	s_main.cinematics.generic.callback		= Main_MenuEvent; 
 	s_main.cinematics.string				= "CINEMATICS";
-	s_main.cinematics.color					= color_red;
+	s_main.cinematics.color					= text_big_color;
 	s_main.cinematics.style					= style;
 
 #ifndef MISSIONPACK
@@ -384,7 +384,7 @@ void UI_MainMenu( void ) {
 		s_main.teamArena.generic.id				= ID_TEAMARENA;
 		s_main.teamArena.generic.callback		= Main_MenuEvent; 
 		s_main.teamArena.string					= "TEAM ARENA";
-		s_main.teamArena.color					= color_red;
+		s_main.teamArena.color					= text_big_color;
 		s_main.teamArena.style					= style;
 	}
 #endif
@@ -398,7 +398,7 @@ void UI_MainMenu( void ) {
 		s_main.mods.generic.id				= ID_MODS;
 		s_main.mods.generic.callback		= Main_MenuEvent; 
 		s_main.mods.string					= "MODS";
-		s_main.mods.color					= color_red;
+		s_main.mods.color					= text_big_color;
 		s_main.mods.style					= style;
 	}
 
@@ -410,7 +410,7 @@ void UI_MainMenu( void ) {
 	s_main.exit.generic.id					= ID_EXIT;
 	s_main.exit.generic.callback			= Main_MenuEvent; 
 	s_main.exit.string						= "EXIT";
-	s_main.exit.color						= color_red;
+	s_main.exit.color						= text_big_color;
 	s_main.exit.style						= style;
 
 	Menu_AddItem( &s_main.menu,	&s_main.singleplayer );

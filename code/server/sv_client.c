@@ -71,6 +71,20 @@ void SV_GetChallenge(netadr_t from)
 		return;
 	}
 
+	// Prevent using getchallenge as an amplifier
+	if ( SVC_RateLimitAddress( from, 10, 1000 ) ) {
+		Com_DPrintf( "SV_GetChallenge: rate limit from %s exceeded, dropping request\n",
+			NET_AdrToString( from ) );
+		return;
+	}
+
+	// Allow getchallenge to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) ) {
+		Com_DPrintf( "SV_GetChallenge: rate limit exceeded, dropping request\n" );
+		return;
+	}
+
 	gameName = Cmd_Argv(2);
 	gameMismatch = !*gameName || strcmp(gameName, com_gamename->string) != 0;
 
@@ -689,6 +703,13 @@ void SV_DropPlayer( player_t *drop, const char *reason ) {
 		return;		// already dropped
 	}
 
+	numLocalPlayers = SV_ClientNumLocalPlayers( client );
+
+	if ( NET_IsLocalAddress( client->netchan.remoteAddress ) && numLocalPlayers == 1 ) {
+		// allowing tthis would cause the server to keep running with disconnected local players that cannot rejoin
+		return;
+	}
+
 	if ( !isBot ) {
 		// see if we already have a challenge for this ip
 		challenge = &svs.challenges[0];
@@ -702,8 +723,6 @@ void SV_DropPlayer( player_t *drop, const char *reason ) {
 			}
 		}
 	}
-
-	numLocalPlayers = SV_ClientNumLocalPlayers( client );
 
 	// Free all allocated data on the client structure
 	SV_FreePlayer( drop );
@@ -820,10 +839,10 @@ static void SV_SendClientGameState( client_t *client ) {
 
 	// write the configstrings
 	for ( start = 0 ; start < MAX_CONFIGSTRINGS ; start++ ) {
-		if (sv.configstrings[start][0]) {
+		if (sv.configstrings[start].s[0]) {
 			MSG_WriteByte( &msg, svc_configstring );
 			MSG_WriteShort( &msg, start );
-			MSG_WriteBigString( &msg, sv.configstrings[start] );
+			MSG_WriteBigString( &msg, sv.configstrings[start].s );
 		}
 	}
 
@@ -1405,6 +1424,11 @@ SV_DropOut_f
 */
 void SV_DropOut_f( client_t *client, int localPlayerNum ) {
 	player_t *player;
+
+	// require disconnect command to leave server
+	if ( SV_ClientNumLocalPlayers( client ) == 1 ) {
+		return;
+	}
 
 	player = client->localPlayers[localPlayerNum];
 

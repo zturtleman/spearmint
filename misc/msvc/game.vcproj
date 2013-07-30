@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="game"
 	ProjectGUID="{F9EE10DA-2404-4154-B904-F93C936C040A}"
 	TargetFrameworkVersion="131072"
@@ -46,7 +46,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile="$(IntDir)\game.pch"
@@ -73,19 +73,19 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="winmm.lib"
-				OutputFile="$(OutDir)\qagamex86.dll"
+				OutputFile="$(OutDir)\gamex86.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile=".\game.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(IntDir)\qagamex86.pdb"
+				ProgramDatabaseFile="$(IntDir)\gamex86.pdb"
 				GenerateMapFile="true"
-				MapFileName="$(IntDir)\qagamex86.map"
+				MapFileName="$(IntDir)\gamex86.map"
 				SubSystem="2"
 				BaseAddress="0x20000000"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary="$(IntDir)\qagamex86.lib"
+				ImportLibrary="$(IntDir)\gamex86.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -142,7 +142,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile="$(IntDir)\game.pch"
@@ -169,19 +169,19 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="winmm.lib"
-				OutputFile="$(OutDir)\qagamex86.dll"
+				OutputFile="$(OutDir)\gamex86.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile=".\game.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(IntDir)\qagamex86.pdb"
+				ProgramDatabaseFile="$(IntDir)\gamex86.pdb"
 				GenerateMapFile="true"
-				MapFileName="$(IntDir)\qagamex86.map"
+				MapFileName="$(IntDir)\gamex86.map"
 				SubSystem="2"
 				BaseAddress="0x20000000"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary="$(IntDir)\qagamex86.lib"
+				ImportLibrary="$(IntDir)\gamex86.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -239,7 +239,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -266,18 +266,18 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="winmm.lib"
-				OutputFile="$(OutDir)\qagamex86.dll"
+				OutputFile="$(OutDir)\gamex86.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile=".\game.def"
-				ProgramDatabaseFile="$(IntDir)\qagamex86.pdb"
+				ProgramDatabaseFile="$(IntDir)\gamex86.pdb"
 				GenerateMapFile="true"
-				MapFileName="$(IntDir)\qagamex86.map"
+				MapFileName="$(IntDir)\gamex86.map"
 				SubSystem="2"
 				BaseAddress="0x20000000"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary="$(IntDir)\qagamex86.lib"
+				ImportLibrary="$(IntDir)\gamex86.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -362,18 +362,18 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="winmm.lib"
-				OutputFile="$(IntDir)\qagamex86.dll"
+				OutputFile="$(IntDir)\gamex86.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile=".\game.def"
-				ProgramDatabaseFile="$(IntDir)\qagamex86.pdb"
+				ProgramDatabaseFile="$(IntDir)\gamex86.pdb"
 				GenerateMapFile="true"
-				MapFileName="$(IntDir)\qagamex86.map"
+				MapFileName="$(IntDir)\gamex86.map"
 				SubSystem="2"
 				BaseAddress="0x20000000"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary="$(IntDir)\qagamex86.lib"
+				ImportLibrary="$(IntDir)\gamex86.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -415,7 +415,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -425,7 +425,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -435,7 +435,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -457,7 +457,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -467,7 +467,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -477,7 +477,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -499,7 +499,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -509,7 +509,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -519,7 +519,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -541,7 +541,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -551,7 +551,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -561,7 +561,91 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\game\ai_ea.c"
+				>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\game\ai_goal.c"
+				>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -583,7 +667,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -593,7 +677,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -603,7 +687,49 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\game\ai_move.c"
+				>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -625,7 +751,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -635,7 +761,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -645,7 +771,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -667,7 +793,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -677,7 +803,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -687,7 +813,91 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\game\ai_weap.c"
+				>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;MISSIONPACK;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\code\game\ai_weight.c"
+				>
+				<FileConfiguration
+					Name="Debug TA|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
+						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -710,7 +920,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -721,7 +931,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -732,7 +942,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -755,7 +965,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -765,7 +975,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -775,7 +985,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -797,7 +1007,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -807,7 +1017,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -817,7 +1027,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -839,7 +1049,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -849,7 +1059,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -859,7 +1069,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -881,7 +1091,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -891,7 +1101,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -901,7 +1111,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -923,7 +1133,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -933,7 +1143,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -943,7 +1153,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -965,7 +1175,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -975,7 +1185,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -985,7 +1195,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1007,7 +1217,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1017,7 +1227,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1027,7 +1237,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1049,7 +1259,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1059,7 +1269,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1069,7 +1279,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1091,7 +1301,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1101,7 +1311,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1111,7 +1321,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1133,7 +1343,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1143,7 +1353,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1153,7 +1363,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1175,7 +1385,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1185,7 +1395,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1195,7 +1405,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1217,7 +1427,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1227,7 +1437,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1237,7 +1447,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1259,7 +1469,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1269,7 +1479,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1279,7 +1489,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1301,7 +1511,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1311,7 +1521,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1321,7 +1531,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1343,7 +1553,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1353,7 +1563,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1363,7 +1573,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1385,7 +1595,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1395,7 +1605,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1405,7 +1615,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1427,7 +1637,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1437,7 +1647,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1447,7 +1657,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1469,7 +1679,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1479,7 +1689,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1489,7 +1699,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1511,7 +1721,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1521,7 +1731,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1531,7 +1741,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1553,7 +1763,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1563,7 +1773,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1573,7 +1783,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1595,7 +1805,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1605,7 +1815,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1615,7 +1825,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1637,7 +1847,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1647,7 +1857,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1657,7 +1867,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1679,7 +1889,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1689,7 +1899,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1699,7 +1909,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1721,7 +1931,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;MISSIONPACK;QAGAME;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;MISSIONPACK;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1731,7 +1941,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;BUILDING_REF_GL;DEBUG;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;DEBUG;GAME;"
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
@@ -1741,7 +1951,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLOBALRANK;"
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GAME;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration

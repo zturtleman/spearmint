@@ -78,9 +78,6 @@ void GLimp_Shutdown( void )
 	ri.IN_Shutdown();
 
 	SDL_QuitSubSystem( SDL_INIT_VIDEO );
-
-	Com_Memset( &glConfig, 0, sizeof( glConfig ) );
-	//Com_Memset( &glState, 0, sizeof( glState ) );
 }
 
 /*
@@ -212,8 +209,11 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 	SDL_DisplayMode desktopMode;
 	int display = 0;
 	int x = 0, y = 0;
+	char windowTitle[128];
 
 	ri.Printf( PRINT_ALL, "Initializing OpenGL display\n");
+
+	ri.Cvar_VariableStringBuffer("com_productName", windowTitle, sizeof (windowTitle));
 
 	if ( r_allowResize->integer )
 		flags |= SDL_WINDOW_RESIZABLE;
@@ -237,13 +237,19 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 
 	if( SDL_GetDesktopDisplayMode( display, &desktopMode ) == 0 )
 	{
-		float displayAspect = (float)desktopMode.w / (float)desktopMode.h;
+		glConfig.displayWidth = desktopMode.w;
+		glConfig.displayHeight = desktopMode.h;
+		glConfig.displayAspect = (float)desktopMode.w / (float)desktopMode.h;
 
-		ri.Printf( PRINT_ALL, "Display aspect: %.3f\n", displayAspect );
+		ri.Printf( PRINT_ALL, "Display aspect: %.3f\n", glConfig.displayAspect );
 	}
 	else
 	{
 		Com_Memset( &desktopMode, 0, sizeof( SDL_DisplayMode ) );
+
+		glConfig.displayWidth = 640;
+		glConfig.displayHeight = 480;
+		glConfig.displayAspect = 1.333f;
 
 		ri.Printf( PRINT_ALL,
 				"Cannot determine display aspect, assuming 1.333\n" );
@@ -420,9 +426,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 		if( !r_allowSoftwareGL->integer )
 			SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
 
-		cvar_t *com_productName = ri.Cvar_Get("com_productName", PRODUCT_NAME, CVAR_ROM);
-
-		if( ( SDL_window = SDL_CreateWindow( com_productName->string, x, y,
+		if( ( SDL_window = SDL_CreateWindow( windowTitle, x, y,
 				glConfig.vidWidth, glConfig.vidHeight, flags ) ) == 0 )
 		{
 			ri.Printf( PRINT_DEVELOPER, "SDL_CreateWindow failed: %s\n", SDL_GetError( ) );
@@ -452,7 +456,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 			}
 		}
 
-		SDL_SetWindowTitle( SDL_window, com_productName->string );
+		SDL_SetWindowTitle( SDL_window, windowTitle );
 		SDL_SetWindowIcon( SDL_window, icon );
 
 		if( ( SDL_glContext = SDL_GL_CreateContext( SDL_window ) ) == NULL )
@@ -460,8 +464,6 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 			ri.Printf( PRINT_DEVELOPER, "SDL_GL_CreateContext failed: %s\n", SDL_GetError( ) );
 			continue;
 		}
-
-		SDL_ShowCursor(0);
 
 		if( SDL_GL_MakeCurrent( SDL_window, SDL_glContext ) < 0 )
 		{
@@ -738,9 +740,6 @@ void GLimp_Init( void )
 	if( ri.Cvar_VariableIntegerValue( "com_abnormalExit" ) )
 	{
 		ri.Cvar_Set( "r_mode", va( "%d", R_MODE_FALLBACK ) );
-		ri.Cvar_Set( "r_picmap", "1" );
-		ri.Cvar_Set( "r_texturebits", "0" );
-		ri.Cvar_Set( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST" );
 		ri.Cvar_Set( "r_fullscreen", "0" );
 		ri.Cvar_Set( "r_centerWindow", "0" );
 		ri.Cvar_Set( "com_abnormalExit", "0" );
@@ -846,4 +845,3 @@ void GLimp_EndFrame( void )
 		r_fullscreen->modified = qfalse;
 	}
 }
-

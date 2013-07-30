@@ -30,16 +30,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // cmdlib.c
 
+#include "qbsp.h"
 #include "l_cmd.h"
 #include "l_log.h"
 #include "l_mem.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
-
-#ifndef SIN
-#define SIN
-#endif //SIN
 
 #if defined(WIN32) || defined(_WIN32)
 #include <direct.h>
@@ -190,11 +187,11 @@ void Error (char *error, ...)
 	char	text[1024];
 
 	va_start(argptr, error);
-	vsprintf(text, error, argptr);
+	Q_vsnprintf(text, sizeof (text), error, argptr);
 	va_end(argptr);
 	printf("ERROR: %s\n", text);
 
-	Log_Write(text);
+	Log_Write("%s", text);
 	Log_Close();
 
 	exit (1);
@@ -206,11 +203,11 @@ void Warning(char *warning, ...)
 	char text[1024];
 
 	va_start(argptr, warning);
-	vsprintf(text, warning, argptr);
+	Q_vsnprintf(text, sizeof (text), warning, argptr);
 	va_end(argptr);
 	printf("WARNING: %s\n", text);
 
-	Log_Write(text);
+	Log_Write("%s", text);
 } //end of the function Warning
 
 #endif
@@ -238,26 +235,26 @@ void qprintf(char *format, ...)
 	va_end(argptr);
 } //end of the function qprintf
 
-void Com_Error(int level, char *error, ...)
+__attribute__ ((format (printf, 2, 3))) void Com_Error(int level, char *error, ...)
 {
 	va_list argptr;
 	char text[1024];
 
 	va_start(argptr, error);
-	vsprintf(text, error, argptr);
+	Q_vsnprintf(text, sizeof (text), error, argptr);
 	va_end(argptr);
-	Error(text);
+	Error("%s", text);
 } //end of the funcion Com_Error
 
-void Com_Printf( const char *fmt, ... )
+__attribute__ ((format (printf, 1, 2))) void Com_Printf( const char *fmt, ... )
 {
 	va_list argptr;
 	char text[1024];
 
 	va_start(argptr, fmt);
-	vsprintf(text, fmt, argptr);
+	Q_vsnprintf(text, sizeof (text), fmt, argptr);
 	va_end(argptr);
-	Log_Print(text);
+	Log_Print("%s", text);
 } //end of the funcion Com_Printf
 
 /*
@@ -414,7 +411,7 @@ void Q_mkdir (char *path)
 	if (_mkdir (path) != -1)
 		return;
 #else
-	if (mkdir (path, 0777) != -1)
+	if (mkdir (path, 0750) != -1)
 		return;
 #endif
 	if (errno != EEXIST)
@@ -990,41 +987,6 @@ float	BigFloat (float l)
 	return l;
 }
 
-#ifdef SIN
-unsigned short   LittleUnsignedShort (unsigned short l)
-{
-	byte    b1,b2;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-
-	return (b1<<8) + b2;
-}
-
-unsigned short   BigUnsignedShort (unsigned short l)
-{
-	return l;
-}
-
-unsigned    LittleUnsigned (unsigned l)
-{
-	byte    b1,b2,b3,b4;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-	b3 = (l>>16)&255;
-	b4 = (l>>24)&255;
-
-	return ((unsigned)b1<<24) + ((unsigned)b2<<16) + ((unsigned)b3<<8) + b4;
-}
-
-unsigned    BigUnsigned (unsigned l)
-{
-	return l;
-}
-#endif
-
-
 #else
 
 
@@ -1078,42 +1040,6 @@ float	LittleFloat (float l)
 {
 	return l;
 }
-
-#ifdef SIN
-unsigned short   BigUnsignedShort (unsigned short l)
-{
-	byte    b1,b2;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-
-	return (b1<<8) + b2;
-}
-
-unsigned short   LittleUnsignedShort (unsigned short l)
-{
-	return l;
-}
-
-
-unsigned    BigUnsigned (unsigned l)
-{
-	byte    b1,b2,b3,b4;
-
-	b1 = l&255;
-	b2 = (l>>8)&255;
-	b3 = (l>>16)&255;
-	b4 = (l>>24)&255;
-
-	return ((unsigned)b1<<24) + ((unsigned)b2<<16) + ((unsigned)b3<<8) + b4;
-}
-
-unsigned    LittleUnsigned (unsigned l)
-{
-	return l;
-}
-#endif
-
 
 #endif
 

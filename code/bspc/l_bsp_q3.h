@@ -29,7 +29,17 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 
 #include "q3files.h"
-//#include "surfaceflags.h"
+#include "../qcommon/surfaceflags.h"
+
+/*
+#define	CONTENTS_SOLID			1		// an eye is never valid in a solid
+#define	CONTENTS_LAVA			8
+#define	CONTENTS_SLIME			16
+#define	CONTENTS_WATER			32
+#define	CONTENTS_FOG			64
+*/
+
+#define Q3_LAST_VISIBLE_CONTENTS   64
 
 extern	int				q3_nummodels;
 extern	q3_dmodel_t		*q3_dmodels;//[MAX_MAP_MODELS];
@@ -85,5 +95,6 @@ extern	q3_dfog_t		*q3_dfogs;//[Q3_MAX_MAP_FOGS];
 extern	char			q3_dbrushsidetextured[Q3_MAX_MAP_BRUSHSIDES];
 
 void Q3_LoadBSPFile(struct quakefile_s *qf);
+void Q3_ResetMapLoading(void);
 void Q3_FreeMaxBSP(void);
 void Q3_ParseEntities (void);

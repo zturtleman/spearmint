@@ -43,6 +43,8 @@ DISPLAY OPTIONS MENU
 #define ART_FRAMER			"menu/art/frame1_r"
 #define ART_BACK0			"menu/art/back_0"
 #define ART_BACK1			"menu/art/back_1"
+#define ART_ACCEPT0			"menu/art/accept_0"
+#define ART_ACCEPT1			"menu/art/accept_1"
 
 #define ID_GRAPHICS			10
 #define ID_DISPLAY			11
@@ -51,6 +53,9 @@ DISPLAY OPTIONS MENU
 #define ID_BRIGHTNESS		14
 #define ID_SCREENSIZE		15
 #define ID_BACK				16
+#define ID_APPLY			17
+#define ID_ANAGLYPH			18
+#define ID_GREYSCALE		19
 
 
 typedef struct {
@@ -67,8 +72,13 @@ typedef struct {
 
 	menuslider_s	brightness;
 	menuslider_s	screensize;
+	menulist_s		anaglyph;
+	menulist_s		greyscale;
 
 	menubitmap_s	back;
+	menubitmap_s	apply;
+
+	int				greyscale_default;
 } displayOptionsInfo_t;
 
 static displayOptionsInfo_t	displayOptionsInfo;
@@ -111,12 +121,53 @@ static void UI_DisplayOptionsMenu_Event( void* ptr, int event ) {
 		trap_Cvar_SetValue( "cg_viewsize", displayOptionsInfo.screensize.curvalue * 10 );
 		break;
 
+	case ID_ANAGLYPH:
+		trap_Cvar_SetValue( "r_anaglyphMode", displayOptionsInfo.anaglyph.curvalue );
+		break;
+
+	case ID_GREYSCALE:
+		break;
+
+	case ID_APPLY:
+		trap_Cvar_SetValue( "r_greyscale", displayOptionsInfo.greyscale.curvalue );
+
+		UI_ForceMenuOff();
+		trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
+		break;
+
 	case ID_BACK:
 		UI_PopMenu();
 		break;
 	}
 }
 
+/*
+=================
+DisplayOptions_UpdateMenuItems
+=================
+*/
+static void DisplayOptions_UpdateMenuItems( void )
+{
+	displayOptionsInfo.apply.generic.flags |= QMF_HIDDEN|QMF_INACTIVE;
+
+	if ( displayOptionsInfo.greyscale_default != displayOptionsInfo.greyscale.curvalue )
+	{
+		displayOptionsInfo.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+	}
+}
+
+/*
+================
+DisplayOptions_MenuDraw
+================
+*/
+void DisplayOptions_MenuDraw (void)
+{
+//APSFIX - rework this
+	DisplayOptions_UpdateMenuItems();
+
+	Menu_Draw( &displayOptionsInfo.menu );
+}
 
 /*
 ===============
@@ -126,18 +177,42 @@ UI_DisplayOptionsMenu_Init
 static void UI_DisplayOptionsMenu_Init( void ) {
 	int		y;
 
+	static const char *anaglyph_names[] =
+	{
+		"Off",
+		"red-cyan",
+		"red-blue",
+		"red-green",
+		"green-magenta",
+		"cyan-red",
+		"blue-red",
+		"green-red",
+		"magenta-green",
+		NULL
+	};
+
+	const int numAnaglyphModes = ARRAY_LEN(anaglyph_names) - 2;
+
+	static const char *offOn_names[] =
+	{
+		"Off",
+		"On",
+		NULL
+	};
+
 	memset( &displayOptionsInfo, 0, sizeof(displayOptionsInfo) );
 
 	UI_DisplayOptionsMenu_Cache();
 	displayOptionsInfo.menu.wrapAround = qtrue;
 	displayOptionsInfo.menu.fullscreen = qtrue;
+	displayOptionsInfo.menu.draw		= DisplayOptions_MenuDraw;
 
 	displayOptionsInfo.banner.generic.type		= MTYPE_BTEXT;
 	displayOptionsInfo.banner.generic.flags		= QMF_CENTER_JUSTIFY;
 	displayOptionsInfo.banner.generic.x			= 320;
 	displayOptionsInfo.banner.generic.y			= 16;
 	displayOptionsInfo.banner.string			= "SYSTEM SETUP";
-	displayOptionsInfo.banner.color				= color_white;
+	displayOptionsInfo.banner.color				= text_banner_color;
 	displayOptionsInfo.banner.style				= UI_CENTER;
 
 	displayOptionsInfo.framel.generic.type		= MTYPE_BITMAP;
@@ -164,7 +239,7 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.graphics.generic.y			= 240 - 2 * PROP_HEIGHT;
 	displayOptionsInfo.graphics.string				= "GRAPHICS";
 	displayOptionsInfo.graphics.style				= UI_RIGHT;
-	displayOptionsInfo.graphics.color				= color_red;
+	displayOptionsInfo.graphics.color				= text_big_color;
 
 	displayOptionsInfo.display.generic.type			= MTYPE_PTEXT;
 	displayOptionsInfo.display.generic.flags		= QMF_RIGHT_JUSTIFY;
@@ -174,7 +249,7 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.display.generic.y			= 240 - PROP_HEIGHT;
 	displayOptionsInfo.display.string				= "DISPLAY";
 	displayOptionsInfo.display.style				= UI_RIGHT;
-	displayOptionsInfo.display.color				= color_red;
+	displayOptionsInfo.display.color				= text_big_color;
 
 	displayOptionsInfo.sound.generic.type			= MTYPE_PTEXT;
 	displayOptionsInfo.sound.generic.flags			= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -184,7 +259,7 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.sound.generic.y				= 240;
 	displayOptionsInfo.sound.string					= "SOUND";
 	displayOptionsInfo.sound.style					= UI_RIGHT;
-	displayOptionsInfo.sound.color					= color_red;
+	displayOptionsInfo.sound.color					= text_big_color;
 
 	displayOptionsInfo.network.generic.type			= MTYPE_PTEXT;
 	displayOptionsInfo.network.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -194,9 +269,9 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.network.generic.y			= 240 + PROP_HEIGHT;
 	displayOptionsInfo.network.string				= "NETWORK";
 	displayOptionsInfo.network.style				= UI_RIGHT;
-	displayOptionsInfo.network.color				= color_red;
+	displayOptionsInfo.network.color				= text_big_color;
 
-	y = 240 - 1 * (BIGCHAR_HEIGHT+2);
+	y = 240 - 2 * (BIGCHAR_HEIGHT+2);
 	displayOptionsInfo.brightness.generic.type		= MTYPE_SLIDER;
 	displayOptionsInfo.brightness.generic.name		= "Brightness:";
 	displayOptionsInfo.brightness.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
@@ -221,6 +296,28 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.screensize.minvalue			= 3;
     displayOptionsInfo.screensize.maxvalue			= 10;
 
+	y += BIGCHAR_HEIGHT+2;
+	// references/modifies "r_anaglyphMode"
+	displayOptionsInfo.anaglyph.generic.type		= MTYPE_SPINCONTROL;
+	displayOptionsInfo.anaglyph.generic.name		= "Anaglyph:";
+	displayOptionsInfo.anaglyph.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	displayOptionsInfo.anaglyph.generic.callback	= UI_DisplayOptionsMenu_Event;
+	displayOptionsInfo.anaglyph.generic.id			= ID_ANAGLYPH;
+	displayOptionsInfo.anaglyph.generic.x			= 400;
+	displayOptionsInfo.anaglyph.generic.y			= y;
+	displayOptionsInfo.anaglyph.itemnames     		= anaglyph_names;
+
+	y += BIGCHAR_HEIGHT+2;
+	// references/modifies "r_greyscale"
+	displayOptionsInfo.greyscale.generic.type		= MTYPE_SPINCONTROL;
+	displayOptionsInfo.greyscale.generic.name		= "Grey Scale:";
+	displayOptionsInfo.greyscale.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	displayOptionsInfo.greyscale.generic.callback	= UI_DisplayOptionsMenu_Event;
+	displayOptionsInfo.greyscale.generic.id			= ID_GREYSCALE;
+	displayOptionsInfo.greyscale.generic.x			= 400;
+	displayOptionsInfo.greyscale.generic.y			= y;
+	displayOptionsInfo.greyscale.itemnames     		= offOn_names;
+
 	displayOptionsInfo.back.generic.type		= MTYPE_BITMAP;
 	displayOptionsInfo.back.generic.name		= ART_BACK0;
 	displayOptionsInfo.back.generic.flags		= QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -232,6 +329,17 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.back.height				= 64;
 	displayOptionsInfo.back.focuspic			= ART_BACK1;
 
+	displayOptionsInfo.apply.generic.type		= MTYPE_BITMAP;
+	displayOptionsInfo.apply.generic.name		= ART_ACCEPT0;
+	displayOptionsInfo.apply.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_HIDDEN|QMF_INACTIVE;
+	displayOptionsInfo.apply.generic.callback	= UI_DisplayOptionsMenu_Event;
+	displayOptionsInfo.apply.generic.id			= ID_APPLY;
+	displayOptionsInfo.apply.generic.x			= 640;
+	displayOptionsInfo.apply.generic.y			= 480-64;
+	displayOptionsInfo.apply.width				= 128;
+	displayOptionsInfo.apply.height				= 64;
+	displayOptionsInfo.apply.focuspic			= ART_ACCEPT1;
+
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.banner );
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.framel );
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.framer );
@@ -241,10 +349,21 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.network );
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.brightness );
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.screensize );
+	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.anaglyph );
+	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.greyscale );
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.back );
+	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.apply );
 
 	displayOptionsInfo.brightness.curvalue  = trap_Cvar_VariableValue("r_gamma") * 10;
 	displayOptionsInfo.screensize.curvalue  = trap_Cvar_VariableValue( "cg_viewsize")/10;
+	displayOptionsInfo.anaglyph.curvalue    = trap_Cvar_VariableValue("r_anaglyphMode");
+	if (displayOptionsInfo.anaglyph.curvalue < 0)
+		displayOptionsInfo.anaglyph.curvalue = 0;
+	else if (displayOptionsInfo.anaglyph.curvalue > numAnaglyphModes)
+		displayOptionsInfo.anaglyph.curvalue = numAnaglyphModes;
+
+	displayOptionsInfo.greyscale.curvalue = displayOptionsInfo.greyscale_default
+			= (trap_Cvar_VariableValue( "r_greyscale") != 0);
 }
 
 

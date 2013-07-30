@@ -152,7 +152,7 @@ float R_ProcessLightmap( byte **pic, int in_padding, int width, int height, byte
 			float g = ( *pic )[j * in_padding + 1];
 			float b = ( *pic )[j * in_padding + 2];
 			float intensity;
-			float out[3];
+			float out[3] = {0.0, 0.0, 0.0};
 
 			intensity = 0.33f * r + 0.685f * g + 0.063f * b;
 
@@ -456,6 +456,7 @@ static void ParseMesh( dsurface_t *ds, drawVert_t *verts, msurface_t *surf ) {
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	// we may have a nodraw surface, because they might still need to
 	// be around for movement clipping
@@ -529,6 +530,7 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, i
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	numVerts = LittleLong( ds->numVerts );
 	numIndexes = LittleLong( ds->numIndexes );
@@ -601,6 +603,7 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, i
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	// foliage surfaces have their actual vert count in patchHeight
 	// and the instance count in patchWidth
@@ -629,7 +632,7 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, i
 	foliage->normal = ( vec4_t* )( foliage->xyz + foliage->numVerts );
 	foliage->texCoords = ( vec2_t* )( foliage->normal + foliage->numVerts );
 	foliage->lmTexCoords = ( vec2_t* )( foliage->texCoords + foliage->numVerts );
-	foliage->indexes = ( glIndex_t* )( foliage->lmTexCoords + foliage->numVerts );
+	foliage->indexes = ( int* )( foliage->lmTexCoords + foliage->numVerts );
 	foliage->instances = ( foliageInstance_t* )( foliage->indexes + foliage->numIndexes );
 
 	surf->data = (surfaceType_t*) foliage;
@@ -719,6 +722,7 @@ static void ParseFlare( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	flare = ri.Hunk_Alloc( sizeof( *flare ), h_low );
 	flare->surfaceType = SF_FLARE;
@@ -2133,7 +2137,7 @@ void RE_LoadWorldMap( const char *name ) {
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
 	}
 
-	tr.worldDir = ri.Malloc(strlen(name)+1);
+	tr.worldDir = ri.Hunk_Alloc( strlen(name)+1, h_low );
 	COM_StripExtension(name, tr.worldDir, strlen(name)+1);
 
 	// clear tr.world so if the level fails to load, the next
@@ -2189,6 +2193,8 @@ void RE_LoadWorldMap( const char *name ) {
 		tr.globalFogDepthForOpaque = tr.world->fogs[tr.world->globalFog].shader->fogParms.depthForOpaque;
 		tr.globalFogDensity = tr.world->fogs[tr.world->globalFog].shader->fogParms.density;
 	}
+
+	R_InitExternalShaders();
 
     ri.FS_FreeFile( buffer.v );
 }

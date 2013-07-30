@@ -70,57 +70,6 @@ int c_peak_totalbspmemory;
 #define	PLANESIDE_EPSILON	0.001
 //0.1
 
-//#ifdef DEBUG
-typedef struct cname_s
-{
-	int value;
-	char *name;
-} cname_t;
-
-cname_t contentnames[] =
-{
-	{CONTENTS_SOLID,"CONTENTS_SOLID"},
-	{CONTENTS_WINDOW,"CONTENTS_WINDOW"},
-	{CONTENTS_AUX,"CONTENTS_AUX"},
-	{CONTENTS_LAVA,"CONTENTS_LAVA"},
-	{CONTENTS_SLIME,"CONTENTS_SLIME"},
-	{CONTENTS_WATER,"CONTENTS_WATER"},
-	{CONTENTS_MIST,"CONTENTS_MIST"},
-	{LAST_VISIBLE_CONTENTS,"LAST_VISIBLE_CONTENTS"},
-
-	{CONTENTS_AREAPORTAL,"CONTENTS_AREAPORTAL"},
-	{CONTENTS_PLAYERCLIP,"CONTENTS_PLAYERCLIP"},
-	{CONTENTS_MONSTERCLIP,"CONTENTS_MONSTERCLIP"},
-	{CONTENTS_CURRENT_0,"CONTENTS_CURRENT_0"},
-	{CONTENTS_CURRENT_90,"CONTENTS_CURRENT_90"},
-	{CONTENTS_CURRENT_180,"CONTENTS_CURRENT_180"},
-	{CONTENTS_CURRENT_270,"CONTENTS_CURRENT_270"},
-	{CONTENTS_CURRENT_UP,"CONTENTS_CURRENT_UP"},
-	{CONTENTS_CURRENT_DOWN,"CONTENTS_CURRENT_DOWN"},
-	{CONTENTS_ORIGIN,"CONTENTS_ORIGIN"},
-	{CONTENTS_MONSTER,"CONTENTS_MONSTER"},
-	{CONTENTS_DEADMONSTER,"CONTENTS_DEADMONSTER"},
-	{CONTENTS_DETAIL,"CONTENTS_DETAIL"},
-	{CONTENTS_Q2TRANSLUCENT,"CONTENTS_TRANSLUCENT"},
-	{CONTENTS_LADDER,"CONTENTS_LADDER"},
-	{0, 0}
-};
-
-void PrintContents(int contents)
-{
-	int i;
-
-	for (i = 0; contentnames[i].value; i++)
-	{
-		if (contents & contentnames[i].value)
-		{
-			Log_Write("%s,", contentnames[i].name);
-		} //end if
-	} //end for
-} //end of the function PrintContents
-
-//#endif DEBUG
-
 //===========================================================================
 //
 // Parameter:			-
@@ -165,29 +114,27 @@ void FindBrushInTree (node_t *node, int brushnum)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void DrawBrushList (bspbrush_t *brush, node_t *node)
+void OutputWinding (winding_t *w, FILE *glview)
 {
-	int		i;
-	side_t	*s;
+	static	int	level = 128;
+	vec_t		light;
+	int			i;
 
-	GLS_BeginScene ();
-	for ( ; brush ; brush=brush->next)
+	fprintf (glview, "%i\n", w->numpoints);
+	level+=28;
+	light = (level&255)/255.0;
+	for (i=0 ; i<w->numpoints ; i++)
 	{
-		for (i=0 ; i<brush->numsides ; i++)
-		{
-			s = &brush->sides[i];
-			if (!s->winding)
-				continue;
-			if (s->texinfo == TEXINFO_NODE)
-				GLS_Winding (s->winding, 1);
-			else if (!(s->flags & SFL_VISIBLE))
-				GLS_Winding (s->winding, 2);
-			else
-				GLS_Winding (s->winding, 0);
-		}
+		fprintf (glview, "%6.3f %6.3f %6.3f %6.3f %6.3f %6.3f\n",
+			w->p[i][0],
+			w->p[i][1],
+			w->p[i][2],
+			light,
+			light,
+			light);
 	}
-	GLS_EndScene ();
-} //end of the function DrawBrushList
+	fprintf (glview, "\n");
+} //end of the function OutputWinding
 //===========================================================================
 //
 // Parameter:			-
@@ -432,7 +379,6 @@ bspbrush_t *AllocBrush (int numsides)
 	bspbrush_t	*bb;
 	int			c;
 
-	// ZTM: int to size_t
 	c = (size_t)&(((bspbrush_t *)0)->sides[numsides]);
 	bb = GetMemory(c);
 	memset (bb, 0, c);
@@ -496,7 +442,6 @@ bspbrush_t *CopyBrush (bspbrush_t *brush)
 	int			size;
 	int			i;
 
-	// ZTM: int to size_t
 	size = (size_t)&(((bspbrush_t *)0)->sides[brush->numsides]);
 
 	newbrush = AllocBrush (brush->numsides);
@@ -666,7 +611,6 @@ int QuickTestBrushToPlanenum (bspbrush_t *brush, int planenum, int *numsplits)
 
 	plane = &mapplanes[planenum];
 
-#ifdef ME
 	//fast axial cases
 	if (plane->type < 3)
 	{
@@ -675,7 +619,6 @@ int QuickTestBrushToPlanenum (bspbrush_t *brush, int planenum, int *numsplits)
 		if (plane->dist - PLANESIDE_EPSILON > brush->maxs[plane->type])
 			return PSIDE_BACK;
 	} //end if
-#endif //ME*/
 
 	// if the brush actually uses the planenum,
 	// we can tell the side for sure
@@ -725,7 +668,6 @@ int TestBrushToPlanenum (bspbrush_t *brush, int planenum,
 
 	plane = &mapplanes[planenum];
 
-#ifdef ME
 	//fast axial cases
 	type = plane->type;
 	if (type < 3)
@@ -738,7 +680,6 @@ int TestBrushToPlanenum (bspbrush_t *brush, int planenum,
 	} //end if
 
 	if (s != PSIDE_BOTH)
-#endif //ME
 	{
 		// if the brush actually uses the planenum,
 		// we can tell the side for sure
@@ -1460,9 +1401,6 @@ node_t *BuildTree_r (node_t *node, bspbrush_t *brushes)
 		c_nodes++;
 	} //endif
 
-	if (drawflag)
-		DrawBrushList(brushes, node);
-
 	// find the best plane to use as a splitter
 	bestside = SelectSplitSide (brushes, node);
 	if (!bestside)
@@ -1648,11 +1586,6 @@ void BuildTreeThread(int threadid)
 			} //end if
 			c_nodes++;
 		} //endif
-
-		if (drawflag)
-		{
-			DrawBrushList(brushes, node);
-		} //end if
 
 		if (cancelconversion)
 		{

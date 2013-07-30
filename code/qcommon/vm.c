@@ -443,16 +443,21 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 		return NULL;
 	}
 
-	// round up to next power of 2 so all data operations can
-	// be mask protected
-	vm->dataAlloc = vm->dataLength = dataLength = header.h->dataLength + header.h->litLength +
+	// find size of the data
+	dataLength = header.h->dataLength + header.h->litLength +
 		header.h->bssLength;
+
+	// the stack is implicitly at the end of the image
+	vm->dataAlloc = vm->dataLength = dataLength - PROGRAM_STACK_SIZE;
+
+	// reserve additional data for dynamic memory allocation via trap_Alloc
+	dataLength += vm_minQvmHunkKB->integer * 1024;
+
+	// round up to next power of 2 so all data operations can
+	// be mask protected, extra data is used for dynamic memory allocation
 	for ( i = 0 ; dataLength > ( 1 << i ) ; i++ ) {
 	}
 	dataLength = 1 << i;
-
-	if ( dataLength - vm->dataLength < vm_minQvmHunkKB->integer * 1024 )
-		dataLength <<= 1;
 
 	if(alloc)
 	{
@@ -1020,8 +1025,8 @@ void VM_VmInfo_f( void ) {
 		Com_Printf( "    table length: %7i\n", vm->instructionCount*4 );
 		Com_Printf( "    data length : %7i\n", vm->dataMask + 1 );
 		Com_Printf( "    trap_Alloc info:\n" );
-		Com_Printf( "      total memory: %7i\n", vm->dataMask + 1 - vm->dataLength );
-		Com_Printf( "      free memory : %7i\n", vm->dataMask + 1 - vm->dataAlloc );
+		Com_Printf( "      total memory: %7i\n", vm->stackBottom - vm->dataLength );
+		Com_Printf( "      free memory : %7i\n", vm->stackBottom - vm->dataAlloc );
 		Com_Printf( "      used memory : %7i\n", vm->dataAlloc - vm->dataLength );
 	}
 }
@@ -1074,14 +1079,18 @@ QVM_Alloc
 */
 unsigned int QVM_Alloc( vm_t *vm, int size ) {
 	unsigned int pointer;
+	int allocSize;
 
-	if ( vm->dataAlloc + size > vm->dataMask+1 ) {
+	// need to align addresses for qvm?
+	allocSize = ( size + 31 ) & ~31;
+
+	if ( vm->dataAlloc + allocSize > vm->stackBottom ) {
 		Com_Error( ERR_DROP, "QVM_Alloc: %s failed on allocation of %i bytes", vm->name, size );
 		return 0;
 	}
 
 	pointer = vm->dataAlloc;
-	vm->dataAlloc += size;
+	vm->dataAlloc += allocSize;
 
 	// only needed if it's possible to free memory, dataBase is set to 0s on QVM load.
 	//Com_Memset( vm->dataBase + pointer, 0, size );

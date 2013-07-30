@@ -115,7 +115,7 @@ FBO_t          *FBO_Create(const char *name, int width, int height)
 
 	if(strlen(name) >= MAX_QPATH)
 	{
-		ri.Error(ERR_DROP, "FBO_Create: \"%s\" is too long\n", name);
+		ri.Error(ERR_DROP, "FBO_Create: \"%s\" is too long", name);
 	}
 
 	if(width <= 0 || width > glRefConfig.maxRenderbufferSize)
@@ -775,11 +775,11 @@ void FBO_BlitFromTexture(struct image_s *src, vec4i_t inSrcBox, vec2_t inSrcTexS
 
 	GLSL_BindProgram(shaderProgram);
 	
-	GLSL_SetUniformMatrix16(shaderProgram, TEXTURECOLOR_UNIFORM_MODELVIEWPROJECTIONMATRIX, projection);
-	GLSL_SetUniformVec4(shaderProgram, TEXTURECOLOR_UNIFORM_COLOR, color);
-	GLSL_SetUniformVec2(shaderProgram, TEXTURECOLOR_UNIFORM_INVTEXRES, invTexRes);
-	GLSL_SetUniformVec2(shaderProgram, TEXTURECOLOR_UNIFORM_AUTOEXPOSUREMINMAX, tr.refdef.autoExposureMinMax);
-	GLSL_SetUniformVec3(shaderProgram, TEXTURECOLOR_UNIFORM_TONEMINAVGMAXLINEAR, tr.refdef.toneMinAvgMaxLinear);
+	GLSL_SetUniformMatrix16(shaderProgram, UNIFORM_MODELVIEWPROJECTIONMATRIX, projection);
+	GLSL_SetUniformVec4(shaderProgram, UNIFORM_COLOR, color);
+	GLSL_SetUniformVec2(shaderProgram, UNIFORM_INVTEXRES, invTexRes);
+	GLSL_SetUniformVec2(shaderProgram, UNIFORM_AUTOEXPOSUREMINMAX, tr.refdef.autoExposureMinMax);
+	GLSL_SetUniformVec3(shaderProgram, UNIFORM_TONEMINAVGMAXLINEAR, tr.refdef.toneMinAvgMaxLinear);
 
 	RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
 

@@ -34,7 +34,7 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  * desc:		Quake3 bot AI
  *
- * $Archive: /source/code/botai/ai_vcmd.c $
+ * $Archive: /source/code/game/ai_vcmd.c $
  *
  *****************************************************************************/
 

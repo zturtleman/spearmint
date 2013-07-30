@@ -122,7 +122,7 @@ void SpecifyServer_MenuInit( void )
 	s_specifyserver.banner.generic.x     = 320;
 	s_specifyserver.banner.generic.y     = 16;
 	s_specifyserver.banner.string		 = "SPECIFY SERVER";
-	s_specifyserver.banner.color  		 = color_white;
+	s_specifyserver.banner.color  		 = text_banner_color;
 	s_specifyserver.banner.style  		 = UI_CENTER;
 
 	s_specifyserver.framel.generic.type  = MTYPE_BITMAP;

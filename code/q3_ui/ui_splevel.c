@@ -79,15 +79,17 @@ SINGLE PLAYER LEVEL SELECT MENU
 #define PLAYER_Y			314
 #define AWARDS_Y			(PLAYER_Y + 26)
 
+#define MAX_UI_AWARDS		6
+
 
 typedef struct {
 	menuframework_s	menu;
 	menutext_s		item_banner;
 	menubitmap_s	item_leftarrow;
-	menubitmap_s	item_maps[4];
+	menubitmap_s	item_maps[ARENAS_PER_TIER];
 	menubitmap_s	item_rightarrow;
 	menubitmap_s	item_player;
-	menubitmap_s	item_awards[6];
+	menubitmap_s	item_awards[MAX_UI_AWARDS];
 	menubitmap_s	item_back;
 	menubitmap_s	item_reset;
 	menubitmap_s	item_custom;
@@ -98,18 +100,18 @@ typedef struct {
 
 	const char *	selectedArenaInfo;
 	int				numMaps;
-	char			levelPicNames[4][MAX_QPATH];
-	char			levelNames[4][16];
-	int				levelScores[4];
-	int				levelScoresSkill[4];
+	char			levelPicNames[ARENAS_PER_TIER][MAX_QPATH];
+	char			levelNames[ARENAS_PER_TIER][16];
+	int				levelScores[ARENAS_PER_TIER];
+	int				levelScoresSkill[ARENAS_PER_TIER];
 	qhandle_t		levelSelectedPic;
 	qhandle_t		levelFocusPic;
 	qhandle_t		levelCompletePic[5];
 
 	char			playerModel[MAX_QPATH];
 	char			playerPicName[MAX_QPATH];
-	int				awardLevels[6];
-	sfxHandle_t		awardSounds[6];
+	int				awardLevels[MAX_UI_AWARDS];
+	sfxHandle_t		awardSounds[MAX_UI_AWARDS];
 
 	int				numBots;
 	qhandle_t		botPics[7];
@@ -290,15 +292,11 @@ static void UI_SPLevelMenu_SetMenuItems( void ) {
 		levelMenuInfo.item_maps[0].generic.bottom += 32;
 		levelMenuInfo.numMaps = 1;
 
-		levelMenuInfo.item_maps[1].generic.flags |= QMF_INACTIVE;
-		levelMenuInfo.item_maps[2].generic.flags |= QMF_INACTIVE;
-		levelMenuInfo.item_maps[3].generic.flags |= QMF_INACTIVE;
-		levelMenuInfo.levelPicNames[1][0] = 0;
-		levelMenuInfo.levelPicNames[2][0] = 0;
-		levelMenuInfo.levelPicNames[3][0] = 0;
-		levelMenuInfo.item_maps[1].shader = 0;
-		levelMenuInfo.item_maps[2].shader = 0;
-		levelMenuInfo.item_maps[3].shader = 0;
+		for ( n = 1; n < ARENAS_PER_TIER; n++ ) {
+			levelMenuInfo.item_maps[n].generic.flags |= QMF_INACTIVE;
+			levelMenuInfo.levelPicNames[n][0] = 0;
+			levelMenuInfo.item_maps[n].shader = 0;
+		}
 	}
 	else if( selectedArenaSet == finalTier ) {
 		arenaInfo = UI_GetSpecialArenaInfo( "final" );
@@ -311,23 +309,19 @@ static void UI_SPLevelMenu_SetMenuItems( void ) {
 		levelMenuInfo.item_maps[0].generic.bottom += 32;
 		levelMenuInfo.numMaps = 1;
 
-		levelMenuInfo.item_maps[1].generic.flags |= QMF_INACTIVE;
-		levelMenuInfo.item_maps[2].generic.flags |= QMF_INACTIVE;
-		levelMenuInfo.item_maps[3].generic.flags |= QMF_INACTIVE;
-		levelMenuInfo.levelPicNames[1][0] = 0;
-		levelMenuInfo.levelPicNames[2][0] = 0;
-		levelMenuInfo.levelPicNames[3][0] = 0;
-		levelMenuInfo.item_maps[1].shader = 0;
-		levelMenuInfo.item_maps[2].shader = 0;
-		levelMenuInfo.item_maps[3].shader = 0;
+		for ( n = 1; n < ARENAS_PER_TIER; n++ ) {
+			levelMenuInfo.item_maps[n].generic.flags |= QMF_INACTIVE;
+			levelMenuInfo.levelPicNames[n][0] = 0;
+			levelMenuInfo.item_maps[n].shader = 0;
+		}
 	}
 	else {
 		levelMenuInfo.item_maps[0].generic.x = 46;
 		Bitmap_Init( &levelMenuInfo.item_maps[0] );
 		levelMenuInfo.item_maps[0].generic.bottom += 18;
-		levelMenuInfo.numMaps = 4;
+		levelMenuInfo.numMaps = ARENAS_PER_TIER;
 
-		for ( n = 0; n < 4; n++ ) {
+		for ( n = 0; n < ARENAS_PER_TIER; n++ ) {
 			level = selectedArenaSet * ARENAS_PER_TIER + n;
 			arenaInfo = UI_GetArenaInfoByNumber( level );
 			UI_SPLevelMenu_SetMenuArena( n, level, arenaInfo );
@@ -584,7 +578,7 @@ static void UI_SPLevelMenu_MenuDraw( void ) {
 	// draw player award levels
 	y = AWARDS_Y;
 	i = 0;
-	for( n = 0; n < 6; n++ ) {
+	for( n = 0; n < MAX_UI_AWARDS; n++ ) {
 		level = levelMenuInfo.awardLevels[n];
 		if( level > 0 ) {
 			if( i & 1 ) {
@@ -707,7 +701,7 @@ void UI_SPLevelMenu_Cache( void ) {
 	trap_R_RegisterShaderNoMip( ART_CUSTOM0 );
 	trap_R_RegisterShaderNoMip( ART_CUSTOM1 );
 
-	for( n = 0; n < 6; n++ ) {
+	for( n = 0; n < MAX_UI_AWARDS; n++ ) {
 		trap_R_RegisterShaderNoMip( ui_medalPicNames[n] );
 		levelMenuInfo.awardSounds[n] = trap_S_RegisterSound( ui_medalSounds[n], qfalse );
 	}
@@ -736,7 +730,7 @@ static void UI_SPLevelMenu_Init( void ) {
 
 	skill = (int)trap_Cvar_VariableValue( "g_spSkill" );
 	if( skill < 1 || skill > 5 ) {
-		trap_Cvar_Set( "g_spSkill", "2" );
+		trap_Cvar_SetValue( "g_spSkill", 2 );
 	}
 
 	memset( &levelMenuInfo, 0, sizeof(levelMenuInfo) );
@@ -750,7 +744,7 @@ static void UI_SPLevelMenu_Init( void ) {
 	levelMenuInfo.item_banner.generic.x				= 320;
 	levelMenuInfo.item_banner.generic.y				= 16;
 	levelMenuInfo.item_banner.string				= "CHOOSE LEVEL";
-	levelMenuInfo.item_banner.color					= color_red;
+	levelMenuInfo.item_banner.color					= text_banner_color;
 	levelMenuInfo.item_banner.style					= UI_CENTER;
 
 	levelMenuInfo.item_leftarrow.generic.type		= MTYPE_BITMAP;
@@ -827,14 +821,14 @@ static void UI_SPLevelMenu_Init( void ) {
 	levelMenuInfo.item_player.width					= 64;
 	levelMenuInfo.item_player.height				= 64;
 
-	for( n = 0; n < 6; n++ ) {
+	for( n = 0; n < MAX_UI_AWARDS; n++ ) {
 		levelMenuInfo.awardLevels[n] = UI_GetAwardLevel( n );
 	}
 	levelMenuInfo.awardLevels[AWARD_FRAGS] = 100 * (levelMenuInfo.awardLevels[AWARD_FRAGS] / 100);
 
 	y = AWARDS_Y;
 	count = 0;
-	for( n = 0; n < 6; n++ ) {
+	for( n = 0; n < MAX_UI_AWARDS; n++ ) {
 		if( levelMenuInfo.awardLevels[n] ) {
 			if( count & 1 ) {
 				x = 224 - (count - 1 ) / 2 * (48 + 16);
@@ -910,14 +904,10 @@ static void UI_SPLevelMenu_Init( void ) {
 	Menu_AddItem( &levelMenuInfo.menu, &levelMenuInfo.item_banner );
 
 	Menu_AddItem( &levelMenuInfo.menu, &levelMenuInfo.item_leftarrow );
-	Menu_AddItem( &levelMenuInfo.menu, &levelMenuInfo.item_maps[0] );
-	Menu_AddItem( &levelMenuInfo.menu, &levelMenuInfo.item_maps[1] );
-	Menu_AddItem( &levelMenuInfo.menu, &levelMenuInfo.item_maps[2] );
-	Menu_AddItem( &levelMenuInfo.menu, &levelMenuInfo.item_maps[3] );
-	levelMenuInfo.item_maps[0].generic.bottom += 18;
-	levelMenuInfo.item_maps[1].generic.bottom += 18;
-	levelMenuInfo.item_maps[2].generic.bottom += 18;
-	levelMenuInfo.item_maps[3].generic.bottom += 18;
+	for (n = 0; n < ARENAS_PER_TIER; n++) {
+		Menu_AddItem( &levelMenuInfo.menu, &levelMenuInfo.item_maps[n] );
+		levelMenuInfo.item_maps[n].generic.bottom += 18;
+	}
 	Menu_AddItem( &levelMenuInfo.menu, &levelMenuInfo.item_rightarrow );
 
 	Menu_AddItem( &levelMenuInfo.menu, &levelMenuInfo.item_player );

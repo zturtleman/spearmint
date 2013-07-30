@@ -40,14 +40,3 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // client only
 #define	CS_MESSAGE				3		// from the map worldspawn's message field
-
-// botlib only
-//NOTE: enum entityType_t in bg_misc.h
-//FIXME: these might change
-enum {
-	ET_GENERAL,
-	ET_PLAYER,
-	ET_ITEM,
-	ET_MISSILE,
-	ET_MOVER
-};

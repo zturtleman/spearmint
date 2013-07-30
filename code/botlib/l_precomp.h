@@ -152,7 +152,7 @@ void PC_SetIncludePath(source_t *source, char *path);
 //set the punction set
 void PC_SetPunctuations(source_t *source, punctuation_t *p);
 //set the base folder to load files from
-void PC_SetBaseFolder(char *path);
+void PC_SetBaseFolder(const char *path);
 //load a source file
 source_t *LoadSourceFile(const char *filename);
 //load a source from memory
@@ -181,7 +181,7 @@ typedef struct pc_token_s
 #endif //BSPC
 
 //
-int PC_LoadSourceHandle(const char *filename);
+int PC_LoadSourceHandle(const char *filename, const char *basepath);
 int PC_FreeSourceHandle(int handle);
 int PC_ReadTokenHandle(int handle, pc_token_t *pc_token);
 void PC_UnreadLastTokenHandle( int handle );

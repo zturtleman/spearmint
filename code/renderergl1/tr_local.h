@@ -354,7 +354,7 @@ typedef struct shader_s {
 	qboolean	isSky;
 	skyParms_t	sky;
 	fogParms_t	fogParms;
-	fogParms_t	waterFogParms;
+	fogParms_t	viewFogParms;
 
 	float		portalRange;			// distance to fog out at
 
@@ -550,14 +550,12 @@ typedef struct drawSurf_s {
 typedef struct srfPoly_s {
 	surfaceType_t	surfaceType;
 	qhandle_t		hShader;
-	int				fogIndex;
 	int				numVerts;
 	polyVert_t		*verts;
 } srfPoly_t;
 
 typedef struct srfPolyBuffer_s {
 	surfaceType_t surfaceType;
-	int fogIndex;
 	polyBuffer_t *pPolyBuffer;
 } srfPolyBuffer_t;
 
@@ -670,7 +668,7 @@ typedef struct
 
 	// triangle definitions
 	int numIndexes;
-	glIndex_t       *indexes;
+	int             *indexes;
 
 	int numVerts;
 	vec4_t          *xyz;
@@ -741,7 +739,8 @@ BRUSH MODELS
 
 typedef struct msurface_s {
 	int					viewCount;		// if == tr.viewCount, already added
-	struct shader_s		*shader;
+	struct shader_s		*shader;			// shader for rendering
+	struct shader_s		*originalShader;	// original shader in BSP, for resetting shader
 	int					fogIndex;
 
 	surfaceType_t		*data;			// any of srf*_t
@@ -861,7 +860,7 @@ void		R_ModelInit (void);
 model_t		*R_GetModelByHandle( qhandle_t hModel );
 int			R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, 
 					 float frac, const char *tagName );
-void		R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs );
+int			R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 
 void		R_Modellist_f (void);
 
@@ -1007,6 +1006,8 @@ typedef struct {
 
 	shader_t				*flareShader;
 	shader_t				*sunShader;
+	char					sunShaderName[MAX_QPATH];
+	float					sunShaderScale;
 
 	int						numLightmaps;
 	int						maxLightmaps;
@@ -1050,6 +1051,8 @@ typedef struct {
 	vec3_t		skyFogColor;
 	float		skyFogDepthForOpaque;
 	float		skyFogDensity;
+
+	fogParms_t	waterFogParms;
 
 	//
 	// put large tables at the end, so most elements will be
@@ -1120,6 +1123,7 @@ extern cvar_t	*r_primitives;			// "0" = based on compiled vertex array existance
 extern cvar_t	*r_inGameVideo;				// controls whether in game video should be draw
 extern cvar_t	*r_fastsky;				// controls whether sky should be cleared or drawn
 extern cvar_t	*r_drawSun;				// controls drawing of sun quad
+extern cvar_t	*r_forceSunScale;		// controls scale of sun quad
 extern cvar_t	*r_dynamiclight;		// dynamic lights enabled/disabled
 extern cvar_t	*r_dlightBacks;			// dlight non-facing surfaces for continuity
 
@@ -1129,6 +1133,7 @@ extern	cvar_t	*r_drawworld;			// disable/enable world rendering
 extern	cvar_t  *r_drawfoliage;			// disable/enable foliage rendering
 extern	cvar_t	*r_speeds;				// various levels of information display
 extern  cvar_t	*r_detailTextures;		// enables/disables detail texturing stages
+extern	cvar_t	*r_shaderlod;
 extern	cvar_t	*r_novis;				// disable/enable usage of PVS
 extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_facePlaneCull;		// enables culling of planar surfaces with back side test
@@ -1305,6 +1310,9 @@ void	R_ScreenShot_f( void );
 #define DEFAULT_FOG_EXP_DENSITY			0.5f
 #define DEFAULT_FOG_LINEAR_DENSITY		1.1f
 
+// ZTM: FIXME: I pulled this number out of nowhere, RTCW used 5 which didn't work with software fog
+#define DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE 2048
+
 void	R_InitFogTable( void );
 float	R_FogFactor( float s, float t );
 float	R_FogTcScale( fogType_t fogType, float depthForOpaque, float density );
@@ -1326,8 +1334,13 @@ shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
 shader_t *R_FindShaderByName( const char *name );
 void		R_InitShaders( void );
+void		R_InitExternalShaders( void );
 void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
+void		RE_SetSurfaceShader( int surfaceNum, const char *name );
+qhandle_t	RE_GetSurfaceShader( int surfaceNum, int withlightmap );
+qhandle_t	RE_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap );
+void		RE_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize );
 
 /*
 ====================================================================
@@ -1455,7 +1468,7 @@ SKIES
 void R_BuildCloudData( shaderCommands_t *shader );
 void R_InitSkyTexCoords( float cloudLayerHeight );
 void R_DrawSkyBox( shaderCommands_t *shader );
-void RB_DrawSun( void );
+void RB_DrawSun( float scale, shader_t *shader );
 void RB_ClipSkyPolygons( shaderCommands_t *shader );
 
 /*
@@ -1649,6 +1662,12 @@ typedef struct {
 	int		numDrawSurfs;
 } drawSurfsCommand_t;
 
+typedef enum {
+	ST_TGA,
+	ST_JPEG,
+	ST_PNG
+} screenshotType_e;
+
 typedef struct {
 	int commandId;
 	int x;
@@ -1656,7 +1675,7 @@ typedef struct {
 	int width;
 	int height;
 	char *fileName;
-	qboolean jpeg;
+	screenshotType_e type;
 } screenshotCommand_t;
 
 typedef struct {
@@ -1721,8 +1740,6 @@ extern	int		max_polybuffers;
 
 extern	backEndData_t	*backEndData;	// the second one may not be allocated
 
-extern	volatile renderCommandList_t	*renderCommandList;
-
 
 void *R_GetCommandBuffer( int bytes );
 void RB_ExecuteRenderCommands( const void *data );
@@ -1742,17 +1759,20 @@ void RE_StretchPicGradient( float x, float y, float w, float h,
 void RE_2DPolyies( polyVert_t* verts, int numverts, qhandle_t hShader );
 void RE_BeginFrame( stereoFrame_t stereoFrame );
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec );
+void RE_SavePNG(const char *filename, int width, int height, byte *data, int padding);
 void RE_SaveJPG(char * filename, int quality, int image_width, int image_height,
                 unsigned char *image_buffer, int padding);
 size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 		          int image_width, int image_height, byte *image_buffer, int padding);
+void RE_SaveTGA(char * filename, int image_width, int image_height, byte *image_buffer, int padding);
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
-void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
+void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
 
 // fog stuff
-int R_DefaultFogNum( void );
+int R_BoundsFogNum( const trRefdef_t *refdef, vec3_t mins, vec3_t maxs );
+int R_PointFogNum( const trRefdef_t *refdef, vec3_t point, float radius );
 void R_FogOff( void );
 void RB_FogOn( void );
 void RB_Fog( int fogNum );

@@ -69,6 +69,7 @@ typedef struct {
 	int						planeNum;
 	int			surfaceFlags;
 	int			shaderNum;
+	int			surfaceNum;
 	winding_t			*winding;
 } cbrushside_t;
 

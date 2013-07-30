@@ -34,6 +34,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/q_shared.h"
 #include "../renderercommon/tr_types.h"
 #include "ui_public.h"
+#include "../cgame/cg_syscalls.h"
 #include "../client/keycodes.h"
 #include "../game/bg_misc.h"
 #include "ui_shared.h"
@@ -537,6 +538,9 @@ typedef struct {
 	vec3_t			flashDlightColor;
 	int				muzzleFlashTime;
 
+	vec3_t			color1;
+	byte			c1RGBA[4];
+
 	// currently in use drawing parms
 	vec3_t			viewAngles;
 	vec3_t			moveAngles;
@@ -905,102 +909,6 @@ void UI_SPPostgameMenu_f( void );
 //
 void UI_SPSkillMenu( const char *arenaInfo );
 void UI_SPSkillMenu_Cache( void );
-
-//
-// ui_syscalls.c
-//
-
-// Additional shared traps in ../game/bg_misc.h
-
-void			trap_GetClipboardData( char *buf, int bufsize );
-void			trap_GetGlconfig( glconfig_t *glconfig );
-void			trap_UpdateScreen( void );
-int				trap_MemoryRemaining( void );
-int				trap_GetVoipTime( int clientNum );
-float			trap_GetVoipPower( int clientNum );
-float			trap_GetVoipGain( int clientNum );
-qboolean		trap_GetVoipMute( int clientNum );
-qboolean		trap_GetVoipMuteAll( void );
-
-void			trap_GetClientState( uiClientState_t *state );
-int				trap_GetConfigString( int index, char* buff, int buffsize );
-
-int				trap_LAN_GetPingQueueCount( void );
-void			trap_LAN_ClearPing( int n );
-void			trap_LAN_GetPing( int n, char *buf, int buflen, int *pingtime );
-void			trap_LAN_GetPingInfo( int n, char *buf, int buflen );
-
-int				trap_LAN_GetServerCount( int source );
-void			trap_LAN_GetServerAddressString( int source, int n, char *buf, int buflen );
-void			trap_LAN_GetServerInfo( int source, int n, char *buf, int buflen );
-int				trap_LAN_GetServerPing( int source, int n );
-void			trap_LAN_LoadCachedServers( void );
-void			trap_LAN_SaveCachedServers( void );
-void			trap_LAN_MarkServerVisible(int source, int n, qboolean visible);
-int				trap_LAN_ServerIsVisible( int source, int n);
-qboolean		trap_LAN_UpdateVisiblePings( int source );
-int				trap_LAN_AddServer(int source, const char *name, const char *addr);
-void			trap_LAN_RemoveServer(int source, const char *addr);
-void			trap_LAN_ResetPings(int n);
-int				trap_LAN_ServerStatus( const char *serverAddress, char *serverStatus, int maxLen );
-int				trap_LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int s2 );
-
-qhandle_t		trap_R_RegisterModel( const char *name );
-qhandle_t		trap_R_RegisterSkin( const char *name );
-qhandle_t		trap_R_RegisterShader( const char *name );
-qhandle_t		trap_R_RegisterShaderNoMip( const char *name );
-void			trap_R_RegisterFont(const char *pFontname, int pointSize, fontInfo_t *font);
-void			trap_R_ClearScene( void );
-void			trap_R_AddRefEntityToScene( const refEntity_t *re );
-void			trap_R_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts );
-void			trap_R_AddPolysToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int numPolys );
-void			trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
-void			trap_R_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b );
-void			trap_R_RenderScene( const refdef_t *fd );
-void			trap_R_SetColor( const float *rgba );
-void			trap_R_SetClipRegion( const float *region );
-void			trap_R_DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader );
-void			trap_R_DrawRotatedPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader, float angle );
-void			trap_R_DrawStretchPicGradient( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader,
-					const float *gradientColor, int gradientType );
-void			trap_R_Add2dPolys( polyVert_t* verts, int numverts, qhandle_t hShader );
-void			trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs );
-int				trap_R_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int endFrame, float frac, const char *tagName );
-void			trap_R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset );
-
-sfxHandle_t		trap_S_RegisterSound( const char *sample, qboolean compressed );
-int				trap_S_SoundDuration( sfxHandle_t handle );
-void			trap_S_StartLocalSound( sfxHandle_t sfx, int channelNum );
-void			trap_S_StopBackgroundTrack( void );
-void			trap_S_StartBackgroundTrack( const char *intro, const char *loop);
-
-void			trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen );
-void			trap_Key_GetBindingBuf( int keynum, char *buf, int buflen );
-void			trap_Key_SetBinding( int keynum, const char *binding );
-qboolean		trap_Key_IsDown( int keynum );
-qboolean		trap_Key_GetOverstrikeMode( void );
-void			trap_Key_SetOverstrikeMode( qboolean state );
-void			trap_Key_ClearStates( void );
-int				trap_Key_GetCatcher( void );
-void			trap_Key_SetCatcher( int catcher );
-int				trap_Key_GetKey( const char *binding, int startKey );
-
-// this returns a handle.  arg0 is the name in the format "idlogo.roq", set arg1 to NULL, alteredstates to qfalse (do not alter gamestate)
-int				trap_CIN_PlayCinematic( const char *arg0, int xpos, int ypos, int width, int height, int bits);
-
-// stops playing the cinematic and ends it.  should always return FMV_EOF
-// cinematics must be stopped in reverse order of when they are started
-e_status		trap_CIN_StopCinematic(int handle);
-
-// will run a frame of the cinematic but will not draw it.  Will return FMV_EOF if the end of the cinematic has been reached.
-e_status		trap_CIN_RunCinematic (int handle);
-
-// draws the current frame
-void			trap_CIN_DrawCinematic (int handle);
-
-// allows you to resize the animation dynamically
-void			trap_CIN_SetExtents (int handle, int x, int y, int w, int h);
-
 
 //
 // ui_addbots.c

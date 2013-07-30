@@ -33,13 +33,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // tr_extratypes.h, for mods that want to extend tr_types.h without losing compatibility with original VMs
 
-// extra renderfx flags start at 0x0400
-#define RF_SUNFLARE			0x0400
-
 // extra refdef flags start at 0x0008
-#define RDF_NOFOG		0x0008		// don't apply fog
-#define RDF_EXTRA		0x0010		// Makro - refdefex_t to follow after refdef_t
-#define RDF_SUNLIGHT    0x0020      // SmileTheory - render sunlight and shadows
+#define RDF_EXTRA		0x0008		// Makro - refdefex_t to follow after refdef_t
+#define RDF_SUNLIGHT    0x0010      // SmileTheory - render sunlight and shadows
 
 typedef struct {
 	float			blurFactor;

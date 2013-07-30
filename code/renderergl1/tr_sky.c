@@ -497,6 +497,8 @@ static void FillCloudySkySide( const int mins[2], const int maxs[2], qboolean ad
 	tHeight = maxs[1] - mins[1] + 1;
 	sWidth = maxs[0] - mins[0] + 1;
 
+	RB_CHECKOVERFLOW( ( maxs[ 0 ] - mins[ 0 ] ) * ( maxs[ 1 ] - mins[ 1 ] ), ( sWidth - 1 ) * ( tHeight - 1 ) * 6 );
+
 	for ( t = mins[1]+HALF_SKY_SUBDIVISIONS; t <= maxs[1]+HALF_SKY_SUBDIVISIONS; t++ )
 	{
 		for ( s = mins[0]+HALF_SKY_SUBDIVISIONS; s <= maxs[0]+HALF_SKY_SUBDIVISIONS; s++ )
@@ -638,7 +640,7 @@ static void FillCloudBox( const shader_t *shader, int stage )
 */
 void R_BuildCloudData( shaderCommands_t *input )
 {
-	int			i;
+	//int			i;
 	shader_t	*shader;
 
 	shader = input->shader;
@@ -654,6 +656,11 @@ void R_BuildCloudData( shaderCommands_t *input )
 
 	if ( shader->sky.cloudHeight )
 	{
+		// From WolfET:
+		// ok, this is really wierd. it's iterating through shader stages here,
+		// which is unnecessary for a multi-stage sky shader, as far as i can tell
+		// nuking this
+#if 0
 		for ( i = 0; i < MAX_SHADER_STAGES; i++ )
 		{
 			if ( !tess.xstages[i] ) {
@@ -661,6 +668,9 @@ void R_BuildCloudData( shaderCommands_t *input )
 			}
 			FillCloudBox( shader, i );
 		}
+#else
+		FillCloudBox( shader, 0 );
+#endif
 	}
 }
 
@@ -730,23 +740,21 @@ void R_InitSkyTexCoords( float heightCloud )
 /*
 ** RB_DrawSun
 */
-void RB_DrawSun( void ) {
+void RB_DrawSun( float scale, shader_t *shader ) {
 	float		size;
 	float		dist;
 	vec3_t		origin, vec1, vec2;
-	vec3_t		temp;
+	byte		sunColor[4] = { 255, 255, 255, 255 };
 
 	if ( !backEnd.skyRenderedThisView ) {
 		return;
 	}
-	if ( !r_drawSun->integer ) {
-		return;
-	}
+
 	qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
 	qglTranslatef (backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2]);
 
 	dist = 	backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
-	size = dist * 0.4;
+	size = dist * scale;
 
 	VectorScale( tr.sunDirection, dist, origin );
 	PerpendicularVector( vec1, tr.sunDirection );
@@ -758,58 +766,9 @@ void RB_DrawSun( void ) {
 	// farthest depth range
 	qglDepthRange( 1.0, 1.0 );
 
-	// FIXME: use quad stamp
-	RB_BeginSurface( tr.sunShader, tess.fogNum );
-		VectorCopy( origin, temp );
-		VectorSubtract( temp, vec1, temp );
-		VectorSubtract( temp, vec2, temp );
-		VectorCopy( temp, tess.xyz[tess.numVertexes] );
-		tess.texCoords[tess.numVertexes][0][0] = 0;
-		tess.texCoords[tess.numVertexes][0][1] = 0;
-		tess.vertexColors[tess.numVertexes][0] = 255;
-		tess.vertexColors[tess.numVertexes][1] = 255;
-		tess.vertexColors[tess.numVertexes][2] = 255;
-		tess.numVertexes++;
+	RB_BeginSurface( shader, 0 );
 
-		VectorCopy( origin, temp );
-		VectorAdd( temp, vec1, temp );
-		VectorSubtract( temp, vec2, temp );
-		VectorCopy( temp, tess.xyz[tess.numVertexes] );
-		tess.texCoords[tess.numVertexes][0][0] = 0;
-		tess.texCoords[tess.numVertexes][0][1] = 1;
-		tess.vertexColors[tess.numVertexes][0] = 255;
-		tess.vertexColors[tess.numVertexes][1] = 255;
-		tess.vertexColors[tess.numVertexes][2] = 255;
-		tess.numVertexes++;
-
-		VectorCopy( origin, temp );
-		VectorAdd( temp, vec1, temp );
-		VectorAdd( temp, vec2, temp );
-		VectorCopy( temp, tess.xyz[tess.numVertexes] );
-		tess.texCoords[tess.numVertexes][0][0] = 1;
-		tess.texCoords[tess.numVertexes][0][1] = 1;
-		tess.vertexColors[tess.numVertexes][0] = 255;
-		tess.vertexColors[tess.numVertexes][1] = 255;
-		tess.vertexColors[tess.numVertexes][2] = 255;
-		tess.numVertexes++;
-
-		VectorCopy( origin, temp );
-		VectorSubtract( temp, vec1, temp );
-		VectorAdd( temp, vec2, temp );
-		VectorCopy( temp, tess.xyz[tess.numVertexes] );
-		tess.texCoords[tess.numVertexes][0][0] = 1;
-		tess.texCoords[tess.numVertexes][0][1] = 0;
-		tess.vertexColors[tess.numVertexes][0] = 255;
-		tess.vertexColors[tess.numVertexes][1] = 255;
-		tess.vertexColors[tess.numVertexes][2] = 255;
-		tess.numVertexes++;
-
-		tess.indexes[tess.numIndexes++] = 0;
-		tess.indexes[tess.numIndexes++] = 1;
-		tess.indexes[tess.numIndexes++] = 2;
-		tess.indexes[tess.numIndexes++] = 0;
-		tess.indexes[tess.numIndexes++] = 2;
-		tess.indexes[tess.numIndexes++] = 3;
+	RB_AddQuadStamp(origin, vec1, vec2, sunColor);
 
 	RB_EndSurface();
 

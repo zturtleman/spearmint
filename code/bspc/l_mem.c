@@ -28,6 +28,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
+#ifdef _WIN32
+#include <malloc.h>
+#endif // _WIN32
+
 #include "qbsp.h"
 #include "l_log.h"
 
@@ -258,7 +262,7 @@ memoryblock_t *BlockFromPointer(void *ptr, char *str)
 		//char *crash = (char *) NULL;
 		//crash[0] = 1;
 		Error("%s: NULL pointer\n", str);
-#endif MEMDEBUG
+#endif // MEMDEBUG
 		return NULL;
 	} //end if
 	block = (memoryblock_t *) ((char *) ptr - sizeof(memoryblock_t));
@@ -387,7 +391,6 @@ typedef struct memhunk_s
 
 memhunk_t *memhunk_high;
 memhunk_t *memhunk_low;
-// ZTM: int to size_t
 size_t memhunk_high_size = 16 * 1024 * 1024;
 size_t memhunk_low_size = 0;
 

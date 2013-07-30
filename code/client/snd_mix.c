@@ -172,7 +172,6 @@ void S_TransferPaintBuffer(int endtime)
 
 	if ( s_testsound->integer ) {
 		int		i;
-		int		count;
 
 		// write a fixed sine wave
 		count = (endtime - s_paintedtime);
@@ -606,7 +605,7 @@ void S_PaintChannelFromMuLaw( channel_t *ch, sfx_t *sc, int count, int sampleOff
 			samp[i].left += (data * leftvol)>>8;
 			samp[i].right += (data * rightvol)>>8;
 			samples++;
-			if (samples == (byte *)chunk->sndChunk+(SND_CHUNK_SIZE*2)) {
+			if (chunk != NULL && samples == (byte *)chunk->sndChunk+(SND_CHUNK_SIZE*2)) {
 				chunk = chunk->next;
 				samples = (byte *)chunk->sndChunk;
 			}

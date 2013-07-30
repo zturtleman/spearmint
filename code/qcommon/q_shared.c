@@ -133,6 +133,18 @@ void COM_DefaultExtension( char *path, int maxSize, const char *extension )
 }
 
 /*
+==================
+COM_SetExtension
+==================
+*/
+void COM_SetExtension(char *path, int maxSize, const char *extension)
+{
+	COM_StripExtension(path, path, maxSize);
+
+	Q_strcat(path, maxSize, extension);
+}
+
+/*
 ============================================================================
 
 					BYTE ORDER FUNCTIONS
@@ -294,15 +306,22 @@ PARSING
 static	char	com_token[MAX_TOKEN_CHARS];
 static	char	com_parsename[MAX_TOKEN_CHARS];
 static	int		com_lines;
+static	int		com_tokenline;
 
 void COM_BeginParseSession( const char *name )
 {
-	com_lines = 0;
+	com_lines = 1;
+	com_tokenline = 0;
 	Com_sprintf(com_parsename, sizeof(com_parsename), "%s", name);
 }
 
 int COM_GetCurrentParseLine( void )
 {
+	if ( com_tokenline )
+	{
+		return com_tokenline;
+	}
+
 	return com_lines;
 }
 
@@ -325,7 +344,7 @@ void COM_ParseError( char *format, ... )
 	Q_vsnprintf (string, sizeof(string), format, argptr);
 	va_end (argptr);
 
-	Com_Printf("ERROR: %s, line %d: %s\n", com_parsename, com_lines, string);
+	Com_Printf("ERROR: %s, line %d: %s\n", com_parsename, COM_GetCurrentParseLine(), string);
 }
 
 void COM_ParseWarning( char *format, ... )
@@ -337,7 +356,7 @@ void COM_ParseWarning( char *format, ... )
 	Q_vsnprintf (string, sizeof(string), format, argptr);
 	va_end (argptr);
 
-	Com_Printf("WARNING: %s, line %d: %s\n", com_parsename, com_lines, string);
+	Com_Printf("WARNING: %s, line %d: %s\n", com_parsename, COM_GetCurrentParseLine(), string);
 }
 
 /*
@@ -447,6 +466,7 @@ char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 	data = *data_p;
 	len = 0;
 	com_token[0] = 0;
+	com_tokenline = 0;
 
 	// make sure incoming data is valid
 	if ( !data )
@@ -486,6 +506,10 @@ char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 			data += 2;
 			while ( *data && ( *data != '*' || data[1] != '/' ) ) 
 			{
+				if ( *data == '\n' )
+				{
+					com_lines++;
+				}
 				data++;
 			}
 			if ( *data ) 
@@ -499,6 +523,9 @@ char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 		}
 	}
 
+	// token starts on this line
+	com_tokenline = com_lines;
+
 	// handle quoted strings
 	if (c == '\"')
 	{
@@ -511,6 +538,10 @@ char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 				com_token[len] = 0;
 				*data_p = ( char * ) data;
 				return com_token;
+			}
+			if ( c == '\n' )
+			{
+				com_lines++;
 			}
 			if (len < MAX_TOKEN_CHARS - 1)
 			{
@@ -530,8 +561,6 @@ char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 		}
 		data++;
 		c = *data;
-		if ( c == '\n' )
-			com_lines++;
 	} while (c>32 && c != delimiter);
 
 	com_token[len] = 0;
@@ -559,16 +588,14 @@ void COM_MatchToken( char **buf_p, char *match ) {
 =================
 SkipBracedSection
 
-The next token should be an open brace.
+The next token should be an open brace or set depth to 1 if already parsed it.
 Skips until a matching close brace is found.
 Internal brace depths are properly skipped.
 =================
 */
-void SkipBracedSection (char **program) {
+qboolean SkipBracedSection (char **program, int depth) {
 	char			*token;
-	int				depth;
 
-	depth = 0;
 	do {
 		token = COM_ParseExt( program, qtrue );
 		if( token[1] == 0 ) {
@@ -580,6 +607,8 @@ void SkipBracedSection (char **program) {
 			}
 		}
 	} while( depth && *program );
+
+	return ( depth == 0 );
 }
 
 /*
@@ -1424,6 +1453,85 @@ char *Com_SkipTokens( char *s, int numTokens, char *sep )
 		return p;
 	else
 		return s;
+}
+
+/*
+============
+Com_ClientListContains
+============
+*/
+qboolean Com_ClientListContains( const clientList_t *list, int clientNum )
+{
+	if( clientNum < 0 || clientNum >= MAX_CLIENTS || !list )
+		return qfalse;
+	if( clientNum < 32 )
+		return ( ( list->lo & ( 1 << clientNum ) ) != 0 );
+	else
+		return ( ( list->hi & ( 1 << ( clientNum - 32 ) ) ) != 0 );
+}
+
+/*
+============
+Com_ClientListAdd
+============
+*/
+void Com_ClientListAdd( clientList_t *list, int clientNum )
+{
+	if( clientNum < 0 || clientNum >= MAX_CLIENTS || !list )
+		return;
+	if( clientNum < 32 )
+		list->lo |= ( 1 << clientNum );
+	else
+		list->hi |= ( 1 << ( clientNum - 32 ) );
+}
+
+/*
+============
+Com_ClientListRemove
+============
+*/
+void Com_ClientListRemove( clientList_t *list, int clientNum )
+{
+	if( clientNum < 0 || clientNum >= MAX_CLIENTS || !list )
+		return;
+	if( clientNum < 32 )
+		list->lo &= ~( 1 << clientNum );
+	else
+		list->hi &= ~( 1 << ( clientNum - 32 ) );
+}
+
+/*
+============
+Com_ClientListString
+============
+*/
+char *Com_ClientListString( const clientList_t *list )
+{
+	static char s[ 17 ];
+
+	s[ 0 ] = '\0';
+	if( !list )
+		return s;
+	Com_sprintf( s, sizeof( s ), "%08x%08x", list->hi, list->lo );
+	return s;
+}
+
+/*
+============
+Com_ClientListParse
+============
+*/
+void Com_ClientListParse( clientList_t *list, const char *s )
+{
+	if( !list )
+		return;
+	list->lo = 0;
+	list->hi = 0;
+	if( !s )
+		return;
+	if( strlen( s ) != 16 )
+		return;
+	sscanf( s, "%x%x", &list->hi, &list->lo );
 }
 
 /*

@@ -204,6 +204,115 @@ void ColorToRGBA16F(const vec3_t color, unsigned short rgba16f[4])
 
 /*
 ===============
+R_ProcessLightmap
+
+	returns maxIntensity
+===============
+*/
+float R_ProcessLightmap( byte **pic, int in_padding, int width, int height, byte **pic_out, qboolean hdrLightmap ) {
+	int j;
+	float maxIntensity = 0;
+	double sumIntensity = 0;
+	float lightScale = 1.0f;
+
+	lightScale = pow(2, r_mapOverBrightBits->integer - tr.overbrightBits - 8); //exp2(r_mapOverBrightBits->integer - tr.overbrightBits - 8);
+
+	for ( j = 0; j < width * height; j++ )
+	{
+		if (r_hdr->integer)
+		{
+			float color[3];
+
+			if (hdrLightmap)
+			{
+#if 0 // HDRFILE_RGBE
+				float exponent = exp2(( *pic )[j*4+3] - 128);
+
+				color[0] = ( *pic )[j*4+0] * exponent;
+				color[1] = ( *pic )[j*4+1] * exponent;
+				color[2] = ( *pic )[j*4+2] * exponent;
+#else // HDRFILE_FLOAT
+				memcpy(color, &( *pic )[j*12], 12);
+
+				color[0] = LittleFloat(color[0]);
+				color[1] = LittleFloat(color[1]);
+				color[2] = LittleFloat(color[2]);
+#endif
+			}
+			else
+			{
+				//hack: convert LDR lightmap to HDR one
+				color[0] = (( *pic )[j*in_padding+0] + 1.0f);
+				color[1] = (( *pic )[j*in_padding+1] + 1.0f);
+				color[2] = (( *pic )[j*in_padding+2] + 1.0f);
+
+				// if under an arbitrary value (say 12) grey it out
+				// this prevents weird splotches in dimly lit areas
+				if (color[0] + color[1] + color[2] < 12.0f)
+				{
+					float avg = (color[0] + color[1] + color[2]) * 0.3333f;
+					color[0] = avg;
+					color[1] = avg;
+					color[2] = avg;
+				}
+			}
+
+			VectorScale(color, lightScale, color);
+
+			if (glRefConfig.textureFloat && glRefConfig.halfFloatPixel)
+				ColorToRGBA16F(color, (unsigned short *)(&( *pic_out )[j*8]));
+			else
+				ColorToRGBE(color, &( *pic_out )[j*4]);
+		}
+		else
+		{
+			if ( r_lightmap->integer > 1 )
+			{	// color code by intensity as development tool	(FIXME: check range)
+				float r = ( *pic )[j*in_padding+0];
+				float g = ( *pic )[j*in_padding+1];
+				float b = ( *pic )[j*in_padding+2];
+				float intensity;
+				float out[3] = {0.0, 0.0, 0.0};
+
+				intensity = 0.33f * r + 0.685f * g + 0.063f * b;
+
+				if ( intensity > 255 )
+					intensity = 1.0f;
+				else
+					intensity /= 255.0f;
+
+				if ( intensity > maxIntensity )
+					maxIntensity = intensity;
+
+				HSVtoRGB( intensity, 1.00, 0.50, out );
+
+				if ( r_lightmap->integer == 3 ) {
+					// Arnout: artists wanted the colours to be inversed
+					( *pic_out )[j * 4 + 0] = out[2] * 255;
+					( *pic_out )[j * 4 + 1] = out[1] * 255;
+					( *pic_out )[j * 4 + 2] = out[0] * 255;
+				} else {
+					( *pic_out )[j * 4 + 0] = out[0] * 255;
+					( *pic_out )[j * 4 + 1] = out[1] * 255;
+					( *pic_out )[j * 4 + 2] = out[2] * 255;
+				}
+				( *pic_out )[j * 4 + 3] = 255;
+
+				sumIntensity += intensity;
+			}
+			else
+			{
+				R_ColorShiftLightingBytes( &( *pic )[j*in_padding], &( *pic_out )[j*4] );
+				( *pic_out )[j*4+3] = 255;
+			}
+		}
+	}
+
+	return maxIntensity;
+}
+
+/*
+===============
 R_LoadLightmaps
 
 ===============
@@ -217,10 +326,23 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 	byte		*image;
 	int			i, j, numLightmaps, textureInternalFormat = 0;
 	float maxIntensity = 0;
-	double sumIntensity = 0;
+	float intensity;
+	int			numExternalLightmaps = 0;
+
+	// ydnar: clear lightmaps first
+	tr.numLightmaps = tr.maxLightmaps = 0;
+	tr.lightmaps = NULL;
+
+	// get number of external lightmaps
+	if (tr.worldDir) {
+		ri.FS_ListFiles(tr.worldDir, ".tga", &numExternalLightmaps);
+	}
 
 	len = l->filelen;
 	if ( !len ) {
+		// Allocate data for external lightmaps.
+		tr.maxLightmaps = numExternalLightmaps;
+		tr.lightmaps = ri.Hunk_Alloc( tr.maxLightmaps * sizeof(image_t *), h_low );
 		return;
 	}
 	buf = fileBase + l->fileofs;
@@ -291,7 +413,8 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 		tr.numLightmaps = numLightmaps;
 	}
 
-	tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
+	tr.maxLightmaps = tr.numLightmaps + numExternalLightmaps;
+	tr.lightmaps = ri.Hunk_Alloc( tr.maxLightmaps * sizeof(image_t *), h_low );
 
 	if (tr.worldDeluxeMapping)
 	{
@@ -333,7 +456,6 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 		{
 			char filename[MAX_QPATH];
 			byte *hdrLightmap = NULL;
-			float lightScale = 1.0f;
 			int size = 0;
 
 			// look for hdr lightmaps
@@ -358,7 +480,7 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 				}
 
 				if (!size)
-					ri.Error(ERR_DROP, "Bad header for %s!\n", filename);
+					ri.Error(ERR_DROP, "Bad header for %s!", filename);
 
 				size -= 2;
 				p += 2;
@@ -376,10 +498,10 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 
 #if 0 // HDRFILE_RGBE
 				if (size != tr.lightmapSize * tr.lightmapSize * 4)
-					ri.Error(ERR_DROP, "Bad size for %s (%i)!\n", filename, size);
+					ri.Error(ERR_DROP, "Bad size for %s (%i)!", filename, size);
 #else // HDRFILE_FLOAT
 				if (size != tr.lightmapSize * tr.lightmapSize * 12)
-					ri.Error(ERR_DROP, "Bad size for %s (%i)!\n", filename, size);
+					ri.Error(ERR_DROP, "Bad size for %s (%i)!", filename, size);
 #endif
 			}
 			else
@@ -390,90 +512,9 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 					buf_p = buf + i * tr.lightmapSize * tr.lightmapSize * 3;
 			}
 
-			lightScale = pow(2, r_mapOverBrightBits->integer - tr.overbrightBits - 8); //exp2(r_mapOverBrightBits->integer - tr.overbrightBits - 8);
-
-			for ( j = 0 ; j < tr.lightmapSize * tr.lightmapSize; j++ ) 
-			{
-				if (r_hdr->integer)
-				{
-					float color[3];
-
-					if (hdrLightmap)
-					{
-#if 0 // HDRFILE_RGBE
-						float exponent = exp2(buf_p[j*4+3] - 128);
-
-						color[0] = buf_p[j*4+0] * exponent;
-						color[1] = buf_p[j*4+1] * exponent;
-						color[2] = buf_p[j*4+2] * exponent;
-#else // HDRFILE_FLOAT
-						memcpy(color, &buf_p[j*12], 12);
-
-						color[0] = LittleFloat(color[0]);
-						color[1] = LittleFloat(color[1]);
-						color[2] = LittleFloat(color[2]);
-#endif
-					}
-					else
-					{
-						//hack: convert LDR lightmap to HDR one
-						color[0] = (buf_p[j*3+0] + 1.0f);
-						color[1] = (buf_p[j*3+1] + 1.0f);
-						color[2] = (buf_p[j*3+2] + 1.0f);
-
-						// if under an arbitrary value (say 12) grey it out
-						// this prevents weird splotches in dimly lit areas
-						if (color[0] + color[1] + color[2] < 12.0f)
-						{
-							float avg = (color[0] + color[1] + color[2]) * 0.3333f;
-							color[0] = avg;
-							color[1] = avg;
-							color[2] = avg;
-						}
-					}
-
-					VectorScale(color, lightScale, color);
-
-					if (glRefConfig.textureFloat && glRefConfig.halfFloatPixel)
-						ColorToRGBA16F(color, (unsigned short *)(&image[j*8]));
-					else
-						ColorToRGBE(color, &image[j*4]);
-				}
-				else
-				{
-					if ( r_lightmap->integer == 2 )
-					{	// color code by intensity as development tool	(FIXME: check range)
-						float r = buf_p[j*3+0];
-						float g = buf_p[j*3+1];
-						float b = buf_p[j*3+2];
-						float intensity;
-						float out[3] = {0.0, 0.0, 0.0};
-
-						intensity = 0.33f * r + 0.685f * g + 0.063f * b;
-
-						if ( intensity > 255 )
-							intensity = 1.0f;
-						else
-							intensity /= 255.0f;
-
-						if ( intensity > maxIntensity )
-							maxIntensity = intensity;
-
-						HSVtoRGB( intensity, 1.00, 0.50, out );
-
-						image[j*4+0] = out[0] * 255;
-						image[j*4+1] = out[1] * 255;
-						image[j*4+2] = out[2] * 255;
-						image[j*4+3] = 255;
-
-						sumIntensity += intensity;
-					}
-					else
-					{
-						R_ColorShiftLightingBytes( &buf_p[j*3], &image[j*4] );
-						image[j*4+3] = 255;
-					}
-				}
+			intensity = R_ProcessLightmap( &buf_p, 3, tr.lightmapSize, tr.lightmapSize, &image, ( hdrLightmap != NULL ) );
+			if ( intensity > maxIntensity ) {
+				maxIntensity = intensity;
 			}
 
 			if (r_mergeLightmaps->integer)
@@ -529,19 +570,16 @@ static float FatPackU(float input, int lightmapnum)
 	if (lightmapnum < 0)
 		return input;
 
-	if (tr.fatLightmapStep == 0) {
-		ri.Printf( PRINT_WARNING, "FatPackU: tr.fatLightmapStep == 0 ???\n" );
-		return input;
-	}
-
 	if (tr.worldDeluxeMapping)
 		lightmapnum >>= 1;
 
-	lightmapnum %= (tr.fatLightmapStep * tr.fatLightmapStep);
-
 	if(tr.fatLightmapSize > 0)
 	{
-		int             x = lightmapnum % tr.fatLightmapStep;
+		int             x;
+
+		lightmapnum %= (tr.fatLightmapStep * tr.fatLightmapStep);
+
+		x = lightmapnum % tr.fatLightmapStep;
 
 		return (input / ((float)tr.fatLightmapStep)) + ((1.0 / ((float)tr.fatLightmapStep)) * (float)x);
 	}
@@ -554,19 +592,16 @@ static float FatPackV(float input, int lightmapnum)
 	if (lightmapnum < 0)
 		return input;
 
-	if (tr.fatLightmapStep == 0) {
-		ri.Printf( PRINT_WARNING, "FatPackV: tr.fatLightmapStep == 0 ???\n" );
-		return input;
-	}
-
 	if (tr.worldDeluxeMapping)
 		lightmapnum >>= 1;
 
-	lightmapnum %= (tr.fatLightmapStep * tr.fatLightmapStep);
-
 	if(tr.fatLightmapSize > 0)
 	{
-		int             y = lightmapnum / tr.fatLightmapStep;
+		int             y;
+
+		lightmapnum %= (tr.fatLightmapStep * tr.fatLightmapStep);
+
+		y = lightmapnum / tr.fatLightmapStep;
 
 		return (input / ((float)tr.fatLightmapStep)) + ((1.0 / ((float)tr.fatLightmapStep)) * (float)y);
 	}
@@ -677,6 +712,44 @@ static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 
 /*
 ===============
+SphereFromBounds
+creates a bounding sphere from a bounding box
+===============
+*/
+
+static void SphereFromBounds( vec3_t mins, vec3_t maxs, vec3_t origin, float *radius ) {
+	vec3_t temp;
+
+	VectorAdd( mins, maxs, origin );
+	VectorScale( origin, 0.5, origin );
+	VectorSubtract( maxs, origin, temp );
+	*radius = VectorLength( temp );
+}
+
+
+
+/*
+===============
+FinishGenericSurface
+handles final surface classification
+===============
+*/
+
+static void FinishGenericSurface( dsurface_t *ds, vec3_t pt, cullinfo_t *cullinfo ) {
+	// set bounding sphere
+	SphereFromBounds( cullinfo->bounds[ 0 ], cullinfo->bounds[ 1 ], cullinfo->localOrigin, &cullinfo->radius );
+
+	// take the plane normal from the lightmap vector and classify it
+	cullinfo->plane.normal[ 0 ] = LittleFloat( ds->lightmapVecs[ 2 ][ 0 ] );
+	cullinfo->plane.normal[ 1 ] = LittleFloat( ds->lightmapVecs[ 2 ][ 1 ] );
+	cullinfo->plane.normal[ 2 ] = LittleFloat( ds->lightmapVecs[ 2 ][ 2 ] );
+	cullinfo->plane.dist = DotProduct( pt, cullinfo->plane.normal );
+	SetPlaneSignbits( &cullinfo->plane );
+	cullinfo->plane.type = PlaneTypeForNormal( cullinfo->plane.normal );
+}
+
+/*
+===============
 ParseFace
 ===============
 */
@@ -689,6 +762,11 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 
 	realLightmapNum = LittleLong( ds->lightmapNum );
 
+	// no lightmap
+	if (realLightmapNum == -1) {
+		realLightmapNum = LIGHTMAP_BY_VERTEX;
+	}
+
 	// get fog volume
 	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
 
@@ -697,14 +775,9 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	numVerts = LittleLong(ds->numVerts);
-	if (numVerts > MAX_FACE_POINTS) {
-		ri.Printf( PRINT_WARNING, "WARNING: MAX_FACE_POINTS exceeded: %i\n", numVerts);
-		numVerts = MAX_FACE_POINTS;
-		surf->shader = tr.defaultShader;
-	}
-
 	numTriangles = LittleLong(ds->numIndexes) / 3;
 
 	//cv = ri.Hunk_Alloc(sizeof(*cv), h_low);
@@ -716,6 +789,8 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 
 	cv->numVerts = numVerts;
 	cv->verts = ri.Hunk_Alloc(numVerts * sizeof(cv->verts[0]), h_low);
+
+	surf->data = (surfaceType_t *) cv;
 
 	// copy vertexes
 	surf->cullinfo.type = CULLINFO_PLANE | CULLINFO_BOX;
@@ -795,17 +870,6 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 		cv->numTriangles -= badTriangles;
 	}
 
-	// take the plane information from the lightmap vector
-	for ( i = 0 ; i < 3 ; i++ ) {
-		cv->plane.normal[i] = LittleFloat( ds->lightmapVecs[2][i] );
-	}
-	cv->plane.dist = DotProduct( cv->verts[0].xyz, cv->plane.normal );
-	SetPlaneSignbits( &cv->plane );
-	cv->plane.type = PlaneTypeForNormal( cv->plane.normal );
-	surf->cullinfo.plane = cv->plane;
-
-	surf->data = (surfaceType_t *)cv;
-
 #ifdef USE_VERT_TANGENT_SPACE
 	// Calculate tangent spaces
 	{
@@ -821,8 +885,12 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 		}
 	}
 #endif
-}
 
+	// finish surface
+	FinishGenericSurface( ds, cv->verts[ 0 ].xyz, &surf->cullinfo );
+
+	cv->plane = surf->cullinfo.plane;
+}
 
 /*
 ===============
@@ -849,6 +917,7 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	// we may have a nodraw surface, because they might still need to
 	// be around for movement clipping
@@ -935,17 +1004,26 @@ ParseTriSurf
 static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes ) {
 	srfTriangles_t *cv;
 	srfTriangle_t  *tri;
-	int             i, j;
-	int             numVerts, numTriangles, badTriangles;
+	int			i, j;
+	int			numVerts, numTriangles, badTriangles;
+	int			realLightmapNum;
+
+	realLightmapNum = LittleLong( ds->lightmapNum );
+
+	// Quake 3 misc_model doesn't have lightmap
+	if (realLightmapNum == -1) {
+		realLightmapNum = LIGHTMAP_BY_VERTEX;
+	}
 
 	// get fog volume
 	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
 
 	// get shader
-	surf->shader = ShaderForShaderNum( ds->shaderNum, LIGHTMAP_BY_VERTEX );
+	surf->shader = ShaderForShaderNum( ds->shaderNum, FatLightmap(realLightmapNum) );
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	numVerts = LittleLong(ds->numVerts);
 	numTriangles = LittleLong(ds->numIndexes) / 3;
@@ -981,8 +1059,10 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		for(j = 0; j < 2; j++)
 		{
 			cv->verts[i].st[j] = LittleFloat(verts[i].st[j]);
-			cv->verts[i].lightmap[j] = LittleFloat(verts[i].lightmap[j]);
+			//cv->verts[i].lightmap[j] = LittleFloat(verts[i].lightmap[j]);
 		}
+		cv->verts[i].lightmap[0] = FatPackU(LittleFloat(verts[i].lightmap[0]), realLightmapNum);
+		cv->verts[i].lightmap[1] = FatPackV(LittleFloat(verts[i].lightmap[1]), realLightmapNum);
 
 		if (hdrVertColors)
 		{
@@ -1054,6 +1134,213 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		}
 	}
 #endif
+
+	// finish surface
+	FinishGenericSurface( ds, cv->verts[ 0 ].xyz, &surf->cullinfo );
+}
+
+/*
+===============
+ParseFoliage
+parses a foliage drawsurface
+===============
+*/
+static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes ) {
+	int			i, j;
+	srfFoliage_t *cv;
+	srfTriangle_t  *tri;
+	int			numVerts, numTriangles, badTriangles;
+	int			numInstances;
+	vec3_t		bounds[2];
+	vec3_t		boundsTranslated[2];
+	vec4_t		color;
+	float		scale;
+
+	// get fog volume
+	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+
+	// get shader
+	surf->shader = ShaderForShaderNum( ds->shaderNum, LIGHTMAP_BY_VERTEX );
+	if ( r_singleShader->integer && !surf->shader->isSky ) {
+		surf->shader = tr.defaultShader;
+	}
+	surf->originalShader = surf->shader;
+
+	numVerts = LittleLong(ds->patchHeight);
+	numTriangles = LittleLong(ds->numIndexes) / 3;
+	numInstances = LittleLong(ds->patchWidth);
+
+	//cv = ri.Hunk_Alloc(sizeof(*cv), h_low);
+	cv = (void *)surf->data;
+	cv->surfaceType = SF_FOLIAGE;
+
+	cv->numTriangles = numTriangles;
+	cv->triangles = ri.Hunk_Alloc(numTriangles * sizeof(cv->triangles[0]), h_low);
+
+	cv->numVerts = numVerts;
+	cv->verts = ri.Hunk_Alloc(numVerts * sizeof(cv->verts[0]), h_low);
+
+	cv->numInstances = numInstances;
+	cv->instances = ri.Hunk_Alloc(numInstances * sizeof(cv->instances[0]), h_low);
+
+	surf->data = (surfaceType_t *) cv;
+
+	// get foliage drawscale
+	scale = r_drawfoliage->value;
+	if ( scale < 0.0f ) {
+		scale = 1.0f;
+	} else if ( scale > 2.0f ) {
+		scale = 2.0f;
+	}
+
+	// copy vertexes
+	surf->cullinfo.type = CULLINFO_BOX;
+	ClearBounds(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]);
+	verts += LittleLong(ds->firstVert);
+	for(i = 0; i < numVerts; i++)
+	{
+		for(j = 0; j < 3; j++)
+		{
+			cv->verts[i].xyz[j] = LittleFloat(verts[i].xyz[j]);
+			cv->verts[i].normal[j] = LittleFloat(verts[i].normal[j]);
+		}
+
+		// scale height
+		cv->verts[i].xyz[2] *= scale;
+
+		AddPointToBounds( cv->verts[i].xyz, surf->cullinfo.bounds[0], surf->cullinfo.bounds[1] );
+
+		for(j = 0; j < 2; j++)
+		{
+			cv->verts[i].st[j] = LittleFloat(verts[i].st[j]);
+			cv->verts[i].lightmap[j] = LittleFloat(verts[i].lightmap[j]);
+		}
+
+#if 0 // ZTM: foliage doesn't use cv->verts[].vertexColors, uses foliage instance color for all verts.
+		if (hdrVertColors)
+		{
+			color[0] = hdrVertColors[(ds->firstVert + i) * 3    ];
+			color[1] = hdrVertColors[(ds->firstVert + i) * 3 + 1];
+			color[2] = hdrVertColors[(ds->firstVert + i) * 3 + 2];
+		}
+		else
+		{
+			//hack: convert LDR vertex colors to HDR
+			if (r_hdr->integer)
+			{
+				color[0] = verts[i].color[0] + 1.0f;
+				color[1] = verts[i].color[1] + 1.0f;
+				color[2] = verts[i].color[2] + 1.0f;
+			}
+			else
+			{
+				color[0] = verts[i].color[0];
+				color[1] = verts[i].color[1];
+				color[2] = verts[i].color[2];
+			}
+		}
+		color[3] = verts[i].color[3] / 255.0f;
+
+		R_ColorShiftLightingFloats( color, cv->verts[i].vertexColors, 1.0f / 255.0f );
+#endif
+	}
+
+	// copy triangles
+	badTriangles = 0;
+	indexes += LittleLong(ds->firstIndex);
+	for(i = 0, tri = cv->triangles; i < numTriangles; i++, tri++)
+	{
+		for(j = 0; j < 3; j++)
+		{
+			tri->indexes[j] = LittleLong(indexes[i * 3 + j]);
+
+			if(tri->indexes[j] < 0 || tri->indexes[j] >= numVerts)
+			{
+				ri.Error(ERR_DROP, "Bad index in face surface");
+			}
+		}
+
+		if ((tri->indexes[0] == tri->indexes[1]) || (tri->indexes[1] == tri->indexes[2]) || (tri->indexes[0] == tri->indexes[2]))
+		{
+			tri--;
+			badTriangles++;
+		}
+	}
+
+	if (badTriangles)
+	{
+		ri.Printf(PRINT_WARNING, "Foliage has bad triangles, originally shader %s %d tris %d verts, now %d tris\n", surf->shader->name, numTriangles, numVerts, numTriangles - badTriangles);
+		cv->numTriangles -= badTriangles;
+	}
+
+	// copy origins and colors
+	ClearBounds( bounds[ 0 ], bounds[ 1 ] );
+	verts += numVerts;
+	for ( i = 0; i < numInstances; i++ )
+	{
+		// copy xyz
+		for ( j = 0; j < 3; j++ )
+			cv->instances[ i ].origin[ j ] = LittleFloat( verts[ i ].xyz[ j ] );
+		VectorAdd( surf->cullinfo.bounds[ 0 ], cv->instances[ i ].origin, boundsTranslated[ 0 ] );
+		VectorAdd( surf->cullinfo.bounds[ 1 ], cv->instances[ i ].origin, boundsTranslated[ 1 ] );
+		AddPointToBounds( boundsTranslated[ 0 ], bounds[ 0 ], bounds[ 1 ] );
+		AddPointToBounds( boundsTranslated[ 1 ], bounds[ 0 ], bounds[ 1 ] );
+
+		// copy color
+		if (hdrVertColors)
+		{
+			color[0] = hdrVertColors[(ds->firstVert + numVerts + i) * 3    ];
+			color[1] = hdrVertColors[(ds->firstVert + numVerts + i) * 3 + 1];
+			color[2] = hdrVertColors[(ds->firstVert + numVerts + i) * 3 + 2];
+		}
+		else
+		{
+			//hack: convert LDR vertex colors to HDR
+			if (r_hdr->integer)
+			{
+				color[0] = verts[i].color[0] + 1.0f;
+				color[1] = verts[i].color[1] + 1.0f;
+				color[2] = verts[i].color[2] + 1.0f;
+			}
+			else
+			{
+				color[0] = verts[i].color[0];
+				color[1] = verts[i].color[1];
+				color[2] = verts[i].color[2];
+			}
+		}
+		color[3] = verts[i].color[3] / 255.0f;
+
+		R_ColorShiftLightingFloats( color, color, 1.0f / 255.0f );
+
+		VectorCopy( color, cv->instances[ i ].color );
+	}
+
+	// replace instance bounds with bounds of all foliage instances
+	VectorCopy( bounds[0], surf->cullinfo.bounds[0] );
+	VectorCopy( bounds[1], surf->cullinfo.bounds[1] );
+
+#ifdef USE_VERT_TANGENT_SPACE
+	// Calculate tangent spaces
+	{
+		srfVert_t      *dv[3];
+
+		for(i = 0, tri = cv->triangles; i < numTriangles; i++, tri++)
+		{
+			dv[0] = &cv->verts[tri->indexes[0]];
+			dv[1] = &cv->verts[tri->indexes[1]];
+			dv[2] = &cv->verts[tri->indexes[2]];
+
+			R_CalcTangentVectors(dv);
+		}
+	}
+#endif
+
+	// finish surface
+	FinishGenericSurface( ds, cv->verts[ 0 ].xyz, &surf->cullinfo );
+
+	VectorCopy( surf->cullinfo.localOrigin, cv->origin );
+	cv->radius = surf->cullinfo.radius;
 }
 
 /*
@@ -1073,6 +1360,7 @@ static void ParseFlare( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
+	surf->originalShader = surf->shader;
 
 	//flare = ri.Hunk_Alloc( sizeof( *flare ), h_low );
 	flare = (void *)surf->data;
@@ -2142,8 +2430,6 @@ static void R_CreateWorldVBO(void)
 	}
 
 
-	startTime = ri.Milliseconds();
-
 	ri.Free(surfacesSorted);
 
 	ri.Hunk_FreeTempMemory(triangles);
@@ -2161,7 +2447,7 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	drawVert_t	*dv;
 	int			*indexes;
 	int			count;
-	int			numFaces, numMeshes, numTriSurfs, numFlares;
+	int			numFaces, numMeshes, numTriSurfs, numFlares, numFoliage;
 	int			i;
 	float *hdrVertColors = NULL;
 
@@ -2169,8 +2455,8 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	numMeshes = 0;
 	numTriSurfs = 0;
 	numFlares = 0;
+	numFoliage = 0;
 
-	in = (void *)(fileBase + surfs->fileofs);
 	if (surfs->filelen % sizeof(*in))
 		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
 	count = surfs->filelen / sizeof(*in);
@@ -2207,7 +2493,7 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 		{
 			//ri.Printf(PRINT_ALL, "Found!\n");
 			if (size != sizeof(float) * 3 * (verts->filelen / sizeof(*dv)))
-				ri.Error(ERR_DROP, "Bad size for %s (%i, expected %i)!\n", filename, size, (int)((sizeof(float)) * 3 * (verts->filelen / sizeof(*dv))));
+				ri.Error(ERR_DROP, "Bad size for %s (%i, expected %i)!", filename, size, (int)((sizeof(float)) * 3 * (verts->filelen / sizeof(*dv))));
 		}
 	}
 
@@ -2232,7 +2518,7 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 				out->data = ri.Hunk_Alloc( sizeof(srfFlare_t), h_low);
 				break;
 			case MST_FOLIAGE:
-				ri.Printf( PRINT_ERROR, "Foliage not supported in Rend2.\n" );
+				out->data = ri.Hunk_Alloc( sizeof(srfFoliage_t), h_low);
 				break;
 			default:
 				break;
@@ -2271,6 +2557,10 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 			}
 			numFlares++;
 			break;
+		case MST_FOLIAGE:
+			ParseFoliage( in, dv, hdrVertColors, out, indexes );
+			numFoliage++;
+			break;
 		default:
 			ri.Error( ERR_DROP, "Bad surfaceType" );
 		}
@@ -2291,8 +2581,8 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	R_MovePatchSurfacesToHunk();
 #endif
 
-	ri.Printf(PRINT_DEVELOPER, "...loaded %d faces, %i meshes, %i trisurfs, %i flares\n", 
-		numFaces, numMeshes, numTriSurfs, numFlares);
+	ri.Printf(PRINT_DEVELOPER, "...loaded %d faces, %i meshes, %i trisurfs, %i flares, %i foliage\n", 
+		numFaces, numMeshes, numTriSurfs, numFlares, numFoliage );
 }
 
 
@@ -2358,13 +2648,48 @@ static	void R_LoadSubmodels( lump_t *l ) {
 R_SetParent
 =================
 */
-static	void R_SetParent (mnode_t *node, mnode_t *parent)
-{
+static	void R_SetParent (mnode_t *node, mnode_t *parent) {
+	//  set parent
 	node->parent = parent;
-	if (node->contents != -1)
+
+	// handle leaf nodes
+	if ( node->contents != -1 ) {
+		// add node surfaces to bounds
+		if ( node->nummarksurfaces > 0 ) {
+			int c;
+			msurface_t      *mark;
+			surfaceType_t   type;
+
+			// add node surfaces to bounds
+			for ( c = 0; c < node->nummarksurfaces; c++ )
+			{
+				mark = s_worldData.surfaces + *( s_worldData.marksurfaces + node->firstmarksurface + c );
+				type = *( *mark ).data;
+				if ( type != SF_GRID &&
+					 type != SF_FACE &&
+					 type != SF_TRIANGLES &&
+					 type != SF_FOLIAGE ) {
+					continue;
+				}
+				AddPointToBounds( mark->cullinfo.bounds[ 0 ], node->surfMins, node->surfMaxs );
+				AddPointToBounds( mark->cullinfo.bounds[ 1 ], node->surfMins, node->surfMaxs );
+				mark++;
+			}
+		}
+
+		// go back
 		return;
+	}
+
+	// recurse to child nodes
 	R_SetParent (node->children[0], node);
 	R_SetParent (node->children[1], node);
+
+	// surface bounds
+	AddPointToBounds( node->children[ 0 ]->surfMins, node->surfMins, node->surfMaxs );
+	AddPointToBounds( node->children[ 0 ]->surfMins, node->surfMins, node->surfMaxs );
+	AddPointToBounds( node->children[ 1 ]->surfMins, node->surfMins, node->surfMaxs );
+	AddPointToBounds( node->children[ 1 ]->surfMaxs, node->surfMins, node->surfMaxs );
 }
 
 /*
@@ -2402,6 +2727,10 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 			out->maxs[j] = LittleLong (in->maxs[j]);
 		}
 
+		// surface bounds
+		VectorCopy( out->mins, out->surfMins );
+		VectorCopy( out->maxs, out->surfMaxs );
+
 		p = LittleLong(in->planeNum);
 		out->plane = s_worldData.planes + p;
 
@@ -2426,6 +2755,9 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 			out->mins[j] = LittleLong (inLeaf->mins[j]);
 			out->maxs[j] = LittleLong (inLeaf->maxs[j]);
 		}
+
+		// surface bounds
+		ClearBounds( out->surfMins, out->surfMaxs );
 
 		out->cluster = LittleLong(inLeaf->cluster);
 		out->area = LittleLong(inLeaf->area);
@@ -2761,7 +3093,7 @@ void R_LoadLightGrid( lump_t *l ) {
 
 			if (size != sizeof(float) * 6 * numGridPoints)
 			{
-				ri.Error(ERR_DROP, "Bad size for %s (%i, expected %i)!\n", filename, size, (int)(sizeof(float)) * 6 * numGridPoints);
+				ri.Error(ERR_DROP, "Bad size for %s (%i, expected %i)!", filename, size, (int)(sizeof(float)) * 6 * numGridPoints);
 			}
 
 			w->hdrLightGrid = ri.Hunk_Alloc(size, h_low);
@@ -3329,6 +3661,18 @@ void R_CalcVertexLightDirs( void )
 				}
 			}
 		}
+		else if(*surface->data == SF_FOLIAGE)
+		{
+			srfFoliage_t *srf = (srfFoliage_t *) surface->data;
+
+			if(srf->numVerts)
+			{
+				for(i = 0; i < srf->numVerts; i++)
+				{
+					R_LightDirForPoint( srf->verts[i].xyz, srf->verts[i].lightdir, srf->verts[i].normal, &s_worldData );
+				}
+			}
+		}
 	}
 }
 
@@ -3354,7 +3698,8 @@ void RE_LoadWorldMap( const char *name ) {
 	}
 
 	// set default map light scale
-	tr.mapLightScale = 1.0f;
+	tr.mapLightScale  = 1.0f;
+	tr.sunShadowScale = 0.5f;
 
 	// set default sun direction to be used if it isn't
 	// overridden by a shader
@@ -3374,12 +3719,16 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.toneMinAvgMaxLevel[2] = 0.0f;
 
 	tr.worldMapLoaded = qtrue;
+	tr.worldDir = NULL;
 
 	// load it
     ri.FS_ReadFile( name, &buffer.v );
 	if ( !buffer.b ) {
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
 	}
+
+	tr.worldDir = ri.Hunk_Alloc( strlen(name)+1, h_low );
+	COM_StripExtension(name, tr.worldDir, strlen(name)+1);
 
 	// clear tr.world so if the level fails to load, the next
 	// try will not look at the partially loaded version
@@ -3424,6 +3773,193 @@ void RE_LoadWorldMap( const char *name ) {
 	// determine vertex light directions
 	R_CalcVertexLightDirs();
 
+	// determine which parts of the map are in sunlight
+	if (0)
+	{
+		world_t	*w;
+		uint8_t *primaryLightGrid, *data;
+		int lightGridSize;
+		int i;
+
+		w = &s_worldData;
+
+		lightGridSize = w->lightGridBounds[0] * w->lightGridBounds[1] * w->lightGridBounds[2];
+		primaryLightGrid = ri.Malloc(lightGridSize * sizeof(*primaryLightGrid));
+
+		memset(primaryLightGrid, 0, lightGridSize * sizeof(*primaryLightGrid));
+
+		data = w->lightGridData;
+		for (i = 0; i < lightGridSize; i++, data += 8)
+		{
+			int lat, lng;
+			vec3_t gridLightDir, gridLightCol;
+
+			// skip samples in wall
+			if (!(data[0]+data[1]+data[2]+data[3]+data[4]+data[5]) )
+				continue;
+
+			gridLightCol[0] = ByteToFloat(data[3]);
+			gridLightCol[1] = ByteToFloat(data[4]);
+			gridLightCol[2] = ByteToFloat(data[5]);
+			(void)gridLightCol; // Suppress unused-but-set-variable warning
+
+			lat = data[7];
+			lng = data[6];
+			lat *= (FUNCTABLE_SIZE/256);
+			lng *= (FUNCTABLE_SIZE/256);
+
+			// decode X as cos( lat ) * sin( long )
+			// decode Y as sin( lat ) * sin( long )
+			// decode Z as cos( long )
+
+			gridLightDir[0] = tr.sinTable[(lat+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK] * tr.sinTable[lng];
+			gridLightDir[1] = tr.sinTable[lat] * tr.sinTable[lng];
+			gridLightDir[2] = tr.sinTable[(lng+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK];
+
+			// FIXME: magic number for determining if light direction is close enough to sunlight
+			if (DotProduct(gridLightDir, tr.sunDirection) > 0.75f)
+			{
+				primaryLightGrid[i] = 1;
+			}
+			else
+			{
+				primaryLightGrid[i] = 255;
+			}
+		}
+
+		if (0)
+		{
+			int i;
+			byte *buffer = ri.Malloc(w->lightGridBounds[0] * w->lightGridBounds[1] * 3 + 18);
+			byte *out;
+			uint8_t *in;
+			char fileName[MAX_QPATH];
+			
+			Com_Memset (buffer, 0, 18);
+			buffer[2] = 2;		// uncompressed type
+			buffer[12] = w->lightGridBounds[0] & 255;
+			buffer[13] = w->lightGridBounds[0] >> 8;
+			buffer[14] = w->lightGridBounds[1] & 255;
+			buffer[15] = w->lightGridBounds[1] >> 8;
+			buffer[16] = 24;	// pixel size
+
+			in = primaryLightGrid;
+			for (i = 0; i < w->lightGridBounds[2]; i++)
+			{
+				int j;
+
+				sprintf(fileName, "primarylg%d.tga", i);
+
+				out = buffer + 18;
+				for (j = 0; j < w->lightGridBounds[0] * w->lightGridBounds[1]; j++)
+				{
+					if (*in == 1)
+					{
+						*out++ = 255;
+						*out++ = 255;
+						*out++ = 255;
+					}
+					else if (*in == 255)
+					{
+						*out++ = 64;
+						*out++ = 64;
+						*out++ = 64;
+					}
+					else
+					{
+						*out++ = 0;
+						*out++ = 0;
+						*out++ = 0;
+					}
+					in++;
+				}
+
+				ri.FS_WriteFile(fileName, buffer, w->lightGridBounds[0] * w->lightGridBounds[1] * 3 + 18);
+			}
+
+			ri.Free(buffer);
+		}
+
+		for (i = 0; i < w->numWorldSurfaces; i++)
+		{
+			msurface_t *surf = w->surfaces + i;
+			cullinfo_t *ci = &surf->cullinfo;
+
+			if(ci->type & CULLINFO_PLANE)
+			{
+				if (DotProduct(ci->plane.normal, tr.sunDirection) <= 0.0f)
+				{
+					//ri.Printf(PRINT_ALL, "surface %d is not oriented towards sunlight\n", i);
+					continue;
+				}
+			}
+
+			if(ci->type & CULLINFO_BOX)
+			{
+				int ibounds[2][3], x, y, z, goodSamples, numSamples;
+				vec3_t lightOrigin;
+
+				VectorSubtract( ci->bounds[0], w->lightGridOrigin, lightOrigin );
+
+				ibounds[0][0] = floor(lightOrigin[0] * w->lightGridInverseSize[0]);
+				ibounds[0][1] = floor(lightOrigin[1] * w->lightGridInverseSize[1]);
+				ibounds[0][2] = floor(lightOrigin[2] * w->lightGridInverseSize[2]);
+
+				VectorSubtract( ci->bounds[1], w->lightGridOrigin, lightOrigin );
+
+				ibounds[1][0] = ceil(lightOrigin[0] * w->lightGridInverseSize[0]);
+				ibounds[1][1] = ceil(lightOrigin[1] * w->lightGridInverseSize[1]);
+				ibounds[1][2] = ceil(lightOrigin[2] * w->lightGridInverseSize[2]);
+
+				ibounds[0][0] = CLAMP(ibounds[0][0], 0, w->lightGridSize[0]);
+				ibounds[0][1] = CLAMP(ibounds[0][1], 0, w->lightGridSize[1]);
+				ibounds[0][2] = CLAMP(ibounds[0][2], 0, w->lightGridSize[2]);
+
+				ibounds[1][0] = CLAMP(ibounds[1][0], 0, w->lightGridSize[0]);
+				ibounds[1][1] = CLAMP(ibounds[1][1], 0, w->lightGridSize[1]);
+				ibounds[1][2] = CLAMP(ibounds[1][2], 0, w->lightGridSize[2]);
+
+				/*
+				ri.Printf(PRINT_ALL, "surf %d bounds (%f %f %f)-(%f %f %f) ibounds (%d %d %d)-(%d %d %d)\n", i,
+					ci->bounds[0][0], ci->bounds[0][1], ci->bounds[0][2],
+					ci->bounds[1][0], ci->bounds[1][1], ci->bounds[1][2],
+					ibounds[0][0], ibounds[0][1], ibounds[0][2],
+					ibounds[1][0], ibounds[1][1], ibounds[1][2]);
+				*/
+
+				goodSamples = 0;
+				numSamples = 0;
+				for (x = ibounds[0][0]; x <= ibounds[1][0]; x++)
+				{
+					for (y = ibounds[0][1]; y <= ibounds[1][1]; y++)
+					{
+						for (z = ibounds[0][2]; z <= ibounds[1][2]; z++)
+						{
+							uint8_t primaryLight = primaryLightGrid[x * 8 + y * 8 * w->lightGridBounds[0] + z * 8 * w->lightGridBounds[0] * w->lightGridBounds[2]];
+
+							if (primaryLight == 0)
+								continue;
+
+							numSamples++;
+
+							if (primaryLight == 1)
+								goodSamples++;
+						}
+					}
+				}
+
+				// FIXME: magic number for determining whether object is mostly in sunlight
+				if (goodSamples > numSamples * 0.75f)
+				{
+					//ri.Printf(PRINT_ALL, "surface %d is in sunlight\n", i);
+					//surf->primaryLight = 1;
+				}
+			}
+		}
+
+		ri.Free(primaryLightGrid);
+	}
+
 	// create static VBOS from the world
 	R_CreateWorldVBO();
 	if (r_mergeLeafSurfaces->integer)
@@ -3448,6 +3984,8 @@ void RE_LoadWorldMap( const char *name ) {
 		tr.globalFogDepthForOpaque = tr.world->fogs[tr.world->globalFog].shader->fogParms.depthForOpaque;
 		tr.globalFogDensity = tr.world->fogs[tr.world->globalFog].shader->fogParms.density;
 	}
+
+	R_InitExternalShaders();
 
     ri.FS_FreeFile( buffer.v );
 }

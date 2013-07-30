@@ -29,8 +29,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 #include "tr_local.h"
 
-volatile renderCommandList_t	*renderCommandList;
-
 /*
 =====================
 R_PerformanceCounters
@@ -475,69 +473,75 @@ qboolean R_PointInBrush( const vec3_t point, const bmodel_t *bmodel ) {
 
 /*
 ====================
-RE_GetWaterFog
+RE_GetViewFog
 ====================
 */
-void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
-	int					bmodelNum;
-	int					surfaceNum;
-	const bmodel_t		*bmodel;
-	const msurface_t	*surface;
+void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater ) {
+	fogType_t			fogType;
+	vec3_t				fogColor;
+	float				fogDepthForOpaque;
+	float				fogDensity;
 
-	if ( tr.world ) {
-		if (type) {
-			*type = FT_NONE;
-		}
-
-		if (color) {
-			VectorSet( color, 0, 0, 0 );
-		}
-
-		if (depthForOpaque) {
-			*depthForOpaque = 0;
-		}
-
-		if (density) {
-			*density = 0;
-		}
-
-		return;
+	if ( inwater ) {
+		fogType = tr.waterFogParms.fogType;
+		VectorCopy( tr.waterFogParms.color, fogColor );
+		fogDepthForOpaque = tr.waterFogParms.depthForOpaque;
+		fogDensity = tr.waterFogParms.density;
+	} else {
+		fogType = FT_NONE;
+		VectorSet( fogColor, 0, 0, 0 );
+		fogDepthForOpaque = 0;
+		fogDensity = 0;
 	}
 
-	for ( bmodelNum = 0, bmodel = tr.world->bmodels; bmodelNum < tr.world->numBModels; bmodelNum++, bmodel++ ) {
+	if ( tr.world ) {
+		int					bmodelNum;
+		int					surfaceNum;
+		const bmodel_t		*bmodel;
+		const msurface_t	*surface;
 
-		if ( !R_PointInBrush( origin, bmodel ) )
-			continue;
+		for ( bmodelNum = 0, bmodel = tr.world->bmodels; bmodelNum < tr.world->numBModels; bmodelNum++, bmodel++ ) {
 
-		for ( surfaceNum = 0, surface = bmodel->firstSurface; surfaceNum < bmodel->numSurfaces; surfaceNum++, surface ) {
-			if ( !surface->shader ) {
+			if ( !R_PointInBrush( origin, bmodel ) )
 				continue;
+
+			for ( surfaceNum = 0, surface = bmodel->firstSurface; surfaceNum < bmodel->numSurfaces; surfaceNum++, surface++ ) {
+				if ( !surface->shader ) {
+					continue;
+				}
+
+				if ( surface->shader->viewFogParms.fogType != FT_NONE
+						|| surface->shader->viewFogParms.color[0]
+						|| surface->shader->viewFogParms.color[1]
+						|| surface->shader->viewFogParms.color[2] ) {
+					fogType = surface->shader->viewFogParms.fogType;
+					VectorCopy( surface->shader->viewFogParms.color, fogColor );
+					fogDepthForOpaque = surface->shader->viewFogParms.depthForOpaque;
+					fogDensity = surface->shader->viewFogParms.density;
+					break;
+				}
 			}
 
-			if ( surface->shader->waterFogParms.fogType != FT_NONE
-					|| surface->shader->waterFogParms.color[0]
-					|| surface->shader->waterFogParms.color[1]
-					|| surface->shader->waterFogParms.color[2] ) {
-
-				if (type) {
-					*type = surface->shader->waterFogParms.fogType;
-				}
-
-				if (color) {
-					VectorCopy( surface->shader->waterFogParms.color, color );
-				}
-
-				if (depthForOpaque) {
-					*depthForOpaque = surface->shader->waterFogParms.depthForOpaque;
-				}
-
-				if (density) {
-					*density = surface->shader->waterFogParms.density;
-				}
-
-				return;
+			if ( surfaceNum != bmodel->numSurfaces ) {
+				break;
 			}
 		}
+	}
+
+	if (type) {
+		*type = fogType;
+	}
+
+	if (color) {
+		VectorCopy( fogColor, color );
+	}
+
+	if (depthForOpaque) {
+		*depthForOpaque = fogDepthForOpaque;
+	}
+
+	if (density) {
+		*density = fogDensity;
 	}
 }
 

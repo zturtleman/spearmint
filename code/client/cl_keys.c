@@ -707,7 +707,7 @@ void Console_Key (int key) {
 	// enter finishes the line
 	if ( key == K_ENTER || key == K_KP_ENTER ) {
 		// if not in the game explicitly prepend a slash if needed
-		if ( clc.state != CA_ACTIVE &&
+		if ( clc.state != CA_ACTIVE && con_autochat->integer &&
 				g_consoleField.buffer[0] &&
 				g_consoleField.buffer[0] != '\\' &&
 				g_consoleField.buffer[0] != '/' ) {
@@ -729,7 +729,9 @@ void Console_Key (int key) {
 			if ( !g_consoleField.buffer[0] ) {
 				return;	// empty lines just scroll the console without adding to history
 			} else {
-				Cbuf_AddText ("cmd say ");
+				if ( con_autochat->integer ) {
+					Cbuf_AddText ("cmd say ");
+				}
 				Cbuf_AddText( g_consoleField.buffer );
 				Cbuf_AddText ("\n");
 			}
@@ -1388,6 +1390,9 @@ void CL_KeyDownEvent( int key, unsigned time, qboolean onlybinds )
 		return;
 	}
 
+	// send the bound action
+	CL_ParseBinding( key, qtrue, time );
+
 	// distribute the key down event to the apropriate handler
 	if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
 		if ( !onlybinds ) {
@@ -1410,10 +1415,6 @@ void CL_KeyDownEvent( int key, unsigned time, qboolean onlybinds )
 			Console_Key( key );
 		}
 	}
-
-	// send the bound action
-	CL_ParseBinding( key, qtrue, time );
-	return;
 }
 
 /*

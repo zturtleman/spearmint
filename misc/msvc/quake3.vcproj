@@ -998,6 +998,7 @@
 						PreprocessorDefinitions=""
 						BrowseInformation="1"
 					/>
+
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -2466,7 +2467,31 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\code\zlib\crc32.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\code\zlib\deflate.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\code\game\g_public.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\code\zlib\inffast.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\code\zlib\inffixed.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\code\zlib\inflate.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\code\zlib\inftrees.h"
 				>
 			</File>
 			<File
@@ -2534,6 +2559,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\code\zlib\trees.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\code\ui\ui_public.h"
 				>
 			</File>
@@ -2547,6 +2576,18 @@
 			</File>
 			<File
 				RelativePath="..\..\code\win32\win_local.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\code\zlib\zconf.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\code\zlib\zlib.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\code\zlib\zutil.h"
 				>
 			</File>
 		</Filter>
@@ -2627,26 +2668,6 @@
 				</File>
 				<File
 					RelativePath="..\..\code\botlib\be_ai_gen.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\code\botlib\be_ai_goal.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\code\botlib\be_ai_move.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\code\botlib\be_ai_weap.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\code\botlib\be_ai_weight.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\code\botlib\be_ea.c"
 					>
 				</File>
 				<File
@@ -2958,6 +2979,18 @@
 		<Filter
 			Name="zlib"
 			>
+			<File
+				RelativePath="..\..\code\zlib\compress.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\code\zlib\deflate.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\code\zlib\trees.c"
+				>
+			</File>
 			<File
 				RelativePath="..\..\code\zlib\adler32.c"
 				>

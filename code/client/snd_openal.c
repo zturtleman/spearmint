@@ -2122,6 +2122,8 @@ static cvar_t *s_alCapture;
 #define ALDRIVER_DEFAULT "OpenAL32.dll"
 #elif defined(MACOS_X)
 #define ALDRIVER_DEFAULT "/System/Library/Frameworks/OpenAL.framework/OpenAL"
+#elif defined(__OpenBSD__)
+#define ALDRIVER_DEFAULT "libopenal.so"
 #else
 #define ALDRIVER_DEFAULT "libopenal.so.1"
 #endif
@@ -2499,8 +2501,6 @@ qboolean S_AL_Init( soundInterface_t *si )
 				devicelist += curlen + 1;
 			}
 		}
-		else
-			devicelist = "";
 
 		s_alAvailableDevices = Cvar_Get("s_alAvailableDevices", devicenames, CVAR_ROM | CVAR_NORESTART);
 	}

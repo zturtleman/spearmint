@@ -37,7 +37,6 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  *****************************************************************************/
 
-#define Vector2Angles(v,a)		vectoangles(v,a)
 #ifndef MAX_PATH
 #define MAX_PATH				MAX_QPATH
 #endif
