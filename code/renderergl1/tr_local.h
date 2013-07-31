@@ -1048,9 +1048,9 @@ typedef struct {
 
 	// set by skyfogvars in a shader
 	fogType_t	skyFogType;
-	vec3_t		skyFogColor;
 	float		skyFogDepthForOpaque;
-	float		skyFogDensity;
+	int			skyFogColorInt;
+	float		skyFogTcScale;
 
 	fogParms_t	waterFogParms;
 

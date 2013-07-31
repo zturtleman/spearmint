@@ -792,7 +792,7 @@ void RB_CalcModulateColorsByFog( unsigned char *colors ) {
 	int			i;
 	float		f, texCoords[SHADER_MAX_VERTEXES][2];
 	fog_t		*fog;
-	qboolean	linearFog;
+	fogType_t	fogType;
 
 	// no world, no fogging
 	if ( backEnd.refdef.rdflags & RDF_NOWORLDMODEL ) {
@@ -803,16 +803,20 @@ void RB_CalcModulateColorsByFog( unsigned char *colors ) {
 		return;
 	}
 
-	fog = tr.world->fogs + tess.fogNum;
-
-	if ( fog->originalBrushNumber < 0 ) {
-		if ( backEnd.refdef.fogType == FT_NONE ) {
-			return;
-		}
-
-		linearFog = ( backEnd.refdef.fogType == FT_LINEAR );
+	if ( tess.shader->isSky ) {
+		fogType = tr.skyFogType;
 	} else {
-		linearFog = ( fog->shader->fogParms.fogType == FT_LINEAR );
+		fog = tr.world->fogs + tess.fogNum;
+
+		if ( fog->originalBrushNumber < 0 ) {
+			fogType = backEnd.refdef.fogType;
+		} else {
+			fogType = fog->shader->fogParms.fogType;
+		}
+	}
+
+	if ( fogType == FT_NONE ) {
+		return;
 	}
 
 	// calculate texcoords so we can derive density
@@ -825,7 +829,7 @@ void RB_CalcModulateColorsByFog( unsigned char *colors ) {
 			continue;
 		}
 
-		if ( linearFog ) {
+		if ( fogType == FT_LINEAR ) {
 			f = 1.0f - ( texCoords[ i ][ 0 ] * texCoords[ i ][ 1 ] );
 		} else {
 			f = 1.0f - R_FogFactor( texCoords[i][0], texCoords[i][1] );
@@ -850,7 +854,7 @@ void RB_CalcModulateAlphasByFog( unsigned char *colors ) {
 	int			i;
 	float		f, texCoords[SHADER_MAX_VERTEXES][2];
 	fog_t		*fog;
-	qboolean	linearFog;
+	fogType_t	fogType;
 
 	// no world, no fogging
 	if ( backEnd.refdef.rdflags & RDF_NOWORLDMODEL ) {
@@ -861,16 +865,20 @@ void RB_CalcModulateAlphasByFog( unsigned char *colors ) {
 		return;
 	}
 
-	fog = tr.world->fogs + tess.fogNum;
-
-	if ( fog->originalBrushNumber < 0 ) {
-		if ( backEnd.refdef.fogType == FT_NONE ) {
-			return;
-		}
-
-		linearFog = ( backEnd.refdef.fogType == FT_LINEAR );
+	if ( tess.shader->isSky ) {
+		fogType = tr.skyFogType;
 	} else {
-		linearFog = ( fog->shader->fogParms.fogType == FT_LINEAR );
+		fog = tr.world->fogs + tess.fogNum;
+
+		if ( fog->originalBrushNumber < 0 ) {
+			fogType = backEnd.refdef.fogType;
+		} else {
+			fogType = fog->shader->fogParms.fogType;
+		}
+	}
+
+	if ( fogType == FT_NONE ) {
+		return;
 	}
 
 	// calculate texcoords so we can derive density
@@ -883,7 +891,7 @@ void RB_CalcModulateAlphasByFog( unsigned char *colors ) {
 			continue;
 		}
 
-		if ( linearFog ) {
+		if ( fogType == FT_LINEAR ) {
 			f = 1.0f - ( texCoords[ i ][ 0 ] * texCoords[ i ][ 1 ] );
 		} else {
 			f = 1.0f - R_FogFactor( texCoords[i][0], texCoords[i][1] );
@@ -904,7 +912,7 @@ void RB_CalcModulateRGBAsByFog( unsigned char *colors ) {
 	int			i;
 	float		f, texCoords[SHADER_MAX_VERTEXES][2];
 	fog_t		*fog;
-	qboolean	linearFog;
+	fogType_t	fogType;
 
 	// no world, no fogging
 	if ( backEnd.refdef.rdflags & RDF_NOWORLDMODEL ) {
@@ -915,16 +923,20 @@ void RB_CalcModulateRGBAsByFog( unsigned char *colors ) {
 		return;
 	}
 
-	fog = tr.world->fogs + tess.fogNum;
-
-	if ( fog->originalBrushNumber < 0 ) {
-		if ( backEnd.refdef.fogType == FT_NONE ) {
-			return;
-		}
-
-		linearFog = ( backEnd.refdef.fogType == FT_LINEAR );
+	if ( tess.shader->isSky ) {
+		fogType = tr.skyFogType;
 	} else {
-		linearFog = ( fog->shader->fogParms.fogType == FT_LINEAR );
+		fog = tr.world->fogs + tess.fogNum;
+
+		if ( fog->originalBrushNumber < 0 ) {
+			fogType = backEnd.refdef.fogType;
+		} else {
+			fogType = fog->shader->fogParms.fogType;
+		}
+	}
+
+	if ( fogType == FT_NONE ) {
+		return;
 	}
 
 	// calculate texcoords so we can derive density
@@ -937,7 +949,7 @@ void RB_CalcModulateRGBAsByFog( unsigned char *colors ) {
 			continue;
 		}
 
-		if ( linearFog ) {
+		if ( fogType == FT_LINEAR ) {
 			f = 1.0f - ( texCoords[ i ][ 0 ] * texCoords[ i ][ 1 ] );
 		} else {
 			f = 1.0f - R_FogFactor( texCoords[i][0], texCoords[i][1] );
@@ -985,13 +997,12 @@ void RB_CalcFogTexCoords( float *st ) {
 	bmodel_t	*bmodel;
 	vec3_t		local;
 	vec4_t		fogSurface, fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
+	fogType_t	fogType;
+	float		tcScale;
 
 	if ( r_useGlFog->integer ) {
 		return;
 	}
-
-	fog = tr.world->fogs + tess.fogNum;
-	bmodel = tr.world->bmodels + fog->modelNum;
 
 	// all fogging distance is based on world Z units
 	VectorSubtract( backEnd.or.origin, backEnd.viewParms.or.origin, local );
@@ -1000,20 +1011,36 @@ void RB_CalcFogTexCoords( float *st ) {
 	fogDistanceVector[2] = -backEnd.or.modelMatrix[10];
 	fogDistanceVector[3] = DotProduct( local, backEnd.viewParms.or.axis[0] );
 
-	// level-wide fogging
-	if ( fog->originalBrushNumber < 0 ) {
-		if ( backEnd.refdef.fogType == FT_NONE ) {
-			return;
-		}
+	if ( tess.shader->isSky ) {
+		fogType = tr.skyFogType;
+		tcScale = tr.skyFogTcScale;
+	} else {
+		fog = tr.world->fogs + tess.fogNum;
+		bmodel = tr.world->bmodels + fog->modelNum;
 
+		if ( fog->originalBrushNumber < 0 ) {
+			fogType = backEnd.refdef.fogType;
+			tcScale = backEnd.refdef.fogTcScale;
+		} else {
+			fogType = fog->shader->fogParms.fogType;
+			tcScale = fog->tcScale;
+		}
+	}
+
+	if ( fogType == FT_NONE ) {
+		return;
+	}
+
+	// level-wide fogging
+	if ( tess.shader->isSky || fog->originalBrushNumber < 0 ) {
 		// scale the fog vectors based on the fog's thickness
-		fogDistanceVector[0] *= backEnd.refdef.fogTcScale;
-		fogDistanceVector[1] *= backEnd.refdef.fogTcScale;
-		fogDistanceVector[2] *= backEnd.refdef.fogTcScale;
-		fogDistanceVector[3] *= backEnd.refdef.fogTcScale;
+		fogDistanceVector[0] *= tcScale;
+		fogDistanceVector[1] *= tcScale;
+		fogDistanceVector[2] *= tcScale;
+		fogDistanceVector[3] *= tcScale;
 
 		// calculate density for each point
-		if ( backEnd.refdef.fogType == FT_LINEAR ) {
+		if ( fogType == FT_LINEAR ) {
 			t = 1.0;
 		} else {
 			t = 31.0/32;
@@ -1027,10 +1054,10 @@ void RB_CalcFogTexCoords( float *st ) {
 		}
 	} else {
 		// scale the fog vectors based on the fog's thickness
-		fogDistanceVector[0] *= fog->tcScale;
-		fogDistanceVector[1] *= fog->tcScale;
-		fogDistanceVector[2] *= fog->tcScale;
-		fogDistanceVector[3] *= fog->tcScale;
+		fogDistanceVector[0] *= tcScale;
+		fogDistanceVector[1] *= tcScale;
+		fogDistanceVector[2] *= tcScale;
+		fogDistanceVector[3] *= tcScale;
 
 		// offset fog surface
 		VectorCopy( fog->surface, fogSurface );
@@ -1052,10 +1079,10 @@ void RB_CalcFogTexCoords( float *st ) {
 
 #if 0 // WolfET
 			// scale the fog vectors based on the fog's thickness
-			fogDepthVector[ 0 ] *= fog->shader->fogParms.tcScale;
-			fogDepthVector[ 1 ] *= fog->shader->fogParms.tcScale;
-			fogDepthVector[ 2 ] *= fog->shader->fogParms.tcScale;
-			fogDepthVector[ 3 ] *= fog->shader->fogParms.tcScale;
+			fogDepthVector[ 0 ] *= tcScale;
+			fogDepthVector[ 1 ] *= tcScale;
+			fogDepthVector[ 2 ] *= tcScale;
+			fogDepthVector[ 3 ] *= tcScale;
 #endif
 
 			eyeT = DotProduct( backEnd.or.viewOrigin, fogDepthVector ) + fogDepthVector[3];
@@ -1072,7 +1099,7 @@ void RB_CalcFogTexCoords( float *st ) {
 			eyeOutside = qfalse;
 		}
 
-		if ( fog->shader->fogParms.fogType == FT_EXP ) {
+		if ( fogType == FT_EXP ) {
 			fogDistanceVector[3] += 1.0/512;
 		}
 
@@ -1082,7 +1109,7 @@ void RB_CalcFogTexCoords( float *st ) {
 			s = DotProduct( v, fogDistanceVector ) + fogDistanceVector[3];
 			t = DotProduct( v, fogDepthVector ) + fogDepthVector[3];
 
-			if ( fog->shader->fogParms.fogType == FT_LINEAR ) {
+			if ( fogType == FT_LINEAR ) {
 				if ( !eyeOutside ) {
 					t += eyeT;
 				}

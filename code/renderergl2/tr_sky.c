@@ -317,6 +317,17 @@ static void MakeSkyVec( float s, float t, int axis, float outSt[2], vec3_t outXY
 	float	boxSize;
 
 	boxSize = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
+
+	// use custom size, but make sure the sky is not far clipped
+	if ( tr.skyFogDepthForOpaque > 0 && tr.skyFogDepthForOpaque < boxSize ) {
+		boxSize = tr.skyFogDepthForOpaque;
+	}
+
+	// make sure the sky is not near clipped
+	if ( boxSize < r_znear->value * 2.0 ) {
+		boxSize = r_znear->value * 2.0;
+	}
+
 	b[0] = s*boxSize;
 	b[1] = t*boxSize;
 	b[2] = boxSize;
