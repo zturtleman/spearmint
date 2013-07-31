@@ -141,9 +141,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "273531EA14D1275D00EB7BD6"
-               BuildableName = "ioquake3.app"
-               BlueprintName = "ioquake3"
-               ReferencedContainer = "container:ioquake3.xcodeproj">
+               BuildableName = "spearmint.app"
+               BlueprintName = "spearmint"
+               ReferencedContainer = "container:spearmint.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>

@@ -16,7 +16,7 @@
 		2772B82E1790EE01004CCF57 /* bg_misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 2772B82A1790EE01004CCF57 /* bg_misc.c */; };
 		2772B8331790EE22004CCF57 /* q_math.c in Sources */ = {isa = PBXBuildFile; fileRef = 2772B8301790EE22004CCF57 /* q_math.c */; };
 		2772B8341790EE22004CCF57 /* q_shared.c in Sources */ = {isa = PBXBuildFile; fileRef = 2772B8311790EE22004CCF57 /* q_shared.c */; };
-		2772B8391790EE51004CCF57 /* ui_syscalls.c in Sources */ = {isa = PBXBuildFile; fileRef = 2772B8381790EE51004CCF57 /* ui_syscalls.c */; };
+		2CCDF6E917A8BCE600DB3A64 /* cg_syscalls.c in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDF6CE17A8BCE600DB3A64 /* cg_syscalls.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,7 +38,9 @@
 		2772B8311790EE22004CCF57 /* q_shared.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = q_shared.c; sourceTree = "<group>"; };
 		2772B8321790EE22004CCF57 /* q_shared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = q_shared.h; sourceTree = "<group>"; };
 		2772B8361790EE2F004CCF57 /* tr_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tr_types.h; sourceTree = "<group>"; };
-		2772B8381790EE51004CCF57 /* ui_syscalls.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ui_syscalls.c; sourceTree = "<group>"; };
+		2CCDF6CE17A8BCE600DB3A64 /* cg_syscalls.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cg_syscalls.c; sourceTree = "<group>"; };
+		2CCDF6CF17A8BCE600DB3A64 /* cg_syscalls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cg_syscalls.h; sourceTree = "<group>"; };
+		2CCDF6FF17A8BD7C00DB3A64 /* cg_syscalls.asm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm.asm; path = cg_syscalls.asm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +73,7 @@
 		2772B8101790ED6D004CCF57 /* code */ = {
 			isa = PBXGroup;
 			children = (
+				2CCDF6B417A8BCE500DB3A64 /* cgame */,
 				2772B8251790EDCC004CCF57 /* client */,
 				2772B8241790EDC6004CCF57 /* game */,
 				2772B8231790EDC1004CCF57 /* qcommon */,
@@ -92,7 +95,6 @@
 				2772B8171790EDA0004CCF57 /* ui_public.h */,
 				2772B8181790EDA0004CCF57 /* ui_shared.c */,
 				2772B8191790EDA0004CCF57 /* ui_shared.h */,
-				2772B8381790EE51004CCF57 /* ui_syscalls.c */,
 			);
 			path = ui;
 			sourceTree = "<group>";
@@ -132,6 +134,16 @@
 				2772B8261790EDEB004CCF57 /* keycodes.h */,
 			);
 			path = client;
+			sourceTree = "<group>";
+		};
+		2CCDF6B417A8BCE500DB3A64 /* cgame */ = {
+			isa = PBXGroup;
+			children = (
+				2CCDF6FF17A8BD7C00DB3A64 /* cg_syscalls.asm */,
+				2CCDF6CE17A8BCE600DB3A64 /* cg_syscalls.c */,
+				2CCDF6CF17A8BCE600DB3A64 /* cg_syscalls.h */,
+			);
+			path = cgame;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -192,7 +204,7 @@
 				2772B82E1790EE01004CCF57 /* bg_misc.c in Sources */,
 				2772B8331790EE22004CCF57 /* q_math.c in Sources */,
 				2772B8341790EE22004CCF57 /* q_shared.c in Sources */,
-				2772B8391790EE51004CCF57 /* ui_syscalls.c in Sources */,
+				2CCDF6E917A8BCE600DB3A64 /* cg_syscalls.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -259,6 +271,11 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					MISSIONPACK,
+					UI,
+					"DEBUG=1",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -268,6 +285,10 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					MISSIONPACK,
+					UI,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

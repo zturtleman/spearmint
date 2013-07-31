@@ -1,6 +1,6 @@
 #!/bin/bash
 CC=gcc-4.0
-BINARY=ioquake3.ub
+BINARY=spearmint.ub
 
 cd `dirname $0`
 if [ ! -f Makefile ]; then
