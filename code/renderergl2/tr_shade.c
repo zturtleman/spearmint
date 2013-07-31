@@ -993,6 +993,11 @@ static void RB_FogPass( void ) {
 	int deformGen;
 	vec5_t deformParams;
 
+	// no fog pass
+	if ( tess.shader->noFog ) {
+		return;
+	}
+
 	if ( tr.world && tess.fogNum == tr.world->globalFog ) {
 		if ( backEnd.refdef.fogType == FT_NONE ) {
 			return;
