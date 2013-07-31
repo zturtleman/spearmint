@@ -1310,8 +1310,8 @@ void	R_ScreenShot_f( void );
 #define DEFAULT_FOG_EXP_DENSITY			0.5f
 #define DEFAULT_FOG_LINEAR_DENSITY		1.1f
 
-// ZTM: FIXME: I pulled this number out of nowhere, RTCW used 5 which didn't work with software fog
-#define DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE 2048
+// not actually opaque at this distance, used for tcScale
+#define DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE 5
 
 void	R_InitFogTable( void );
 float	R_FogFactor( float s, float t );
