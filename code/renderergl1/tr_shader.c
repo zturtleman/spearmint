@@ -2051,7 +2051,8 @@ static qboolean ParseShader( char **text )
 
 			tr.skyFogType = FT_EXP;
 
-			tr.skyFogDepthForOpaque = 5; // sets how big sky box size is too, not just fog tcscale
+			// sets how big sky box size is too, not just fog tcscale
+			tr.skyFogDepthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
 
 			tr.skyFogColorInt = ColorBytes4 ( fogColor[0] * tr.identityLight,
 										  fogColor[1] * tr.identityLight,
