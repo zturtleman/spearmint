@@ -29,6 +29,6 @@
       location = "group:speex.xcodeproj">
    </FileRef>
    <FileRef
-      location = "container:ioquake3.xcodeproj">
+      location = "container:spearmint.xcodeproj">
    </FileRef>
 </Workspace>

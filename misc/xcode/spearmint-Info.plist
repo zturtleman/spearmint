@@ -17,11 +17,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.36</string>
+	<string>Alpha</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>3cd8b49-2013-07-17</string>
+	<string>8e251e9-2013-07-30</string>
 	<key>CGDisableCoalescedUpdates</key>
 	<true/>
 	<key>LSMinimumSystemVersion</key>
