@@ -155,8 +155,10 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 	}
 
 	if ( !hShader ) {
-		ri.Printf( PRINT_WARNING, "WARNING: RE_AddPolyToScene: NULL poly shader\n");
-		return;
+		// This isn't a useful warning, and an hShader of zero isn't a null shader, it's
+		// the default shader.
+		//ri.Printf( PRINT_WARNING, "WARNING: RE_AddPolyToScene: NULL poly shader\n");
+		//return;
 	}
 
 	for ( j = 0; j < numPolys; j++ ) {
