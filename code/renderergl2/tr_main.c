@@ -758,7 +758,7 @@ R_BoundsFogNum
 */
 qboolean R_IsGlobalFog( int fogNum ) {
 
-	if ( tr.world || fogNum <= 0 || fogNum >= tr.world->numfogs ) {
+	if ( !tr.world || fogNum <= 0 || fogNum >= tr.world->numfogs ) {
 		return qfalse;
 	}
 
