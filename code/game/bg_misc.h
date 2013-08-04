@@ -901,6 +901,15 @@ typedef enum {
 	TEAMTASK_CAMP
 } teamtask_t;
 
+//flag status
+typedef enum {
+	FLAG_ATBASE = 0,
+	FLAG_TAKEN,			// CTF
+	FLAG_TAKEN_RED,		// One Flag CTF
+	FLAG_TAKEN_BLUE,	// One Flag CTF
+	FLAG_DROPPED
+} flagStatus_t;
+
 // means of death
 typedef enum {
 	MOD_UNKNOWN,
