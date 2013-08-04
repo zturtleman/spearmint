@@ -706,6 +706,8 @@ void VM_Free( vm_t *vm ) {
 		return;
 	}
 
+	VM_ClearMemoryTags( vm );
+
 	if(vm->callLevel) {
 		if(!forced_unload) {
 			Com_Error( ERR_FATAL, "VM_Free(%s) on running vm", vm->name );
@@ -1094,38 +1096,51 @@ typedef struct {
 
 #define MAX_VM_MEMORY_TAGS 128
 static vmMemoryTag_t vmMemoryTags[MAX_VM_MEMORY_TAGS];
-int numVMMemoryTags = 0;
 
 intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag ) {
 	intptr_t	ptr;
 	int			i;
+	int			freeSlot;
 
 	if (size < 1)
 		Com_Error( ERR_DROP, "VM %s tried to allocate %d bytes of memory", vm->name, size );
 
+	freeSlot = -1;
+
 	// Check if memory with this tag and size already allocated, if so return it.
 	if ( tag ) {
-		for ( i = 0; i < numVMMemoryTags; i++ ) {
-			if ( ( ( vm->dllHandle && !vmMemoryTags[i].vm ) || vmMemoryTags[i].vm == vm ) && vmMemoryTags[i].size == size && strcmp( tag, vmMemoryTags[i].tag ) == 0 ) {
+		for ( i = 0; i < MAX_VM_MEMORY_TAGS; i++ ) {
+			if ( !vmMemoryTags[i].vm ) {
+				freeSlot = i;
+				continue;
+			}
+			if ( vmMemoryTags[i].vm != vm && !( vm->dllHandle && vmMemoryTags[i].vm->dllHandle ) ) {
+				continue;
+			}
+			// ZTM: FIXME: don't allow game vm to reference pointers in cgame or ui vm as are non-persistant
+			if ( vmMemoryTags[i].size == size && strcmp( tag, vmMemoryTags[i].tag ) == 0 ) {
 				return vmMemoryTags[i].pointer;
 			}
 		}
 	}
 
-	if ( vm->dllHandle ) {
+	if ( vm->dllHandle && !Q_stricmp( vm->name, "game" ) ) {
+		// game DLL cannot allocate data on hunk due to hunk getting cleared at vid_restart
+		ptr = (intptr_t)Z_TagMalloc( size, TAG_GAME );
+		Com_Memset( (void*)ptr, 0, size );
+	} else if ( vm->dllHandle ) {
 		ptr = (intptr_t)Hunk_Alloc( size, h_high );
 	} else {
 		ptr = QVM_Alloc( vm, size );
 	}
 
 	if ( tag ) {
-		if ( numVMMemoryTags < MAX_VM_MEMORY_TAGS ) {
-			vmMemoryTags[numVMMemoryTags].vm = vm->dllHandle ? NULL : vm;
-			vmMemoryTags[numVMMemoryTags].pointer = ptr;
-			vmMemoryTags[numVMMemoryTags].tag = S_Malloc(strlen(tag)+1);
-			Q_strncpyz(vmMemoryTags[numVMMemoryTags].tag, tag, strlen(tag)+1);
-			vmMemoryTags[numVMMemoryTags].size = size;
-			numVMMemoryTags++;
+		if ( freeSlot >= 0 && freeSlot < MAX_VM_MEMORY_TAGS ) {
+			vmMemoryTags[ freeSlot ].vm = vm;
+			vmMemoryTags[ freeSlot ].pointer = ptr;
+			vmMemoryTags[ freeSlot ].tag = S_Malloc( strlen(tag)+1 );
+			Q_strncpyz( vmMemoryTags[ freeSlot ].tag, tag, strlen(tag)+1 );
+			vmMemoryTags[ freeSlot ].size = size;
 		} else {
 			Com_Error( ERR_DROP, "Out of free VM memory tags" );
 		}
@@ -1139,9 +1154,23 @@ intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag ) {
 VM_ClearMemoryTags
 =================
 */
-void VM_ClearMemoryTags( void ) {
-	Com_Memset( vmMemoryTags, 0, sizeof ( vmMemoryTags ) );
-	numVMMemoryTags = 0;
+void VM_ClearMemoryTags( vm_t *vm ) {
+	int i;
+
+	if ( !vm ) {
+		return;
+	}
+
+	for ( i = 0; i < MAX_VM_MEMORY_TAGS; i++ ) {
+		if ( vmMemoryTags[i].vm == vm ) {
+			vmMemoryTags[i].vm = NULL;
+
+			Z_Free( vmMemoryTags[i].tag );
+			vmMemoryTags[i].tag = NULL;
+			vmMemoryTags[i].pointer = 0;
+			vmMemoryTags[i].size = 0;
+		}
+	}
 }
 
 /*

@@ -779,6 +779,7 @@ void SV_ShutdownGameProgs( void ) {
 	}
 	VM_Call( gvm, GAME_SHUTDOWN, qfalse );
 	VM_Free( gvm );
+	Z_FreeTags( TAG_GAME );
 	gvm = NULL;
 }
 
