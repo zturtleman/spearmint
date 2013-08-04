@@ -498,7 +498,7 @@ void S_SpatializeOrigin (vec3_t origin, int master_vol, int *left_vol, int *righ
 		vol = (master_vol * scale);
 		if (vol < 0)
 			vol = 0;
-		*left_vol += (master_vol * scale);
+		*left_vol += vol;
 	}
 
 	if ( *right_vol > master_vol ) {
