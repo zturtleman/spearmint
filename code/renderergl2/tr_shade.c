@@ -526,13 +526,24 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 		case CGEN_FOG:
 			{
 				fog_t		*fog;
+				unsigned	colorInt;
 
-				fog = tr.world->fogs + tess.fogNum;
+				if ( tess.shader->isSky ) {
+					colorInt = tr.skyFogColorInt;
+				} else {
+					fog = tr.world->fogs + tess.fogNum;
 
-				baseColor[0] = ((unsigned char *)(&fog->colorInt))[0] / 255.0f;
-				baseColor[1] = ((unsigned char *)(&fog->colorInt))[1] / 255.0f;
-				baseColor[2] = ((unsigned char *)(&fog->colorInt))[2] / 255.0f;
-				baseColor[3] = ((unsigned char *)(&fog->colorInt))[3] / 255.0f;
+					if ( fog->originalBrushNumber < 0 ) {
+						colorInt = backEnd.refdef.fogColorInt;
+					} else {
+						colorInt = fog->colorInt;
+					}
+				}
+
+				baseColor[0] = ((unsigned char *)(&colorInt))[0] / 255.0f;
+				baseColor[1] = ((unsigned char *)(&colorInt))[1] / 255.0f;
+				baseColor[2] = ((unsigned char *)(&colorInt))[2] / 255.0f;
+				baseColor[3] = ((unsigned char *)(&colorInt))[3] / 255.0f;
 			}
 
 			vertColor[0] =
