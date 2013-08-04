@@ -312,7 +312,7 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
     <key>LSMinimumSystemVersion</key>
     <string>${MACOSX_DEPLOYMENT_TARGET}</string>
     <key>NSHumanReadableCopyright</key>
-    <string>QUAKE III ARENA Copyright © 1999-2000 id Software, Inc. All rights reserved.</string>
+    <string>Copyright © 1999-2013 id Software LLC, Dark Legion Development, Padworld Entertainment, ioquake3 contributors.</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
 </dict>
