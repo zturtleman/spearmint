@@ -348,6 +348,18 @@ static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 	return shader;
 }
 
+/*
+===============
+ConvertBSPFogNum
+
+convert -1 to 1 (global fog that is enabled/disabled by cgame)
+shift all other numbers up
+===============
+*/
+static int ConvertBSPFogNum( int fogNum ) {
+	return LittleLong( fogNum ) + 2;
+}
+
 // Ridah, optimizations here
 // memory block for use by surfaces
 static byte *surfHunkPtr;
@@ -449,7 +461,7 @@ static void ParseMesh( dsurface_t *ds, drawVert_t *verts, msurface_t *surf ) {
 	lightmapNum = LittleLong( ds->lightmapNum );
 
 	// get fog volume
-	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+	surf->fogIndex = ConvertBSPFogNum( ds->fogNum );
 
 	// get shader value
 	surf->shader = ShaderForShaderNum( ds->shaderNum, lightmapNum );
@@ -523,7 +535,7 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, i
 	}
 
 	// get fog volume
-	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+	surf->fogIndex = ConvertBSPFogNum( ds->fogNum );
 
 	// get shader
 	surf->shader = ShaderForShaderNum( ds->shaderNum, lightmapNum );
@@ -596,7 +608,7 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, i
 
 
 	// get fog volume
-	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+	surf->fogIndex = ConvertBSPFogNum( ds->fogNum );
 
 	// get shader
 	surf->shader = ShaderForShaderNum( ds->shaderNum, LIGHTMAP_BY_VERTEX );
@@ -715,7 +727,7 @@ static void ParseFlare( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int
 	int				i;
 
 	// get fog volume
-	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+	surf->fogIndex = ConvertBSPFogNum( ds->fogNum );
 
 	// get shader
 	surf->shader = ShaderForShaderNum( ds->shaderNum, LIGHTMAP_BY_VERTEX );
@@ -1825,11 +1837,16 @@ static	void R_LoadFogs( lump_t *l, lump_t *brushesLump, lump_t *sidesLump ) {
 	s_worldData.fogs = ri.Hunk_Alloc ( s_worldData.numfogs*sizeof(*out), h_low);
 	out = s_worldData.fogs + 1;
 
-	// reset global fog
-	s_worldData.globalFog = -1;
+	// reset bsp global fog number
+	s_worldData.globalFogNum = -1;
+
+	// setup global fog
+	out->originalBrushNumber = -1;
+	VectorSet( out->bounds[ 0 ], MIN_WORLD_COORD, MIN_WORLD_COORD, MIN_WORLD_COORD );
+	VectorSet( out->bounds[ 1 ], MAX_WORLD_COORD, MAX_WORLD_COORD, MAX_WORLD_COORD );
+	out++;
 
 	if ( !count ) {
-		goto forceGlobalFogSetup;
 		return;
 	}
 
@@ -1845,7 +1862,7 @@ static	void R_LoadFogs( lump_t *l, lump_t *brushesLump, lump_t *sidesLump ) {
 	}
 	sidesCount = sidesLump->filelen / sizeof(*sides);
 
-	for ( i=0 ; i<count ; i++, fogs++) {
+	for ( i=2 ; i<count+2 ; i++, fogs++) {
 		out->originalBrushNumber = LittleLong( fogs->brushNum );
 
 		// global fog has a brush number of -1, and no visible side
@@ -1916,7 +1933,7 @@ static	void R_LoadFogs( lump_t *l, lump_t *brushesLump, lump_t *sidesLump ) {
 		out->tcScale = R_FogTcScale( shader->fogParms.fogType, d, shader->fogParms.density );
 
 		if ( out->originalBrushNumber == -1 ) {
-			s_worldData.globalFog = i + 1;
+			s_worldData.globalFogNum = i;
 		} else {
 			// set the gradient vector
 			sideNum = LittleLong( fogs->visibleSide );
@@ -1932,26 +1949,6 @@ static	void R_LoadFogs( lump_t *l, lump_t *brushesLump, lump_t *sidesLump ) {
 		}
 
 		out++;
-	}
-
-forceGlobalFogSetup:
-
-	// Add global fog if not present in bsp.
-	if ( s_worldData.globalFog == -1 ) {
-		s_worldData.globalFog = s_worldData.numfogs - 1;
-
-		out = s_worldData.fogs + s_worldData.globalFog;
-
-		out->originalBrushNumber = -1;
-
-		VectorSet( out->bounds[ 0 ], 0, 0, 0 );
-		VectorSet( out->bounds[ 1 ], 0, 0, 0 );
-
-		// Don't check bounds of global fog.
-		//s_worldData.numfogs--;
-	} else {
-		// Ignore internal global fog.
-		s_worldData.numfogs--;
 	}
 }
 
@@ -2186,12 +2183,14 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.world = &s_worldData;
 
 	// If global fog was found in BSP and hasn't been set by a shader, use it
-	if ( tr.world->globalFog != -1 && tr.world->fogs[tr.world->globalFog].shader  && !tr.globalFogType ) {
+	if ( tr.world->globalFogNum != -1 && tr.world->fogs[ tr.world->globalFogNum ].shader && !tr.globalFogType ) {
+		shader_t *shader = tr.world->fogs[ tr.world->globalFogNum ].shader;
+
 		// Set default global fog
-		tr.globalFogType = tr.world->fogs[tr.world->globalFog].shader->fogParms.fogType;
-		VectorCopy( tr.world->fogs[tr.world->globalFog].shader->fogParms.color, tr.globalFogColor );
-		tr.globalFogDepthForOpaque = tr.world->fogs[tr.world->globalFog].shader->fogParms.depthForOpaque;
-		tr.globalFogDensity = tr.world->fogs[tr.world->globalFog].shader->fogParms.density;
+		tr.globalFogType = shader->fogParms.fogType;
+		VectorCopy( shader->fogParms.color, tr.globalFogColor );
+		tr.globalFogDepthForOpaque = shader->fogParms.depthForOpaque;
+		tr.globalFogDensity = shader->fogParms.density;
 	}
 
 	R_InitExternalShaders();
