@@ -1787,7 +1787,7 @@ shaderProgram_t *GLSL_GetGenericShaderProgram(int stage)
 	shaderStage_t *pStage = tess.xstages[stage];
 	int shaderAttribs = 0;
 
-	if (tess.fogNum && pStage->adjustColorsForFog)
+	if (tess.fogNum && (!R_IsGlobalFog(tess.fogNum) || backEnd.refdef.fogType != FT_NONE) && pStage->adjustColorsForFog)
 	{
 		shaderAttribs |= GENERICDEF_USE_FOG;
 	}
