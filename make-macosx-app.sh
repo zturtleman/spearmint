@@ -75,11 +75,11 @@ function symlinkArch()
 
     pushd "${DSTPATH}" > /dev/null
 
-    IS32=`file "${SRCFILE}.${EXT}" | grep "i386" | awk '{print $NF}'`
-    IS64=`file "${SRCFILE}.${EXT}" | grep "x86_64" | awk '{print $NF}'`
-	ISPPC=`file "${SRCFILE}.${EXT}" | grep "ppc" | awk '{print $NF}'`
+    IS32=`file "${SRCFILE}.${EXT}" | grep "i386"`
+    IS64=`file "${SRCFILE}.${EXT}" | grep "x86_64"`
+    ISPPC=`file "${SRCFILE}.${EXT}" | grep "ppc"`
 
-    if [ "${IS32}" == "i386" ]; then
+    if [ "${IS32}" != "" ]; then
         if [ ! -L "${DSTFILE}x86.${EXT}" ]; then
             ln -s "${SRCFILE}.${EXT}" "${DSTFILE}x86.${EXT}"
         fi
@@ -87,7 +87,7 @@ function symlinkArch()
         rm "${DSTFILE}x86.${EXT}"
     fi
 
-    if [ "${IS64}" == "x86_64" ]; then
+    if [ "${IS64}" != "" ]; then
         if [ ! -L "${DSTFILE}x86_64.${EXT}" ]; then
             ln -s "${SRCFILE}.${EXT}" "${DSTFILE}x86_64.${EXT}"
         fi
@@ -95,7 +95,7 @@ function symlinkArch()
         rm "${DSTFILE}x86_64.${EXT}"
     fi
 
-    if [ "${ISPPC}" == "ppc" ]; then
+    if [ "${ISPPC}" != "" ]; then
         if [ ! -L "${DSTFILE}ppc.${EXT}" ]; then
             ln -s "${SRCFILE}.${EXT}" "${DSTFILE}ppc.${EXT}"
         fi
@@ -145,12 +145,13 @@ BASEDIR="baseq3"
 MISSIONPACKDIR="missionpack"
 
 CGAME="cgame"
-GAME="qagame"
+GAME="game"
 UI="ui"
 
 RENDERER_OPENGL="renderer_opengl"
 
-DEDICATED_NAME="ioq3ded"
+EXECUTABLE_NAME="spearmint"
+DEDICATED_NAME="spearmint-server"
 
 CGAME_NAME="${CGAME}.dylib"
 GAME_NAME="${GAME}.dylib"
@@ -165,13 +166,12 @@ PKGINFO="APPLIOQ3"
 
 OBJROOT="build"
 #BUILT_PRODUCTS_DIR="${OBJROOT}/${TARGET_NAME}-darwin-${CURRENT_ARCH}"
-PRODUCT_NAME="ioquake3"
+PRODUCT_NAME="Spearmint"
 WRAPPER_EXTENSION="app"
 WRAPPER_NAME="${PRODUCT_NAME}.${WRAPPER_EXTENSION}"
 CONTENTS_FOLDER_PATH="${WRAPPER_NAME}/Contents"
 UNLOCALIZED_RESOURCES_FOLDER_PATH="${CONTENTS_FOLDER_PATH}/Resources"
 EXECUTABLE_FOLDER_PATH="${CONTENTS_FOLDER_PATH}/MacOS"
-EXECUTABLE_NAME="${PRODUCT_NAME}"
 
 # loop through the architectures to build string lists for each universal binary
 for ARCH in $SEARCH_ARCHS; do
@@ -238,12 +238,12 @@ done
 cd `dirname $0`
 
 if [ ! -f Makefile ]; then
-	echo "$0 must be run from the ioquake3 build directory"
+	echo "$0 must be run from the spearmint build directory"
 	exit 1
 fi
 
 if [ "${IOQ3_CLIENT_ARCHS}" == "" ]; then
-	echo "$0: no ioquake3 binary architectures were found for target '${TARGET_NAME}'"
+	echo "$0: no spearmint binary architectures were found for target '${TARGET_NAME}'"
 	exit 1
 fi
 
@@ -312,7 +312,7 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
     <key>LSMinimumSystemVersion</key>
     <string>${MACOSX_DEPLOYMENT_TARGET}</string>
     <key>NSHumanReadableCopyright</key>
-    <string>QUAKE III ARENA Copyright © 1999-2000 id Software, Inc. All rights reserved.</string>
+    <string>Copyright © 1999-2013 id Software LLC, Dark Legion Development, Padworld Entertainment, ioquake3 contributors.</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
 </dict>

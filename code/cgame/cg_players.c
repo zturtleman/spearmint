@@ -2143,7 +2143,7 @@ Adds a piece with modifications or duplications for powerups
 Also called by CG_Missile for quad rockets, but nobody can tell...
 ===============
 */
-void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int team ) {
+void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state ) {
 
 	if ( state->powerups & ( 1 << PW_INVIS ) ) {
 		ent->customShader = cgs.media.invisShader;
@@ -2151,7 +2151,7 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int te
 	} else {
 		/*
 		if ( state->eFlags & EF_KAMIKAZE ) {
-			if (team == TEAM_BLUE)
+			if ( state->team == TEAM_BLUE )
 				ent->customShader = cgs.media.blueKamikazeShader;
 			else
 				ent->customShader = cgs.media.redKamikazeShader;
@@ -2163,7 +2163,7 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int te
 
 		if ( state->powerups & ( 1 << PW_QUAD ) )
 		{
-			if (team == TEAM_RED)
+			if ( state->team == TEAM_RED )
 				ent->customShader = cgs.media.redQuadShader;
 			else
 				ent->customShader = cgs.media.quadShader;
@@ -2334,7 +2334,7 @@ void CG_Player( centity_t *cent ) {
 	legs.renderfx = renderfx;
 	VectorCopy (legs.origin, legs.oldorigin);	// don't positionally lerp at all
 
-	CG_AddRefEntityWithPowerups( &legs, &cent->currentState, ci->team );
+	CG_AddRefEntityWithPowerups( &legs, &cent->currentState );
 
 	// if the model failed, allow the default nullmodel to be displayed
 	if (!legs.hModel) {
@@ -2358,7 +2358,7 @@ void CG_Player( centity_t *cent ) {
 	torso.shadowPlane = shadowPlane;
 	torso.renderfx = renderfx;
 
-	CG_AddRefEntityWithPowerups( &torso, &cent->currentState, ci->team );
+	CG_AddRefEntityWithPowerups( &torso, &cent->currentState );
 
 #ifdef MISSIONPACK
 	if ( cent->currentState.eFlags & EF_KAMIKAZE ) {
@@ -2580,7 +2580,7 @@ void CG_Player( centity_t *cent ) {
 	head.shadowPlane = shadowPlane;
 	head.renderfx = renderfx;
 
-	CG_AddRefEntityWithPowerups( &head, &cent->currentState, ci->team );
+	CG_AddRefEntityWithPowerups( &head, &cent->currentState );
 
 #ifdef MISSIONPACK
 	CG_BreathPuffs(cent, &head);

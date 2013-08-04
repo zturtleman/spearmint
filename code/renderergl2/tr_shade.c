@@ -670,16 +670,26 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 	if (!tess.fogNum)
 		return;
 
-	fog = tr.world->fogs + tess.fogNum;
-
-	if ( tr.world && tess.fogNum == tr.world->globalFog ) {
-		if ( backEnd.refdef.fogType == FT_NONE ) {
+	if ( tess.shader->isSky ) {
+		if ( tr.skyFogType == FT_NONE ) {
 			return;
 		}
 
-		tcScale = backEnd.refdef.fogTcScale;
+		fog = NULL;
+		tcScale = tr.skyFogTcScale;
 	} else {
-		tcScale = fog->tcScale;
+		fog = tr.world->fogs + tess.fogNum;
+
+		// Global fog
+		if ( fog->originalBrushNumber < 0 ) {
+			if ( backEnd.refdef.fogType == FT_NONE ) {
+				return;
+			}
+
+			tcScale = backEnd.refdef.fogTcScale;
+		} else {
+			tcScale = fog->tcScale;
+		}
 	}
 
 	VectorSubtract( backEnd.or.origin, backEnd.viewParms.or.origin, local );
@@ -692,7 +702,7 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 	VectorScale4(fogDistanceVector, tcScale, fogDistanceVector);
 
 	// rotate the gradient vector for this orientation
-	if ( fog->hasSurface ) {
+	if ( fog && fog->hasSurface ) {
 		fogDepthVector[0] = fog->surface[0] * backEnd.or.axis[0][0] + 
 			fog->surface[1] * backEnd.or.axis[0][1] + fog->surface[2] * backEnd.or.axis[0][2];
 		fogDepthVector[1] = fog->surface[0] * backEnd.or.axis[1][0] + 
@@ -988,25 +998,40 @@ static void RB_FogPass( void ) {
 	vec4_t	fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
 	float	eyeT = 0;
 	shaderProgram_t *sp;
+	fogType_t	fogType;
 	int		colorInt;
 
 	int deformGen;
 	vec5_t deformParams;
 
-	if ( tr.world && tess.fogNum == tr.world->globalFog ) {
-		if ( backEnd.refdef.fogType == FT_NONE ) {
-			return;
-		}
+	// no fog pass
+	if ( tess.shader->noFog ) {
+		return;
+	}
 
-		colorInt = backEnd.refdef.fogColorInt;
+	if ( tess.shader->isSky ) {
+		fogType = tr.skyFogType;
+		colorInt = tr.skyFogColorInt;
 	} else {
 		fog = tr.world->fogs + tess.fogNum;
 
-		colorInt = fog->colorInt;
+		// Global fog
+		if ( fog->originalBrushNumber < 0 ) {
+			fogType = backEnd.refdef.fogType;
+			colorInt = backEnd.refdef.fogColorInt;
+		} else {
+			fogType = fog->shader->fogParms.fogType;
+			colorInt = fog->colorInt;
+		}
+	}
+
+	if ( fogType == FT_NONE ) {
+		return;
 	}
 
 	ComputeDeformValues(&deformGen, deformParams);
 
+	// ZTM: FIXME: need linear fog shader for FT_LINEAR ?
 	{
 		int index = 0;
 

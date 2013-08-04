@@ -1388,14 +1388,6 @@ typedef struct qtime_s {
 } qtime_t;
 
 
-// server browser sources
-// TTimo: AS_MPLAYER is no longer used
-#define AS_LOCAL			0
-#define AS_MPLAYER		1
-#define AS_GLOBAL			2
-#define AS_FAVORITES	3
-
-
 // cinematic states
 typedef enum {
 	FMV_IDLE,
@@ -1406,24 +1398,6 @@ typedef enum {
 	FMV_LOOPED,
 	FMV_ID_WAIT
 } e_status;
-
-typedef enum _flag_status {
-	FLAG_ATBASE = 0,
-	FLAG_TAKEN,			// CTF
-	FLAG_TAKEN_RED,		// One Flag CTF
-	FLAG_TAKEN_BLUE,	// One Flag CTF
-	FLAG_DROPPED
-} flagStatus_t;
-
-typedef enum {
-	DS_NONE,
-
-	DS_PLAYBACK,
-	DS_RECORDING,
-
-	DS_NUM_DEMO_STATES
-} demoState_t;
-
 
 
 #define MAX_JOYSTICK_AXIS 16

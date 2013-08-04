@@ -7,15 +7,15 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
-		2772B8021790EBE0004CCF57 /* all ioquake3 */ = {
+		2772B8021790EBE0004CCF57 /* all spearmint */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = 2772B8031790EBE0004CCF57 /* Build configuration list for PBXAggregateTarget "all ioquake3" */;
+			buildConfigurationList = 2772B8031790EBE0004CCF57 /* Build configuration list for PBXAggregateTarget "all spearmint" */;
 			buildPhases = (
 			);
 			dependencies = (
 				2772B80D1790ECAB004CCF57 /* PBXTargetDependency */,
 			);
-			name = "all ioquake3";
+			name = "all spearmint";
 			productName = "all ioquake3";
 		};
 		2772B8081790EC7F004CCF57 /* all game */ = {
@@ -197,10 +197,10 @@
 		2711BECE14D137BC005EB142 /* snd_public.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = snd_public.h; sourceTree = "<group>"; };
 		2711BECF14D137BC005EB142 /* snd_wavelet.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = snd_wavelet.c; sourceTree = "<group>"; };
 		2711BEE014D137F4005EB142 /* cg_public.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cg_public.h; sourceTree = "<group>"; };
-		273531EB14D1275D00EB7BD6 /* ioquake3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ioquake3.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		273531EB14D1275D00EB7BD6 /* spearmint.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = spearmint.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		273531EF14D1275D00EB7BD6 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
-		273531F714D1275D00EB7BD6 /* ioquake3-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ioquake3-Info.plist"; sourceTree = "<group>"; };
-		273531FD14D1275D00EB7BD6 /* ioquake3-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ioquake3-Prefix.pch"; sourceTree = "<group>"; };
+		273531F714D1275D00EB7BD6 /* spearmint-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "spearmint-Info.plist"; sourceTree = "<group>"; };
+		273531FD14D1275D00EB7BD6 /* spearmint-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "spearmint-Prefix.pch"; sourceTree = "<group>"; };
 		2735379B14D8F13E000D6E73 /* botlib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = botlib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		274FAB78178FA81700B17C7A /* snd_main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = snd_main.c; sourceTree = "<group>"; };
 		274FAB7A178FA86E00B17C7A /* md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = md5.c; sourceTree = "<group>"; };
@@ -543,7 +543,7 @@
 		273531EC14D1275D00EB7BD6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				273531EB14D1275D00EB7BD6 /* ioquake3.app */,
+				273531EB14D1275D00EB7BD6 /* spearmint.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -562,8 +562,8 @@
 			isa = PBXGroup;
 			children = (
 				2758BB41179070C3007F6582 /* quake3_flat.iconset */,
-				273531F714D1275D00EB7BD6 /* ioquake3-Info.plist */,
-				273531FD14D1275D00EB7BD6 /* ioquake3-Prefix.pch */,
+				273531F714D1275D00EB7BD6 /* spearmint-Info.plist */,
+				273531FD14D1275D00EB7BD6 /* spearmint-Prefix.pch */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -707,9 +707,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		273531EA14D1275D00EB7BD6 /* ioquake3 */ = {
+		273531EA14D1275D00EB7BD6 /* spearmint */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2735320914D1275D00EB7BD6 /* Build configuration list for PBXNativeTarget "ioquake3" */;
+			buildConfigurationList = 2735320914D1275D00EB7BD6 /* Build configuration list for PBXNativeTarget "spearmint" */;
 			buildPhases = (
 				273531E714D1275D00EB7BD6 /* Sources */,
 				273531E814D1275D00EB7BD6 /* Frameworks */,
@@ -722,9 +722,9 @@
 			);
 			dependencies = (
 			);
-			name = ioquake3;
+			name = spearmint;
 			productName = quake3;
-			productReference = 273531EB14D1275D00EB7BD6 /* ioquake3.app */;
+			productReference = 273531EB14D1275D00EB7BD6 /* spearmint.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -737,7 +737,7 @@
 				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = ioquake;
 			};
-			buildConfigurationList = 273531E514D1275D00EB7BD6 /* Build configuration list for PBXProject "ioquake3" */;
+			buildConfigurationList = 273531E514D1275D00EB7BD6 /* Build configuration list for PBXProject "spearmint" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -749,8 +749,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				273531EA14D1275D00EB7BD6 /* ioquake3 */,
-				2772B8021790EBE0004CCF57 /* all ioquake3 */,
+				273531EA14D1275D00EB7BD6 /* spearmint */,
+				2772B8021790EBE0004CCF57 /* all spearmint */,
 				2772B8081790EC7F004CCF57 /* all game */,
 			);
 		};
@@ -880,7 +880,7 @@
 /* Begin PBXTargetDependency section */
 		2772B80D1790ECAB004CCF57 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 273531EA14D1275D00EB7BD6 /* ioquake3 */;
+			target = 273531EA14D1275D00EB7BD6 /* spearmint */;
 			targetProxy = 2772B80C1790ECAB004CCF57 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -983,7 +983,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "ioquake3-Prefix.pch";
+				GCC_PREFIX_HEADER = "spearmint-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/../../code/jpeg-8c\"",
 					"\"$(SRCROOT)/../../code/libspeex/include\"",
@@ -991,14 +991,14 @@
 					"\"$(SRCROOT)/../../code/opusfile-0.2/include\"",
 					"\"$(SRCROOT)/../../code/libogg-1.3.0/include\"",
 				);
-				INFOPLIST_FILE = "ioquake3-Info.plist";
+				INFOPLIST_FILE = "spearmint-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(BUILT_PRODUCTS_DIR)\"",
 					"\"$(SRCROOT)/../../code/libs/macosx\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
-				PRODUCT_NAME = ioquake3;
+				PRODUCT_NAME = spearmint;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -1008,7 +1008,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "ioquake3-Prefix.pch";
+				GCC_PREFIX_HEADER = "spearmint-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/../../code/jpeg-8c\"",
 					"\"$(SRCROOT)/../../code/libspeex/include\"",
@@ -1016,14 +1016,14 @@
 					"\"$(SRCROOT)/../../code/opusfile-0.2/include\"",
 					"\"$(SRCROOT)/../../code/libogg-1.3.0/include\"",
 				);
-				INFOPLIST_FILE = "ioquake3-Info.plist";
+				INFOPLIST_FILE = "spearmint-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(BUILT_PRODUCTS_DIR)\"",
 					"\"$(SRCROOT)/../../code/libs/macosx\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
-				PRODUCT_NAME = ioquake3;
+				PRODUCT_NAME = spearmint;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -1059,7 +1059,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		273531E514D1275D00EB7BD6 /* Build configuration list for PBXProject "ioquake3" */ = {
+		273531E514D1275D00EB7BD6 /* Build configuration list for PBXProject "spearmint" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2735320714D1275D00EB7BD6 /* Debug */,
@@ -1068,7 +1068,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2735320914D1275D00EB7BD6 /* Build configuration list for PBXNativeTarget "ioquake3" */ = {
+		2735320914D1275D00EB7BD6 /* Build configuration list for PBXNativeTarget "spearmint" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2735320A14D1275D00EB7BD6 /* Debug */,
@@ -1077,7 +1077,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2772B8031790EBE0004CCF57 /* Build configuration list for PBXAggregateTarget "all ioquake3" */ = {
+		2772B8031790EBE0004CCF57 /* Build configuration list for PBXAggregateTarget "all spearmint" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2772B8041790EBE0004CCF57 /* Debug */,

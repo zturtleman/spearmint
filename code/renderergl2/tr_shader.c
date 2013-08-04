@@ -2254,10 +2254,14 @@ static qboolean ParseShader( char **text )
 
 			tr.skyFogType = FT_EXP;
 
+			// sets how big sky box size is too, not just fog tcscale
 			tr.skyFogDepthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
 
-			tr.skyFogDensity = fogDensity;
-			VectorCopy( fogColor, tr.skyFogColor);
+			tr.skyFogColorInt = ColorBytes4 ( fogColor[0] * tr.identityLight,
+										  fogColor[1] * tr.identityLight,
+										  fogColor[2] * tr.identityLight, 1.0 );
+
+			tr.skyFogTcScale = R_FogTcScale( tr.skyFogType, tr.skyFogDepthForOpaque, fogDensity );
 			continue;
 		}
 		// waterfogvars ( <red> <green> <blue> ) [density <= 1 or depthForOpaque > 1]

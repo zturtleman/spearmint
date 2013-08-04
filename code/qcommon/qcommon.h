@@ -371,7 +371,7 @@ void	*VM_ExplicitArgPtr( vm_t *vm, intptr_t intValue );
 #define	VMA(x) VM_ArgPtr(args[x])
 #define	VMF(x)	IntAsFloat((int)args[x])
 
-void VM_ClearMemoryTags( void );
+void VM_ClearMemoryTags( vm_t *vm );
 intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag );
 intptr_t VM_Alloc( int size, const char *tag );
 
@@ -904,7 +904,8 @@ typedef enum {
 	TAG_BOTLIB,
 	TAG_RENDERER,
 	TAG_SMALL,
-	TAG_STATIC
+	TAG_STATIC,
+	TAG_GAME
 } memtag_t;
 
 /*
