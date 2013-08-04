@@ -3026,7 +3026,7 @@ static void UI_StartSkirmish(qboolean next) {
 		}
 	}
 	if (g >= GT_TEAM ) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, "wait 5; team Red\n" );
+		trap_Cvar_Set( "teampref", "red" );
 	}
 }
 
