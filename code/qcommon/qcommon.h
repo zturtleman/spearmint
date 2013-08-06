@@ -625,13 +625,13 @@ char	**FS_ListFiles( const char *directory, const char *extension, int *numfiles
 // if extension is "/", only subdirectories will be returned
 // the returned files will not include any directories or /
 
-void	FS_SortFileList(char **filelist, int numfiles);
-
 void	FS_FreeFileList( char **list );
 
 qboolean FS_FileExists( const char *file );
 
 qboolean FS_CreatePath (char *OSPath);
+
+int FS_PathCmp( const char *s1, const char *s2 );
 
 int FS_FindVM(void **startSearch, char *found, int foundlen, const char *name, int enableDll);
 

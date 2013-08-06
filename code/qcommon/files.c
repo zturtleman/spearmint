@@ -2214,14 +2214,26 @@ FS_AddFileToList
 ==================
 */
 static int FS_AddFileToList( char *name, char *list[MAX_FOUND_FILES], int nfiles ) {
-	int		i;
+	int		i, j, val;
 
 	if ( nfiles == MAX_FOUND_FILES - 1 ) {
 		return nfiles;
 	}
 	for ( i = 0 ; i < nfiles ; i++ ) {
-		if ( !Q_stricmp( name, list[i] ) ) {
-			return nfiles;		// allready in list
+		val = FS_PathCmp( name, list[i] );
+		if ( !val ) {
+			return nfiles;		// already in list
+		}
+		// insert into list
+		else if ( val < 0 ) {
+			for ( j = nfiles-1; j >= i; --j ) {
+				list[j+1] = list[j];
+			}
+
+			list[i] = CopyString( name );
+			nfiles++;
+
+			return nfiles;
 		}
 	}
 	list[nfiles] = CopyString( name );
@@ -2410,8 +2422,6 @@ char **FS_ListFilesEx( const char *path, const char **extensions, int numExts, i
 	if ( !nfiles ) {
 		return NULL;
 	}
-
-	FS_SortFileList((char **)&list, nfiles);
 
 	listCopy = Z_Malloc( ( nfiles + 1 ) * sizeof( *listCopy ) );
 	for ( i = 0 ; i < nfiles ; i++ ) {
@@ -2862,34 +2872,6 @@ int FS_PathCmp( const char *s1, const char *s2 ) {
 
 /*
 ================
-FS_SortFileList
-================
-*/
-void FS_SortFileList(char **filelist, int numfiles) {
-	int i, j, k, numsortedfiles;
-	char **sortedlist;
-
-	sortedlist = Z_Malloc( ( numfiles + 1 ) * sizeof( *sortedlist ) );
-	sortedlist[0] = NULL;
-	numsortedfiles = 0;
-	for (i = 0; i < numfiles; i++) {
-		for (j = 0; j < numsortedfiles; j++) {
-			if (FS_PathCmp(filelist[i], sortedlist[j]) < 0) {
-				break;
-			}
-		}
-		for (k = numsortedfiles; k > j; k--) {
-			sortedlist[k] = sortedlist[k-1];
-		}
-		sortedlist[j] = filelist[i];
-		numsortedfiles++;
-	}
-	Com_Memcpy(filelist, sortedlist, numfiles * sizeof( *filelist ) );
-	Z_Free(sortedlist);
-}
-
-/*
-================
 FS_NewDir_f
 ================
 */
@@ -2910,8 +2892,6 @@ void FS_NewDir_f( void ) {
 	Com_Printf( "---------------\n" );
 
 	dirnames = FS_ListFilteredFiles( "", "", filter, &ndirs, qfalse );
-
-	FS_SortFileList(dirnames, ndirs);
 
 	for ( i = 0; i < ndirs; i++ ) {
 		FS_ConvertPath(dirnames[i]);
@@ -4443,8 +4423,6 @@ void	FS_FilenameCompletion( const char *dir, const char *ext,
 	char	filename[ MAX_STRING_CHARS ];
 
 	filenames = FS_ListFilteredFiles( dir, ext, NULL, &nfiles, allowNonPureFilesOnDisk );
-
-	FS_SortFileList( filenames, nfiles );
 
 	for( i = 0; i < nfiles; i++ ) {
 		FS_ConvertPath( filenames[ i ] );
