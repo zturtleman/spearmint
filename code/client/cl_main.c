@@ -1580,6 +1580,7 @@ void CL_Disconnect( qboolean showMainMenu ) {
 			speex_bits_destroy(&clc.speexDecoderBits[i]);
 			speex_decoder_destroy(clc.speexDecoder[i]);
 		}
+		clc.speexInitialized = qfalse;
 	}
 	Cmd_RemoveCommand ("voip");
 #endif
