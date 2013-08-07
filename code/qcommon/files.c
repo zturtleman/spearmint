@@ -3896,6 +3896,8 @@ static void FS_CheckPaks( qboolean quiet )
 	char			badGames[512];
 	int				pak;
 
+	badGames[0] = '\0';
+
 	FS_ReorderPaksumsPaks();
 
 	for (pak = 0; pak < fs_numPaksums; pak++) {
