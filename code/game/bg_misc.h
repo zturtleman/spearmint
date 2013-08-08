@@ -81,9 +81,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	CS_MUSIC				2
 #define	CS_MESSAGE				3		// from the map worldspawn's message field
 #define	CS_MOTD					4		// g_motd string for server message of the day
-/* bg_public.h
-	ZTM: NOTE: Server expects CS_WARMUP as 5.
-*/
 #define	CS_WARMUP				5		// server time when the match will be restarted
 #define	CS_SCORES1				6
 #define	CS_SCORES2				7

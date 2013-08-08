@@ -591,9 +591,6 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	DA_Init( &svs.snapshotEntities, svs.numSnapshotEntities, sv.gameEntityStateSize, qfalse );
 	svs.nextSnapshotEntities = 0;
 
-	// don't allow a map_restart if game is modified
-	sv_dorestart->integer = 0;
-
 	// run a few frames to allow everything to settle
 	for (i = 0;i < 3; i++)
 	{
@@ -799,8 +796,6 @@ void SV_Init (void)
 
 	sv_public = Cvar_Get("sv_public", "0", 0);
 	Cvar_CheckRange(sv_public, -2, 1, qtrue);
-
-	sv_dorestart = Cvar_Get ("sv_dorestart", "0", CVAR_ROM );
 
 	// initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();

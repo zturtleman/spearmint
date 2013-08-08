@@ -419,5 +419,12 @@ typedef enum {
 	GAME_VID_RESTART,				// ( void );
 	// caused by vid_restart on localhost server.
 	// model handles are no longer valid, must re-register all models.
+
+	GAME_MAP_RESTART				// ( int levelTime, int restartTime );
+	// G_MapRestart will be called when a map_restart command has been issued;
+	//    caused by user, VM code, or server after restart time is hit.
+	// return restart time (levelTime + delay), -1 to do a full map reload,
+	//    or INT_MAX to prevent map restart.
+
 } gameExport_t;
 

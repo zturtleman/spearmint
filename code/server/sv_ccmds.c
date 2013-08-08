@@ -219,7 +219,6 @@ static void SV_MapRestart_f( void ) {
 	player_t	*player;
 	char		*denied;
 	qboolean	isBot;
-	int			delay;
 
 	// make sure we aren't restarting twice in the same frame
 	if ( com_frameTime == sv.serverId ) {
@@ -232,25 +231,16 @@ static void SV_MapRestart_f( void ) {
 		return;
 	}
 
-	if ( sv.restartTime ) {
-		return;
-	}
+	// let game delay or pervent the restart or force full map reload
+	sv.restartTime = VM_Call( gvm, GAME_MAP_RESTART, sv.time, sv.restartTime );
 
-	if (Cmd_Argc() > 1 ) {
-		delay = atoi( Cmd_Argv(1) );
-	}
-	else {
-		delay = 5;
-	}
-	if( delay && !Cvar_VariableValue("g_doWarmup") ) {
-		sv.restartTime = sv.time + delay * 1000;
-		SV_SetConfigstring( CS_WARMUP, va("%i", sv.restartTime) );
+	if( sv.restartTime > sv.time ) {
 		return;
 	}
 
 	// check for changes in variables that can't just be restarted
 	// check for maxclients change
-	if ( sv_maxclients->modified || sv_dorestart->integer ) {
+	if ( sv_maxclients->modified || sv.restartTime < 0 ) {
 		char	mapname[MAX_QPATH];
 
 		Com_Printf( "variable change -- restarting.\n" );
@@ -334,7 +324,7 @@ static void SV_MapRestart_f( void ) {
 				if ( player != NULL ) {
 					SV_DropPlayer( player, denied );
 				}
-				Com_Printf( "SV_MapRestart_f(%d): dropped client %i - denied!\n", delay, i );
+				Com_Printf( "SV_MapRestart_f: dropped client %i - denied!\n", i );
 				continue;
 			}
 
