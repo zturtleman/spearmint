@@ -83,6 +83,20 @@ static void CL_GetClipboardData( char *buf, int buflen ) {
 
 /*
 ====================
+CL_SetMapTitle
+====================
+*/
+void CL_SetMapTitle( const char *name ) {
+	if ( !name || !*name ) {
+		clc.mapTitle[0] = '\0';
+		return;
+	}
+
+	Q_strncpyz( clc.mapTitle, name, sizeof ( clc.mapTitle ) );
+}
+
+/*
+====================
 CL_GetClientState
 ====================
 */
@@ -1376,6 +1390,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 	case CG_GETDEMOLENGTH:
 		return CL_DemoLength();
+	case CG_SETMAPTITLE:
+		CL_SetMapTitle( VMA(1) );
+		return 0;
 	case CG_GETCLIENTSTATE:
 		CL_GetClientState( VMA(1) );
 		return 0;

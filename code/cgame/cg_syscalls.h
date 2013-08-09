@@ -96,6 +96,7 @@ int			trap_GetDemoLength( void );
 
 void		trap_GetClientState( uiClientState_t *state );
 int			trap_GetConfigString( int index, char* buff, int buffsize );
+void		trap_SetMapTitle( const char *name );
 
 // model collision
 void		trap_CM_LoadMap( const char *mapname );

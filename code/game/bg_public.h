@@ -36,5 +36,3 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	PERS_SCORE				0		// !!! MUST NOT CHANGE, SERVER AND
 										// GAME BOTH REFERENCE !!!
 
-// client only
-#define	CS_MESSAGE				3		// from the map worldspawn's message field

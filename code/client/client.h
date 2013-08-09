@@ -190,6 +190,7 @@ typedef struct {
 	int			connectTime;				// for connection retransmits
 	int			connectPacketCount;			// for display on connection dialog
 	char		serverMessage[MAX_STRING_TOKENS];	// for display on connection dialog
+	char		mapTitle[MAX_STRING_TOKENS];		// for saving in PNG screenshots
 
 	int			challenge;					// from the server to use for connecting
 
@@ -622,6 +623,6 @@ qboolean CL_VideoRecording( void );
 // cl_main.c
 //
 void CL_WriteDemoMessage ( msg_t *msg, int headerBytes );
-void CL_GetMapMessage(char *buf, int bufLength);
-qboolean CL_GetClientLocation(char *buf, int bufLength, int localClientNum);
+void CL_GetMapTitle( char *buf, int bufLength );
+qboolean CL_GetClientLocation( char *buf, int bufLength, int localClientNum );
 

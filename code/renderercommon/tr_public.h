@@ -213,8 +213,8 @@ typedef struct {
 	uLong (*zlib_crc32) (uLong crc, const Bytef *buf, uInt len);
 
 	// get extra info for png screenshots
-	void	(*CL_GetMapMessage)(char *buf, int bufLength);
-	qboolean (*CL_GetClientLocation)(char *buf, int bufLength, int localClientNum);
+	void	(*CL_GetMapTitle)( char *buf, int bufLength );
+	qboolean (*CL_GetClientLocation)( char *buf, int bufLength, int localClientNum );
 } refimport_t;
 
 

@@ -523,6 +523,10 @@ int trap_GetConfigString( int index, char* buff, int buffsize ) {
 	return syscall( CG_GETCONFIGSTRING, index, buff, buffsize );
 }
 
+void trap_SetMapTitle( const char *name ) {
+	syscall( CG_SETMAPTITLE, name );
+}
+
 int trap_MemoryRemaining( void ) {
 	return syscall( CG_MEMORY_REMAINING );
 }
