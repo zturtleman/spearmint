@@ -191,6 +191,7 @@ typedef struct {
 	int			connectPacketCount;			// for display on connection dialog
 	char		serverMessage[MAX_STRING_TOKENS];	// for display on connection dialog
 	char		mapTitle[MAX_STRING_TOKENS];		// for saving in PNG screenshots
+	vec3_t		viewAngles[CL_MAX_SPLITVIEW];		// used so cgame can save view angles across vid_restart
 
 	int			challenge;					// from the server to use for connecting
 

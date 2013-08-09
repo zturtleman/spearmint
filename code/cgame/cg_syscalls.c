@@ -527,6 +527,14 @@ void trap_SetMapTitle( const char *name ) {
 	syscall( CG_SETMAPTITLE, name );
 }
 
+void trap_SetViewAngles( int localPlayerNum, const vec3_t angles ) {
+	syscall( CG_SETVIEWANGLES, localPlayerNum, angles );
+}
+
+void trap_GetViewAngles( int localPlayerNum, const vec3_t angles ) {
+	syscall( CG_GETVIEWANGLES, localPlayerNum, angles );
+}
+
 int trap_MemoryRemaining( void ) {
 	return syscall( CG_MEMORY_REMAINING );
 }

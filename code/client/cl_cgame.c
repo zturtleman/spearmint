@@ -97,6 +97,40 @@ void CL_SetMapTitle( const char *name ) {
 
 /*
 ====================
+CL_SetViewAngles
+====================
+*/
+void CL_SetViewAngles( int localPlayerNum, const vec3_t angles ) {
+	if ( localPlayerNum < 0 || localPlayerNum >= CL_MAX_SPLITVIEW ) {
+		return;
+	}
+
+	if ( angles ) {
+		VectorCopy( angles, clc.viewAngles[ localPlayerNum ] );
+	} else {
+		VectorClear( clc.viewAngles[ localPlayerNum ] );
+	}
+}
+
+/*
+====================
+CL_GetViewAngles
+====================
+*/
+void CL_GetViewAngles( int localPlayerNum, vec3_t angles ) {
+	if ( localPlayerNum < 0 || localPlayerNum >= CL_MAX_SPLITVIEW ) {
+		return;
+	}
+
+	if ( !angles ) {
+		return;
+	}
+
+	VectorCopy( clc.viewAngles[ localPlayerNum ], angles );
+}
+
+/*
+====================
 CL_GetClientState
 ====================
 */
@@ -1392,6 +1426,12 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return CL_DemoLength();
 	case CG_SETMAPTITLE:
 		CL_SetMapTitle( VMA(1) );
+		return 0;
+	case CG_SETVIEWANGLES:
+		CL_SetViewAngles( args[1], VMA(2) );
+		return 0;
+	case CG_GETVIEWANGLES:
+		CL_GetViewAngles( args[1], VMA(2) );
 		return 0;
 	case CG_GETCLIENTSTATE:
 		CL_GetClientState( VMA(1) );

@@ -2184,6 +2184,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 			continue;
 		}
 
+		trap_GetViewAngles( i, cg.localClients[i].viewangles );
 		CG_LocalClientAdded(i, clientNums[i]);
 	}
 
@@ -2314,6 +2315,12 @@ Called before every level change or subsystem restart
 =================
 */
 void CG_Shutdown( void ) {
+	int i;
+
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		trap_SetViewAngles( i, cg.localClients[ i ].viewangles );
+	}
+
 	// some mods may need to do cleanup work here,
 	// like closing files or archiving session data
 }

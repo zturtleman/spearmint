@@ -199,6 +199,8 @@ typedef enum {
 	CG_GETDEMONAME,
 	CG_GETDEMOLENGTH,
 	CG_SETMAPTITLE,
+	CG_SETVIEWANGLES,
+	CG_GETVIEWANGLES,
 
 	// note: these were not originally available in cgame
 	CG_GETCLIENTSTATE = 190,
