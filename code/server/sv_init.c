@@ -869,6 +869,8 @@ void SV_Shutdown( char *finalmsg ) {
 	Com_ShutdownRef();
 #endif
 
+	MSG_ShutdownNetFields();
+
 	// free current level
 	SV_ClearServer();
 

@@ -1377,6 +1377,8 @@ void CL_ClearMemory(qboolean shutdownRef)
 		Hunk_Clear();
 		// clear collision map data
 		CM_ClearMap();
+		// clear net fields
+		MSG_ShutdownNetFields();
 	}
 	else {
 		// clear all the client data on the hunk

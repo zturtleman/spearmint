@@ -809,6 +809,18 @@ void MSG_ReportChangeVectors_f( void ) {
 
 /*
 ==================
+MSG_FreeNetFields
+==================
+*/
+static void MSG_FreeNetFields( netFields_t *stateFields ) {
+	if ( stateFields->fields ) {
+		Z_Free( stateFields->fields );
+		stateFields->fields = NULL;
+	}
+}
+
+/*
+==================
 MSG_InitNetFields
 
 Validate net fields and setup each field's numElementArrays.
@@ -827,9 +839,11 @@ static const char *MSG_InitNetFields( netFields_t *stateFields, const vmNetField
 		return "no fields";
 	}
 
+	MSG_FreeNetFields( stateFields );
+
 	stateFields->objectSize = objectSize;
 	stateFields->numFields = numFields;
-	stateFields->fields = Hunk_Alloc( sizeof (netField_t) * numFields, h_high );
+	stateFields->fields = Z_Malloc( sizeof (netField_t) * numFields );
 
 	networkData = 0;
 
@@ -911,6 +925,16 @@ void MSG_SetNetFields( vmNetField_t *vmEntityFields, int numEntityFields, int en
 	if ( error ) {
 		Com_Error( ERR_DROP, "playerState_t: %s", error );
 	}
+}
+
+/*
+==================
+MSG_ShutdownNetFields
+==================
+*/
+void MSG_ShutdownNetFields( void ) {
+	MSG_FreeNetFields( &msg_entityStateFields );
+	MSG_FreeNetFields( &msg_playerStateFields );
 }
 
 /*

@@ -109,6 +109,7 @@ void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *t
 
 void MSG_SetNetFields( vmNetField_t *vmEntityFields, int numEntityFields, int entityStateSize,
 					   vmNetField_t *vmPlayerFields, int numPlayerFields, int playerStateSize );
+void MSG_ShutdownNetFields( void );
 
 void MSG_WriteDeltaEntity( msg_t *msg, sharedEntityState_t *from, sharedEntityState_t *to,
 						   qboolean force );
