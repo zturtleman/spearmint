@@ -468,7 +468,7 @@ void CG_RegisterCvars( void ) {
 		trap_Cvar_Register( &cg_drawGun[i], name, "1", CVAR_ARCHIVE );
 		trap_Cvar_CheckRange( name, 0, 3, qtrue );
 
-		trap_Cvar_Register( &cg_thirdPerson[i], Com_LocalClientCvarName(i, "cg_thirdPerson"), "0", CVAR_CHEAT );
+		trap_Cvar_Register( &cg_thirdPerson[i], Com_LocalClientCvarName(i, "cg_thirdPerson"), "0", 0 );
 		trap_Cvar_Register( &cg_thirdPersonRange[i], Com_LocalClientCvarName(i, "cg_thirdPersonRange"), "40", CVAR_CHEAT );
 		trap_Cvar_Register( &cg_thirdPersonAngle[i], Com_LocalClientCvarName(i, "cg_thirdPersonAngle"), "0", CVAR_CHEAT );
 
