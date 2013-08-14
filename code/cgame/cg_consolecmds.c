@@ -141,6 +141,28 @@ static void CG_ScoresUp_f( int localClientNum ) {
 	}
 }
 
+/*
+=============
+CG_SetModel_f
+=============
+*/
+void CG_SetModel_f( int localClientNum ) {
+	const char	*arg;
+	char	name[256];
+	char	cvarName[32];
+
+	Q_strncpyz( cvarName, Com_LocalClientCvarName( localClientNum, "model"), sizeof (cvarName) );
+
+	arg = CG_Argv( 1 );
+	if ( arg[0] ) {
+		trap_Cvar_Set( cvarName, arg );
+		trap_Cvar_Set( Com_LocalClientCvarName( localClientNum, "headmodel"), arg );
+	} else {
+		trap_Cvar_VariableStringBuffer( cvarName, name, sizeof(name) );
+		Com_Printf("%s is set to %s\n", cvarName, name);
+	}
+}
+
 #ifdef MISSIONPACK_HUD
 extern menuDef_t *menuScoreboard;
 extern displayContextDef_t cgDC;
@@ -659,6 +681,7 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "tauntDeathInsult", CG_TauntDeathInsult_f },
 	{ "tauntGauntlet", CG_TauntGauntlet_f },
 #endif
+	{ "model", CG_SetModel_f },
 	{ "viewpos", CG_Viewpos_f },
 	{ "weapnext", CG_NextWeapon_f },
 	{ "weapprev", CG_PrevWeapon_f },

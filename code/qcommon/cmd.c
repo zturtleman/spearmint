@@ -854,6 +854,7 @@ A complete command line has been parsed, so try to execute it
 */
 void	Cmd_ExecuteString( const char *text ) {	
 	cmd_function_t	*cmdFunc, **prev;
+	qboolean		checkVmCmdFirst;
 
 	// execute the command line
 	Cmd_TokenizeString( text );		
@@ -883,9 +884,12 @@ void	Cmd_ExecuteString( const char *text ) {
 			return;
 		}
 	}
-	
+
+	// let vm commands to override vm cvars
+	checkVmCmdFirst = ( Cvar_Flags( cmd.argv[0] ) & CVAR_VM_CREATED );
+
 	// check cvars
-	if ( Cvar_Command() ) {
+	if ( !checkVmCmdFirst && Cvar_Command() ) {
 		return;
 	}
 
@@ -896,6 +900,11 @@ void	Cmd_ExecuteString( const char *text ) {
 
 	// check server game commands
 	if ( com_sv_running && com_sv_running->integer && SV_GameCommand() ) {
+		return;
+	}
+
+	// check cvars
+	if ( checkVmCmdFirst && Cvar_Command() ) {
 		return;
 	}
 
