@@ -291,14 +291,6 @@ typedef struct {
 
 static cvarTable_t cgameCvarTable[] = {
 	{ &cg_ignore, "cg_ignore", "0", 0, RANGE_ALL },	// used for debugging
-	{ &cg_autoswitch[0], "cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_autoswitch[1], "2cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_autoswitch[2], "3cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_autoswitch[3], "4cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_drawGun[0], "cg_drawGun", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
-	{ &cg_drawGun[1], "2cg_drawGun", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
-	{ &cg_drawGun[2], "3cg_drawGun", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
-	{ &cg_drawGun[3], "4cg_drawGun", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
 	{ &cg_zoomFov, "cg_zoomfov", "22.5", CVAR_ARCHIVE, RANGE_FLOAT(1, 160) },
 	{ &cg_fov, "cg_fov", "90", CVAR_ARCHIVE, RANGE_FLOAT(1, 160) },
 	{ &cg_viewsize, "cg_viewsize", "100", CVAR_ARCHIVE, RANGE_INT( 30, 100 ) },
@@ -347,18 +339,6 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_tracerChance, "cg_tracerchance", "0.4", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_tracerWidth, "cg_tracerwidth", "1", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_tracerLength, "cg_tracerlength", "100", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonRange[0], "cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonAngle[0], "cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonRange[1], "2cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonAngle[1], "2cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonRange[2], "3cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonAngle[2], "3cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonRange[3], "4cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonAngle[3], "4cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPerson[0], "cg_thirdPerson", "0", 0, RANGE_BOOL },
-	{ &cg_thirdPerson[1], "2cg_thirdPerson", "0", 0, RANGE_BOOL },
-	{ &cg_thirdPerson[2], "3cg_thirdPerson", "0", 0, RANGE_BOOL },
-	{ &cg_thirdPerson[3], "4cg_thirdPerson", "0", 0, RANGE_BOOL },
 	{ &cg_splitviewVertical, "cg_splitviewVertical", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },
@@ -387,14 +367,6 @@ static cvarTable_t cgameCvarTable[] = {
 #ifdef MISSIONPACK
 	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
 	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
-	{ &cg_currentSelectedPlayer[0], "cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayer[1], "2cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayer[2], "3cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayer[3], "4cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayerName[0], "cg_currentSelectedPlayerName", "", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayerName[1], "2cg_currentSelectedPlayerName", "", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayerName[2], "3cg_currentSelectedPlayerName", "", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayerName[3], "4cg_currentSelectedPlayerName", "", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_singlePlayer, "ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM, RANGE_ALL },
 	{ &cg_enableDust, "g_enableDust", "0", CVAR_SERVERINFO, RANGE_BOOL },
 	{ &cg_enableBreath, "g_enableBreath", "0", CVAR_SERVERINFO, RANGE_BOOL },
@@ -442,15 +414,17 @@ CG_RegisterCvars
 =================
 */
 void CG_RegisterCvars( void ) {
+	int			userInfo[MAX_SPLITVIEW] = { CVAR_USERINFO, CVAR_USERINFO2, CVAR_USERINFO3, CVAR_USERINFO4 };
+	char		*modelNames[MAX_SPLITVIEW] = { DEFAULT_MODEL, DEFAULT_MODEL2, DEFAULT_MODEL3, DEFAULT_MODEL4 };
+	char		*headModelNames[MAX_SPLITVIEW] = { DEFAULT_HEAD, DEFAULT_HEAD2, DEFAULT_HEAD3, DEFAULT_HEAD4 };
+	char		*teamModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_MODEL, DEFAULT_TEAM_MODEL2, DEFAULT_TEAM_MODEL3, DEFAULT_TEAM_MODEL4 };
+	char		*teamHeadModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_HEAD, DEFAULT_TEAM_HEAD2, DEFAULT_TEAM_HEAD3, DEFAULT_TEAM_HEAD4 };
+	char		*name;
 	int			i;
 	cvarTable_t	*cv;
 	char		var[MAX_TOKEN_CHARS];
 
 	for ( i = 0, cv = cgameCvarTable ; i < cgameCvarTableSize ; i++, cv++ ) {
-		if (Com_LocalClientForCvarName(cv->cvarName) >= CG_MaxSplitView()) {
-			continue;
-		}
-
 		trap_Cvar_Register( cv->vmCvar, cv->cvarName,
 			cv->defaultString, cv->cvarFlags );
 
@@ -459,9 +433,52 @@ void CG_RegisterCvars( void ) {
 		}
 	}
 
-	CG_RegisterInputCvars();
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		if ( i == 0 ) {
+			name = DEFAULT_CLIENT_NAME;
+		} else {
+			name = va("%s%d", DEFAULT_CLIENT_NAME, i + 1);
+		}
 
-	BG_RegisterClientCvars(CG_MaxSplitView());
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "name"), name, userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "model"), modelNames[i], userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "headmodel"), headModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_model"), teamModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_headmodel"), teamHeadModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "color1"), va("%d", DEFAULT_CLIENT_COLOR1), userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "color2"), va("%d", DEFAULT_CLIENT_COLOR2), userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "handicap"), "100", userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "teamtask"), "0", userInfo[i] );
+
+		// set to team in ui before starting server
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "teampref"), "", userInfo[i] );
+		// clear team if was previously set (only want it used for one game)
+		trap_Cvar_Set( Com_LocalClientCvarName(i, "teampref"), "" );
+
+		name = Com_LocalClientCvarName(i, "cg_autoswitch");
+		trap_Cvar_Register( &cg_autoswitch[i], name, "1", CVAR_ARCHIVE );
+		trap_Cvar_CheckRange( name, 0, 1, qtrue );
+
+		name = Com_LocalClientCvarName(i, "cg_drawGun");
+		trap_Cvar_Register( &cg_drawGun[i], name, "1", CVAR_ARCHIVE );
+		trap_Cvar_CheckRange( name, 0, 3, qtrue );
+
+		trap_Cvar_Register( &cg_thirdPerson[i], Com_LocalClientCvarName(i, "cg_thirdPerson"), "0", CVAR_CHEAT );
+		trap_Cvar_Register( &cg_thirdPersonRange[i], Com_LocalClientCvarName(i, "cg_thirdPersonRange"), "40", CVAR_CHEAT );
+		trap_Cvar_Register( &cg_thirdPersonAngle[i], Com_LocalClientCvarName(i, "cg_thirdPersonAngle"), "0", CVAR_CHEAT );
+
+#ifdef MISSIONPACK
+		trap_Cvar_Register( &cg_currentSelectedPlayer[i], Com_LocalClientCvarName(i, "cg_currentSelectedPlayer"), "0", CVAR_ARCHIVE );
+		trap_Cvar_Register( &cg_currentSelectedPlayerName[i], Com_LocalClientCvarName(i, "cg_currentSelectedPlayerName"), "", CVAR_ARCHIVE );
+#endif
+	}
+
+	CG_RegisterInputCvars();
 
 	// see if we are also running the server on this machine
 	trap_Cvar_VariableStringBuffer( "sv_running", var, sizeof( var ) );

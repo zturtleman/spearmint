@@ -5805,8 +5805,6 @@ void UI_RegisterCvars( void ) {
 
 	trap_Cvar_Register( NULL, "g_redTeam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO );
 	trap_Cvar_Register( NULL, "g_blueTeam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO );
-
-	BG_RegisterClientCvars(uiInfo.maxSplitView);
 }
 
 /*
