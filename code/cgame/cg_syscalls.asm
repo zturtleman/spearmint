@@ -81,6 +81,9 @@ equ	trap_GetDemoState					-159
 equ	trap_GetDemoPos						-160
 equ	trap_GetDemoName					-161
 equ	trap_GetDemoLength					-162
+equ	trap_SetMapTitle					-163
+equ	trap_SetViewAngles				-164
+equ	trap_GetViewAngles				-165
 
 equ	trap_GetClientState					-191
 equ	trap_GetConfigString				-192

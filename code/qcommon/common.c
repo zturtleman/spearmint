@@ -132,7 +132,7 @@ int			com_frameNumber;
 
 qboolean	com_errorEntered = qfalse;
 qboolean	com_fullyInitialized = qfalse;
-qboolean	com_gameRestarting = qfalse;
+int			com_gameRestarting = 0;
 
 char	com_errorMessage[MAXPRINTMSG];
 
@@ -282,6 +282,7 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	static int	lastErrorTime;
 	static int	errorCount;
 	int			currentTime;
+	qboolean	restartClient;
 
 	if(com_errorEntered)
 		Sys_Error("recursive error after: %s", com_errorMessage);
@@ -314,9 +315,15 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	if (code != ERR_DISCONNECT)
 		Cvar_Set("com_errorMessage", com_errorMessage);
 
+	restartClient = ( com_gameRestarting & 2 ) && ( !com_cl_running || !com_cl_running->integer );
+	com_gameRestarting = 0;
+
 	if (code == ERR_DISCONNECT || code == ERR_SERVERDISCONNECT) {
 		VM_Forced_Unload_Start();
 		SV_Shutdown( "Server disconnected" );
+		if ( restartClient ) {
+			CL_Init();
+		}
 		CL_Disconnect( qtrue );
 		CL_FlushMemory( );
 		VM_Forced_Unload_Done();
@@ -328,6 +335,9 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 		Com_Printf ("********************\nERROR: %s\n********************\n", com_errorMessage);
 		VM_Forced_Unload_Start();
 		SV_Shutdown (va("Server crashed: %s",  com_errorMessage));
+		if ( restartClient ) {
+			CL_Init();
+		}
 		CL_Disconnect( qtrue );
 		CL_FlushMemory( );
 		VM_Forced_Unload_Done();
@@ -1653,7 +1663,6 @@ qboolean Hunk_CheckMark( void ) {
 }
 
 void CL_ShutdownCGame( void );
-void CL_ShutdownUI( void );
 void SV_ShutdownGameProgs( void );
 
 /*
@@ -1667,7 +1676,6 @@ void Hunk_Clear( void ) {
 
 #ifndef DEDICATED
 	CL_ShutdownCGame();
-	CL_ShutdownUI();
 #endif
 	SV_ShutdownGameProgs();
 #ifndef DEDICATED
@@ -2554,16 +2562,16 @@ void Com_GameRestart(qboolean disconnect)
 	// make sure no recursion can be triggered
 	if(!com_gameRestarting && com_fullyInitialized)
 	{
-		int clWasRunning;
-		
-		com_gameRestarting = qtrue;
-		clWasRunning = com_cl_running->integer;
-		
+		com_gameRestarting = 1;
+
+		if( com_cl_running->integer )
+			com_gameRestarting |= 2;
+
 		// Kill server if we have one
 		if(com_sv_running->integer)
 			SV_Shutdown("Game directory changed");
 
-		if(clWasRunning)
+		if(com_gameRestarting & 2)
 		{
 			if(disconnect)
 				CL_Disconnect(qfalse);
@@ -2585,13 +2593,13 @@ void Com_GameRestart(qboolean disconnect)
 			NET_Restart_f();
 		}
 
-		if(clWasRunning)
+		if(com_gameRestarting & 2)
 		{
 			CL_Init();
 			CL_StartHunkUsers(qfalse);
 		}
 		
-		com_gameRestarting = qfalse;
+		com_gameRestarting = 0;
 	}
 }
 

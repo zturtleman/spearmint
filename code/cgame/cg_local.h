@@ -31,6 +31,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/q_shared.h"
 #include "../renderercommon/tr_types.h"
 #include "../game/bg_misc.h"
+#include "../client/keycodes.h"
+#include "../ui/ui_public.h"
 #include "cg_public.h"
 #include "cg_syscalls.h"
 
@@ -607,6 +609,8 @@ typedef struct {
 #define MAX_SPAWN_VARS_CHARS    2048
  
 typedef struct {
+	qboolean	connected;			// connected to a server
+	
 	int			clientFrame;		// incremented each frame
 
 	qboolean	demoPlayback;

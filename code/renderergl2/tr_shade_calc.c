@@ -1004,13 +1004,6 @@ void RB_CalcFogTexCoords( float *st ) {
 		return;
 	}
 
-	// all fogging distance is based on world Z units
-	VectorSubtract( backEnd.or.origin, backEnd.viewParms.or.origin, local );
-	fogDistanceVector[0] = -backEnd.or.modelMatrix[2];
-	fogDistanceVector[1] = -backEnd.or.modelMatrix[6];
-	fogDistanceVector[2] = -backEnd.or.modelMatrix[10];
-	fogDistanceVector[3] = DotProduct( local, backEnd.viewParms.or.axis[0] );
-
 	if ( tess.shader->isSky ) {
 		fogType = tr.skyFogType;
 		tcScale = tr.skyFogTcScale;
@@ -1030,6 +1023,13 @@ void RB_CalcFogTexCoords( float *st ) {
 	if ( fogType == FT_NONE ) {
 		return;
 	}
+
+	// all fogging distance is based on world Z units
+	VectorSubtract( backEnd.or.origin, backEnd.viewParms.or.origin, local );
+	fogDistanceVector[0] = -backEnd.or.modelMatrix[2];
+	fogDistanceVector[1] = -backEnd.or.modelMatrix[6];
+	fogDistanceVector[2] = -backEnd.or.modelMatrix[10];
+	fogDistanceVector[3] = DotProduct( local, backEnd.viewParms.or.axis[0] );
 
 	// level-wide fogging
 	if ( tess.shader->isSky || fog->originalBrushNumber < 0 ) {

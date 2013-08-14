@@ -80,6 +80,13 @@ enum {
   CGAME_EVENT_EDITHUD
 };
 
+typedef enum {
+	UIMENU_NONE,
+	UIMENU_MAIN,
+	UIMENU_INGAME,
+	UIMENU_TEAM,
+	UIMENU_POSTGAME
+} uiMenuCommand_t;
 
 typedef struct {
 	connstate_t		connState;
@@ -198,6 +205,9 @@ typedef enum {
 	CG_GETDEMOPOS,
 	CG_GETDEMONAME,
 	CG_GETDEMOLENGTH,
+	CG_SETMAPTITLE,
+	CG_SETVIEWANGLES,
+	CG_GETVIEWANGLES,
 
 	// note: these were not originally available in cgame
 	CG_GETCLIENTSTATE = 190,
@@ -334,6 +344,9 @@ typedef enum {
 	CG_GETAPIVERSION,	// system reserved
 
 	CG_INIT,
+//	void	UI_Init( qboolean inGameLoad, int maxSplitView );
+
+	CG_INGAME_INIT,
 //	void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 )
 	// called when the level loads or when the renderer is restarted
 	// all media should be registered at this time
@@ -347,15 +360,16 @@ typedef enum {
 	// oportunity to flush and close any open files
 
 	CG_CONSOLE_COMMAND,
-//	qboolean (*CG_ConsoleCommand)( void );
+//	qboolean (*CG_ConsoleCommand)( int realTime );
 	// a console command has been issued locally that is not recognized by the
 	// main game system.
 	// use Cmd_Argc() / Cmd_Argv() to read the command, return qfalse if the
 	// command is not known to the game
 
-	CG_DRAW_ACTIVE_FRAME,
-//	void (*CG_DrawActiveFrame)( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback );
-	// Generates and draws a game scene and status information at the given time.
+	CG_REFRESH,
+//	void (*CG_Refresh)( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
+	// Draws UI and if connected to a server, generates and draws a game scene
+	// and status information at the given time.
 	// If demoPlayback is set, local movement prediction will not be enabled
 
 	CG_CROSSHAIR_PLAYER,
@@ -379,6 +393,15 @@ typedef enum {
 
 	CG_JOYSTICK_EVENT,
 //	void	(*CG_JoystickEvent)( int localClientNum, int axis, int value );
+
+	CG_MOUSE_POSITION,
+//  int		(*CG_MousePosition)( int localClientNum );
+
+	CG_SET_MOUSE_POSITION,
+//  void	(*CG_SetMousePosition)( int localClientNum, int x, int y );
+
+	CG_SET_ACTIVE_MENU,
+//	void (*CG_SetActiveMenu)( uiMenuCommand_t menu );
 
 	CG_EVENT_HANDLING,
 //	void (*CG_EventHandling)(int type);

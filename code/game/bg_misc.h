@@ -81,9 +81,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	CS_MUSIC				2
 #define	CS_MESSAGE				3		// from the map worldspawn's message field
 #define	CS_MOTD					4		// g_motd string for server message of the day
-/* bg_public.h
-	ZTM: NOTE: Server expects CS_WARMUP as 5.
-*/
 #define	CS_WARMUP				5		// server time when the match will be restarted
 #define	CS_SCORES1				6
 #define	CS_SCORES2				7
@@ -1102,10 +1099,6 @@ void	BG_DecomposeUserCmdValue( int value, int *weapon );
 #define UI_BLINK		0x00001000
 #define UI_INVERSE		0x00002000
 #define UI_PULSE		0x00004000
-
-#if defined CGAME || defined UI
-void BG_RegisterClientCvars(int maxSplitview);
-#endif
 
 
 typedef struct

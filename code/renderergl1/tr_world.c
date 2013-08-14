@@ -316,18 +316,6 @@ void R_AddBrushModelSurfaces ( trRefEntity_t *ent ) {
 */
 
 /*
-=================
-R_LeafFogNum
-
-See if leaf is inside a fog volume
-Return positive with /any part/ of the leaf falling within a fog volume
-=================
-*/
-int R_LeafFogNum( mnode_t *node ) {
-	return R_BoundsFogNum( &tr.refdef, node->mins, node->maxs );
-}
-
-/*
 ================
 R_AddLeafSurfaces
 
@@ -335,7 +323,7 @@ Adds a leaf's drawsurfaces
 ================
 */
 static void R_AddLeafSurfaces( mnode_t *node, int dlightBits ) {
-	int c, fogNum;
+	int c;
 	msurface_t  *surf, **mark;
 
 	// add to count
@@ -362,8 +350,6 @@ static void R_AddLeafSurfaces( mnode_t *node, int dlightBits ) {
 		tr.viewParms.visBounds[1][2] = node->maxs[2];
 	}
 
-	fogNum = R_LeafFogNum( node );
-
 	// add the individual surfaces
 	mark = node->firstmarksurface;
 	c = node->nummarksurfaces;
@@ -371,7 +357,7 @@ static void R_AddLeafSurfaces( mnode_t *node, int dlightBits ) {
 		// the surface may have already been added if it
 		// spans multiple leafs
 		surf = *mark;
-		R_AddWorldSurface( surf, surf->shader, fogNum, dlightBits );
+		R_AddWorldSurface( surf, surf->shader, surf->fogIndex, dlightBits );
 		mark++;
 	}
 }

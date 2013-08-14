@@ -371,6 +371,7 @@ Removed cvars
   com_basegame            - replaced manually setting basegame dirs with loading
                             them from gameconfig.txt in fs_game dir
   fs_basegame             - see above
+  vm_ui                   - ui VM has been merged into cgame VM
 
 
 Removed commands
@@ -385,7 +386,7 @@ Using shared libraries instead of qvm
   To force Spearmint to use shared libraries instead of qvms run it with the
   following parameters:
 
-    +set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0
+    +set sv_pure 0 +set vm_cgame 0 +set vm_game 0
 
 Using Quake III Arena Demo Data Files
   Copy demoq3/pak0.pk3 from the demo installer to your baseq3 directory. The

@@ -1344,8 +1344,6 @@ void CL_ShutdownAll(qboolean shutdownRef)
 	S_DisableSounds();
 	// shutdown CGame
 	CL_ShutdownCGame();
-	// shutdown UI
-	CL_ShutdownUI();
 
 	// shutdown the renderer
 	if(shutdownRef)
@@ -1353,7 +1351,6 @@ void CL_ShutdownAll(qboolean shutdownRef)
 	else if(re.Shutdown)
 		re.Shutdown(qfalse);		// don't destroy window or context
 
-	cls.uiStarted = qfalse;
 	cls.cgameStarted = qfalse;
 	cls.rendererStarted = qfalse;
 	cls.soundRegistered = qfalse;
@@ -1377,6 +1374,8 @@ void CL_ClearMemory(qboolean shutdownRef)
 		Hunk_Clear();
 		// clear collision map data
 		CM_ClearMap();
+		// clear net fields
+		MSG_ShutdownNetFields();
 	}
 	else {
 		// clear all the client data on the hunk
@@ -1580,6 +1579,7 @@ void CL_Disconnect( qboolean showMainMenu ) {
 			speex_bits_destroy(&clc.speexDecoderBits[i]);
 			speex_decoder_destroy(clc.speexDecoder[i]);
 		}
+		clc.speexInitialized = qfalse;
 	}
 	Cmd_RemoveCommand ("voip");
 #endif
@@ -1589,8 +1589,8 @@ void CL_Disconnect( qboolean showMainMenu ) {
 		clc.demofile = 0;
 	}
 
-	if ( uivm && showMainMenu ) {
-		VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_NONE );
+	if ( cgvm && showMainMenu ) {
+		VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_NONE );
 	}
 
 	SCR_StopCinematic ();
@@ -2021,8 +2021,6 @@ void CL_Vid_Restart_f( void ) {
 			Hunk_Clear();
 		}
 	
-		// shutdown the UI
-		CL_ShutdownUI();
 		// shutdown the CGame
 		CL_ShutdownCGame();
 		// shutdown the renderer and clear the renderer interface
@@ -2032,7 +2030,6 @@ void CL_Vid_Restart_f( void ) {
 		// reinitialize the filesystem if the game directory has changed
 
 		cls.rendererStarted = qfalse;
-		cls.uiStarted = qfalse;
 		cls.cgameStarted = qfalse;
 		cls.soundRegistered = qfalse;
 
@@ -2050,13 +2047,6 @@ void CL_Vid_Restart_f( void ) {
 			// XXX
 			extern void SV_GameVidRestart(void);
 			SV_GameVidRestart();
-		}
-
-		// start the cgame if connected
-		if(clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC)
-		{
-			cls.cgameStarted = qtrue;
-			CL_InitCGame();
 		}
 	}
 }
@@ -2196,14 +2186,10 @@ void CL_DownloadsComplete( void ) {
 	Cvar_Set("r_uiFullScreen", "0");
 
 	// flush client memory and start loading stuff
-	// this will also (re)load the UI
+	// this will also (re)load the cgame vm
 	// if this is a local client then only the client part of the hunk
 	// will be cleared, note that this is done after the hunk mark has been set
 	CL_FlushMemory();
-
-	// initialize the CGame
-	cls.cgameStarted = qtrue;
-	CL_InitCGame();
 
 	CL_WritePacket();
 	CL_WritePacket();
@@ -3013,11 +2999,11 @@ void CL_Frame ( int msec ) {
 	}
 #endif
 
-	if ( clc.state == CA_DISCONNECTED && !( Key_GetCatcher( ) & KEYCATCH_UI )
-		&& !com_sv_running->integer && uivm ) {
+	if ( clc.state == CA_DISCONNECTED && !( Key_GetCatcher( ) & KEYCATCH_UI_CGAME )
+		&& !com_sv_running->integer && cgvm ) {
 		// if disconnected, bring up the menu
 		S_StopAllSounds();
-		VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+		VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_MAIN );
 	}
 
 	// if recording an avi, lock to a fixed fps
@@ -3258,9 +3244,9 @@ void CL_StartHunkUsers( qboolean rendererOnly ) {
 		return;
 	}
 
-	if ( !cls.uiStarted ) {
-		cls.uiStarted = qtrue;
-		CL_InitUI();
+	if ( !cls.cgameStarted ) {
+		cls.cgameStarted = qtrue;
+		CL_InitCGame();
 	}
 }
 
@@ -3291,7 +3277,7 @@ void CL_InitRef( void ) {
   
 	ri.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
 	ri.CL_MaxSplitView = CL_MaxSplitView;
-	ri.CL_GetMapMessage = CL_GetMapMessage;
+	ri.CL_GetMapTitle = CL_GetMapTitle;
 	ri.CL_GetClientLocation = CL_GetClientLocation;
 	ri.zlib_compress = compress;
 	ri.zlib_crc32 = crc32;
@@ -3311,24 +3297,6 @@ void CL_InitRef( void ) {
 
 	// unpause so the cgame definately gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
-}
-
-
-//===========================================================================================
-
-
-void CL_SetModel_f( void ) {
-	char	*arg;
-	char	name[256];
-
-	arg = Cmd_Argv( 1 );
-	if (arg[0]) {
-		Cvar_Set( "model", arg );
-		Cvar_Set( "headmodel", arg );
-	} else {
-		Cvar_VariableStringBuffer( "model", name, sizeof(name) );
-		Com_Printf("model is set to %s\n", name);
-	}
 }
 
 
@@ -3608,7 +3576,6 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("showip", CL_ShowIP_f );
 	Cmd_AddCommand ("fs_openedList", CL_OpenedPK3List_f );
 	Cmd_AddCommand ("fs_referencedList", CL_ReferencedPK3List_f );
-	Cmd_AddCommand ("model", CL_SetModel_f );
 	Cmd_AddCommand ("video", CL_Video_f );
 	Cmd_AddCommand ("stopvideo", CL_StopVideo_f );
 	CL_InitRef();
@@ -3686,7 +3653,6 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 	Cmd_RemoveCommand ("showip");
 	Cmd_RemoveCommand ("fs_openedList");
 	Cmd_RemoveCommand ("fs_referencedList");
-	Cmd_RemoveCommand ("model");
 	Cmd_RemoveCommand ("video");
 	Cmd_RemoveCommand ("stopvideo");
 
@@ -4547,21 +4513,16 @@ void CL_ShowIP_f(void) {
 
 /*
 =================
-CL_GetMapMessage
+CL_GetMapTitle
 =================
 */
-void CL_GetMapMessage(char *buf, int bufLength) {
-	int		offset;
-
-	offset = cl.gameState.stringOffsets[CS_MESSAGE];
-	if (!offset) {
-		if( bufLength ) {
-			Q_strncpyz( buf, "Unknown", bufLength);
-		}
+void CL_GetMapTitle( char *buf, int bufLength ) {
+	if ( !clc.mapTitle[0] ) {
+		Q_strncpyz( buf, "Unknown", bufLength );
 		return;
 	}
 
-	Q_strncpyz( buf, cl.gameState.stringData+offset, bufLength);
+	Q_strncpyz( buf, clc.mapTitle, bufLength );
 }
 
 /*

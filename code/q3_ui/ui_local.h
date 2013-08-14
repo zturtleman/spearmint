@@ -31,13 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #ifndef __UI_LOCAL_H__
 #define __UI_LOCAL_H__
 
-#include "../qcommon/q_shared.h"
-#include "../renderercommon/tr_types.h"
-//NOTE: include the ui_public.h from the new UI
-#include "../ui/ui_public.h"
-#include "../cgame/cg_syscalls.h"
-#include "../client/keycodes.h"
-#include "../game/bg_misc.h"
+#include "../cgame/cg_local.h"
 
 typedef void (*voidfunc_f)(void);
 
@@ -486,26 +480,6 @@ extern void DriverInfo_Cache( void );
 // ui_players.c
 //
 
-//FIXME ripped from cg_local.h
-typedef struct {
-	int			oldFrame;
-	int			oldFrameTime;		// time when ->oldFrame was exactly on
-
-	int			frame;
-	int			frameTime;			// time when ->frame will be exactly on
-
-	float		backlerp;
-
-	float		yawAngle;
-	qboolean	yawing;
-	float		pitchAngle;
-	qboolean	pitching;
-
-	int			animationNumber;	// may include ANIM_TOGGLEBIT
-	animation_t	*animation;
-	int			animationTime;		// time when the first frame of the animation will be exact
-} lerpFrame_t;
-
 typedef struct {
 	// model info
 	qhandle_t		legsModel;
@@ -594,14 +568,6 @@ typedef struct {
 	int					maxSplitView;
 } uiStatic_t;
 
-extern void			UI_Init( qboolean inGameLoad, int maxSplitView );
-extern void			UI_Shutdown( void );
-extern void			UI_KeyEvent( int key, int down );
-extern void			UI_MouseEvent( int localClientNum, int dx, int dy );
-extern int			UI_MousePosition( int localClientNum );
-extern void			UI_SetMousePosition( int localClientNum, int x, int y );
-extern void			UI_Refresh( int realtime );
-extern qboolean		UI_ConsoleCommand( int realTime );
 extern float		UI_ClampCvar( float min, float max, float value );
 extern void			UI_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 extern void			UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader ); 

@@ -43,8 +43,10 @@ int redTeamNameModificationCount = -1;
 int blueTeamNameModificationCount = -1;
 #endif
 
-void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
+void CG_Init( qboolean inGameLoad, int maxSplitView );
+void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
 void CG_Shutdown( void );
+void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
 static char *CG_VoIPString( int localClientNum );
 
 
@@ -62,27 +64,71 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_GETAPIVERSION:
 		return ( CG_API_MAJOR_VERSION << 16) | ( CG_API_MINOR_VERSION & 0xFFFF );
 	case CG_INIT:
-		CG_Init( arg0, arg1, arg2, arg3, arg4, arg5, arg6 );
+		CG_Init( arg0, arg1 );
+		return 0;
+	case CG_INGAME_INIT:
+		CG_Ingame_Init( arg0, arg1, arg2, arg3, arg4, arg5, arg6 );
 		return 0;
 	case CG_SHUTDOWN:
+		UI_Shutdown();
 		CG_Shutdown();
 		return 0;
 	case CG_CONSOLE_COMMAND:
-		return CG_ConsoleCommand();
-	case CG_DRAW_ACTIVE_FRAME:
-		CG_DrawActiveFrame( arg0, arg1, arg2 );
+		{
+			qboolean found = UI_ConsoleCommand(arg0);
+			if ( !found && cg.connected )
+				found = CG_ConsoleCommand();
+			return found;
+		}
+	case CG_REFRESH:
+		CG_Refresh( arg0, arg1, arg2, arg3, arg4 );
 		return 0;
 	case CG_CROSSHAIR_PLAYER:
 		return CG_CrosshairPlayer(arg0);
 	case CG_LAST_ATTACKER:
 		return CG_LastAttacker(arg0);
-    case CG_VOIP_STRING:
-      return (intptr_t)CG_VoIPString(arg0);
+	case CG_VOIP_STRING:
+		return (intptr_t)CG_VoIPString(arg0);
 	case CG_KEY_EVENT:
-		CG_KeyEvent(arg0, arg1);
+		{
+			int key = arg0;
+			qboolean down = arg1;
+
+			if ( key == K_ESCAPE && down && !( trap_Key_GetCatcher( ) & KEYCATCH_UI ) ) {
+				uiClientState_t cls;
+
+				trap_GetClientState( &cls );
+
+				if ( cls.connState == CA_ACTIVE && trap_GetDemoState() != DS_PLAYBACK ) {
+					UI_SetActiveMenu( UIMENU_INGAME );
+				}
+				else if ( cls.connState != CA_DISCONNECTED ) {
+					trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
+				}
+				return 0;
+			}
+		}
+
+		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
+			CG_KeyEvent(arg0, arg1);
+		} else {
+			UI_KeyEvent(arg0, arg1);
+		}
 		return 0;
 	case CG_MOUSE_EVENT:
-		CG_MouseEvent(arg0, arg1, arg2);
+		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
+			CG_MouseEvent(arg0, arg1, arg2);
+		} else {
+			UI_MouseEvent(arg0, arg1, arg2);
+		}
+		return 0;
+	case CG_MOUSE_POSITION:
+		return UI_MousePosition( arg0 );
+	case CG_SET_MOUSE_POSITION:
+		UI_SetMousePosition( arg0, arg1, arg2 );
+		return 0;
+	case CG_SET_ACTIVE_MENU:
+		UI_SetActiveMenu( arg0 );
 		return 0;
 	case CG_JOYSTICK_EVENT:
 		CG_JoystickEvent(arg0, arg1, arg2);
@@ -90,15 +136,11 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_EVENT_HANDLING:
 		CG_EventHandling(arg0);
 		return 0;
-    case CG_CONSOLE_TEXT:
+	case CG_CONSOLE_TEXT:
 		CG_AddNotifyText();
 		return 0;
 	case CG_WANTSBINDKEYS:
-#ifdef MISSIONPACK_HUD
-		return Display_WantsBindKeys();
-#else
-		return qfalse;
-#endif
+		return UI_WantsBindKeys();
 	case CG_CREATE_USER_CMD:
 		return (intptr_t)CG_CreateUserCmd(arg0, arg1, arg2, IntAsFloat(arg3), IntAsFloat(arg4));
 	default:
@@ -247,16 +289,8 @@ typedef struct {
 #define RANGE_INT(min,max) min, max, qtrue
 #define RANGE_FLOAT(min,max) min, max, qfalse
 
-static cvarTable_t cvarTable[] = {
+static cvarTable_t cgameCvarTable[] = {
 	{ &cg_ignore, "cg_ignore", "0", 0, RANGE_ALL },	// used for debugging
-	{ &cg_autoswitch[0], "cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_autoswitch[1], "2cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_autoswitch[2], "3cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_autoswitch[3], "4cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_drawGun[0], "cg_drawGun", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
-	{ &cg_drawGun[1], "2cg_drawGun", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
-	{ &cg_drawGun[2], "3cg_drawGun", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
-	{ &cg_drawGun[3], "4cg_drawGun", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
 	{ &cg_zoomFov, "cg_zoomfov", "22.5", CVAR_ARCHIVE, RANGE_FLOAT(1, 160) },
 	{ &cg_fov, "cg_fov", "90", CVAR_ARCHIVE, RANGE_FLOAT(1, 160) },
 	{ &cg_viewsize, "cg_viewsize", "100", CVAR_ARCHIVE, RANGE_INT( 30, 100 ) },
@@ -305,18 +339,6 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_tracerChance, "cg_tracerchance", "0.4", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_tracerWidth, "cg_tracerwidth", "1", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_tracerLength, "cg_tracerlength", "100", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonRange[0], "cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonAngle[0], "cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonRange[1], "2cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonAngle[1], "2cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonRange[2], "3cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonAngle[2], "3cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonRange[3], "4cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPersonAngle[3], "4cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
-	{ &cg_thirdPerson[0], "cg_thirdPerson", "0", 0, RANGE_BOOL },
-	{ &cg_thirdPerson[1], "2cg_thirdPerson", "0", 0, RANGE_BOOL },
-	{ &cg_thirdPerson[2], "3cg_thirdPerson", "0", 0, RANGE_BOOL },
-	{ &cg_thirdPerson[3], "4cg_thirdPerson", "0", 0, RANGE_BOOL },
 	{ &cg_splitviewVertical, "cg_splitviewVertical", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },
@@ -345,14 +367,6 @@ static cvarTable_t cvarTable[] = {
 #ifdef MISSIONPACK
 	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
 	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
-	{ &cg_currentSelectedPlayer[0], "cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayer[1], "2cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayer[2], "3cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayer[3], "4cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayerName[0], "cg_currentSelectedPlayerName", "", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayerName[1], "2cg_currentSelectedPlayerName", "", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayerName[2], "3cg_currentSelectedPlayerName", "", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_currentSelectedPlayerName[3], "4cg_currentSelectedPlayerName", "", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_singlePlayer, "ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM, RANGE_ALL },
 	{ &cg_enableDust, "g_enableDust", "0", CVAR_SERVERINFO, RANGE_BOOL },
 	{ &cg_enableBreath, "g_enableBreath", "0", CVAR_SERVERINFO, RANGE_BOOL },
@@ -392,7 +406,7 @@ static cvarTable_t cvarTable[] = {
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 };
 
-static int  cvarTableSize = ARRAY_LEN( cvarTable );
+static int  cgameCvarTableSize = ARRAY_LEN( cgameCvarTable );
 
 /*
 =================
@@ -400,15 +414,17 @@ CG_RegisterCvars
 =================
 */
 void CG_RegisterCvars( void ) {
+	int			userInfo[MAX_SPLITVIEW] = { CVAR_USERINFO, CVAR_USERINFO2, CVAR_USERINFO3, CVAR_USERINFO4 };
+	char		*modelNames[MAX_SPLITVIEW] = { DEFAULT_MODEL, DEFAULT_MODEL2, DEFAULT_MODEL3, DEFAULT_MODEL4 };
+	char		*headModelNames[MAX_SPLITVIEW] = { DEFAULT_HEAD, DEFAULT_HEAD2, DEFAULT_HEAD3, DEFAULT_HEAD4 };
+	char		*teamModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_MODEL, DEFAULT_TEAM_MODEL2, DEFAULT_TEAM_MODEL3, DEFAULT_TEAM_MODEL4 };
+	char		*teamHeadModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_HEAD, DEFAULT_TEAM_HEAD2, DEFAULT_TEAM_HEAD3, DEFAULT_TEAM_HEAD4 };
+	char		*name;
 	int			i;
 	cvarTable_t	*cv;
 	char		var[MAX_TOKEN_CHARS];
 
-	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
-		if (Com_LocalClientForCvarName(cv->cvarName) >= CG_MaxSplitView()) {
-			continue;
-		}
-
+	for ( i = 0, cv = cgameCvarTable ; i < cgameCvarTableSize ; i++, cv++ ) {
 		trap_Cvar_Register( cv->vmCvar, cv->cvarName,
 			cv->defaultString, cv->cvarFlags );
 
@@ -417,9 +433,52 @@ void CG_RegisterCvars( void ) {
 		}
 	}
 
-	CG_RegisterInputCvars();
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		if ( i == 0 ) {
+			name = DEFAULT_CLIENT_NAME;
+		} else {
+			name = va("%s%d", DEFAULT_CLIENT_NAME, i + 1);
+		}
 
-	BG_RegisterClientCvars(CG_MaxSplitView());
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "name"), name, userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "model"), modelNames[i], userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "headmodel"), headModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_model"), teamModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_headmodel"), teamHeadModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "color1"), va("%d", DEFAULT_CLIENT_COLOR1), userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "color2"), va("%d", DEFAULT_CLIENT_COLOR2), userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "handicap"), "100", userInfo[i] | CVAR_ARCHIVE );
+
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "teamtask"), "0", userInfo[i] );
+
+		// set to team in ui before starting server
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "teampref"), "", userInfo[i] );
+		// clear team if was previously set (only want it used for one game)
+		trap_Cvar_Set( Com_LocalClientCvarName(i, "teampref"), "" );
+
+		name = Com_LocalClientCvarName(i, "cg_autoswitch");
+		trap_Cvar_Register( &cg_autoswitch[i], name, "1", CVAR_ARCHIVE );
+		trap_Cvar_CheckRange( name, 0, 1, qtrue );
+
+		name = Com_LocalClientCvarName(i, "cg_drawGun");
+		trap_Cvar_Register( &cg_drawGun[i], name, "1", CVAR_ARCHIVE );
+		trap_Cvar_CheckRange( name, 0, 3, qtrue );
+
+		trap_Cvar_Register( &cg_thirdPerson[i], Com_LocalClientCvarName(i, "cg_thirdPerson"), "0", 0 );
+		trap_Cvar_Register( &cg_thirdPersonRange[i], Com_LocalClientCvarName(i, "cg_thirdPersonRange"), "40", CVAR_CHEAT );
+		trap_Cvar_Register( &cg_thirdPersonAngle[i], Com_LocalClientCvarName(i, "cg_thirdPersonAngle"), "0", CVAR_CHEAT );
+
+#ifdef MISSIONPACK
+		trap_Cvar_Register( &cg_currentSelectedPlayer[i], Com_LocalClientCvarName(i, "cg_currentSelectedPlayer"), "0", CVAR_ARCHIVE );
+		trap_Cvar_Register( &cg_currentSelectedPlayerName[i], Com_LocalClientCvarName(i, "cg_currentSelectedPlayerName"), "", CVAR_ARCHIVE );
+#endif
+	}
+
+	CG_RegisterInputCvars();
 
 	// see if we are also running the server on this machine
 	trap_Cvar_VariableStringBuffer( "sv_running", var, sizeof( var ) );
@@ -460,7 +519,7 @@ void CG_UpdateCvars( void ) {
 	int			i;
 	cvarTable_t	*cv;
 
-	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
+	for ( i = 0, cv = cgameCvarTable ; i < cgameCvarTableSize ; i++, cv++ ) {
 		if (Com_LocalClientForCvarName(cv->cvarName) >= CG_MaxSplitView()) {
 			continue;
 		}
@@ -1693,7 +1752,7 @@ void CG_ParseMenu(const char *menuFile) {
 		//	break;
 		//}
 
-		//if ( menuCount == MAX_MENUS ) {
+		//if ( cgDC.menuCount == MAX_MENUS ) {
 		//	Com_Printf( "Too many menus!\n" );
 		//	break;
 		//}
@@ -1756,6 +1815,8 @@ void CG_LoadMenus(const char *menuFile) {
 
 	start = trap_Milliseconds();
 
+	Init_Display(&cgDC);
+
 	len = trap_FS_FOpenFile( menuFile, &f, FS_READ );
 	if ( !f ) {
 		Com_Printf( S_COLOR_YELLOW "menu file not found: %s, using default\n", menuFile );
@@ -1792,7 +1853,7 @@ void CG_LoadMenus(const char *menuFile) {
 		//	break;
 		//}
 
-		//if ( menuCount == MAX_MENUS ) {
+		//if ( cgDC.menuCount == MAX_MENUS ) {
 		//	Com_Printf( "Too many menus!\n" );
 		//	break;
 		//}
@@ -2130,7 +2191,7 @@ void CG_AssetCache( void ) {
 	//  trap_R_RegisterFont("fonts/arial.ttf", 72, &Assets.textFont);
 	//}
 	//Assets.background = trap_R_RegisterShaderNoMip( ASSET_BACKGROUND );
-	//Com_Printf("Menu Size: %i bytes\n", sizeof(Menus));
+	//Com_Printf("Menu Size: %i bytes\n", sizeof(cgDC.Menus));
 	cgDC.Assets.gradientBar = trap_R_RegisterShaderNoMip( ASSET_GRADIENTBAR );
 	cgDC.Assets.fxBasePic = trap_R_RegisterShaderNoMip( ART_FX_BASE );
 	cgDC.Assets.fxPic[0] = trap_R_RegisterShaderNoMip( ART_FX_RED );
@@ -2154,14 +2215,10 @@ void CG_AssetCache( void ) {
 =================
 CG_Init
 
-Called after every level change or subsystem restart
-Will perform callbacks to make the loading info screen update.
+Called after every cgame load, such as main menu, level change, or subsystem restart
 =================
 */
-void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 ) {
-	int	clientNums[MAX_SPLITVIEW];
-	const char	*s;
-	int			i;
+void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	// clear everything
 	memset( &cgs, 0, sizeof( cgs ) );
@@ -2169,6 +2226,33 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 	memset( cg_entities, 0, sizeof(cg_entities) );
 	memset( cg_weapons, 0, sizeof(cg_weapons) );
 	memset( cg_items, 0, sizeof(cg_items) );
+
+	cg.connected = inGameLoad;
+
+	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
+
+	CG_RegisterCvars();
+
+#ifdef MISSIONPACK_HUD
+	Init_Display(&cgDC);
+	String_Init();
+#endif
+
+	UI_Init( inGameLoad, maxSplitView );
+}
+
+/*
+=================
+CG_Ingame_Init
+
+Called after every level change or subsystem restart
+Will perform callbacks to make the loading info screen update.
+=================
+*/
+void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 ) {
+	int	clientNums[MAX_SPLITVIEW];
+	const char	*s;
+	int			i;
 
 	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 	cg.numViewports = 1;
@@ -2184,6 +2268,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 			continue;
 		}
 
+		trap_GetViewAngles( i, cg.localClients[i].viewangles );
 		CG_LocalClientAdded(i, clientNums[i]);
 	}
 
@@ -2196,8 +2281,6 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 	cgs.media.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
 	cgs.media.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );
 	cgs.media.charsetPropB		= trap_R_RegisterShaderNoMip( "menu/art/font2_prop.tga" );
-
-	CG_RegisterCvars();
 
 	CG_InitConsoleCommands();
 
@@ -2246,6 +2329,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 	s = CG_ConfigString( CS_LEVEL_START_TIME );
 	cgs.levelStartTime = atoi( s );
 
+	trap_SetMapTitle( CG_ConfigString( CS_MESSAGE ) );
 	trap_SetNetFields( sizeof (entityState_t), bg_entityStateFields, bg_numEntityStateFields,
 					   sizeof (playerState_t), bg_playerStateFields, bg_numPlayerStateFields );
 
@@ -2256,10 +2340,6 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 	CG_LoadingString( "collision map" );
 
 	trap_CM_LoadMap( cgs.mapname );
-
-#ifdef MISSIONPACK_HUD
-	String_Init();
-#endif
 
 	cg.loading = qtrue;		// force players to load instead of defer
 
@@ -2313,10 +2393,41 @@ Called before every level change or subsystem restart
 =================
 */
 void CG_Shutdown( void ) {
+	int i;
+
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		trap_SetViewAngles( i, cg.localClients[ i ].viewangles );
+	}
+
 	// some mods may need to do cleanup work here,
 	// like closing files or archiving session data
 }
 
+/*
+=================
+CG_Refresh
+
+Draw the frame
+=================
+*/
+void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime ) {
+
+	if ( state >= CA_LOADING && !UI_IsFullscreen() ) {
+#ifdef MISSIONPACK_HUD
+		Init_Display(&cgDC);
+#endif
+		CG_DrawActiveFrame( serverTime, stereoView, demoPlayback );
+	}
+
+	if ( state <= CA_LOADING || (trap_Key_GetCatcher() & KEYCATCH_UI) ) {
+		UI_Refresh( realTime );
+	}
+
+	// connecting clients will show the connection dialog
+	if ( state >= CA_CONNECTING && state < CA_ACTIVE ) {
+		UI_DrawConnectScreen( ( state >= CA_LOADING ) );
+	}
+}
 
 /*
 ==================

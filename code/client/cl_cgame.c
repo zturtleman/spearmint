@@ -83,6 +83,54 @@ static void CL_GetClipboardData( char *buf, int buflen ) {
 
 /*
 ====================
+CL_SetMapTitle
+====================
+*/
+void CL_SetMapTitle( const char *name ) {
+	if ( !name || !*name ) {
+		clc.mapTitle[0] = '\0';
+		return;
+	}
+
+	Q_strncpyz( clc.mapTitle, name, sizeof ( clc.mapTitle ) );
+}
+
+/*
+====================
+CL_SetViewAngles
+====================
+*/
+void CL_SetViewAngles( int localPlayerNum, const vec3_t angles ) {
+	if ( localPlayerNum < 0 || localPlayerNum >= CL_MAX_SPLITVIEW ) {
+		return;
+	}
+
+	if ( angles ) {
+		VectorCopy( angles, clc.viewAngles[ localPlayerNum ] );
+	} else {
+		VectorClear( clc.viewAngles[ localPlayerNum ] );
+	}
+}
+
+/*
+====================
+CL_GetViewAngles
+====================
+*/
+void CL_GetViewAngles( int localPlayerNum, vec3_t angles ) {
+	if ( localPlayerNum < 0 || localPlayerNum >= CL_MAX_SPLITVIEW ) {
+		return;
+	}
+
+	if ( !angles ) {
+		return;
+	}
+
+	VectorCopy( clc.viewAngles[ localPlayerNum ], angles );
+}
+
+/*
+====================
 CL_GetClientState
 ====================
 */
@@ -1034,7 +1082,7 @@ CL_ShutdonwCGame
 ====================
 */
 void CL_ShutdownCGame( void ) {
-	Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
+	Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_UI_CGAME );
 	cls.cgameStarted = qfalse;
 	if ( !cgvm ) {
 		return;
@@ -1376,6 +1424,15 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 	case CG_GETDEMOLENGTH:
 		return CL_DemoLength();
+	case CG_SETMAPTITLE:
+		CL_SetMapTitle( VMA(1) );
+		return 0;
+	case CG_SETVIEWANGLES:
+		CL_SetViewAngles( args[1], VMA(2) );
+		return 0;
+	case CG_GETVIEWANGLES:
+		CL_GetViewAngles( args[1], VMA(2) );
+		return 0;
 	case CG_GETCLIENTSTATE:
 		CL_GetClientState( VMA(1) );
 		return 0;
@@ -1577,6 +1634,7 @@ Should only be called by CL_StartHunkUsers
 ====================
 */
 void CL_InitCGame( void ) {
+	qboolean			inGameLoad;
 	const char			*info;
 	const char			*mapname;
 	int					t1, t2;
@@ -1584,14 +1642,6 @@ void CL_InitCGame( void ) {
 	unsigned int		version, major, minor;
 
 	t1 = Sys_Milliseconds();
-
-	// put away the console
-	Con_Close();
-
-	// find the current mapname
-	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
-	mapname = Info_ValueForKey( info, "mapname" );
-	Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
 
 	// load the dll or bytecode
 	cgvm = VM_Create( "cgame", CL_CgameSystemCalls, Cvar_VariableValue( "vm_cgame" ) );
@@ -1612,6 +1662,24 @@ void CL_InitCGame( void ) {
 		Com_Error( ERR_DROP, "CGame is version %x.%x, expected %x.%x", major, minor, CG_API_MAJOR_VERSION, CG_API_MINOR_VERSION );
 	}
 
+	inGameLoad = ( clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC );
+
+	// init for this gamestate
+	VM_Call( cgvm, CG_INIT, inGameLoad, CL_MAX_SPLITVIEW );
+
+	if ( !inGameLoad ) {
+		// only loading main menu
+		return;
+	}
+
+	// put away the console
+	Con_Close();
+
+	// find the current mapname
+	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
+	mapname = Info_ValueForKey( info, "mapname" );
+	Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
+
 	clc.state = CA_LOADING;
 
 	if (!com_sv_running->integer) {
@@ -1621,7 +1689,7 @@ void CL_InitCGame( void ) {
 	// init for this gamestate
 	// use the lastExecutedServerCommand instead of the serverCommandSequence
 	// otherwise server commands sent just before a gamestate are dropped
-	VM_Call( cgvm, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, CL_MAX_SPLITVIEW,
+	VM_Call( cgvm, CG_INGAME_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, CL_MAX_SPLITVIEW,
 			clc.clientNums[0], clc.clientNums[1], clc.clientNums[2], clc.clientNums[3] );
 
 	// entityBaselines, parseEntities, and snapshot player states are saved across vid_restart
@@ -1679,7 +1747,7 @@ qboolean CL_GameCommand( void ) {
 		return qfalse;
 	}
 
-	return VM_Call( cgvm, CG_CONSOLE_COMMAND );
+	return VM_Call( cgvm, CG_CONSOLE_COMMAND, cls.realtime );
 }
 
 /*
@@ -1702,7 +1770,7 @@ CL_CGameRendering
 =====================
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
-	VM_Call( cgvm, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
+	VM_Call( cgvm, CG_REFRESH, cl.serverTime, stereo, clc.demoplaying, clc.state, cls.realtime );
 	VM_Debug( 0 );
 }
 

@@ -109,6 +109,7 @@ void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *t
 
 void MSG_SetNetFields( vmNetField_t *vmEntityFields, int numEntityFields, int entityStateSize,
 					   vmNetField_t *vmPlayerFields, int numPlayerFields, int playerStateSize );
+void MSG_ShutdownNetFields( void );
 
 void MSG_WriteDeltaEntity( msg_t *msg, sharedEntityState_t *from, sharedEntityState_t *to,
 						   qboolean force );
@@ -625,13 +626,13 @@ char	**FS_ListFiles( const char *directory, const char *extension, int *numfiles
 // if extension is "/", only subdirectories will be returned
 // the returned files will not include any directories or /
 
-void	FS_SortFileList(char **filelist, int numfiles);
-
 void	FS_FreeFileList( char **list );
 
 qboolean FS_FileExists( const char *file );
 
 qboolean FS_CreatePath (char *OSPath);
+
+int FS_PathCmp( const char *s1, const char *s2 );
 
 int FS_FindVM(void **startSearch, char *found, int foundlen, const char *name, int enableDll);
 
@@ -1088,11 +1089,6 @@ void SV_PacketEvent( netadr_t from, msg_t *msg );
 int SV_FrameMsec(void);
 qboolean SV_GameCommand( void );
 int SV_SendQueuedPackets(void);
-
-//
-// UI interface
-//
-qboolean UI_GameCommand( void );
 
 /*
 ==============================================================

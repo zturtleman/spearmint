@@ -33,10 +33,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 //        in the server, client, and botlib as in the VMs, keep all in one place.
 
 // server only
-#define	CS_WARMUP				5		// server time when the match will be restarted
-
 #define	PERS_SCORE				0		// !!! MUST NOT CHANGE, SERVER AND
 										// GAME BOTH REFERENCE !!!
 
-// client only
-#define	CS_MESSAGE				3		// from the map worldspawn's message field

@@ -79,7 +79,7 @@ void RB_Fog( int fogNum ) {
 		return;
 	}
 
-	if ( tr.world && fogNum == tr.world->globalFog ) {
+	if ( R_IsGlobalFog( fogNum ) ) {
 		lastGlfogType = backEnd.refdef.fogType;
 
 		switch ( backEnd.refdef.fogType ) {
@@ -214,6 +214,20 @@ void RB_FogOn( void ) {
 R_BoundsFogNum
 =================
 */
+qboolean R_IsGlobalFog( int fogNum ) {
+
+	if ( !tr.world || fogNum <= 0 || fogNum >= tr.world->numfogs ) {
+		return qfalse;
+	}
+
+	return ( tr.world->fogs[ fogNum ].originalBrushNumber < 0 );
+}
+
+/*
+=================
+R_BoundsFogNum
+=================
+*/
 int R_BoundsFogNum( const trRefdef_t *refdef, vec3_t mins, vec3_t maxs ) {
 	int i, j;
 	fog_t *fog;
@@ -222,7 +236,8 @@ int R_BoundsFogNum( const trRefdef_t *refdef, vec3_t mins, vec3_t maxs ) {
 		return 0;
 	}
 
-	for ( i = 1; i < tr.world->numfogs; i++ ) {
+	// 0 is no fog, 1 is global fog
+	for ( i = 2; i < tr.world->numfogs; i++ ) {
 		fog = &tr.world->fogs[ i ];
 		for ( j = 0; j < 3; j++ ) {
 			if ( mins[ j ] >= fog->bounds[ 1 ][ j ] ||
@@ -235,8 +250,9 @@ int R_BoundsFogNum( const trRefdef_t *refdef, vec3_t mins, vec3_t maxs ) {
 		}
 	}
 
+	// default to global fog if enabled
 	if ( refdef->fogType != FT_NONE ) {
-		return tr.world->globalFog;
+		return 1;
 	}
 
 	return 0;

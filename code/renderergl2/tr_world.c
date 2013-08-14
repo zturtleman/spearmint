@@ -455,18 +455,6 @@ void R_AddBrushModelSurfaces ( trRefEntity_t *ent ) {
 =============================================================
 */
 
-/*
-=================
-R_LeafFogNum
-
-See if leaf is inside a fog volume
-Return positive with /any part/ of the leaf falling within a fog volume
-=================
-*/
-int R_LeafFogNum( mnode_t *node ) {
-	return R_BoundsFogNum( &tr.refdef, node->mins, node->maxs );
-}
-
 #if 0
 /*
 ================
@@ -476,7 +464,7 @@ Adds a leaf's drawsurfaces
 ================
 */
 static void R_AddLeafSurfaces( mnode_t *node, int dlightBits ) {
-	int c, fogNum;
+	int c;
 	msurface_t  *surf, **mark;
 
 	// add to count
@@ -502,8 +490,6 @@ static void R_AddLeafSurfaces( mnode_t *node, int dlightBits ) {
 	if ( node->maxs[2] > tr.viewParms.visBounds[1][2] ) {
 		tr.viewParms.visBounds[1][2] = node->maxs[2];
 	}
-
-	fogNum = R_LeafFogNum( node );
 
 	// add the individual surfaces
 	mark = node->firstmarksurface;
@@ -660,7 +646,6 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 		// leaf node, so add mark surfaces
 		int			c;
 		int surf, *view;
-		int fogNum;
 
 		tr.pc.c_leafs++;
 
@@ -685,8 +670,6 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			tr.viewParms.visBounds[1][2] = node->maxs[2];
 		}
 
-		fogNum = R_LeafFogNum( node );
-
 		// add merged and unmerged surfaces
 		if (tr.world->viewSurfaces && !r_nocurves->integer && node->numCustomShaders == 0)
 			view = tr.world->viewSurfaces + node->firstmarksurface;
@@ -702,7 +685,6 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 				if (tr.world->mergedSurfacesViewCount[-surf - 1] != tr.viewCount)
 				{
 					tr.world->mergedSurfacesViewCount[-surf - 1]  = tr.viewCount;
-					tr.world->mergedSurfacesFogNum[-surf - 1] = fogNum;
 					tr.world->mergedSurfacesDlightBits[-surf - 1] = dlightBits;
 					tr.world->mergedSurfacesPshadowBits[-surf - 1] = pshadowBits;
 				}
@@ -717,7 +699,6 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 				if (tr.world->surfacesViewCount[surf] != tr.viewCount)
 				{
 					tr.world->surfacesViewCount[surf] = tr.viewCount;
-					tr.world->surfacesFogNum[surf] = fogNum;
 					tr.world->surfacesDlightBits[surf] = dlightBits;
 					tr.world->surfacesPshadowBits[surf] = pshadowBits;
 				}
@@ -975,7 +956,7 @@ void R_AddWorldSurfaces (void) {
 
 			surf = (msurface_t*)tr.world->surfaces + i;
 
-			R_AddWorldSurface( surf, surf->shader, tr.world->surfacesFogNum[i], tr.world->surfacesDlightBits[i], tr.world->surfacesPshadowBits[i] );
+			R_AddWorldSurface( surf, surf->shader, surf->fogIndex, tr.world->surfacesDlightBits[i], tr.world->surfacesPshadowBits[i] );
 			tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
 		}
 		for (i = 0; i < tr.world->numMergedSurfaces; i++)
@@ -985,7 +966,7 @@ void R_AddWorldSurfaces (void) {
 
 			surf = (msurface_t*)tr.world->mergedSurfaces + i;
 
-			R_AddWorldSurface( surf, surf->shader, tr.world->mergedSurfacesFogNum[i], tr.world->mergedSurfacesDlightBits[i], tr.world->mergedSurfacesPshadowBits[i] );
+			R_AddWorldSurface( surf, surf->shader, surf->fogIndex, tr.world->mergedSurfacesDlightBits[i], tr.world->mergedSurfacesPshadowBits[i] );
 			tr.refdef.dlightMask |= tr.world->mergedSurfacesDlightBits[i];
 		}
 

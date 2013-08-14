@@ -63,7 +63,6 @@ cvar_t	*sv_minPing;
 cvar_t	*sv_maxPing;
 cvar_t	*sv_gametypeName;
 cvar_t	*sv_gametypeNetName;
-cvar_t	*sv_dorestart;
 cvar_t	*sv_pure;
 cvar_t	*sv_floodProtect;
 cvar_t	*sv_lanForceRate; // dedicated 1 (LAN) server forces local client rates to 99999 (bug #491)
@@ -1220,8 +1219,7 @@ void SV_Frame( int msec ) {
 	}
 
 	if( sv.restartTime && sv.time >= sv.restartTime ) {
-		sv.restartTime = 0;
-		Cbuf_AddText( "map_restart 0\n" );
+		Cbuf_AddText( "map_restart\n" );
 		return;
 	}
 

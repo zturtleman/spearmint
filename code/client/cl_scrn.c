@@ -416,66 +416,13 @@ This will be called twice if rendering in stereo mode
 ==================
 */
 void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
-	qboolean uiFullscreen;
-
 	re.BeginFrame( stereoFrame );
 
-	uiFullscreen = (uivm && VM_Call( uivm, UI_IS_FULLSCREEN ));
-
-	// wide aspect ratio screens need to have the sides cleared
-	// unless they are displaying game renderings
-	if ( uiFullscreen || (clc.state != CA_ACTIVE && clc.state != CA_CINEMATIC) ) {
-		if ( cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ) {
-			re.SetColor( g_color_table[0] );
-			re.DrawStretchPic( 0, 0, cls.glconfig.vidWidth, cls.glconfig.vidHeight, 0, 0, 0, 0, cls.whiteShader );
-			re.SetColor( NULL );
-		}
-	}
-
-	// if the menu is going to cover the entire screen, we
-	// don't need to render anything under it
-	if ( uivm && !uiFullscreen ) {
-		switch( clc.state ) {
-		default:
-			Com_Error( ERR_FATAL, "SCR_DrawScreenField: bad clc.state" );
-			break;
-		case CA_CINEMATIC:
-			SCR_DrawCinematic();
-			break;
-		case CA_DISCONNECTED:
-			// force menu up
-			S_StopAllSounds();
-			VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-			break;
-		case CA_CONNECTING:
-		case CA_CHALLENGING:
-		case CA_CONNECTED:
-			// connecting clients will only show the connection dialog
-			// refresh to update the time
-			VM_Call( uivm, UI_REFRESH, cls.realtime );
-			VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qfalse );
-			break;
-		case CA_LOADING:
-		case CA_PRIMED:
-			// draw the game information screen and loading progress
-			CL_CGameRendering(stereoFrame);
-
-			// also draw the connection information, so it doesn't
-			// flash away too briefly on local or lan games
-			// refresh to update the time
-			VM_Call( uivm, UI_REFRESH, cls.realtime );
-			VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qtrue );
-			break;
-		case CA_ACTIVE:
-			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
-			CL_CGameRendering(stereoFrame);
-			break;
-		}
-	}
-
-	// the menu draws next
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
-		VM_Call( uivm, UI_REFRESH, cls.realtime );
+	if ( clc.state == CA_CINEMATIC ) {
+		SCR_DrawCinematic();
+	} else {
+		// draw UI and/or game scene
+		CL_CGameRendering(stereoFrame);
 	}
 
 	// console draws next
@@ -509,7 +456,7 @@ void SCR_UpdateScreen( void ) {
 
 	// If there is no VM, there are also no rendering commands issued. Stop the renderer in
 	// that case.
-	if( uivm || com_dedicated->integer )
+	if( cgvm || com_dedicated->integer )
 	{
 		// XXX
 		int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");

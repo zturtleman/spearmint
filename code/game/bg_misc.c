@@ -1938,65 +1938,6 @@ int cmdcmp( const void *a, const void *b ) {
   return Q_stricmp( (const char *)a, ((dummyCmd_t *)b)->name );
 }
 
-#if defined CGAME || defined UI
-/*
-========================
-BG_RegisterClientCvars
-
-Init client-side cvars in cgame and ui.
-========================
-*/
-void BG_RegisterClientCvars(int maxSplitview) {
-	int i;
-	const char *name;
-	const int userInfo[MAX_SPLITVIEW] = { CVAR_USERINFO, CVAR_USERINFO2, CVAR_USERINFO3, CVAR_USERINFO4 };
-	const char *modelNames[MAX_SPLITVIEW] = { DEFAULT_MODEL, DEFAULT_MODEL2, DEFAULT_MODEL3, DEFAULT_MODEL4 };
-	const char *headModelNames[MAX_SPLITVIEW] = { DEFAULT_HEAD, DEFAULT_HEAD2, DEFAULT_HEAD3, DEFAULT_HEAD4 };
-	const char *teamModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_MODEL, DEFAULT_TEAM_MODEL2, DEFAULT_TEAM_MODEL3, DEFAULT_TEAM_MODEL4 };
-	const char *teamHeadModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_HEAD, DEFAULT_TEAM_HEAD2, DEFAULT_TEAM_HEAD3, DEFAULT_TEAM_HEAD4 };
-
-	for (i = 0; i < maxSplitview; i++) {
-		if (i == 0) {
-			name = DEFAULT_CLIENT_NAME;
-		} else {
-			name = va("%s%d", DEFAULT_CLIENT_NAME, i + 1);
-		}
-
-		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "name"), name, userInfo[i] | CVAR_ARCHIVE );
-
-		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "model"), modelNames[i], userInfo[i] | CVAR_ARCHIVE );
-		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "headmodel"), headModelNames[i], userInfo[i] | CVAR_ARCHIVE );
-
-		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "team_model"), teamModelNames[i], userInfo[i] | CVAR_ARCHIVE );
-		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "team_headmodel"), teamHeadModelNames[i], userInfo[i] | CVAR_ARCHIVE );
-
-		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "color1"), va("%d", DEFAULT_CLIENT_COLOR1), userInfo[i] | CVAR_ARCHIVE );
-		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "color2"), va("%d", DEFAULT_CLIENT_COLOR2), userInfo[i] | CVAR_ARCHIVE );
-
-		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "handicap"), "100", userInfo[i] | CVAR_ARCHIVE );
-
-		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "teamtask"), "0", userInfo[i] );
-
-		// set to in ui before starting server
-		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "teampref"), "", userInfo[i] );
-		// clear team if was previously set (only want it used for one game)
-		trap_Cvar_Set( Com_LocalClientCvarName(i, "teampref"), "" );
-
-		// init autoswitch so the ui will have it correctly even
-		// if the cgame hasn't been started
-		trap_Cvar_Register(NULL, Com_LocalClientCvarName(i, "cg_autoswitch"), "1", CVAR_ARCHIVE);
-	}
-
-	trap_Cvar_Register(NULL, "cg_predictItems", "1", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
-
-	trap_Cvar_Register(NULL, "com_blood", "1", CVAR_ARCHIVE );
-
-	// cgame might not be initialized before menu is used
-	trap_Cvar_Register(NULL, "cg_viewsize", "100", CVAR_ARCHIVE );
-	trap_Cvar_CheckRange("cg_viewsize", 30, 100, qtrue );
-}
-#endif
-
 /*
 =================
 PC_SourceWarning

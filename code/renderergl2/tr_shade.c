@@ -526,13 +526,24 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 		case CGEN_FOG:
 			{
 				fog_t		*fog;
+				unsigned	colorInt;
 
-				fog = tr.world->fogs + tess.fogNum;
+				if ( tess.shader->isSky ) {
+					colorInt = tr.skyFogColorInt;
+				} else {
+					fog = tr.world->fogs + tess.fogNum;
 
-				baseColor[0] = ((unsigned char *)(&fog->colorInt))[0] / 255.0f;
-				baseColor[1] = ((unsigned char *)(&fog->colorInt))[1] / 255.0f;
-				baseColor[2] = ((unsigned char *)(&fog->colorInt))[2] / 255.0f;
-				baseColor[3] = ((unsigned char *)(&fog->colorInt))[3] / 255.0f;
+					if ( fog->originalBrushNumber < 0 ) {
+						colorInt = backEnd.refdef.fogColorInt;
+					} else {
+						colorInt = fog->colorInt;
+					}
+				}
+
+				baseColor[0] = ((unsigned char *)(&colorInt))[0] / 255.0f;
+				baseColor[1] = ((unsigned char *)(&colorInt))[1] / 255.0f;
+				baseColor[2] = ((unsigned char *)(&colorInt))[2] / 255.0f;
+				baseColor[3] = ((unsigned char *)(&colorInt))[3] / 255.0f;
 			}
 
 			vertColor[0] =
@@ -1072,8 +1083,6 @@ static void RB_FogPass( void ) {
 	GLSL_SetUniformFloat(sp, UNIFORM_FOGEYET, eyeT);
 
 	if ( tess.shader->fogPass == FP_EQUAL ) {
-		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_EQUAL );
-	} else if ( tess.shader->sort >= SS_BLEND0 ) {
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_EQUAL );
 	} else {
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
@@ -1654,7 +1663,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	// now do fog
 	//
-	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && tr.world && tess.fogNum == tr.world->globalFog ) ) ) {
+	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && R_IsGlobalFog( tess.fogNum ) ) ) ) {
 		RB_FogPass();
 	}
 

@@ -838,8 +838,6 @@ static void RB_FogPass( void ) {
 
 	if ( tess.shader->fogPass == FP_EQUAL ) {
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_EQUAL );
-	} else if ( tess.shader->sort >= SS_BLEND0 ) {
-		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_EQUAL );
 	} else {
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
 	}
@@ -1196,7 +1194,7 @@ void SetIteratorFog( void ) {
 		return;
 	}
 
-	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && tess.shader->sort < SS_BLEND0 && tr.world && tess.fogNum == tr.world->globalFog ) ) ) {
+	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && tess.shader->sort < SS_BLEND0 && R_IsGlobalFog( tess.fogNum ) ) ) ) {
 		RB_Fog( tess.fogNum );
 	} else {
 		R_FogOff();
@@ -1377,7 +1375,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	// now do fog
 	//
-	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && tr.world && tess.fogNum == tr.world->globalFog ) ) ) {
+	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && R_IsGlobalFog( tess.fogNum ) ) ) ) {
 		RB_FogPass();
 	}
 
@@ -1469,7 +1467,7 @@ void RB_StageIteratorVertexLitTexture( void )
 	//
 	// now do fog
 	//
-	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && tr.world && tess.fogNum == tr.world->globalFog ) ) ) {
+	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && R_IsGlobalFog( tess.fogNum ) ) ) ) {
 		RB_FogPass();
 	}
 
@@ -1581,7 +1579,7 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 	//
 	// now do fog
 	//
-	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && tr.world && tess.fogNum == tr.world->globalFog ) ) ) {
+	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && R_IsGlobalFog( tess.fogNum ) ) ) ) {
 		RB_FogPass();
 	}
 

@@ -2690,8 +2690,8 @@ void RE_SavePNG(const char *filename, int width, int height, byte *data, int pad
 	Q_strncpyz(tEXt[numtEXt].key, "Mapname", sizeof (tEXt[numtEXt].key));
 	ri.Cvar_VariableStringBuffer("mapname", tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
 	numtEXt++;
-	Q_strncpyz(tEXt[numtEXt].key, "Mapmessage", sizeof (tEXt[numtEXt].key));
-	ri.CL_GetMapMessage(tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
+	Q_strncpyz(tEXt[numtEXt].key, "Maptitle", sizeof (tEXt[numtEXt].key));
+	ri.CL_GetMapTitle(tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
 	numtEXt++;
 	for (i = 0; i < ri.CL_MaxSplitView(); i++) {
 		Com_sprintf(tEXt[numtEXt].key, sizeof (tEXt[numtEXt].key), "Playername%d", i+1);

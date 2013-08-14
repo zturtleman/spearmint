@@ -64,12 +64,6 @@ static qboolean g_editingField = qfalse;
 static itemDef_t *g_bindItem = NULL;
 static itemDef_t *g_editItem = NULL;
 
-menuDef_t Menus[MAX_MENUS];      // defined menus
-int menuCount = 0;               // how many
-
-menuDef_t *menuStack[MAX_OPEN_MENUS];
-int openMenuCount = 0;
-
 static qboolean debugMode = qfalse;
 
 #define DOUBLE_CLICK_DELAY 300
@@ -84,11 +78,7 @@ itemDef_t *Menu_SetPrevCursorItem(menuDef_t *menu);
 itemDef_t *Menu_SetNextCursorItem(menuDef_t *menu);
 static qboolean Menu_OverActiveItem(menuDef_t *menu, float x, float y);
 
-#ifdef CGAME
-#define MEM_POOL_SIZE  128 * 1024
-#else
-#define MEM_POOL_SIZE  1024 * 1024
-#endif
+#define MEM_POOL_SIZE  ( 1024 + 128 ) * 1024
 
 static char		memoryPool[MEM_POOL_SIZE];
 static int		allocPoint, outOfMemory;
@@ -246,12 +236,11 @@ void String_Init(void) {
 	}
 	strHandleCount = 0;
 	strPoolIndex = 0;
-	menuCount = 0;
-	openMenuCount = 0;
+	DC->menuCount = 0;
 	UI_InitMemory();
 	Item_SetupKeywordHash();
 	Menu_SetupKeywordHash();
-	if (DC && DC->getKey) {
+	if (DC->getKey) {
 		Controls_GetConfig();
 	}
 }
@@ -963,9 +952,9 @@ void Menu_FadeItemByName(menuDef_t *menu, const char *p, qboolean fadeOut) {
 
 menuDef_t *Menus_FindByName(const char *p) {
   int i;
-  for (i = 0; i < menuCount; i++) {
-    if (Q_stricmp(Menus[i].window.name, p) == 0) {
-      return &Menus[i];
+  for (i = 0; i < DC->menuCount; i++) {
+    if (Q_stricmp(DC->Menus[i].window.name, p) == 0) {
+      return &DC->Menus[i];
     } 
   }
   return NULL;
@@ -1000,9 +989,9 @@ void Menus_CloseByName(const char *p) {
 
 void Menus_CloseAll(void) {
   int i;
-  for (i = 0; i < menuCount; i++) {
-		Menu_RunCloseScript(&Menus[i]);
-		Menus[i].window.flags &= ~(WINDOW_HASFOCUS | WINDOW_VISIBLE);
+  for (i = 0; i < DC->menuCount; i++) {
+		Menu_RunCloseScript(&DC->Menus[i]);
+		DC->Menus[i].window.flags &= ~(WINDOW_HASFOCUS | WINDOW_VISIBLE);
   }
 }
 
@@ -2476,8 +2465,8 @@ static void Menu_CloseCinematics(menuDef_t *menu) {
 
 static void Display_CloseCinematics( void ) {
 	int i;
-	for (i = 0; i < menuCount; i++) {
-		Menu_CloseCinematics(&Menus[i]);
+	for (i = 0; i < DC->menuCount; i++) {
+		Menu_CloseCinematics(&DC->Menus[i]);
 	}
 }
 
@@ -2501,8 +2490,8 @@ void  Menus_Activate(menuDef_t *menu) {
 int Display_VisibleMenuCount( void ) {
 	int i, count;
 	count = 0;
-	for (i = 0; i < menuCount; i++) {
-		if (Menus[i].window.flags & (WINDOW_FORCED | WINDOW_VISIBLE)) {
+	for (i = 0; i < DC->menuCount; i++) {
+		if (DC->Menus[i].window.flags & (WINDOW_FORCED | WINDOW_VISIBLE)) {
 			count++;
 		}
 	}
@@ -2520,13 +2509,13 @@ void Menus_HandleOOBClick(menuDef_t *menu, int key, qboolean down) {
 			menu->window.flags &= ~(WINDOW_HASFOCUS | WINDOW_VISIBLE);
 		}
 
-		for (i = 0; i < menuCount; i++) {
-			if (Menu_OverActiveItem(&Menus[i], DC->cursorx, DC->cursory)) {
+		for (i = 0; i < DC->menuCount; i++) {
+			if (Menu_OverActiveItem(&DC->Menus[i], DC->cursorx, DC->cursory)) {
 				Menu_RunCloseScript(menu);
 				menu->window.flags &= ~(WINDOW_HASFOCUS | WINDOW_VISIBLE);
-				Menus_Activate(&Menus[i]);
-				Menu_HandleMouseMove(&Menus[i], DC->cursorx, DC->cursory);
-				Menu_HandleKey(&Menus[i], key, down);
+				Menus_Activate(&DC->Menus[i]);
+				Menu_HandleMouseMove(&DC->Menus[i], DC->cursorx, DC->cursory);
+				Menu_HandleKey(&DC->Menus[i], key, down);
 			}
 		}
 
@@ -4024,9 +4013,9 @@ itemDef_t *Menu_GetFocusedItem(menuDef_t *menu) {
 
 menuDef_t *Menu_GetFocused(void) {
   int i;
-  for (i = 0; i < menuCount; i++) {
-    if (Menus[i].window.flags & WINDOW_HASFOCUS && Menus[i].window.flags & WINDOW_VISIBLE) {
-      return &Menus[i];
+  for (i = 0; i < DC->menuCount; i++) {
+    if (DC->Menus[i].window.flags & WINDOW_HASFOCUS && DC->Menus[i].window.flags & WINDOW_VISIBLE) {
+      return &DC->Menus[i];
     }
   }
   return NULL;
@@ -4074,8 +4063,8 @@ void Menu_SetFeederSelection(menuDef_t *menu, int feeder, int index, const char 
 
 qboolean Menus_AnyFullScreenVisible(void) {
   int i;
-  for (i = 0; i < menuCount; i++) {
-    if (Menus[i].window.flags & WINDOW_VISIBLE && Menus[i].fullScreen) {
+  for (i = 0; i < DC->menuCount; i++) {
+    if (DC->Menus[i].window.flags & WINDOW_VISIBLE && DC->Menus[i].fullScreen) {
 			return qtrue;
     }
   }
@@ -4085,16 +4074,12 @@ qboolean Menus_AnyFullScreenVisible(void) {
 menuDef_t *Menus_ActivateByName(const char *p) {
   int i;
   menuDef_t *m = NULL;
-	menuDef_t *focus = Menu_GetFocused();
-  for (i = 0; i < menuCount; i++) {
-    if (Q_stricmp(Menus[i].window.name, p) == 0) {
-	    m = &Menus[i];
-			Menus_Activate(m);
-			if (openMenuCount < MAX_OPEN_MENUS && focus != NULL) {
-				menuStack[openMenuCount++] = focus;
-			}
+  for (i = 0; i < DC->menuCount; i++) {
+    if (Q_stricmp(DC->Menus[i].window.name, p) == 0) {
+	    m = &DC->Menus[i];
+		Menus_Activate(m);
     } else {
-      Menus[i].window.flags &= ~WINDOW_HASFOCUS;
+      DC->Menus[i].window.flags &= ~WINDOW_HASFOCUS;
     }
   }
 	Display_CloseCinematics();
@@ -5591,19 +5576,19 @@ Menu_New
 ===============
 */
 void Menu_New(int handle) {
-	menuDef_t *menu = &Menus[menuCount];
+	menuDef_t *menu = &DC->Menus[DC->menuCount];
 
-	if (menuCount < MAX_MENUS) {
+	if (DC->menuCount < MAX_MENUS) {
 		Menu_Init(menu);
 		if (Menu_Parse(handle, menu)) {
 			Menu_PostParse(menu);
-			menuCount++;
+			DC->menuCount++;
 		}
 	}
 }
 
 int Menu_Count(void) {
-	return menuCount;
+	return DC->menuCount;
 }
 
 void Menu_PaintAll(void) {
@@ -5613,7 +5598,7 @@ void Menu_PaintAll(void) {
 	}
 
 	for (i = 0; i < Menu_Count(); i++) {
-		Menu_Paint(&Menus[i], qfalse);
+		Menu_Paint(&DC->Menus[i], qfalse);
 	}
 
 	if (debugMode) {
@@ -5623,7 +5608,7 @@ void Menu_PaintAll(void) {
 }
 
 void Menu_Reset(void) {
-	menuCount = 0;
+	DC->menuCount = 0;
 }
 
 displayContextDef_t *Display_GetContext(void) {
@@ -5638,11 +5623,11 @@ static float captureY;
 void *Display_CaptureItem(int x, int y) {
 	int i;
 
-	for (i = 0; i < menuCount; i++) {
+	for (i = 0; i < DC->menuCount; i++) {
 		// turn off focus each item
 		// menu->items[i].window.flags &= ~WINDOW_HASFOCUS;
-		if (Rect_ContainsPoint(&Menus[i].window.rect, x, y)) {
-			return &Menus[i];
+		if (Rect_ContainsPoint(&DC->Menus[i].window.rect, x, y)) {
+			return &DC->Menus[i];
 		}
 	}
 	return NULL;
@@ -5662,8 +5647,8 @@ qboolean Display_MouseMove(void *p, int x, int y) {
 				return qtrue;
 			}
 		}
-		for (i = 0; i < menuCount; i++) {
-			Menu_HandleMouseMove(&Menus[i], x, y);
+		for (i = 0; i < DC->menuCount; i++) {
+			Menu_HandleMouseMove(&DC->Menus[i], x, y);
 		}
 	} else {
 		menu->window.rect.x += x;
@@ -5676,10 +5661,10 @@ qboolean Display_MouseMove(void *p, int x, int y) {
 
 int Display_CursorType(int x, int y) {
 	int i;
-	for (i = 0; i < menuCount; i++) {
+	for (i = 0; i < DC->menuCount; i++) {
 		rectDef_t r2;
-		r2.x = Menus[i].window.rect.x - 3;
-		r2.y = Menus[i].window.rect.y - 3;
+		r2.x = DC->Menus[i].window.rect.x - 3;
+		r2.y = DC->Menus[i].window.rect.y - 3;
 		r2.w = r2.h = 7;
 		if (Rect_ContainsPoint(&r2, x, y)) {
 			return CURSOR_SIZER;
@@ -5733,8 +5718,8 @@ static void Menu_CacheContents(menuDef_t *menu) {
 
 void Display_CacheAll(void) {
 	int i;
-	for (i = 0; i < menuCount; i++) {
-		Menu_CacheContents(&Menus[i]);
+	for (i = 0; i < DC->menuCount; i++) {
+		Menu_CacheContents(&DC->Menus[i]);
 	}
 }
 

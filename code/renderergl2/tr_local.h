@@ -1406,14 +1406,12 @@ typedef struct {
 	int			numsurfaces;
 	msurface_t	*surfaces;
 	int         *surfacesViewCount;
-	int         *surfacesFogNum;
 	int         *surfacesDlightBits;
 	int			*surfacesPshadowBits;
 
 	int			numMergedSurfaces;
 	msurface_t	*mergedSurfaces;
 	int         *mergedSurfacesViewCount;
-	int         *mergedSurfacesFogNum;
 	int         *mergedSurfacesDlightBits;
 	int			*mergedSurfacesPshadowBits;
 
@@ -1424,7 +1422,7 @@ typedef struct {
 	int			numfogs;
 	fog_t		*fogs;
 
-	int			globalFog;				// index of global fog in bsp
+	int			globalFogNum;				// index of global fog in bsp
 
 	vec3_t		lightGridOrigin;
 	vec3_t		lightGridSize;
@@ -2821,6 +2819,7 @@ void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, floa
 void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
 
 // fog stuff
+qboolean R_IsGlobalFog( int fogNum );
 int R_BoundsFogNum( const trRefdef_t *refdef, vec3_t mins, vec3_t maxs );
 int R_PointFogNum( const trRefdef_t *refdef, vec3_t point, float radius );
 void R_FogOff( void );
