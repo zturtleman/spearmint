@@ -81,7 +81,6 @@ VM_Init
 void VM_Init( void ) {
 	Cvar_Get( "vm_cgame", "0", CVAR_ARCHIVE );
 	Cvar_Get( "vm_game", "0", CVAR_ARCHIVE );
-	Cvar_Get( "vm_ui", "0", CVAR_ARCHIVE );
 
 	vm_minQvmHunkKB = Cvar_Get( "vm_minQvmHunkKB", "48", CVAR_ARCHIVE );
 	Cvar_CheckRange( vm_minQvmHunkKB, 0, 24 * 1024, qtrue );

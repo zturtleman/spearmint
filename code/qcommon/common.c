@@ -1663,7 +1663,6 @@ qboolean Hunk_CheckMark( void ) {
 }
 
 void CL_ShutdownCGame( void );
-void CL_ShutdownUI( void );
 void SV_ShutdownGameProgs( void );
 
 /*
@@ -1677,7 +1676,6 @@ void Hunk_Clear( void ) {
 
 #ifndef DEDICATED
 	CL_ShutdownCGame();
-	CL_ShutdownUI();
 #endif
 	SV_ShutdownGameProgs();
 #ifndef DEDICATED

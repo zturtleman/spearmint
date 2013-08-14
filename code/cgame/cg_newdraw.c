@@ -1733,6 +1733,8 @@ void CG_MouseEvent(int localClientNum, int x, int y) {
 		return;
 	}
 
+	Init_Display(&cgDC);
+
 	cgDC.cursorx = cgs.cursorX;
 	cgDC.cursory = cgs.cursorY;
 
@@ -1778,6 +1780,7 @@ CG_HideTeamMenus
 
 */
 void CG_HideTeamMenu( void ) {
+  Init_Display(&cgDC);
   Menus_CloseByName("teamMenu");
   Menus_CloseByName("getMenu");
 }
@@ -1789,6 +1792,7 @@ CG_ShowTeamMenus
 
 */
 void CG_ShowTeamMenu( void ) {
+  Init_Display(&cgDC);
   Menus_OpenByName("teamMenu");
 }
 
@@ -1818,12 +1822,24 @@ void CG_EventHandling(int type) {
 
 
 void CG_KeyEvent(int key, qboolean down) {
+	cglc_t *lc;
 
 	if (!down) {
 		return;
 	}
 
-	if ( cg.cur_lc->predictedPlayerState.pm_type == PM_NORMAL || (cg.cur_lc->predictedPlayerState.pm_type == PM_SPECTATOR && cg.cur_lc->showScores == qfalse)) {
+	Init_Display(&cgDC);
+
+	// escape always gets out of CGAME stuff
+	if (key == K_ESCAPE) {
+		trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_CGAME );
+		CG_EventHandling(CGAME_EVENT_NONE);
+		return;
+	}
+
+	lc = &cg.localClients[0];
+
+	if ( lc->predictedPlayerState.pm_type == PM_NORMAL || (lc->predictedPlayerState.pm_type == PM_SPECTATOR && lc->showScores == qfalse)) {
 		CG_EventHandling(CGAME_EVENT_NONE);
     trap_Key_SetCatcher(0);
 		return;
@@ -1861,6 +1877,7 @@ int CG_ClientNumFromName(const char *p) {
 
 void CG_ShowResponseHead(void) {
 #ifdef MISSIONPACK_HUD
+	Init_Display(&cgDC);
 	Menus_OpenByName("voiceMenu");
 #endif // MISSIONPACK_HUD
 }

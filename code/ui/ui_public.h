@@ -33,59 +33,30 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "../cgame/cg_public.h"
 
-#define UI_API_MAJOR_VERSION	0xdead
-#define UI_API_MINOR_VERSION	0xbeef
+// UI functions used by cgame
 
-typedef enum {
-	UIMENU_NONE,
-	UIMENU_MAIN,
-	UIMENU_INGAME,
-	UIMENU_TEAM,
-	UIMENU_POSTGAME
-} uiMenuCommand_t;
+void	UI_Init( qboolean inGameLoad, int maxSplitView );
+void	UI_Shutdown( void );
 
-typedef enum {
-	UI_GETAPIVERSION = 0,	// system reserved
+void	UI_KeyEvent( int key, qboolean down );
+void	UI_MouseEvent( int localClientNum, int dx, int dy );
+int		UI_MousePosition( int localClientNum );
+void	UI_SetMousePosition( int localClientNum, int x, int y );
 
-	UI_INIT,
-//	void	UI_Init( qboolean inGameLoad, int maxSplitView );
+qboolean UI_IsFullscreen( void );
 
-	UI_SHUTDOWN,
-//	void	UI_Shutdown( void );
+void	UI_Refresh( int time );
+void	UI_SetActiveMenu( uiMenuCommand_t menu );
+qboolean UI_ConsoleCommand( int realTime );
 
-	UI_KEY_EVENT,
-//	void	UI_KeyEvent( int key );
-
-	UI_MOUSE_EVENT,
-//	void	UI_MouseEvent( int localClientNum, int dx, int dy );
-
-	UI_MOUSE_POSITION,
-//  int		UI_MousePosition( int localClientNum );
-
-	UI_SET_MOUSE_POSITION,
-//  void	UI_SetMousePosition( int localClientNum, int x, int y );
-
-	UI_REFRESH,
-//	void	UI_Refresh( int time );
-
-	UI_IS_FULLSCREEN,
-//	qboolean UI_IsFullscreen( void );
-
-	UI_SET_ACTIVE_MENU,
-//	void	UI_SetActiveMenu( uiMenuCommand_t menu );
-
-	UI_CONSOLE_COMMAND,
-//	qboolean UI_ConsoleCommand( int realTime );
-
-	UI_DRAW_CONNECT_SCREEN,
-//	void	UI_DrawConnectScreen( qboolean overlay );
+void	UI_DrawConnectScreen( qboolean overlay );
 // if !overlay, the background will be drawn, otherwise it will be
 // overlayed over whatever the cgame has drawn.
 // a GetClientState syscall will be made to get the current strings
 
-	UI_WANTSBINDKEYS,
-//	qboolean UI_WantsBindKeys( void );
+qboolean UI_WantsBindKeys( void );
 
-} uiExport_t;
+// used by cg_info.c
+void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );
 
 #endif

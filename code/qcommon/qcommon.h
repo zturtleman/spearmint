@@ -1090,11 +1090,6 @@ int SV_FrameMsec(void);
 qboolean SV_GameCommand( void );
 int SV_SendQueuedPackets(void);
 
-//
-// UI interface
-//
-qboolean UI_GameCommand( void );
-
 /*
 ==============================================================
 

@@ -38,43 +38,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 uiStatic_t		uis;
 qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
 
-void QDECL Com_Error( int level, const char *error, ... ) {
-	va_list		argptr;
-	char		text[1024];
-
-	va_start (argptr, error);
-	Q_vsnprintf (text, sizeof(text), error, argptr);
-	va_end (argptr);
-
-	trap_Error( text );
-}
-
-void QDECL Com_Printf( const char *msg, ... ) {
-	va_list		argptr;
-	char		text[1024];
-
-	va_start (argptr, msg);
-	Q_vsnprintf (text, sizeof(text), msg, argptr);
-	va_end (argptr);
-
-	trap_Print( va("%s", text) );
-}
-
-void QDECL Com_DPrintf( const char *msg, ... ) {
-	va_list		argptr;
-	char		text[1024];
-
-	if (!trap_Cvar_VariableValue("developer")) {
-		return;			// don't confuse non-developers with techie stuff...
-	}
-
-	va_start (argptr, msg);
-	Q_vsnprintf (text, sizeof(text), msg, argptr);
-	va_end (argptr);
-
-	trap_Print( text );
-}
-
 /*
 =================
 UI_ClampCvar
@@ -875,7 +838,7 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 UI_KeyEvent
 =================
 */
-void UI_KeyEvent( int key, int down ) {
+void UI_KeyEvent( int key, qboolean down ) {
 	sfxHandle_t		s;
 
 	if (!uis.activemenu) {

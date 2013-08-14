@@ -58,9 +58,7 @@ void CL_MouseEvent( int localClientNum, int dx, int dy, int time ) {
 		return;
 	}
 
-	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		VM_Call(uivm, UI_MOUSE_EVENT, localClientNum, dx, dy);
-	} else if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
+	if (Key_GetCatcher( ) & KEYCATCH_UI_CGAME) {
 		VM_Call(cgvm, CG_MOUSE_EVENT, localClientNum, dx, dy);
 	} else {
 		lc = &cl.localClients[localClientNum];

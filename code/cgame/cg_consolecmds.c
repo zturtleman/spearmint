@@ -143,14 +143,28 @@ static void CG_ScoresUp_f( int localClientNum ) {
 
 #ifdef MISSIONPACK_HUD
 extern menuDef_t *menuScoreboard;
+extern displayContextDef_t cgDC;
 void Menu_Reset( void );			// FIXME: add to right include file
+#ifdef MISSIONPACK
+void UI_Load( void );
+#endif
 
 static void CG_LoadHud_f( void) {
   char buff[1024];
 	const char *hudSet;
   memset(buff, 0, sizeof(buff));
 
+#ifdef MISSIONPACK
+	// must reload both ui and hud at once, they share the string memory pool
+	UI_Load();
+
+	Init_Display(&cgDC);
+#else
+	Init_Display(&cgDC);
+
 	String_Init();
+#endif
+
 	Menu_Reset();
 	
 	trap_Cvar_VariableStringBuffer("cg_hudFiles", buff, sizeof(buff));

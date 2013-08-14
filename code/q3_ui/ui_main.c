@@ -40,65 +40,8 @@ USER INTERFACE MAIN
 #include "ui_local.h"
 
 
-/*
-================
-vmMain
-
-This is the only way control passes into the module.
-This must be the very first function compiled into the .qvm file
-================
-*/
-Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11  ) {
-	switch ( command ) {
-	case UI_GETAPIVERSION:
-		return ( UI_API_MAJOR_VERSION << 16) | ( UI_API_MINOR_VERSION & 0xFFFF );
-
-	case UI_INIT:
-		UI_Init(arg0, arg1);
-		return 0;
-
-	case UI_SHUTDOWN:
-		UI_Shutdown();
-		return 0;
-
-	case UI_KEY_EVENT:
-		UI_KeyEvent( arg0, arg1 );
-		return 0;
-
-	case UI_MOUSE_EVENT:
-		UI_MouseEvent( arg0, arg1, arg2 );
-		return 0;
-
-	case UI_MOUSE_POSITION:
-		return UI_MousePosition( arg0 );
-
-	case UI_SET_MOUSE_POSITION:
-		UI_SetMousePosition( arg0, arg1, arg2 );
-		return 0;
-
-	case UI_REFRESH:
-		UI_Refresh( arg0 );
-		return 0;
-
-	case UI_IS_FULLSCREEN:
-		return UI_IsFullscreen();
-
-	case UI_SET_ACTIVE_MENU:
-		UI_SetActiveMenu( arg0 );
-		return 0;
-
-	case UI_CONSOLE_COMMAND:
-		return UI_ConsoleCommand(arg0);
-
-	case UI_DRAW_CONNECT_SCREEN:
-		UI_DrawConnectScreen( arg0 );
-		return 0;
-
-	case UI_WANTSBINDKEYS:
-		return Controls_WantsBindKeys();
-	}
-
-	return -1;
+qboolean UI_WantsBindKeys( void ) {
+	return Controls_WantsBindKeys();
 }
 
 

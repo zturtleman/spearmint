@@ -1344,8 +1344,6 @@ void CL_ShutdownAll(qboolean shutdownRef)
 	S_DisableSounds();
 	// shutdown CGame
 	CL_ShutdownCGame();
-	// shutdown UI
-	CL_ShutdownUI();
 
 	// shutdown the renderer
 	if(shutdownRef)
@@ -1353,7 +1351,6 @@ void CL_ShutdownAll(qboolean shutdownRef)
 	else if(re.Shutdown)
 		re.Shutdown(qfalse);		// don't destroy window or context
 
-	cls.uiStarted = qfalse;
 	cls.cgameStarted = qfalse;
 	cls.rendererStarted = qfalse;
 	cls.soundRegistered = qfalse;
@@ -1592,8 +1589,8 @@ void CL_Disconnect( qboolean showMainMenu ) {
 		clc.demofile = 0;
 	}
 
-	if ( uivm && showMainMenu ) {
-		VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_NONE );
+	if ( cgvm && showMainMenu ) {
+		VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_NONE );
 	}
 
 	SCR_StopCinematic ();
@@ -2024,8 +2021,6 @@ void CL_Vid_Restart_f( void ) {
 			Hunk_Clear();
 		}
 	
-		// shutdown the UI
-		CL_ShutdownUI();
 		// shutdown the CGame
 		CL_ShutdownCGame();
 		// shutdown the renderer and clear the renderer interface
@@ -2035,7 +2030,6 @@ void CL_Vid_Restart_f( void ) {
 		// reinitialize the filesystem if the game directory has changed
 
 		cls.rendererStarted = qfalse;
-		cls.uiStarted = qfalse;
 		cls.cgameStarted = qfalse;
 		cls.soundRegistered = qfalse;
 
@@ -2053,13 +2047,6 @@ void CL_Vid_Restart_f( void ) {
 			// XXX
 			extern void SV_GameVidRestart(void);
 			SV_GameVidRestart();
-		}
-
-		// start the cgame if connected
-		if(clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC)
-		{
-			cls.cgameStarted = qtrue;
-			CL_InitCGame();
 		}
 	}
 }
@@ -2199,14 +2186,10 @@ void CL_DownloadsComplete( void ) {
 	Cvar_Set("r_uiFullScreen", "0");
 
 	// flush client memory and start loading stuff
-	// this will also (re)load the UI
+	// this will also (re)load the cgame vm
 	// if this is a local client then only the client part of the hunk
 	// will be cleared, note that this is done after the hunk mark has been set
 	CL_FlushMemory();
-
-	// initialize the CGame
-	cls.cgameStarted = qtrue;
-	CL_InitCGame();
 
 	CL_WritePacket();
 	CL_WritePacket();
@@ -3016,11 +2999,11 @@ void CL_Frame ( int msec ) {
 	}
 #endif
 
-	if ( clc.state == CA_DISCONNECTED && !( Key_GetCatcher( ) & KEYCATCH_UI )
-		&& !com_sv_running->integer && uivm ) {
+	if ( clc.state == CA_DISCONNECTED && !( Key_GetCatcher( ) & KEYCATCH_UI_CGAME )
+		&& !com_sv_running->integer && cgvm ) {
 		// if disconnected, bring up the menu
 		S_StopAllSounds();
-		VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+		VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_MAIN );
 	}
 
 	// if recording an avi, lock to a fixed fps
@@ -3261,9 +3244,9 @@ void CL_StartHunkUsers( qboolean rendererOnly ) {
 		return;
 	}
 
-	if ( !cls.uiStarted ) {
-		cls.uiStarted = qtrue;
-		CL_InitUI();
+	if ( !cls.cgameStarted ) {
+		cls.cgameStarted = qtrue;
+		CL_InitCGame();
 	}
 }
 

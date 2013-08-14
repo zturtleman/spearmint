@@ -37,43 +37,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
 
-void QDECL Com_Error( int level, const char *error, ... ) {
-	va_list		argptr;
-	char		text[1024];
-
-	va_start (argptr, error);
-	Q_vsnprintf (text, sizeof(text), error, argptr);
-	va_end (argptr);
-
-	trap_Error( text );
-}
-
-void QDECL Com_Printf( const char *msg, ... ) {
-	va_list		argptr;
-	char		text[1024];
-
-	va_start (argptr, msg);
-	Q_vsnprintf (text, sizeof(text), msg, argptr);
-	va_end (argptr);
-
-	trap_Print( va("%s", text) );
-}
-
-void QDECL Com_DPrintf( const char *msg, ... ) {
-	va_list		argptr;
-	char		text[1024];
-
-	if (!trap_Cvar_VariableValue("developer")) {
-		return;			// don't confuse non-developers with techie stuff...
-	}
-
-	va_start (argptr, msg);
-	Q_vsnprintf (text, sizeof(text), msg, argptr);
-	va_end (argptr);
-
-	trap_Print( text );
-}
-
 qboolean newUI = qfalse;
 
 
@@ -366,6 +329,13 @@ qboolean UI_ConsoleCommand( int realTime ) {
 	}
 	
 	if ( Q_stricmp (cmd, "ui_load") == 0 ) {
+#ifdef MISSIONPACK_HUD
+		if ( cg.connected ) {
+			// if hud scripts are loaded, UI_Load() will break it. So reload hud and ui using loadhud command.
+			trap_Cmd_ExecuteText( EXEC_NOW, "loadhud\n" );
+			return qtrue;
+		}
+#endif
 		UI_Load();
 		return qtrue;
 	}
@@ -401,14 +371,6 @@ qboolean UI_ConsoleCommand( int realTime ) {
 	}
 
 	return qfalse;
-}
-
-/*
-=================
-UI_Shutdown
-=================
-*/
-void UI_Shutdown( void ) {
 }
 
 /*

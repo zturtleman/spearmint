@@ -43,8 +43,10 @@ int redTeamNameModificationCount = -1;
 int blueTeamNameModificationCount = -1;
 #endif
 
-void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
+void CG_Init( qboolean inGameLoad, int maxSplitView );
+void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
 void CG_Shutdown( void );
+void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
 static char *CG_VoIPString( int localClientNum );
 
 
@@ -62,15 +64,24 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_GETAPIVERSION:
 		return ( CG_API_MAJOR_VERSION << 16) | ( CG_API_MINOR_VERSION & 0xFFFF );
 	case CG_INIT:
-		CG_Init( arg0, arg1, arg2, arg3, arg4, arg5, arg6 );
+		CG_Init( arg0, arg1 );
+		return 0;
+	case CG_INGAME_INIT:
+		CG_Ingame_Init( arg0, arg1, arg2, arg3, arg4, arg5, arg6 );
 		return 0;
 	case CG_SHUTDOWN:
+		UI_Shutdown();
 		CG_Shutdown();
 		return 0;
 	case CG_CONSOLE_COMMAND:
-		return CG_ConsoleCommand();
-	case CG_DRAW_ACTIVE_FRAME:
-		CG_DrawActiveFrame( arg0, arg1, arg2 );
+		{
+			qboolean found = UI_ConsoleCommand(arg0);
+			if ( !found && cg.connected )
+				found = CG_ConsoleCommand();
+			return found;
+		}
+	case CG_REFRESH:
+		CG_Refresh( arg0, arg1, arg2, arg3, arg4 );
 		return 0;
 	case CG_CROSSHAIR_PLAYER:
 		return CG_CrosshairPlayer(arg0);
@@ -79,10 +90,45 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_VOIP_STRING:
 		return (intptr_t)CG_VoIPString(arg0);
 	case CG_KEY_EVENT:
-		CG_KeyEvent(arg0, arg1);
+		{
+			int key = arg0;
+			qboolean down = arg1;
+
+			if ( key == K_ESCAPE && down && !( trap_Key_GetCatcher( ) & KEYCATCH_UI ) ) {
+				uiClientState_t cls;
+
+				trap_GetClientState( &cls );
+
+				if ( cls.connState == CA_ACTIVE && trap_GetDemoState() != DS_PLAYBACK ) {
+					UI_SetActiveMenu( UIMENU_INGAME );
+				}
+				else if ( cls.connState != CA_DISCONNECTED ) {
+					trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
+				}
+				return 0;
+			}
+		}
+
+		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
+			CG_KeyEvent(arg0, arg1);
+		} else {
+			UI_KeyEvent(arg0, arg1);
+		}
 		return 0;
 	case CG_MOUSE_EVENT:
-		CG_MouseEvent(arg0, arg1, arg2);
+		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
+			CG_MouseEvent(arg0, arg1, arg2);
+		} else {
+			UI_MouseEvent(arg0, arg1, arg2);
+		}
+		return 0;
+	case CG_MOUSE_POSITION:
+		return UI_MousePosition( arg0 );
+	case CG_SET_MOUSE_POSITION:
+		UI_SetMousePosition( arg0, arg1, arg2 );
+		return 0;
+	case CG_SET_ACTIVE_MENU:
+		UI_SetActiveMenu( arg0 );
 		return 0;
 	case CG_JOYSTICK_EVENT:
 		CG_JoystickEvent(arg0, arg1, arg2);
@@ -94,11 +140,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		CG_AddNotifyText();
 		return 0;
 	case CG_WANTSBINDKEYS:
-#ifdef MISSIONPACK_HUD
-		return Display_WantsBindKeys();
-#else
-		return qfalse;
-#endif
+		return UI_WantsBindKeys();
 	case CG_CREATE_USER_CMD:
 		return (intptr_t)CG_CreateUserCmd(arg0, arg1, arg2, IntAsFloat(arg3), IntAsFloat(arg4));
 	default:
@@ -247,7 +289,7 @@ typedef struct {
 #define RANGE_INT(min,max) min, max, qtrue
 #define RANGE_FLOAT(min,max) min, max, qfalse
 
-static cvarTable_t cvarTable[] = {
+static cvarTable_t cgameCvarTable[] = {
 	{ &cg_ignore, "cg_ignore", "0", 0, RANGE_ALL },	// used for debugging
 	{ &cg_autoswitch[0], "cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_autoswitch[1], "2cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
@@ -392,7 +434,7 @@ static cvarTable_t cvarTable[] = {
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 };
 
-static int  cvarTableSize = ARRAY_LEN( cvarTable );
+static int  cgameCvarTableSize = ARRAY_LEN( cgameCvarTable );
 
 /*
 =================
@@ -404,7 +446,7 @@ void CG_RegisterCvars( void ) {
 	cvarTable_t	*cv;
 	char		var[MAX_TOKEN_CHARS];
 
-	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
+	for ( i = 0, cv = cgameCvarTable ; i < cgameCvarTableSize ; i++, cv++ ) {
 		if (Com_LocalClientForCvarName(cv->cvarName) >= CG_MaxSplitView()) {
 			continue;
 		}
@@ -460,7 +502,7 @@ void CG_UpdateCvars( void ) {
 	int			i;
 	cvarTable_t	*cv;
 
-	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
+	for ( i = 0, cv = cgameCvarTable ; i < cgameCvarTableSize ; i++, cv++ ) {
 		if (Com_LocalClientForCvarName(cv->cvarName) >= CG_MaxSplitView()) {
 			continue;
 		}
@@ -1693,7 +1735,7 @@ void CG_ParseMenu(const char *menuFile) {
 		//	break;
 		//}
 
-		//if ( menuCount == MAX_MENUS ) {
+		//if ( cgDC.menuCount == MAX_MENUS ) {
 		//	Com_Printf( "Too many menus!\n" );
 		//	break;
 		//}
@@ -1756,6 +1798,8 @@ void CG_LoadMenus(const char *menuFile) {
 
 	start = trap_Milliseconds();
 
+	Init_Display(&cgDC);
+
 	len = trap_FS_FOpenFile( menuFile, &f, FS_READ );
 	if ( !f ) {
 		Com_Printf( S_COLOR_YELLOW "menu file not found: %s, using default\n", menuFile );
@@ -1792,7 +1836,7 @@ void CG_LoadMenus(const char *menuFile) {
 		//	break;
 		//}
 
-		//if ( menuCount == MAX_MENUS ) {
+		//if ( cgDC.menuCount == MAX_MENUS ) {
 		//	Com_Printf( "Too many menus!\n" );
 		//	break;
 		//}
@@ -2130,7 +2174,7 @@ void CG_AssetCache( void ) {
 	//  trap_R_RegisterFont("fonts/arial.ttf", 72, &Assets.textFont);
 	//}
 	//Assets.background = trap_R_RegisterShaderNoMip( ASSET_BACKGROUND );
-	//Com_Printf("Menu Size: %i bytes\n", sizeof(Menus));
+	//Com_Printf("Menu Size: %i bytes\n", sizeof(cgDC.Menus));
 	cgDC.Assets.gradientBar = trap_R_RegisterShaderNoMip( ASSET_GRADIENTBAR );
 	cgDC.Assets.fxBasePic = trap_R_RegisterShaderNoMip( ART_FX_BASE );
 	cgDC.Assets.fxPic[0] = trap_R_RegisterShaderNoMip( ART_FX_RED );
@@ -2154,14 +2198,10 @@ void CG_AssetCache( void ) {
 =================
 CG_Init
 
-Called after every level change or subsystem restart
-Will perform callbacks to make the loading info screen update.
+Called after every cgame load, such as main menu, level change, or subsystem restart
 =================
 */
-void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 ) {
-	int	clientNums[MAX_SPLITVIEW];
-	const char	*s;
-	int			i;
+void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	// clear everything
 	memset( &cgs, 0, sizeof( cgs ) );
@@ -2169,6 +2209,33 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 	memset( cg_entities, 0, sizeof(cg_entities) );
 	memset( cg_weapons, 0, sizeof(cg_weapons) );
 	memset( cg_items, 0, sizeof(cg_items) );
+
+	cg.connected = inGameLoad;
+
+	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
+
+	CG_RegisterCvars();
+
+#ifdef MISSIONPACK_HUD
+	Init_Display(&cgDC);
+	String_Init();
+#endif
+
+	UI_Init( inGameLoad, maxSplitView );
+}
+
+/*
+=================
+CG_Ingame_Init
+
+Called after every level change or subsystem restart
+Will perform callbacks to make the loading info screen update.
+=================
+*/
+void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 ) {
+	int	clientNums[MAX_SPLITVIEW];
+	const char	*s;
+	int			i;
 
 	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 	cg.numViewports = 1;
@@ -2197,8 +2264,6 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 	cgs.media.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
 	cgs.media.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );
 	cgs.media.charsetPropB		= trap_R_RegisterShaderNoMip( "menu/art/font2_prop.tga" );
-
-	CG_RegisterCvars();
 
 	CG_InitConsoleCommands();
 
@@ -2258,10 +2323,6 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 	CG_LoadingString( "collision map" );
 
 	trap_CM_LoadMap( cgs.mapname );
-
-#ifdef MISSIONPACK_HUD
-	String_Init();
-#endif
 
 	cg.loading = qtrue;		// force players to load instead of defer
 
@@ -2325,6 +2386,31 @@ void CG_Shutdown( void ) {
 	// like closing files or archiving session data
 }
 
+/*
+=================
+CG_Refresh
+
+Draw the frame
+=================
+*/
+void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime ) {
+
+	if ( state >= CA_LOADING && !UI_IsFullscreen() ) {
+#ifdef MISSIONPACK_HUD
+		Init_Display(&cgDC);
+#endif
+		CG_DrawActiveFrame( serverTime, stereoView, demoPlayback );
+	}
+
+	if ( state <= CA_LOADING || (trap_Key_GetCatcher() & KEYCATCH_UI) ) {
+		UI_Refresh( realTime );
+	}
+
+	// connecting clients will show the connection dialog
+	if ( state >= CA_CONNECTING && state < CA_ACTIVE ) {
+		UI_DrawConnectScreen( ( state >= CA_LOADING ) );
+	}
+}
 
 /*
 ==================

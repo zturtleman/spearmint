@@ -655,7 +655,7 @@ void Con_DrawConsole( void ) {
 
 	// if disconnected, render console full screen
 	if ( clc.state == CA_DISCONNECTED ) {
-		if ( !( Key_GetCatcher( ) & (KEYCATCH_UI | KEYCATCH_CGAME)) ) {
+		if ( !( Key_GetCatcher( ) & KEYCATCH_UI_CGAME) ) {
 			Con_DrawSolidConsole( 1.0 );
 			return;
 		}
@@ -665,7 +665,7 @@ void Con_DrawConsole( void ) {
 		Con_DrawSolidConsole( con.displayFrac );
 	}
 
-	if( Key_GetCatcher( ) & ( KEYCATCH_UI | KEYCATCH_CGAME ) )
+	if( Key_GetCatcher( ) & KEYCATCH_UI_CGAME )
 		return;
 
 	// draw the chat line
