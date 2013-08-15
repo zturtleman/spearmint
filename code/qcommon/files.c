@@ -1212,7 +1212,7 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 				{
 					// found it!
 
-					// mark the pak as having been referenced and mark specifics on cgame and ui
+					// mark the pak as having been referenced and mark specific on cgame
 					// shaders, txt, arena files  by themselves do not count as a reference as 
 					// these are loaded from all pk3s 
 					// from every pk3 file.. 
@@ -1236,8 +1236,6 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 
 					if(strstr(filename, "cgame.qvm"))
 						pak->referenced |= FS_CGAME_REF;
-					if(strstr(filename, "ui.qvm"))
-						pak->referenced |= FS_UI_REF;
 
 					if(uniqueFILE)
 					{

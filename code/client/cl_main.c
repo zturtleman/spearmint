@@ -1404,7 +1404,7 @@ CL_MapLoading
 
 A local server is starting to load a map, so update the
 screen to let the user know about it, then dump all client
-memory on the hunk from cgame, ui, and renderer
+memory on the hunk from cgame and renderer
 =====================
 */
 void CL_MapLoading( void ) {
@@ -1990,7 +1990,7 @@ CL_Vid_Restart_f
 
 Restart the video subsystem
 
-we also have to reload the UI and CGame because the renderer
+we also have to reload CGame because the renderer
 doesn't know what graphics to reload
 =================
 */
@@ -2026,7 +2026,7 @@ void CL_Vid_Restart_f( void ) {
 		// shutdown the renderer and clear the renderer interface
 		Com_ShutdownRef();
 		// clear pak references
-		FS_ClearPakReferences( FS_UI_REF | FS_CGAME_REF );
+		FS_ClearPakReferences( FS_CGAME_REF );
 		// reinitialize the filesystem if the game directory has changed
 
 		cls.rendererStarted = qfalse;
@@ -2984,7 +2984,7 @@ void CL_Frame ( int msec ) {
 	if(clc.downloadCURLM) {
 		CL_cURL_PerformDownload();
 		// we can't process frames normally when in disconnected
-		// download mode since the ui vm expects clc.state to be
+		// download mode since the cgame vm expects clc.state to be
 		// CA_CONNECTED
 		if(clc.cURLDisconnected) {
 			cls.realFrametime = msec;

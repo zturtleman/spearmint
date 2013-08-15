@@ -596,8 +596,7 @@ issues.
 // referenced flags
 // these are in loop specific order so don't change the order
 #define FS_GENERAL_REF	0x01
-#define FS_UI_REF		0x02
-#define FS_CGAME_REF	0x04
+#define FS_CGAME_REF	0x02
 // number of id paks that will never be autodownloaded from baseq3/missionpack
 #define NUM_ID_PAKS		9
 #define NUM_TA_PAKS		4
@@ -916,7 +915,6 @@ server vm
 server clipmap
 ---mark---
 renderer initialization (shaders, etc)
-UI vm
 cgame vm
 renderer map
 renderer models

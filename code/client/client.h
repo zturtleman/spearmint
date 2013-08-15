@@ -47,7 +47,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 
 // Lower this define to change max supported local clients for client/renderer,
-// cgame/ui get max from client when they are initialized.
+// cgame gets max from client when it's initialized.
 #ifndef CL_MAX_SPLITVIEW
 #define CL_MAX_SPLITVIEW MAX_SPLITVIEW
 #endif

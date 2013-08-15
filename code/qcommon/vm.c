@@ -1116,7 +1116,7 @@ intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag ) {
 			if ( vmMemoryTags[i].vm != vm && !( vm->dllHandle && vmMemoryTags[i].vm->dllHandle ) ) {
 				continue;
 			}
-			// ZTM: FIXME: don't allow game vm to reference pointers in cgame or ui vm as are non-persistant
+			// ZTM: FIXME: don't allow game vm to reference pointers in cgame vm as they are non-persistant
 			if ( vmMemoryTags[i].size == size && strcmp( tag, vmMemoryTags[i].tag ) == 0 ) {
 				return vmMemoryTags[i].pointer;
 			}

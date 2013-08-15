@@ -33,7 +33,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 //
 // system traps
-// These functions are how cgame and ui communicates with the client system
+// These functions are how cgame communicates with the client system
 //
 
 // Additional shared traps in ../game/bg_misc.h
