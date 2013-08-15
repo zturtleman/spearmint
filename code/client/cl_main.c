@@ -2025,9 +2025,6 @@ void CL_Vid_Restart_f( void ) {
 		CL_ShutdownCGame();
 		// shutdown the renderer and clear the renderer interface
 		Com_ShutdownRef();
-		// clear pak references
-		FS_ClearPakReferences( FS_CGAME_REF );
-		// reinitialize the filesystem if the game directory has changed
 
 		cls.rendererStarted = qfalse;
 		cls.cgameStarted = qfalse;

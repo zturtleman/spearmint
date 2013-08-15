@@ -229,7 +229,7 @@ typedef struct {
 	unzFile			handle;						// handle to zip file
 	int				checksum;					// checksum of the zip
 	int				numfiles;					// number of files in pk3
-	int				referenced;					// referenced file flags
+	qboolean			referenced;					// is pk3 referenced?
 	int				hashSize;					// hash table size (power of 2)
 	fileInPack_t*	*hashTable;					// hash table
 	fileInPack_t*	buildBuffer;				// buffer with the filenames etc.
@@ -1212,13 +1212,13 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 				{
 					// found it!
 
-					// mark the pak as having been referenced and mark specific on cgame
+					// mark the pak as having been referenced
 					// shaders, txt, arena files  by themselves do not count as a reference as 
 					// these are loaded from all pk3s 
 					// from every pk3 file.. 
 					len = strlen(filename);
 
-					if (!(pak->referenced & FS_GENERAL_REF))
+					if (!pak->referenced)
 					{
 						if(!FS_IsExt(filename, ".shader", len) &&
 						   !FS_IsExt(filename, ".txt", len) &&
@@ -1230,12 +1230,9 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 						   Q_stricmp(filename, "vm/game.qvm") != 0 &&
 						   !strstr(filename, "levelshots"))
 						{
-							pak->referenced |= FS_GENERAL_REF;
+							pak->referenced = qtrue;
 						}
 					}
-
-					if(strstr(filename, "cgame.qvm"))
-						pak->referenced |= FS_CGAME_REF;
 
 					if(uniqueFILE)
 					{
@@ -4103,26 +4100,6 @@ const char *FS_ReferencedPakNames( void ) {
 
 /*
 =====================
-FS_ClearPakReferences
-=====================
-*/
-void FS_ClearPakReferences( int flags ) {
-	searchpath_t *search;
-
-	if ( !flags ) {
-		flags = -1;
-	}
-	for ( search = fs_searchpaths; search; search = search->next ) {
-		// is the element a pak file and has it been referenced?
-		if ( search->pack ) {
-			search->pack->referenced &= ~flags;
-		}
-	}
-}
-
-
-/*
-=====================
 FS_PureServerSetLoadedPaks
 
 If the string is empty, all data sources will be allowed.
@@ -4274,9 +4251,6 @@ void FS_Restart( qboolean gameDirChanged ) {
 
 	// free anything we currently have loaded
 	FS_Shutdown(qfalse);
-
-	// clear pak references
-	FS_ClearPakReferences(0);
 
 	// try to start up normally
 	FS_Startup(!gameDirChanged);
