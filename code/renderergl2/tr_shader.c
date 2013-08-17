@@ -1218,6 +1218,10 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				depthFuncBits = 0;
 			}
+			else if ( !Q_stricmp( token, "disable" ) )
+			{
+				depthFuncBits = 0;
+			}
 			else if ( !Q_stricmp( token, "equal" ) )
 			{
 				depthFuncBits = GLS_DEPTHFUNC_EQUAL;
