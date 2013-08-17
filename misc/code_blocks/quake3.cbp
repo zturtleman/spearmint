@@ -1074,6 +1074,9 @@
 		<Unit filename="../../code/renderercommon/tr_image_bmp.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/renderercommon/tr_image_ftx.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/renderercommon/tr_image_jpg.c">
 			<Option compilerVar="CC" />
 		</Unit>
