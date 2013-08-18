@@ -195,7 +195,6 @@ vmCvar_t	cg_footsteps;
 vmCvar_t	cg_addMarks;
 vmCvar_t	cg_brassTime;
 vmCvar_t	cg_viewsize;
-vmCvar_t	cg_drawGun[MAX_SPLITVIEW];
 vmCvar_t	cg_gun_frame;
 vmCvar_t	cg_gun_x;
 vmCvar_t	cg_gun_y;
@@ -203,14 +202,10 @@ vmCvar_t	cg_gun_z;
 vmCvar_t	cg_tracerChance;
 vmCvar_t	cg_tracerWidth;
 vmCvar_t	cg_tracerLength;
-vmCvar_t	cg_autoswitch[MAX_SPLITVIEW];
 vmCvar_t	cg_ignore;
 vmCvar_t	cg_simpleItems;
 vmCvar_t	cg_fov;
 vmCvar_t	cg_zoomFov;
-vmCvar_t	cg_thirdPerson[MAX_SPLITVIEW];
-vmCvar_t	cg_thirdPersonRange[MAX_SPLITVIEW];
-vmCvar_t	cg_thirdPersonAngle[MAX_SPLITVIEW];
 vmCvar_t	cg_splitviewVertical;
 vmCvar_t	cg_lagometer;
 vmCvar_t	cg_drawAttacker;
@@ -263,8 +258,6 @@ vmCvar_t	cg_drawShaderInfo;
 #ifdef MISSIONPACK
 vmCvar_t 	cg_redTeamName;
 vmCvar_t 	cg_blueTeamName;
-vmCvar_t	cg_currentSelectedPlayer[MAX_SPLITVIEW];
-vmCvar_t	cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 vmCvar_t	cg_singlePlayer;
 vmCvar_t	cg_enableDust;
 vmCvar_t	cg_enableBreath;
@@ -272,6 +265,22 @@ vmCvar_t	cg_singlePlayerActive;
 vmCvar_t	cg_recordSPDemo;
 vmCvar_t	cg_recordSPDemoName;
 vmCvar_t	cg_obeliskRespawnDelay;
+#endif
+
+vmCvar_t	cg_color1[MAX_SPLITVIEW];
+vmCvar_t	cg_color2[MAX_SPLITVIEW];
+vmCvar_t	cg_handicap[MAX_SPLITVIEW];
+vmCvar_t	cg_teamtask[MAX_SPLITVIEW];
+vmCvar_t	cg_teampref[MAX_SPLITVIEW];
+vmCvar_t	cg_autoswitch[MAX_SPLITVIEW];
+vmCvar_t	cg_drawGun[MAX_SPLITVIEW];
+vmCvar_t	cg_thirdPerson[MAX_SPLITVIEW];
+vmCvar_t	cg_thirdPersonRange[MAX_SPLITVIEW];
+vmCvar_t	cg_thirdPersonAngle[MAX_SPLITVIEW];
+
+#ifdef MISSIONPACK
+vmCvar_t	cg_currentSelectedPlayer[MAX_SPLITVIEW];
+vmCvar_t	cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 #endif
 
 typedef struct {
@@ -283,6 +292,16 @@ typedef struct {
 	float		rangeMax;
 	qboolean	rangeIntegral;
 } cvarTable_t;
+
+typedef struct {
+	vmCvar_t	*vmCvars; // [MAX_SPLITVIEW]
+	char		*baseName;
+	char		*defaultString;
+	int			baseCvarFlags;
+	float		rangeMin;
+	float		rangeMax;
+	qboolean	rangeIntegral;
+} userCvarTable_t;
 
 #define RANGE_ALL 0, 0, qfalse
 #define RANGE_BOOL 0, 1, qtrue
@@ -406,33 +425,89 @@ static cvarTable_t cgameCvarTable[] = {
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 };
 
+static userCvarTable_t userCvarTable[] = {
+	{ cg_color1, "color1", XSTRING( DEFAULT_CLIENT_COLOR1 ), CVAR_USERINFO | CVAR_ARCHIVE, RANGE_ALL },
+	{ cg_color2, "color2", XSTRING( DEFAULT_CLIENT_COLOR2 ), CVAR_USERINFO | CVAR_ARCHIVE, RANGE_ALL },
+	{ cg_handicap, "handicap", "100", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_ALL },
+	{ cg_teamtask, "teamtask", "0", CVAR_USERINFO, RANGE_ALL },
+	{ cg_teampref, "teampref", "", CVAR_USERINFO, RANGE_ALL },
+
+	{ cg_autoswitch, "cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ cg_drawGun, "cg_drawGun", "1", CVAR_ARCHIVE, RANGE_INT(0, 3) },
+	{ cg_thirdPerson, "cg_thirdPerson", "0", 0, RANGE_BOOL },
+	{ cg_thirdPersonRange, "cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
+	{ cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
+
+#ifdef MISSIONPACK
+	{ cg_currentSelectedPlayer, "cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },
+	{ cg_currentSelectedPlayerName, "cg_currentSelectedPlayerName", "", CVAR_ARCHIVE, RANGE_ALL }
+#endif
+};
+
 static int  cgameCvarTableSize = ARRAY_LEN( cgameCvarTable );
+static int  userCvarTableSize = ARRAY_LEN( userCvarTable );
 
 /*
 =================
-CG_RegisterCvars
+CG_RegisterCvar
 =================
 */
-void CG_RegisterCvars( void ) {
-	int			userInfo[MAX_SPLITVIEW] = { CVAR_USERINFO, CVAR_USERINFO2, CVAR_USERINFO3, CVAR_USERINFO4 };
-	char		*modelNames[MAX_SPLITVIEW] = { DEFAULT_MODEL, DEFAULT_MODEL2, DEFAULT_MODEL3, DEFAULT_MODEL4 };
-	char		*headModelNames[MAX_SPLITVIEW] = { DEFAULT_HEAD, DEFAULT_HEAD2, DEFAULT_HEAD3, DEFAULT_HEAD4 };
-	char		*teamModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_MODEL, DEFAULT_TEAM_MODEL2, DEFAULT_TEAM_MODEL3, DEFAULT_TEAM_MODEL4 };
-	char		*teamHeadModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_HEAD, DEFAULT_TEAM_HEAD2, DEFAULT_TEAM_HEAD3, DEFAULT_TEAM_HEAD4 };
-	char		*name;
-	int			i;
+void CG_RegisterCvar( vmCvar_t *vmCvar, char *cvarName, char *defaultString, int cvarFlags, float rangeMin, float rangeMax, qboolean rangeIntegral ) {
+	trap_Cvar_Register( vmCvar, cvarName, defaultString, cvarFlags );
+
+	if ( rangeMin != 0 || rangeMax != 0 ) {
+		trap_Cvar_CheckRange( cvarName, rangeMin, rangeMax, rangeIntegral );
+	}
+}
+
+/*
+=================
+CG_RegisterCgameCvars
+=================
+*/
+void CG_RegisterCgameCvars( void ) {
 	cvarTable_t	*cv;
-	char		var[MAX_TOKEN_CHARS];
+	int			i;
 
 	for ( i = 0, cv = cgameCvarTable ; i < cgameCvarTableSize ; i++, cv++ ) {
-		trap_Cvar_Register( cv->vmCvar, cv->cvarName,
-			cv->defaultString, cv->cvarFlags );
+		CG_RegisterCvar( cv->vmCvar, cv->cvarName, cv->defaultString,
+						cv->cvarFlags, cv->rangeMin, cv->rangeMax, cv->rangeIntegral );
+	}
+}
 
-		if ( cv->rangeMin != 0 || cv->rangeMax != 0 ) {
-			trap_Cvar_CheckRange( cv->cvarName, cv->rangeMin, cv->rangeMax, cv->rangeIntegral );
+/*
+=================
+CG_RegisterUserCvars
+=================
+*/
+void CG_RegisterUserCvars( void ) {
+	int				userInfo[MAX_SPLITVIEW] = { CVAR_USERINFO, CVAR_USERINFO2, CVAR_USERINFO3, CVAR_USERINFO4 };
+	char			*modelNames[MAX_SPLITVIEW] = { DEFAULT_MODEL, DEFAULT_MODEL2, DEFAULT_MODEL3, DEFAULT_MODEL4 };
+	char			*headModelNames[MAX_SPLITVIEW] = { DEFAULT_HEAD, DEFAULT_HEAD2, DEFAULT_HEAD3, DEFAULT_HEAD4 };
+	char			*teamModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_MODEL, DEFAULT_TEAM_MODEL2, DEFAULT_TEAM_MODEL3, DEFAULT_TEAM_MODEL4 };
+	char			*teamHeadModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_HEAD, DEFAULT_TEAM_HEAD2, DEFAULT_TEAM_HEAD3, DEFAULT_TEAM_HEAD4 };
+	char			*name;
+	userCvarTable_t	*uservar;
+	int				i, j;
+	int				cvarFlags;
+
+	for ( i = 0, uservar = userCvarTable ; i < userCvarTableSize ; i++, uservar++ ) {
+		for ( j = 0; j < CG_MaxSplitView(); j++ ) {
+			cvarFlags = uservar->baseCvarFlags;
+
+			// set correct userinfo flag
+			if ( cvarFlags & CVAR_USERINFO ) {
+				cvarFlags &= ~CVAR_USERINFO;
+				cvarFlags |= userInfo[j];
+			}
+
+			CG_RegisterCvar( &uservar->vmCvars[j], Com_LocalClientCvarName( j, uservar->baseName ),
+							uservar->defaultString, cvarFlags,
+							uservar->rangeMin, uservar->rangeMax, uservar->rangeIntegral );
 		}
 	}
 
+	// cvars with per-player defaults
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
 		if ( i == 0 ) {
 			name = DEFAULT_CLIENT_NAME;
@@ -448,38 +523,25 @@ void CG_RegisterCvars( void ) {
 		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_model"), teamModelNames[i], userInfo[i] | CVAR_ARCHIVE );
 		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_headmodel"), teamHeadModelNames[i], userInfo[i] | CVAR_ARCHIVE );
 
-		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "color1"), va("%d", DEFAULT_CLIENT_COLOR1), userInfo[i] | CVAR_ARCHIVE );
-		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "color2"), va("%d", DEFAULT_CLIENT_COLOR2), userInfo[i] | CVAR_ARCHIVE );
-
-		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "handicap"), "100", userInfo[i] | CVAR_ARCHIVE );
-
-		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "teamtask"), "0", userInfo[i] );
-
-		// set to team in ui before starting server
-		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "teampref"), "", userInfo[i] );
-		// clear team if was previously set (only want it used for one game)
+		// ZTM: TODO: Move this somewhere else so one can set teampref on CLI startup args?
+		// clear team preference if was previously set (only want it used for one game)
 		trap_Cvar_Set( Com_LocalClientCvarName(i, "teampref"), "" );
-
-		name = Com_LocalClientCvarName(i, "cg_autoswitch");
-		trap_Cvar_Register( &cg_autoswitch[i], name, "1", CVAR_ARCHIVE );
-		trap_Cvar_CheckRange( name, 0, 1, qtrue );
-
-		name = Com_LocalClientCvarName(i, "cg_drawGun");
-		trap_Cvar_Register( &cg_drawGun[i], name, "1", CVAR_ARCHIVE );
-		trap_Cvar_CheckRange( name, 0, 3, qtrue );
-
-		trap_Cvar_Register( &cg_thirdPerson[i], Com_LocalClientCvarName(i, "cg_thirdPerson"), "0", 0 );
-		trap_Cvar_Register( &cg_thirdPersonRange[i], Com_LocalClientCvarName(i, "cg_thirdPersonRange"), "40", CVAR_CHEAT );
-		trap_Cvar_Register( &cg_thirdPersonAngle[i], Com_LocalClientCvarName(i, "cg_thirdPersonAngle"), "0", CVAR_CHEAT );
-
-#ifdef MISSIONPACK
-		trap_Cvar_Register( &cg_currentSelectedPlayer[i], Com_LocalClientCvarName(i, "cg_currentSelectedPlayer"), "0", CVAR_ARCHIVE );
-		trap_Cvar_Register( &cg_currentSelectedPlayerName[i], Com_LocalClientCvarName(i, "cg_currentSelectedPlayerName"), "", CVAR_ARCHIVE );
-#endif
 	}
+}
 
+/*
+=================
+CG_RegisterCvars
+=================
+*/
+void CG_RegisterCvars( void ) {
+	char		var[MAX_TOKEN_CHARS];
+
+	CG_RegisterCgameCvars();
+	CG_RegisterUserCvars();
 	CG_RegisterInputCvars();
 
+	// ZTM: TODO: Move cgs.localServer init somewhere else?
 	// see if we are also running the server on this machine
 	trap_Cvar_VariableStringBuffer( "sv_running", var, sizeof( var ) );
 	cgs.localServer = atoi( var );
@@ -512,21 +574,42 @@ static void CG_ForceModelChange( void ) {
 
 /*
 =================
-CG_UpdateCvars
+CG_UpdateCgameCvars
 =================
 */
-void CG_UpdateCvars( void ) {
+void CG_UpdateCgameCvars( void ) {
 	int			i;
 	cvarTable_t	*cv;
 
 	for ( i = 0, cv = cgameCvarTable ; i < cgameCvarTableSize ; i++, cv++ ) {
-		if (Com_LocalClientForCvarName(cv->cvarName) >= CG_MaxSplitView()) {
-			continue;
-		}
-
 		trap_Cvar_Update( cv->vmCvar );
 	}
+}
 
+/*
+=================
+CG_UpdateUserCvars
+=================
+*/
+void CG_UpdateUserCvars( void ) {
+	int				i, j;
+	userCvarTable_t	*uservar;
+
+	for ( i = 0, uservar = userCvarTable ; i < userCvarTableSize ; i++, uservar++ ) {
+		for ( j = 0; j < CG_MaxSplitView(); j++ ) {
+			trap_Cvar_Update( &uservar->vmCvars[j] );
+		}
+	}
+}
+
+/*
+=================
+CG_UpdateCvars
+=================
+*/
+void CG_UpdateCvars( void ) {
+	CG_UpdateCgameCvars();
+	CG_UpdateUserCvars();
 	CG_UpdateInputCvars();
 
 	// check for modications here
