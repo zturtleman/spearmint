@@ -214,6 +214,9 @@ int				trap_Key_GetCatcher( void );
 void			trap_Key_SetCatcher( int catcher );
 int				trap_Key_GetKey( const char *binding, int startKey );
 
+int				trap_Mouse_GetState( int localClientNum );
+void			trap_Mouse_SetState( int localClientNum, int state );
+
 int				trap_LAN_GetPingQueueCount( void );
 void			trap_LAN_ClearPing( int n );
 void			trap_LAN_GetPing( int n, char *buf, int buflen, int *pingtime );

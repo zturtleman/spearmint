@@ -107,6 +107,7 @@ extern int g_console_field_width;
 typedef struct {
 	int			mouseDx[2], mouseDy[2];	// added to by mouse events
 	int			mouseIndex;
+	int			mouseFlags;				// MOUSE_CGAME, MOUSE_CLIENT, ...
 
 } calc_t;
 
@@ -489,6 +490,9 @@ void CL_VerifyCode( void );
 
 int Key_StringToKeynum( char *str );
 char *Key_KeynumToString (int keynum);
+
+int Mouse_GetState( int localClientNum );
+void Mouse_SetState( int localClientNum, int state );
 
 //
 // cl_parse.c

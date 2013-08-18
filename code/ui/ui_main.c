@@ -3133,6 +3133,20 @@ static void UI_Update(const char *name) {
 	}
 }
 
+void UI_ForceMenuOff (void) {
+	trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CGAME ) | MOUSE_CLIENT );
+	trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
+	trap_Cvar_SetValue( "cl_paused", 0 );
+	Menus_CloseAll();
+}
+
+void UI_EnterMenu (void) {
+	trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CLIENT ) | MOUSE_CGAME );
+	//trap_Mouse_SetState( 0,  trap_Mouse_GetState( 0 ) | MOUSE_CGAME );
+	trap_Key_SetCatcher( KEYCATCH_UI );
+	//trap_Cvar_SetValue( "cl_paused", 1 );
+}
+
 static void UI_RunMenuScript(char **args) {
 	const char *name, *name2;
 	char buff[1024];
@@ -3309,13 +3323,12 @@ static void UI_RunMenuScript(char **args) {
 			trap_Cvar_SetValue( "ui_singlePlayerActive", 0 );
 			trap_Cmd_ExecuteText( EXEC_NOW, "quit");
 		} else if (Q_stricmp(name, "Controls") == 0) {
-			trap_Cvar_SetValue( "cl_paused", 1 );
-			trap_Key_SetCatcher( KEYCATCH_UI );
+			UI_EnterMenu();
 			Menus_CloseAll();
 			Menus_ActivateByName("setup_menu2");
 		} else if (Q_stricmp(name, "Leave") == 0) {
 			trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
-			trap_Key_SetCatcher( KEYCATCH_UI );
+			UI_EnterMenu();
 			Menus_CloseAll();
 			Menus_ActivateByName("main");
 		} else if (Q_stricmp(name, "ServerSort") == 0) {
@@ -3333,9 +3346,7 @@ static void UI_RunMenuScript(char **args) {
 		} else if (Q_stricmp(name, "SkirmishStart") == 0) {
 			UI_StartSkirmish(qfalse);
 		} else if (Q_stricmp(name, "closeingame") == 0) {
-			trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-			trap_Cvar_SetValue( "cl_paused", 0 );
-			Menus_CloseAll();
+			UI_ForceMenuOff();
 		} else if (Q_stricmp(name, "voteMap") == 0) {
 			if (ui_currentNetMap.integer >=0 && ui_currentNetMap.integer < uiInfo.mapCount) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va("callvote map %s\n",uiInfo.mapList[ui_currentNetMap.integer].mapLoadName) );
@@ -3436,9 +3447,7 @@ static void UI_RunMenuScript(char **args) {
 						trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 					}
 				}
-				trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-				trap_Cvar_SetValue( "cl_paused", 0 );
-				Menus_CloseAll();
+				UI_ForceMenuOff();
 			}
 		} else if (Q_stricmp(name, "voiceOrdersTeam") == 0) {
 			const char *orders;
@@ -3448,9 +3457,7 @@ static void UI_RunMenuScript(char **args) {
 					trap_Cmd_ExecuteText( EXEC_APPEND, orders );
 					trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 				}
-				trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-				trap_Cvar_SetValue( "cl_paused", 0 );
-				Menus_CloseAll();
+				UI_ForceMenuOff();
 			}
 		} else if (Q_stricmp(name, "voiceOrders") == 0) {
 			const char *orders;
@@ -3461,9 +3468,7 @@ static void UI_RunMenuScript(char **args) {
 					trap_Cmd_ExecuteText( EXEC_APPEND, va(buff, uiInfo.teamClientNums[selectedPlayer]) );
 					trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 				}
-				trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-				trap_Cvar_SetValue( "cl_paused", 0 );
-				Menus_CloseAll();
+				UI_ForceMenuOff();
 			}
 		} else if (Q_stricmp(name, "glCustom") == 0) {
 			trap_Cvar_SetValue( "ui_glCustom", 4 );
@@ -4822,12 +4827,10 @@ static void UI_ParseGameInfo(const char *teamFile) {
 static void UI_Pause(qboolean b) {
 	if (b) {
 		// pause the game and set the ui keycatcher
-		trap_Cvar_SetValue( "cl_paused", 1 );
-		trap_Key_SetCatcher( KEYCATCH_UI );
+		UI_EnterMenu();
 	} else {
 		// unpause the game and clear the ui keycatcher
-		trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-		trap_Cvar_SetValue( "cl_paused", 0 );
+		UI_ForceMenuOff();
 	}
 }
 
@@ -5115,8 +5118,7 @@ void UI_KeyEvent( int key, qboolean down ) {
 				Menu_HandleKey(menu, key, down );
 			}
 		} else {
-			trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-			trap_Cvar_SetValue( "cl_paused", 0 );
+			UI_ForceMenuOff();
 		}
   }
 
@@ -5219,9 +5221,7 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 		v[0] = v[1] = v[2] = 0;
 	  switch ( menu ) {
 	  case UIMENU_NONE:
-			trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-			trap_Cvar_SetValue( "cl_paused", 0 );
-			Menus_CloseAll();
+			UI_ForceMenuOff();
 
 		  return;
 	  case UIMENU_MAIN:
@@ -5257,8 +5257,7 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			Menus_ActivateByName("endofgame");
 		  return;
 	  case UIMENU_INGAME:
-			trap_Cvar_SetValue( "cl_paused", 1 );
-			trap_Key_SetCatcher( KEYCATCH_UI );
+			UI_EnterMenu();
 			UI_BuildPlayerList();
 			Menus_CloseAll();
 			Menus_ActivateByName("ingame");

@@ -121,6 +121,11 @@ typedef enum {
 	DS_NUM_DEMO_STATES
 } demoState_t;
 
+// bit flags for trap_Mouse_GetState and trap_Mouse_SetState
+#define MOUSE_CLIENT			0x0001		// update mouse x and y for usercmd_t creation
+#define MOUSE_CGAME				0x0002		// call CG_MOUSE_EVENT when mouse moves
+
+
 /*
 ==================================================================
 
@@ -292,6 +297,9 @@ typedef enum {
 	CG_KEY_GETCATCHER,
 	CG_KEY_SETCATCHER,
 	CG_KEY_GETKEY,
+
+	CG_MOUSE_GETSTATE,
+	CG_MOUSE_SETSTATE,
 
 
 	CG_LAN_GETPINGQUEUECOUNT = 550,

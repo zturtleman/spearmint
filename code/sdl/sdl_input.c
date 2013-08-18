@@ -1148,7 +1148,7 @@ void IN_Frame( void )
 
 	// If not DISCONNECTED (main menu) or ACTIVE (in game), we're loading
 	loading = ( clc.state != CA_DISCONNECTED && clc.state != CA_ACTIVE );
-	cursorShowing = Key_GetCatcher() & KEYCATCH_UI;
+	cursorShowing = !( Mouse_GetState( 0 ) & MOUSE_CLIENT );
 
 	if( !Cvar_VariableIntegerValue("r_fullscreen") && ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) )
 	{

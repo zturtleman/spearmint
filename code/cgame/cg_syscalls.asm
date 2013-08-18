@@ -170,6 +170,9 @@ equ trap_Key_GetCatcher					-508
 equ trap_Key_SetCatcher					-509
 equ trap_Key_GetKey						-510
 
+equ	trap_Mouse_GetState					-511
+equ	trap_Mouse_SetState					-512
+
 
 
 equ	trap_LAN_GetPingQueueCount			-551

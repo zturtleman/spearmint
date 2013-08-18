@@ -1469,6 +1469,10 @@ void CL_ClearState (void) {
 	DA_Free( &cl.parseEntities );
 
 	Com_Memset( &cl, 0, sizeof( cl ) );
+
+	for (index = 0; index < CL_MAX_SPLITVIEW; index++) {
+		cl.localClients[index].mouseFlags = MOUSE_CLIENT;
+	}
 }
 
 /*
