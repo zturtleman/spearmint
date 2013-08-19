@@ -1239,6 +1239,13 @@ void UI_Refresh( int realtime )
 	{
 		if (uis.activemenu->fullscreen)
 		{
+			// wide aspect ratio screens need to have the sides cleared
+			if ( uis.glconfig.vidWidth * 480 > uis.glconfig.vidHeight * 640 ) {
+				trap_R_SetColor( g_color_table[0] );
+				trap_R_DrawStretchPic( 0, 0, uis.glconfig.vidWidth, uis.glconfig.vidHeight, 0, 0, 0, 0, uis.whiteShader );
+				trap_R_SetColor( NULL );
+			}
+
 			// draw the background
 			if( uis.activemenu->showlogo ) {
 				UI_DrawHandlePic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uis.menuBackShader );
