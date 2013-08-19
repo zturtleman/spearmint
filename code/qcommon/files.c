@@ -4276,7 +4276,8 @@ void FS_Restart( qboolean gameDirChanged ) {
 
 	if ( Q_stricmp(fs_gamedirvar->string, lastValidGame) ) {
 		// skip the q3config.cfg if "safe" is on the command line
-		if ( !Com_SafeMode() ) {
+		// and only execute q3config.cfg if it exists in current fs_homepath + fs_gamedir
+		if ( !Com_SafeMode() && FS_FileExists( Q3CONFIG_CFG ) ) {
 			Cbuf_AddText ("exec " Q3CONFIG_CFG "\n");
 		}
 	}
