@@ -3224,7 +3224,7 @@ int Com_ModifyMsec( int msec ) {
 		// clients of remote servers do not want to clamp time, because
 		// it would skew their view of the server's time temporarily
 
-		if (com_sv_running->integer && msec > 500)
+		if ( ( ( com_sv_running->integer && com_dedicated->integer ) || com_developer->integer ) && msec > 500 )
 			Com_Printf( "Hitch warning: %i msec frame time\n", msec );
 
 		clampTime = 5000;
