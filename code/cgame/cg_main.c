@@ -488,11 +488,18 @@ void CG_RegisterUserCvars( void ) {
 	char			*teamHeadModelNames[MAX_SPLITVIEW] = { DEFAULT_TEAM_HEAD, DEFAULT_TEAM_HEAD2, DEFAULT_TEAM_HEAD3, DEFAULT_TEAM_HEAD4 };
 	char			*name;
 	userCvarTable_t	*uservar;
+	vmCvar_t		*vmcvar;
 	int				i, j;
 	int				cvarFlags;
 
 	for ( i = 0, uservar = userCvarTable ; i < userCvarTableSize ; i++, uservar++ ) {
 		for ( j = 0; j < CG_MaxSplitView(); j++ ) {
+			if ( uservar->vmCvars ) {
+				vmcvar = &uservar->vmCvars[j];
+			} else {
+				vmcvar = NULL;
+			}
+
 			cvarFlags = uservar->baseCvarFlags;
 
 			// set correct userinfo flag
@@ -501,7 +508,7 @@ void CG_RegisterUserCvars( void ) {
 				cvarFlags |= userInfo[j];
 			}
 
-			CG_RegisterCvar( &uservar->vmCvars[j], Com_LocalClientCvarName( j, uservar->baseName ),
+			CG_RegisterCvar( vmcvar, Com_LocalClientCvarName( j, uservar->baseName ),
 							uservar->defaultString, cvarFlags,
 							uservar->rangeMin, uservar->rangeMax, uservar->rangeIntegral );
 		}
@@ -582,6 +589,10 @@ void CG_UpdateCgameCvars( void ) {
 	cvarTable_t	*cv;
 
 	for ( i = 0, cv = cgameCvarTable ; i < cgameCvarTableSize ; i++, cv++ ) {
+		if ( !cv->vmCvar ) {
+			continue;
+		}
+
 		trap_Cvar_Update( cv->vmCvar );
 	}
 }
@@ -596,6 +607,10 @@ void CG_UpdateUserCvars( void ) {
 	userCvarTable_t	*uservar;
 
 	for ( i = 0, uservar = userCvarTable ; i < userCvarTableSize ; i++, uservar++ ) {
+		if ( !uservar->vmCvars ) {
+			continue;
+		}
+
 		for ( j = 0; j < CG_MaxSplitView(); j++ ) {
 			trap_Cvar_Update( &uservar->vmCvars[j] );
 		}
