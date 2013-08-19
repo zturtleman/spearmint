@@ -122,6 +122,7 @@ void UI_PushMenu( menuframework_s *menu )
 
 	m_entersound = qtrue;
 
+	trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CLIENT ) | MOUSE_CGAME );
 	trap_Key_SetCatcher( KEYCATCH_UI );
 
 	// force first available item to have focus
@@ -820,7 +821,6 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 		UI_RankingsMenu();
 		return;
 		*/
-		trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CLIENT ) | MOUSE_CGAME );
 		trap_Cvar_SetValue( "cl_paused", 1 );
 		UI_InGameMenu();
 		return;

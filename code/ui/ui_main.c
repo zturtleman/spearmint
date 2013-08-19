@@ -3142,9 +3142,8 @@ void UI_ForceMenuOff (void) {
 
 void UI_EnterMenu (void) {
 	trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CLIENT ) | MOUSE_CGAME );
-	//trap_Mouse_SetState( 0,  trap_Mouse_GetState( 0 ) | MOUSE_CGAME );
 	trap_Key_SetCatcher( KEYCATCH_UI );
-	//trap_Cvar_SetValue( "cl_paused", 1 );
+	trap_Cvar_SetValue( "cl_paused", 1 );
 }
 
 static void UI_RunMenuScript(char **args) {
@@ -5226,7 +5225,7 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 		  return;
 	  case UIMENU_MAIN:
 			trap_Cvar_SetValue( "sv_killserver", 1 );
-			trap_Key_SetCatcher( KEYCATCH_UI );
+			UI_EnterMenu();
 			//trap_S_StartLocalSound( trap_S_RegisterSound("sound/misc/menu_background.wav", qfalse) , CHAN_LOCAL_SOUND );
 			//trap_S_StartBackgroundTrack("sound/misc/menu_background.wav", NULL);
 			if (uiInfo.inGameLoad) {
@@ -5244,12 +5243,12 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			}
 		  return;
 	  case UIMENU_TEAM:
-			trap_Key_SetCatcher( KEYCATCH_UI );
+			UI_EnterMenu();
       Menus_ActivateByName("team");
 		  return;
 	  case UIMENU_POSTGAME:
 			trap_Cvar_SetValue( "sv_killserver", 1 );
-			trap_Key_SetCatcher( KEYCATCH_UI );
+			UI_EnterMenu();
 			if (uiInfo.inGameLoad) {
 				UI_LoadNonIngame();
 			}
