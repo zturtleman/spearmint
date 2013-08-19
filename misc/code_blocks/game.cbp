@@ -6,7 +6,7 @@
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
-			<Target title="Release Win32">
+			<Target title="Release baseq3 Win32">
 				<Option platforms="Windows;" />
 				<Option output="../../build/release-codeblocks-x86/baseq3/gamex86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/baseq3/game" />
@@ -23,7 +23,7 @@
 					<Add option="-m32" />
 				</Linker>
 			</Target>
-			<Target title="Debug Win32">
+			<Target title="Debug baseq3 Win32">
 				<Option platforms="Windows;" />
 				<Option output="../../build/debug-codeblocks-x86/baseq3/gamex86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/baseq3/game" />
@@ -40,7 +40,7 @@
 					<Add option="-m32" />
 				</Linker>
 			</Target>
-			<Target title="Release Team Arena Win32">
+			<Target title="Release missionpack Win32">
 				<Option platforms="Windows;" />
 				<Option output="../../build/release-codeblocks-x86/missionpack/gamex86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/missionpack/game" />
@@ -58,7 +58,7 @@
 					<Add option="-m32" />
 				</Linker>
 			</Target>
-			<Target title="Debug Team Arena Win32">
+			<Target title="Debug missionpack Win32">
 				<Option platforms="Windows;" />
 				<Option output="../../build/debug-codeblocks-x86/missionpack/gamex86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/missionpack/game" />
@@ -75,7 +75,7 @@
 					<Add option="-m32" />
 				</Linker>
 			</Target>
-			<Target title="Release Linux x86">
+			<Target title="Release baseq3 Linux x86">
 				<Option platforms="Unix;" />
 				<Option output="../../build/release-codeblocks-x86/baseq3/gamex86.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/baseq3/game" />
@@ -89,7 +89,7 @@
 					<Add option="-DNDEBUG" />
 				</Compiler>
 			</Target>
-			<Target title="Debug Linux x86">
+			<Target title="Debug baseq3 Linux x86">
 				<Option platforms="Unix;" />
 				<Option output="../../build/debug-codeblocks-x86/baseq3/gamex86.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/baseq3/game" />
@@ -102,7 +102,7 @@
 					<Add option="-DGAME" />
 				</Compiler>
 			</Target>
-			<Target title="Release Team Arena Linux x86">
+			<Target title="Release missionpack Linux x86">
 				<Option platforms="Unix;" />
 				<Option output="../../build/release-codeblocks-x86/missionpack/gamex86.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/missionpack/game" />
@@ -116,7 +116,7 @@
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
-			<Target title="Debug Team Arena Linux x86">
+			<Target title="Debug missionpack Linux x86">
 				<Option platforms="Unix;" />
 				<Option output="../../build/debug-codeblocks-x86/missionpack/gamex86.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/missionpack/game" />
@@ -130,7 +130,7 @@
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
-			<Target title="Release Linux x86_64">
+			<Target title="Release baseq3 Linux x86_64">
 				<Option platforms="Unix;" />
 				<Option output="../../build/release-codeblocks-x86_64/baseq3/gamex86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86_64/baseq3/game" />
@@ -143,7 +143,7 @@
 					<Add option="-DNDEBUG" />
 				</Compiler>
 			</Target>
-			<Target title="Debug Linux x86_64">
+			<Target title="Debug baseq3 Linux x86_64">
 				<Option platforms="Unix;" />
 				<Option output="../../build/debug-codeblocks-x86_64/baseq3/gamex86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86_64/baseq3/game" />
@@ -156,7 +156,7 @@
 					<Add option="-DGAME" />
 				</Compiler>
 			</Target>
-			<Target title="Release Team Arena Linux x86_64">
+			<Target title="Release missionpack Linux x86_64">
 				<Option platforms="Unix;" />
 				<Option output="../../build/release-codeblocks-x86_64/missionpack/gamex86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86_64/missionpack/game" />
@@ -170,7 +170,7 @@
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
-			<Target title="Debug Team Arena Linux x86_64">
+			<Target title="Debug missionpack Linux x86_64">
 				<Option platforms="Unix;" />
 				<Option output="../../build/debug-codeblocks-x86_64/missionpack/gamex86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86_64/missionpack/game" />
