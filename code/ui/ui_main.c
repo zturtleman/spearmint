@@ -3809,9 +3809,6 @@ static void UI_SortServerStatusInfo( serverStatusInfo_t *info ) {
 	int i, j, index;
 	char *tmp1, *tmp2;
 
-	// FIXME: if "gamename" == "baseq3" or "missionpack" then
-	// replace the gametype number by FFA, CTF etc.
-	//
 	index = 0;
 	for (i = 0; serverStatusCvars[i].name; i++) {
 		for (j = 0; j < info->numLines; j++) {
