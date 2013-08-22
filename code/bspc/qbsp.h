@@ -29,9 +29,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 
 
-#if defined(WIN32) || defined(_WIN32)
-#include <io.h>
-#endif
 #include <stdlib.h>
 #include "l_cmd.h"
 #include "l_math.h"

@@ -65,7 +65,7 @@ void PrintMemorySize(unsigned long size)
 //===========================================================================
 int MemorySize(void *ptr)
 {
-#if defined(WIN32) || defined(_WIN32)
+#ifdef _WIN32
 	#ifdef __WATCOMC__
 		//Intel 32 bits memory addressing, 16 bytes aligned
 	return (_msize(ptr) + 15) >> 4 << 4;

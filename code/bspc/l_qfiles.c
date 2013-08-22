@@ -28,7 +28,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
-#if defined(WIN32)|defined(_WIN32)
+#ifdef _WIN32
 #include <windows.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -279,7 +279,7 @@ quakefile_t *FindQuakeFilesInZip(char *zipfile, char *filter)
 //===========================================================================
 quakefile_t *FindQuakeFilesWithPakFilter(char *pakfilter, char *filter)
 {
-#if defined(WIN32)||defined(_WIN32)
+#ifdef _WIN32
 	WIN32_FIND_DATA filedata;
 	HWND handle;
 	struct _stat statbuf;
@@ -296,7 +296,7 @@ quakefile_t *FindQuakeFilesWithPakFilter(char *pakfilter, char *filter)
 	lastqf = NULL;
 	if (pakfilter && strlen(pakfilter))
 	{
-#if defined(WIN32)|defined(_WIN32)
+#ifdef _WIN32
 		handle = FindFirstFile(pakfilter, &filedata);
 		done = (handle == INVALID_HANDLE_VALUE);
 		while(!done)
@@ -327,7 +327,7 @@ quakefile_t *FindQuakeFilesWithPakFilter(char *pakfilter, char *filter)
 			} //end if
 			else
 			{
-#if defined(WIN32)|defined(_WIN32)
+#ifdef _WIN32
 				str = StringContains(pakfile, ".pk3", false);
 #else
 				str = StringContains(pakfile, ".pk3", true);
@@ -350,7 +350,7 @@ quakefile_t *FindQuakeFilesWithPakFilter(char *pakfilter, char *filter)
 				} //end if
 			} //end else
 			//
-#if defined(WIN32)|defined(_WIN32)
+#ifdef _WIN32
 			//find the next file
 			done = !FindNextFile(handle, &filedata);
 		} //end while
@@ -361,7 +361,7 @@ quakefile_t *FindQuakeFilesWithPakFilter(char *pakfilter, char *filter)
 	} //end if
 	else
 	{
-#if defined(WIN32)|defined(_WIN32)
+#ifdef _WIN32
 		handle = FindFirstFile(filter, &filedata);
 		done = (handle == INVALID_HANDLE_VALUE);
 		while(!done)
@@ -390,7 +390,7 @@ quakefile_t *FindQuakeFilesWithPakFilter(char *pakfilter, char *filter)
 			if (lastqf) lastqf->next = qf;
 			else qfiles = qf;
 			lastqf = qf;
-#if defined(WIN32)|defined(_WIN32)
+#ifdef _WIN32
 			//find the next file
 			done = !FindNextFile(handle, &filedata);
 		} //end while

@@ -132,7 +132,7 @@ MKDIR=mkdir
 
 ifeq ($(PLATFORM),linux)
 
-  BASE_CFLAGS+= -Dstricmp=strcasecmp -DLINUX -DBSPC -Wall
+  BASE_CFLAGS+= -Dstricmp=strcasecmp -DBSPC -Wall
 
   ifeq ($(ARCH),alpha)
     ARCH=axp
