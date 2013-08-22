@@ -46,7 +46,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "l_qfiles.h"
 
 #define BSPC_NAME			"Spearmint BSPC"
-#define BSPC_VERSION		"2.2"
+#define BSPC_VERSION		"2.1h"
 
 #define ZTMAUTOARGS
 
