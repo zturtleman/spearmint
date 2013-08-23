@@ -28,17 +28,15 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
-#if defined(WIN32) || defined(_WIN32)
+#ifdef _WIN32
 #include <direct.h>
 #include <windows.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #else
 #include <unistd.h>
 #include <glob.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #endif
+#include <sys/stat.h>
 #include "qbsp.h"
 #include "l_mem.h"
 #include "../botlib/aasfile.h"
@@ -144,7 +142,7 @@ void AASOuputFile(quakefile_t *qf, char *outputpath, char *filename)
 //===========================================================================
 void CreateAASFilesForAllBSPFiles(char *quakepath)
 {
-#if defined(WIN32)||defined(_WIN32)
+#ifdef _WIN32
 	WIN32_FIND_DATA filedata;
 	HWND handle;
 	struct _stat statbuf;
@@ -162,7 +160,7 @@ void CreateAASFilesForAllBSPFiles(char *quakepath)
 	AppendPathSeperator(filter, sizeof(filter));
 	strcat(filter, "*");
 
-#if defined(WIN32)|defined(_WIN32)
+#ifdef _WIN32
 	handle = FindFirstFile(filter, &filedata);
 	done = (handle == INVALID_HANDLE_VALUE);
 	while(!done)
@@ -221,7 +219,7 @@ void CreateAASFilesForAllBSPFiles(char *quakepath)
 				} //end for
 			} //end for
 		} //end if
-#if defined(WIN32)|defined(_WIN32)
+#ifdef _WIN32
 		//find the next file
 		done = !FindNextFile(handle, &filedata);
 	} //end while
@@ -702,7 +700,7 @@ int main (int argc, char **argv)
 	else
 	{
 		Log_Print("Usage:   bspc [-<switch> [-<switch> ...]]\n"
-#if defined(WIN32) || defined(_WIN32)
+#ifdef _WIN32
 			"Example 1: bspc -bsp2aas d:\\quake3\\baseq3\\maps\\mymap?.bsp\n"
 			"Example 2: bspc -bsp2aas d:\\quake3\\baseq3\\pak0.pk3\\maps/q3dm*.bsp\n"
 #else

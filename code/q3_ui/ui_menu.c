@@ -306,7 +306,6 @@ void UI_MainMenu( void ) {
 		s_errorMessage.menu.wrapAround = qtrue;
 		s_errorMessage.menu.showlogo = qtrue;		
 
-		trap_Key_SetCatcher( KEYCATCH_UI );
 		uis.menusp = 0;
 		UI_PushMenu ( &s_errorMessage.menu );
 		
@@ -428,7 +427,6 @@ void UI_MainMenu( void ) {
 	}
 	Menu_AddItem( &s_main.menu,	&s_main.exit );             
 
-	trap_Key_SetCatcher( KEYCATCH_UI );
 	uis.menusp = 0;
 	UI_PushMenu ( &s_main.menu );
 		

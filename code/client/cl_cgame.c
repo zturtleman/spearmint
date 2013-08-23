@@ -1472,6 +1472,13 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 
 
+	case CG_MOUSE_GETSTATE:
+		return Mouse_GetState( args[1] );
+	case CG_MOUSE_SETSTATE:
+		Mouse_SetState( args[1], args[2] );
+		return 0;
+
+
 	case CG_LAN_LOADCACHEDSERVERS:
 		LAN_LoadCachedServers();
 		return 0;

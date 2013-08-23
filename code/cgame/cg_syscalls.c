@@ -579,6 +579,14 @@ qboolean trap_Key_GetOverstrikeMode( void ) {
   return syscall( CG_KEY_GETOVERSTRIKEMODE );
 }
 
+int trap_Mouse_GetState( int localClientNum ) {
+	return syscall( CG_MOUSE_GETSTATE, localClientNum );
+}
+
+void trap_Mouse_SetState( int localClientNum, int state ) {
+	syscall( CG_MOUSE_SETSTATE, localClientNum, state );
+}
+
 int trap_LAN_GetPingQueueCount( void ) {
 	return syscall( CG_LAN_GETPINGQUEUECOUNT );
 }

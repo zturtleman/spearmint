@@ -29,9 +29,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 
 
-#if defined(WIN32) || defined(_WIN32)
-#include <io.h>
-#endif
 #include <stdlib.h>
 #include "l_cmd.h"
 #include "l_math.h"
@@ -46,7 +43,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "l_qfiles.h"
 
 #define BSPC_NAME			"Spearmint BSPC"
-#define BSPC_VERSION		"2.2"
+#define BSPC_VERSION		"2.1h"
 
 #define ZTMAUTOARGS
 

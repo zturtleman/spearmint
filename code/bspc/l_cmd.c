@@ -38,7 +38,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include <sys/stat.h>
 #include <assert.h>
 
-#if defined(WIN32) || defined(_WIN32)
+#ifdef _WIN32
 #include <direct.h>
 #else
 #include <unistd.h>
@@ -397,17 +397,13 @@ void Q_getwd (char *out, size_t size)
 		perror("getcwd");
 		exit(1);
 	}
-#if defined(WIN32) || defined(_WIN32)
-	strcat (out, "\\");
-#else
-	strcat(out, "/");
-#endif
+	strncat(out, PATHSEPERATOR_STR, size);
 }
 
 
 void Q_mkdir (char *path)
 {
-#ifdef WIN32
+#ifdef _WIN32
 	if (_mkdir (path) != -1)
 		return;
 #else

@@ -593,11 +593,6 @@ issues.
 ==============================================================
 */
 
-// referenced flags
-// these are in loop specific order so don't change the order
-#define FS_GENERAL_REF	0x01
-#define FS_UI_REF		0x02
-#define FS_CGAME_REF	0x04
 // number of id paks that will never be autodownloaded from baseq3/missionpack
 #define NUM_ID_PAKS		9
 #define NUM_TA_PAKS		4
@@ -718,9 +713,6 @@ const char *FS_ReferencedPakNames( void );
 const char *FS_ReferencedPakChecksums( void );
 // Returns a space separated string containing the checksums of all referenced pk3 files.
 // The server will send this to the clients so they can check which files should be auto-downloaded.
-
-void FS_ClearPakReferences( int flags );
-// clears referenced booleans on loaded pk3s
 
 void FS_PureServerSetReferencedPaks( const char *pakSums, const char *pakNames );
 void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames );
@@ -916,7 +908,6 @@ server vm
 server clipmap
 ---mark---
 renderer initialization (shaders, etc)
-UI vm
 cgame vm
 renderer map
 renderer models

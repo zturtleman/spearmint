@@ -117,7 +117,7 @@ void RunThreadsOnIndividual (int workcnt, qboolean showpacifier, void(*func)(int
 //
 //===================================================================
 
-#if defined(WIN32) || defined(_WIN32)
+#ifdef _WIN32
 
 #define USED
 
@@ -444,7 +444,7 @@ int GetNumThreads(void)
 	return currentnumthreads;
 } //end of the function GetNumThreads
 
-#endif
+#endif //_WIN32
 
 
 //===================================================================
@@ -769,7 +769,7 @@ int GetNumThreads(void)
 //
 //===================================================================
 
-#if defined(LINUX)
+#ifdef __linux__
 
 #define	USED
 
@@ -1080,7 +1080,7 @@ int GetNumThreads(void)
 	return currentnumthreads;
 } //end of the function GetNumThreads
 
-#endif //LINUX
+#endif //__linux__
 
 
 //===================================================================

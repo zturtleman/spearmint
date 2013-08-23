@@ -12,7 +12,7 @@
 				<Option object_output="../../build/release-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Compiler>
 					<Add option="-O2" />
@@ -48,7 +48,7 @@
 				<Option object_output="../../build/debug-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Compiler>
 					<Add option="-g" />
@@ -84,7 +84,7 @@
 				<Option object_output="../../build/release-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wall" />
@@ -104,7 +104,7 @@
 				<Option object_output="../../build/debug-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-O0" />
@@ -124,7 +124,7 @@
 				<Option object_output="../../build/release-codeblocks-x86_64/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wall" />
@@ -144,7 +144,7 @@
 				<Option object_output="../../build/debug-codeblocks-x86_64/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
+				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-O0" />
@@ -367,9 +367,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/client/cl_scrn.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/client/cl_ui.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/client/client.h" />
@@ -1051,20 +1048,6 @@
 		<Unit filename="../../code/qcommon/vm_x86.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/qcommon/vm_x86_64.c">
-			<Option compilerVar="CC" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Release Linux x86_64" />
-			<Option target="Debug Linux x86_64" />
-		</Unit>
-		<Unit filename="../../code/qcommon/vm_x86_64_assembler.c">
-			<Option compilerVar="CC" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Release Linux x86_64" />
-			<Option target="Debug Linux x86_64" />
-		</Unit>
 		<Unit filename="../../code/renderercommon/iqm.h" />
 		<Unit filename="../../code/renderercommon/qgl.h" />
 		<Unit filename="../../code/renderercommon/tr_common.h" />
@@ -1072,6 +1055,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/renderercommon/tr_image_bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/renderercommon/tr_image_ftx.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/renderercommon/tr_image_jpg.c">
