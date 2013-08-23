@@ -74,6 +74,7 @@ cvar_t *r_allowSoftwareGL; // Don't abort out if a hardware visual can't be obta
 cvar_t *r_allowResize; // make window resizable
 cvar_t *r_centerWindow;
 cvar_t *r_sdlDriver;
+cvar_t *r_forceWindowIcon32;
 
 void (APIENTRYP qglActiveTextureARB) (GLenum texture);
 void (APIENTRYP qglClientActiveTextureARB) (GLenum texture);
@@ -410,12 +411,44 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 
 #ifdef USE_ICON
 		{
-			SDL_Surface *icon = SDL_CreateRGBSurfaceFrom(
-					(void *)CLIENT_WINDOW_ICON.pixel_data,
-					CLIENT_WINDOW_ICON.width,
-					CLIENT_WINDOW_ICON.height,
-					CLIENT_WINDOW_ICON.bytes_per_pixel * 8,
-					CLIENT_WINDOW_ICON.bytes_per_pixel * CLIENT_WINDOW_ICON.width,
+			SDL_Surface *icon;
+			byte *pixelData;
+			int bytesPerPixel, width, height;
+			qboolean internalIcon;
+
+			pixelData = NULL;
+			bytesPerPixel = 4;
+			internalIcon = qfalse;
+
+			// try to load 32 x 32 icon
+			if ( r_forceWindowIcon32->integer ) {
+				R_LoadImage( "windowicon32", &pixelData, &width, &height );
+
+				if ( pixelData && ( width != 32 || height != 32 ) ) {
+					ri.Free( pixelData );
+					pixelData = NULL;
+					ri.Printf( PRINT_WARNING, "Ignoring windowicon32: Image must be 32 x 32!\n");
+				}
+			} else {
+				// try to load high resolution icon
+				R_LoadImage( "windowicon", &pixelData, &width, &height );
+			}
+
+			// fallback to default icon
+			if ( !pixelData ) {
+				internalIcon = qtrue;
+				pixelData = (byte *)CLIENT_WINDOW_ICON.pixel_data;
+				bytesPerPixel = CLIENT_WINDOW_ICON.bytes_per_pixel;
+				width = CLIENT_WINDOW_ICON.width;
+				height = CLIENT_WINDOW_ICON.height;
+			}
+
+			icon = SDL_CreateRGBSurfaceFrom(
+					(void *)pixelData,
+					width,
+					height,
+					bytesPerPixel * 8,
+					bytesPerPixel * width,
 #ifdef Q3_LITTLE_ENDIAN
 					0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
 #else
@@ -425,6 +458,11 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 
 			SDL_WM_SetIcon( icon, NULL );
 			SDL_FreeSurface( icon );
+
+			if ( !internalIcon && pixelData ) {
+				ri.Free( pixelData );
+				pixelData = NULL;
+			}
 		}
 #endif
 
@@ -708,6 +746,11 @@ void GLimp_Init( void )
 	r_sdlDriver = ri.Cvar_Get( "r_sdlDriver", "", CVAR_ROM );
 	r_allowResize = ri.Cvar_Get( "r_allowResize", "0", CVAR_ARCHIVE );
 	r_centerWindow = ri.Cvar_Get( "r_centerWindow", "0", CVAR_ARCHIVE );
+#ifdef _WIN32
+	r_forceWindowIcon32 = ri.Cvar_Get( "r_forceWindowIcon32", "1", CVAR_LATCH );
+#else
+	r_forceWindowIcon32 = ri.Cvar_Get( "r_forceWindowIcon32", "0", CVAR_LATCH );
+#endif
 
 	if( ri.Cvar_VariableIntegerValue( "com_abnormalExit" ) )
 	{

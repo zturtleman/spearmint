@@ -136,7 +136,8 @@ float R_NoiseGet4f( float x, float y, float z, float t );
 int R_RandomOn( float t );
 void  R_NoiseInit( void );
 
-image_t     *R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags );
+void	R_LoadImage( const char *name, byte **pic, int *width, int *height );
+image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags );
 image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgType_t type, imgFlags_t flags, int internalFormat );
 
 void R_IssuePendingRenderCommands( void );

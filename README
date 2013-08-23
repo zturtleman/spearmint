@@ -322,6 +322,8 @@ New cvars
   r_shaderlod                       - used for if-endifs in shaders
                                       "if shaderlod 0.45" .. "endif"
                                        check if r_shaderlod > 0.45
+  r_forceWindowIcon32               - use low resolution 32x32 window icon,
+                                      windowicon32.ext instead of windowicon.ext
 
   g_playerCapsule                   - use capsule instead of box for player
                                       collision. each player has it set at spawn
