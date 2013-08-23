@@ -2853,9 +2853,11 @@ void Com_Init( char *commandLine ) {
 
 	if( Sys_WritePIDFile( ) ) {
 #ifndef DEDICATED
-		const char *message = "The last time " PRODUCT_NAME " ran, "
+		char message[1024];
+
+		Com_sprintf( message, sizeof (message), "The last time %s ran, "
 			"it didn't exit properly. This may be due to inappropriate video "
-			"settings. Would you like to start with \"safe\" video settings?";
+			"settings. Would you like to start with \"safe\" video settings?", com_productName->string );
 
 		if( Sys_Dialog( DT_YES_NO, message, "Abnormal Exit" ) == DR_YES ) {
 			Cvar_Set( "com_abnormalExit", "1" );
