@@ -734,6 +734,8 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	vec3_t			maxs = {16, 16, 32};
 	float			len;
 	float			xx;
+	float			xscale;
+	float			yscale;
 
 	if ( !pi->legsModel || !pi->torsoModel || !pi->headModel || !pi->animations[0].numFrames ) {
 		return;
@@ -769,9 +771,17 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	refdef.width = w;
 	refdef.height = h;
 
-	refdef.fov_x = (int)((float)refdef.width / cgs.screenXScale / 640.0f * 90.0f);
-	xx = refdef.width / cgs.screenXScale / tan( refdef.fov_x / 360 * M_PI );
-	refdef.fov_y = atan2( refdef.height / cgs.screenYScale, xx );
+	if ( ui_stretch.integer ) {
+		xscale = cgs.screenXScaleStretch;
+		yscale = cgs.screenYScaleStretch;
+	} else {
+		xscale = cgs.screenXScale;
+		yscale = cgs.screenYScale;
+	}
+
+	refdef.fov_x = (int)((float)refdef.width / xscale / 640.0f * 90.0f);
+	xx = refdef.width / xscale / tan( refdef.fov_x / 360 * M_PI );
+	refdef.fov_y = atan2( refdef.height / yscale, xx );
 	refdef.fov_y *= ( 360 / M_PI );
 
 	// calculate distance so the player nearly fills the box
