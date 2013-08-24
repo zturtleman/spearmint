@@ -556,7 +556,6 @@ void UI_Refresh( int realtime )
 	//	return;
 	//}
 
-	CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
 	Init_Display(&uiInfo.uiDC);
 
 	uiInfo.uiDC.frameTime = realtime - uiInfo.uiDC.realTime;
@@ -580,6 +579,15 @@ void UI_Refresh( int realtime )
 
 
 	UI_UpdateCvars();
+
+	if ( UI_IsFullscreen() ) {
+		// wide aspect ratio screens need to have the sides cleared
+		if ( cgs.glconfig.vidWidth * 480 > cgs.glconfig.vidHeight * 640 ) {
+			trap_R_SetColor( g_color_table[0] );
+			trap_R_DrawStretchPic( 0, 0, cgs.glconfig.vidWidth, cgs.glconfig.vidHeight, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
+			trap_R_SetColor( NULL );
+		}
+	}
 
 	if (Menu_Count() > 0) {
 		// paint all the menus
