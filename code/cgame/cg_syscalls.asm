@@ -11,6 +11,12 @@ equ floor						-8
 equ ceil						-9
 equ Q_acos						-10
 equ Q_asin						-11
+equ tan							-12
+equ atan						-13
+equ pow							-14
+equ exp							-15
+equ log							-16
+equ log10						-17
 
 equ trap_Print							-21
 equ trap_Error							-22

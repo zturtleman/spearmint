@@ -341,6 +341,18 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return FloatAsInt( Q_acos( VMF(1) ) );
 	case TRAP_ASIN:
 		return FloatAsInt( Q_asin( VMF(1) ) );
+	case TRAP_TAN:
+		return FloatAsInt( tan( VMF(1) ) );
+	case TRAP_ATAN:
+		return FloatAsInt( atan( VMF(1) ) );
+	case TRAP_POW:
+		return FloatAsInt( pow( VMF(1), VMF(2) ) );
+	case TRAP_EXP:
+		return FloatAsInt( exp( VMF(1) ) );
+	case TRAP_LOG:
+		return FloatAsInt( log( VMF(1) ) );
+	case TRAP_LOG10:
+		return FloatAsInt( log10( VMF(1) ) );
 
 	case G_PRINT:
 		Com_Printf( "%s", (const char*)VMA(1) );

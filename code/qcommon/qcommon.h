@@ -347,7 +347,13 @@ typedef enum {
 	TRAP_FLOOR,
 	TRAP_CEIL,
 	TRAP_ACOS,
-	TRAP_ASIN
+	TRAP_ASIN,
+	TRAP_TAN,
+	TRAP_ATAN,
+	TRAP_POW,
+	TRAP_EXP,
+	TRAP_LOG,
+	TRAP_LOG10
 } sharedTraps_t;
 
 void	VM_Init( void );
