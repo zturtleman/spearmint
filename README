@@ -329,6 +329,8 @@ New cvars
                                       collision. each player has it set at spawn
                                       allowing mix of capsule and box in game
 
+  ui_stretch                        - stretch menus to fill wide/narrow screens
+
 
 New commands
   video [filename]        - start video capture (use with demo command)

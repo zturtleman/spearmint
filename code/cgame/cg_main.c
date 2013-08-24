@@ -254,6 +254,7 @@ vmCvar_t	cg_voipShowMeter;
 vmCvar_t	cg_voipShowCrosshairMeter;
 vmCvar_t	cg_consoleLatency;
 vmCvar_t	cg_drawShaderInfo;
+vmCvar_t	ui_stretch;
 
 #ifdef MISSIONPACK
 vmCvar_t 	cg_redTeamName;
@@ -424,6 +425,8 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_consoleLatency, "cg_consoleLatency", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_drawShaderInfo, "cg_drawShaderInfo", "0", 0, RANGE_BOOL },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
+
+	{ &ui_stretch, "ui_stretch", "0", CVAR_ARCHIVE, RANGE_BOOL },
 };
 
 static userCvarTable_t userCvarTable[] = {
@@ -2528,7 +2531,11 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	}
 
 	if ( state <= CA_LOADING || (trap_Key_GetCatcher() & KEYCATCH_UI) ) {
-		CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+		if ( ui_stretch.integer ) {
+			CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
+		} else {
+			CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+		}
 		UI_Refresh( realTime );
 	}
 
