@@ -30,8 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // 
 // string allocation/managment
 
-#include "../qcommon/q_shared.h"
-#include "../game/bg_misc.h"
+#include "../cgame/cg_local.h"
 #include "ui_shared.h"
 
 #define SCROLL_TIME_START					500
@@ -3486,14 +3485,6 @@ qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down) {
 
 
 
-void AdjustFrom640(float *x, float *y, float *w, float *h) {
-	//*x = *x * DC->scale + DC->bias;
-	*x *= DC->xscale;
-	*y *= DC->yscale;
-	*w *= DC->xscale;
-	*h *= DC->yscale;
-}
-
 void Item_Model_Paint(itemDef_t *item) {
 	float x, y, w, h;
 	refdef_t refdef;
@@ -3515,7 +3506,7 @@ void Item_Model_Paint(itemDef_t *item) {
 	w = item->window.rect.w-2;
 	h = item->window.rect.h-2;
 
-	AdjustFrom640( &x, &y, &w, &h );
+	CG_AdjustFrom640( &x, &y, &w, &h );
 
 	refdef.x = x;
 	refdef.y = y;

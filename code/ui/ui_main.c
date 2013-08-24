@@ -189,35 +189,6 @@ void UI_ClearClipRegion( void ) {
 	trap_R_SetClipRegion( NULL );
 }
 
-void _UI_DrawSides(float x, float y, float w, float h, float size) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
-	size *= uiInfo.uiDC.xscale;
-	trap_R_DrawStretchPic( x, y, size, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-	trap_R_DrawStretchPic( x + w - size, y, size, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-}
-
-void _UI_DrawTopBottom(float x, float y, float w, float h, float size) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
-	size *= uiInfo.uiDC.yscale;
-	trap_R_DrawStretchPic( x, y, w, size, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-	trap_R_DrawStretchPic( x, y + h - size, w, size, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-}
-/*
-================
-UI_DrawRect
-
-Coordinates are 640*480 virtual values
-=================
-*/
-void _UI_DrawRect( float x, float y, float width, float height, float size, const float *color ) {
-	trap_R_SetColor( color );
-
-  _UI_DrawTopBottom(x, y, width, height, size);
-  _UI_DrawSides(x, y, width, height, size);
-
-	trap_R_SetColor( NULL );
-}
-
 int Text_Width(const char *text, float scale, int limit) {
   int count,len;
 	float out;
@@ -584,6 +555,7 @@ void UI_Refresh( int realtime )
 	//	return;
 	//}
 
+	CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
 	Init_Display(&uiInfo.uiDC);
 
 	uiInfo.uiDC.frameTime = realtime - uiInfo.uiDC.realTime;
@@ -4963,11 +4935,6 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	UI_RegisterCvars();
 	UI_InitMemory();
 
-	// for 640x480 virtualized screen
-	uiInfo.uiDC.yscale = cgs.screenYScaleStretch;
-	uiInfo.uiDC.xscale = cgs.screenXScaleStretch;
-	uiInfo.uiDC.bias = cgs.screenXBias;
-
   //UI_Load();
 	uiInfo.uiDC.registerShaderNoMip = &trap_R_RegisterShaderNoMip;
 	uiInfo.uiDC.setColor = &UI_SetColor;
@@ -4979,9 +4946,9 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	uiInfo.uiDC.registerModel = &trap_R_RegisterModel;
 	uiInfo.uiDC.modelBounds = &trap_R_ModelBounds;
 	uiInfo.uiDC.fillRect = &UI_FillRect;
-	uiInfo.uiDC.drawRect = &_UI_DrawRect;
-	uiInfo.uiDC.drawSides = &_UI_DrawSides;
-	uiInfo.uiDC.drawTopBottom = &_UI_DrawTopBottom;
+	uiInfo.uiDC.drawRect = &CG_DrawRect;
+	uiInfo.uiDC.drawSides = &CG_DrawSides;
+	uiInfo.uiDC.drawTopBottom = &CG_DrawTopBottom;
 	uiInfo.uiDC.clearScene = &trap_R_ClearScene;
 	uiInfo.uiDC.addRefEntityToScene = &trap_R_AddRefEntityToScene;
 	uiInfo.uiDC.renderScene = &trap_R_RenderScene;
@@ -5159,8 +5126,7 @@ int UI_MousePosition( int localClientNum )
 		return 0;
 	}
 
-	return (int)rint( uiInfo.uiDC.cursorx * uiInfo.uiDC.xscale ) |
-			(int)rint( uiInfo.uiDC.cursory * uiInfo.uiDC.yscale ) << 16;
+	return uiInfo.unscaledCursorX | ( uiInfo.unscaledCursorY << 16 );
 }
 
 /*
@@ -5170,13 +5136,24 @@ UI_SetMousePosition
 */
 void UI_SetMousePosition( int localClientNum, int x, int y )
 {
+	float ax, ay, aw, ah;
+
 	if (localClientNum != 0) {
 		// ui currently only supports one cursor
 		return;
 	}
 
-	uiInfo.uiDC.cursorx = x / uiInfo.uiDC.xscale;
-	uiInfo.uiDC.cursory = y / uiInfo.uiDC.yscale;
+	uiInfo.unscaledCursorX = x;
+	uiInfo.unscaledCursorY = y;
+
+	ax = 0;
+	ay = 0;
+	aw = 1;
+	ah = 1;
+	UI_AdjustFrom640( &ax, &ay, &aw, &ah );
+
+	uiInfo.uiDC.cursorx = uiInfo.unscaledCursorX / aw - ax;
+	uiInfo.uiDC.cursory = uiInfo.unscaledCursorY / ah - ay;
 
 	Init_Display(&uiInfo.uiDC);
 

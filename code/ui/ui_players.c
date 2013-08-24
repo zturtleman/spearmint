@@ -774,9 +774,9 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	refdef.width = w;
 	refdef.height = h;
 
-	refdef.fov_x = (int)((float)refdef.width / uiInfo.uiDC.xscale / 640.0f * 90.0f);
-	xx = refdef.width / uiInfo.uiDC.xscale / tan( refdef.fov_x / 360 * M_PI );
-	refdef.fov_y = atan2( refdef.height / uiInfo.uiDC.yscale, xx );
+	refdef.fov_x = (int)((float)refdef.width / cgs.screenXScaleStretch / 640.0f * 90.0f);
+	xx = refdef.width / cgs.screenXScaleStretch / tan( refdef.fov_x / 360 * M_PI );
+	refdef.fov_y = atan2( refdef.height / cgs.screenYScaleStretch, xx );
 	refdef.fov_y *= ( 360 / (float)M_PI );
 
 	// calculate distance so the player nearly fills the box

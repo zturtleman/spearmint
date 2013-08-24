@@ -381,19 +381,7 @@ Adjusted for resolution and screen aspect ratio
 ================
 */
 void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
-	// expect valid pointers
-#if 0
-	*x = *x * uiInfo.uiDC.scale + uiInfo.uiDC.bias;
-	*y *= uiInfo.uiDC.scale;
-	*w *= uiInfo.uiDC.scale;
-	*h *= uiInfo.uiDC.scale;
-#endif
-
-	*x *= uiInfo.uiDC.xscale;
-	*y *= uiInfo.uiDC.yscale;
-	*w *= uiInfo.uiDC.xscale;
-	*h *= uiInfo.uiDC.yscale;
-
+	CG_AdjustFrom640( x, y, w, h );
 }
 
 void UI_DrawNamedPic( float x, float y, float width, float height, const char *picname ) {
