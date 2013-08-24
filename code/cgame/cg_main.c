@@ -2332,6 +2332,13 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	CG_RegisterCvars();
 
+	// load a few needed things before we do any screen updates
+	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
+	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
+	cgs.media.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
+	cgs.media.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );
+	cgs.media.charsetPropB		= trap_R_RegisterShaderNoMip( "menu/art/font2_prop.tga" );
+
 	// get the rendering configuration from the client system
 	trap_GetGlconfig( &cgs.glconfig );
 
@@ -2398,13 +2405,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 
 	cgs.processedSnapshotNum = serverMessageNum;
 	cgs.serverCommandSequence = serverCommandSequence;
-
-	// load a few needed things before we do any screen updates
-	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
-	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
-	cgs.media.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
-	cgs.media.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );
-	cgs.media.charsetPropB		= trap_R_RegisterShaderNoMip( "menu/art/font2_prop.tga" );
 
 	CG_InitConsoleCommands();
 
