@@ -628,6 +628,10 @@ void CG_UpdateCvars( void ) {
 	CG_UpdateUserCvars();
 	CG_UpdateInputCvars();
 
+	if ( !cg.connected ) {
+		return;
+	}
+
 	// check for modications here
 
 	// If team overlay is on, ask for updates from the server.  If it's off,
@@ -2512,6 +2516,9 @@ Draw the frame
 =================
 */
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime ) {
+
+	// update cvars
+	CG_UpdateCvars();
 
 	if ( state >= CA_LOADING && !UI_IsFullscreen() ) {
 #ifdef MISSIONPACK_HUD
