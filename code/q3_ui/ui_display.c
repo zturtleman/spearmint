@@ -281,7 +281,7 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.brightness.generic.y			= y;
 	displayOptionsInfo.brightness.minvalue			= 5;
 	displayOptionsInfo.brightness.maxvalue			= 20;
-	if( !uis.glconfig.deviceSupportsGamma ) {
+	if( !cgs.glconfig.deviceSupportsGamma ) {
 		displayOptionsInfo.brightness.generic.flags |= QMF_GRAYED;
 	}
 

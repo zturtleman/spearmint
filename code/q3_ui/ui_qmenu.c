@@ -1743,7 +1743,7 @@ void Menu_Cache( void )
 	uis.rb_off          = trap_R_RegisterShaderNoMip( "menu/art/switch_off" );
 
 	uis.whiteShader = trap_R_RegisterShaderNoMip( "white" );
-	if ( uis.glconfig.hardwareType == GLHW_RAGEPRO ) {
+	if ( cgs.glconfig.hardwareType == GLHW_RAGEPRO ) {
 		// the blend effect turns to shit with the normal 
 		uis.menuBackShader	= trap_R_RegisterShaderNoMip( "menubackRagePro" );
 	} else {

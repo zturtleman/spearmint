@@ -543,12 +543,13 @@ qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName
 typedef struct {
 	int					frametime;
 	int					realtime;
-	int					cursorx;
+	int					cursorx; // 0 to 640
 	int					cursory;
+	int					unscaledCursorX; // 0 to glconfig.vidWidth
+	int					unscaledCursorY;
 	int					menusp;
 	menuframework_s*	activemenu;
 	menuframework_s*	stack[MAX_MENUDEPTH];
-	glconfig_t			glconfig;
 	qboolean			debug;
 	qhandle_t			whiteShader;
 	qhandle_t			menuBackShader;
@@ -560,9 +561,6 @@ typedef struct {
 	qhandle_t			cursor;
 	qhandle_t			rb_on;
 	qhandle_t			rb_off;
-	float				xscale;
-	float				yscale;
-	float				bias;
 	qboolean			demoversion;
 	qboolean			firstdraw;
 	int					maxSplitView;

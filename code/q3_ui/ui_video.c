@@ -105,10 +105,10 @@ static void DriverInfo_MenuDraw( void )
 	UI_DrawString( 320, 152, "PIXELFORMAT", UI_CENTER|UI_SMALLFONT, text_small_title_color );
 	UI_DrawString( 320, 192, "EXTENSIONS", UI_CENTER|UI_SMALLFONT, text_small_title_color );
 
-	UI_DrawString( 320, 80+16, uis.glconfig.vendor_string, UI_CENTER|UI_SMALLFONT, text_color_normal );
-	UI_DrawString( 320, 96+16, uis.glconfig.version_string, UI_CENTER|UI_SMALLFONT, text_color_normal );
-	UI_DrawString( 320, 112+16, uis.glconfig.renderer_string, UI_CENTER|UI_SMALLFONT, text_color_normal );
-	UI_DrawString( 320, 152+16, va ("color(%d-bits) Z(%d-bits) stencil(%d-bits)", uis.glconfig.colorBits, uis.glconfig.depthBits, uis.glconfig.stencilBits), UI_CENTER|UI_SMALLFONT, text_color_normal );
+	UI_DrawString( 320, 80+16, cgs.glconfig.vendor_string, UI_CENTER|UI_SMALLFONT, text_color_normal );
+	UI_DrawString( 320, 96+16, cgs.glconfig.version_string, UI_CENTER|UI_SMALLFONT, text_color_normal );
+	UI_DrawString( 320, 112+16, cgs.glconfig.renderer_string, UI_CENTER|UI_SMALLFONT, text_color_normal );
+	UI_DrawString( 320, 152+16, va ("color(%d-bits) Z(%d-bits) stencil(%d-bits)", cgs.glconfig.colorBits, cgs.glconfig.depthBits, cgs.glconfig.stencilBits), UI_CENTER|UI_SMALLFONT, text_color_normal );
 
 	// double column
 	y = 192+16;
@@ -197,7 +197,7 @@ static void UI_DriverInfo_Menu( void )
   // https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=399
   // NOTE: could have pushed the size of stringbuff, but the list is already out of the screen
   // (no matter what your resolution)
-  Q_strncpyz(s_driverinfo.stringbuff, uis.glconfig.extensions_string, 1024);
+  Q_strncpyz(s_driverinfo.stringbuff, cgs.glconfig.extensions_string, 1024);
 
 	// build null terminated extension strings
 	eptr = s_driverinfo.stringbuff;
@@ -442,8 +442,8 @@ static void GraphicsOptions_GetAspectRatios( void )
 
 		// calculate resolution's aspect ratio
 		if (strchr(resolutions[r], '(')) {
-			w = uis.glconfig.displayWidth;
-			h = uis.glconfig.displayHeight;
+			w = cgs.glconfig.displayWidth;
+			h = cgs.glconfig.displayHeight;
 			Com_sprintf( str, sizeof(str), "Auto (%.2f:1)", (float)w / (float)h );
 		} else {
 			x = strchr( resolutions[r], 'x' ) + 1;
@@ -514,7 +514,7 @@ static void GraphicsOptions_GetResolutions( void )
 		static char displayRes[64];
 
 		// Add display resolution video mode
-		Com_sprintf(displayRes, sizeof(displayRes), "Auto (%dx%d)", uis.glconfig.displayWidth, uis.glconfig.displayHeight);
+		Com_sprintf(displayRes, sizeof(displayRes), "Auto (%dx%d)", cgs.glconfig.displayWidth, cgs.glconfig.displayHeight);
 		detectedResolutions[i++] = displayRes;
 
 		// Use display resolution in "Very High Quality" template
@@ -1071,7 +1071,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.driver.generic.x     = 400;
 	s_graphicsoptions.driver.generic.y     = y;
 	s_graphicsoptions.driver.itemnames     = s_driver_names;
-	s_graphicsoptions.driver.curvalue      = (uis.glconfig.driverType == GLDRV_VOODOO);
+	s_graphicsoptions.driver.curvalue      = (cgs.glconfig.driverType == GLDRV_VOODOO);
 	y += BIGCHAR_HEIGHT+2;
 
 	// references/modifies "r_allowExtensions"
@@ -1220,8 +1220,8 @@ void GraphicsOptions_MenuInit( void )
 	GraphicsOptions_SetMenuItems();
 	GraphicsOptions_GetInitialVideo();
 
-	if ( uis.glconfig.driverType == GLDRV_ICD &&
-		 uis.glconfig.hardwareType == GLHW_3DFX_2D3D )
+	if ( cgs.glconfig.driverType == GLDRV_ICD &&
+		 cgs.glconfig.hardwareType == GLHW_3DFX_2D3D )
 	{
 		s_graphicsoptions.driver.generic.flags |= QMF_HIDDEN|QMF_INACTIVE;
 	}
