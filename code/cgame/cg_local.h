@@ -746,9 +746,6 @@ typedef struct {
 // stored in the clientInfo_t, itemInfo_t, weaponInfo_t, and powerupInfo_t
 typedef struct {
 	qhandle_t	charsetShader;
-	qhandle_t	charsetProp;
-	qhandle_t	charsetPropGlow;
-	qhandle_t	charsetPropB;
 	qhandle_t	whiteShader;
 
 #ifdef MISSIONPACK
