@@ -132,181 +132,6 @@ extern vmCvar_t	ui_bigFont;
 extern vmCvar_t ui_serverStatusTimeOut;
 
 
-
-//
-// ui_qmenu.c
-//
-
-#define RCOLUMN_OFFSET			( BIGCHAR_WIDTH )
-#define LCOLUMN_OFFSET			(-BIGCHAR_WIDTH )
-
-#define SLIDER_RANGE			10
-#define	MAX_EDIT_LINE			256
-
-#define MAX_MENUDEPTH			8
-#define MAX_MENUITEMS			96
-
-#define MTYPE_NULL				0
-#define MTYPE_SLIDER			1	
-#define MTYPE_ACTION			2
-#define MTYPE_SPINCONTROL		3
-#define MTYPE_FIELD				4
-#define MTYPE_RADIOBUTTON		5
-#define MTYPE_BITMAP			6	
-#define MTYPE_TEXT				7
-#define MTYPE_SCROLLLIST		8
-#define MTYPE_PTEXT				9
-#define MTYPE_BTEXT				10
-
-#define QMF_BLINK				0x00000001
-#define QMF_SMALLFONT			0x00000002
-#define QMF_LEFT_JUSTIFY		0x00000004
-#define QMF_CENTER_JUSTIFY		0x00000008
-#define QMF_RIGHT_JUSTIFY		0x00000010
-#define QMF_NUMBERSONLY			0x00000020	// edit field is only numbers
-#define QMF_HIGHLIGHT			0x00000040
-#define QMF_HIGHLIGHT_IF_FOCUS	0x00000080	// steady focus
-#define QMF_PULSEIFFOCUS		0x00000100	// pulse if focus
-#define QMF_HASMOUSEFOCUS		0x00000200
-#define QMF_NOONOFFTEXT			0x00000400
-#define QMF_MOUSEONLY			0x00000800	// only mouse input allowed
-#define QMF_HIDDEN				0x00001000	// skips drawing
-#define QMF_GRAYED				0x00002000	// grays and disables
-#define QMF_INACTIVE			0x00004000	// disables any input
-#define QMF_NODEFAULTINIT		0x00008000	// skip default initialization
-#define QMF_OWNERDRAW			0x00010000
-#define QMF_PULSE				0x00020000
-#define QMF_LOWERCASE			0x00040000	// edit field is all lower case
-#define QMF_UPPERCASE			0x00080000	// edit field is all upper case
-#define QMF_SILENT				0x00100000
-
-// callback notifications
-#define QM_GOTFOCUS				1
-#define QM_LOSTFOCUS			2
-#define QM_ACTIVATED			3
-
-typedef struct _tag_menuframework
-{
-	int	cursor;
-	int cursor_prev;
-
-	int	nitems;
-	void *items[MAX_MENUITEMS];
-
-	void (*draw) (void);
-	sfxHandle_t (*key) (int key);
-
-	qboolean	wrapAround;
-	qboolean	fullscreen;
-	qboolean	showlogo;
-} menuframework_s;
-
-typedef struct
-{
-	int type;
-	const char *name;
-	int	id;
-	int x, y;
-	int left;
-	int	top;
-	int	right;
-	int	bottom;
-	menuframework_s *parent;
-	int menuPosition;
-	unsigned flags;
-
-	void (*callback)( void *self, int event );
-	void (*statusbar)( void *self );
-	void (*ownerdraw)( void *self );
-} menucommon_s;
-
-typedef struct {
-	int		cursor;
-	int		scroll;
-	int		widthInChars;
-	char	buffer[MAX_EDIT_LINE];
-	int		maxchars;
-} mfield_t;
-
-typedef struct
-{
-	menucommon_s	generic;
-	mfield_t		field;
-} menufield_s;
-
-typedef struct 
-{
-	menucommon_s generic;
-
-	float minvalue;
-	float maxvalue;
-	float curvalue;
-
-	float range;
-} menuslider_s;
-
-typedef struct
-{
-	menucommon_s generic;
-
-	int	oldvalue;
-	int curvalue;
-	int	numitems;
-	int	top;
-		
-	const char **itemnames;
-
-	int width;
-	int height;
-	int	columns;
-	int	seperation;
-} menulist_s;
-
-typedef struct
-{
-	menucommon_s generic;
-} menuaction_s;
-
-typedef struct
-{
-	menucommon_s generic;
-	int curvalue;
-} menuradiobutton_s;
-
-typedef struct
-{
-	menucommon_s	generic;
-	char*			focuspic;	
-	char*			errorpic;
-	qhandle_t		shader;
-	qhandle_t		focusshader;
-	int				width;
-	int				height;
-	float*			focuscolor;
-} menubitmap_s;
-
-typedef struct
-{
-	menucommon_s	generic;
-	char*			string;
-	int				style;
-	float*			color;
-} menutext_s;
-
-extern void			Menu_Cache( void );
-extern void			Menu_Focus( menucommon_s *m );
-extern void			Menu_AddItem( menuframework_s *menu, void *item );
-extern void			Menu_AdjustCursor( menuframework_s *menu, int dir );
-extern void			Menu_Draw( menuframework_s *menu );
-extern void			*Menu_ItemAtCursor( menuframework_s *m );
-extern sfxHandle_t	Menu_ActivateItem( menuframework_s *s, menucommon_s* item );
-extern void			Menu_SetCursor( menuframework_s *s, int cursor );
-extern void			Menu_SetCursorToItem( menuframework_s *m, void* ptr );
-extern sfxHandle_t	Menu_DefaultKey( menuframework_s *s, int key );
-extern void			Bitmap_Init( menubitmap_s *b );
-extern void			Bitmap_Draw( menubitmap_s *b );
-extern void			ScrollList_Draw( menulist_s *l );
-extern sfxHandle_t	ScrollList_Key( menulist_s *l, int key );
 extern sfxHandle_t	menu_in_sound;
 extern sfxHandle_t	menu_move_sound;
 extern sfxHandle_t	menu_out_sound;
@@ -339,17 +164,6 @@ extern char	*ui_medalPicNames[];
 extern char	*ui_medalSounds[];
 
 //
-// ui_mfield.c
-//
-extern void			MField_Clear( mfield_t *edit );
-extern void			MField_KeyDownEvent( mfield_t *edit, int key );
-extern void			MField_CharEvent( mfield_t *edit, int ch );
-extern void			MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color );
-extern void			MenuField_Init( menufield_s* m );
-extern void			MenuField_Draw( menufield_s *f );
-extern sfxHandle_t	MenuField_Key( menufield_s* m, int* key );
-
-//
 // ui_main.c
 //
 void UI_Report( void );
@@ -359,133 +173,8 @@ int UI_AdjustTimeByGame(int time);
 void UI_ShowPostGame(qboolean newHigh);
 void UI_ClearScores( void );
 void UI_LoadArenas(void);
-
-//
-// ui_menu.c
-//
-extern void MainMenu_Cache( void );
-extern void UI_MainMenu(void);
-extern void UI_RegisterCvars( void );
-extern void UI_UpdateCvars( void );
-
-//
-// ui_credits.c
-//
-extern void UI_CreditMenu( void );
-
-//
-// ui_ingame.c
-//
-extern void InGame_Cache( void );
-extern void UI_InGameMenu(void);
-
-//
-// ui_confirm.c
-//
-extern void ConfirmMenu_Cache( void );
-extern void UI_ConfirmMenu( const char *question, void (*draw)( void ), void (*action)( qboolean result ) );
-
-//
-// ui_setup.c
-//
-extern void UI_SetupMenu_Cache( void );
-extern void UI_SetupMenu(void);
-
-//
-// ui_team.c
-//
-extern void UI_TeamMainMenu( void );
-extern void TeamMain_Cache( void );
-
-//
-// ui_connect.c
-//
-extern void UI_DrawConnectScreen( qboolean overlay );
-
-//
-// ui_controls2.c
-//
-extern void UI_ControlsMenu( void );
-extern void Controls_Cache( void );
-
-//
-// ui_demo2.c
-//
-extern void UI_DemosMenu( void );
-extern void Demos_Cache( void );
-
-//
-// ui_cinematics.c
-//
-extern void UI_CinematicsMenu( void );
-extern void UI_CinematicsMenu_f( void );
-extern void UI_CinematicsMenu_Cache( void );
-
-//
-// ui_mods.c
-//
-extern void UI_ModsMenu( void );
-extern void UI_ModsMenu_Cache( void );
-
-//
-// ui_playermodel.c
-//
-extern void UI_PlayerModelMenu( void );
-extern void PlayerModel_Cache( void );
-
-//
-// ui_playersettings.c
-//
-extern void UI_PlayerSettingsMenu( void );
-extern void PlayerSettings_Cache( void );
-
-//
-// ui_preferences.c
-//
-extern void UI_PreferencesMenu( void );
-extern void Preferences_Cache( void );
-
-//
-// ui_specifyleague.c
-//
-extern void UI_SpecifyLeagueMenu( void );
-extern void SpecifyLeague_Cache( void );
-
-//
-// ui_specifyserver.c
-//
-extern void UI_SpecifyServerMenu( void );
-extern void SpecifyServer_Cache( void );
-
-//
-// ui_servers2.c
-//
-#define MAX_FAVORITESERVERS 16
-
-extern void UI_ArenaServersMenu( void );
-extern void ArenaServers_Cache( void );
-
-//
-// ui_startserver.c
-//
-extern void UI_StartServerMenu( qboolean multiplayer );
-extern void StartServer_Cache( void );
-extern void ServerOptions_Cache( void );
-extern void UI_BotSelectMenu( char *bot );
-extern void UI_BotSelectMenu_Cache( void );
-
-//
-// ui_serverinfo.c
-//
-extern void UI_ServerInfoMenu( void );
-extern void ServerInfo_Cache( void );
-
-//
-// ui_video.c
-//
-extern void UI_GraphicsOptionsMenu( void );
-extern void GraphicsOptions_Cache( void );
-extern void DriverInfo_Cache( void );
+void UI_RegisterCvars(void);
+void UI_UpdateCvars(void);
 
 //
 // ui_players.c
@@ -547,34 +236,6 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 void UI_PlayerInfo_SetModel( playerInfo_t *pi, const char *model, const char *headmodel, char *teamName );
 void UI_PlayerInfo_SetInfo( playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNum, qboolean chat );
 qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName , const char *headName, const char *teamName);
-
-//
-// ui_atoms.c
-//
-// this is only used in the old ui, the new ui has its own version
-typedef struct {
-	int					frametime;
-	int					realtime;
-	int					cursorx;
-	int					cursory;
-	glconfig_t 	glconfig;
-	qboolean		debug;
-	qhandle_t		whiteShader;
-	qhandle_t		menuBackShader;
-	qhandle_t		menuBackNoLogoShader;
-	qhandle_t		charset;
-	qhandle_t		charsetProp;
-	qhandle_t		charsetPropGlow;
-	qhandle_t		charsetPropB;
-	qhandle_t		cursor;
-	qhandle_t		rb_on;
-	qhandle_t		rb_off;
-	float				scale;
-	float				bias;
-	qboolean		demoversion;
-	qboolean		firstdraw;
-} uiStatic_t;
-
 
 // new ui stuff
 #define UI_NUMFX 7
@@ -841,147 +502,21 @@ extern void			UI_AdjustFrom640( float *x, float *y, float *w, float *h );
 extern void			UI_DrawTextBox (int x, int y, int width, int lines);
 extern qboolean		UI_IsFullscreen( void );
 extern void			UI_SetActiveMenu( uiMenuCommand_t menu );
-extern void			UI_PushMenu ( menuframework_s *menu );
-extern void			UI_PopMenu (void);
 extern void			UI_ForceMenuOff (void);
 extern char			*UI_Argv( int arg );
 extern char			*UI_Cvar_VariableString( const char *var_name );
 extern void			UI_StartDemoLoop( void );
 extern qboolean		m_entersound;
 void UI_LoadBestScores(const char *map, int game);
-extern uiStatic_t	uis;
-
-//
-// ui_spLevel.c
-//
-void UI_SPLevelMenu_Cache( void );
-void UI_SPLevelMenu( void );
-void UI_SPLevelMenu_f( void );
-void UI_SPLevelMenu_ReInit( void );
-
-//
-// ui_spArena.c
-//
-void UI_SPArena_Start( const char *arenaInfo );
-
-//
-// ui_spPostgame.c
-//
-void UI_SPPostgameMenu_Cache( void );
-void UI_SPPostgameMenu_f( void );
-
-//
-// ui_spSkill.c
-//
-void UI_SPSkillMenu( const char *arenaInfo );
-void UI_SPSkillMenu_Cache( void );
-
-//
-// ui_addbots.c
-//
-void UI_AddBots_Cache( void );
-void UI_AddBotsMenu( void );
-
-//
-// ui_removebots.c
-//
-void UI_RemoveBots_Cache( void );
-void UI_RemoveBotsMenu( void );
-
-//
-// ui_teamorders.c
-//
-extern void UI_TeamOrdersMenu( void );
-extern void UI_TeamOrdersMenu_f( void );
-extern void UI_TeamOrdersMenu_Cache( void );
-
-//
-// ui_loadconfig.c
-//
-void UI_LoadConfig_Cache( void );
-void UI_LoadConfigMenu( void );
-
-//
-// ui_saveconfig.c
-//
-void UI_SaveConfigMenu_Cache( void );
-void UI_SaveConfigMenu( void );
-
-//
-// ui_display.c
-//
-void UI_DisplayOptionsMenu_Cache( void );
-void UI_DisplayOptionsMenu( void );
-
-//
-// ui_sound.c
-//
-void UI_SoundOptionsMenu_Cache( void );
-void UI_SoundOptionsMenu( void );
-
-//
-// ui_network.c
-//
-void UI_NetworkOptionsMenu_Cache( void );
-void UI_NetworkOptionsMenu( void );
 
 //
 // ui_gameinfo.c
 //
-typedef enum {
-	AWARD_ACCURACY,
-	AWARD_IMPRESSIVE,
-	AWARD_EXCELLENT,
-	AWARD_GAUNTLET,
-	AWARD_FRAGS,
-	AWARD_PERFECT
-} awardType_t;
-
-const char *UI_GetArenaInfoByNumber( int num );
-const char *UI_GetArenaInfoByMap( const char *map );
-const char *UI_GetSpecialArenaInfo( const char *tag );
-int UI_GetNumArenas( void );
-int UI_GetNumSPArenas( void );
-int UI_GetNumSPTiers( void );
-
 char *UI_GetBotInfoByNumber( int num );
 char *UI_GetBotInfoByName( const char *name );
 int UI_GetNumBots( void );
 void UI_LoadBots( void );
 char *UI_GetBotNameByNumber( int num );
-
-void UI_GetBestScore( int level, int *score, int *skill );
-void UI_SetBestScore( int level, int score );
-int UI_TierCompleted( int levelWon );
-qboolean UI_ShowTierVideo( int tier );
-qboolean UI_CanShowTierVideo( int tier );
-int  UI_GetCurrentGame( void );
-void UI_NewGame( void );
-void UI_LogAwardData( int award, int data );
-int UI_GetAwardLevel( int award );
-
-void UI_SPUnlock_f( void );
-void UI_SPUnlockMedals_f( void );
-
-void UI_InitGameinfo( void );
-
-//
-// ui_login.c
-//
-void Login_Cache( void );
-void UI_LoginMenu( void );
-
-//
-// ui_signup.c
-//
-void Signup_Cache( void );
-void UI_SignupMenu( void );
-
-//
-// ui_rankstatus.c
-//
-void RankStatus_Cache( void );
-void UI_RankStatusMenu( void );
 
 
 // new ui 
