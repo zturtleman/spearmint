@@ -2195,6 +2195,7 @@ static int CG_OwnerDrawWidth(int ownerDraw, float scale) {
 }
 
 static int CG_PlayCinematic(const char *name, float x, float y, float w, float h) {
+	CG_AdjustFrom640( &x, &y, &w, &h );
   return trap_CIN_PlayCinematic(name, x, y, w, h, CIN_loop);
 }
 
@@ -2203,6 +2204,7 @@ static void CG_StopCinematic(int handle) {
 }
 
 static void CG_DrawCinematic(int handle, float x, float y, float w, float h) {
+	CG_AdjustFrom640( &x, &y, &w, &h );
   trap_CIN_SetExtents(handle, x, y, w, h);
   trap_CIN_DrawCinematic(handle);
 }

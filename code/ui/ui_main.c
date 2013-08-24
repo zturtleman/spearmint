@@ -111,6 +111,7 @@ static void UI_ParseTeamInfo(const char *teamFile);
 static const char *UI_SelectedMap(int index, int *actual);
 static const char *UI_SelectedHead(int index, int *actual);
 static int UI_GetIndexFromSelection(int actual);
+static void UI_DrawCinematic(int handle, float x, float y, float w, float h);
 
 int ProcessNewUI( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6 );
 
@@ -1096,8 +1097,7 @@ static void UI_DrawClanCinematic(rectDef_t *rect, float scale, vec4_t color) {
 			}
 			if (uiInfo.teamList[i].cinematic >= 0) {
 			  trap_CIN_RunCinematic(uiInfo.teamList[i].cinematic);
-				trap_CIN_SetExtents(uiInfo.teamList[i].cinematic, rect->x, rect->y, rect->w, rect->h);
-	 			trap_CIN_DrawCinematic(uiInfo.teamList[i].cinematic);
+			  UI_DrawCinematic(uiInfo.teamList[i].cinematic, rect->x, rect->y, rect->w, rect->h);
 			} else {
 			  	trap_R_SetColor( color );
 				UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon_Metal);
@@ -1118,8 +1118,7 @@ static void UI_DrawPreviewCinematic(rectDef_t *rect, float scale, vec4_t color) 
 		uiInfo.previewMovie = trap_CIN_PlayCinematic(va("%s.roq", uiInfo.movieList[uiInfo.movieIndex]), 0, 0, 0, 0, (CIN_loop | CIN_silent) );
 		if (uiInfo.previewMovie >= 0) {
 		  trap_CIN_RunCinematic(uiInfo.previewMovie);
-			trap_CIN_SetExtents(uiInfo.previewMovie, rect->x, rect->y, rect->w, rect->h);
- 			trap_CIN_DrawCinematic(uiInfo.previewMovie);
+		  UI_DrawCinematic(uiInfo.previewMovie, rect->x, rect->y, rect->w, rect->h);
 		} else {
 			uiInfo.previewMovie = -2;
 		}
@@ -1220,8 +1219,7 @@ static void UI_DrawMapCinematic(rectDef_t *rect, float scale, vec4_t color, qboo
 		}
 		if (uiInfo.mapList[map].cinematic >= 0) {
 		  trap_CIN_RunCinematic(uiInfo.mapList[map].cinematic);
-		  trap_CIN_SetExtents(uiInfo.mapList[map].cinematic, rect->x, rect->y, rect->w, rect->h);
- 			trap_CIN_DrawCinematic(uiInfo.mapList[map].cinematic);
+		  UI_DrawCinematic(uiInfo.mapList[map].cinematic, rect->x, rect->y, rect->w, rect->h);
 		} else {
 			uiInfo.mapList[map].cinematic = -2;
 		}
@@ -1296,8 +1294,7 @@ static void UI_DrawNetMapPreview(rectDef_t *rect, float scale, vec4_t color) {
 static void UI_DrawNetMapCinematic(rectDef_t *rect, float scale, vec4_t color) {
 	if (uiInfo.serverStatus.currentServerCinematic >= 0) {
 	  trap_CIN_RunCinematic(uiInfo.serverStatus.currentServerCinematic);
-	  trap_CIN_SetExtents(uiInfo.serverStatus.currentServerCinematic, rect->x, rect->y, rect->w, rect->h);
- 	  trap_CIN_DrawCinematic(uiInfo.serverStatus.currentServerCinematic);
+	  UI_DrawCinematic(uiInfo.serverStatus.currentServerCinematic, rect->x, rect->y, rect->w, rect->h);
 	} else {
 		UI_DrawNetMapPreview(rect, scale, color);
 	}
@@ -4809,6 +4806,7 @@ static int UI_OwnerDraw_Width(int ownerDraw) {
 #endif
 
 static int UI_PlayCinematic(const char *name, float x, float y, float w, float h) {
+	UI_AdjustFrom640( &x, &y, &w, &h );
   return trap_CIN_PlayCinematic(name, x, y, w, h, (CIN_loop | CIN_silent));
 }
 
@@ -4840,6 +4838,7 @@ static void UI_StopCinematic(int handle) {
 }
 
 static void UI_DrawCinematic(int handle, float x, float y, float w, float h) {
+	UI_AdjustFrom640( &x, &y, &w, &h );
 	trap_CIN_SetExtents(handle, x, y, w, h);
   trap_CIN_DrawCinematic(handle);
 }

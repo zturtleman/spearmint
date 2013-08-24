@@ -1584,7 +1584,6 @@ void CIN_DrawCinematic (int handle) {
 	w = cinTable[handle].width;
 	h = cinTable[handle].height;
 	buf = cinTable[handle].buf;
-	SCR_AdjustFrom640( &x, &y, &w, &h );
 
 	if (cinTable[handle].dirty && (cinTable[handle].CIN_WIDTH != cinTable[handle].drawX || cinTable[handle].CIN_HEIGHT != cinTable[handle].drawY)) {
 		int *buf2;
@@ -1605,6 +1604,7 @@ void CIN_DrawCinematic (int handle) {
 
 void CL_PlayCinematic_f(void) {
 	char	*arg, *s;
+	float	x, y, width, height;
 	int bits = CIN_system;
 
 	Com_DPrintf("CL_PlayCinematic_f\n");
@@ -1624,7 +1624,13 @@ void CL_PlayCinematic_f(void) {
 
 	S_StopAllSounds ();
 
-	CL_handle = CIN_PlayCinematic( arg, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, bits );
+	x = 0;
+	y = 0;
+	width = SCREEN_WIDTH;
+	height = SCREEN_HEIGHT;
+	SCR_AdjustFrom640( &x, &y, &width, &height );
+
+	CL_handle = CIN_PlayCinematic( arg, x, y, width, height, bits );
 	if (CL_handle >= 0) {
 		do {
 			SCR_RunCinematic();
