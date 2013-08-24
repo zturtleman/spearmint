@@ -1282,6 +1282,7 @@ extern	vmCvar_t		cg_voipShowMeter;
 extern	vmCvar_t		cg_voipShowCrosshairMeter;
 extern	vmCvar_t		cg_consoleLatency;
 extern	vmCvar_t		cg_drawShaderInfo;
+extern	vmCvar_t		cg_fovAspectAdjust;
 extern	vmCvar_t		ui_stretch;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
