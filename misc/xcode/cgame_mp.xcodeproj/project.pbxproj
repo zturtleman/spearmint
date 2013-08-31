@@ -38,48 +38,12 @@
 		2CCDF6B217A8BCA800DB3A64 /* cg_polybus.c in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDF6AD17A8BCA800DB3A64 /* cg_polybus.c */; };
 		2CCDF6B317A8BCA800DB3A64 /* cg_spawn.c in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDF6AE17A8BCA800DB3A64 /* cg_spawn.c */; };
 		2CCDF70317A8BDB100DB3A64 /* bg_tracemap.c in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDF70217A8BDB100DB3A64 /* bg_tracemap.c */; };
-		4B6C213317D194B80074264F /* ui_addbots.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C210917D194B80074264F /* ui_addbots.c */; };
-		4B6C213417D194B80074264F /* ui_atoms.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C210A17D194B80074264F /* ui_atoms.c */; };
-		4B6C213517D194B80074264F /* ui_cinematics.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C210B17D194B80074264F /* ui_cinematics.c */; };
-		4B6C213617D194B80074264F /* ui_confirm.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C210C17D194B80074264F /* ui_confirm.c */; };
-		4B6C213717D194B80074264F /* ui_connect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C210D17D194B80074264F /* ui_connect.c */; };
-		4B6C213817D194B80074264F /* ui_controls2.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C210E17D194B80074264F /* ui_controls2.c */; };
-		4B6C213917D194B80074264F /* ui_credits.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C210F17D194B80074264F /* ui_credits.c */; };
-		4B6C213A17D194B80074264F /* ui_demo2.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211017D194B80074264F /* ui_demo2.c */; };
-		4B6C213B17D194B80074264F /* ui_display.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211117D194B80074264F /* ui_display.c */; };
-		4B6C213C17D194B80074264F /* ui_gameinfo.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211217D194B80074264F /* ui_gameinfo.c */; };
-		4B6C213D17D194B80074264F /* ui_ingame_selectplayer.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211317D194B80074264F /* ui_ingame_selectplayer.c */; };
-		4B6C213E17D194B80074264F /* ui_ingame.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211417D194B80074264F /* ui_ingame.c */; };
-		4B6C213F17D194B80074264F /* ui_joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211517D194B80074264F /* ui_joystick.c */; };
-		4B6C214017D194B80074264F /* ui_loadconfig.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211617D194B80074264F /* ui_loadconfig.c */; };
-		4B6C214117D194B80074264F /* ui_main.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211817D194B80074264F /* ui_main.c */; };
-		4B6C214217D194B80074264F /* ui_menu.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211917D194B80074264F /* ui_menu.c */; };
-		4B6C214317D194B80074264F /* ui_mfield.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211A17D194B80074264F /* ui_mfield.c */; };
-		4B6C214417D194B80074264F /* ui_mods.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211B17D194B80074264F /* ui_mods.c */; };
-		4B6C214517D194B80074264F /* ui_network.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211C17D194B80074264F /* ui_network.c */; };
-		4B6C214617D194B80074264F /* ui_options.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211D17D194B80074264F /* ui_options.c */; };
-		4B6C214717D194B80074264F /* ui_playermodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211E17D194B80074264F /* ui_playermodel.c */; };
-		4B6C214817D194B80074264F /* ui_players.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C211F17D194B80074264F /* ui_players.c */; };
-		4B6C214917D194B80074264F /* ui_playersettings.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212017D194B80074264F /* ui_playersettings.c */; };
-		4B6C214A17D194B80074264F /* ui_preferences.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212117D194B80074264F /* ui_preferences.c */; };
-		4B6C214B17D194B80074264F /* ui_qmenu.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212217D194B80074264F /* ui_qmenu.c */; };
-		4B6C214C17D194B80074264F /* ui_removebots.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212317D194B80074264F /* ui_removebots.c */; };
-		4B6C214D17D194B80074264F /* ui_selectplayer.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212417D194B80074264F /* ui_selectplayer.c */; };
-		4B6C214E17D194B80074264F /* ui_serverinfo.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212517D194B80074264F /* ui_serverinfo.c */; };
-		4B6C214F17D194B80074264F /* ui_servers2.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212617D194B80074264F /* ui_servers2.c */; };
-		4B6C215017D194B80074264F /* ui_setup.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212717D194B80074264F /* ui_setup.c */; };
-		4B6C215117D194B80074264F /* ui_sound.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212817D194B80074264F /* ui_sound.c */; };
-		4B6C215217D194B80074264F /* ui_sparena.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212917D194B80074264F /* ui_sparena.c */; };
-		4B6C215317D194B80074264F /* ui_specifyserver.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212A17D194B80074264F /* ui_specifyserver.c */; };
-		4B6C215417D194B80074264F /* ui_splevel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212B17D194B80074264F /* ui_splevel.c */; };
-		4B6C215517D194B80074264F /* ui_sppostgame.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212C17D194B80074264F /* ui_sppostgame.c */; };
-		4B6C215617D194B80074264F /* ui_spreset.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212D17D194B80074264F /* ui_spreset.c */; };
-		4B6C215717D194B80074264F /* ui_spskill.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212E17D194B80074264F /* ui_spskill.c */; };
-		4B6C215817D194B80074264F /* ui_startserver.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C212F17D194B80074264F /* ui_startserver.c */; };
-		4B6C215917D194B80074264F /* ui_team.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C213017D194B80074264F /* ui_team.c */; };
-		4B6C215A17D194B80074264F /* ui_teamorders.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C213117D194B80074264F /* ui_teamorders.c */; };
-		4B6C215B17D194B80074264F /* ui_video.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C213217D194B80074264F /* ui_video.c */; };
-		4B6C21A117D196980074264F /* cg_newdraw.c in Sources */ = {isa = PBXBuildFile; fileRef = 2711BCF214D12E99005EB142 /* cg_newdraw.c */; };
+		4B6C20ED17D193740074264F /* ui_atoms.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C20E617D193740074264F /* ui_atoms.c */; };
+		4B6C20EE17D193740074264F /* ui_gameinfo.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C20E717D193740074264F /* ui_gameinfo.c */; };
+		4B6C20EF17D193740074264F /* ui_main.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C20E917D193740074264F /* ui_main.c */; };
+		4B6C20F017D193740074264F /* ui_players.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C20EA17D193740074264F /* ui_players.c */; };
+		4B6C20F117D193740074264F /* ui_shared.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C20EB17D193740074264F /* ui_shared.c */; };
+		4B6C219017D196650074264F /* cg_newdraw.c in Sources */ = {isa = PBXBuildFile; fileRef = 2711BCF214D12E99005EB142 /* cg_newdraw.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -126,54 +90,13 @@
 		2CCDF70117A8BDB100DB3A64 /* bg_misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bg_misc.h; path = game/bg_misc.h; sourceTree = "<group>"; };
 		2CCDF70217A8BDB100DB3A64 /* bg_tracemap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bg_tracemap.c; path = game/bg_tracemap.c; sourceTree = "<group>"; };
 		4B6C20DA17D192D00074264F /* ui_public.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ui_public.h; path = ui/ui_public.h; sourceTree = "<group>"; };
-		4B6C210917D194B80074264F /* ui_addbots.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_addbots.c; path = q3_ui/ui_addbots.c; sourceTree = "<group>"; };
-		4B6C210A17D194B80074264F /* ui_atoms.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_atoms.c; path = q3_ui/ui_atoms.c; sourceTree = "<group>"; };
-		4B6C210B17D194B80074264F /* ui_cinematics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_cinematics.c; path = q3_ui/ui_cinematics.c; sourceTree = "<group>"; };
-		4B6C210C17D194B80074264F /* ui_confirm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_confirm.c; path = q3_ui/ui_confirm.c; sourceTree = "<group>"; };
-		4B6C210D17D194B80074264F /* ui_connect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_connect.c; path = q3_ui/ui_connect.c; sourceTree = "<group>"; };
-		4B6C210E17D194B80074264F /* ui_controls2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_controls2.c; path = q3_ui/ui_controls2.c; sourceTree = "<group>"; };
-		4B6C210F17D194B80074264F /* ui_credits.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_credits.c; path = q3_ui/ui_credits.c; sourceTree = "<group>"; };
-		4B6C211017D194B80074264F /* ui_demo2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_demo2.c; path = q3_ui/ui_demo2.c; sourceTree = "<group>"; };
-		4B6C211117D194B80074264F /* ui_display.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_display.c; path = q3_ui/ui_display.c; sourceTree = "<group>"; };
-		4B6C211217D194B80074264F /* ui_gameinfo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_gameinfo.c; path = q3_ui/ui_gameinfo.c; sourceTree = "<group>"; };
-		4B6C211317D194B80074264F /* ui_ingame_selectplayer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_ingame_selectplayer.c; path = q3_ui/ui_ingame_selectplayer.c; sourceTree = "<group>"; };
-		4B6C211417D194B80074264F /* ui_ingame.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_ingame.c; path = q3_ui/ui_ingame.c; sourceTree = "<group>"; };
-		4B6C211517D194B80074264F /* ui_joystick.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_joystick.c; path = q3_ui/ui_joystick.c; sourceTree = "<group>"; };
-		4B6C211617D194B80074264F /* ui_loadconfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_loadconfig.c; path = q3_ui/ui_loadconfig.c; sourceTree = "<group>"; };
-		4B6C211717D194B80074264F /* ui_local.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ui_local.h; path = q3_ui/ui_local.h; sourceTree = "<group>"; };
-		4B6C211817D194B80074264F /* ui_main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_main.c; path = q3_ui/ui_main.c; sourceTree = "<group>"; };
-		4B6C211917D194B80074264F /* ui_menu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_menu.c; path = q3_ui/ui_menu.c; sourceTree = "<group>"; };
-		4B6C211A17D194B80074264F /* ui_mfield.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_mfield.c; path = q3_ui/ui_mfield.c; sourceTree = "<group>"; };
-		4B6C211B17D194B80074264F /* ui_mods.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_mods.c; path = q3_ui/ui_mods.c; sourceTree = "<group>"; };
-		4B6C211C17D194B80074264F /* ui_network.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_network.c; path = q3_ui/ui_network.c; sourceTree = "<group>"; };
-		4B6C211D17D194B80074264F /* ui_options.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_options.c; path = q3_ui/ui_options.c; sourceTree = "<group>"; };
-		4B6C211E17D194B80074264F /* ui_playermodel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_playermodel.c; path = q3_ui/ui_playermodel.c; sourceTree = "<group>"; };
-		4B6C211F17D194B80074264F /* ui_players.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_players.c; path = q3_ui/ui_players.c; sourceTree = "<group>"; };
-		4B6C212017D194B80074264F /* ui_playersettings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_playersettings.c; path = q3_ui/ui_playersettings.c; sourceTree = "<group>"; };
-		4B6C212117D194B80074264F /* ui_preferences.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_preferences.c; path = q3_ui/ui_preferences.c; sourceTree = "<group>"; };
-		4B6C212217D194B80074264F /* ui_qmenu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_qmenu.c; path = q3_ui/ui_qmenu.c; sourceTree = "<group>"; };
-		4B6C212317D194B80074264F /* ui_removebots.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_removebots.c; path = q3_ui/ui_removebots.c; sourceTree = "<group>"; };
-		4B6C212417D194B80074264F /* ui_selectplayer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_selectplayer.c; path = q3_ui/ui_selectplayer.c; sourceTree = "<group>"; };
-		4B6C212517D194B80074264F /* ui_serverinfo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_serverinfo.c; path = q3_ui/ui_serverinfo.c; sourceTree = "<group>"; };
-		4B6C212617D194B80074264F /* ui_servers2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_servers2.c; path = q3_ui/ui_servers2.c; sourceTree = "<group>"; };
-		4B6C212717D194B80074264F /* ui_setup.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_setup.c; path = q3_ui/ui_setup.c; sourceTree = "<group>"; };
-		4B6C212817D194B80074264F /* ui_sound.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_sound.c; path = q3_ui/ui_sound.c; sourceTree = "<group>"; };
-		4B6C212917D194B80074264F /* ui_sparena.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_sparena.c; path = q3_ui/ui_sparena.c; sourceTree = "<group>"; };
-		4B6C212A17D194B80074264F /* ui_specifyserver.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_specifyserver.c; path = q3_ui/ui_specifyserver.c; sourceTree = "<group>"; };
-		4B6C212B17D194B80074264F /* ui_splevel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_splevel.c; path = q3_ui/ui_splevel.c; sourceTree = "<group>"; };
-		4B6C212C17D194B80074264F /* ui_sppostgame.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_sppostgame.c; path = q3_ui/ui_sppostgame.c; sourceTree = "<group>"; };
-		4B6C212D17D194B80074264F /* ui_spreset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_spreset.c; path = q3_ui/ui_spreset.c; sourceTree = "<group>"; };
-		4B6C212E17D194B80074264F /* ui_spskill.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_spskill.c; path = q3_ui/ui_spskill.c; sourceTree = "<group>"; };
-		4B6C212F17D194B80074264F /* ui_startserver.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_startserver.c; path = q3_ui/ui_startserver.c; sourceTree = "<group>"; };
-		4B6C213017D194B80074264F /* ui_team.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_team.c; path = q3_ui/ui_team.c; sourceTree = "<group>"; };
-		4B6C213117D194B80074264F /* ui_teamorders.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_teamorders.c; path = q3_ui/ui_teamorders.c; sourceTree = "<group>"; };
-		4B6C213217D194B80074264F /* ui_video.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_video.c; path = q3_ui/ui_video.c; sourceTree = "<group>"; };
-		4B6C21A317D196C60074264F /* ui_login.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_login.c; path = q3_ui/ui_login.c; sourceTree = "<group>"; };
-		4B6C21A417D196C60074264F /* ui_rankings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_rankings.c; path = q3_ui/ui_rankings.c; sourceTree = "<group>"; };
-		4B6C21A517D196C60074264F /* ui_rankstatus.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_rankstatus.c; path = q3_ui/ui_rankstatus.c; sourceTree = "<group>"; };
-		4B6C21A617D196C60074264F /* ui_saveconfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_saveconfig.c; path = q3_ui/ui_saveconfig.c; sourceTree = "<group>"; };
-		4B6C21A717D196C60074264F /* ui_signup.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_signup.c; path = q3_ui/ui_signup.c; sourceTree = "<group>"; };
-		4B6C21A817D196C60074264F /* ui_specifyleague.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_specifyleague.c; path = q3_ui/ui_specifyleague.c; sourceTree = "<group>"; };
+		4B6C20E617D193740074264F /* ui_atoms.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_atoms.c; path = ui/ui_atoms.c; sourceTree = "<group>"; };
+		4B6C20E717D193740074264F /* ui_gameinfo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_gameinfo.c; path = ui/ui_gameinfo.c; sourceTree = "<group>"; };
+		4B6C20E817D193740074264F /* ui_local.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ui_local.h; path = ui/ui_local.h; sourceTree = "<group>"; };
+		4B6C20E917D193740074264F /* ui_main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_main.c; path = ui/ui_main.c; sourceTree = "<group>"; };
+		4B6C20EA17D193740074264F /* ui_players.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_players.c; path = ui/ui_players.c; sourceTree = "<group>"; };
+		4B6C20EB17D193740074264F /* ui_shared.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_shared.c; path = ui/ui_shared.c; sourceTree = "<group>"; };
+		4B6C20EC17D193740074264F /* ui_shared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ui_shared.h; path = ui/ui_shared.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -206,6 +129,13 @@
 		2711BD1914D12EB5005EB142 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				4B6C20E617D193740074264F /* ui_atoms.c */,
+				4B6C20E717D193740074264F /* ui_gameinfo.c */,
+				4B6C20E817D193740074264F /* ui_local.h */,
+				4B6C20E917D193740074264F /* ui_main.c */,
+				4B6C20EA17D193740074264F /* ui_players.c */,
+				4B6C20EB17D193740074264F /* ui_shared.c */,
+				4B6C20EC17D193740074264F /* ui_shared.h */,
 				4B6C20DA17D192D00074264F /* ui_public.h */,
 			);
 			name = ui;
@@ -232,7 +162,6 @@
 			children = (
 				273531A114D1263700EB7BD6 /* cgame */,
 				2711BD1814D12E9E005EB142 /* game */,
-				4B6C215C17D194C30074264F /* q3_ui */,
 				27AACFD9178DF39B0093DFC0 /* qcommon */,
 				2711BD1914D12EB5005EB142 /* ui */,
 			);
@@ -286,61 +215,6 @@
 			path = qcommon;
 			sourceTree = "<group>";
 		};
-		4B6C215C17D194C30074264F /* q3_ui */ = {
-			isa = PBXGroup;
-			children = (
-				4B6C21A317D196C60074264F /* ui_login.c */,
-				4B6C21A417D196C60074264F /* ui_rankings.c */,
-				4B6C21A517D196C60074264F /* ui_rankstatus.c */,
-				4B6C21A617D196C60074264F /* ui_saveconfig.c */,
-				4B6C21A717D196C60074264F /* ui_signup.c */,
-				4B6C21A817D196C60074264F /* ui_specifyleague.c */,
-				4B6C210917D194B80074264F /* ui_addbots.c */,
-				4B6C210A17D194B80074264F /* ui_atoms.c */,
-				4B6C210B17D194B80074264F /* ui_cinematics.c */,
-				4B6C210C17D194B80074264F /* ui_confirm.c */,
-				4B6C210D17D194B80074264F /* ui_connect.c */,
-				4B6C210E17D194B80074264F /* ui_controls2.c */,
-				4B6C210F17D194B80074264F /* ui_credits.c */,
-				4B6C211017D194B80074264F /* ui_demo2.c */,
-				4B6C211117D194B80074264F /* ui_display.c */,
-				4B6C211217D194B80074264F /* ui_gameinfo.c */,
-				4B6C211317D194B80074264F /* ui_ingame_selectplayer.c */,
-				4B6C211417D194B80074264F /* ui_ingame.c */,
-				4B6C211517D194B80074264F /* ui_joystick.c */,
-				4B6C211617D194B80074264F /* ui_loadconfig.c */,
-				4B6C211717D194B80074264F /* ui_local.h */,
-				4B6C211817D194B80074264F /* ui_main.c */,
-				4B6C211917D194B80074264F /* ui_menu.c */,
-				4B6C211A17D194B80074264F /* ui_mfield.c */,
-				4B6C211B17D194B80074264F /* ui_mods.c */,
-				4B6C211C17D194B80074264F /* ui_network.c */,
-				4B6C211D17D194B80074264F /* ui_options.c */,
-				4B6C211E17D194B80074264F /* ui_playermodel.c */,
-				4B6C211F17D194B80074264F /* ui_players.c */,
-				4B6C212017D194B80074264F /* ui_playersettings.c */,
-				4B6C212117D194B80074264F /* ui_preferences.c */,
-				4B6C212217D194B80074264F /* ui_qmenu.c */,
-				4B6C212317D194B80074264F /* ui_removebots.c */,
-				4B6C212417D194B80074264F /* ui_selectplayer.c */,
-				4B6C212517D194B80074264F /* ui_serverinfo.c */,
-				4B6C212617D194B80074264F /* ui_servers2.c */,
-				4B6C212717D194B80074264F /* ui_setup.c */,
-				4B6C212817D194B80074264F /* ui_sound.c */,
-				4B6C212917D194B80074264F /* ui_sparena.c */,
-				4B6C212A17D194B80074264F /* ui_specifyserver.c */,
-				4B6C212B17D194B80074264F /* ui_splevel.c */,
-				4B6C212C17D194B80074264F /* ui_sppostgame.c */,
-				4B6C212D17D194B80074264F /* ui_spreset.c */,
-				4B6C212E17D194B80074264F /* ui_spskill.c */,
-				4B6C212F17D194B80074264F /* ui_startserver.c */,
-				4B6C213017D194B80074264F /* ui_team.c */,
-				4B6C213117D194B80074264F /* ui_teamorders.c */,
-				4B6C213217D194B80074264F /* ui_video.c */,
-			);
-			name = q3_ui;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -370,7 +244,7 @@
 				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = ioquake;
 			};
-			buildConfigurationList = 2735318F14D125FD00EB7BD6 /* Build configuration list for PBXProject "cgame" */;
+			buildConfigurationList = 2735318F14D125FD00EB7BD6 /* Build configuration list for PBXProject "cgame_mp" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -423,48 +297,12 @@
 				2CCDF6B217A8BCA800DB3A64 /* cg_polybus.c in Sources */,
 				2CCDF6B317A8BCA800DB3A64 /* cg_spawn.c in Sources */,
 				2CCDF70317A8BDB100DB3A64 /* bg_tracemap.c in Sources */,
-				4B6C213317D194B80074264F /* ui_addbots.c in Sources */,
-				4B6C213417D194B80074264F /* ui_atoms.c in Sources */,
-				4B6C213517D194B80074264F /* ui_cinematics.c in Sources */,
-				4B6C213617D194B80074264F /* ui_confirm.c in Sources */,
-				4B6C213717D194B80074264F /* ui_connect.c in Sources */,
-				4B6C213817D194B80074264F /* ui_controls2.c in Sources */,
-				4B6C213917D194B80074264F /* ui_credits.c in Sources */,
-				4B6C213A17D194B80074264F /* ui_demo2.c in Sources */,
-				4B6C213B17D194B80074264F /* ui_display.c in Sources */,
-				4B6C213C17D194B80074264F /* ui_gameinfo.c in Sources */,
-				4B6C213D17D194B80074264F /* ui_ingame_selectplayer.c in Sources */,
-				4B6C213E17D194B80074264F /* ui_ingame.c in Sources */,
-				4B6C213F17D194B80074264F /* ui_joystick.c in Sources */,
-				4B6C214017D194B80074264F /* ui_loadconfig.c in Sources */,
-				4B6C214117D194B80074264F /* ui_main.c in Sources */,
-				4B6C214217D194B80074264F /* ui_menu.c in Sources */,
-				4B6C214317D194B80074264F /* ui_mfield.c in Sources */,
-				4B6C214417D194B80074264F /* ui_mods.c in Sources */,
-				4B6C214517D194B80074264F /* ui_network.c in Sources */,
-				4B6C214617D194B80074264F /* ui_options.c in Sources */,
-				4B6C214717D194B80074264F /* ui_playermodel.c in Sources */,
-				4B6C214817D194B80074264F /* ui_players.c in Sources */,
-				4B6C214917D194B80074264F /* ui_playersettings.c in Sources */,
-				4B6C214A17D194B80074264F /* ui_preferences.c in Sources */,
-				4B6C214B17D194B80074264F /* ui_qmenu.c in Sources */,
-				4B6C214C17D194B80074264F /* ui_removebots.c in Sources */,
-				4B6C214D17D194B80074264F /* ui_selectplayer.c in Sources */,
-				4B6C214E17D194B80074264F /* ui_serverinfo.c in Sources */,
-				4B6C214F17D194B80074264F /* ui_servers2.c in Sources */,
-				4B6C215017D194B80074264F /* ui_setup.c in Sources */,
-				4B6C215117D194B80074264F /* ui_sound.c in Sources */,
-				4B6C215217D194B80074264F /* ui_sparena.c in Sources */,
-				4B6C215317D194B80074264F /* ui_specifyserver.c in Sources */,
-				4B6C215417D194B80074264F /* ui_splevel.c in Sources */,
-				4B6C215517D194B80074264F /* ui_sppostgame.c in Sources */,
-				4B6C215617D194B80074264F /* ui_spreset.c in Sources */,
-				4B6C215717D194B80074264F /* ui_spskill.c in Sources */,
-				4B6C215817D194B80074264F /* ui_startserver.c in Sources */,
-				4B6C215917D194B80074264F /* ui_team.c in Sources */,
-				4B6C215A17D194B80074264F /* ui_teamorders.c in Sources */,
-				4B6C215B17D194B80074264F /* ui_video.c in Sources */,
-				4B6C21A117D196980074264F /* cg_newdraw.c in Sources */,
+				4B6C20ED17D193740074264F /* ui_atoms.c in Sources */,
+				4B6C20EE17D193740074264F /* ui_gameinfo.c in Sources */,
+				4B6C20EF17D193740074264F /* ui_main.c in Sources */,
+				4B6C20F017D193740074264F /* ui_players.c in Sources */,
+				4B6C20F117D193740074264F /* ui_shared.c in Sources */,
+				4B6C219017D196650074264F /* cg_newdraw.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -550,7 +388,11 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = "";
-				GCC_PREPROCESSOR_DEFINITIONS = CGAME;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					MISSIONPACK_HUD,
+					MISSIONPACK,
+					CGAME,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -558,7 +400,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2735318F14D125FD00EB7BD6 /* Build configuration list for PBXProject "cgame" */ = {
+		2735318F14D125FD00EB7BD6 /* Build configuration list for PBXProject "cgame_mp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2735319714D125FD00EB7BD6 /* Debug */,
