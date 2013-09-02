@@ -567,7 +567,6 @@ typedef struct {
 } uiStatic_t;
 
 extern float		UI_ClampCvar( float min, float max, float value );
-extern void			UI_SetColor( const float *rgba );
 extern void			UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);
 extern void			UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color );
 extern float		UI_ProportionalSizeScale( int style );

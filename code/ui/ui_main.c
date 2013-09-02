@@ -569,7 +569,7 @@ void UI_Refresh( int realtime )
 	} 
 	
 	// draw cursor
-	UI_SetColor( NULL );
+	trap_R_SetColor( NULL );
 	if (Menu_Count() > 0 && (trap_Key_GetCatcher() & KEYCATCH_UI)) {
 		CG_DrawPic( uiInfo.uiDC.cursorx-16, uiInfo.uiDC.cursory-16, 32, 32, uiInfo.uiDC.Assets.cursor);
 	}
@@ -4912,7 +4912,7 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 
   //UI_Load();
 	uiInfo.uiDC.registerShaderNoMip = &trap_R_RegisterShaderNoMip;
-	uiInfo.uiDC.setColor = &UI_SetColor;
+	uiInfo.uiDC.setColor = &trap_R_SetColor;
 	uiInfo.uiDC.drawHandlePic = &CG_DrawPic;
 	uiInfo.uiDC.drawStretchPic = &trap_R_DrawStretchPic;
 	uiInfo.uiDC.drawText = &Text_Paint;
@@ -5322,7 +5322,7 @@ static void UI_DisplayDownloadInfo( const char *downloadName, float centerPoint,
 
 	leftWidth = 320;
 
-	UI_SetColor(colorWhite);
+	trap_R_SetColor(colorWhite);
 	Text_PaintCenter(centerPoint, yStart + 112, scale, colorWhite, dlText, 0);
 	Text_PaintCenter(centerPoint, yStart + 192, scale, colorWhite, etaText, 0);
 	Text_PaintCenter(centerPoint, yStart + 248, scale, colorWhite, xferText, 0);

@@ -353,10 +353,6 @@ qboolean UI_ConsoleCommand( int realTime ) {
 	return qfalse;
 }
 
-void UI_SetColor( const float *rgba ) {
-	trap_R_SetColor( rgba );
-}
-
 qboolean UI_CursorInRect (int x, int y, int width, int height)
 {
 	if (uiInfo.uiDC.cursorx < x ||

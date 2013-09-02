@@ -1115,10 +1115,6 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	uis.menusp     = 0;
 }
 
-void UI_SetColor( const float *rgba ) {
-	trap_R_SetColor( rgba );
-}
-
 /*
 =================
 UI_Refresh
@@ -1166,7 +1162,7 @@ void UI_Refresh( int realtime )
 	}
 
 	// draw cursor
-	UI_SetColor( NULL );
+	trap_R_SetColor( NULL );
 	CG_DrawPic( uis.cursorx-16, uis.cursory-16, 32, 32, uis.cursor);
 
 #ifndef NDEBUG
