@@ -39,16 +39,6 @@ qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
 
 qboolean newUI = qfalse;
 
-
-/*
-=================
-UI_StartDemoLoop
-=================
-*/
-void UI_StartDemoLoop( void ) {
-	trap_Cmd_ExecuteText( EXEC_APPEND, "d1\n" );
-}
-
 void UI_SetBestScores(postGameInfo_t *newInfo, qboolean postGame) {
 	trap_Cvar_Set("ui_scoreAccuracy",				va("%i%%", newInfo->accuracy));
 	trap_Cvar_SetValue("ui_scoreImpressives",	newInfo->impressives);

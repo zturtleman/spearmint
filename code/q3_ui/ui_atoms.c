@@ -67,15 +67,6 @@ int UI_NumLocalClients(uiClientState_t *cs) {
 
 /*
 =================
-UI_StartDemoLoop
-=================
-*/
-void UI_StartDemoLoop( void ) {
-	trap_Cmd_ExecuteText( EXEC_APPEND, "d1\n" );
-}
-
-/*
-=================
 UI_PushMenu
 =================
 */
