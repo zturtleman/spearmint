@@ -163,33 +163,6 @@ void AssetCache( void ) {
 	uiInfo.newHighScoreSound = trap_S_RegisterSound("sound/feedback/voc_newhighscore.wav", qfalse);
 }
 
-/*
-================
-UI_SetClipRegion
-=================
-*/
-void UI_SetClipRegion( float x, float y, float w, float h ) {
-	vec4_t clip;
-
-	CG_AdjustFrom640( &x, &y, &w, &h );
-
-	clip[ 0 ] = x;
-	clip[ 1 ] = y;
-	clip[ 2 ] = x + w;
-	clip[ 3 ] = y + h;
-
-	trap_R_SetClipRegion( clip );
-}
-
-/*
-================
-UI_ClearClipRegion
-=================
-*/
-void UI_ClearClipRegion( void ) {
-	trap_R_SetClipRegion( NULL );
-}
-
 int Text_Width(const char *text, float scale, int limit) {
   int count,len;
 	float out;
@@ -1825,12 +1798,12 @@ static void UI_DrawServerMOTD(rectDef_t *rect, float scale, vec4_t color) {
 	int now = uiInfo.uiDC.realTime;
 	int delta = now - uiInfo.serverStatus.motdTime;
 
-	UI_SetClipRegion( rect->x, rect->y, rect->w, rect->h );
+	CG_SetClipRegion( rect->x, rect->y, rect->w, rect->h );
 
 	Text_Paint( rect->x - uiInfo.serverStatus.motdOffset, rect->y + rect->h - 3, scale, color, text, 0, 0, 0 );
 	Text_Paint( rect->x + textWidth - uiInfo.serverStatus.motdOffset, rect->y + rect->h - 3, scale, color, text, 0, 0, 0 );
 
-	UI_ClearClipRegion( );
+	CG_ClearClipRegion( );
 
 	uiInfo.serverStatus.motdOffset += ( delta / 1000.0f ) * MOTD_PIXELS_PER_SECOND;
 
