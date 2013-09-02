@@ -581,12 +581,7 @@ void UI_Refresh( int realtime )
 	UI_UpdateCvars();
 
 	if ( UI_IsFullscreen() ) {
-		// wide and narrow aspect ratios screens need to have the sides cleared
-		if ( cgs.screenXBias || cgs.screenYBias ) {
-			trap_R_SetColor( g_color_table[0] );
-			trap_R_DrawStretchPic( 0, 0, cgs.glconfig.vidWidth, cgs.glconfig.vidHeight, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-			trap_R_SetColor( NULL );
-		}
+		CG_ClearScreen();
 	}
 
 	if (Menu_Count() > 0) {
@@ -5426,6 +5421,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 
 
 	if ( !overlay && menu ) {
+		CG_ClearScreen();
 		Menu_Paint(menu, qtrue);
 	}
 

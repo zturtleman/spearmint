@@ -1246,12 +1246,7 @@ void UI_Refresh( int realtime )
 	{
 		if (uis.activemenu->fullscreen)
 		{
-			// wide and narrow aspect ratios screens need to have the sides cleared
-			if ( cgs.screenXBias || cgs.screenYBias ) {
-				trap_R_SetColor( g_color_table[0] );
-				trap_R_DrawStretchPic( 0, 0, cgs.glconfig.vidWidth, cgs.glconfig.vidHeight, 0, 0, 0, 0, uis.whiteShader );
-				trap_R_SetColor( NULL );
-			}
+			CG_ClearScreen();
 
 			// draw the background
 			if( uis.activemenu->showlogo ) {
