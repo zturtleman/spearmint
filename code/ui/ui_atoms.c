@@ -373,17 +373,6 @@ qboolean UI_ConsoleCommand( int realTime ) {
 	return qfalse;
 }
 
-/*
-================
-UI_AdjustFrom640
-
-Adjusted for resolution and screen aspect ratio
-================
-*/
-void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
-	CG_AdjustFrom640( x, y, w, h );
-}
-
 void UI_SetColor( const float *rgba ) {
 	trap_R_SetColor( rgba );
 }

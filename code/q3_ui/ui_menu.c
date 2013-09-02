@@ -190,7 +190,7 @@ static void Main_MenuDraw( void ) {
 	y = 0;
 	w = 640;
 	h = 120;
-	UI_AdjustFrom640( &x, &y, &w, &h );
+	CG_AdjustFrom640( &x, &y, &w, &h );
 	refdef.x = x;
 	refdef.y = y;
 	refdef.width = w;

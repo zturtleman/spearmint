@@ -371,10 +371,10 @@ static void UI_DrawBannerString2( int x, int y, const char* str, vec4_t color )
 	ay = y;
 	agapwidth = PROPB_GAP_WIDTH;
 	ah = PROPB_HEIGHT;
-	UI_AdjustFrom640( &ax, &ay, &agapwidth, &ah );
+	CG_AdjustFrom640( &ax, &ay, &agapwidth, &ah );
 
 	aspacewidth = PROPB_SPACE_WIDTH;
-	UI_AdjustFrom640( NULL, NULL, &aspacewidth, NULL );
+	CG_AdjustFrom640( NULL, NULL, &aspacewidth, NULL );
 
 	s = str;
 	while ( *s )
@@ -390,7 +390,7 @@ static void UI_DrawBannerString2( int x, int y, const char* str, vec4_t color )
 			fwidth = (float)propMapB[ch][2] / 256.0f;
 			fheight = (float)PROPB_HEIGHT / 256.0f;
 			aw = (float)propMapB[ch][2];
-			UI_AdjustFrom640( NULL, NULL, &aw, NULL );
+			CG_AdjustFrom640( NULL, NULL, &aw, NULL );
 			trap_R_DrawStretchPic( ax, ay, aw, ah, fcol, frow, fcol+fwidth, frow+fheight, uis.charsetPropB );
 		}
 
@@ -490,10 +490,10 @@ static void UI_DrawProportionalString2( int x, int y, const char* str, vec4_t co
 	ay = y;
 	agapwidth = PROP_GAP_WIDTH * sizeScale;
 	ah = PROP_HEIGHT * sizeScale;
-	UI_AdjustFrom640( &ax, &ay, &agapwidth, &ah );
+	CG_AdjustFrom640( &ax, &ay, &agapwidth, &ah );
 
 	aspacewidth = PROP_SPACE_WIDTH * sizeScale;
-	UI_AdjustFrom640( NULL, NULL, &aspacewidth, NULL );
+	CG_AdjustFrom640( NULL, NULL, &aspacewidth, NULL );
 
 	s = str;
 	while ( *s )
@@ -508,7 +508,7 @@ static void UI_DrawProportionalString2( int x, int y, const char* str, vec4_t co
 			fwidth = (float)propMap[ch][2] / 256.0f;
 			fheight = (float)PROP_HEIGHT / 256.0f;
 			aw = (float)propMap[ch][2] * sizeScale;
-			UI_AdjustFrom640( NULL, NULL, &aw, NULL );
+			CG_AdjustFrom640( NULL, NULL, &aw, NULL );
 			trap_R_DrawStretchPic( ax, ay, aw, ah, fcol, frow, fcol+fwidth, frow+fheight, charset );
 		}
 
@@ -688,7 +688,7 @@ static void UI_DrawString2( int x, int y, const char* str, vec4_t color, int cha
 	aw = charw;
 	ah = charh;
 
-	UI_AdjustFrom640( &ax, &ay, &aw, &ah );
+	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
 	s = str;
 	while ( *s )
@@ -915,7 +915,7 @@ void UI_MouseEvent( int localClientNum, int dx, int dy )
 	ay = 0;
 	aw = 1;
 	ah = 1;
-	UI_AdjustFrom640( &ax, &ay, &aw, &ah );
+	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
 	uis.cursorx = uis.unscaledCursorX / aw - ax;
 	uis.cursory = uis.unscaledCursorY / ah - ay;
@@ -1131,17 +1131,6 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	uis.activemenu = NULL;
 	uis.menusp     = 0;
-}
-
-/*
-================
-UI_AdjustFrom640
-
-Adjusted for resolution and screen aspect ratio
-================
-*/
-void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
-	CG_AdjustFrom640( x, y, w, h );
 }
 
 void UI_SetColor( const float *rgba ) {

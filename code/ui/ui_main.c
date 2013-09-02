@@ -171,7 +171,7 @@ UI_SetClipRegion
 void UI_SetClipRegion( float x, float y, float w, float h ) {
 	vec4_t clip;
 
-	UI_AdjustFrom640( &x, &y, &w, &h );
+	CG_AdjustFrom640( &x, &y, &w, &h );
 
 	clip[ 0 ] = x;
 	clip[ 1 ] = y;
@@ -266,7 +266,7 @@ void Text_PaintChar(float x, float y, float width, float height, float scale, fl
   float w, h;
   w = width * scale;
   h = height * scale;
-  UI_AdjustFrom640( &x, &y, &w, &h );
+  CG_AdjustFrom640( &x, &y, &w, &h );
   trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
 }
 
@@ -4809,7 +4809,7 @@ static int UI_OwnerDraw_Width(int ownerDraw) {
 #endif
 
 static int UI_PlayCinematic(const char *name, float x, float y, float w, float h) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
+	CG_AdjustFrom640( &x, &y, &w, &h );
   return trap_CIN_PlayCinematic(name, x, y, w, h, (CIN_loop | CIN_silent));
 }
 
@@ -4841,7 +4841,7 @@ static void UI_StopCinematic(int handle) {
 }
 
 static void UI_DrawCinematic(int handle, float x, float y, float w, float h) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
+	CG_AdjustFrom640( &x, &y, &w, &h );
 	trap_CIN_SetExtents(handle, x, y, w, h);
   trap_CIN_DrawCinematic(handle);
 }
@@ -5152,7 +5152,7 @@ void UI_SetMousePosition( int localClientNum, int x, int y )
 	ay = 0;
 	aw = 1;
 	ah = 1;
-	UI_AdjustFrom640( &ax, &ay, &aw, &ah );
+	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
 	uiInfo.uiDC.cursorx = uiInfo.unscaledCursorX / aw - ax;
 	uiInfo.uiDC.cursory = uiInfo.unscaledCursorY / ah - ay;
