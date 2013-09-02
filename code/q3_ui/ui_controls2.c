@@ -938,7 +938,7 @@ static void Controls_DrawKeyBinding( void *self )
 
 	if (c)
 	{
-		UI_FillRect( a->generic.left, a->generic.top, a->generic.right-a->generic.left+1, a->generic.bottom-a->generic.top+1, listbar_color ); 
+		CG_FillRect( a->generic.left, a->generic.top, a->generic.right-a->generic.left+1, a->generic.bottom-a->generic.top+1, listbar_color ); 
 
 		UI_DrawString( x - SMALLCHAR_WIDTH, y, g_bindings[a->generic.id].label, UI_RIGHT|UI_SMALLFONT, text_color_highlight );
 		UI_DrawString( x + SMALLCHAR_WIDTH, y, name, UI_LEFT|UI_SMALLFONT|UI_PULSE, text_color_highlight );
@@ -990,7 +990,7 @@ static void Controls_DrawSmallText( void *self )
 
 	if (c)
 	{
-		UI_FillRect( text->generic.left, text->generic.top, text->generic.right-text->generic.left+1, text->generic.bottom-text->generic.top+1, listbar_color ); 
+		CG_FillRect( text->generic.left, text->generic.top, text->generic.right-text->generic.left+1, text->generic.bottom-text->generic.top+1, listbar_color ); 
 
 		UI_DrawString( x - SMALLCHAR_WIDTH, y, text->string, UI_RIGHT|UI_SMALLFONT, text_color_highlight );
 

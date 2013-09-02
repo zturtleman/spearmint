@@ -4947,7 +4947,7 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	uiInfo.uiDC.textHeight = &Text_Height;
 	uiInfo.uiDC.registerModel = &trap_R_RegisterModel;
 	uiInfo.uiDC.modelBounds = &trap_R_ModelBounds;
-	uiInfo.uiDC.fillRect = &UI_FillRect;
+	uiInfo.uiDC.fillRect = &CG_FillRect;
 	uiInfo.uiDC.drawRect = &CG_DrawRect;
 	uiInfo.uiDC.drawSides = &CG_DrawSides;
 	uiInfo.uiDC.drawTopBottom = &CG_DrawTopBottom;

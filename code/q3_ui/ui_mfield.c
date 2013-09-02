@@ -378,7 +378,7 @@ void MenuField_Draw( menufield_s *f )
 	if ( focus )
 	{
 		// draw cursor
-		UI_FillRect( f->generic.left, f->generic.top, f->generic.right-f->generic.left+1, f->generic.bottom-f->generic.top+1, listbar_color ); 
+		CG_FillRect( f->generic.left, f->generic.top, f->generic.right-f->generic.left+1, f->generic.bottom-f->generic.top+1, listbar_color ); 
 		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|style, color);
 	}
 

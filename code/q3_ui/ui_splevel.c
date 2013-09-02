@@ -612,7 +612,7 @@ static void UI_SPLevelMenu_MenuDraw( void ) {
 	for ( n = 0; n < levelMenuInfo.numMaps; n++ ) {
 		x = levelMenuInfo.item_maps[n].generic.x;
 		y = levelMenuInfo.item_maps[n].generic.y;
-		UI_FillRect( x, y + 96, 128, 18, color_black );
+		CG_FillRect( x, y + 96, 128, 18, color_black );
 	}
 
 	if ( selectedArenaSet > currentSet ) {
@@ -666,7 +666,7 @@ static void UI_SPLevelMenu_MenuDraw( void ) {
 			CG_DrawPic( x, y, 64, 64, levelMenuInfo.botPics[n]);
 		}
 		else {
-			UI_FillRect( x, y, 64, 64, color_black );
+			CG_FillRect( x, y, 64, 64, color_black );
 			UI_DrawProportionalString( x+22, y+18, "?", UI_BIGFONT, color_orange );
 		}
 		UI_DrawString( x, y + 64, levelMenuInfo.botNames[n], UI_SMALLFONT|UI_LEFT, color_orange );

@@ -384,22 +384,6 @@ void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	CG_AdjustFrom640( x, y, w, h );
 }
 
-/*
-================
-UI_FillRect
-
-Coordinates are 640*480 virtual values
-=================
-*/
-void UI_FillRect( float x, float y, float width, float height, const float *color ) {
-	trap_R_SetColor( color );
-
-	UI_AdjustFrom640( &x, &y, &width, &height );
-	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-
-	trap_R_SetColor( NULL );
-}
-
 void UI_SetColor( const float *rgba ) {
 	trap_R_SetColor( rgba );
 }
