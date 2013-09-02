@@ -1284,7 +1284,7 @@ static void ServerOptions_SetMenuItems( void ) {
 	}
 
 	s_serveroptions.publicserver.curvalue = Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_publicServer" ) );
-	Q_strncpyz( s_serveroptions.hostname.field.buffer, UI_Cvar_VariableString( "sv_hostname" ), sizeof( s_serveroptions.hostname.field.buffer ) );
+	Q_strncpyz( s_serveroptions.hostname.field.buffer, CG_Cvar_VariableString( "sv_hostname" ), sizeof( s_serveroptions.hostname.field.buffer ) );
 	s_serveroptions.pure.curvalue = Com_Clamp( 0, 1, trap_Cvar_VariableValue( "sv_pure" ) );
 
 	// set the map pic

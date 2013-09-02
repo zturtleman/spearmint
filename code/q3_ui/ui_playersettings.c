@@ -309,7 +309,7 @@ static void PlayerSettings_SetMenuItems( void ) {
 	int		h;
 
 	// name
-	Q_strncpyz( s_playersettings.name.field.buffer, UI_Cvar_VariableString(
+	Q_strncpyz( s_playersettings.name.field.buffer, CG_Cvar_VariableString(
 			Com_LocalClientCvarName(s_playersettings.localClient, "name")), sizeof(s_playersettings.name.field.buffer) );
 
 	// effects color
@@ -327,7 +327,7 @@ static void PlayerSettings_SetMenuItems( void ) {
 	viewangles[ROLL]  = 0;
 
 	UI_PlayerInfo_SetModel( &s_playersettings.playerinfo,
-			UI_Cvar_VariableString( Com_LocalClientCvarName(s_playersettings.localClient, "model") ) );
+			CG_Cvar_VariableString( Com_LocalClientCvarName(s_playersettings.localClient, "model") ) );
 	UI_PlayerInfo_SetInfo( &s_playersettings.playerinfo, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 
 	// handicap

@@ -1480,7 +1480,7 @@ static void Controls_InitModel( void )
 {
 	memset( &s_controls.playerinfo, 0, sizeof(playerInfo_t) );
 
-	UI_PlayerInfo_SetModel( &s_controls.playerinfo, UI_Cvar_VariableString( "model" ) );
+	UI_PlayerInfo_SetModel( &s_controls.playerinfo, CG_Cvar_VariableString( "model" ) );
 
 	Controls_UpdateModel( ANIM_IDLE );
 }

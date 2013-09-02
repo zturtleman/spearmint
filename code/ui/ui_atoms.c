@@ -61,17 +61,6 @@ void UI_StartDemoLoop( void ) {
 	trap_Cmd_ExecuteText( EXEC_APPEND, "d1\n" );
 }
 
-
-char *UI_Cvar_VariableString( const char *var_name ) {
-	static char	buffer[MAX_STRING_CHARS];
-
-	trap_Cvar_VariableStringBuffer( var_name, buffer, sizeof( buffer ) );
-
-	return buffer;
-}
-
-
-
 void UI_SetBestScores(postGameInfo_t *newInfo, qboolean postGame) {
 	trap_Cvar_Set("ui_scoreAccuracy",				va("%i%%", newInfo->accuracy));
 	trap_Cvar_SetValue("ui_scoreImpressives",	newInfo->impressives);

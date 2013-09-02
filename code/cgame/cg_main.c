@@ -916,6 +916,19 @@ const char *CG_Argv( int arg ) {
 
 /*
 ================
+CG_Cvar_VariableString
+================
+*/
+char *CG_Cvar_VariableString( const char *var_name ) {
+	static char	buffer[MAX_STRING_CHARS];
+
+	trap_Cvar_VariableStringBuffer( var_name, buffer, sizeof( buffer ) );
+
+	return buffer;
+}
+
+/*
+================
 CG_MaxSplitView
 ================
 */

@@ -498,7 +498,6 @@ extern qboolean 	UI_CursorInRect (int x, int y, int width, int height);
 extern qboolean		UI_IsFullscreen( void );
 extern void			UI_SetActiveMenu( uiMenuCommand_t menu );
 extern void			UI_ForceMenuOff (void);
-extern char			*UI_Cvar_VariableString( const char *var_name );
 extern void			UI_StartDemoLoop( void );
 extern qboolean		m_entersound;
 void UI_LoadBestScores(const char *map, int game);

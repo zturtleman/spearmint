@@ -1317,6 +1317,7 @@ extern	vmCvar_t		cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 //
 const char *CG_ConfigString( int index );
 const char *CG_Argv( int arg );
+char *CG_Cvar_VariableString( const char *var_name );
 
 int CG_MaxSplitView(void);
 

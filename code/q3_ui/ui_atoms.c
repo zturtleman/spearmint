@@ -991,15 +991,6 @@ void UI_SetMousePosition( int localClientNum, int x, int y )
 	UI_MouseEvent(localClientNum, 0, 0);
 }
 
-char *UI_Cvar_VariableString( const char *var_name ) {
-	static char	buffer[MAX_STRING_CHARS];
-
-	trap_Cvar_VariableStringBuffer( var_name, buffer, sizeof( buffer ) );
-
-	return buffer;
-}
-
-
 /*
 =================
 UI_Cache

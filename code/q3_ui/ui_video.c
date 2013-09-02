@@ -506,7 +506,7 @@ GraphicsOptions_GetResolutions
 */
 static void GraphicsOptions_GetResolutions( void )
 {
-	Q_strncpyz(resbuf, UI_Cvar_VariableString("r_availableModes"), sizeof(resbuf));
+	Q_strncpyz(resbuf, CG_Cvar_VariableString("r_availableModes"), sizeof(resbuf));
 	if(*resbuf)
 	{
 		char* s = resbuf;
@@ -891,7 +891,7 @@ static void GraphicsOptions_SetMenuItems( void )
 		break;
 	}
 
-	if ( !Q_stricmp( UI_Cvar_VariableString( "r_textureMode" ), "GL_LINEAR_MIPMAP_NEAREST" ) )
+	if ( !Q_stricmp( CG_Cvar_VariableString( "r_textureMode" ), "GL_LINEAR_MIPMAP_NEAREST" ) )
 	{
 		s_graphicsoptions.filter.curvalue = 0;
 	}
