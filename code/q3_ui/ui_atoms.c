@@ -865,9 +865,10 @@ UI_MouseEvent
 */
 void UI_MouseEvent( int localClientNum, int dx, int dy )
 {
+	float			ax, ay, aw, ah;
+	int				xbias, ybias;
 	int				i;
 	menucommon_s*	m;
-	float			ax, ay, aw, ah;
 
 	if (localClientNum != 0) {
 		// q3_ui currently only supports one cursor
@@ -877,27 +878,18 @@ void UI_MouseEvent( int localClientNum, int dx, int dy )
 	if (!uis.activemenu)
 		return;
 
-	// update mouse screen position
-	uis.unscaledCursorX += dx;
-	if (uis.unscaledCursorX < 0)
-		uis.unscaledCursorX = 0;
-	else if (uis.unscaledCursorX > cgs.glconfig.vidWidth)
-		uis.unscaledCursorX = cgs.glconfig.vidWidth;
-
-	uis.unscaledCursorY += dy;
-	if (uis.unscaledCursorY < 0)
-		uis.unscaledCursorY = 0;
-	else if (uis.unscaledCursorY > cgs.glconfig.vidHeight)
-		uis.unscaledCursorY = cgs.glconfig.vidHeight;
-
 	ax = 0;
 	ay = 0;
 	aw = 1;
 	ah = 1;
 	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
-	uis.cursorx = uis.unscaledCursorX / aw - ax;
-	uis.cursory = uis.unscaledCursorY / ah - ay;
+	xbias = ax/aw;
+	ybias = ay/ah;
+
+	// update mouse screen position
+	uis.cursorx = Com_Clamp( -xbias, SCREEN_WIDTH+xbias, uis.cursorx + dx );
+	uis.cursory = Com_Clamp( -ybias, SCREEN_HEIGHT+ybias, uis.cursory + dy );
 
 	// region test the active menu items
 	for (i=0; i<uis.activemenu->nitems; i++)
@@ -944,12 +936,24 @@ UI_MousePosition
 */
 int UI_MousePosition( int localClientNum )
 {
+	float ax, ay, aw, ah;
+	int	x, y;
+
 	if (localClientNum != 0) {
 		// ui currently only supports one cursor
 		return 0;
 	}
 
-	return (int)uis.unscaledCursorX | ( (int)uis.unscaledCursorY << 16 );
+	ax = 0;
+	ay = 0;
+	aw = 1;
+	ah = 1;
+	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
+
+	x = ( ( uis.cursorx + ax ) * aw );
+	y = ( ( uis.cursory + ay ) * ah );
+
+	return x | ( y << 16 );
 }
 
 /*
@@ -959,13 +963,21 @@ UI_SetMousePosition
 */
 void UI_SetMousePosition( int localClientNum, int x, int y )
 {
+	float ax, ay, aw, ah;
+
 	if (localClientNum != 0) {
 		// ui currently only supports one cursor
 		return;
 	}
 
-	uis.unscaledCursorX = x;
-	uis.unscaledCursorY = y;
+	ax = 0;
+	ay = 0;
+	aw = 1;
+	ah = 1;
+	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
+
+	uis.cursorx = ( x - ax ) / aw;
+	uis.cursory = ( y - ay ) / ah;
 
 	UI_MouseEvent(localClientNum, 0, 0);
 }

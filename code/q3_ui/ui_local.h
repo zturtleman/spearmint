@@ -543,10 +543,8 @@ qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName
 typedef struct {
 	int					frametime;
 	int					realtime;
-	int					cursorx; // 0 to 640
+	int					cursorx;
 	int					cursory;
-	int					unscaledCursorX; // 0 to glconfig.vidWidth
-	int					unscaledCursorY;
 	int					menusp;
 	menuframework_s*	activemenu;
 	menuframework_s*	stack[MAX_MENUDEPTH];

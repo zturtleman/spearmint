@@ -4989,23 +4989,26 @@ UI_MouseEvent
 */
 void UI_MouseEvent( int localClientNum, int dx, int dy )
 {
+	float ax, ay, aw, ah;
+	int xbias, ybias;
+
 	if (localClientNum != 0) {
 		// ui currently only supports one cursor
 		return;
 	}
 
-	// update mouse screen position
-	uiInfo.uiDC.cursorx += dx;
-	if (uiInfo.uiDC.cursorx < 0)
-		uiInfo.uiDC.cursorx = 0;
-	else if (uiInfo.uiDC.cursorx > SCREEN_WIDTH)
-		uiInfo.uiDC.cursorx = SCREEN_WIDTH;
+	ax = 0;
+	ay = 0;
+	aw = 1;
+	ah = 1;
+	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
-	uiInfo.uiDC.cursory += dy;
-	if (uiInfo.uiDC.cursory < 0)
-		uiInfo.uiDC.cursory = 0;
-	else if (uiInfo.uiDC.cursory > SCREEN_HEIGHT)
-		uiInfo.uiDC.cursory = SCREEN_HEIGHT;
+	xbias = ax/aw;
+	ybias = ay/ah;
+
+	// update mouse screen position
+	uiInfo.uiDC.cursorx = Com_Clamp( -xbias, SCREEN_WIDTH+xbias, uiInfo.uiDC.cursorx + dx );
+	uiInfo.uiDC.cursory = Com_Clamp( -ybias, SCREEN_HEIGHT+ybias, uiInfo.uiDC.cursory + dy );
 
 	Init_Display(&uiInfo.uiDC);
 
@@ -5024,12 +5027,24 @@ UI_MousePosition
 */
 int UI_MousePosition( int localClientNum )
 {
+	float ax, ay, aw, ah;
+	int x, y;
+
 	if (localClientNum != 0) {
 		// ui currently only supports one cursor
 		return 0;
 	}
 
-	return uiInfo.unscaledCursorX | ( uiInfo.unscaledCursorY << 16 );
+	ax = 0;
+	ay = 0;
+	aw = 1;
+	ah = 1;
+	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
+
+	x = ( ( uiInfo.uiDC.cursorx + ax ) * aw );
+	y = ( ( uiInfo.uiDC.cursory + ay ) * ah );
+
+	return x | ( y << 16 );
 }
 
 /*
@@ -5046,17 +5061,14 @@ void UI_SetMousePosition( int localClientNum, int x, int y )
 		return;
 	}
 
-	uiInfo.unscaledCursorX = x;
-	uiInfo.unscaledCursorY = y;
-
 	ax = 0;
 	ay = 0;
 	aw = 1;
 	ah = 1;
 	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
-	uiInfo.uiDC.cursorx = uiInfo.unscaledCursorX / aw - ax;
-	uiInfo.uiDC.cursory = uiInfo.unscaledCursorY / ah - ay;
+	uiInfo.uiDC.cursorx = ( x - ax ) / aw;
+	uiInfo.uiDC.cursory = ( y - ay ) / ah;
 
 	Init_Display(&uiInfo.uiDC);
 

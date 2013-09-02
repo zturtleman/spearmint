@@ -407,8 +407,8 @@ void UI_InGameMenu( void ) {
 	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
 	// set menu cursor to a nice location
-	uis.unscaledCursorX = (float)cgs.glconfig.vidWidth * ( 319.0f / SCREEN_WIDTH ) * aw + ax;
-	uis.unscaledCursorY = (float)cgs.glconfig.vidHeight * ( 80.0f / SCREEN_HEIGHT ) * ah + ay;
+	uis.cursorx = 319;
+	uis.cursory = 80;
 	UI_MouseEvent( 0, 0, 0 );
 
 	InGame_MenuInit();

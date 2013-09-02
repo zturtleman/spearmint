@@ -476,9 +476,6 @@ typedef struct {
 	qboolean inGameLoad;
 	int		maxSplitView;
 
-	int		unscaledCursorX; // 0 to glconfig.vidWidth
-	int		unscaledCursorY;
-
 }	uiInfo_t;
 
 extern uiInfo_t uiInfo;
