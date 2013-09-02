@@ -991,15 +991,6 @@ void UI_SetMousePosition( int localClientNum, int x, int y )
 	UI_MouseEvent(localClientNum, 0, 0);
 }
 
-char *UI_Argv( int arg ) {
-	static char	buffer[MAX_STRING_CHARS];
-
-	trap_Argv( arg, buffer, sizeof( buffer ) );
-
-	return buffer;
-}
-
-
 char *UI_Cvar_VariableString( const char *var_name ) {
 	static char	buffer[MAX_STRING_CHARS];
 
@@ -1063,7 +1054,7 @@ qboolean UI_ConsoleCommand( int realTime ) {
 	uis.frametime = realTime - uis.realtime;
 	uis.realtime = realTime;
 
-	cmd = UI_Argv( 0 );
+	cmd = CG_Argv( 0 );
 
 	// ensure minimum menu data is available
 	Menu_Cache();

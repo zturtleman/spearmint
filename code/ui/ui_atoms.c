@@ -62,15 +62,6 @@ void UI_StartDemoLoop( void ) {
 }
 
 
-char *UI_Argv( int arg ) {
-	static char	buffer[MAX_STRING_CHARS];
-
-	trap_Argv( arg, buffer, sizeof( buffer ) );
-
-	return buffer;
-}
-
-
 char *UI_Cvar_VariableString( const char *var_name ) {
 	static char	buffer[MAX_STRING_CHARS];
 
@@ -235,18 +226,18 @@ static void UI_CalcPostGameStats( void ) {
 		trap_FS_FCloseFile(f);
 	}					 
 
-	newInfo.accuracy = atoi(UI_Argv(3));
-	newInfo.impressives = atoi(UI_Argv(4));
-	newInfo.excellents = atoi(UI_Argv(5));
-	newInfo.defends = atoi(UI_Argv(6));
-	newInfo.assists = atoi(UI_Argv(7));
-	newInfo.gauntlets = atoi(UI_Argv(8));
-	newInfo.baseScore = atoi(UI_Argv(9));
-	newInfo.perfects = atoi(UI_Argv(10));
-	newInfo.redScore = atoi(UI_Argv(11));
-	newInfo.blueScore = atoi(UI_Argv(12));
-	time = atoi(UI_Argv(13));
-	newInfo.captures = atoi(UI_Argv(14));
+	newInfo.accuracy = atoi(CG_Argv(3));
+	newInfo.impressives = atoi(CG_Argv(4));
+	newInfo.excellents = atoi(CG_Argv(5));
+	newInfo.defends = atoi(CG_Argv(6));
+	newInfo.assists = atoi(CG_Argv(7));
+	newInfo.gauntlets = atoi(CG_Argv(8));
+	newInfo.baseScore = atoi(CG_Argv(9));
+	newInfo.perfects = atoi(CG_Argv(10));
+	newInfo.redScore = atoi(CG_Argv(11));
+	newInfo.blueScore = atoi(CG_Argv(12));
+	time = atoi(CG_Argv(13));
+	newInfo.captures = atoi(CG_Argv(14));
 
 	newInfo.time = (time - trap_Cvar_VariableValue("ui_matchStartTime")) / 1000;
 	adjustedTime = uiInfo.mapList[ui_currentMap.integer].timeToBeat[game];
@@ -314,7 +305,7 @@ qboolean UI_ConsoleCommand( int realTime ) {
 	uiInfo.uiDC.frameTime = realTime - uiInfo.uiDC.realTime;
 	uiInfo.uiDC.realTime = realTime;
 
-	cmd = UI_Argv( 0 );
+	cmd = CG_Argv( 0 );
 
 	// ensure minimum menu data is available
 	//Menu_Cache();
@@ -346,9 +337,9 @@ qboolean UI_ConsoleCommand( int realTime ) {
 			char shader2[MAX_QPATH];
 			char shader3[MAX_QPATH];
 			
-			Q_strncpyz(shader1, UI_Argv(1), sizeof(shader1));
-			Q_strncpyz(shader2, UI_Argv(2), sizeof(shader2));
-			Q_strncpyz(shader3, UI_Argv(3), sizeof(shader3));
+			Q_strncpyz(shader1, CG_Argv(1), sizeof(shader1));
+			Q_strncpyz(shader2, CG_Argv(2), sizeof(shader2));
+			Q_strncpyz(shader3, CG_Argv(3), sizeof(shader3));
 			
 			trap_R_RemapShader(shader1, shader2, shader3);
 			return qtrue;

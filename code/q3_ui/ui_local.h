@@ -583,7 +583,6 @@ extern void			UI_SetActiveMenu( uiMenuCommand_t menu );
 extern void			UI_PushMenu ( menuframework_s *menu );
 extern void			UI_PopMenu (void);
 extern void			UI_ForceMenuOff (void);
-extern char			*UI_Argv( int arg );
 extern char			*UI_Cvar_VariableString( const char *var_name );
 extern void			UI_Refresh( int time );
 extern int			UI_MaxSplitView(void);
