@@ -673,7 +673,7 @@ void CG_UpdateCvars( void ) {
 }
 
 int CG_CrosshairPlayer( int localClientNum ) {
-	if (localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
+	if (!cg.snap || localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
 		return -1;
 	}
 
@@ -685,7 +685,7 @@ int CG_CrosshairPlayer( int localClientNum ) {
 }
 
 int CG_LastAttacker( int localClientNum ) {
-	if (localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
+	if (!cg.snap || localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
 		return -1;
 	}
 
