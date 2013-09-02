@@ -388,7 +388,7 @@ static void StartServer_LevelshotDraw( void *self ) {
 	w = b->width;
 	h =	b->height;
 	if( b->shader ) {
-		UI_DrawHandlePic( x, y, w, h, b->shader );
+		CG_DrawPic( x, y, w, h, b->shader );
 	}
 
 	x = b->generic.x;
@@ -407,7 +407,7 @@ static void StartServer_LevelshotDraw( void *self ) {
 	w = b->width;
 	h =	b->height + 28;
 	if( b->generic.flags & QMF_HIGHLIGHT ) {	
-		UI_DrawHandlePic( x, y, w, h, b->focusshader );
+		CG_DrawPic( x, y, w, h, b->focusshader );
 	}
 }
 

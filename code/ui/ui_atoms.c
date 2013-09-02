@@ -384,44 +384,6 @@ void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	CG_AdjustFrom640( x, y, w, h );
 }
 
-void UI_DrawNamedPic( float x, float y, float width, float height, const char *picname ) {
-	qhandle_t	hShader;
-
-	hShader = trap_R_RegisterShaderNoMip( picname );
-	UI_AdjustFrom640( &x, &y, &width, &height );
-	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
-}
-
-void UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader ) {
-	float	s0;
-	float	s1;
-	float	t0;
-	float	t1;
-
-	if( w < 0 ) {	// flip about vertical
-		w  = -w;
-		s0 = 1;
-		s1 = 0;
-	}
-	else {
-		s0 = 0;
-		s1 = 1;
-	}
-
-	if( h < 0 ) {	// flip about horizontal
-		h  = -h;
-		t0 = 1;
-		t1 = 0;
-	}
-	else {
-		t0 = 0;
-		t1 = 1;
-	}
-	
-	UI_AdjustFrom640( &x, &y, &w, &h );
-	trap_R_DrawStretchPic( x, y, w, h, s0, t0, s1, t1, hShader );
-}
-
 /*
 ================
 UI_FillRect

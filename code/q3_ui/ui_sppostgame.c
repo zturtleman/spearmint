@@ -236,7 +236,7 @@ static void UI_SPPostgameMenu_DrawAwardsMedals( int max ) {
 		medal = postgameMenuInfo.awardsEarned[n];
 		amount = postgameMenuInfo.awardsLevels[n];
 
-		UI_DrawNamedPic( x, y, 48, 48, ui_medalPicNames[medal] );
+		CG_DrawNamedPic( x, y, 48, 48, ui_medalPicNames[medal] );
 
 		if( medal == AWARD_ACCURACY ) {
 			Com_sprintf( buf, sizeof(buf), "%i%%", amount );

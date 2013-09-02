@@ -267,8 +267,44 @@ Coordinates are 640*480 virtual values
 =================
 */
 void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader ) {
+	float	s0;
+	float	s1;
+	float	t0;
+	float	t1;
+
+	if( width < 0 ) {	// flip about vertical
+		width  = -width;
+		s0 = 1;
+		s1 = 0;
+	}
+	else {
+		s0 = 0;
+		s1 = 1;
+	}
+
+	if( height < 0 ) {	// flip about horizontal
+		height  = -height;
+		t0 = 1;
+		t1 = 0;
+	}
+	else {
+		t0 = 0;
+		t1 = 1;
+	}
+
 	CG_AdjustFrom640( &x, &y, &width, &height );
-	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
+	trap_R_DrawStretchPic( x, y, width, height, s0, t0, s1, t1, hShader );
+}
+
+/*
+================
+CG_DrawNamedPic
+
+Coordinates are 640*480 virtual values
+=================
+*/
+void CG_DrawNamedPic( float x, float y, float width, float height, const char *picname ) {
+	CG_DrawPic( x, y, width, height, trap_R_RegisterShaderNoMip( picname ) );
 }
 
 /*

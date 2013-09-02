@@ -113,7 +113,7 @@ Reset_MenuDraw
 =================
 */
 static void Reset_MenuDraw( void ) {
-	UI_DrawNamedPic( 142, 118, 359, 256, ART_FRAME );
+	CG_DrawNamedPic( 142, 118, 359, 256, ART_FRAME );
 	UI_DrawProportionalString( 320, 194 + 10, "RESET GAME?", UI_CENTER|UI_INVERSE, text_big_color );
 	UI_DrawProportionalString( s_reset.slashX, 265, "/", UI_LEFT|UI_INVERSE, text_big_color );
 	Menu_Draw( &s_reset.menu );

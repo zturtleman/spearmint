@@ -540,7 +540,7 @@ void UI_DrawCenteredPic(qhandle_t image, int w, int h) {
   int x, y;
   x = (SCREEN_WIDTH - w) / 2;
   y = (SCREEN_HEIGHT - h) / 2;
-  UI_DrawHandlePic(x, y, w, h, image);
+  CG_DrawPic(x, y, w, h, image);
 }
 
 int frameCount = 0;
@@ -598,7 +598,7 @@ void UI_Refresh( int realtime )
 	// draw cursor
 	UI_SetColor( NULL );
 	if (Menu_Count() > 0 && (trap_Key_GetCatcher() & KEYCATCH_UI)) {
-		UI_DrawHandlePic( uiInfo.uiDC.cursorx-16, uiInfo.uiDC.cursory-16, 32, 32, uiInfo.uiDC.Assets.cursor);
+		CG_DrawPic( uiInfo.uiDC.cursorx-16, uiInfo.uiDC.cursory-16, 32, 32, uiInfo.uiDC.Assets.cursor);
 	}
 
 #ifndef NDEBUG
@@ -1084,7 +1084,7 @@ static void UI_DrawClanLogo(rectDef_t *rect, float scale, vec4_t color) {
       uiInfo.teamList[i].teamIcon_Name = trap_R_RegisterShaderNoMip(va("%s_name", uiInfo.teamList[i].imageName));
 		}
 
-  	UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon);
+  	CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon);
     trap_R_SetColor(NULL);
   }
 }
@@ -1103,13 +1103,13 @@ static void UI_DrawClanCinematic(rectDef_t *rect, float scale, vec4_t color) {
 			  UI_DrawCinematic(uiInfo.teamList[i].cinematic, rect->x, rect->y, rect->w, rect->h);
 			} else {
 			  	trap_R_SetColor( color );
-				UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon_Metal);
+				CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon_Metal);
 				trap_R_SetColor(NULL);
 				uiInfo.teamList[i].cinematic = -2;
 			}
 		} else {
 	  	trap_R_SetColor( color );
-			UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon);
+			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon);
 			trap_R_SetColor(NULL);
 		}
 	}
@@ -1180,8 +1180,8 @@ static void UI_DrawTeamMember(rectDef_t *rect, float scale, vec4_t color, qboole
 static void UI_DrawEffects(rectDef_t *rect, float scale, vec4_t color) {
 	float xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
 
-	UI_DrawHandlePic( rect->x, rect->y - 14, 128, 8, uiInfo.uiDC.Assets.fxBasePic );
-	UI_DrawHandlePic( rect->x + uiInfo.effectsColor * xOffset + xOffset * 0.5f, rect->y - 16, 16, 12, uiInfo.uiDC.Assets.fxPic[uiInfo.effectsColor] );
+	CG_DrawPic( rect->x, rect->y - 14, 128, 8, uiInfo.uiDC.Assets.fxBasePic );
+	CG_DrawPic( rect->x + uiInfo.effectsColor * xOffset + xOffset * 0.5f, rect->y - 16, 16, 12, uiInfo.uiDC.Assets.fxPic[uiInfo.effectsColor] );
 }
 
 static void UI_DrawMapPreview(rectDef_t *rect, float scale, vec4_t color, qboolean net) {
@@ -1192,9 +1192,9 @@ static void UI_DrawMapPreview(rectDef_t *rect, float scale, vec4_t color, qboole
 	}
 
 	if (uiInfo.mapList[map].levelShot > 0) {
-		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.mapList[map].levelShot);
+		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.mapList[map].levelShot);
 	} else {
-		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap_R_RegisterShaderNoMip("menu/art/unknownmap"));
+		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, trap_R_RegisterShaderNoMip("menu/art/unknownmap"));
 	}
 }						 
 
@@ -1288,9 +1288,9 @@ static void UI_DrawNetSource(rectDef_t *rect, float scale, vec4_t color, int tex
 static void UI_DrawNetMapPreview(rectDef_t *rect, float scale, vec4_t color) {
 
 	if (uiInfo.serverStatus.currentServerPreview > 0) {
-		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.serverStatus.currentServerPreview);
+		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.serverStatus.currentServerPreview);
 	} else {
-		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap_R_RegisterShaderNoMip("menu/art/unknownmap"));
+		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, trap_R_RegisterShaderNoMip("menu/art/unknownmap"));
 	}
 }
 
@@ -1330,7 +1330,7 @@ static void UI_DrawTierMap(rectDef_t *rect, int index) {
 		uiInfo.tierList[i].mapHandles[index] = trap_R_RegisterShaderNoMip(va("levelshots/%s", uiInfo.tierList[i].maps[index]));
 	}
 												 
-	UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.tierList[i].mapHandles[index]);
+	CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.tierList[i].mapHandles[index]);
 }
 
 static const char *UI_EnglishMapName(const char *map) {
@@ -1507,7 +1507,7 @@ static void	UI_DrawPlayerLogo(rectDef_t *rect, vec3_t color) {
 	}
 
  	trap_R_SetColor( color );
-	UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon );
+	CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon );
  	trap_R_SetColor( NULL );
 }
 
@@ -1520,7 +1520,7 @@ static void	UI_DrawPlayerLogoMetal(rectDef_t *rect, vec3_t color) {
 	}
 
  	trap_R_SetColor( color );
-	UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon_Metal );
+	CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon_Metal );
  	trap_R_SetColor( NULL );
 }
 
@@ -1533,7 +1533,7 @@ static void	UI_DrawPlayerLogoName(rectDef_t *rect, vec3_t color) {
 	}
 
  	trap_R_SetColor( color );
-	UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon_Name );
+	CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon_Name );
  	trap_R_SetColor( NULL );
 }
 
@@ -1546,7 +1546,7 @@ static void	UI_DrawOpponentLogo(rectDef_t *rect, vec3_t color) {
 	}
 
  	trap_R_SetColor( color );
-	UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon );
+	CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon );
  	trap_R_SetColor( NULL );
 }
 
@@ -1559,7 +1559,7 @@ static void	UI_DrawOpponentLogoMetal(rectDef_t *rect, vec3_t color) {
 	}
 
  	trap_R_SetColor( color );
-	UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon_Metal );
+	CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon_Metal );
  	trap_R_SetColor( NULL );
 }
 
@@ -1572,7 +1572,7 @@ static void	UI_DrawOpponentLogoName(rectDef_t *rect, vec3_t color) {
 	}
 
  	trap_R_SetColor( color );
-	UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon_Name );
+	CG_DrawPic( rect->x, rect->y, rect->w, rect->h, uiInfo.teamList[i].teamIcon_Name );
  	trap_R_SetColor( NULL );
 }
 
@@ -1734,7 +1734,7 @@ static void UI_DrawCrosshair(rectDef_t *rect, float scale, vec4_t color) {
 	if (uiInfo.currentCrosshair < 0 || uiInfo.currentCrosshair >= NUM_CROSSHAIRS) {
 		uiInfo.currentCrosshair = 0;
 	}
-	UI_DrawHandlePic( rect->x, rect->y - rect->h, rect->w, rect->h, uiInfo.uiDC.Assets.crosshairShader[uiInfo.currentCrosshair]);
+	CG_DrawPic( rect->x, rect->y - rect->h, rect->w, rect->h, uiInfo.uiDC.Assets.crosshairShader[uiInfo.currentCrosshair]);
  	trap_R_SetColor( NULL );
 }
 
@@ -4940,7 +4940,7 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
   //UI_Load();
 	uiInfo.uiDC.registerShaderNoMip = &trap_R_RegisterShaderNoMip;
 	uiInfo.uiDC.setColor = &UI_SetColor;
-	uiInfo.uiDC.drawHandlePic = &UI_DrawHandlePic;
+	uiInfo.uiDC.drawHandlePic = &CG_DrawPic;
 	uiInfo.uiDC.drawStretchPic = &trap_R_DrawStretchPic;
 	uiInfo.uiDC.drawText = &Text_Paint;
 	uiInfo.uiDC.textWidth = &Text_Width;
