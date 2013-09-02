@@ -1040,7 +1040,7 @@ UI_ConsoleCommand
 =================
 */
 qboolean UI_ConsoleCommand( int realTime ) {
-	char	*cmd;
+	const char	*cmd;
 
 	uis.frametime = realTime - uis.realtime;
 	uis.realtime = realTime;
