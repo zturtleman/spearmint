@@ -3139,21 +3139,6 @@ static bind_t g_bindings[] =
 
 static const int g_bindCount = ARRAY_LEN(g_bindings);
 
-#ifndef MISSIONPACK
-static configcvar_t g_configcvars[] =
-{
-	{"cl_run",			0,					0},
-	{"m_pitch",			0,					0},
-	{"cg_autoswitch",	0,					0},
-	{"sensitivity",		0,					0},
-	{"in_joystick",		0,					0},
-	{"joy_threshold",	0,					0},
-	{"m_filter",		0,					0},
-	{"cl_freelook",		0,					0},
-	{NULL,				0,					0}
-};
-#endif
-
 /*
 =================
 Controls_GetKeyAssignment
@@ -5606,11 +5591,6 @@ displayContextDef_t *Display_GetContext(void) {
 	return DC;
 }
  
-#ifndef MISSIONPACK
-static float captureX;
-static float captureY;
-#endif
-
 void *Display_CaptureItem(int x, int y) {
 	int i;
 
