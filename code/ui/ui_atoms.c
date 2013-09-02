@@ -37,8 +37,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
 
-qboolean newUI = qfalse;
-
 void UI_SetBestScores(postGameInfo_t *newInfo, qboolean postGame) {
 	trap_Cvar_Set("ui_scoreAccuracy",				va("%i%%", newInfo->accuracy));
 	trap_Cvar_SetValue("ui_scoreImpressives",	newInfo->impressives);
