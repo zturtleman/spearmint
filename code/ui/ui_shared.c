@@ -3200,13 +3200,13 @@ void Controls_GetConfig( void )
 	}
 
 	//s_controls.invertmouse.curvalue  = DC->getCVarValue( "m_pitch" ) < 0;
-	//s_controls.smoothmouse.curvalue  = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "m_filter" ) );
-	//s_controls.alwaysrun.curvalue    = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cl_run" ) );
-	//s_controls.autoswitch.curvalue   = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cg_autoswitch" ) );
-	//s_controls.sensitivity.curvalue  = UI_ClampCvar( 2, 30, Controls_GetCvarValue( "sensitivity" ) );
-	//s_controls.joyenable.curvalue    = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "in_joystick" ) );
-	//s_controls.joythreshold.curvalue = UI_ClampCvar( 0.05, 0.75, Controls_GetCvarValue( "joy_threshold" ) );
-	//s_controls.freelook.curvalue     = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cl_freelook" ) );
+	//s_controls.smoothmouse.curvalue  = Com_Clamp( 0, 1, Controls_GetCvarValue( "m_filter" ) );
+	//s_controls.alwaysrun.curvalue    = Com_Clamp( 0, 1, Controls_GetCvarValue( "cl_run" ) );
+	//s_controls.autoswitch.curvalue   = Com_Clamp( 0, 1, Controls_GetCvarValue( "cg_autoswitch" ) );
+	//s_controls.sensitivity.curvalue  = Com_Clamp( 2, 30, Controls_GetCvarValue( "sensitivity" ) );
+	//s_controls.joyenable.curvalue    = Com_Clamp( 0, 1, Controls_GetCvarValue( "in_joystick" ) );
+	//s_controls.joythreshold.curvalue = Com_Clamp( 0.05, 0.75, Controls_GetCvarValue( "joy_threshold" ) );
+	//s_controls.freelook.curvalue     = Com_Clamp( 0, 1, Controls_GetCvarValue( "cl_freelook" ) );
 }
 
 /*

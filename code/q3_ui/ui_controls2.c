@@ -1098,14 +1098,14 @@ static void Controls_GetConfig( void )
 
 	if (s_controls.localClient == 0) {
 		s_controls.invertmouse.curvalue  = Controls_GetCvarValue( "m_pitch" ) < 0;
-		s_controls.smoothmouse.curvalue  = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "m_filter" ) );
-		s_controls.sensitivity.curvalue  = UI_ClampCvar( 2, 30, Controls_GetCvarValue( "sensitivity" ) );
-		s_controls.freelook.curvalue     = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cl_freelook" ) );
+		s_controls.smoothmouse.curvalue  = Com_Clamp( 0, 1, Controls_GetCvarValue( "m_filter" ) );
+		s_controls.sensitivity.curvalue  = Com_Clamp( 2, 30, Controls_GetCvarValue( "sensitivity" ) );
+		s_controls.freelook.curvalue     = Com_Clamp( 0, 1, Controls_GetCvarValue( "cl_freelook" ) );
 	}
 
-	s_controls.alwaysrun.curvalue = UI_ClampCvar( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) ) );
-	s_controls.autoswitch.curvalue = UI_ClampCvar( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) ) );
-	s_controls.joythreshold.curvalue = UI_ClampCvar( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) ) );
+	s_controls.alwaysrun.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) ) );
+	s_controls.autoswitch.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) ) );
+	s_controls.joythreshold.curvalue = Com_Clamp( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) ) );
 }
 
 /*

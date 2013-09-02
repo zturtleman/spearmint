@@ -40,18 +40,6 @@ qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
 
 /*
 =================
-UI_ClampCvar
-=================
-*/
-float UI_ClampCvar( float min, float max, float value )
-{
-	if ( value < min ) return min;
-	if ( value > max ) return max;
-	return value;
-}
-
-/*
-=================
 UI_MaxSplitView
 =================
 */
