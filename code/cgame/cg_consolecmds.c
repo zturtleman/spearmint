@@ -46,7 +46,7 @@ void CG_TargetCommand_f( int localPlayerNum ) {
 	char	test[4];
 
 	targetNum = CG_CrosshairPlayer( localPlayerNum );
-	if (!targetNum ) {
+	if ( targetNum == -1 ) {
 		return;
 	}
 
