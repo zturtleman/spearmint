@@ -357,10 +357,6 @@ void UI_SetColor( const float *rgba ) {
 	trap_R_SetColor( rgba );
 }
 
-void UI_UpdateScreen( void ) {
-	trap_UpdateScreen();
-}
-
 qboolean UI_CursorInRect (int x, int y, int width, int height)
 {
 	if (uiInfo.uiDC.cursorx < x ||

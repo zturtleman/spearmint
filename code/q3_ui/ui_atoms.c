@@ -1119,10 +1119,6 @@ void UI_SetColor( const float *rgba ) {
 	trap_R_SetColor( rgba );
 }
 
-void UI_UpdateScreen( void ) {
-	trap_UpdateScreen();
-}
-
 /*
 =================
 UI_Refresh
