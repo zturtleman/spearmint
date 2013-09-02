@@ -229,7 +229,7 @@ void CG_DrawTopBottom(float x, float y, float w, float h, float size) {
 }
 /*
 ================
-UI_DrawRect
+CG_DrawRect
 
 Coordinates are 640*480 virtual values
 =================

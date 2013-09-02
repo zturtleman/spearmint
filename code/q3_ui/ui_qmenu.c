@@ -1540,10 +1540,10 @@ void Menu_Draw( menuframework_s *menu )
 				h =	itemptr->bottom - itemptr->top + 1;
 
 				if (itemptr->flags & QMF_HASMOUSEFOCUS) {
-					UI_DrawRect(x, y, w, h, colorYellow );
+					CG_DrawRect(x, y, w, h, 1, colorYellow );
 				}
 				else {
-					UI_DrawRect(x, y, w, h, colorWhite );
+					CG_DrawRect(x, y, w, h, 1, colorWhite );
 				}
 			}
 		}

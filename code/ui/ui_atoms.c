@@ -438,33 +438,6 @@ void UI_FillRect( float x, float y, float width, float height, const float *colo
 	trap_R_SetColor( NULL );
 }
 
-void UI_DrawSides(float x, float y, float w, float h) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
-	trap_R_DrawStretchPic( x, y, 1, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-	trap_R_DrawStretchPic( x + w - 1, y, 1, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-}
-
-void UI_DrawTopBottom(float x, float y, float w, float h) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
-	trap_R_DrawStretchPic( x, y, w, 1, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-	trap_R_DrawStretchPic( x, y + h - 1, w, 1, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-}
-/*
-================
-UI_DrawRect
-
-Coordinates are 640*480 virtual values
-=================
-*/
-void UI_DrawRect( float x, float y, float width, float height, const float *color ) {
-	trap_R_SetColor( color );
-
-  UI_DrawTopBottom(x, y, width, height);
-  UI_DrawSides(x, y, width, height);
-
-	trap_R_SetColor( NULL );
-}
-
 void UI_SetColor( const float *rgba ) {
 	trap_R_SetColor( rgba );
 }
