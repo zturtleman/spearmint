@@ -509,13 +509,6 @@ UI_Refresh
 =================
 */
 
-void UI_DrawCenteredPic(qhandle_t image, int w, int h) {
-  int x, y;
-  x = (SCREEN_WIDTH - w) / 2;
-  y = (SCREEN_HEIGHT - h) / 2;
-  CG_DrawPic(x, y, w, h, image);
-}
-
 int frameCount = 0;
 int startTime;
 
