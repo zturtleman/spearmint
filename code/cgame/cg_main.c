@@ -76,7 +76,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_CONSOLE_COMMAND:
 		{
 			qboolean found = UI_ConsoleCommand(arg0);
-			if ( !found && cg.connected )
+			if ( !found )
 				found = CG_ConsoleCommand();
 			return found;
 		}
@@ -2356,6 +2356,8 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	CG_RegisterCvars();
 
+	CG_InitConsoleCommands();
+
 	// load a few needed things before we do any screen updates
 	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
 	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
@@ -2426,8 +2428,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 
 	cgs.processedSnapshotNum = serverMessageNum;
 	cgs.serverCommandSequence = serverCommandSequence;
-
-	CG_InitConsoleCommands();
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 		cg.localClients[i].weaponSelect = WP_MACHINEGUN;
