@@ -71,7 +71,13 @@ void CL_ConsolePrint( char *txt ) {
 void CL_JoystickEvent( int localClientNum, int axis, int value, int time ) {
 }
 
+void Key_Dummy_f( void ) {
+}
+
 void CL_InitKeyCommands( void ) {
+	// stop server from printing unknown command bind when executing default.cfg
+	Cmd_AddCommand ("bind",Key_Dummy_f);
+	Cmd_AddCommand ("unbindall",Key_Dummy_f);
 }
 
 void CL_FlushMemory(void)
