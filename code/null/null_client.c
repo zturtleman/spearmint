@@ -65,10 +65,6 @@ void CL_MapLoading( void ) {
 void CL_KeyEvent (int key, qboolean down, unsigned time) {
 }
 
-qboolean UI_GameCommand( void ) {
-	return qfalse;
-}
-
 void CL_ConsolePrint( char *txt ) {
 }
 
@@ -76,9 +72,6 @@ void CL_JoystickEvent( int localClientNum, int axis, int value, int time ) {
 }
 
 void CL_InitKeyCommands( void ) {
-}
-
-void CL_CDDialog( void ) {
 }
 
 void CL_FlushMemory(void)
@@ -92,12 +85,3 @@ void CL_ShutdownAll(qboolean shutdownRef)
 void CL_StartHunkUsers( qboolean rendererOnly ) {
 }
 
-void CL_InitRef(void)
-{
-}
-
-void CL_Snd_Shutdown(void)
-{
-}
-
-qboolean CL_CDKeyValidate( const char *key, const char *checksum ) { return qtrue; }

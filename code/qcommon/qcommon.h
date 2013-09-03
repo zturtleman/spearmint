@@ -1047,14 +1047,8 @@ void CL_FlushMemory( void );
 void CL_ShutdownAll(qboolean shutdownRef);
 // shutdown client
 
-void CL_InitRef(void);
-// initialize renderer interface
-
 void CL_StartHunkUsers( qboolean rendererOnly );
 // start all the client stuff using the hunk
-
-void CL_Snd_Shutdown(void);
-// Restart sound subsystem
 
 void Key_KeynameCompletion( void(*callback)(const char *s) );
 // for keyname autocompletion
