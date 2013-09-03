@@ -701,6 +701,7 @@ Cmd_Argc() / Cmd_Argv()
 =================
 */
 qboolean CG_ConsoleCommand( void ) {
+	char		buffer[BIG_INFO_STRING];
 	const char	*cmd;
 	int		i;
 	int		localPlayerNum;
@@ -722,18 +723,24 @@ qboolean CG_ConsoleCommand( void ) {
 		}
 	}
 
-	if ( localPlayerNum != 0 )
-		return qfalse;
-
-	for ( i = 0 ; i < ARRAY_LEN( commands ) ; i++ ) {
-		if ( !Q_stricmp( cmd, commands[i].cmd )) {
-			if ( ( commands[i].flags & CMD_INGAME ) && !cg.snap ) {
-				CG_Printf("You must be in game to use command \"%s\"\n", cmd);
+	if ( localPlayerNum == 0 ) {
+		for ( i = 0 ; i < ARRAY_LEN( commands ) ; i++ ) {
+			if ( !Q_stricmp( cmd, commands[i].cmd )) {
+				if ( ( commands[i].flags & CMD_INGAME ) && !cg.snap ) {
+					CG_Printf("You must be in game to use command \"%s\"\n", cmd);
+					return qtrue;
+				}
+				commands[i].function();
 				return qtrue;
 			}
-			commands[i].function();
-			return qtrue;
 		}
+	}
+
+	if ( cg.connected && trap_GetDemoState() != DS_PLAYBACK ) {
+		// the game server will interpret these commands
+		trap_LiteralArgs( buffer, sizeof ( buffer ) );
+		trap_SendClientCommand( buffer );
+		return qtrue;
 	}
 
 	return qfalse;

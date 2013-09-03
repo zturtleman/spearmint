@@ -439,11 +439,13 @@ void	Cmd_AddCommand( const char *cmd_name, xcommand_t function );
 // as a clc_clientCommand instead of executed locally
 
 void	Cmd_RemoveCommand( const char *cmd_name );
+void	Cmd_RemoveCommandsByFunc( xcommand_t function );
 
 typedef void (*completionFunc_t)( char *args, int argNum );
 
 // don't allow VMs to remove system commands
-void	Cmd_RemoveCommandSafe( const char *cmd_name );
+void	Cmd_AddCommandSafe( const char *cmd_name, xcommand_t function );
+void	Cmd_RemoveCommandSafe( const char *cmd_name, xcommand_t function );
 
 void	Cmd_CommandCompletion( void(*callback)(const char *s) );
 // callback with each valid string
@@ -1019,7 +1021,6 @@ void CL_Init( void );
 void CL_Disconnect( qboolean showMainMenu );
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit);
 void CL_Frame( int msec );
-qboolean CL_GameCommand( void );
 void CL_GameConsoleText( void );
 void CL_KeyEvent (int key, qboolean down, unsigned time);
 
@@ -1039,11 +1040,6 @@ void CL_MapLoading( void );
 // when the server is going to load a new map, the entire hunk
 // will be cleared, so the client must shutdown cgame, ui, and
 // the renderer
-
-void	CL_ForwardCommandToServer( const char *string );
-// adds the current command line as a clc_clientCommand to the client message.
-// things like godmode, noclip, etc, are commands directed to the server,
-// so when they are typed in at the console, they will need to be forwarded.
 
 void CL_FlushMemory( void );
 // dump all memory on an error
@@ -1082,7 +1078,6 @@ void SV_Shutdown( char *finalmsg );
 void SV_Frame( int msec );
 void SV_PacketEvent( netadr_t from, msg_t *msg );
 int SV_FrameMsec(void);
-qboolean SV_GameCommand( void );
 int SV_SendQueuedPackets(void);
 
 /*

@@ -62,18 +62,11 @@ void CL_Disconnect( qboolean showMainMenu ) {
 void CL_MapLoading( void ) {
 }
 
-qboolean CL_GameCommand( void ) {
-  return qfalse;
-}
-
 void CL_KeyEvent (int key, qboolean down, unsigned time) {
 }
 
 qboolean UI_GameCommand( void ) {
 	return qfalse;
-}
-
-void CL_ForwardCommandToServer( const char *string ) {
 }
 
 void CL_ConsolePrint( char *txt ) {

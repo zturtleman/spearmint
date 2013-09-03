@@ -527,15 +527,3 @@ void G_RegisterCommands( void )
 		trap_AddCommand( svcmds[ i ].cmd );
 	}
 }
-
-void G_UnregisterCommands( void )
-{
-	int i;
-
-	for( i = 0; i < numSvCmds; i++ )
-	{
-		if( svcmds[ i ].dedicated && !g_dedicated.integer )
-			continue;
-		trap_RemoveCommand( svcmds[ i ].cmd );
-	}
-}

@@ -318,15 +318,6 @@ void CL_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int 
 					  playerStateFields, numPlayerStateFields, playerStateSize );
 }
 
-/*
-=====================
-CL_AddCgameCommand
-=====================
-*/
-void CL_AddCgameCommand( const char *cmdName ) {
-	Cmd_AddCommand( cmdName, NULL );
-}
-
 
 /*
 =====================
@@ -1091,6 +1082,8 @@ void CL_ShutdownCGame( void ) {
 	VM_Call( cgvm, CG_SHUTDOWN );
 	VM_Free( cgvm );
 	cgvm = NULL;
+
+	Cmd_RemoveCommandsByFunc( CL_GameCommand );
 }
 
 /*
@@ -1227,10 +1220,10 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		Cbuf_ExecuteTextSafe( args[1], VMA(2) );
 		return 0;
 	case CG_ADDCOMMAND:
-		CL_AddCgameCommand( VMA(1) );
+		Cmd_AddCommandSafe( VMA(1), CL_GameCommand );
 		return 0;
 	case CG_REMOVECOMMAND:
-		Cmd_RemoveCommandSafe( VMA(1) );
+		Cmd_RemoveCommandSafe( VMA(1), CL_GameCommand );
 		return 0;
 	case CG_SENDCLIENTCOMMAND:
 		CL_AddReliableCommand(VMA(1), qfalse);
@@ -1764,15 +1757,15 @@ void CL_InitCGame( void ) {
 ====================
 CL_GameCommand
 
-See if the current console command is claimed by the cgame
+Pass the current console command to cgame
 ====================
 */
-qboolean CL_GameCommand( void ) {
+void CL_GameCommand( void ) {
 	if ( !cgvm ) {
-		return qfalse;
+		return;
 	}
 
-	return VM_Call( cgvm, CG_CONSOLE_COMMAND, cls.realtime );
+	VM_Call( cgvm, CG_CONSOLE_COMMAND, cls.realtime );
 }
 
 /*

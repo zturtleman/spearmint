@@ -369,10 +369,10 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 
 	case G_ADDCOMMAND:
-		Cmd_AddCommand( VMA(1), NULL );
+		Cmd_AddCommandSafe( VMA(1), SV_GameCommand );
 		return 0;
 	case G_REMOVECOMMAND:
-		Cmd_RemoveCommandSafe( VMA(1) );
+		Cmd_RemoveCommandSafe( VMA(1), SV_GameCommand );
 		return 0;
 	case G_CMD_EXECUTETEXT:
 		Cbuf_ExecuteTextSafe( args[1], VMA(2) );
@@ -780,6 +780,21 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 
 /*
 ===============
+SV_GameInternalShutdown
+
+Call SV_ShutdownGameProgs or SV_RestartGameProgs instead of this directly.
+===============
+*/
+void SV_GameInternalShutdown( qboolean restart ) {
+	VM_Call( gvm, GAME_SHUTDOWN, restart );
+
+	Z_FreeTags( TAG_GAME );
+
+	Cmd_RemoveCommandsByFunc( SV_GameCommand );
+}
+
+/*
+===============
 SV_ShutdownGameProgs
 
 Called every time a map changes
@@ -789,9 +804,8 @@ void SV_ShutdownGameProgs( void ) {
 	if ( !gvm ) {
 		return;
 	}
-	VM_Call( gvm, GAME_SHUTDOWN, qfalse );
+	SV_GameInternalShutdown( qfalse );
 	VM_Free( gvm );
-	Z_FreeTags( TAG_GAME );
 	gvm = NULL;
 }
 
@@ -848,7 +862,7 @@ void SV_RestartGameProgs( void ) {
 	if ( !gvm ) {
 		return;
 	}
-	VM_Call( gvm, GAME_SHUTDOWN, qtrue );
+	SV_GameInternalShutdown( qtrue );
 
 	// do a restart instead of a free
 	gvm = VM_Restart(gvm, qtrue);
@@ -894,15 +908,15 @@ void SV_InitGameProgs( void ) {
 ====================
 SV_GameCommand
 
-See if the current console command is claimed by the game
+Pass current console command to game VM
 ====================
 */
-qboolean SV_GameCommand( void ) {
+void SV_GameCommand( void ) {
 	if ( sv.state != SS_GAME ) {
-		return qfalse;
+		return;
 	}
 
-	return VM_Call( gvm, GAME_CONSOLE_COMMAND );
+	VM_Call( gvm, GAME_CONSOLE_COMMAND );
 }
 
 /*
