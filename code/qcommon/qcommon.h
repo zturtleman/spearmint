@@ -428,12 +428,10 @@ then searches for a command or variable that matches the first token.
 */
 
 typedef void (*xcommand_t) (void);
-typedef void (*icommand_t) (int);
 
 void	Cmd_Init (void);
 
 void	Cmd_AddCommand( const char *cmd_name, xcommand_t function );
-void	Cmd_AddIntCommand( const char *cmd_name, icommand_t function, int value );
 // called by the init functions of other parts of the program to
 // register commands and functions to call for them.
 // The cmd_name is referenced later, so it should not be in temp memory
