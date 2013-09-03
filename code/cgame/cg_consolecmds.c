@@ -801,6 +801,4 @@ void CG_InitConsoleCommands( void ) {
 		trap_AddCommand(Com_LocalClientCvarName(i, "setviewpos"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "stats"));
 	}
-
-	trap_AddCommand ("addbot");
 }
