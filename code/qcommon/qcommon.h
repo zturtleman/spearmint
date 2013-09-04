@@ -521,13 +521,13 @@ void	Cvar_Update( vmCvar_t *vmCvar );
 cvar_t *Cvar_Set2( const char *var_name, const char *value, int defaultFlags, qboolean force );
 //
 
-ID_INLINE cvar_t	*Cvar_Set( const char *var_name, const char *value );
+cvar_t	*Cvar_Set( const char *var_name, const char *value );
 // will create the variable with no flags if it doesn't exist
 
-ID_INLINE cvar_t	*Cvar_SetSafe( const char *var_name, const char *value);
+cvar_t	*Cvar_SetSafe( const char *var_name, const char *value);
 // same as Cvar_Set, but doesn't force setting the value (respects CVAR_ROM, etc)
 
-ID_INLINE cvar_t	*Cvar_User_Set( const char *var_name, const char *value );
+cvar_t	*Cvar_User_Set( const char *var_name, const char *value );
 // same as Cvar_SetSafe, but defaults to CVAR_USER_CREATED
 
 void	Cvar_VM_Set( const char *var_name, const char *value, qboolean gamevm );
