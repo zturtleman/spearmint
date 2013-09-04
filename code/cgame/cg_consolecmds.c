@@ -52,7 +52,7 @@ void CG_TargetCommand_f( int localPlayerNum ) {
 	}
 
 	trap_Argv( 1, test, 4 );
-	trap_Cmd_ExecuteText(EXEC_NOW, va( "%s %i %i", Com_LocalClientCvarName( localPlayerNum, "gc" ), targetNum, atoi( test ) ) );
+	trap_SendClientCommand( va( "%s %i %i", Com_LocalClientCvarName( localPlayerNum, "gc" ), targetNum, atoi( test ) ) );
 }
 
 
