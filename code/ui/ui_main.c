@@ -5679,9 +5679,6 @@ void UI_RegisterCvars( void ) {
 	}
 
 	trap_Cvar_CheckRange( "ui_actualNetGameType", 0, GT_MAX_GAME_TYPE-1, qtrue );
-
-	trap_Cvar_Register( NULL, "g_redTeam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO );
-	trap_Cvar_Register( NULL, "g_blueTeam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO );
 }
 
 /*
