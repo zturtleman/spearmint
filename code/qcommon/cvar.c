@@ -651,7 +651,7 @@ Cvar_Set
 Force cvar to a value
 ============
 */
-ID_INLINE cvar_t *Cvar_Set( const char *var_name, const char *value) {
+cvar_t *Cvar_Set( const char *var_name, const char *value) {
 	return Cvar_Set2 (var_name, value, 0, qtrue);
 }
 
@@ -662,7 +662,7 @@ Cvar_SetSafe
 Try to set cvar to a value. respects CVAR_ROM, etc.
 ============
 */
-ID_INLINE cvar_t *Cvar_SetSafe( const char *var_name, const char *value) {
+cvar_t *Cvar_SetSafe( const char *var_name, const char *value) {
 	return Cvar_Set2 (var_name, value, 0, qfalse);
 }
 
@@ -673,7 +673,7 @@ Cvar_User_Set
 Same as Cvar_SetSafe, but have new cvars have user created flag.
 ============
 */
-ID_INLINE cvar_t *Cvar_User_Set( const char *var_name, const char *value) {
+cvar_t *Cvar_User_Set( const char *var_name, const char *value) {
 	return Cvar_Set2 (var_name, value, CVAR_USER_CREATED, qfalse);
 }
 
