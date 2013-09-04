@@ -102,10 +102,12 @@ typedef struct {
 #define SORT_HOST			0
 #define SORT_MAP			1
 #define SORT_CLIENTS		2
-#define SORT_GAME			3
+#define SORT_GAMETYPE		3
 #define SORT_PING			4
 #define SORT_HUMANS			5
 #define SORT_BOTS			6
+#define SORT_MAXCLIENTS		7
+#define SORT_GAMEDIR		8
 
 // server browser sources
 // TTimo: AS_MPLAYER is no longer used

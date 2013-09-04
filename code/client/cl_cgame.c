@@ -856,13 +856,18 @@ static int LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int
 		case SORT_MAP:
 			res = Q_stricmp( server1->mapName, server2->mapName );
 			break;
+		case SORT_MAXCLIENTS:
 		case SORT_CLIENTS:
 		case SORT_HUMANS:
 		case SORT_BOTS:
 			{
 				int clients1, clients2;
 
-				if ( sortKey == SORT_HUMANS ) {
+				if ( sortKey == SORT_MAXCLIENTS ) {
+					clients1 = server1->maxClients;
+					clients2 = server2->maxClients;
+				}
+				else if ( sortKey == SORT_HUMANS ) {
 					clients1 = server1->g_humanplayers;
 					clients2 = server2->g_humanplayers;
 				}
@@ -886,8 +891,11 @@ static int LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int
 				}
 			}
 			break;
-		case SORT_GAME:
+		case SORT_GAMETYPE:
 			res = Q_stricmp( server1->gameType, server2->gameType );
+			break;
+		case SORT_GAMEDIR:
+			res = Q_stricmp( server1->game, server2->game );
 			break;
 		case SORT_PING:
 			if (server1->ping < server2->ping) {

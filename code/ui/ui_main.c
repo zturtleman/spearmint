@@ -2622,7 +2622,7 @@ void UI_ServersSort(int column, qboolean force) {
 			}
 			break;
 		case COLUMN_GAME:
-			sortKey = SORT_GAME;
+			sortKey = SORT_GAMETYPE;
 			break;
 		case COLUMN_PING:
 			sortKey = SORT_PING;

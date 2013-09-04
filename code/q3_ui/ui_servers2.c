@@ -100,7 +100,7 @@ MULTIPLAYER MENU (SERVER BROWSER)
 #define SORT_HOST			0
 #define SORT_MAP			1
 #define SORT_CLIENTS		2
-#define SORT_GAME			3
+#define SORT_GAMETYPE		3
 #define SORT_PING			4
 
 #define GAMES_ALL			0
@@ -297,7 +297,7 @@ static int QDECL ArenaServers_Compare( const void *arg1, const void *arg2 ) {
 		}
 		return -1;
 
-	case SORT_GAME:
+	case SORT_GAMETYPE:
 		return Q_stricmp( t1->gametypeName, t2->gametypeName );
 
 	case SORT_PING:
