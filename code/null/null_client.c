@@ -91,3 +91,7 @@ void CL_ShutdownAll(qboolean shutdownRef)
 void CL_StartHunkUsers( qboolean rendererOnly ) {
 }
 
+qboolean CL_ConnectedToServer( void ) {
+	return qfalse;
+}
+

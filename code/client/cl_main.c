@@ -1523,7 +1523,7 @@ static void CL_OldGame(void)
 	{
 		// change back to previous fs_game
 		cl_oldGameSet = qfalse;
-		Cvar_Set2("fs_game", cl_oldGame, qtrue);
+		Cvar_Set("fs_game", cl_oldGame);
 		FS_ConditionalRestart(qfalse);
 	}
 }
@@ -3637,6 +3637,10 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 
 	Com_Printf( "-----------------------\n" );
 
+}
+
+qboolean CL_ConnectedToServer( void ) {
+	return ( clc.state >= CA_CONNECTED );
 }
 
 static void CL_SetServerInfo(serverInfo_t *server, const char *info, int ping) {

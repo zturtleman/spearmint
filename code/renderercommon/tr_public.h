@@ -156,8 +156,8 @@ typedef struct {
 	void	(*Free)( void *buf );
 
 	cvar_t	*(*Cvar_Get)( const char *name, const char *value, int flags );
-	void	(*Cvar_Set)( const char *name, const char *value );
-	void	(*Cvar_SetValue) (const char *name, float value);
+	cvar_t	*(*Cvar_Set)( const char *name, const char *value );
+	cvar_t	*(*Cvar_SetValue) (const char *name, float value);
 	void	(*Cvar_CheckRange)( cvar_t *cv, float minVal, float maxVal, qboolean shouldBeIntegral );
 
 	int		(*Cvar_VariableIntegerValue) (const char *var_name);

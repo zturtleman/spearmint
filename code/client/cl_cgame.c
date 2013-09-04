@@ -1164,10 +1164,10 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		Cvar_Update( VMA(1) );
 		return 0;
 	case CG_CVAR_SET:
-		Cvar_SetSafe( VMA(1), VMA(2) );
+		Cvar_VM_Set( VMA(1), VMA(2), qfalse );
 		return 0;
 	case CG_CVAR_SET_VALUE:
-		Cvar_SetValueSafe( VMA(1), VMF(2) );
+		Cvar_VM_SetValue( VMA(1), VMF(2), qfalse );
 		return 0;
 	case CG_CVAR_RESET:
 		Cvar_Reset( VMA(1) );

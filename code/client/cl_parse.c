@@ -470,8 +470,6 @@ void CL_SystemInfoChanged( void ) {
 	// scan through all the variables in the systeminfo and locally set cvars to match
 	s = systemInfo;
 	while ( s ) {
-		int cvar_flags;
-		
 		Info_NextPair( &s, key, value );
 		if ( !key[0] ) {
 			break;
@@ -489,19 +487,7 @@ void CL_SystemInfoChanged( void ) {
 			gameSet = qtrue;
 		}
 
-		if((cvar_flags = Cvar_Flags(key)) == CVAR_NONEXISTENT)
-			Cvar_Get(key, value, CVAR_SERVER_CREATED | CVAR_ROM);
-		else
-		{
-			// If this cvar may not be modified by a server discard the value.
-			if(!(cvar_flags & (CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED)))
-			{
-				Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", key, value);
-				continue;
-			}
-
-			Cvar_SetSafe(key, value);
-		}
+		Cvar_Server_Set(key, value);
 	}
 	// game folder must be set
 	if ( !gameSet ) {
