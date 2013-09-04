@@ -534,9 +534,6 @@ void	Cvar_VM_Set( const char *var_name, const char *value, qboolean gamevm );
 void	Cvar_Server_Set( const char *var_name, const char *value );
 // sometimes we set variables from an untrusted source: fail if flags & CVAR_PROTECTED
 
-void Cvar_SetLatched( const char *var_name, const char *value);
-// don't set the cvar immediately
-
 cvar_t	*Cvar_SetValue( const char *var_name, float value );
 void	Cvar_VM_SetValue( const char *var_name, float value, qboolean gamevm );
 // expands value to a string and calls Cvar_Set/Cvar_VM_Set

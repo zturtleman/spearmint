@@ -742,15 +742,6 @@ void Cvar_VM_Set( const char *var_name, const char *value, qboolean gamevm )
 
 /*
 ============
-Cvar_SetLatched
-============
-*/
-void Cvar_SetLatched( const char *var_name, const char *value) {
-	Cvar_SetSafe (var_name, value);
-}
-
-/*
-============
 Cvar_SetValue
 ============
 */
