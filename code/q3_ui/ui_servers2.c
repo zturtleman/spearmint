@@ -82,6 +82,7 @@ MULTIPLAYER MENU (SERVER BROWSER)
 #define ID_CREATE			21
 #define ID_CONNECT			22
 #define ID_REMOVE			23
+#define ID_SHOW_BOTS		24
 
 #define GR_LOGO				30
 #define GR_LETTERS			31
@@ -166,6 +167,7 @@ typedef struct servernode_s {
 	char	hostname[MAX_HOSTNAMELENGTH+3];
 	char	mapname[MAX_MAPNAMELENGTH];
 	int		numclients;
+	int		humanplayers;
 	int		maxclients;
 	int		pingtime;
 	char	gametypeName[12];
@@ -190,6 +192,7 @@ typedef struct {
 	menulist_s			sortkey;
 	menuradiobutton_s	showfull;
 	menuradiobutton_s	showempty;
+	menuradiobutton_s	showbots;
 
 	menulist_s			list;
 	menubitmap_s		mappic;
@@ -235,6 +238,7 @@ static int				g_gametype;
 static int				g_sortkey;
 static int				g_emptyservers;
 static int				g_fullservers;
+static int				g_showbots;
 
 
 /*
@@ -432,6 +436,7 @@ static void ArenaServers_UpdateMenu( void ) {
 	servernode_t*	servernodeptr;
 	table_t*		tableptr;
 	char			*pingColor;
+	int				clients;
 	int				gametype;
 
 	if( g_arenaservers.numqueriedservers > 0 ) {
@@ -449,6 +454,7 @@ static void ArenaServers_UpdateMenu( void ) {
 			g_arenaservers.sortkey.generic.flags	&= ~QMF_GRAYED;
 			g_arenaservers.showempty.generic.flags	&= ~QMF_GRAYED;
 			g_arenaservers.showfull.generic.flags	&= ~QMF_GRAYED;
+			g_arenaservers.showbots.generic.flags	&= ~QMF_GRAYED;
 			g_arenaservers.list.generic.flags		&= ~QMF_GRAYED;
 			g_arenaservers.refresh.generic.flags	&= ~QMF_GRAYED;
 			g_arenaservers.go.generic.flags			&= ~QMF_GRAYED;
@@ -475,6 +481,7 @@ static void ArenaServers_UpdateMenu( void ) {
 			g_arenaservers.sortkey.generic.flags	|= QMF_GRAYED;
 			g_arenaservers.showempty.generic.flags	|= QMF_GRAYED;
 			g_arenaservers.showfull.generic.flags	|= QMF_GRAYED;
+			g_arenaservers.showbots.generic.flags	|= QMF_GRAYED;
 			g_arenaservers.list.generic.flags		|= QMF_GRAYED;
 			g_arenaservers.refresh.generic.flags	|= QMF_GRAYED;
 			g_arenaservers.go.generic.flags			|= QMF_GRAYED;
@@ -501,6 +508,7 @@ static void ArenaServers_UpdateMenu( void ) {
 			g_arenaservers.sortkey.generic.flags	&= ~QMF_GRAYED;
 			g_arenaservers.showempty.generic.flags	&= ~QMF_GRAYED;
 			g_arenaservers.showfull.generic.flags	&= ~QMF_GRAYED;
+			g_arenaservers.showbots.generic.flags	&= ~QMF_GRAYED;
 			g_arenaservers.list.generic.flags		|= QMF_GRAYED;
 			g_arenaservers.refresh.generic.flags	&= ~QMF_GRAYED;
 			g_arenaservers.go.generic.flags			|= QMF_GRAYED;
@@ -524,8 +532,14 @@ static void ArenaServers_UpdateMenu( void ) {
 		tableptr->servernode = servernodeptr;
 		buff = tableptr->buff;
 
+		if (g_showbots == 0) {
+			clients = servernodeptr->humanplayers;
+		} else {
+			clients = servernodeptr->numclients;
+		}
+
 		// can only cull valid results
-		if( !g_emptyservers && !servernodeptr->numclients ) {
+		if( !g_emptyservers && !clients ) {
 			continue;
 		}
 
@@ -556,7 +570,7 @@ static void ArenaServers_UpdateMenu( void ) {
 		}
 
 		Com_sprintf( buff, MAX_LISTBOXWIDTH, "%-20.20s %-12.12s %2d/%2d %-8.8s %4s%s%3d " S_COLOR_YELLOW "",
-			servernodeptr->hostname, servernodeptr->mapname, servernodeptr->numclients,
+			servernodeptr->hostname, servernodeptr->mapname, clients,
  			servernodeptr->maxclients, servernodeptr->gametypeName,
 			netnames[servernodeptr->nettype], pingColor, servernodeptr->pingtime);
 		j++;
@@ -666,6 +680,7 @@ static void ArenaServers_Insert( char* adrstr, char* info, int pingtime )
 	Q_CleanStr( servernodeptr->mapname );
 
 	servernodeptr->numclients = atoi( Info_ValueForKey( info, "clients") );
+	servernodeptr->humanplayers = atoi( Info_ValueForKey( info, "g_humanplayers") );
 	servernodeptr->maxclients = atoi( Info_ValueForKey( info, "sv_maxclients") );
 	servernodeptr->pingtime   = pingtime;
 	servernodeptr->minPing    = atoi( Info_ValueForKey( info, "minPing") );
@@ -1189,6 +1204,12 @@ static void ArenaServers_Event( void* ptr, int event ) {
 		ArenaServers_UpdateMenu();
 		break;
 
+	case ID_SHOW_BOTS:
+		trap_Cvar_SetValue( "ui_browserShowBots", g_arenaservers.showbots.curvalue );
+		g_showbots = g_arenaservers.showbots.curvalue;
+		ArenaServers_UpdateMenu();
+		break;
+
 	case ID_LIST:
 		if( event == QM_GOTFOCUS ) {
 			ArenaServers_UpdatePicture();
@@ -1351,6 +1372,15 @@ static void ArenaServers_MenuInit( void ) {
 	g_arenaservers.showempty.generic.x			= 320;
 	g_arenaservers.showempty.generic.y			= y;
 
+	y += SMALLCHAR_HEIGHT;
+	g_arenaservers.showbots.generic.type		= MTYPE_RADIOBUTTON;
+	g_arenaservers.showbots.generic.name		= "Show Bots:";
+	g_arenaservers.showbots.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	g_arenaservers.showbots.generic.callback	= ArenaServers_Event;
+	g_arenaservers.showbots.generic.id			= ID_SHOW_BOTS;
+	g_arenaservers.showbots.generic.x			= 320;
+	g_arenaservers.showbots.generic.y			= y;
+
 	y += 3 * SMALLCHAR_HEIGHT;
 	g_arenaservers.list.generic.type			= MTYPE_SCROLLLIST;
 	g_arenaservers.list.generic.flags			= QMF_HIGHLIGHT_IF_FOCUS;
@@ -1491,6 +1521,7 @@ static void ArenaServers_MenuInit( void ) {
 	Menu_AddItem( &g_arenaservers.menu, (void*) &g_arenaservers.sortkey );
 	Menu_AddItem( &g_arenaservers.menu, (void*) &g_arenaservers.showfull);
 	Menu_AddItem( &g_arenaservers.menu, (void*) &g_arenaservers.showempty );
+	Menu_AddItem( &g_arenaservers.menu, (void*) &g_arenaservers.showbots );
 
 	Menu_AddItem( &g_arenaservers.menu, (void*) &g_arenaservers.mappic );
 	Menu_AddItem( &g_arenaservers.menu, (void*) &g_arenaservers.status );
@@ -1522,6 +1553,9 @@ static void ArenaServers_MenuInit( void ) {
 
 	g_emptyservers = Com_Clamp( 0, 1, ui_browserShowEmpty.integer );
 	g_arenaservers.showempty.curvalue = g_emptyservers;
+
+	g_showbots = Com_Clamp( 0, 1, ui_browserShowBots.integer );
+	g_arenaservers.showbots.curvalue = g_showbots;
 
 	// force to initial state and refresh
 	g_arenaservers.master.curvalue = g_servertype = ArenaServers_SetType(g_servertype);
