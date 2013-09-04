@@ -30,6 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 // cg_main.c -- initialization and primary entry point for cgame
 #include "cg_local.h"
+#include "../ui/ui_public.h"
 
 #ifdef MISSIONPACK_HUD
 #include "../ui/ui_shared.h"
@@ -74,12 +75,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		CG_Shutdown();
 		return 0;
 	case CG_CONSOLE_COMMAND:
-		{
-			qboolean found = UI_ConsoleCommand(arg0);
-			if ( !found )
-				found = CG_ConsoleCommand();
-			return found;
-		}
+		return CG_ConsoleCommand(arg0);
 	case CG_REFRESH:
 		CG_Refresh( arg0, arg1, arg2, arg3, arg4 );
 		return 0;

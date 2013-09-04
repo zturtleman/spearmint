@@ -256,75 +256,64 @@ static void UI_CalcPostGameStats( void ) {
 
 }
 
+static void UI_Test_f( void ) {
+	UI_ShowPostGame(qtrue);
+}
+
+static void UI_Load_f( void ) {
+#ifdef MISSIONPACK_HUD
+	if ( cg.connected ) {
+		// if hud scripts are loaded, UI_Load() will break it. So reload hud and ui using loadhud command.
+		trap_Cmd_ExecuteText( EXEC_NOW, "loadhud\n" );
+		return;
+	}
+#endif
+	UI_Load();
+}
+
+static void UI_RemapShader_f( void ) {
+	if (trap_Argc() == 4) {
+		char shader1[MAX_QPATH];
+		char shader2[MAX_QPATH];
+		char shader3[MAX_QPATH];
+
+		Q_strncpyz(shader1, CG_Argv(1), sizeof(shader1));
+		Q_strncpyz(shader2, CG_Argv(2), sizeof(shader2));
+		Q_strncpyz(shader3, CG_Argv(3), sizeof(shader3));
+
+		trap_R_RemapShader(shader1, shader2, shader3);
+	}
+}
+
+consoleCommand_t	ui_commands[] = {
+	//{ "levelselect", UI_SPLevelMenu_f, 0 },
+	{ "postgame", UI_CalcPostGameStats, CMD_INGAME },
+	{ "ui_cache", UI_Cache_f, 0 },
+	//{ "ui_cinematics", UI_CinematicsMenu_f, 0 },
+	//{ "ui_teamOrders", UI_TeamOrdersMenu_f, CMD_INGAME },
+	//{ "iamacheater", UI_SPUnlock_f, 0 },
+	//{ "iamamonkey", UI_SPUnlockMedals_f, 0 },
+	{ "ui_test", UI_Test_f, CMD_INGAME },
+	{ "ui_report", UI_Report, 0 },
+	{ "ui_load", UI_Load_f, 0 },
+	{ "remapShader", UI_RemapShader_f, 0 }
+};
+
+int ui_numCommands = ARRAY_LEN( ui_commands );
 
 /*
 =================
 UI_ConsoleCommand
+
+update frame time, commands are executed by CG_ConsoleCommand
 =================
 */
-qboolean UI_ConsoleCommand( int realTime ) {
-	const char	*cmd;
-
+void UI_ConsoleCommand( int realTime ) {
 	uiInfo.uiDC.frameTime = realTime - uiInfo.uiDC.realTime;
 	uiInfo.uiDC.realTime = realTime;
 
-	cmd = CG_Argv( 0 );
-
 	// ensure minimum menu data is available
 	//Menu_Cache();
-
-	if ( Q_stricmp (cmd, "ui_test") == 0 ) {
-		UI_ShowPostGame(qtrue);
-	}
-
-	if ( Q_stricmp (cmd, "ui_report") == 0 ) {
-		UI_Report();
-		return qtrue;
-	}
-	
-	if ( Q_stricmp (cmd, "ui_load") == 0 ) {
-#ifdef MISSIONPACK_HUD
-		if ( cg.connected ) {
-			// if hud scripts are loaded, UI_Load() will break it. So reload hud and ui using loadhud command.
-			trap_Cmd_ExecuteText( EXEC_NOW, "loadhud\n" );
-			return qtrue;
-		}
-#endif
-		UI_Load();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "remapShader") == 0 ) {
-		if (trap_Argc() == 4) {
-			char shader1[MAX_QPATH];
-			char shader2[MAX_QPATH];
-			char shader3[MAX_QPATH];
-			
-			Q_strncpyz(shader1, CG_Argv(1), sizeof(shader1));
-			Q_strncpyz(shader2, CG_Argv(2), sizeof(shader2));
-			Q_strncpyz(shader3, CG_Argv(3), sizeof(shader3));
-			
-			trap_R_RemapShader(shader1, shader2, shader3);
-			return qtrue;
-		}
-	}
-
-	if ( Q_stricmp (cmd, "postgame") == 0 ) {
-		UI_CalcPostGameStats();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "ui_cache") == 0 ) {
-		UI_Cache_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "ui_teamOrders") == 0 ) {
-		//UI_TeamOrdersMenu_f();
-		return qtrue;
-	}
-
-	return qfalse;
 }
 
 qboolean UI_CursorInRect (int x, int y, int width, int height)

@@ -33,6 +33,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "../cgame/cg_public.h"
 
+// UI commands
+extern consoleCommand_t ui_commands[];
+extern int ui_numCommands;
+
 // UI functions used by cgame
 
 void	UI_Init( qboolean inGameLoad, int maxSplitView );
@@ -47,7 +51,7 @@ qboolean UI_IsFullscreen( void );
 
 void	UI_Refresh( int time );
 void	UI_SetActiveMenu( uiMenuCommand_t menu );
-qboolean UI_ConsoleCommand( int realTime );
+void	UI_ConsoleCommand( int realTime );
 
 void	UI_DrawConnectScreen( qboolean overlay );
 // if !overlay, the background will be drawn, otherwise it will be

@@ -32,7 +32,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../renderercommon/tr_types.h"
 #include "../game/bg_misc.h"
 #include "../client/keycodes.h"
-#include "../ui/ui_public.h"
 #include "cg_public.h"
 #include "cg_syscalls.h"
 
@@ -1628,7 +1627,16 @@ void CG_DrawOldTourneyScoreboard( void );
 //
 // cg_consolecmds.c
 //
-qboolean CG_ConsoleCommand( void );
+#define CMD_INGAME	1 // only usable while in-game
+#define CMD_MENU	2 // only usable while at main menu
+
+typedef struct {
+	char	*cmd;
+	void	(*function)(void);
+	int		flags;
+} consoleCommand_t;
+
+qboolean CG_ConsoleCommand( int realTime );
 void CG_InitConsoleCommands( void );
 
 //

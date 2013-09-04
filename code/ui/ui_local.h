@@ -32,6 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define __UI_LOCAL_H__
 
 #include "../cgame/cg_local.h"
+#include "ui_public.h"
 #include "ui_shared.h"
 
 // global display context

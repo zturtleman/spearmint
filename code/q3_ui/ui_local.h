@@ -32,6 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define __UI_LOCAL_H__
 
 #include "../cgame/cg_local.h"
+#include "../ui/ui_public.h"
 
 typedef void (*voidfunc_f)(void);
 

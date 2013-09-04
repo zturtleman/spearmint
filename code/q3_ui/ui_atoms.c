@@ -1025,58 +1025,31 @@ void UI_Cache_f( void ) {
 }
 
 
+consoleCommand_t	ui_commands[] = {
+	{ "levelselect", UI_SPLevelMenu_f, 0 },
+	{ "postgame", UI_SPPostgameMenu_f, CMD_INGAME },
+	{ "ui_cache", UI_Cache_f, 0 },
+	{ "ui_cinematics", UI_CinematicsMenu_f, 0 },
+	{ "ui_teamOrders", UI_TeamOrdersMenu_f, CMD_INGAME },
+	{ "iamacheater", UI_SPUnlock_f, 0 },
+	{ "iamamonkey", UI_SPUnlockMedals_f, 0 }
+};
+
+int ui_numCommands = ARRAY_LEN( ui_commands );
+
 /*
 =================
 UI_ConsoleCommand
+
+update frame time, commands are executed by CG_ConsoleCommand
 =================
 */
-qboolean UI_ConsoleCommand( int realTime ) {
-	const char	*cmd;
-
+void UI_ConsoleCommand( int realTime ) {
 	uis.frametime = realTime - uis.realtime;
 	uis.realtime = realTime;
 
-	cmd = CG_Argv( 0 );
-
 	// ensure minimum menu data is available
 	Menu_Cache();
-
-	if ( Q_stricmp (cmd, "levelselect") == 0 ) {
-		UI_SPLevelMenu_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "postgame") == 0 ) {
-		UI_SPPostgameMenu_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "ui_cache") == 0 ) {
-		UI_Cache_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "ui_cinematics") == 0 ) {
-		UI_CinematicsMenu_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "ui_teamOrders") == 0 ) {
-		UI_TeamOrdersMenu_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "iamacheater") == 0 ) {
-		UI_SPUnlock_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "iamamonkey") == 0 ) {
-		UI_SPUnlockMedals_f();
-		return qtrue;
-	}
-
-	return qfalse;
 }
 
 /*

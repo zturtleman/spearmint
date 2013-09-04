@@ -31,6 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // cg_info.c -- display information while data is being loading
 
 #include "cg_local.h"
+#include "../ui/ui_public.h"
 
 #define MAX_LOADING_PLAYER_ICONS	16
 #define MAX_LOADING_ITEM_ICONS		26
