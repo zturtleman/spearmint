@@ -271,20 +271,6 @@ static void UI_Load_f( void ) {
 	UI_Load();
 }
 
-static void UI_RemapShader_f( void ) {
-	if (trap_Argc() == 4) {
-		char shader1[MAX_QPATH];
-		char shader2[MAX_QPATH];
-		char shader3[MAX_QPATH];
-
-		Q_strncpyz(shader1, CG_Argv(1), sizeof(shader1));
-		Q_strncpyz(shader2, CG_Argv(2), sizeof(shader2));
-		Q_strncpyz(shader3, CG_Argv(3), sizeof(shader3));
-
-		trap_R_RemapShader(shader1, shader2, shader3);
-	}
-}
-
 consoleCommand_t	ui_commands[] = {
 	//{ "levelselect", UI_SPLevelMenu_f, 0 },
 	{ "postgame", UI_CalcPostGameStats, CMD_INGAME },
@@ -295,8 +281,7 @@ consoleCommand_t	ui_commands[] = {
 	//{ "iamamonkey", UI_SPUnlockMedals_f, 0 },
 	{ "ui_test", UI_Test_f, CMD_INGAME },
 	{ "ui_report", UI_Report, 0 },
-	{ "ui_load", UI_Load_f, 0 },
-	{ "remapShader", UI_RemapShader_f, 0 }
+	{ "ui_load", UI_Load_f, 0 }
 };
 
 int ui_numCommands = ARRAY_LEN( ui_commands );

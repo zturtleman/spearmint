@@ -558,6 +558,39 @@ void CG_GenerateTracemap(void)
 	BG_GenerateTracemap(cgs.mapname, cg.mapcoordsMins, cg.mapcoordsMaxs, &gen);
 }
 
+/*
+==================
+CG_RemapShader_f
+==================
+*/
+static void CG_RemapShader_f( void ) {
+	char shader1[MAX_QPATH];
+	char shader2[MAX_QPATH];
+	char timeoffset[MAX_QPATH];
+
+	if ( cg.connected && trap_Cvar_VariableIntegerValue( "sv_pure" ) ) {
+		CG_Printf( "%s command cannot be used on pure servers.\n", CG_Argv( 0 ) );
+		return;
+	}
+
+	if (trap_Argc() < 2 || trap_Argc() > 4) {
+		CG_Printf( "Usage: %s <original shader> [new shader] [time offset]\n", CG_Argv( 0 ) );
+		return;
+	}
+
+	Q_strncpyz( shader1, CG_Argv( 1 ), sizeof(shader1) );
+	Q_strncpyz( shader2, CG_Argv( 2 ), sizeof( shader2 ) );
+
+	if ( !strlen( shader2 ) ) {
+		// reset shader remap
+		Q_strncpyz( shader2, shader1, sizeof(shader2) );
+	}
+
+	Q_strncpyz( timeoffset, CG_Argv( 3 ), sizeof( timeoffset ) );
+
+	trap_R_RemapShader( shader1, shader2, timeoffset );
+}
+
 static consoleCommand_t	cg_commands[] = {
 	{ "testgun", CG_TestGun_f, CMD_INGAME },
 	{ "testmodel", CG_TestModel_f, CMD_INGAME },
@@ -579,7 +612,8 @@ static consoleCommand_t	cg_commands[] = {
 	{ "startOrbit", CG_StartOrbit_f, CMD_INGAME },
 	//{ "camera", CG_Camera_f, CMD_INGAME },
 	{ "loaddeferred", CG_LoadDeferredPlayers, CMD_INGAME },
-	{ "generateTracemap", CG_GenerateTracemap, CMD_INGAME }
+	{ "generateTracemap", CG_GenerateTracemap, CMD_INGAME },
+	{ "remapShader", CG_RemapShader_f, 0 }
 };
 
 static int cg_numCommands = ARRAY_LEN( cg_commands );
