@@ -1493,7 +1493,7 @@ RE_RegisterSkin
 qhandle_t RE_RegisterSkin( const char *name ) {
 	qhandle_t	hSkin;
 	skin_t		*skin;
-	skinSurface_t	*surf;
+	skinSurface_t	*surf, *lastSurf;
 	union {
 		char *c;
 		void *v;
@@ -1518,7 +1518,7 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 	for ( hSkin = 1; hSkin < tr.numSkins ; hSkin++ ) {
 		skin = tr.skins[hSkin];
 		if ( !Q_stricmp( skin->name, name ) ) {
-			if( skin->numSurfaces == 0 ) {
+			if( !skin->surfaces ) {
 				return 0;		// default skin
 			}
 			return hSkin;
@@ -1534,15 +1534,14 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 	skin = ri.Hunk_Alloc( sizeof( skin_t ), h_low );
 	tr.skins[hSkin] = skin;
 	Q_strncpyz( skin->name, name, sizeof( skin->name ) );
-	skin->numSurfaces = 0;
+	skin->surfaces = lastSurf = NULL;
 
 	R_IssuePendingRenderCommands();
 
 	// If not a .skin file, load as a single shader
 	if ( strcmp( name + strlen( name ) - 5, ".skin" ) ) {
-		skin->numSurfaces = 1;
-		skin->surfaces[0] = ri.Hunk_Alloc( sizeof(skin->surfaces[0]), h_low );
-		skin->surfaces[0]->shader = R_FindShader( name, LIGHTMAP_NONE, qtrue );
+		skin->surfaces = ri.Hunk_Alloc( sizeof( skinSurface_t ), h_low );
+		skin->surfaces->shader = R_FindShader( name, LIGHTMAP_NONE, qtrue );
 		return hSkin;
 	}
 
@@ -1572,7 +1571,7 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 			SkipRestOfLine( &text_p );
 			continue;
 		}
-		
+
 		// skip RTCW/ET skin settings
 		if ( !Q_stricmpn( token, "md3_", 4 ) || !Q_stricmp( token, "playerscale" ) ) {
 			SkipRestOfLine( &text_p );
@@ -1583,22 +1582,24 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 		token = COM_ParseExt2( &text_p, qfalse, ',' );
 		Q_strncpyz( shaderName, token, sizeof( shaderName ) );
 
-		if ( skin->numSurfaces >= MD3_MAX_SURFACES ) {
-			ri.Printf( PRINT_WARNING, "WARNING: Ignoring surfaces in '%s', the max is %d surfaces!\n", name, MD3_MAX_SURFACES );
-			break;
-		}
-
-		surf = skin->surfaces[ skin->numSurfaces ] = ri.Hunk_Alloc( sizeof( *skin->surfaces[0] ), h_low );
+		surf = ri.Hunk_Alloc( sizeof( skinSurface_t ), h_low );
 		Q_strncpyz( surf->name, surfName, sizeof( surf->name ) );
 		surf->shader = R_FindShader( shaderName, LIGHTMAP_NONE, qtrue );
-		skin->numSurfaces++;
+
+		if ( !skin->surfaces ) {
+			skin->surfaces = surf;
+		} else if ( lastSurf ) {
+			lastSurf->next = surf;
+		}
+
+		lastSurf = surf;
 	}
 
 	ri.FS_FreeFile( text.v );
 
 
 	// never let a skin have 0 shaders
-	if ( skin->numSurfaces == 0 ) {
+	if ( !skin->surfaces ) {
 		return 0;		// use default skin
 	}
 
@@ -1619,9 +1620,6 @@ void	R_InitSkins( void ) {
 	// make the default skin have all default shaders
 	skin = tr.skins[0] = ri.Hunk_Alloc( sizeof( skin_t ), h_low );
 	Q_strncpyz( skin->name, "<default skin>", sizeof( skin->name )  );
-	skin->numSurfaces = 1;
-	skin->surfaces[0] = ri.Hunk_Alloc( sizeof( *skin->surfaces ), h_low );
-	skin->surfaces[0]->shader = tr.defaultShader;
 }
 
 /*
@@ -1642,8 +1640,9 @@ R_SkinList_f
 ===============
 */
 void	R_SkinList_f( void ) {
-	int			i, j;
+	int			i;
 	skin_t		*skin;
+	skinSurface_t *surf;
 
 	ri.Printf (PRINT_ALL, "------------------\n");
 
@@ -1651,9 +1650,9 @@ void	R_SkinList_f( void ) {
 		skin = tr.skins[i];
 
 		ri.Printf( PRINT_ALL, "%3i:%s\n", i, skin->name );
-		for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
+		for ( surf = skin->surfaces ; surf ; surf = surf->next ) {
 			ri.Printf( PRINT_ALL, "       %s = %s\n", 
-				skin->surfaces[j]->name, skin->surfaces[j]->shader->name );
+				surf->name, surf->shader->name );
 		}
 	}
 	ri.Printf (PRINT_ALL, "------------------\n");

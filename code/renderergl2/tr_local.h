@@ -897,15 +897,15 @@ typedef struct {
 //=================================================================================
 
 // skins allow models to be retextured without modifying the model file
-typedef struct {
-	char		name[MAX_QPATH];
-	shader_t	*shader;
+typedef struct skinSurface_s {
+	char			name[MAX_QPATH];
+	shader_t		*shader;
+	struct skinSurface_s	*next;
 } skinSurface_t;
 
 typedef struct skin_s {
 	char		name[MAX_QPATH];		// game path, including extension
-	int			numSurfaces;
-	skinSurface_t	*surfaces[MD3_MAX_SURFACES];
+	skinSurface_t	*surfaces;
 } skin_t;
 
 
