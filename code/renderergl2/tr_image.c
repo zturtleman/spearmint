@@ -3208,6 +3208,10 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 		return 0;
 	}
 
+	if ( !COM_CompareExtension( name, ".skin" ) ) {
+		ri.Printf( PRINT_DEVELOPER, "WARNING: RE_RegisterSkin ignoring '%s', must have \".skin\" extension\n", name );
+		return 0;
+	}
 
 	// see if the skin is already loaded
 	for ( hSkin = 1; hSkin < tr.numSkins ; hSkin++ ) {
@@ -3232,13 +3236,6 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 	skin->surfaces = lastSurf = NULL;
 
 	R_IssuePendingRenderCommands();
-
-	// If not a .skin file, load as a single shader
-	if ( strcmp( name + strlen( name ) - 5, ".skin" ) ) {
-		skin->surfaces = ri.Hunk_Alloc( sizeof( skinSurface_t ), h_low );
-		skin->surfaces->shader = R_FindShader( name, LIGHTMAP_NONE, qtrue );
-		return hSkin;
-	}
 
 	// load and parse the skin file
     ri.FS_ReadFile( name, &text.v );
