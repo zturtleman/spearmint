@@ -1583,6 +1583,11 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 		token = COM_ParseExt2( &text_p, qfalse, ',' );
 		Q_strncpyz( shaderName, token, sizeof( shaderName ) );
 
+		if ( skin->numSurfaces >= MD3_MAX_SURFACES ) {
+			ri.Printf( PRINT_WARNING, "WARNING: Ignoring surfaces in '%s', the max is %d surfaces!\n", name, MD3_MAX_SURFACES );
+			break;
+		}
+
 		surf = skin->surfaces[ skin->numSurfaces ] = ri.Hunk_Alloc( sizeof( *skin->surfaces[0] ), h_low );
 		Q_strncpyz( surf->name, surfName, sizeof( surf->name ) );
 		surf->shader = R_FindShader( shaderName, LIGHTMAP_NONE, qtrue );
