@@ -2202,7 +2202,7 @@ static void R_AddEntitySurface (int entityNum)
 
 	ent = tr.currentEntity = &tr.refdef.entities[tr.currentEntityNum];
 
-	ent->needDlights = qfalse;
+	ent->needDlights = 0;
 
 	// preshift the value we are going to OR into the drawsurf sort
 	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
@@ -2313,6 +2313,8 @@ R_GenerateDrawSurfs
 ====================
 */
 void R_GenerateDrawSurfs( void ) {
+	R_CullDlights();
+
 	R_AddWorldSurfaces ();
 
 	R_AddPolygonSurfaces();
@@ -3134,6 +3136,8 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 			R_RotateForViewer ();
 
 			R_SetupProjectionOrtho(&tr.viewParms, lightviewBounds);
+
+			R_CullDlights();
 
 			R_AddWorldSurfaces ();
 

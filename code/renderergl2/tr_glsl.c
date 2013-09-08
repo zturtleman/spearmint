@@ -144,7 +144,9 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_PrimaryLightOrigin",  GLSL_VEC4  },
 	{ "u_PrimaryLightColor",   GLSL_VEC3  },
 	{ "u_PrimaryLightAmbient", GLSL_VEC3  },
-	{ "u_PrimaryLightRadius",  GLSL_FLOAT }
+	{ "u_PrimaryLightRadius",  GLSL_FLOAT },
+
+	{ "u_Intensity", GLSL_FLOAT }
 };
 
 

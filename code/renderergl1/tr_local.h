@@ -56,12 +56,14 @@ typedef unsigned int glIndex_t;
 
 
 typedef struct dlight_s {
-	vec3_t	origin;
-	vec3_t	color;				// range from 0.0 to 1.0, should be color normalized
-	float	radius;
+	vec3_t		origin;
+	vec3_t		color;				// range from 0.0 to 1.0, should be color normalized
+	float		radius;
+	float		radiusInverseCubed;	// attenuation optimization
+	float		intensity;			// 1.0 = fullbright, > 1.0 = overbright
+	int			flags;
 
-	vec3_t	transformed;		// origin in local coordinate system
-	int		additive;			// texture detail is lost tho when the lightmap is dark
+	vec3_t		transformed;		// origin in local coordinate system
 } dlight_t;
 
 
@@ -72,7 +74,7 @@ typedef struct {
 
 	float		axisLength;		// compensate for non-normalized axis
 
-	qboolean	needDlights;	// true for bmodels that touch a dlight
+	int			needDlights;	// bits for dlights that may touch this bmodel
 	qboolean	lightingCalculated;
 	vec3_t		lightDir;		// normalized direction towards light
 	vec3_t		ambientLight;	// color normalized to 0-255
@@ -442,6 +444,7 @@ typedef struct {
 	int			num_entities;
 	trRefEntity_t	*entities;
 
+	int			dlightBits;
 	int			num_dlights;
 	struct dlight_s	*dlights;
 
@@ -1439,6 +1442,7 @@ LIGHTS
 ============================================================
 */
 
+void R_CullDlights( void );
 void R_DlightBmodel( bmodel_t *bmodel );
 void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent );
 void R_TransformDlights( int count, dlight_t *dl, orientationr_t *or );
@@ -1513,8 +1517,8 @@ void RE_ClearScene( void );
 void RE_AddRefEntityToScene( const refEntity_t *ent );
 void RE_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
 void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
-void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b );
-void RE_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, float g, float b );
+void RE_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void RE_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
 void RE_RenderScene( const refdef_t *fd );
 
 /*

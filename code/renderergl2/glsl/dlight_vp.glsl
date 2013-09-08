@@ -11,6 +11,7 @@ uniform float  u_Time;
 #endif
 
 uniform vec4   u_Color;
+uniform float  u_Intensity;
 uniform mat4   u_ModelViewProjectionMatrix;
 
 varying vec2   var_Tex1;
@@ -81,12 +82,13 @@ void main()
 #endif
 
 	gl_Position = u_ModelViewProjectionMatrix * position;
-		
-	vec3 dist = u_DlightInfo.xyz - position.xyz;	
+
+	vec3 dist = u_DlightInfo.xyz - position.xyz;
 
 	var_Tex1 = dist.xy * u_DlightInfo.a + vec2(0.5);
+
 	float dlightmod = step(0.0, dot(dist, normal));
-	dlightmod *= clamp(2.0 * (1.0 - abs(dist.z) * u_DlightInfo.a), 0.0, 1.0);
+	dlightmod *= clamp(u_Intensity * 2.0 * (1.0 - abs(dist.z) * u_DlightInfo.a), 0.0, 1.0);
 	
 	var_Color = u_Color * dlightmod;
 }

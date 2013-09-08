@@ -170,13 +170,29 @@ static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 	float       d;
 	int         i;
 	dlight_t    *dl;
-	
+
+	for ( i = 0 ; i < tr.refdef.num_dlights ; i++ ) {
+		if ( ! ( dlightBits & ( 1 << i ) ) ) {
+			continue;
+		}
+
+		if ( !( tr.refdef.dlights[ i ].flags & REF_SURFACE_DLIGHT ) ) {
+			dlightBits &= ~( 1 << i );
+		}
+	}
+
 	if ( surf->cullinfo.type & CULLINFO_PLANE )
 	{
 		for ( i = 0 ; i < tr.refdef.num_dlights ; i++ ) {
 			if ( ! ( dlightBits & ( 1 << i ) ) ) {
 				continue;
 			}
+
+			// lightning dlights affect all surfaces
+			if ( tr.refdef.dlights[ i ].flags & REF_DIRECTED_DLIGHT ) {
+				continue;
+			}
+
 			dl = &tr.refdef.dlights[i];
 			d = DotProduct( dl->origin, surf->cullinfo.plane.normal ) - surf->cullinfo.plane.dist;
 			if ( d < -dl->radius || d > dl->radius ) {
@@ -192,6 +208,12 @@ static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 			if ( ! ( dlightBits & ( 1 << i ) ) ) {
 				continue;
 			}
+
+			// lightning dlights affect all surfaces
+			if ( tr.refdef.dlights[ i ].flags & REF_DIRECTED_DLIGHT ) {
+				continue;
+			}
+
 			dl = &tr.refdef.dlights[i];
 			if ( dl->origin[0] - dl->radius > surf->cullinfo.bounds[1][0]
 				|| dl->origin[0] + dl->radius < surf->cullinfo.bounds[0][0]
@@ -211,6 +233,12 @@ static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 			if ( ! ( dlightBits & ( 1 << i ) ) ) {
 				continue;
 			}
+
+			// lightning dlights affect all surfaces
+			if ( tr.refdef.dlights[ i ].flags & REF_DIRECTED_DLIGHT ) {
+				continue;
+			}
+
 			dl = &tr.refdef.dlights[i];
 			if (!SpheresIntersect(dl->origin, dl->radius, surf->cullinfo.localOrigin, surf->cullinfo.radius))
 			{
@@ -511,9 +539,10 @@ R_RecursiveWorldNode
 ================
 */
 static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, int pshadowBits ) {
+	int i, r;
+	dlight_t    *dl;
 
 	do {
-		int			newDlights[2];
 		unsigned int newPShadows[2];
 
 		// if the node wasn't marked as potentially visible, exit
@@ -526,8 +555,6 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 		// inside can be visible OPTIMIZE: don't do this all the way to leafs?
 
 		if ( !r_nocull->integer ) {
-			int		r;
-
 			if ( planeBits & 1 ) {
 				r = BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[0]);
 				if (r == 2) {
@@ -579,36 +606,33 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			}
 		}
 
+		// cull dlights
+		if ( dlightBits ) {
+			for ( i = 0; i < tr.refdef.num_dlights; i++ )
+			{
+				if ( dlightBits & ( 1 << i ) ) {
+					// directional dlights don't get culled
+					if ( tr.refdef.dlights[ i ].flags & REF_DIRECTED_DLIGHT ) {
+						continue;
+					}
+
+					// test dlight bounds against node surface bounds
+					dl = &tr.refdef.dlights[ i ];
+					if ( node->surfMins[ 0 ] >= ( dl->origin[ 0 ] + dl->radius ) || node->surfMaxs[ 0 ] <= ( dl->origin[ 0 ] - dl->radius ) ||
+						 node->surfMins[ 1 ] >= ( dl->origin[ 1 ] + dl->radius ) || node->surfMaxs[ 1 ] <= ( dl->origin[ 1 ] - dl->radius ) ||
+						 node->surfMins[ 2 ] >= ( dl->origin[ 2 ] + dl->radius ) || node->surfMaxs[ 2 ] <= ( dl->origin[ 2 ] - dl->radius ) ) {
+						dlightBits &= ~( 1 << i );
+					}
+				}
+			}
+		}
+
 		if ( node->contents != -1 ) {
 			break;
 		}
 
 		// node is just a decision point, so go down both sides
 		// since we don't care about sort orders, just go positive to negative
-
-		// determine which dlights are needed
-		newDlights[0] = 0;
-		newDlights[1] = 0;
-		if ( dlightBits ) {
-			int	i;
-
-			for ( i = 0 ; i < tr.refdef.num_dlights ; i++ ) {
-				dlight_t	*dl;
-				float		dist;
-
-				if ( dlightBits & ( 1 << i ) ) {
-					dl = &tr.refdef.dlights[i];
-					dist = DotProduct( dl->origin, node->plane->normal ) - node->plane->dist;
-					
-					if ( dist > -dl->radius ) {
-						newDlights[0] |= ( 1 << i );
-					}
-					if ( dist < dl->radius ) {
-						newDlights[1] |= ( 1 << i );
-					}
-				}
-			}
-		}
 
 		newPShadows[0] = 0;
 		newPShadows[1] = 0;
@@ -634,11 +658,10 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 		}
 
 		// recurse down the children, front side first
-		R_RecursiveWorldNode (node->children[0], planeBits, newDlights[0], newPShadows[0] );
+		R_RecursiveWorldNode (node->children[0], planeBits, dlightBits, newPShadows[0] );
 
 		// tail recurse
 		node = node->children[1];
-		dlightBits = newDlights[1];
 		pshadowBits = newPShadows[1];
 	} while ( 1 );
 
