@@ -311,6 +311,8 @@ New cvars
                                       (must enable cm_betterIbspSurfaceNums!)
   cg_fovAspectAdjust                - apply fov correction for non-4:3 viewports
                                       it's especially useful for splitscreen
+  cg_fadeExplosions                 - fade out explosions instead of
+                                      shrinking radius
 
   vm_minQvmHunkKB                   - minimum memory pool size for each QVM's
                                       trap_Alloc. DLLs use shared memory pool
