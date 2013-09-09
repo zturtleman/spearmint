@@ -313,6 +313,15 @@ New cvars
                                       it's especially useful for splitscreen
   cg_fadeExplosions                 - fade out explosions instead of
                                       shrinking radius
+  cg_coronas                        - 0: disable drawing corona entities
+                                      1: draw coronas if in front of camera
+                                         and within dist set by cg_coronafardist
+                                      2: only check if solid object between
+                                         corona and camera
+                                      3: just pass to renderer, may draw through
+                                         walls
+  cg_coronafardist                  - max draw distance for coronas, if
+                                      cg_coronas is 1
 
   vm_minQvmHunkKB                   - minimum memory pool size for each QVM's
                                       trap_Alloc. DLLs use shared memory pool
