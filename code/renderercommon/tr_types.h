@@ -32,6 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define __TR_TYPES_H
 
 
+#define MAX_CORONAS		32		// not really a reason to limit this other than trying to keep a reasonable count
 #define	MAX_DLIGHTS		32		// can't be increased, because bit flags are used on surfaces
 
 #define	REFENTITYNUM_BITS	12		// can't be increased without changing drawsurf bit packing

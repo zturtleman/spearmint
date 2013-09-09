@@ -70,6 +70,15 @@ typedef unsigned int glIndex_t;
 
 #define USE_VERT_TANGENT_SPACE
 
+typedef struct corona_s {
+	vec3_t		origin;
+	vec3_t		color;			// range from 0.0 to 1.0, should be color normalized
+	vec3_t		transformed;	// origin in local coordinate system
+	float		scale;			// uses r_flaresize as the baseline (1.0)
+	int			id;
+	qboolean	visible;		// still send the corona request, even if not visible, for proper fading
+} corona_t;
+
 typedef struct dlight_s {
 	vec3_t		origin;
 	vec3_t		color;				// range from 0.0 to 1.0, should be color normalized
@@ -875,6 +884,9 @@ typedef struct {
 	int			dlightBits;
 	int			num_dlights;
 	struct dlight_s	*dlights;
+
+	int			num_coronas;
+	struct corona_s	*coronas;
 
 	int			numPolys;
 	struct srfPoly_s	*polys;
@@ -2402,7 +2414,7 @@ FLARES
 
 void R_ClearFlares( void );
 
-void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, vec3_t normal );
+void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, float scale, vec3_t normal, int id, qboolean cgvisible );
 void RB_AddDlightFlares( void );
 void RB_RenderFlares (void);
 
@@ -2543,6 +2555,7 @@ void RE_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *vert
 void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void RE_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
 void RE_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible );
 void RE_RenderScene( const refdef_t *fd );
 
 /*
@@ -2779,6 +2792,7 @@ typedef enum {
 typedef struct {
 	drawSurf_t	drawSurfs[MAX_DRAWSURFS];
 	dlight_t	dlights[MAX_DLIGHTS];
+	corona_t	coronas[MAX_CORONAS];
 	trRefEntity_t	entities[MAX_REFENTITIES];
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];

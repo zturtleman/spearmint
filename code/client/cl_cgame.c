@@ -1369,6 +1369,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_ADDADDITIVELIGHTTOSCENE:
 		re.AddAdditiveLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6) );
 		return 0;
+	case CG_R_ADDCORONATOSCENE:
+		re.AddCoronaToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5), args[6], args[7] );
+		return 0;
 	case CG_R_RENDERSCENE:
 		re.RenderScene( VMA(1) );
 		return 0;

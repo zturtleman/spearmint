@@ -122,30 +122,31 @@ equ	trap_R_ClearScene					-306
 equ	trap_R_AddRefEntityToScene			-307
 equ	trap_R_AddPolyToScene				-308
 equ	trap_R_AddLightToScene				-309
-equ	trap_R_RenderScene					-310
-equ	trap_R_SetColor						-311
-equ	trap_R_DrawStretchPic				-312
-equ	trap_R_LerpTag						-313
-equ trap_R_ModelBounds					-314
-equ trap_R_RemapShader					-315
-equ	trap_R_SetClipRegion				-316
-equ trap_R_DrawRotatedPic				-317
-equ trap_R_DrawStretchPicGradient		-318
-equ trap_R_Add2dPolys					-319
-equ	trap_R_AddPolysToScene				-320
-equ	trap_R_AddPolyBufferToScene			-321
+equ trap_R_AddAdditiveLightToScene		-310
+equ trap_R_AddCoronaToScene				-311
+equ	trap_R_RenderScene					-312
+equ	trap_R_SetColor						-313
+equ	trap_R_DrawStretchPic				-314
+equ	trap_R_LerpTag						-315
+equ trap_R_ModelBounds					-316
+equ trap_R_RemapShader					-317
+equ	trap_R_SetClipRegion				-318
+equ trap_R_DrawRotatedPic				-319
+equ trap_R_DrawStretchPicGradient		-320
+equ trap_R_Add2dPolys					-321
+equ	trap_R_AddPolysToScene				-322
+equ	trap_R_AddPolyBufferToScene			-323
 
 equ	trap_R_LoadWorldMap					-351
 equ trap_GetEntityToken					-352
 equ trap_R_LightForPoint				-353
 equ trap_R_inPVS						-354
-equ trap_R_AddAdditiveLightToScene		-355
-equ trap_R_GetGlobalFog					-356
-equ trap_R_GetViewFog					-357
-equ trap_R_SetSurfaceShader				-358
-equ trap_R_GetSurfaceShader				-359
-equ trap_R_GetShaderFromModel			-360
-equ trap_R_GetShaderName				-361
+equ trap_R_GetGlobalFog					-355
+equ trap_R_GetViewFog					-356
+equ trap_R_SetSurfaceShader				-357
+equ trap_R_GetSurfaceShader				-358
+equ trap_R_GetShaderFromModel			-359
+equ trap_R_GetShaderName				-360
 
 
 

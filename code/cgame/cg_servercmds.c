@@ -367,6 +367,8 @@ static void CG_ConfigStringModified( void ) {
 #ifdef MISSIONPACK
 		CG_BuildSpectatorString();
 #endif
+	} else if ( num >= CS_DLIGHTS && num < CS_DLIGHTS + MAX_DLIGHT_CONFIGSTRINGS ) {
+		// FIXME - dlight changes ignored!
 	} else if ( num == CS_FLAGSTATUS ) {
 		if( cgs.gametype == GT_CTF ) {
 			// format is rb where its red/blue, 0 is at base, 1 is taken, 2 is dropped
@@ -489,6 +491,8 @@ static void CG_MapRestart( void ) {
 	cg.levelShot = qfalse;
 
 	cgs.voteTime = 0;
+
+	cg.lightstylesInited = qfalse;
 
 	cg.mapRestart = qtrue;
 

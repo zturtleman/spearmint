@@ -128,6 +128,102 @@ void CG_SetEntitySoundPosition( centity_t *cent ) {
 	}
 }
 
+#define LS_FRAMETIME 100 // (ms)  cycle through lightstyle characters at 10fps
+
+/*
+==============
+CG_AddLightstyle
+==============
+*/
+void CG_AddLightstyle( centity_t *cent ) {
+	float lightval;
+	int cl;
+	int r, g, b;
+	int stringlength;
+	float offset;
+	//int offsetwhole;
+	int otime;
+	int lastch, nextch;
+
+	if ( !cent->dl_stylestring ) {
+		return;
+	}
+
+	otime = cg.time - cent->dl_time;
+	stringlength = strlen( cent->dl_stylestring );
+
+	// it's been a long time since you were updated, lets assume a reset
+	if ( otime > 2 * LS_FRAMETIME ) {
+		otime = 0;
+		cent->dl_frame = cent->dl_oldframe = 0;
+		cent->dl_backlerp = 0;
+	}
+
+	cent->dl_time = cg.time;
+
+	offset = ( (float)otime ) / LS_FRAMETIME;
+	//offsetwhole = (int)offset;
+
+	cent->dl_backlerp += offset;
+
+
+	if ( cent->dl_backlerp > 1 ) {                     // we're moving on to the next frame
+		cent->dl_oldframe   = cent->dl_oldframe + (int)cent->dl_backlerp;
+		cent->dl_frame      = cent->dl_oldframe + 1;
+		if ( cent->dl_oldframe >= stringlength ) {
+			cent->dl_oldframe = ( cent->dl_oldframe ) % stringlength;
+			if ( cent->dl_oldframe < 3 && cent->dl_sound ) { // < 3 so if an alarm comes back into the pvs it will only start a sound if it's going to be closely synced with the light, otherwise wait till the next cycle
+				trap_S_StartSound( NULL, cent->currentState.number, CHAN_AUTO, cgs.gameSounds[cent->dl_sound] );
+			}
+		}
+
+		if ( cent->dl_frame >= stringlength ) {
+			cent->dl_frame = ( cent->dl_frame ) % stringlength;
+		}
+
+		cent->dl_backlerp = cent->dl_backlerp - (int)cent->dl_backlerp;
+	}
+
+
+	lastch = cent->dl_stylestring[cent->dl_oldframe] - 'a';
+	nextch = cent->dl_stylestring[cent->dl_frame] - 'a';
+
+	lightval = ( lastch * ( 1.0 - cent->dl_backlerp ) ) + ( nextch * cent->dl_backlerp );
+
+	// ydnar: dlight values go from 0-1.5ish
+	#if 0
+	lightval = ( lightval * ( 1000.0f / 24.0f ) ) - 200.0f; // they want 'm' as the "middle" value as 300
+	lightval = MAX( 0.0f,    lightval );
+	lightval = min( 1000.0f, lightval );
+	#else
+	lightval *= 0.071429;
+	lightval = MAX( 0.0f,   lightval );
+	lightval = MIN( 20.0f,  lightval );
+	#endif
+
+	cl = cent->currentState.constantLight;
+	r = cl & 255;
+	g = ( cl >> 8 ) & 255;
+	b = ( cl >> 16 ) & 255;
+
+	// ydnar: if the dlight has angles, then it is a directional global dlight
+	if ( cent->currentState.angles[ 0 ] || cent->currentState.angles[ 1 ] || cent->currentState.angles[ 2 ] ) {
+#if 0 // ZTM: FIXME: add support for directed dlights
+		vec3_t normal;
+
+		AngleVectors( cent->currentState.angles, normal, NULL, NULL );
+		trap_R_AddDirectedLightToScene( normal, 256, lightval,
+								(float) r / 255.0f, (float) r / 255.0f, (float) r / 255.0f );
+#endif
+	}
+	// normal global dlight
+	else
+	{
+		trap_R_AddLightToScene( cent->lerpOrigin, 256, lightval,
+								(float) r / 255.0f, (float) g / 255.0f, (float) b / 255.0f );
+	}
+}
+
 /*
 ==================
 CG_EntityEffects
@@ -158,12 +254,16 @@ static void CG_EntityEffects( centity_t *cent ) {
 		int		cl;
 		float		i, r, g, b;
 
-		cl = cent->currentState.constantLight;
-		r = (float) (cl & 0xFF) / 255.0;
-		g = (float) ((cl >> 8) & 0xFF) / 255.0;
-		b = (float) ((cl >> 16) & 0xFF) / 255.0;
-		i = (float) ((cl >> 24) & 0xFF) * 4.0;
-		trap_R_AddLightToScene(cent->lerpOrigin, i, 1.0f, r, g, b);
+		if ( cent->dl_stylestring[0] != 0 ) {  // it's probably a dlight
+			CG_AddLightstyle( cent );
+		} else {
+			cl = cent->currentState.constantLight;
+			r = (float) (cl & 0xFF) / 255.0;
+			g = (float) ((cl >> 8) & 0xFF) / 255.0;
+			b = (float) ((cl >> 16) & 0xFF) / 255.0;
+			i = (float) ((cl >> 24) & 0xFF) * 4.0;
+			trap_R_AddLightToScene(cent->lerpOrigin, i, 1.0f, r, g, b);
+		}
 	}
 
 }
@@ -953,6 +1053,67 @@ static void CG_TeamBase( centity_t *cent ) {
 }
 
 /*
+==============
+CG_Corona
+
+only coronas that are in your PVS are being added
+==============
+*/
+static void CG_Corona( centity_t *cent ) {
+	trace_t tr;
+	int r, g, b;
+	int dli;
+	qboolean visible, behind, toofar;
+	float dot, dist;
+	vec3_t dir;
+
+	if ( cg_coronas.integer == 0 ) {   // if set to '0' no coronas
+		return;
+	}
+
+	dli = cent->currentState.dl_intensity;
+	r = dli & 255;
+	g = ( dli >> 8 ) & 255;
+	b = ( dli >> 16 ) & 255;
+
+	visible = qfalse;
+	behind = qfalse;
+	toofar = qfalse;
+
+	if ( cg_coronas.integer == 3 ) {
+		// let renderer decide if visable, may see through wall though
+		visible = qtrue;
+	} else if ( cg_coronas.integer == 2 ) {
+		// trace everything
+	} else {
+		VectorSubtract( cg.refdef.vieworg, cent->lerpOrigin, dir );
+
+		dist = VectorNormalize2( dir, dir );
+		if ( dist > cg_coronafardist.integer ) {   // performance variable cg_coronafardist will keep down super long traces
+			toofar = qtrue;
+		}
+
+		dot = DotProduct( dir, cg.refdef.viewaxis[0] );
+		if ( dot >= -0.6 ) {     // assumes ~90 deg fov	(SA) changed value to 0.6 (screen corner at 90 fov)
+			behind = qtrue;     // use the dot to at least do trivial removal of those behind you.
+		}
+		// yeah, I could calc side planes to clip against, but would that be worth it? (much better than dumb dot>= thing?)
+
+		//	CG_Printf("dot: %f\n", dot);
+	}
+
+	if ( !visible && !behind && !toofar ) {
+		CG_Trace( &tr, cg.refdef.vieworg, NULL, NULL, cent->lerpOrigin, -1, MASK_SOLID );
+
+		if ( tr.fraction == 1 ) {
+			visible = qtrue;
+		}
+	}
+
+	trap_R_AddCoronaToScene( cent->lerpOrigin, (float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f, (float)cent->currentState.density / 255.0f, cent->currentState.number, visible );
+}
+
+/*
 ===============
 CG_AddCEntity
 
@@ -1007,6 +1168,9 @@ static void CG_AddCEntity( centity_t *cent ) {
 		break;
 	case ET_TEAM:
 		CG_TeamBase( cent );
+		break;
+	case ET_CORONA:
+		CG_Corona( cent );
 		break;
 	}
 }

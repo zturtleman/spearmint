@@ -963,6 +963,10 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		return;
 	}
 
+	if ( !cg.lightstylesInited ) {
+		CG_SetupDlightstyles();
+	}
+
 	// this counter will be bumped for every valid scene we generate
 	cg.clientFrame++;
 

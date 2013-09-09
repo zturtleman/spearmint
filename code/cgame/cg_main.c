@@ -250,6 +250,8 @@ vmCvar_t	cg_voipShowMeter;
 vmCvar_t	cg_voipShowCrosshairMeter;
 vmCvar_t	cg_consoleLatency;
 vmCvar_t	cg_drawShaderInfo;
+vmCvar_t	cg_coronafardist;
+vmCvar_t	cg_coronas;
 vmCvar_t	cg_fovAspectAdjust;
 vmCvar_t	cg_fadeExplosions;
 vmCvar_t	ui_stretch;
@@ -422,6 +424,8 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_voipShowCrosshairMeter, "cg_voipShowCrosshairMeter", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_consoleLatency, "cg_consoleLatency", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_drawShaderInfo, "cg_drawShaderInfo", "0", 0, RANGE_BOOL },
+	{ &cg_coronafardist, "cg_coronafardist", "1536", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_coronas, "cg_coronas", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
 	{ &cg_fovAspectAdjust, "cg_fovAspectAdjust", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_fadeExplosions, "cg_fadeExplosions", "0", CVAR_ARCHIVE, RANGE_BOOL },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
@@ -932,6 +936,71 @@ CG_MaxSplitView
 */
 int CG_MaxSplitView(void) {
 	return cgs.maxSplitView;
+}
+
+//========================================================================
+
+/*
+=================
+CG_SetupDlightstyles
+=================
+*/
+void CG_SetupDlightstyles( void ) {
+	int i, j;
+	char        *str;
+	char        *token;
+	int entnum;
+	centity_t   *cent;
+
+	cg.lightstylesInited = qtrue;
+
+	for ( i = 1; i < MAX_DLIGHT_CONFIGSTRINGS; i++ ) {
+		str = (char *) CG_ConfigString( CS_DLIGHTS + i );
+		if ( !strlen( str ) ) {
+			break;
+		}
+
+		token = COM_Parse( &str );   // ent num
+		entnum = atoi( token );
+
+		if ( entnum < 0 || entnum >= MAX_GENTITIES ) {
+			continue;
+		}
+
+		cent = &cg_entities[entnum];
+
+		token = COM_Parse( &str );   // stylestring
+		Q_strncpyz( cent->dl_stylestring, token, sizeof( cent->dl_stylestring ) );
+
+		token = COM_Parse( &str );   // offset
+		cent->dl_frame      = atoi( token );
+		cent->dl_oldframe   = cent->dl_frame - 1;
+		if ( cent->dl_oldframe < 0 ) {
+			cent->dl_oldframe = strlen( cent->dl_stylestring );
+		}
+
+		token = COM_Parse( &str );   // sound id
+		cent->dl_sound = atoi( token );
+
+		token = COM_Parse( &str );   // attenuation
+		cent->dl_atten = atoi( token );
+
+		for ( j = 0; j < strlen( cent->dl_stylestring ); j++ ) {
+
+			cent->dl_stylestring[j] += cent->dl_atten;  // adjust character for attenuation/amplification
+
+			// clamp result
+			if ( cent->dl_stylestring[j] < 'a' ) {
+				cent->dl_stylestring[j] = 'a';
+			}
+			if ( cent->dl_stylestring[j] > 'z' ) {
+				cent->dl_stylestring[j] = 'z';
+			}
+		}
+
+		cent->dl_backlerp   = 0.0;
+		cent->dl_time       = cg.time;
+	}
 }
 
 //========================================================================
@@ -2491,6 +2560,8 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	CG_SetConfigValues();
 
 	CG_StartMusic();
+
+	cg.lightstylesInited = qfalse;
 
 	CG_LoadingString( "" );
 

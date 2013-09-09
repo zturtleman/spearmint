@@ -72,6 +72,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define STEPSIZE			18
 
+
+#define MAX_DLIGHT_CONFIGSTRINGS 16
+
 //
 // config strings are a general means of communicating variable length strings
 // from the server to all connected clients.
@@ -107,9 +110,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	CS_SOUNDS				(CS_MODELS+MAX_MODELS)
 #define	CS_PLAYERS				(CS_SOUNDS+MAX_SOUNDS)
 #define CS_LOCATIONS			(CS_PLAYERS+MAX_CLIENTS)
-#define CS_PARTICLES			(CS_LOCATIONS+MAX_LOCATIONS) 
+#define CS_PARTICLES			(CS_LOCATIONS+MAX_LOCATIONS)
+#define CS_DLIGHTS              (CS_PARTICLES+MAX_LOCATIONS)
 
-#define CS_MAX					(CS_PARTICLES+MAX_LOCATIONS)
+#define CS_MAX					(CS_DLIGHTS+MAX_DLIGHT_CONFIGSTRINGS)
 
 #if (CS_MAX) > MAX_CONFIGSTRINGS
 #error overflow: (CS_MAX) > MAX_CONFIGSTRINGS
@@ -213,6 +217,7 @@ typedef struct entityState_s {
 	int		groundEntityNum;	// ENTITYNUM_NONE = in air
 
 	int		constantLight;	// r + (g<<8) + (b<<16) + (intensity<<24)
+	int		dl_intensity;	// used for coronas
 	int		loopSound;		// constantly loop this sound
 
 	int		modelindex2;
@@ -223,6 +228,8 @@ typedef struct entityState_s {
 	int		eventParm;
 
 	int		team;
+
+	int		density;            // for particle effects
 
 	// for players
 	int		powerups;		// bit flags
@@ -1024,6 +1031,7 @@ typedef enum {
 	ET_INVISIBLE,
 	ET_GRAPPLE,				// grapple hooked on wall
 	ET_TEAM,
+	ET_CORONA,
 
 	ET_EVENTS				// any of the EV_* events can be added freestanding
 							// by setting eType to ET_EVENTS + eventNum
