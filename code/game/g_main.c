@@ -685,7 +685,12 @@ int G_MapRestart( int levelTime, int restartTime ) {
 		delay = 5;
 	}
 
-	restartTime = levelTime + delay * 1000;
+	if ( delay > 0 ) {
+		restartTime = levelTime + delay * 1000;
+	} else {
+		restartTime = 0;
+	}
+
 	trap_SetConfigstring( CS_WARMUP, va( "%i", restartTime ) );
 	return restartTime;
 }
