@@ -146,14 +146,27 @@ char *Sys_ConsoleInput(void)
 Sys_PIDFileName
 =================
 */
-static char *Sys_PIDFileName( void )
+static char *Sys_PIDFileName( const char *gamedir )
 {
 	const char *homePath = Sys_DefaultHomePath( );
 
 	if( *homePath != '\0' )
-		return va( "%s/%s/%s", homePath, FS_GetCurrentGameDir(), PID_FILENAME );
+		return va( "%s/%s/%s", homePath, gamedir, PID_FILENAME );
 
 	return NULL;
+}
+
+/*
+=================
+Sys_RemovePIDFile
+=================
+*/
+void Sys_RemovePIDFile( const char *gamedir )
+{
+	char *pidFile = Sys_PIDFileName( gamedir );
+
+	if( pidFile != NULL )
+		remove( pidFile );
 }
 
 /*
@@ -163,9 +176,9 @@ Sys_WritePIDFile
 Return qtrue if there is an existing stale PID file
 =================
 */
-qboolean Sys_WritePIDFile( void )
+static qboolean Sys_WritePIDFile( const char *gamedir )
 {
-	char      *pidFile = Sys_PIDFileName( );
+	char      *pidFile = Sys_PIDFileName( gamedir );
 	FILE      *f;
 	qboolean  stale = qfalse;
 
@@ -204,6 +217,27 @@ qboolean Sys_WritePIDFile( void )
 
 /*
 =================
+Sys_InitPIDFile
+=================
+*/
+void Sys_InitPIDFile( const char *gamedir ) {
+	if( Sys_WritePIDFile( gamedir ) ) {
+#ifndef DEDICATED
+		char message[1024];
+
+		Com_sprintf( message, sizeof (message), "The last time %s ran, "
+			"it didn't exit properly. This may be due to inappropriate video "
+			"settings. Would you like to start with \"safe\" video settings?", com_productName->string );
+
+		if( Sys_Dialog( DT_YES_NO, message, "Abnormal Exit" ) == DR_YES ) {
+			Cvar_Set( "com_abnormalExit", "1" );
+		}
+#endif
+	}
+}
+
+/*
+=================
 Sys_Exit
 
 Single exit point (regular exit or in case of error)
@@ -220,10 +254,7 @@ static __attribute__ ((noreturn)) void Sys_Exit( int exitCode )
 	if( exitCode < 2 )
 	{
 		// Normal exit
-		char *pidFile = Sys_PIDFileName( );
-
-		if( pidFile != NULL )
-			remove( pidFile );
+		Sys_RemovePIDFile( FS_GetCurrentGameDir() );
 	}
 
 	Sys_PlatformExit( );

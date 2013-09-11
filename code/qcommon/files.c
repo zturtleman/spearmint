@@ -4275,6 +4275,9 @@ void FS_Restart( qboolean gameDirChanged ) {
 	}
 
 	if ( Q_stricmp(fs_gamedirvar->string, lastValidGame) ) {
+		Sys_RemovePIDFile( lastValidGame );
+		Sys_InitPIDFile( fs_gamedirvar->string );
+
 		// skip the q3config.cfg if "safe" is on the command line
 		// and only execute q3config.cfg if it exists in current fs_homepath + fs_gamedir
 		if ( !Com_SafeMode() && FS_FileExists( Q3CONFIG_CFG ) ) {

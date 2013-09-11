@@ -1184,7 +1184,8 @@ typedef enum
 
 dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *title );
 
-qboolean Sys_WritePIDFile( void );
+void Sys_RemovePIDFile( const char *gamedir );
+void Sys_InitPIDFile( const char *gamedir );
 
 /* This is based on the Adaptive Huffman algorithm described in Sayood's Data
  * Compression book.  The ranks are not actually stored, but implicitly defined
