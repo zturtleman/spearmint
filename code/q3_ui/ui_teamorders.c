@@ -318,7 +318,7 @@ static void UI_TeamOrdersMenu_ListEvent( void *ptr, int event ) {
 
 	if( id == ID_LIST_BOTS ) {
 		teamOrdersMenuInfo.selectedBot = selection;
-		if( teamOrdersMenuInfo.gametype == GT_CTF ) {
+		if( teamOrdersMenuInfo.gametype > GT_TEAM ) {
 			UI_TeamOrdersMenu_SetList( ID_LIST_CTF_ORDERS );
 		}
 		else {
