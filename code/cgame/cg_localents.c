@@ -499,8 +499,13 @@ static void CG_AddExplosion( localEntity_t *ex ) {
 		} else {
 			light = 1.0 - ( light - 0.5 ) * 2;
 		}
-		light = ex->light * light;
-		trap_R_AddLightToScene(ent->origin, light, ex->lightColor[0], ex->lightColor[1], ex->lightColor[2] );
+
+		if ( cg_fadeExplosions.integer ) {
+			trap_R_AddLightToScene(ent->origin, ex->light, light, ex->lightColor[0], ex->lightColor[1], ex->lightColor[2] );
+		} else {
+			light = ex->light * light;
+			trap_R_AddLightToScene(ent->origin, light, 1.0f, ex->lightColor[0], ex->lightColor[1], ex->lightColor[2] );
+		}
 	}
 }
 
@@ -540,8 +545,13 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 		} else {
 			light = 1.0 - ( light - 0.5 ) * 2;
 		}
-		light = le->light * light;
-		trap_R_AddLightToScene(re.origin, light, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
+
+		if ( cg_fadeExplosions.integer ) {
+			trap_R_AddLightToScene(re.origin, le->light, light, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
+		} else {
+			light = le->light * light;
+			trap_R_AddLightToScene(re.origin, light, 1.0f, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
+		}
 	}
 }
 
@@ -627,7 +637,7 @@ void CG_AddKamikaze( localEntity_t *le ) {
 
 		trap_R_AddRefEntityToScene( re );
 		// add the dlight
-		trap_R_AddLightToScene( re->origin, c * 1000.0, 1.0, 1.0, c );
+		trap_R_AddLightToScene( re->origin, c * 1000.0, 1.0, 1.0, 1.0, c );
 	}
 
 	if (t > KAMI_SHOCKWAVE2_STARTTIME && t < KAMI_SHOCKWAVE2_ENDTIME) {

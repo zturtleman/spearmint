@@ -185,6 +185,12 @@ struct gentity_s {
 
 	gitem_t		*item;			// for bonus items
 
+	// dlights
+	vec3_t		dl_color;
+	char		*dl_stylestring;
+	char		*dl_shader;
+	int			dl_atten;
+
 	// info for bots
 	qboolean	botvalid;
 	float		update_time;
@@ -488,7 +494,8 @@ void SaveRegisteredItems( void );
 //
 // g_utils.c
 //
-int G_ModelIndex( char *name );
+int		G_FindConfigstringIndex( char *name, int start, int max, qboolean create );
+int		G_ModelIndex( char *name );
 int		G_SoundIndex( char *name );
 void	trap_SendServerCommand( int clientNum, char *cmd );
 void	G_TeamCommand( team_t team, char *cmd );
@@ -613,7 +620,6 @@ qboolean SpotWouldTelefrag( gentity_t *spot );
 //
 qboolean	ConsoleCommand( void );
 void G_RegisterCommands( void );
-void G_UnregisterCommands( void );
 void G_ProcessIPBans(void);
 qboolean G_FilterPacket (char *from);
 

@@ -309,6 +309,19 @@ New cvars
   cg_drawShaderInfo                 - draw world shader name/image on HUD that
                                       that player's crosshair is pointing at
                                       (must enable cm_betterIbspSurfaceNums!)
+  cg_fovAspectAdjust                - apply fov correction for non-4:3 viewports
+                                      it's especially useful for splitscreen
+  cg_fadeExplosions                 - fade out explosions instead of
+                                      shrinking radius
+  cg_coronas                        - 0: disable drawing corona entities
+                                      1: draw coronas if in front of camera
+                                         and within dist set by cg_coronafardist
+                                      2: only check if solid object between
+                                         corona and camera
+                                      3: just pass to renderer, may draw through
+                                         walls
+  cg_coronafardist                  - max draw distance for coronas, if
+                                      cg_coronas is 1
 
   vm_minQvmHunkKB                   - minimum memory pool size for each QVM's
                                       trap_Alloc. DLLs use shared memory pool
@@ -328,6 +341,8 @@ New cvars
   g_playerCapsule                   - use capsule instead of box for player
                                       collision. each player has it set at spawn
                                       allowing mix of capsule and box in game
+
+  ui_stretch                        - stretch menus to fill wide/narrow screens
 
 
 New commands

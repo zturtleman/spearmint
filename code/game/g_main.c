@@ -613,8 +613,6 @@ void G_ShutdownGame( int restart ) {
 	if ( trap_Cvar_VariableIntegerValue( "bot_enable" ) ) {
 		BotAIShutdown( restart );
 	}
-
-	G_UnregisterCommands( );
 }
 
 
@@ -687,7 +685,12 @@ int G_MapRestart( int levelTime, int restartTime ) {
 		delay = 5;
 	}
 
-	restartTime = levelTime + delay * 1000;
+	if ( delay > 0 ) {
+		restartTime = levelTime + delay * 1000;
+	} else {
+		restartTime = 0;
+	}
+
 	trap_SetConfigstring( CS_WARMUP, va( "%i", restartTime ) );
 	return restartTime;
 }

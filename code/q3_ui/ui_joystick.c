@@ -183,7 +183,7 @@ static void UI_Joystick_GetNames( void ) {
 	char	cmd_tokenized[BIG_INFO_STRING+MAX_STRING_TOKENS];	// will have 0 bytes inserted
 
 	// Get newline delimited string of joystick names.
-	Q_strncpyz(joybuf, UI_Cvar_VariableString("in_availableJoysticks"), sizeof(joybuf));
+	Q_strncpyz(joybuf, CG_Cvar_VariableString("in_availableJoysticks"), sizeof(joybuf));
 
 	// Option to disable joystick
 	Q_strncpyz(joystickMenu.joystickNames[0], "None", sizeof (joystickMenu.joystickNames[0]));

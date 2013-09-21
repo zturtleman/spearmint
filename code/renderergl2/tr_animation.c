@@ -311,7 +311,8 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 	mdrLOD_t		*lod;
 	shader_t		*shader;
 	skin_t		*skin;
-	int				i, j;
+	skinSurface_t	*skinSurf;
+	int				i;
 	int				lodnum = 0;
 	int				fogNum = 0;
 	int				cull;
@@ -389,11 +390,11 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 			skin = R_GetSkinByHandle(ent->e.customSkin);
 			shader = tr.defaultShader;
 			
-			for(j = 0; j < skin->numSurfaces; j++)
+			for(skinSurf = skin->surfaces; skinSurf; skinSurf = skinSurf->next)
 			{
-				if (!strcmp(skin->surfaces[j]->name, surface->name))
+				if (!strcmp(skinSurf->name, surface->name))
 				{
-					shader = skin->surfaces[j]->shader;
+					shader = skinSurf->shader;
 					break;
 				}
 			}

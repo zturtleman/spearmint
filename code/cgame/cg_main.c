@@ -30,6 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 // cg_main.c -- initialization and primary entry point for cgame
 #include "cg_local.h"
+#include "../ui/ui_public.h"
 
 #ifdef MISSIONPACK_HUD
 #include "../ui/ui_shared.h"
@@ -74,12 +75,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		CG_Shutdown();
 		return 0;
 	case CG_CONSOLE_COMMAND:
-		{
-			qboolean found = UI_ConsoleCommand(arg0);
-			if ( !found && cg.connected )
-				found = CG_ConsoleCommand();
-			return found;
-		}
+		return CG_ConsoleCommand(arg0);
 	case CG_REFRESH:
 		CG_Refresh( arg0, arg1, arg2, arg3, arg4 );
 		return 0;
@@ -254,6 +250,11 @@ vmCvar_t	cg_voipShowMeter;
 vmCvar_t	cg_voipShowCrosshairMeter;
 vmCvar_t	cg_consoleLatency;
 vmCvar_t	cg_drawShaderInfo;
+vmCvar_t	cg_coronafardist;
+vmCvar_t	cg_coronas;
+vmCvar_t	cg_fovAspectAdjust;
+vmCvar_t	cg_fadeExplosions;
+vmCvar_t	ui_stretch;
 
 #ifdef MISSIONPACK
 vmCvar_t 	cg_redTeamName;
@@ -423,7 +424,13 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_voipShowCrosshairMeter, "cg_voipShowCrosshairMeter", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_consoleLatency, "cg_consoleLatency", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_drawShaderInfo, "cg_drawShaderInfo", "0", 0, RANGE_BOOL },
+	{ &cg_coronafardist, "cg_coronafardist", "1536", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_coronas, "cg_coronas", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
+	{ &cg_fovAspectAdjust, "cg_fovAspectAdjust", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_fadeExplosions, "cg_fadeExplosions", "0", CVAR_ARCHIVE, RANGE_BOOL },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
+
+	{ &ui_stretch, "ui_stretch", "0", CVAR_ARCHIVE, RANGE_BOOL },
 };
 
 static userCvarTable_t userCvarTable[] = {
@@ -628,6 +635,10 @@ void CG_UpdateCvars( void ) {
 	CG_UpdateUserCvars();
 	CG_UpdateInputCvars();
 
+	if ( !cg.connected ) {
+		return;
+	}
+
 	// check for modications here
 
 	// If team overlay is on, ask for updates from the server.  If it's off,
@@ -664,7 +675,7 @@ void CG_UpdateCvars( void ) {
 }
 
 int CG_CrosshairPlayer( int localClientNum ) {
-	if (localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
+	if (!cg.snap || localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
 		return -1;
 	}
 
@@ -676,7 +687,7 @@ int CG_CrosshairPlayer( int localClientNum ) {
 }
 
 int CG_LastAttacker( int localClientNum ) {
-	if (localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
+	if (!cg.snap || localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
 		return -1;
 	}
 
@@ -907,11 +918,89 @@ const char *CG_Argv( int arg ) {
 
 /*
 ================
+CG_Cvar_VariableString
+================
+*/
+char *CG_Cvar_VariableString( const char *var_name ) {
+	static char	buffer[MAX_STRING_CHARS];
+
+	trap_Cvar_VariableStringBuffer( var_name, buffer, sizeof( buffer ) );
+
+	return buffer;
+}
+
+/*
+================
 CG_MaxSplitView
 ================
 */
 int CG_MaxSplitView(void) {
 	return cgs.maxSplitView;
+}
+
+//========================================================================
+
+/*
+=================
+CG_SetupDlightstyles
+=================
+*/
+void CG_SetupDlightstyles( void ) {
+	int i, j;
+	char        *str;
+	char        *token;
+	int entnum;
+	centity_t   *cent;
+
+	cg.lightstylesInited = qtrue;
+
+	for ( i = 1; i < MAX_DLIGHT_CONFIGSTRINGS; i++ ) {
+		str = (char *) CG_ConfigString( CS_DLIGHTS + i );
+		if ( !strlen( str ) ) {
+			break;
+		}
+
+		token = COM_Parse( &str );   // ent num
+		entnum = atoi( token );
+
+		if ( entnum < 0 || entnum >= MAX_GENTITIES ) {
+			continue;
+		}
+
+		cent = &cg_entities[entnum];
+
+		token = COM_Parse( &str );   // stylestring
+		Q_strncpyz( cent->dl_stylestring, token, sizeof( cent->dl_stylestring ) );
+
+		token = COM_Parse( &str );   // offset
+		cent->dl_frame      = atoi( token );
+		cent->dl_oldframe   = cent->dl_frame - 1;
+		if ( cent->dl_oldframe < 0 ) {
+			cent->dl_oldframe = strlen( cent->dl_stylestring );
+		}
+
+		token = COM_Parse( &str );   // sound id
+		cent->dl_sound = atoi( token );
+
+		token = COM_Parse( &str );   // attenuation
+		cent->dl_atten = atoi( token );
+
+		for ( j = 0; j < strlen( cent->dl_stylestring ); j++ ) {
+
+			cent->dl_stylestring[j] += cent->dl_atten;  // adjust character for attenuation/amplification
+
+			// clamp result
+			if ( cent->dl_stylestring[j] < 'a' ) {
+				cent->dl_stylestring[j] = 'a';
+			}
+			if ( cent->dl_stylestring[j] > 'z' ) {
+				cent->dl_stylestring[j] = 'z';
+			}
+		}
+
+		cent->dl_backlerp   = 0.0;
+		cent->dl_time       = cg.time;
+	}
 }
 
 //========================================================================
@@ -2195,6 +2284,7 @@ static int CG_OwnerDrawWidth(int ownerDraw, float scale) {
 }
 
 static int CG_PlayCinematic(const char *name, float x, float y, float w, float h) {
+	CG_AdjustFrom640( &x, &y, &w, &h );
   return trap_CIN_PlayCinematic(name, x, y, w, h, CIN_loop);
 }
 
@@ -2203,6 +2293,7 @@ static void CG_StopCinematic(int handle) {
 }
 
 static void CG_DrawCinematic(int handle, float x, float y, float w, float h) {
+	CG_AdjustFrom640( &x, &y, &w, &h );
   trap_CIN_SetExtents(handle, x, y, w, h);
   trap_CIN_DrawCinematic(handle);
 }
@@ -2332,6 +2423,37 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	CG_RegisterCvars();
 
+	CG_InitConsoleCommands();
+
+	// load a few needed things before we do any screen updates
+	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
+	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
+
+	// get the rendering configuration from the client system
+	trap_GetGlconfig( &cgs.glconfig );
+
+	// Viewport scale and offset
+	cgs.screenXScaleStretch = cgs.glconfig.vidWidth * (1.0/640.0);
+	cgs.screenYScaleStretch = cgs.glconfig.vidHeight * (1.0/480.0);
+	if ( cgs.glconfig.vidWidth * 480 > cgs.glconfig.vidHeight * 640 ) {
+		cgs.screenXScale = cgs.glconfig.vidWidth * (1.0/640.0);
+		cgs.screenYScale = cgs.glconfig.vidHeight * (1.0/480.0);
+		// wide screen
+		cgs.screenXBias = 0.5 * ( cgs.glconfig.vidWidth - ( cgs.glconfig.vidHeight * (640.0/480.0) ) );
+		cgs.screenXScale = cgs.screenYScale;
+		// no narrow screen
+		cgs.screenYBias = 0;
+	}
+	else {
+		cgs.screenXScale = cgs.glconfig.vidWidth * (1.0/640.0);
+		cgs.screenYScale = cgs.glconfig.vidHeight * (1.0/480.0);
+		// narrow screen
+		cgs.screenYBias = 0.5 * ( cgs.glconfig.vidHeight - ( cgs.glconfig.vidWidth * (480.0/640.0) ) );
+		cgs.screenYScale = cgs.screenXScale;
+		// no wide screen
+		cgs.screenXBias = 0;
+	}
+
 #ifdef MISSIONPACK_HUD
 	Init_Display(&cgDC);
 	String_Init();
@@ -2374,15 +2496,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	cgs.processedSnapshotNum = serverMessageNum;
 	cgs.serverCommandSequence = serverCommandSequence;
 
-	// load a few needed things before we do any screen updates
-	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
-	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
-	cgs.media.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
-	cgs.media.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );
-	cgs.media.charsetPropB		= trap_R_RegisterShaderNoMip( "menu/art/font2_prop.tga" );
-
-	CG_InitConsoleCommands();
-
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 		cg.localClients[i].weaponSelect = WP_MACHINEGUN;
 	}
@@ -2390,31 +2503,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	cgs.redflag = cgs.blueflag = -1; // For compatibily, default to unset for
 	cgs.flagStatus = -1;
 	// old servers
-
-	// get the rendering configuration from the client system
-	trap_GetGlconfig( &cgs.glconfig );
-
-	// Viewport scale and offset
-	cgs.screenXScaleStretch = cgs.glconfig.vidWidth * (1.0/640.0);
-	cgs.screenYScaleStretch = cgs.glconfig.vidHeight * (1.0/480.0);
-	if ( cgs.glconfig.vidWidth * 480 > cgs.glconfig.vidHeight * 640 ) {
-		cgs.screenXScale = cgs.glconfig.vidWidth * (1.0/640.0);
-		cgs.screenYScale = cgs.glconfig.vidHeight * (1.0/480.0);
-		// wide screen
-		cgs.screenXBias = 0.5 * ( cgs.glconfig.vidWidth - ( cgs.glconfig.vidHeight * (640.0/480.0) ) );
-		cgs.screenXScale = cgs.screenYScale;
-		// no narrow screen
-		cgs.screenYBias = 0;
-	}
-	else {
-		cgs.screenXScale = cgs.glconfig.vidWidth * (1.0/640.0);
-		cgs.screenYScale = cgs.glconfig.vidHeight * (1.0/480.0);
-		// narrow screen
-		cgs.screenYBias = 0.5 * ( cgs.glconfig.vidHeight - ( cgs.glconfig.vidWidth * (480.0/640.0) ) );
-		cgs.screenYScale = cgs.screenXScale;
-		// no wide screen
-		cgs.screenXBias = 0;
-	}
 
 	// get the gamestate from the client system
 	trap_GetGameState( &cgs.gameState );
@@ -2473,6 +2561,8 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 
 	CG_StartMusic();
 
+	cg.lightstylesInited = qfalse;
+
 	CG_LoadingString( "" );
 
 #ifdef MISSIONPACK
@@ -2511,6 +2601,9 @@ Draw the frame
 */
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime ) {
 
+	// update cvars
+	CG_UpdateCvars();
+
 	if ( state >= CA_LOADING && !UI_IsFullscreen() ) {
 #ifdef MISSIONPACK_HUD
 		Init_Display(&cgDC);
@@ -2519,6 +2612,11 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	}
 
 	if ( state <= CA_LOADING || (trap_Key_GetCatcher() & KEYCATCH_UI) ) {
+		if ( ui_stretch.integer ) {
+			CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
+		} else {
+			CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+		}
 		UI_Refresh( realTime );
 	}
 

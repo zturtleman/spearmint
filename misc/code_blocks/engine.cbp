@@ -1217,7 +1217,6 @@
 			<Option target="Release Win32" />
 			<Option target="Debug Win32" />
 		</Unit>
-		<Unit filename="../../code/ui/ui_public.h" />
 		<Unit filename="../../code/zlib/adler32.c">
 			<Option compilerVar="CC" />
 		</Unit>

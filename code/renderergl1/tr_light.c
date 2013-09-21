@@ -60,6 +60,41 @@ void R_TransformDlights( int count, dlight_t *dl, orientationr_t *or) {
 }
 
 /*
+===============
+R_CullDlights
+
+Frustum culls dynamic lights
+===============
+*/
+void R_CullDlights( void ) {
+	int i, numDlights, dlightBits;
+	dlight_t    *dl;
+
+
+	/* limit */
+	if ( tr.refdef.num_dlights > MAX_DLIGHTS ) {
+		tr.refdef.num_dlights = MAX_DLIGHTS;
+	}
+
+	/* walk dlight list */
+	numDlights = 0;
+	dlightBits = 0;
+	for ( i = 0, dl = tr.refdef.dlights; i < tr.refdef.num_dlights; i++, dl++ )
+	{
+		if ( ( dl->flags & REF_DIRECTED_DLIGHT ) || R_CullPointAndRadius( dl->origin, dl->radius ) != CULL_OUT ) {
+			numDlights = i + 1;
+			dlightBits |= ( 1 << i );
+		}
+	}
+
+	/* reset count */
+	tr.refdef.num_dlights = numDlights;
+
+	/* set bits */
+	tr.refdef.dlightBits = dlightBits;
+}
+
+/*
 =============
 R_DlightBmodel
 
@@ -79,24 +114,27 @@ void R_DlightBmodel( bmodel_t *bmodel ) {
 	for ( i=0 ; i<tr.refdef.num_dlights ; i++ ) {
 		dl = &tr.refdef.dlights[i];
 
-		// see if the point is close enough to the bounds to matter
-		for ( j = 0 ; j < 3 ; j++ ) {
-			if ( dl->transformed[j] - bmodel->bounds[1][j] > dl->radius ) {
-				break;
+		// parallel dlights affect all entities
+		if ( !( dl->flags & REF_DIRECTED_DLIGHT ) ) {
+			// see if the point is close enough to the bounds to matter
+			for ( j = 0 ; j < 3 ; j++ ) {
+				if ( dl->transformed[j] - bmodel->bounds[1][j] > dl->radius ) {
+					break;
+				}
+				if ( bmodel->bounds[0][j] - dl->transformed[j] > dl->radius ) {
+					break;
+				}
 			}
-			if ( bmodel->bounds[0][j] - dl->transformed[j] > dl->radius ) {
-				break;
+			if ( j < 3 ) {
+				continue;
 			}
-		}
-		if ( j < 3 ) {
-			continue;
 		}
 
 		// we need to check this light
 		mask |= 1 << i;
 	}
 
-	tr.currentEntity->needDlights = (mask != 0);
+	tr.currentEntity->needDlights = mask;
 
 	// set the dlight bits in all the surfaces
 	for ( i = 0 ; i < bmodel->numSurfaces ; i++ ) {
@@ -293,7 +331,7 @@ by the Calc_* functions
 void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 	int				i;
 	dlight_t		*dl;
-	float			power;
+	float			modulate;
 	vec3_t			dir;
 	float			d;
 	vec3_t			lightDir;
@@ -345,17 +383,42 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 
 	for ( i = 0 ; i < refdef->num_dlights ; i++ ) {
 		dl = &refdef->dlights[i];
-		VectorSubtract( dl->origin, lightOrigin, dir );
-		d = VectorNormalize( dir );
 
-		power = DLIGHT_AT_RADIUS * ( dl->radius * dl->radius );
-		if ( d < DLIGHT_MINIMUM_RADIUS ) {
-			d = DLIGHT_MINIMUM_RADIUS;
+		if ( !( dl->flags & REF_GRID_DLIGHT ) ) {
+			continue;
 		}
-		d = power / ( d * d );
 
-		VectorMA( ent->directedLight, d, dl->color, ent->directedLight );
-		VectorMA( lightDir, d, dir, lightDir );
+		// directional dlight, origin is a directional normal
+		if ( dl->flags & REF_DIRECTED_DLIGHT ) {
+			modulate = dl->intensity * 255.0;
+			VectorCopy( dl->origin, dir );
+		}
+		// ET dlight
+		else if ( dl->flags & REF_VERTEX_DLIGHT )
+		{
+			VectorSubtract( dl->origin, lightOrigin, dir );
+			d = dl->radius - VectorNormalize( dir );
+			if ( d <= 0.0 ) {
+				modulate = 0;
+			} else {
+				modulate = dl->intensity * d;
+			}
+		}
+		// Q3 dlight
+		else
+		{
+			VectorSubtract( dl->origin, lightOrigin, dir );
+			d = VectorNormalize( dir );
+			modulate = DLIGHT_AT_RADIUS * ( dl->radius * dl->radius );
+			if ( d < DLIGHT_MINIMUM_RADIUS ) {
+				d = DLIGHT_MINIMUM_RADIUS;
+			}
+
+			modulate = modulate / ( d * d ) * dl->intensity;
+		}
+
+		VectorMA( ent->directedLight, modulate, dl->color, ent->directedLight );
+		VectorMA( lightDir, modulate, dir, lightDir );
 	}
 
 	// clamp ambient

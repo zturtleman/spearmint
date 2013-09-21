@@ -433,6 +433,7 @@ sharedEntity_t *SV_GEntityForSvEntity( svEntity_t *svEnt );
 void		SV_InitGameProgs ( void );
 void		SV_ShutdownGameProgs ( void );
 void		SV_RestartGameProgs( void );
+void		SV_GameCommand( void );
 qboolean	SV_inPVS (const vec3_t p1, const vec3_t p2);
 
 //

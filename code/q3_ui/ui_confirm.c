@@ -129,7 +129,7 @@ MessaheMenu_Draw
 static void MessageMenu_Draw( void ) {
 	int i,y;
 	
-	UI_DrawNamedPic( 142, 118, 359, 256, ART_CONFIRM_FRAME );
+	CG_DrawNamedPic( 142, 118, 359, 256, ART_CONFIRM_FRAME );
 	
 	y = 188;
 	for(i=0; s_confirm.lines[i]; i++)
@@ -151,7 +151,7 @@ ConfirmMenu_Draw
 =================
 */
 static void ConfirmMenu_Draw( void ) {
-	UI_DrawNamedPic( 142, 118, 359, 256, ART_CONFIRM_FRAME );
+	CG_DrawNamedPic( 142, 118, 359, 256, ART_CONFIRM_FRAME );
 	UI_DrawProportionalString( 320, 204, s_confirm.question, s_confirm.style, text_big_color );
 	UI_DrawProportionalString( s_confirm.slashX, 265, "/", UI_LEFT|UI_INVERSE, text_big_color );
 

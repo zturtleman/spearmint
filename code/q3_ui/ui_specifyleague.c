@@ -300,11 +300,11 @@ void SpecifyLeague_MenuInit( void )
 
 	// initialize any menu variables
 	Q_strncpyz( s_specifyleague.rankname.field.buffer, 
-		UI_Cvar_VariableString("name"), 
+		CG_Cvar_VariableString("name"), 
 		sizeof(s_specifyleague.rankname.field.buffer) );
 
 	Q_strncpyz( playername,
-		UI_Cvar_VariableString("name"), 
+		CG_Cvar_VariableString("name"), 
 		sizeof(playername) );
 
 	SpecifyLeague_GetList();

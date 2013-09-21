@@ -422,7 +422,7 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 
 			s = var->latchedString;
 			var->latchedString = NULL;	// otherwise cvar_set2 would free it
-			Cvar_Set2( var_name, s, qtrue );
+			Cvar_Set2( var_name, s, 0, qtrue );
 			Z_Free( s );
 		}
 
@@ -523,7 +523,7 @@ void Cvar_Print( cvar_t *v ) {
 Cvar_Set2
 ============
 */
-cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
+cvar_t *Cvar_Set2( const char *var_name, const char *value, int defaultFlags, qboolean force ) {
 	cvar_t	*var;
 
 //	Com_DPrintf( "Cvar_Set2: %s %s\n", var_name, value );
@@ -546,11 +546,7 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 			return NULL;
 		}
 		// create it
-		if ( !force ) {
-			return Cvar_Get( var_name, value, CVAR_USER_CREATED );
-		} else {
-			return Cvar_Get (var_name, value, 0);
-		}
+		return Cvar_Get( var_name, value, defaultFlags );
 	}
 
 	if (!value ) {
@@ -618,6 +614,11 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 			return var;
 		}
 
+		if ( (var->flags & CVAR_SYSTEMINFO) && !com_sv_running->integer && CL_ConnectedToServer() )
+		{
+			Com_Printf ("%s can only be set by server.\n", var_name);
+			return var;
+		}
 	}
 	else
 	{
@@ -646,42 +647,97 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 /*
 ============
 Cvar_Set
+
+Force cvar to a value
 ============
 */
-void Cvar_Set( const char *var_name, const char *value) {
-	Cvar_Set2 (var_name, value, qtrue);
+cvar_t *Cvar_Set( const char *var_name, const char *value) {
+	return Cvar_Set2 (var_name, value, 0, qtrue);
 }
 
 /*
 ============
 Cvar_SetSafe
+
+Try to set cvar to a value. respects CVAR_ROM, etc.
 ============
 */
-void Cvar_SetSafe( const char *var_name, const char *value )
-{
-	int flags = Cvar_Flags( var_name );
-
-	if((flags != CVAR_NONEXISTENT) && (flags & CVAR_PROTECTED))
-	{
-		if( value )
-			Com_Error( ERR_DROP, "Restricted source tried to set "
-				"\"%s\" to \"%s\"", var_name, value );
-		else
-			Com_Error( ERR_DROP, "Restricted source tried to "
-				"modify \"%s\"", var_name );
-		return;
-	}
-
-	Cvar_Set( var_name, value );
+cvar_t *Cvar_SetSafe( const char *var_name, const char *value) {
+	return Cvar_Set2 (var_name, value, 0, qfalse);
 }
 
 /*
 ============
-Cvar_SetLatched
+Cvar_User_Set
+
+Same as Cvar_SetSafe, but have new cvars have user created flag.
 ============
 */
-void Cvar_SetLatched( const char *var_name, const char *value) {
-	Cvar_Set2 (var_name, value, qfalse);
+cvar_t *Cvar_User_Set( const char *var_name, const char *value) {
+	return Cvar_Set2 (var_name, value, CVAR_USER_CREATED, qfalse);
+}
+
+/*
+============
+Cvar_Server_Set
+
+Set cvars from network server.
+============
+*/
+void Cvar_Server_Set( const char *var_name, const char *value )
+{
+	int flags = Cvar_Flags( var_name );
+
+	// If this cvar may not be modified by a server discard the value.
+	if(!(flags & (CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED)))
+	{
+		Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", var_name, value);
+		return;
+	}
+
+	if((flags != CVAR_NONEXISTENT) && (flags & CVAR_PROTECTED))
+	{
+		if( value )
+			Com_Error( ERR_DROP, "Server tried to set "
+				"\"%s\" to \"%s\"", var_name, value );
+		else
+			Com_Error( ERR_DROP, "Server tried to "
+				"modify \"%s\"", var_name );
+		return;
+	}
+
+	Cvar_Set2( var_name, value, CVAR_SERVER_CREATED | CVAR_ROM, qtrue );
+}
+
+/*
+============
+Cvar_VM_Set
+
+Set cvar for game or cgame vm.
+============
+*/
+void Cvar_VM_Set( const char *var_name, const char *value, qboolean gamevm )
+{
+	int flags = Cvar_Flags( var_name );
+
+	if ( !gamevm && (flags & CVAR_SYSTEMINFO) && !com_sv_running->integer && CL_ConnectedToServer() )
+	{
+		Com_Printf ("%s can only be set by server.\n", var_name);
+		return;
+	}
+
+	if((flags != CVAR_NONEXISTENT) && (flags & CVAR_PROTECTED))
+	{
+		if( value )
+			Com_Error( ERR_DROP, "%s tried to set "
+				"\"%s\" to \"%s\"", gamevm ? "GameVM" : "CGameVM", var_name, value );
+		else
+			Com_Error( ERR_DROP, "%s tried to "
+				"modify \"%s\"", gamevm ? "GameVM" : "CGameVM",  var_name );
+		return;
+	}
+
+	Cvar_Set2( var_name, value, CVAR_VM_CREATED, qtrue );
 }
 
 /*
@@ -689,7 +745,7 @@ void Cvar_SetLatched( const char *var_name, const char *value) {
 Cvar_SetValue
 ============
 */
-void Cvar_SetValue( const char *var_name, float value) {
+cvar_t *Cvar_SetValue( const char *var_name, float value) {
 	char	val[32];
 
 	if ( value == (int)value ) {
@@ -697,15 +753,15 @@ void Cvar_SetValue( const char *var_name, float value) {
 	} else {
 		Com_sprintf (val, sizeof(val), "%f",value);
 	}
-	Cvar_Set (var_name, val);
+	return Cvar_Set (var_name, val);
 }
 
 /*
 ============
-Cvar_SetValueSafe
+Cvar_VM_SetValue
 ============
 */
-void Cvar_SetValueSafe( const char *var_name, float value )
+void Cvar_VM_SetValue( const char *var_name, float value, qboolean gamevm )
 {
 	char val[32];
 
@@ -713,7 +769,7 @@ void Cvar_SetValueSafe( const char *var_name, float value )
 		Com_sprintf( val, sizeof(val), "%i", (int)value );
 	else
 		Com_sprintf( val, sizeof(val), "%f", value );
-	Cvar_SetSafe( var_name, val );
+	Cvar_VM_Set( var_name, val, gamevm );
 }
 
 /*
@@ -722,7 +778,7 @@ Cvar_Reset
 ============
 */
 void Cvar_Reset( const char *var_name ) {
-	Cvar_Set2( var_name, NULL, qfalse );
+	Cvar_SetSafe( var_name, NULL );
 }
 
 /*
@@ -732,7 +788,7 @@ Cvar_ForceReset
 */
 void Cvar_ForceReset(const char *var_name)
 {
-	Cvar_Set2(var_name, NULL, qtrue);
+	Cvar_Set(var_name, NULL);
 }
 
 /*
@@ -787,7 +843,7 @@ qboolean Cvar_Command( void ) {
 	}
 
 	// set the value if forcing isn't required
-	Cvar_Set2 (v->name, Cmd_Args(), qfalse);
+	Cvar_User_Set (v->name, Cmd_Args());
 	return qtrue;
 }
 
@@ -839,9 +895,8 @@ void Cvar_Toggle_f( void ) {
 	}
 
 	if(c == 2) {
-		Cvar_Set2(Cmd_Argv(1), va("%d", 
-			!Cvar_VariableValue(Cmd_Argv(1))), 
-			qfalse);
+		Cvar_User_Set(Cmd_Argv(1), va("%d", 
+			!Cvar_VariableValue(Cmd_Argv(1))));
 		return;
 	}
 
@@ -856,13 +911,13 @@ void Cvar_Toggle_f( void ) {
 	// behaviour is the same as no match (set to the first argument)
 	for(i = 2; i + 1 < c; i++) {
 		if(strcmp(curval, Cmd_Argv(i)) == 0) {
-			Cvar_Set2(Cmd_Argv(1), Cmd_Argv(i + 1), qfalse);
+			Cvar_User_Set(Cmd_Argv(1), Cmd_Argv(i + 1));
 			return;
 		}
 	}
 
 	// fallback
-	Cvar_Set2(Cmd_Argv(1), Cmd_Argv(2), qfalse);
+	Cvar_User_Set(Cmd_Argv(1), Cmd_Argv(2));
 }
 
 /*
@@ -890,7 +945,7 @@ void Cvar_Set_f( void ) {
 		return;
 	}
 
-	v = Cvar_Set2 (Cmd_Argv(1), Cmd_ArgsFrom(2), qfalse);
+	v = Cvar_User_Set (Cmd_Argv(1), Cmd_ArgsFrom(2));
 	if( !v ) {
 		return;
 	}
@@ -1158,7 +1213,7 @@ void Cvar_Restart(qboolean unsetVM)
 		if(!(curvar->flags & (CVAR_ROM | CVAR_INIT | CVAR_NORESTART)))
 		{
 			// Just reset the rest to their default values.
-			Cvar_Set2(curvar->name, curvar->resetString, qfalse);
+			Cvar_SetSafe(curvar->name, curvar->resetString);
 		}
 		
 		curvar = curvar->next;

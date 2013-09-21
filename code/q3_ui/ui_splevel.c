@@ -612,7 +612,7 @@ static void UI_SPLevelMenu_MenuDraw( void ) {
 	for ( n = 0; n < levelMenuInfo.numMaps; n++ ) {
 		x = levelMenuInfo.item_maps[n].generic.x;
 		y = levelMenuInfo.item_maps[n].generic.y;
-		UI_FillRect( x, y + 96, 128, 18, color_black );
+		CG_FillRect( x, y + 96, 128, 18, color_black );
 	}
 
 	if ( selectedArenaSet > currentSet ) {
@@ -630,19 +630,19 @@ static void UI_SPLevelMenu_MenuDraw( void ) {
 		UI_DrawString( x + 64, y + 96, levelMenuInfo.levelNames[n], UI_CENTER|UI_SMALLFONT, color_orange );
 
 		if( levelMenuInfo.levelScores[n] == 1 ) {
-			UI_DrawHandlePic( x, y, 128, 96, levelMenuInfo.levelCompletePic[levelMenuInfo.levelScoresSkill[n] - 1] ); 
+			CG_DrawPic( x, y, 128, 96, levelMenuInfo.levelCompletePic[levelMenuInfo.levelScoresSkill[n] - 1] ); 
 		}
 
 		if ( n == selectedArena ) {
 			if( Menu_ItemAtCursor( &levelMenuInfo.menu ) == &levelMenuInfo.item_maps[n] ) {
 				trap_R_SetColor( color );
 			}
-			UI_DrawHandlePic( x-1, y-1, 130, 130 - 14, levelMenuInfo.levelSelectedPic ); 
+			CG_DrawPic( x-1, y-1, 130, 130 - 14, levelMenuInfo.levelSelectedPic ); 
 			trap_R_SetColor( NULL );
 		}
 		else if( Menu_ItemAtCursor( &levelMenuInfo.menu ) == &levelMenuInfo.item_maps[n] ) {
 			trap_R_SetColor( color );
-			UI_DrawHandlePic( x-31, y-30, 256, 256-27, levelMenuInfo.levelFocusPic); 
+			CG_DrawPic( x-31, y-30, 256, 256-27, levelMenuInfo.levelFocusPic); 
 			trap_R_SetColor( NULL );
 		}
 	}
@@ -663,10 +663,10 @@ static void UI_SPLevelMenu_MenuDraw( void ) {
 	for( n = 0; n < levelMenuInfo.numBots; n++ ) {
 		x = 18 + pad + (64 + 26) * n;
 		if( levelMenuInfo.botPics[n] ) {
-			UI_DrawHandlePic( x, y, 64, 64, levelMenuInfo.botPics[n]);
+			CG_DrawPic( x, y, 64, 64, levelMenuInfo.botPics[n]);
 		}
 		else {
-			UI_FillRect( x, y, 64, 64, color_black );
+			CG_FillRect( x, y, 64, 64, color_black );
 			UI_DrawProportionalString( x+22, y+18, "?", UI_BIGFONT, color_orange );
 		}
 		UI_DrawString( x, y + 64, levelMenuInfo.botNames[n], UI_SMALLFONT|UI_LEFT, color_orange );

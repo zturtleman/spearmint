@@ -45,6 +45,7 @@
 		274FAC83178FB1C800B17C7A /* tr_image_tga.c in Sources */ = {isa = PBXBuildFile; fileRef = 274FAC77178FB1C800B17C7A /* tr_image_tga.c */; };
 		274FAC84178FB1C800B17C7A /* tr_noise.c in Sources */ = {isa = PBXBuildFile; fileRef = 274FAC78178FB1C800B17C7A /* tr_noise.c */; };
 		274FAC88178FB1D600B17C7A /* libjpeg8.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 274FAC87178FB1D600B17C7A /* libjpeg8.a */; };
+		4B6C1FF617D18D1A0074264F /* tr_image_ftx.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C1FF517D18D1A0074264F /* tr_image_ftx.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -96,6 +97,7 @@
 		274FAC79178FB1C800B17C7A /* tr_public.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tr_public.h; sourceTree = "<group>"; };
 		274FAC7A178FB1C800B17C7A /* tr_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tr_types.h; sourceTree = "<group>"; };
 		274FAC87178FB1D600B17C7A /* libjpeg8.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libjpeg8.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		4B6C1FF517D18D1A0074264F /* tr_image_ftx.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tr_image_ftx.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,6 +222,7 @@
 				274FAC71178FB1C800B17C7A /* tr_common.h */,
 				274FAC72178FB1C800B17C7A /* tr_font.c */,
 				274FAC73178FB1C800B17C7A /* tr_image_bmp.c */,
+				4B6C1FF517D18D1A0074264F /* tr_image_ftx.c */,
 				274FAC74178FB1C800B17C7A /* tr_image_jpg.c */,
 				274FAC75178FB1C800B17C7A /* tr_image_pcx.c */,
 				274FAC76178FB1C800B17C7A /* tr_image_png.c */,
@@ -317,6 +320,7 @@
 				274FAC82178FB1C800B17C7A /* tr_image_png.c in Sources */,
 				274FAC83178FB1C800B17C7A /* tr_image_tga.c in Sources */,
 				274FAC84178FB1C800B17C7A /* tr_noise.c in Sources */,
+				4B6C1FF617D18D1A0074264F /* tr_image_ftx.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

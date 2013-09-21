@@ -62,18 +62,7 @@ void CL_Disconnect( qboolean showMainMenu ) {
 void CL_MapLoading( void ) {
 }
 
-qboolean CL_GameCommand( void ) {
-  return qfalse;
-}
-
 void CL_KeyEvent (int key, qboolean down, unsigned time) {
-}
-
-qboolean UI_GameCommand( void ) {
-	return qfalse;
-}
-
-void CL_ForwardCommandToServer( const char *string ) {
 }
 
 void CL_ConsolePrint( char *txt ) {
@@ -82,10 +71,13 @@ void CL_ConsolePrint( char *txt ) {
 void CL_JoystickEvent( int localClientNum, int axis, int value, int time ) {
 }
 
-void CL_InitKeyCommands( void ) {
+void Key_Dummy_f( void ) {
 }
 
-void CL_CDDialog( void ) {
+void CL_InitKeyCommands( void ) {
+	// stop server from printing unknown command bind when executing default.cfg
+	Cmd_AddCommand ("bind",Key_Dummy_f);
+	Cmd_AddCommand ("unbindall",Key_Dummy_f);
 }
 
 void CL_FlushMemory(void)
@@ -99,12 +91,7 @@ void CL_ShutdownAll(qboolean shutdownRef)
 void CL_StartHunkUsers( qboolean rendererOnly ) {
 }
 
-void CL_InitRef(void)
-{
+qboolean CL_ConnectedToServer( void ) {
+	return qfalse;
 }
 
-void CL_Snd_Shutdown(void)
-{
-}
-
-qboolean CL_CDKeyValidate( const char *key, const char *checksum ) { return qtrue; }

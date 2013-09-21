@@ -765,6 +765,9 @@ double atan2( double y, double x ) {
 	return base + dir * i * ( M_PI/2048); 
 }
 
+double tan( double x ) {
+	return sin(x) / cos(x);
+}
 
 #endif
 
@@ -816,10 +819,6 @@ static double powN( double base, int exp )
 	// x < 0
 	else
 		return 1.0 / powN( base, -exp );
-}
-
-double tan( double x ) {
-	return sin(x) / cos(x);
 }
 
 

@@ -347,7 +347,13 @@ typedef enum {
 	TRAP_FLOOR,
 	TRAP_CEIL,
 	TRAP_ACOS,
-	TRAP_ASIN
+	TRAP_ASIN,
+	TRAP_TAN,
+	TRAP_ATAN,
+	TRAP_POW,
+	TRAP_EXP,
+	TRAP_LOG,
+	TRAP_LOG10
 } sharedTraps_t;
 
 void	VM_Init( void );
@@ -422,12 +428,10 @@ then searches for a command or variable that matches the first token.
 */
 
 typedef void (*xcommand_t) (void);
-typedef void (*icommand_t) (int);
 
 void	Cmd_Init (void);
 
 void	Cmd_AddCommand( const char *cmd_name, xcommand_t function );
-void	Cmd_AddIntCommand( const char *cmd_name, icommand_t function, int value );
 // called by the init functions of other parts of the program to
 // register commands and functions to call for them.
 // The cmd_name is referenced later, so it should not be in temp memory
@@ -435,11 +439,13 @@ void	Cmd_AddIntCommand( const char *cmd_name, icommand_t function, int value );
 // as a clc_clientCommand instead of executed locally
 
 void	Cmd_RemoveCommand( const char *cmd_name );
+void	Cmd_RemoveCommandsByFunc( xcommand_t function );
 
 typedef void (*completionFunc_t)( char *args, int argNum );
 
 // don't allow VMs to remove system commands
-void	Cmd_RemoveCommandSafe( const char *cmd_name );
+void	Cmd_AddCommandSafe( const char *cmd_name, xcommand_t function );
+void	Cmd_RemoveCommandSafe( const char *cmd_name, xcommand_t function );
 
 void	Cmd_CommandCompletion( void(*callback)(const char *s) );
 // callback with each valid string
@@ -512,21 +518,25 @@ void	Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultVa
 void	Cvar_Update( vmCvar_t *vmCvar );
 // updates an interpreted modules' version of a cvar
 
-void 	Cvar_Set( const char *var_name, const char *value );
+cvar_t *Cvar_Set2( const char *var_name, const char *value, int defaultFlags, qboolean force );
+//
+
+cvar_t	*Cvar_Set( const char *var_name, const char *value );
 // will create the variable with no flags if it doesn't exist
 
-cvar_t	*Cvar_Set2(const char *var_name, const char *value, qboolean force);
-// same as Cvar_Set, but allows more control over setting of cvar
+cvar_t	*Cvar_SetSafe( const char *var_name, const char *value);
+// same as Cvar_Set, but doesn't force setting the value (respects CVAR_ROM, etc)
 
-void	Cvar_SetSafe( const char *var_name, const char *value );
+cvar_t	*Cvar_User_Set( const char *var_name, const char *value );
+// same as Cvar_SetSafe, but defaults to CVAR_USER_CREATED
+
+void	Cvar_VM_Set( const char *var_name, const char *value, qboolean gamevm );
+void	Cvar_Server_Set( const char *var_name, const char *value );
 // sometimes we set variables from an untrusted source: fail if flags & CVAR_PROTECTED
 
-void Cvar_SetLatched( const char *var_name, const char *value);
-// don't set the cvar immediately
-
-void	Cvar_SetValue( const char *var_name, float value );
-void	Cvar_SetValueSafe( const char *var_name, float value );
-// expands value to a string and calls Cvar_Set/Cvar_SetSafe
+cvar_t	*Cvar_SetValue( const char *var_name, float value );
+void	Cvar_VM_SetValue( const char *var_name, float value, qboolean gamevm );
+// expands value to a string and calls Cvar_Set/Cvar_VM_Set
 
 float	Cvar_VariableValue( const char *var_name );
 int		Cvar_VariableIntegerValue( const char *var_name );
@@ -1015,7 +1025,6 @@ void CL_Init( void );
 void CL_Disconnect( qboolean showMainMenu );
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit);
 void CL_Frame( int msec );
-qboolean CL_GameCommand( void );
 void CL_GameConsoleText( void );
 void CL_KeyEvent (int key, qboolean down, unsigned time);
 
@@ -1036,25 +1045,17 @@ void CL_MapLoading( void );
 // will be cleared, so the client must shutdown cgame, ui, and
 // the renderer
 
-void	CL_ForwardCommandToServer( const char *string );
-// adds the current command line as a clc_clientCommand to the client message.
-// things like godmode, noclip, etc, are commands directed to the server,
-// so when they are typed in at the console, they will need to be forwarded.
-
 void CL_FlushMemory( void );
 // dump all memory on an error
 
 void CL_ShutdownAll(qboolean shutdownRef);
 // shutdown client
 
-void CL_InitRef(void);
-// initialize renderer interface
-
 void CL_StartHunkUsers( qboolean rendererOnly );
 // start all the client stuff using the hunk
 
-void CL_Snd_Shutdown(void);
-// Restart sound subsystem
+qboolean CL_ConnectedToServer( void );
+// returns qtrue if connected to a server
 
 void Key_KeynameCompletion( void(*callback)(const char *s) );
 // for keyname autocompletion
@@ -1078,7 +1079,6 @@ void SV_Shutdown( char *finalmsg );
 void SV_Frame( int msec );
 void SV_PacketEvent( netadr_t from, msg_t *msg );
 int SV_FrameMsec(void);
-qboolean SV_GameCommand( void );
 int SV_SendQueuedPackets(void);
 
 /*
@@ -1184,7 +1184,8 @@ typedef enum
 
 dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *title );
 
-qboolean Sys_WritePIDFile( void );
+void Sys_RemovePIDFile( const char *gamedir );
+void Sys_InitPIDFile( const char *gamedir );
 
 /* This is based on the Adaptive Huffman algorithm described in Sayood's Data
  * Compression book.  The ranks are not actually stored, but implicitly defined

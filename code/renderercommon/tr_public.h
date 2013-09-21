@@ -80,8 +80,9 @@ typedef struct {
 	void	(*AddPolyToScene)( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
 	void	(*AddPolyBufferToScene)( polyBuffer_t* pPolyBuffer );
 	int		(*LightForPoint)( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
-	void	(*AddLightToScene)( const vec3_t org, float intensity, float r, float g, float b );
-	void	(*AddAdditiveLightToScene)( const vec3_t org, float intensity, float r, float g, float b );
+	void	(*AddLightToScene)( const vec3_t org, float radius, float intensity, float r, float g, float b );
+	void	(*AddAdditiveLightToScene)( const vec3_t org, float radius, float intensity, float r, float g, float b );
+	void	(*AddCoronaToScene)( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible );
 	void	(*RenderScene)( const refdef_t *fd );
 
 	void	(*SetColor)( const float *rgba );	// NULL = 1,1,1,1
@@ -156,8 +157,8 @@ typedef struct {
 	void	(*Free)( void *buf );
 
 	cvar_t	*(*Cvar_Get)( const char *name, const char *value, int flags );
-	void	(*Cvar_Set)( const char *name, const char *value );
-	void	(*Cvar_SetValue) (const char *name, float value);
+	cvar_t	*(*Cvar_Set)( const char *name, const char *value );
+	cvar_t	*(*Cvar_SetValue) (const char *name, float value);
 	void	(*Cvar_CheckRange)( cvar_t *cv, float minVal, float maxVal, qboolean shouldBeIntegral );
 
 	int		(*Cvar_VariableIntegerValue) (const char *var_name);

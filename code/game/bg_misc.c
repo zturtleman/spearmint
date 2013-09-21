@@ -995,6 +995,8 @@ vmNetField_t	bg_entityStateFields[] =
 { NETF(angles2[0]), 0 },
 { NETF(angles2[2]), 0 },
 { NETF(constantLight), 32 },
+{ NETF(dl_intensity), 32 },
+{ NETF(density), 10},
 { NETF(frame), 16 }
 };
 

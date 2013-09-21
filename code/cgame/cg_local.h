@@ -32,7 +32,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../renderercommon/tr_types.h"
 #include "../game/bg_misc.h"
 #include "../client/keycodes.h"
-#include "../ui/ui_public.h"
 #include "cg_public.h"
 #include "cg_syscalls.h"
 
@@ -194,6 +193,16 @@ typedef struct centity_s {
 	// exact interpolated position of entity on this frame
 	vec3_t			lerpOrigin;
 	vec3_t			lerpAngles;
+
+	// client side dlights
+	int				dl_frame;
+	int				dl_oldframe;
+	float			dl_backlerp;
+	int				dl_time;
+	char			dl_stylestring[64];
+	int				dl_sound;
+	int				dl_atten;
+
 } centity_t;
 
 
@@ -677,6 +686,8 @@ typedef struct {
 	// information screen text during loading
 	char		infoScreenText[MAX_STRING_CHARS];
 
+	qboolean	lightstylesInited;
+
 	// global centerprinting (drawn over all viewports)
 	int			centerPrintTime;
 	float		centerPrintCharScale;
@@ -746,9 +757,6 @@ typedef struct {
 // stored in the clientInfo_t, itemInfo_t, weaponInfo_t, and powerupInfo_t
 typedef struct {
 	qhandle_t	charsetShader;
-	qhandle_t	charsetProp;
-	qhandle_t	charsetPropGlow;
-	qhandle_t	charsetPropB;
 	qhandle_t	whiteShader;
 
 #ifdef MISSIONPACK
@@ -1285,6 +1293,11 @@ extern	vmCvar_t		cg_voipShowMeter;
 extern	vmCvar_t		cg_voipShowCrosshairMeter;
 extern	vmCvar_t		cg_consoleLatency;
 extern	vmCvar_t		cg_drawShaderInfo;
+extern	vmCvar_t		cg_coronafardist;
+extern	vmCvar_t		cg_coronas;
+extern	vmCvar_t		cg_fovAspectAdjust;
+extern	vmCvar_t		cg_fadeExplosions;
+extern	vmCvar_t		ui_stretch;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
 extern	vmCvar_t		cg_blueTeamName;
@@ -1318,6 +1331,7 @@ extern	vmCvar_t		cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 //
 const char *CG_ConfigString( int index );
 const char *CG_Argv( int arg );
+char *CG_Cvar_VariableString( const char *var_name );
 
 int CG_MaxSplitView(void);
 
@@ -1349,6 +1363,8 @@ void CG_BuildSpectatorString( void );
 
 void CG_RemoveNotifyLine( cglc_t *localClient );
 void CG_AddNotifyText( void );
+
+void CG_SetupDlightstyles( void );
 
 
 //
@@ -1394,6 +1410,7 @@ screenPlacement_e CG_GetScreenVerticalPlacement(void);
 void CG_AdjustFrom640( float *x, float *y, float *w, float *h );
 void CG_FillRect( float x, float y, float width, float height, const float *color );
 void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
+void CG_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 void CG_SetClipRegion( float x, float y, float w, float h );
 void CG_ClearClipRegion( void );
 
@@ -1415,10 +1432,10 @@ void CG_KeysStringForBinding(const char *binding, char *string, int stringSize )
 void CG_ColorForHealth( vec4_t hcolor );
 void CG_GetColorForHealth( int health, int armor, vec4_t hcolor );
 
-void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );
 void CG_DrawRect( float x, float y, float width, float height, float size, const float *color );
 void CG_DrawSides(float x, float y, float w, float h, float size);
 void CG_DrawTopBottom(float x, float y, float w, float h, float size);
+void CG_ClearScreen( void );
 
 
 //
@@ -1627,7 +1644,16 @@ void CG_DrawOldTourneyScoreboard( void );
 //
 // cg_consolecmds.c
 //
-qboolean CG_ConsoleCommand( void );
+#define CMD_INGAME	1 // only usable while in-game
+#define CMD_MENU	2 // only usable while at main menu
+
+typedef struct {
+	char	*cmd;
+	void	(*function)(void);
+	int		flags;
+} consoleCommand_t;
+
+qboolean CG_ConsoleCommand( int realTime );
 void CG_InitConsoleCommands( void );
 
 //

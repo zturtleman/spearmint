@@ -369,8 +369,6 @@ typedef struct cmd_function_s
 	struct cmd_function_s	*next;
 	char					*name;
 	xcommand_t				function;
-	icommand_t				intFunction;
-	int						intValue;
 	completionFunc_t	complete;
 } cmd_function_t;
 
@@ -706,9 +704,7 @@ void	Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
 	// fail if the command already exists
 	if( Cmd_FindCommand( cmd_name ) )
 	{
-		// allow completion-only commands to be silently doubled
-		if( function != NULL )
-			Com_Printf( "Cmd_AddCommand: %s already defined\n", cmd_name );
+		Com_Printf( "Cmd_AddCommand: %s already defined\n", cmd_name );
 		return;
 	}
 
@@ -716,8 +712,6 @@ void	Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
 	cmd = S_Malloc (sizeof(cmd_function_t));
 	cmd->name = CopyString( cmd_name );
 	cmd->function = function;
-	cmd->intFunction = NULL;
-	cmd->intValue = 0;
 	cmd->complete = NULL;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
@@ -725,30 +719,21 @@ void	Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
 
 /*
 ============
-Cmd_AddIntCommand
+Cmd_AddCommandSafe
+
+Only add command if there isn't a system cvar with the same name
 ============
 */
-void	Cmd_AddIntCommand( const char *cmd_name, icommand_t function, int value ) {
-	cmd_function_t	*cmd;
-	
-	// fail if the command already exists
-	if( Cmd_FindCommand( cmd_name ) )
+void	Cmd_AddCommandSafe( const char *cmd_name, xcommand_t function )
+{
+	if( !( Cvar_Flags( cmd_name ) & ( CVAR_NONEXISTENT | CVAR_VM_CREATED ) ) )
 	{
-		// allow completion-only commands to be silently doubled
-		if( function != NULL )
-			Com_Printf( "Cmd_AddIntCommand: %s already defined\n", cmd_name );
+		Com_Error( ERR_DROP, "Restricted source tried to override "
+			"system cvar \"%s\" with a command", cmd_name );
 		return;
 	}
 
-	// use a small malloc to avoid zone fragmentation
-	cmd = S_Malloc (sizeof(cmd_function_t));
-	cmd->name = CopyString( cmd_name );
-	cmd->function = NULL;
-	cmd->intFunction = function;
-	cmd->intValue = value;
-	cmd->complete = NULL;
-	cmd->next = cmd_functions;
-	cmd_functions = cmd;
+	Cmd_AddCommand( cmd_name, function );
 }
 
 /*
@@ -795,18 +780,47 @@ void	Cmd_RemoveCommand( const char *cmd_name ) {
 
 /*
 ============
-Cmd_RemoveCommandSafe
+Cmd_RemoveCommandsByFunc
 
-Only remove commands with no associated function
+single function may have multiple names, so check all commands
 ============
 */
-void Cmd_RemoveCommandSafe( const char *cmd_name )
+void	Cmd_RemoveCommandsByFunc( xcommand_t function ) {
+	cmd_function_t	*cmd, **back;
+
+	back = &cmd_functions;
+	while( 1 ) {
+		cmd = *back;
+		if ( !cmd ) {
+			// command wasn't active
+			return;
+		}
+		if ( cmd->function == function ) {
+			*back = cmd->next;
+			if (cmd->name) {
+				Z_Free(cmd->name);
+			}
+			Z_Free (cmd);
+			continue;
+		}
+		back = &cmd->next;
+	}
+}
+
+/*
+============
+Cmd_RemoveCommandSafe
+
+Only remove commands with correct associated function
+============
+*/
+void Cmd_RemoveCommandSafe( const char *cmd_name, xcommand_t function )
 {
 	cmd_function_t *cmd = Cmd_FindCommand( cmd_name );
 
 	if( !cmd )
 		return;
-	if( cmd->function || cmd->intFunction )
+	if( cmd->function != function )
 	{
 		Com_Error( ERR_DROP, "Restricted source tried to remove "
 			"system command \"%s\"", cmd_name );
@@ -854,7 +868,6 @@ A complete command line has been parsed, so try to execute it
 */
 void	Cmd_ExecuteString( const char *text ) {	
 	cmd_function_t	*cmdFunc, **prev;
-	qboolean		checkVmCmdFirst;
 
 	// execute the command line
 	Cmd_TokenizeString( text );		
@@ -873,44 +886,17 @@ void	Cmd_ExecuteString( const char *text ) {
 			cmd_functions = cmdFunc;
 
 			// perform the action
-			if ( cmdFunc->intFunction ) {
-				cmdFunc->intFunction( cmdFunc->intValue );
-			} else if ( !cmdFunc->function ) {
-				// let the cgame or game handle it
-				break;
-			} else {
-				cmdFunc->function ();
-			}
+			cmdFunc->function ();
 			return;
 		}
 	}
 
-	// let vm commands to override vm cvars
-	checkVmCmdFirst = ( Cvar_Flags( cmd.argv[0] ) & CVAR_VM_CREATED );
-
 	// check cvars
-	if ( !checkVmCmdFirst && Cvar_Command() ) {
+	if ( Cvar_Command() ) {
 		return;
 	}
 
-	// check client game commands
-	if ( com_cl_running && com_cl_running->integer && CL_GameCommand() ) {
-		return;
-	}
-
-	// check server game commands
-	if ( com_sv_running && com_sv_running->integer && SV_GameCommand() ) {
-		return;
-	}
-
-	// check cvars
-	if ( checkVmCmdFirst && Cvar_Command() ) {
-		return;
-	}
-
-	// send it as a server command if we are connected
-	// this will usually result in a chat message
-	CL_ForwardCommandToServer ( text );
+	Com_Printf ("Unknown command \"%s" S_COLOR_WHITE "\"\n", cmd.argv[0]);
 }
 
 /*

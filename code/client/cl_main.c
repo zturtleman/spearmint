@@ -1523,7 +1523,7 @@ static void CL_OldGame(void)
 	{
 		// change back to previous fs_game
 		cl_oldGameSet = qfalse;
-		Cvar_Set2("fs_game", cl_oldGame, qtrue);
+		Cvar_Set("fs_game", cl_oldGame);
 		FS_ConditionalRestart(qfalse);
 	}
 }
@@ -1636,38 +1636,6 @@ void CL_Disconnect( qboolean showMainMenu ) {
 		CL_OldGame();
 	else
 		noGameRestart = qfalse;
-}
-
-
-/*
-===================
-CL_ForwardCommandToServer
-
-adds the current command line as a clientCommand
-things like godmode, noclip, etc, are commands directed to the server,
-so when they are typed in at the console, they will need to be forwarded.
-===================
-*/
-void CL_ForwardCommandToServer( const char *string ) {
-	char	*cmd;
-
-	cmd = Cmd_Argv(0);
-
-	// ignore key up commands
-	if ( cmd[0] == '-' ) {
-		return;
-	}
-
-	if ( clc.demoplaying || clc.state < CA_CONNECTED || cmd[0] == '+' ) {
-		Com_Printf ("Unknown command \"%s" S_COLOR_WHITE "\"\n", cmd);
-		return;
-	}
-
-	if ( Cmd_Argc() > 1 ) {
-		CL_AddReliableCommand(string, qfalse);
-	} else {
-		CL_AddReliableCommand(cmd, qfalse);
-	}
 }
 
 /*
@@ -3669,6 +3637,10 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 
 	Com_Printf( "-----------------------\n" );
 
+}
+
+qboolean CL_ConnectedToServer( void ) {
+	return ( clc.state >= CA_CONNECTED );
 }
 
 static void CL_SetServerInfo(serverInfo_t *server, const char *info, int ping) {

@@ -346,16 +346,16 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			shader = R_GetShaderByHandle( ent->e.customShader );
 		} else if ( ent->e.customSkin > 0 && ent->e.customSkin < tr.numSkins ) {
 			skin_t *skin;
-			int		j;
+			skinSurface_t *skinSurf;
 
 			skin = R_GetSkinByHandle( ent->e.customSkin );
 
 			// match the surface name to something in the skin file
 			shader = tr.defaultShader;
-			for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
+			for ( skinSurf = skin->surfaces ; skinSurf ; skinSurf = skinSurf->next ) {
 				// the names have both been lowercased
-				if ( !strcmp( skin->surfaces[j]->name, surface->name ) ) {
-					shader = skin->surfaces[j]->shader;
+				if ( !strcmp( skinSurf->name, surface->name ) ) {
+					shader = skinSurf->shader;
 					break;
 				}
 			}

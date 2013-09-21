@@ -65,7 +65,6 @@
 		2711BED614D137BC005EB142 /* cl_net_chan.c in Sources */ = {isa = PBXBuildFile; fileRef = 2711BEC314D137BC005EB142 /* cl_net_chan.c */; };
 		2711BED714D137BC005EB142 /* cl_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 2711BEC414D137BC005EB142 /* cl_parse.c */; };
 		2711BED814D137BC005EB142 /* cl_scrn.c in Sources */ = {isa = PBXBuildFile; fileRef = 2711BEC514D137BC005EB142 /* cl_scrn.c */; };
-		2711BED914D137BC005EB142 /* cl_ui.c in Sources */ = {isa = PBXBuildFile; fileRef = 2711BEC614D137BC005EB142 /* cl_ui.c */; };
 		2711BEDA14D137BC005EB142 /* snd_adpcm.c in Sources */ = {isa = PBXBuildFile; fileRef = 2711BEC914D137BC005EB142 /* snd_adpcm.c */; };
 		2711BEDB14D137BC005EB142 /* snd_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = 2711BECA14D137BC005EB142 /* snd_dma.c */; };
 		2711BEDC14D137BC005EB142 /* snd_mem.c in Sources */ = {isa = PBXBuildFile; fileRef = 2711BECC14D137BC005EB142 /* snd_mem.c */; };
@@ -186,7 +185,6 @@
 		2711BEC314D137BC005EB142 /* cl_net_chan.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cl_net_chan.c; sourceTree = "<group>"; };
 		2711BEC414D137BC005EB142 /* cl_parse.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cl_parse.c; sourceTree = "<group>"; };
 		2711BEC514D137BC005EB142 /* cl_scrn.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cl_scrn.c; sourceTree = "<group>"; };
-		2711BEC614D137BC005EB142 /* cl_ui.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cl_ui.c; sourceTree = "<group>"; };
 		2711BEC714D137BC005EB142 /* client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = client.h; sourceTree = "<group>"; };
 		2711BEC814D137BC005EB142 /* keys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = keys.h; sourceTree = "<group>"; };
 		2711BEC914D137BC005EB142 /* snd_adpcm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = snd_adpcm.c; sourceTree = "<group>"; };
@@ -218,7 +216,7 @@
 		2758B912178FB696007F6582 /* libSDLmain.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDLmain.a; path = ../../code/libs/macosx/libSDLmain.a; sourceTree = SOURCE_ROOT; };
 		2758BA49178FD062007F6582 /* renderer_opengl2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = renderer_opengl2.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		2758BB3217905B8F007F6582 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
-		2758BB41179070C3007F6582 /* quake3_flat.iconset */ = {isa = PBXFileReference; lastKnownFileType = folder.iconset; name = quake3_flat.iconset; path = ../quake3_flat.iconset; sourceTree = "<group>"; };
+		2758BB41179070C3007F6582 /* quake3_flat.iconset */ = {isa = PBXFileReference; lastKnownFileType = folder; name = quake3_flat.iconset; path = ../quake3_flat.iconset; sourceTree = "<group>"; };
 		2772B8001790EABF004CCF57 /* libspeex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libspeex.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		2772B8401790F05B004CCF57 /* cgame.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = cgame.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		2772B8411790F05B004CCF57 /* game.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = game.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -495,7 +493,6 @@
 				2711BEC314D137BC005EB142 /* cl_net_chan.c */,
 				2711BEC414D137BC005EB142 /* cl_parse.c */,
 				2711BEC514D137BC005EB142 /* cl_scrn.c */,
-				2711BEC614D137BC005EB142 /* cl_ui.c */,
 				2711BEC714D137BC005EB142 /* client.h */,
 				27AAD000178E00430093DFC0 /* keycodes.h */,
 				2711BEC814D137BC005EB142 /* keys.h */,
@@ -837,7 +834,6 @@
 				2711BED614D137BC005EB142 /* cl_net_chan.c in Sources */,
 				2711BED714D137BC005EB142 /* cl_parse.c in Sources */,
 				2711BED814D137BC005EB142 /* cl_scrn.c in Sources */,
-				2711BED914D137BC005EB142 /* cl_ui.c in Sources */,
 				2711BEDA14D137BC005EB142 /* snd_adpcm.c in Sources */,
 				2711BEDB14D137BC005EB142 /* snd_dma.c in Sources */,
 				2711BEDC14D137BC005EB142 /* snd_mem.c in Sources */,

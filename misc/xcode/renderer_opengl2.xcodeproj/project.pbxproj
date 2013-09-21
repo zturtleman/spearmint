@@ -79,6 +79,7 @@
 		2758BA45178FCFC1007F6582 /* texturecolor_vp.c in Sources */ = {isa = PBXBuildFile; fileRef = 2758BA26178FCFC0007F6582 /* texturecolor_vp.c */; };
 		2758BA46178FCFC1007F6582 /* tonemap_fp.c in Sources */ = {isa = PBXBuildFile; fileRef = 2758BA28178FCFC0007F6582 /* tonemap_fp.c */; };
 		2758BA47178FCFC1007F6582 /* tonemap_vp.c in Sources */ = {isa = PBXBuildFile; fileRef = 2758BA2A178FCFC0007F6582 /* tonemap_vp.c */; };
+		4B6C201A17D18E0E0074264F /* tr_image_ftx.c in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C201917D18E0E0074264F /* tr_image_ftx.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -197,6 +198,7 @@
 		2758BA29178FCFC0007F6582 /* tonemap_fp.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = tonemap_fp.glsl; sourceTree = "<group>"; };
 		2758BA2A178FCFC0007F6582 /* tonemap_vp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tonemap_vp.c; sourceTree = "<group>"; };
 		2758BA2B178FCFC0007F6582 /* tonemap_vp.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = tonemap_vp.glsl; sourceTree = "<group>"; };
+		4B6C201917D18E0E0074264F /* tr_image_ftx.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tr_image_ftx.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -297,6 +299,7 @@
 		2758B9A3178FBB7B007F6582 /* renderercommon */ = {
 			isa = PBXGroup;
 			children = (
+				4B6C201917D18E0E0074264F /* tr_image_ftx.c */,
 				2758B9A4178FBB8E007F6582 /* iqm.h */,
 				2758B9A5178FBB8E007F6582 /* qgl.h */,
 				2758B9A6178FBB8E007F6582 /* tr_common.h */,
@@ -560,6 +563,7 @@
 				2758BA45178FCFC1007F6582 /* texturecolor_vp.c in Sources */,
 				2758BA46178FCFC1007F6582 /* tonemap_fp.c in Sources */,
 				2758BA47178FCFC1007F6582 /* tonemap_vp.c in Sources */,
+				4B6C201A17D18E0E0074264F /* tr_image_ftx.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -35,52 +35,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 **********************************************************************/
 #include "ui_local.h"
 
-qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
-
-qboolean newUI = qfalse;
-
-
-/*
-=================
-UI_ClampCvar
-=================
-*/
-float UI_ClampCvar( float min, float max, float value )
-{
-	if ( value < min ) return min;
-	if ( value > max ) return max;
-	return value;
-}
-
-/*
-=================
-UI_StartDemoLoop
-=================
-*/
-void UI_StartDemoLoop( void ) {
-	trap_Cmd_ExecuteText( EXEC_APPEND, "d1\n" );
-}
-
-
-char *UI_Argv( int arg ) {
-	static char	buffer[MAX_STRING_CHARS];
-
-	trap_Argv( arg, buffer, sizeof( buffer ) );
-
-	return buffer;
-}
-
-
-char *UI_Cvar_VariableString( const char *var_name ) {
-	static char	buffer[MAX_STRING_CHARS];
-
-	trap_Cvar_VariableStringBuffer( var_name, buffer, sizeof( buffer ) );
-
-	return buffer;
-}
-
-
-
 void UI_SetBestScores(postGameInfo_t *newInfo, qboolean postGame) {
 	trap_Cvar_Set("ui_scoreAccuracy",				va("%i%%", newInfo->accuracy));
 	trap_Cvar_SetValue("ui_scoreImpressives",	newInfo->impressives);
@@ -235,18 +189,18 @@ static void UI_CalcPostGameStats( void ) {
 		trap_FS_FCloseFile(f);
 	}					 
 
-	newInfo.accuracy = atoi(UI_Argv(3));
-	newInfo.impressives = atoi(UI_Argv(4));
-	newInfo.excellents = atoi(UI_Argv(5));
-	newInfo.defends = atoi(UI_Argv(6));
-	newInfo.assists = atoi(UI_Argv(7));
-	newInfo.gauntlets = atoi(UI_Argv(8));
-	newInfo.baseScore = atoi(UI_Argv(9));
-	newInfo.perfects = atoi(UI_Argv(10));
-	newInfo.redScore = atoi(UI_Argv(11));
-	newInfo.blueScore = atoi(UI_Argv(12));
-	time = atoi(UI_Argv(13));
-	newInfo.captures = atoi(UI_Argv(14));
+	newInfo.accuracy = atoi(CG_Argv(3));
+	newInfo.impressives = atoi(CG_Argv(4));
+	newInfo.excellents = atoi(CG_Argv(5));
+	newInfo.defends = atoi(CG_Argv(6));
+	newInfo.assists = atoi(CG_Argv(7));
+	newInfo.gauntlets = atoi(CG_Argv(8));
+	newInfo.baseScore = atoi(CG_Argv(9));
+	newInfo.perfects = atoi(CG_Argv(10));
+	newInfo.redScore = atoi(CG_Argv(11));
+	newInfo.blueScore = atoi(CG_Argv(12));
+	time = atoi(CG_Argv(13));
+	newInfo.captures = atoi(CG_Argv(14));
 
 	newInfo.time = (time - trap_Cvar_VariableValue("ui_matchStartTime")) / 1000;
 	adjustedTime = uiInfo.mapList[ui_currentMap.integer].timeToBeat[game];
@@ -302,194 +256,49 @@ static void UI_CalcPostGameStats( void ) {
 
 }
 
+static void UI_Test_f( void ) {
+	UI_ShowPostGame(qtrue);
+}
+
+static void UI_Load_f( void ) {
+#ifdef MISSIONPACK_HUD
+	if ( cg.connected ) {
+		// if hud scripts are loaded, UI_Load() will break it. So reload hud and ui using loadhud command.
+		trap_Cmd_ExecuteText( EXEC_NOW, "loadhud\n" );
+		return;
+	}
+#endif
+	UI_Load();
+}
+
+consoleCommand_t	ui_commands[] = {
+	//{ "levelselect", UI_SPLevelMenu_f, 0 },
+	{ "postgame", UI_CalcPostGameStats, CMD_INGAME },
+	{ "ui_cache", UI_Cache_f, 0 },
+	//{ "ui_cinematics", UI_CinematicsMenu_f, 0 },
+	//{ "ui_teamOrders", UI_TeamOrdersMenu_f, CMD_INGAME },
+	//{ "iamacheater", UI_SPUnlock_f, 0 },
+	//{ "iamamonkey", UI_SPUnlockMedals_f, 0 },
+	{ "ui_test", UI_Test_f, CMD_INGAME },
+	{ "ui_report", UI_Report, 0 },
+	{ "ui_load", UI_Load_f, 0 }
+};
+
+int ui_numCommands = ARRAY_LEN( ui_commands );
 
 /*
 =================
 UI_ConsoleCommand
+
+update frame time, commands are executed by CG_ConsoleCommand
 =================
 */
-qboolean UI_ConsoleCommand( int realTime ) {
-	char	*cmd;
-
+void UI_ConsoleCommand( int realTime ) {
 	uiInfo.uiDC.frameTime = realTime - uiInfo.uiDC.realTime;
 	uiInfo.uiDC.realTime = realTime;
 
-	cmd = UI_Argv( 0 );
-
 	// ensure minimum menu data is available
 	//Menu_Cache();
-
-	if ( Q_stricmp (cmd, "ui_test") == 0 ) {
-		UI_ShowPostGame(qtrue);
-	}
-
-	if ( Q_stricmp (cmd, "ui_report") == 0 ) {
-		UI_Report();
-		return qtrue;
-	}
-	
-	if ( Q_stricmp (cmd, "ui_load") == 0 ) {
-#ifdef MISSIONPACK_HUD
-		if ( cg.connected ) {
-			// if hud scripts are loaded, UI_Load() will break it. So reload hud and ui using loadhud command.
-			trap_Cmd_ExecuteText( EXEC_NOW, "loadhud\n" );
-			return qtrue;
-		}
-#endif
-		UI_Load();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "remapShader") == 0 ) {
-		if (trap_Argc() == 4) {
-			char shader1[MAX_QPATH];
-			char shader2[MAX_QPATH];
-			char shader3[MAX_QPATH];
-			
-			Q_strncpyz(shader1, UI_Argv(1), sizeof(shader1));
-			Q_strncpyz(shader2, UI_Argv(2), sizeof(shader2));
-			Q_strncpyz(shader3, UI_Argv(3), sizeof(shader3));
-			
-			trap_R_RemapShader(shader1, shader2, shader3);
-			return qtrue;
-		}
-	}
-
-	if ( Q_stricmp (cmd, "postgame") == 0 ) {
-		UI_CalcPostGameStats();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "ui_cache") == 0 ) {
-		UI_Cache_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "ui_teamOrders") == 0 ) {
-		//UI_TeamOrdersMenu_f();
-		return qtrue;
-	}
-
-	return qfalse;
-}
-
-/*
-================
-UI_AdjustFrom640
-
-Adjusted for resolution and screen aspect ratio
-================
-*/
-void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
-	// expect valid pointers
-#if 0
-	*x = *x * uiInfo.uiDC.scale + uiInfo.uiDC.bias;
-	*y *= uiInfo.uiDC.scale;
-	*w *= uiInfo.uiDC.scale;
-	*h *= uiInfo.uiDC.scale;
-#endif
-
-	*x *= uiInfo.uiDC.xscale;
-	*y *= uiInfo.uiDC.yscale;
-	*w *= uiInfo.uiDC.xscale;
-	*h *= uiInfo.uiDC.yscale;
-
-}
-
-void UI_DrawNamedPic( float x, float y, float width, float height, const char *picname ) {
-	qhandle_t	hShader;
-
-	hShader = trap_R_RegisterShaderNoMip( picname );
-	UI_AdjustFrom640( &x, &y, &width, &height );
-	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
-}
-
-void UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader ) {
-	float	s0;
-	float	s1;
-	float	t0;
-	float	t1;
-
-	if( w < 0 ) {	// flip about vertical
-		w  = -w;
-		s0 = 1;
-		s1 = 0;
-	}
-	else {
-		s0 = 0;
-		s1 = 1;
-	}
-
-	if( h < 0 ) {	// flip about horizontal
-		h  = -h;
-		t0 = 1;
-		t1 = 0;
-	}
-	else {
-		t0 = 0;
-		t1 = 1;
-	}
-	
-	UI_AdjustFrom640( &x, &y, &w, &h );
-	trap_R_DrawStretchPic( x, y, w, h, s0, t0, s1, t1, hShader );
-}
-
-/*
-================
-UI_FillRect
-
-Coordinates are 640*480 virtual values
-=================
-*/
-void UI_FillRect( float x, float y, float width, float height, const float *color ) {
-	trap_R_SetColor( color );
-
-	UI_AdjustFrom640( &x, &y, &width, &height );
-	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-
-	trap_R_SetColor( NULL );
-}
-
-void UI_DrawSides(float x, float y, float w, float h) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
-	trap_R_DrawStretchPic( x, y, 1, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-	trap_R_DrawStretchPic( x + w - 1, y, 1, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-}
-
-void UI_DrawTopBottom(float x, float y, float w, float h) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
-	trap_R_DrawStretchPic( x, y, w, 1, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-	trap_R_DrawStretchPic( x, y + h - 1, w, 1, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-}
-/*
-================
-UI_DrawRect
-
-Coordinates are 640*480 virtual values
-=================
-*/
-void UI_DrawRect( float x, float y, float width, float height, const float *color ) {
-	trap_R_SetColor( color );
-
-  UI_DrawTopBottom(x, y, width, height);
-  UI_DrawSides(x, y, width, height);
-
-	trap_R_SetColor( NULL );
-}
-
-void UI_SetColor( const float *rgba ) {
-	trap_R_SetColor( rgba );
-}
-
-void UI_UpdateScreen( void ) {
-	trap_UpdateScreen();
-}
-
-
-void UI_DrawTextBox (int x, int y, int width, int lines)
-{
-	UI_FillRect( x + BIGCHAR_WIDTH/2, y + BIGCHAR_HEIGHT/2, ( width + 1 ) * BIGCHAR_WIDTH, ( lines + 1 ) * BIGCHAR_HEIGHT, colorBlack );
-	UI_DrawRect( x + BIGCHAR_WIDTH/2, y + BIGCHAR_HEIGHT/2, ( width + 1 ) * BIGCHAR_WIDTH, ( lines + 1 ) * BIGCHAR_HEIGHT, colorWhite );
 }
 
 qboolean UI_CursorInRect (int x, int y, int width, int height)

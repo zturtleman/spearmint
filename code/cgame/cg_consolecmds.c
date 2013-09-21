@@ -32,6 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // executed by a key binding
 
 #include "cg_local.h"
+#include "../ui/ui_public.h"
 #ifdef MISSIONPACK
 #include "../ui/ui_shared.h"
 #endif
@@ -46,12 +47,12 @@ void CG_TargetCommand_f( int localPlayerNum ) {
 	char	test[4];
 
 	targetNum = CG_CrosshairPlayer( localPlayerNum );
-	if (!targetNum ) {
+	if ( targetNum == -1 ) {
 		return;
 	}
 
 	trap_Argv( 1, test, 4 );
-	trap_Cmd_ExecuteText(EXEC_NOW, va( "%s %i %i", Com_LocalClientCvarName( localPlayerNum, "gc" ), targetNum, atoi( test ) ) );
+	trap_SendClientCommand( va( "%s %i %i", Com_LocalClientCvarName( localPlayerNum, "gc" ), targetNum, atoi( test ) ) );
 }
 
 
@@ -557,136 +558,209 @@ void CG_GenerateTracemap(void)
 	BG_GenerateTracemap(cgs.mapname, cg.mapcoordsMins, cg.mapcoordsMaxs, &gen);
 }
 
-typedef struct {
-	char	*cmd;
-	void	(*function)(void);
-} consoleCommand_t;
+/*
+==================
+CG_RemapShader_f
+==================
+*/
+static void CG_RemapShader_f( void ) {
+	char shader1[MAX_QPATH];
+	char shader2[MAX_QPATH];
+	char timeoffset[MAX_QPATH];
 
-static consoleCommand_t	commands[] = {
-	{ "testgun", CG_TestGun_f },
-	{ "testmodel", CG_TestModel_f },
-	{ "nextframe", CG_TestModelNextFrame_f },
-	{ "prevframe", CG_TestModelPrevFrame_f },
-	{ "nextskin", CG_TestModelNextSkin_f },
-	{ "prevskin", CG_TestModelPrevSkin_f },
-	{ "sizeup", CG_SizeUp_f },
-	{ "sizedown", CG_SizeDown_f },
+	if ( cg.connected && trap_Cvar_VariableIntegerValue( "sv_pure" ) ) {
+		CG_Printf( "%s command cannot be used on pure servers.\n", CG_Argv( 0 ) );
+		return;
+	}
+
+	if (trap_Argc() < 2 || trap_Argc() > 4) {
+		CG_Printf( "Usage: %s <original shader> [new shader] [time offset]\n", CG_Argv( 0 ) );
+		return;
+	}
+
+	Q_strncpyz( shader1, CG_Argv( 1 ), sizeof(shader1) );
+	Q_strncpyz( shader2, CG_Argv( 2 ), sizeof( shader2 ) );
+
+	if ( !strlen( shader2 ) ) {
+		// reset shader remap
+		Q_strncpyz( shader2, shader1, sizeof(shader2) );
+	}
+
+	Q_strncpyz( timeoffset, CG_Argv( 3 ), sizeof( timeoffset ) );
+
+	trap_R_RemapShader( shader1, shader2, timeoffset );
+}
+
+static consoleCommand_t	cg_commands[] = {
+	{ "testgun", CG_TestGun_f, CMD_INGAME },
+	{ "testmodel", CG_TestModel_f, CMD_INGAME },
+	{ "nextframe", CG_TestModelNextFrame_f, CMD_INGAME },
+	{ "prevframe", CG_TestModelPrevFrame_f, CMD_INGAME },
+	{ "nextskin", CG_TestModelNextSkin_f, CMD_INGAME },
+	{ "prevskin", CG_TestModelPrevSkin_f, CMD_INGAME },
+	{ "sizeup", CG_SizeUp_f, 0 },
+	{ "sizedown", CG_SizeDown_f, 0 },
 #ifdef MISSIONPACK
-	{ "spWin", CG_spWin_f },
-	{ "spLose", CG_spLose_f },
+	{ "spWin", CG_spWin_f, CMD_INGAME },
+	{ "spLose", CG_spLose_f, CMD_INGAME },
 #ifdef MISSIONPACK_HUD
-	{ "loadhud", CG_LoadHud_f },
-	{ "scoresDown", CG_scrollScoresDown_f },
-	{ "scoresUp", CG_scrollScoresUp_f },
+	{ "loadhud", CG_LoadHud_f, CMD_INGAME },
+	{ "scoresDown", CG_scrollScoresDown_f, CMD_INGAME },
+	{ "scoresUp", CG_scrollScoresUp_f, CMD_INGAME },
 #endif
 #endif
-	{ "startOrbit", CG_StartOrbit_f },
-	//{ "camera", CG_Camera_f },
-	{ "loaddeferred", CG_LoadDeferredPlayers },
-	{ "generateTracemap", CG_GenerateTracemap }
+	{ "startOrbit", CG_StartOrbit_f, CMD_INGAME },
+	//{ "camera", CG_Camera_f, CMD_INGAME },
+	{ "loaddeferred", CG_LoadDeferredPlayers, CMD_INGAME },
+	{ "generateTracemap", CG_GenerateTracemap, CMD_INGAME },
+	{ "remapShader", CG_RemapShader_f, 0 }
 };
+
+static int cg_numCommands = ARRAY_LEN( cg_commands );
 
 typedef struct {
 	char	*cmd;
 	void	(*function)(int);
+	int		flags;
 } playerConsoleCommand_t;
 
 static playerConsoleCommand_t	playerCommands[] = {
-	{ "+attack", IN_Button0Down },
-	{ "-attack", IN_Button0Up },
-	{ "+back",IN_BackDown },
-	{ "-back",IN_BackUp },
-	{ "+button0", IN_Button0Down },
-	{ "-button0", IN_Button0Up },
-	{ "+button10", IN_Button10Down },
-	{ "-button10", IN_Button10Up },
-	{ "+button11", IN_Button11Down },
-	{ "-button11", IN_Button11Up },
-	{ "+button12", IN_Button12Down },
-	{ "-button12", IN_Button12Up },
-	{ "+button13", IN_Button13Down },
-	{ "-button13", IN_Button13Up },
-	{ "+button14", IN_Button14Down },
-	{ "-button14", IN_Button14Up },
-	{ "+button1", IN_Button1Down },
-	{ "-button1", IN_Button1Up },
-	{ "+button2", IN_Button2Down },
-	{ "-button2", IN_Button2Up },
-	{ "+button3", IN_Button3Down },
-	{ "-button3", IN_Button3Up },
-	{ "+button4", IN_Button4Down },
-	{ "-button4", IN_Button4Up },
-	{ "+button5", IN_Button5Down },
-	{ "-button5", IN_Button5Up },
-	{ "+button6", IN_Button6Down },
-	{ "-button6", IN_Button6Up },
-	{ "+button7", IN_Button7Down },
-	{ "-button7", IN_Button7Up },
-	{ "+button8", IN_Button8Down },
-	{ "-button8", IN_Button8Up },
-	{ "+button9", IN_Button9Down },
-	{ "-button9", IN_Button9Up },
-	{ "+forward",IN_ForwardDown },
-	{ "-forward",IN_ForwardUp },
-	{ "+left",IN_LeftDown },
-	{ "-left",IN_LeftUp },
-	{ "+lookdown", IN_LookdownDown },
-	{ "-lookdown", IN_LookdownUp },
-	{ "+lookup", IN_LookupDown },
-	{ "-lookup", IN_LookupUp },
-	{ "+mlook", IN_MLookDown },
-	{ "-mlook", IN_MLookUp },
-	{ "+movedown",IN_DownDown },
-	{ "-movedown",IN_DownUp },
-	{ "+moveleft", IN_MoveleftDown },
-	{ "-moveleft", IN_MoveleftUp },
-	{ "+moveright", IN_MoverightDown },
-	{ "-moveright", IN_MoverightUp },
-	{ "+moveup",IN_UpDown },
-	{ "-moveup",IN_UpUp },
-	{ "+right",IN_RightDown },
-	{ "-right",IN_RightUp },
-	{ "+scores", CG_ScoresDown_f },
-	{ "-scores", CG_ScoresUp_f },
-	{ "+speed", IN_SpeedDown },
-	{ "-speed", IN_SpeedUp },
-	{ "+strafe", IN_StrafeDown },
-	{ "-strafe", IN_StrafeUp },
-	{ "+zoom", CG_ZoomDown_f },
-	{ "-zoom", CG_ZoomUp_f },
-	{ "centerview", IN_CenterView },
-	{ "tcmd", CG_TargetCommand_f },
-	{ "tell_target", CG_TellTarget_f },
-	{ "tell_attacker", CG_TellAttacker_f },
+	{ "+attack", IN_Button0Down, 0 },
+	{ "-attack", IN_Button0Up, 0 },
+	{ "+back",IN_BackDown, 0 },
+	{ "-back",IN_BackUp, 0 },
+	{ "+button0", IN_Button0Down, 0 },
+	{ "-button0", IN_Button0Up, 0 },
+	{ "+button10", IN_Button10Down, 0 },
+	{ "-button10", IN_Button10Up, 0 },
+	{ "+button11", IN_Button11Down, 0 },
+	{ "-button11", IN_Button11Up, 0 },
+	{ "+button12", IN_Button12Down, 0 },
+	{ "-button12", IN_Button12Up, 0 },
+	{ "+button13", IN_Button13Down, 0 },
+	{ "-button13", IN_Button13Up, 0 },
+	{ "+button14", IN_Button14Down, 0 },
+	{ "-button14", IN_Button14Up, 0 },
+	{ "+button1", IN_Button1Down, 0 },
+	{ "-button1", IN_Button1Up, 0 },
+	{ "+button2", IN_Button2Down, 0 },
+	{ "-button2", IN_Button2Up, 0 },
+	{ "+button3", IN_Button3Down, 0 },
+	{ "-button3", IN_Button3Up, 0 },
+	{ "+button4", IN_Button4Down, 0 },
+	{ "-button4", IN_Button4Up, 0 },
+	{ "+button5", IN_Button5Down, 0 },
+	{ "-button5", IN_Button5Up, 0 },
+	{ "+button6", IN_Button6Down, 0 },
+	{ "-button6", IN_Button6Up, 0 },
+	{ "+button7", IN_Button7Down, 0 },
+	{ "-button7", IN_Button7Up, 0 },
+	{ "+button8", IN_Button8Down, 0 },
+	{ "-button8", IN_Button8Up, 0 },
+	{ "+button9", IN_Button9Down, 0 },
+	{ "-button9", IN_Button9Up, 0 },
+	{ "+forward",IN_ForwardDown, 0 },
+	{ "-forward",IN_ForwardUp, 0 },
+	{ "+left",IN_LeftDown, 0 },
+	{ "-left",IN_LeftUp, 0 },
+	{ "+lookdown", IN_LookdownDown, 0 },
+	{ "-lookdown", IN_LookdownUp, 0 },
+	{ "+lookup", IN_LookupDown, 0 },
+	{ "-lookup", IN_LookupUp, 0 },
+	{ "+mlook", IN_MLookDown, 0 },
+	{ "-mlook", IN_MLookUp, 0 },
+	{ "+movedown",IN_DownDown, 0 },
+	{ "-movedown",IN_DownUp, 0 },
+	{ "+moveleft", IN_MoveleftDown, 0 },
+	{ "-moveleft", IN_MoveleftUp, 0 },
+	{ "+moveright", IN_MoverightDown, 0 },
+	{ "-moveright", IN_MoverightUp, 0 },
+	{ "+moveup",IN_UpDown, 0 },
+	{ "-moveup",IN_UpUp, 0 },
+	{ "+right",IN_RightDown, 0 },
+	{ "-right",IN_RightUp, 0 },
+	{ "+scores", CG_ScoresDown_f, CMD_INGAME },
+	{ "-scores", CG_ScoresUp_f, CMD_INGAME },
+	{ "+speed", IN_SpeedDown, 0 },
+	{ "-speed", IN_SpeedUp, 0 },
+	{ "+strafe", IN_StrafeDown, 0 },
+	{ "-strafe", IN_StrafeUp, 0 },
+	{ "+zoom", CG_ZoomDown_f, CMD_INGAME },
+	{ "-zoom", CG_ZoomUp_f, CMD_INGAME },
+	{ "centerview", IN_CenterView, 0 },
+	{ "tcmd", CG_TargetCommand_f, CMD_INGAME },
+	{ "tell_target", CG_TellTarget_f, CMD_INGAME },
+	{ "tell_attacker", CG_TellAttacker_f, CMD_INGAME },
 #ifdef MISSIONPACK
-	{ "vtell_target", CG_VoiceTellTarget_f },
-	{ "vtell_attacker", CG_VoiceTellAttacker_f },
-	{ "nextTeamMember", CG_NextTeamMember_f },
-	{ "prevTeamMember", CG_PrevTeamMember_f },
-	{ "nextOrder", CG_NextOrder_f },
-	{ "confirmOrder", CG_ConfirmOrder_f },
-	{ "denyOrder", CG_DenyOrder_f },
-	{ "taskOffense", CG_TaskOffense_f },
-	{ "taskDefense", CG_TaskDefense_f },
-	{ "taskPatrol", CG_TaskPatrol_f },
-	{ "taskCamp", CG_TaskCamp_f },
-	{ "taskFollow", CG_TaskFollow_f },
-	{ "taskRetrieve", CG_TaskRetrieve_f },
-	{ "taskEscort", CG_TaskEscort_f },
-	{ "taskSuicide", CG_TaskSuicide_f },
-	{ "taskOwnFlag", CG_TaskOwnFlag_f },
-	{ "tauntKillInsult", CG_TauntKillInsult_f },
-	{ "tauntPraise", CG_TauntPraise_f },
-	{ "tauntTaunt", CG_TauntTaunt_f },
-	{ "tauntDeathInsult", CG_TauntDeathInsult_f },
-	{ "tauntGauntlet", CG_TauntGauntlet_f },
+	{ "vtell_target", CG_VoiceTellTarget_f, CMD_INGAME },
+	{ "vtell_attacker", CG_VoiceTellAttacker_f, CMD_INGAME },
+	{ "nextTeamMember", CG_NextTeamMember_f, CMD_INGAME },
+	{ "prevTeamMember", CG_PrevTeamMember_f, CMD_INGAME },
+	{ "nextOrder", CG_NextOrder_f, CMD_INGAME },
+	{ "confirmOrder", CG_ConfirmOrder_f, CMD_INGAME },
+	{ "denyOrder", CG_DenyOrder_f, CMD_INGAME },
+	{ "taskOffense", CG_TaskOffense_f, CMD_INGAME },
+	{ "taskDefense", CG_TaskDefense_f, CMD_INGAME },
+	{ "taskPatrol", CG_TaskPatrol_f, CMD_INGAME },
+	{ "taskCamp", CG_TaskCamp_f, CMD_INGAME },
+	{ "taskFollow", CG_TaskFollow_f, CMD_INGAME },
+	{ "taskRetrieve", CG_TaskRetrieve_f, CMD_INGAME },
+	{ "taskEscort", CG_TaskEscort_f, CMD_INGAME },
+	{ "taskSuicide", CG_TaskSuicide_f, CMD_INGAME },
+	{ "taskOwnFlag", CG_TaskOwnFlag_f, CMD_INGAME },
+	{ "tauntKillInsult", CG_TauntKillInsult_f, CMD_INGAME },
+	{ "tauntPraise", CG_TauntPraise_f, CMD_INGAME },
+	{ "tauntTaunt", CG_TauntTaunt_f, CMD_INGAME },
+	{ "tauntDeathInsult", CG_TauntDeathInsult_f, CMD_INGAME },
+	{ "tauntGauntlet", CG_TauntGauntlet_f, CMD_INGAME },
 #endif
-	{ "model", CG_SetModel_f },
-	{ "viewpos", CG_Viewpos_f },
-	{ "weapnext", CG_NextWeapon_f },
-	{ "weapprev", CG_PrevWeapon_f },
-	{ "weapon", CG_Weapon_f }
+	{ "model", CG_SetModel_f, 0 },
+	{ "viewpos", CG_Viewpos_f, CMD_INGAME },
+	{ "weapnext", CG_NextWeapon_f, CMD_INGAME },
+	{ "weapprev", CG_PrevWeapon_f, CMD_INGAME },
+	{ "weapon", CG_Weapon_f, CMD_INGAME }
 };
+
+static int numPlayerCommands = ARRAY_LEN( playerCommands );
+
+/*
+=================
+CG_CheckCmdFlags
+=================
+*/
+static qboolean CG_CheckCmdFlags( const char *cmd, int flags ) {
+	if ( ( flags & CMD_INGAME ) && !cg.snap ) {
+		CG_Printf("Must be in game to use command \"%s\"\n", cmd);
+		return qtrue;
+	}
+
+	if ( ( flags & CMD_MENU ) && cg.connected ) {
+		CG_Printf("Cannot use command \"%s\" while in game\n", cmd);
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
+=================
+CG_CheckCommands
+=================
+*/
+static qboolean CG_CheckCommands( consoleCommand_t *commands, int numCommands, const char *cmd ) {
+	int i;
+
+	for ( i = 0 ; i < numCommands ; i++ ) {
+		if ( !Q_stricmp( cmd, commands[i].cmd )) {
+			if ( CG_CheckCmdFlags( cmd, commands[i].flags ) ) {
+				return qtrue;
+			}
+			commands[i].function();
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
 
 /*
 =================
@@ -696,32 +770,46 @@ The string has been tokenized and can be retrieved with
 Cmd_Argc() / Cmd_Argv()
 =================
 */
-qboolean CG_ConsoleCommand( void ) {
+qboolean CG_ConsoleCommand( int realTime ) {
+	char		buffer[BIG_INFO_STRING];
 	const char	*cmd;
 	int		i;
 	int		localPlayerNum;
 	const char	*baseCmd;
+
+	// update UI frame time
+	UI_ConsoleCommand( realTime );
 
 	cmd = CG_Argv(0);
 
 	localPlayerNum = Com_LocalClientForCvarName( cmd );
 	baseCmd = Com_LocalClientBaseCvarName( cmd );
 
-	for ( i = 0 ; i < ARRAY_LEN( playerCommands ) ; i++ ) {
+	for ( i = 0 ; i < numPlayerCommands ; i++ ) {
 		if ( !Q_stricmp( baseCmd, playerCommands[i].cmd )) {
+			if ( CG_CheckCmdFlags( cmd, playerCommands[i].flags ) ) {
+				return qtrue;
+			}
 			playerCommands[i].function( localPlayerNum );
 			return qtrue;
 		}
 	}
 
-	if ( localPlayerNum != 0 )
-		return qfalse;
-
-	for ( i = 0 ; i < ARRAY_LEN( commands ) ; i++ ) {
-		if ( !Q_stricmp( cmd, commands[i].cmd )) {
-			commands[i].function();
+	if ( localPlayerNum == 0 ) {
+		if ( CG_CheckCommands( cg_commands, cg_numCommands, cmd ) ) {
 			return qtrue;
 		}
+
+		if ( CG_CheckCommands( ui_commands, ui_numCommands, cmd ) ) {
+			return qtrue;
+		}
+	}
+
+	if ( cg.connected && trap_GetDemoState() != DS_PLAYBACK ) {
+		// the game server will interpret these commands
+		trap_LiteralArgs( buffer, sizeof ( buffer ) );
+		trap_SendClientCommand( buffer );
+		return qtrue;
 	}
 
 	return qfalse;
@@ -739,14 +827,22 @@ so it can perform tab completion
 void CG_InitConsoleCommands( void ) {
 	int		i, j;
 
-	for ( i = 0 ; i < ARRAY_LEN( commands ) ; i++ ) {
-		trap_AddCommand( commands[i].cmd );
+	for ( i = 0 ; i < cg_numCommands ; i++ ) {
+		trap_AddCommand( cg_commands[i].cmd );
 	}
 
-	for ( i = 0 ; i < ARRAY_LEN( playerCommands ) ; i++ ) {
+	for ( i = 0 ; i < ui_numCommands ; i++ ) {
+		trap_AddCommand( ui_commands[i].cmd );
+	}
+
+	for ( i = 0 ; i < numPlayerCommands ; i++ ) {
 		for ( j = 0; j < CG_MaxSplitView(); j++ ) {
 			trap_AddCommand( Com_LocalClientCvarName( j, playerCommands[i].cmd ) );
 		}
+	}
+
+	if ( !cg.connected ) {
+		return;
 	}
 
 	//
@@ -785,6 +881,4 @@ void CG_InitConsoleCommands( void ) {
 		trap_AddCommand(Com_LocalClientCvarName(i, "setviewpos"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "stats"));
 	}
-
-	trap_AddCommand ("addbot");
 }

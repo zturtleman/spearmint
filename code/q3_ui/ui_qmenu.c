@@ -328,14 +328,14 @@ void Bitmap_Draw( menubitmap_s *b )
 		if (b->shader)
 		{
 			trap_R_SetColor( colorMdGrey );
-			UI_DrawHandlePic( x, y, w, h, b->shader );
+			CG_DrawPic( x, y, w, h, b->shader );
 			trap_R_SetColor( NULL );
 		}
 	}
 	else
 	{
 		if (b->shader)
-			UI_DrawHandlePic( x, y, w, h, b->shader );
+			CG_DrawPic( x, y, w, h, b->shader );
 
 		if (  ( (b->generic.flags & QMF_PULSE) 
 			|| (b->generic.flags & QMF_PULSEIFFOCUS) )
@@ -353,7 +353,7 @@ void Bitmap_Draw( menubitmap_s *b )
 			color[3] = 0.5+0.5*sin(uis.realtime/PULSE_DIVISOR);
 
 			trap_R_SetColor( color );
-			UI_DrawHandlePic( x, y, w, h, b->focusshader );
+			CG_DrawPic( x, y, w, h, b->focusshader );
 			trap_R_SetColor( NULL );
 		}
 		else if ((b->generic.flags & QMF_HIGHLIGHT) || ((b->generic.flags & QMF_HIGHLIGHT_IF_FOCUS) && (Menu_ItemAtCursor( b->generic.parent ) == b)))
@@ -361,11 +361,11 @@ void Bitmap_Draw( menubitmap_s *b )
 			if (b->focuscolor)
 			{
 				trap_R_SetColor( b->focuscolor );
-				UI_DrawHandlePic( x, y, w, h, b->focusshader );
+				CG_DrawPic( x, y, w, h, b->focusshader );
 				trap_R_SetColor( NULL );
 			}
 			else
-				UI_DrawHandlePic( x, y, w, h, b->focusshader );
+				CG_DrawPic( x, y, w, h, b->focusshader );
 		}
 	}
 }
@@ -540,7 +540,7 @@ static void RadioButton_Draw( menuradiobutton_s *rb )
 	if ( focus )
 	{
 		// draw cursor
-		UI_FillRect( rb->generic.left, rb->generic.top, rb->generic.right-rb->generic.left+1, rb->generic.bottom-rb->generic.top+1, listbar_color ); 
+		CG_FillRect( rb->generic.left, rb->generic.top, rb->generic.right-rb->generic.left+1, rb->generic.bottom-rb->generic.top+1, listbar_color ); 
 		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
 	}
 
@@ -549,12 +549,12 @@ static void RadioButton_Draw( menuradiobutton_s *rb )
 
 	if ( !rb->curvalue )
 	{
-		UI_DrawHandlePic( x + SMALLCHAR_WIDTH, y + 2, 16, 16, uis.rb_off);
+		CG_DrawPic( x + SMALLCHAR_WIDTH, y + 2, 16, 16, uis.rb_off);
 		UI_DrawString( x + SMALLCHAR_WIDTH + 16, y, "off", style, color );
 	}
 	else
 	{
-		UI_DrawHandlePic( x + SMALLCHAR_WIDTH, y + 2, 16, 16, uis.rb_on );
+		CG_DrawPic( x + SMALLCHAR_WIDTH, y + 2, 16, 16, uis.rb_on );
 		UI_DrawString( x + SMALLCHAR_WIDTH + 16, y, "on", style, color );
 	}
 }
@@ -677,9 +677,9 @@ static void Slider_Draw( menuslider_s *s ) {
 	UI_DrawString( x - SMALLCHAR_WIDTH, y, s->generic.name, UI_RIGHT|style, color );
 
 	// draw slider
-	UI_SetColor( color );
-	UI_DrawHandlePic( x + SMALLCHAR_WIDTH, y, 96, 16, sliderBar );
-	UI_SetColor( NULL );
+	trap_R_SetColor( color );
+	CG_DrawPic( x + SMALLCHAR_WIDTH, y, 96, 16, sliderBar );
+	trap_R_SetColor( NULL );
 
 	// clamp thumb
 	if( s->maxvalue > s->minvalue )	{
@@ -703,7 +703,7 @@ static void Slider_Draw( menuslider_s *s ) {
 		button = sliderButton_0;
 	}
 
-	UI_DrawHandlePic( (int)( x + 2*SMALLCHAR_WIDTH + (SLIDER_RANGE-1)*SMALLCHAR_WIDTH* s->range ) - 2, y - 2, 12, 20, button );
+	CG_DrawPic( (int)( x + 2*SMALLCHAR_WIDTH + (SLIDER_RANGE-1)*SMALLCHAR_WIDTH* s->range ) - 2, y - 2, 12, 20, button );
 }
 #else
 /*
@@ -742,7 +742,7 @@ static void Slider_Draw( menuslider_s *s )
 	if ( focus )
 	{
 		// draw cursor
-		UI_FillRect( s->generic.left, s->generic.top, s->generic.right-s->generic.left+1, s->generic.bottom-s->generic.top+1, listbar_color ); 
+		CG_FillRect( s->generic.left, s->generic.top, s->generic.right-s->generic.left+1, s->generic.bottom-s->generic.top+1, listbar_color ); 
 		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
 	}
 
@@ -880,7 +880,7 @@ static void SpinControl_Draw( menulist_s *s )
 	if ( focus )
 	{
 		// draw cursor
-		UI_FillRect( s->generic.left, s->generic.top, s->generic.right-s->generic.left+1, s->generic.bottom-s->generic.top+1, listbar_color ); 
+		CG_FillRect( s->generic.left, s->generic.top, s->generic.right-s->generic.left+1, s->generic.bottom-s->generic.top+1, listbar_color ); 
 		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
 	}
 
@@ -1237,7 +1237,7 @@ void ScrollList_Draw( menulist_s *l )
 					u -= (l->width * SMALLCHAR_WIDTH) / 2 + 1;
 				}
 
-				UI_FillRect(u,y,l->width*SMALLCHAR_WIDTH,SMALLCHAR_HEIGHT+2,listbar_color);
+				CG_FillRect(u,y,l->width*SMALLCHAR_WIDTH,SMALLCHAR_HEIGHT+2,listbar_color);
 				color = text_color_highlight;
 
 				if (hasfocus)
@@ -1540,10 +1540,10 @@ void Menu_Draw( menuframework_s *menu )
 				h =	itemptr->bottom - itemptr->top + 1;
 
 				if (itemptr->flags & QMF_HASMOUSEFOCUS) {
-					UI_DrawRect(x, y, w, h, colorYellow );
+					CG_DrawRect(x, y, w, h, 1, colorYellow );
 				}
 				else {
-					UI_DrawRect(x, y, w, h, colorWhite );
+					CG_DrawRect(x, y, w, h, 1, colorWhite );
 				}
 			}
 		}
@@ -1743,7 +1743,7 @@ void Menu_Cache( void )
 	uis.rb_off          = trap_R_RegisterShaderNoMip( "menu/art/switch_off" );
 
 	uis.whiteShader = trap_R_RegisterShaderNoMip( "white" );
-	if ( uis.glconfig.hardwareType == GLHW_RAGEPRO ) {
+	if ( cgs.glconfig.hardwareType == GLHW_RAGEPRO ) {
 		// the blend effect turns to shit with the normal 
 		uis.menuBackShader	= trap_R_RegisterShaderNoMip( "menubackRagePro" );
 	} else {

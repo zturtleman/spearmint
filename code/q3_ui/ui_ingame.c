@@ -395,12 +395,21 @@ UI_InGameMenu
 =================
 */
 void UI_InGameMenu( void ) {
+	float ax, ay, aw, ah;
+
 	// force as top level menu
-	uis.menusp = 0;  
+	uis.menusp = 0;
+
+	ax = 0;
+	ay = 0;
+	aw = 1;
+	ah = 1;
+	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
 	// set menu cursor to a nice location
 	uis.cursorx = 319;
 	uis.cursory = 80;
+	UI_MouseEvent( 0, 0, 0 );
 
 	InGame_MenuInit();
 	UI_PushMenu( &s_ingame.menu );

@@ -388,12 +388,12 @@ static void StartServer_LevelshotDraw( void *self ) {
 	w = b->width;
 	h =	b->height;
 	if( b->shader ) {
-		UI_DrawHandlePic( x, y, w, h, b->shader );
+		CG_DrawPic( x, y, w, h, b->shader );
 	}
 
 	x = b->generic.x;
 	y = b->generic.y + b->height;
-	UI_FillRect( x, y, b->width, 28, colorBlack );
+	CG_FillRect( x, y, b->width, 28, colorBlack );
 
 	x += b->width / 2;
 	y += 4;
@@ -407,7 +407,7 @@ static void StartServer_LevelshotDraw( void *self ) {
 	w = b->width;
 	h =	b->height + 28;
 	if( b->generic.flags & QMF_HIGHLIGHT ) {	
-		UI_DrawHandlePic( x, y, w, h, b->focusshader );
+		CG_DrawPic( x, y, w, h, b->focusshader );
 	}
 }
 
@@ -1123,7 +1123,7 @@ static void ServerOptions_LevelshotDraw( void *self ) {
 
 	x = b->generic.x;
 	y = b->generic.y + b->height;
-	UI_FillRect( x, y, b->width, 40, colorBlack );
+	CG_FillRect( x, y, b->width, 40, colorBlack );
 
 	x += b->width / 2;
 	y += 4;
@@ -1284,7 +1284,7 @@ static void ServerOptions_SetMenuItems( void ) {
 	}
 
 	s_serveroptions.publicserver.curvalue = Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_publicServer" ) );
-	Q_strncpyz( s_serveroptions.hostname.field.buffer, UI_Cvar_VariableString( "sv_hostname" ), sizeof( s_serveroptions.hostname.field.buffer ) );
+	Q_strncpyz( s_serveroptions.hostname.field.buffer, CG_Cvar_VariableString( "sv_hostname" ), sizeof( s_serveroptions.hostname.field.buffer ) );
 	s_serveroptions.pure.curvalue = Com_Clamp( 0, 1, trap_Cvar_VariableValue( "sv_pure" ) );
 
 	// set the map pic
@@ -1345,7 +1345,7 @@ static void PlayerName_Draw( void *item ) {
 	if ( focus )
 	{
 		// draw cursor
-		UI_FillRect( s->generic.left, s->generic.top, s->generic.right-s->generic.left+1, s->generic.bottom-s->generic.top+1, listbar_color ); 
+		CG_FillRect( s->generic.left, s->generic.top, s->generic.right-s->generic.left+1, s->generic.bottom-s->generic.top+1, listbar_color ); 
 		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
 	}
 

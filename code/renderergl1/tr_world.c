@@ -153,9 +153,7 @@ static int R_DlightSurface( msurface_t *surface, int dlightBits ) {
 			continue;
 		}
 
-#if 0
-		// junior dlights don't affect world surfaces
-		if ( tr.refdef.dlights[ i ].flags & REF_JUNIOR_DLIGHT ) {
+		if ( !( tr.refdef.dlights[ i ].flags & REF_SURFACE_DLIGHT ) ) {
 			dlightBits &= ~( 1 << i );
 			continue;
 		}
@@ -164,7 +162,6 @@ static int R_DlightSurface( msurface_t *surface, int dlightBits ) {
 		if ( tr.refdef.dlights[ i ].flags & REF_DIRECTED_DLIGHT ) {
 			continue;
 		}
-#endif
 
 		// test surface bounding sphere against dlight bounding sphere
 		VectorCopy( tr.refdef.dlights[ i ].transformed, origin );
@@ -369,10 +366,10 @@ R_RecursiveWorldNode
 ================
 */
 static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits ) {
+	int i, r;
+	dlight_t    *dl;
 
 	do {
-		int			newDlights[2];
-
 		// if the node wasn't marked as potentially visible, exit
 		if (node->visframe != tr.visCount) {
 			return;
@@ -382,8 +379,6 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits )
 		// inside can be visible OPTIMIZE: don't do this all the way to leafs?
 
 		if ( !r_nocull->integer ) {
-			int		r;
-
 			if ( planeBits & 1 ) {
 				r = BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[0]);
 				if (r == 2) {
@@ -437,6 +432,28 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits )
 
 		}
 
+		// cull dlights
+		if ( dlightBits ) {
+			for ( i = 0; i < tr.refdef.num_dlights; i++ )
+			{
+				if ( dlightBits & ( 1 << i ) ) {
+					// directional dlights don't get culled
+					if ( tr.refdef.dlights[ i ].flags & REF_DIRECTED_DLIGHT ) {
+						continue;
+					}
+
+					// test dlight bounds against node surface bounds
+					dl = &tr.refdef.dlights[ i ];
+					if ( node->surfMins[ 0 ] >= ( dl->origin[ 0 ] + dl->radius ) || node->surfMaxs[ 0 ] <= ( dl->origin[ 0 ] - dl->radius ) ||
+						 node->surfMins[ 1 ] >= ( dl->origin[ 1 ] + dl->radius ) || node->surfMaxs[ 1 ] <= ( dl->origin[ 1 ] - dl->radius ) ||
+						 node->surfMins[ 2 ] >= ( dl->origin[ 2 ] + dl->radius ) || node->surfMaxs[ 2 ] <= ( dl->origin[ 2 ] - dl->radius ) ) {
+						dlightBits &= ~( 1 << i );
+					}
+				}
+			}
+		}
+
+		// handle leaf nodes
 		if ( node->contents != -1 ) {
 			break;
 		}
@@ -444,36 +461,11 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits )
 		// node is just a decision point, so go down both sides
 		// since we don't care about sort orders, just go positive to negative
 
-		// determine which dlights are needed
-		newDlights[0] = 0;
-		newDlights[1] = 0;
-		if ( dlightBits ) {
-			int	i;
-
-			for ( i = 0 ; i < tr.refdef.num_dlights ; i++ ) {
-				dlight_t	*dl;
-				float		dist;
-
-				if ( dlightBits & ( 1 << i ) ) {
-					dl = &tr.refdef.dlights[i];
-					dist = DotProduct( dl->origin, node->plane->normal ) - node->plane->dist;
-					
-					if ( dist > -dl->radius ) {
-						newDlights[0] |= ( 1 << i );
-					}
-					if ( dist < dl->radius ) {
-						newDlights[1] |= ( 1 << i );
-					}
-				}
-			}
-		}
-
 		// recurse down the children, front side first
-		R_RecursiveWorldNode (node->children[0], planeBits, newDlights[0] );
+		R_RecursiveWorldNode (node->children[0], planeBits, dlightBits );
 
 		// tail recurse
 		node = node->children[1];
-		dlightBits = newDlights[1];
 	} while ( 1 );
 
 	// short circuit
@@ -656,10 +648,7 @@ void R_AddWorldSurfaces (void) {
 	ClearBounds( tr.viewParms.visBounds[0], tr.viewParms.visBounds[1] );
 
 	// perform frustum culling and add all the potentially visible surfaces
-	if ( tr.refdef.num_dlights > 32 ) {
-		tr.refdef.num_dlights = 32 ;
-	}
-	R_RecursiveWorldNode( tr.world->nodes, 255, ( 1 << tr.refdef.num_dlights ) - 1 );
+	R_RecursiveWorldNode( tr.world->nodes, 255, tr.refdef.dlightBits );
 
 	// clear brush model
 	tr.currentBModel = NULL;

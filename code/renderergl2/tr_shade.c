@@ -350,6 +350,9 @@ static void ProjectDlightTexture( void ) {
 	float	radius;
 	int deformGen;
 	vec5_t deformParams;
+	float intensity;
+	qboolean vertexLight;
+	int shaderNum;
 
 	if ( !backEnd.refdef.num_dlights ) {
 		return;
@@ -370,8 +373,26 @@ static void ProjectDlightTexture( void ) {
 		VectorCopy( dl->transformed, origin );
 		radius = dl->radius;
 		scale = 1.0f / radius;
+		intensity = dl->intensity;
 
-		sp = &tr.dlightShader[deformGen == DGEN_NONE ? 0 : 1];
+		vertexLight = ( ( dl->flags & REF_DIRECTED_DLIGHT ) || ( dl->flags & REF_VERTEX_DLIGHT ) );
+
+#if 0 // ZTM: FIXME: support ET dlight and directed light
+		if ( dl->flags & REF_DIRECTED_DLIGHT ) {
+			scale = radius;
+
+			GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, origin);
+
+			shaderNum = (deformGen == DGEN_NONE) ? 4 : 3;
+		} else if ( dl->flags & REF_VERTEX_DLIGHT ) {
+			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, radius);
+
+			shaderNum = (deformGen == DGEN_NONE) ? 4 : 3;
+		} else
+#endif
+		shaderNum = (deformGen == DGEN_NONE) ? 0 : 1;
+
+		sp = &tr.dlightShader[shaderNum];
 
 		backEnd.pc.c_dlightDraws++;
 
@@ -399,12 +420,18 @@ static void ProjectDlightTexture( void ) {
 		vector[2] = origin[2];
 		vector[3] = scale;
 		GLSL_SetUniformVec4(sp, UNIFORM_DLIGHTINFO, vector);
-	  
-		GL_Bind( tr.dlightImage );
+
+		
+		GLSL_SetUniformFloat(sp, UNIFORM_INTENSITY, intensity);
+
+		if ( vertexLight )
+			GL_Bind( tr.whiteImage );
+		else
+			GL_Bind( tr.dlightImage );
 
 		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
 		// where they aren't rendered
-		if ( dl->additive ) {
+		if ( dl->flags & REF_ADDITIVE_DLIGHT ) {
 			GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
 		}
 		else {

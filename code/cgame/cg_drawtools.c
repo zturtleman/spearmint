@@ -91,7 +91,7 @@ Adjusted for resolution and screen aspect ratio
 void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	int viewXBias = 0;
 
-	if (cg.numViewports != 1 && cg.snap) {
+	if (cg.numViewports != 1 && cg.snap && ( x != NULL || y != NULL ) ) {
 		qboolean right = qfalse;
 		qboolean down = qfalse;
 
@@ -119,44 +119,66 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 
 		if (right) {
 			viewXBias = 2;
-			*x += SCREEN_WIDTH;
+			if ( x != NULL ) {
+				*x += SCREEN_WIDTH;
+			}
 		}
 		if (down) {
-			*y += SCREEN_HEIGHT;
+			if ( y != NULL ) {
+				*y += SCREEN_HEIGHT;
+			}
 		}
 	}
 
 	if (cg_horizontalPlacement == PLACE_STRETCH) {
 		// scale for screen sizes (not aspect correct in wide screen)
-		*x *= cgs.screenXScaleStretch;
-		*w *= cgs.screenXScaleStretch;
+		if ( w != NULL ) {
+			*w *= cgs.screenXScaleStretch;
+		}
+		if ( x != NULL ) {
+			*x *= cgs.screenXScaleStretch;
+		}
 	} else {
 		// scale for screen sizes
-		*x *= cgs.screenXScale;
-		*w *= cgs.screenXScale;
-
-		// Screen Placement
-		if (cg_horizontalPlacement == PLACE_CENTER) {
-			*x += cgs.screenXBias;
-		} else if (cg_horizontalPlacement == PLACE_RIGHT) {
-			*x += cgs.screenXBias*2;
+		if ( w != NULL ) {
+			*w *= cgs.screenXScale;
 		}
 
-		// Offset for widescreen
-		*x += cgs.screenXBias*(viewXBias);
+		if ( x != NULL ) {
+			*x *= cgs.screenXScale;
+
+			// Screen Placement
+			if (cg_horizontalPlacement == PLACE_CENTER) {
+				*x += cgs.screenXBias;
+			} else if (cg_horizontalPlacement == PLACE_RIGHT) {
+				*x += cgs.screenXBias*2;
+			}
+
+			// Offset for widescreen
+			*x += cgs.screenXBias*(viewXBias);
+		}
 	}
 
 	if (cg_verticalPlacement == PLACE_STRETCH) {
-		*y *= cgs.screenYScaleStretch;
-		*h *= cgs.screenYScaleStretch;
+		if ( h != NULL ) {
+			*h *= cgs.screenYScaleStretch;
+		}
+		if ( y != NULL ) {
+			*y *= cgs.screenYScaleStretch;
+		}
 	} else {
-		*y *= cgs.screenYScale;
-		*h *= cgs.screenYScale;
+		if ( h != NULL ) {
+			*h *= cgs.screenYScale;
+		}
 
-		if (cg_verticalPlacement == PLACE_CENTER) {
-			*y += cgs.screenYBias;
-		} else if (cg_verticalPlacement == PLACE_BOTTOM) {
-			*y += cgs.screenYBias*2;
+		if ( y != NULL ) {
+			*y *= cgs.screenYScale;
+
+			if (cg_verticalPlacement == PLACE_CENTER) {
+				*y += cgs.screenYBias;
+			} else if (cg_verticalPlacement == PLACE_BOTTOM) {
+				*y += cgs.screenYBias*2;
+			}
 		}
 	}
 }
@@ -207,7 +229,7 @@ void CG_DrawTopBottom(float x, float y, float w, float h, float size) {
 }
 /*
 ================
-UI_DrawRect
+CG_DrawRect
 
 Coordinates are 640*480 virtual values
 =================
@@ -221,6 +243,20 @@ void CG_DrawRect( float x, float y, float width, float height, float size, const
 	trap_R_SetColor( NULL );
 }
 
+/*
+================
+CG_ClearScreen
+
+Wide and narrow aspect ratios screens need to have the sides cleared.
+Used when drawing fullscreen 4:3 UI.
+=================
+*/
+void CG_ClearScreen( void ) {
+	trap_R_SetColor( g_color_table[0] );
+	trap_R_DrawStretchPic( 0, 0, cgs.glconfig.vidWidth, cgs.glconfig.vidHeight, 0, 0, 0, 0, cgs.media.whiteShader );
+	trap_R_SetColor( NULL );
+}
+
 
 
 /*
@@ -231,8 +267,44 @@ Coordinates are 640*480 virtual values
 =================
 */
 void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader ) {
+	float	s0;
+	float	s1;
+	float	t0;
+	float	t1;
+
+	if( width < 0 ) {	// flip about vertical
+		width  = -width;
+		s0 = 1;
+		s1 = 0;
+	}
+	else {
+		s0 = 0;
+		s1 = 1;
+	}
+
+	if( height < 0 ) {	// flip about horizontal
+		height  = -height;
+		t0 = 1;
+		t1 = 0;
+	}
+	else {
+		t0 = 0;
+		t1 = 1;
+	}
+
 	CG_AdjustFrom640( &x, &y, &width, &height );
-	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
+	trap_R_DrawStretchPic( x, y, width, height, s0, t0, s1, t1, hShader );
+}
+
+/*
+================
+CG_DrawNamedPic
+
+Coordinates are 640*480 virtual values
+=================
+*/
+void CG_DrawNamedPic( float x, float y, float width, float height, const char *picname ) {
+	CG_DrawPic( x, y, width, height, trap_R_RegisterShaderNoMip( picname ) );
 }
 
 /*

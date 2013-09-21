@@ -94,7 +94,8 @@ void R_Init( void ) {
 	tr.defaultShader = &localShader;
 
 	// dummy skin
-	localSkin.numSurfaces = 0;
+	Q_strncpyz(localSkin.name, "<default>", sizeof (localSkin.name));
+	localSkin.surfaces = NULL;
 
 	R_ModelInit();
 }

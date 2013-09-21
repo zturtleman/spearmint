@@ -371,6 +371,9 @@ void	Svcmd_EntityList_f (void) {
 		case ET_GRAPPLE:
 			G_Printf("ET_GRAPPLE          ");
 			break;
+		case ET_CORONA:
+			G_Printf("ET_CORONA           ");
+			break;
 		default:
 			G_Printf("%3i                 ", check->s.eType);
 			break;
@@ -525,17 +528,5 @@ void G_RegisterCommands( void )
 		if( svcmds[ i ].dedicated && !g_dedicated.integer )
 			continue;
 		trap_AddCommand( svcmds[ i ].cmd );
-	}
-}
-
-void G_UnregisterCommands( void )
-{
-	int i;
-
-	for( i = 0; i < numSvCmds; i++ )
-	{
-		if( svcmds[ i ].dedicated && !g_dedicated.integer )
-			continue;
-		trap_RemoveCommand( svcmds[ i ].cmd );
 	}
 }
