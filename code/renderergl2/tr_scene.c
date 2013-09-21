@@ -143,7 +143,7 @@ void R_AddPolygonSurfaces( void ) {
 
 	for ( i = 0, poly = tr.refdef.polys; i < tr.refdef.numPolys ; i++, poly++ ) {
 		sh = R_GetShaderByHandle( poly->hShader );
-		R_AddDrawSurf( ( void * )poly, sh, R_PolyFogNum( poly ), qfalse, qfalse );
+		R_AddDrawSurf( ( void * )poly, sh, R_PolyFogNum( poly ), qfalse, qfalse, 0 /*cubeMap*/  );
 	}
 }
 
@@ -246,7 +246,7 @@ void R_AddPolygonBufferSurfaces( void ) {
 	for ( i = 0, polybuffer = tr.refdef.polybuffers; i < tr.refdef.numPolyBuffers ; i++, polybuffer++ ) {
 		sh = R_GetShaderByHandle( polybuffer->pPolyBuffer->shader );
 
-		R_AddDrawSurf( ( void * )polybuffer, sh, R_PolyBufferFogNum( polybuffer ), qfalse, qfalse );
+		R_AddDrawSurf( ( void * )polybuffer, sh, R_PolyBufferFogNum( polybuffer ), qfalse, qfalse, 0 /*cubeMap*/  );
 	}
 }
 
@@ -396,36 +396,9 @@ void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float sca
 	cor->visible = visible;
 }
 
-/*
-@@@@@@@@@@@@@@@@@@@@@
-RE_RenderScene
 
-Draw a 3D view into a part of the window, then return
-to 2D drawing.
-
-Rendering a scene may require multiple views to be rendered
-to handle mirrors,
-@@@@@@@@@@@@@@@@@@@@@
-*/
-void RE_RenderScene( const refdef_t *fd ) {
-	viewParms_t		parms;
-	int				startTime;
-
-	if ( !tr.registered ) {
-		return;
-	}
-	GLimp_LogComment( "====== RE_RenderScene =====\n" );
-
-	if ( r_norefresh->integer ) {
-		return;
-	}
-
-	startTime = ri.Milliseconds();
-
-	if (!tr.world && !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
-		ri.Error (ERR_DROP, "R_RenderScene: NULL worldmodel");
-	}
-
+void RE_BeginScene(const refdef_t *fd)
+{
 	Com_Memcpy( tr.refdef.text, fd->text, sizeof( tr.refdef.text ) );
 
 	tr.refdef.x = fd->x;
@@ -608,6 +581,50 @@ void RE_RenderScene( const refdef_t *fd ) {
 	// each scene / view.
 	tr.frameSceneNum++;
 	tr.sceneCount++;
+}
+
+
+void RE_EndScene()
+{
+	// the next scene rendered in this frame will tack on after this one
+	r_firstSceneDrawSurf = tr.refdef.numDrawSurfs;
+	r_firstSceneEntity = r_numentities;
+	r_firstSceneDlight = r_numdlights;
+	r_firstScenePoly = r_numpolys;
+	r_firstScenePolybuffer = r_numpolybuffers;
+}
+
+/*
+@@@@@@@@@@@@@@@@@@@@@
+RE_RenderScene
+
+Draw a 3D view into a part of the window, then return
+to 2D drawing.
+
+Rendering a scene may require multiple views to be rendered
+to handle mirrors,
+@@@@@@@@@@@@@@@@@@@@@
+*/
+void RE_RenderScene( const refdef_t *fd ) {
+	viewParms_t		parms;
+	int				startTime;
+
+	if ( !tr.registered ) {
+		return;
+	}
+	GLimp_LogComment( "====== RE_RenderScene =====\n" );
+
+	if ( r_norefresh->integer ) {
+		return;
+	}
+
+	startTime = ri.Milliseconds();
+
+	if (!tr.world && !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
+		ri.Error (ERR_DROP, "R_RenderScene: NULL worldmodel");
+	}
+
+	RE_BeginScene(fd);
 
 	// SmileTheory: playing with shadow mapping
 	if (!( fd->rdflags & RDF_NOWORLDMODEL ) && tr.refdef.num_dlights && r_dlightMode->integer >= 2)
@@ -627,6 +644,21 @@ void RE_RenderScene( const refdef_t *fd ) {
 		R_RenderSunShadowMaps(fd, 0);
 		R_RenderSunShadowMaps(fd, 1);
 		R_RenderSunShadowMaps(fd, 2);
+	}
+
+	// playing with cube maps
+	// this is where dynamic cubemaps would be rendered
+	if (0) //(glRefConfig.framebufferObject && !( fd->rdflags & RDF_NOWORLDMODEL ))
+	{
+		int i, j;
+
+		for (i = 0; i < tr.numCubemaps; i++)
+		{
+			for (j = 0; j < 6; j++)
+			{
+				R_RenderCubemapSide(i, j, qtrue);
+			}
+		}
 	}
 
 	// setup view parms for the initial view
@@ -664,12 +696,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 	if(!( fd->rdflags & RDF_NOWORLDMODEL ))
 		R_AddPostProcessCmd();
 
-	// the next scene rendered in this frame will tack on after this one
-	r_firstSceneDrawSurf = tr.refdef.numDrawSurfs;
-	r_firstSceneEntity = r_numentities;
-	r_firstSceneDlight = r_numdlights;
-	r_firstScenePoly = r_numpolys;
-	r_firstScenePolybuffer = r_numpolybuffers;
+	RE_EndScene();
 
 	tr.frontEndMsec += ri.Milliseconds() - startTime;
 }

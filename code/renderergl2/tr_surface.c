@@ -71,7 +71,7 @@ void RB_CheckOverflow( int verts, int indexes ) {
 		ri.Error(ERR_DROP, "RB_CheckOverflow: indices > MAX (%d > %d)", indexes, SHADER_MAX_INDEXES );
 	}
 
-	RB_BeginSurface(tess.shader, tess.fogNum );
+	RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex );
 }
 
 void RB_CheckVBOandIBO(VBO_t *vbo, IBO_t *ibo)
@@ -79,7 +79,7 @@ void RB_CheckVBOandIBO(VBO_t *vbo, IBO_t *ibo)
 	if (!(vbo == glState.currentVBO && ibo == glState.currentIBO) || tess.multiDrawPrimitives >= MAX_MULTIDRAW_PRIMITIVES)
 	{
 		RB_EndSurface();
-		RB_BeginSurface(tess.shader, tess.fogNum);
+		RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
 
 		R_BindVBO(vbo);
 		R_BindIBO(ibo);
@@ -1482,7 +1482,7 @@ static void RB_SurfaceGrid( srfGridMesh_t *srf ) {
 			// if we don't have enough space for at least one strip, flush the buffer
 			if ( vrows < 2 || irows < 1 ) {
 				RB_EndSurface();
-				RB_BeginSurface(tess.shader, tess.fogNum );
+				RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex );
 			} else {
 				break;
 			}
@@ -1733,7 +1733,7 @@ void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)
 
 	//RB_CheckVBOandIBO(surface->vbo, surface->ibo);
 	RB_EndSurface();
-	RB_BeginSurface(tess.shader, tess.fogNum);
+	RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
 
 	R_BindVBO(surface->vbo);
 	R_BindIBO(surface->ibo);
