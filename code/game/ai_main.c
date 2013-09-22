@@ -1321,6 +1321,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	bs->entergame_time = FloatTime();
 	bs->ms = BotAllocMoveState(client);
 	bs->walker = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_WALKER, 0, 1);
+	bs->revenge_enemy = -1;
 	numbots++;
 
 	if (trap_Cvar_VariableIntegerValue("bot_testichat")) {

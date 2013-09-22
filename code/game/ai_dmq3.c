@@ -2975,6 +2975,10 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			return qfalse;
 		}
 #endif
+		// looking for revenge
+		if (curenemy == bs->revenge_enemy && bs->revenge_kills > 0) {
+			return qfalse;
+		}
 		//
 		VectorSubtract(curenemyinfo.origin, bs->origin, dir);
 		cursquaredist = VectorLengthSquared(dir);
@@ -4832,11 +4836,22 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 		case EV_OBITUARY:
 		{
 			int target, attacker, mod;
+			float vengefulness;
+			qboolean getRevenge;
 
 			target = state->otherEntityNum;
 			attacker = state->otherEntityNum2;
 			mod = state->eventParm;
-			//
+
+			//does the bot want revenge?
+			if (level.numPlayingClients < 3) {
+				getRevenge = qfalse;
+			} else {
+				vengefulness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VENGEFULNESS, 0, 1);
+				getRevenge = (random() < vengefulness);
+			}
+
+			//the bot was killed
 			if (target == bs->client) {
 				bs->botdeathtype = mod;
 				bs->lastkilledby = attacker;
@@ -4847,6 +4862,20 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 				else bs->botsuicide = qfalse;
 				//
 				bs->num_deaths++;
+				//
+				if (!bs->botsuicide) {
+					if (getRevenge) {
+						if (attacker != bs->revenge_enemy) {
+							bs->revenge_enemy = attacker;
+							bs->revenge_kills = 0;
+						}
+
+						bs->revenge_kills++;
+					} else {
+						bs->revenge_enemy = -1;
+						bs->revenge_kills = 0;
+					}
+				}
 			}
 			//else if this client was killed by the bot
 			else if (attacker == bs->client) {
@@ -4855,6 +4884,18 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 				bs->killedenemy_time = FloatTime();
 				//
 				bs->num_kills++;
+				// revenge!
+				if (target == bs->revenge_enemy) {
+					if (getRevenge) {
+						bs->revenge_kills--;
+					} else {
+						bs->revenge_kills = 0;
+					}
+
+					if (bs->revenge_kills <= 0) {
+						bs->revenge_enemy = -1;
+					}
+				}
 			}
 			else if (attacker == bs->enemy && target == attacker) {
 				bs->enemysuicide = qtrue;
