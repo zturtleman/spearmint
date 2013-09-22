@@ -1001,7 +1001,7 @@ static void CG_TeamBase( centity_t *cent ) {
 				model.shaderRGBA[2] = 0xff;
 				model.shaderRGBA[3] = 0xff;
 				//
-				model.origin[2] += 56;
+				model.origin[2] += OBELISK_TARGET_HEIGHT;
 				model.hModel = cgs.media.overloadTargetModel;
 				trap_R_AddRefEntityToScene( &model );
 			}

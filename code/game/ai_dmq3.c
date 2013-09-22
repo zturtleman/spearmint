@@ -3306,7 +3306,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 		// if attacking an obelisk
 		if ( bs->enemy == redobelisk.entitynum ||
 			bs->enemy == blueobelisk.entitynum ) {
-			target[2] += 32;
+			target[2] += OBELISK_TARGET_HEIGHT;
 		}
 #endif
 		//aim at the obelisk

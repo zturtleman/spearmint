@@ -72,6 +72,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define STEPSIZE			18
 
+#ifdef MISSIONPACK
+#define OBELISK_TARGET_HEIGHT	56
+#endif
+
 
 #define MAX_DLIGHT_CONFIGSTRINGS 16
 
