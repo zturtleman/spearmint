@@ -954,7 +954,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	trap_R_ClearScene();
 
 	// set up cg.snap and possibly cg.nextSnap
-	CG_ProcessSnapshots();
+	CG_ProcessSnapshots( qfalse );
 
 	// if we haven't received any snapshots yet, all
 	// we can draw is the information screen
