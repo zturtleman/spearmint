@@ -2965,7 +2965,17 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	//
 	if (curenemy >= 0) {
 		BotEntityInfo(curenemy, &curenemyinfo);
-		if (EntityCarriesFlag(&curenemyinfo)) return qfalse;
+		// only concentrate on flag carrier if not carrying a flag
+		if (EntityCarriesFlag(&curenemyinfo) && !BotCTFCarryingFlag(bs)) {
+			return qfalse;
+		}
+#ifdef MISSIONPACK
+		// only concentrate on cube carrier if not carrying cubes
+		if (EntityCarriesCubes(&curenemyinfo) && !BotHarvesterCarryingCubes(bs)) {
+			return qfalse;
+		}
+#endif
+		//
 		VectorSubtract(curenemyinfo.origin, bs->origin, dir);
 		cursquaredist = VectorLengthSquared(dir);
 	}
@@ -3033,8 +3043,12 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		//calculate the distance towards the enemy
 		VectorSubtract(entinfo.origin, bs->origin, dir);
 		squaredist = VectorLengthSquared(dir);
-		//if this entity is not carrying a flag
-		if (!EntityCarriesFlag(&entinfo))
+		//if this entity is not carrying a flag or cubes
+		if (!EntityCarriesFlag(&entinfo)
+#ifdef MISSIONPACK
+			&& !EntityCarriesCubes(&entinfo)
+#endif
+			)
 		{
 			//if this enemy is further away than the current one
 			if (curenemy >= 0 && squaredist > cursquaredist) continue;
