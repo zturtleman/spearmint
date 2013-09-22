@@ -2658,10 +2658,11 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	int movetype, i, attackentity;
 	float attack_skill, jumper, croucher, dist, strafechange_time;
 	float attack_dist, attack_range;
-	vec3_t forward, backward, sideward, hordir, up = {0, 0, 1};
+	vec3_t forward, backward, sideward, start, hordir, up = {0, 0, 1};
 	aas_entityinfo_t entinfo;
 	bot_moveresult_t moveresult;
 	bot_goal_t goal;
+	bsp_trace_t bsptrace;
 
 	attackentity = bs->enemy;
 	//
@@ -2707,7 +2708,18 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 			bs->attackcrouch_time = FloatTime() + croucher * 5;
 		}
 	}
-	if (bs->attackcrouch_time > FloatTime()) movetype = MOVE_CROUCH;
+	//
+	if (bs->attackcrouch_time > FloatTime()) {
+		// get the start point aiming from
+		VectorCopy(bs->origin, start);
+		start[2] += CROUCH_VIEWHEIGHT;
+		BotAI_Trace(&bsptrace, start, NULL, NULL, entinfo.origin, bs->client, MASK_SHOT);
+
+		// only try to crouch if the enemy remains visible
+		if (bsptrace.fraction >= 1.0 || bsptrace.ent == attackentity) {
+			movetype = MOVE_CROUCH;
+		}
+	}
 	//if the bot should jump
 	if (movetype == MOVE_JUMP) {
 		//if jumped last frame
