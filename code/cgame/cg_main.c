@@ -2489,6 +2489,7 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 			continue;
 		}
 
+		trap_Mouse_SetState( i, MOUSE_CLIENT );
 		trap_GetViewAngles( i, cg.localClients[i].viewangles );
 		CG_LocalClientAdded(i, clientNums[i]);
 	}
