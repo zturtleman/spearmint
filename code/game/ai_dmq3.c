@@ -3009,6 +3009,10 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (g_entities[i].flags & FL_NOTARGET) {
 			continue;
 		}
+		//if on the same team
+		if (BotSameTeam(bs, i)) {
+			continue;
+		}
 		//
 		BotEntityInfo(i, &entinfo);
 		//
@@ -3037,8 +3041,6 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		} //end if
 		//if the bot has no
 		if (squaredist > Square(900.0 + alertness * 4000.0)) continue;
-		//if on the same team
-		if (BotSameTeam(bs, i)) continue;
 		//if the bot's health decreased or the enemy is shooting
 		if (curenemy < 0 && (healthdecrease || EntityIsShooting(&entinfo)))
 			f = 360;
