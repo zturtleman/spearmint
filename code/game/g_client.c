@@ -755,12 +755,6 @@ void ClientUserinfoChanged( int clientNum ) {
 		trap_DropClient(clientNum, "Invalid userinfo");
 	}
 
-	// check for local client
-	s = Info_ValueForKey( userinfo, "ip" );
-	if ( !strcmp( s, "localhost" ) ) {
-		client->pers.localClient = qtrue;
-	}
-
 	// check the item prediction
 	s = Info_ValueForKey( userinfo, "cg_predictItems" );
 	if ( !atoi( s ) ) {
@@ -976,11 +970,11 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int conn
 	client->pers.connectionNum = connectionNum;
 	client->pers.localPlayerNum = localPlayerNum;
 
-	// read or initialize the session data
-	if ( firstTime || level.newSession ) {
-		G_InitSessionData( client, userinfo );
+	// check for local client
+	value = Info_ValueForKey( userinfo, "ip" );
+	if ( !strcmp( value, "localhost" ) ) {
+		client->pers.localClient = qtrue;
 	}
-	G_ReadSessionData( client );
 
 	if( isBot ) {
 		ent->r.svFlags |= SVF_BOT;
@@ -989,6 +983,12 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int conn
 			return "BotConnectfailed";
 		}
 	}
+
+	// read or initialize the session data
+	if ( firstTime || level.newSession ) {
+		G_InitSessionData( client, userinfo );
+	}
+	G_ReadSessionData( client );
 
 	// get and distribute relevent paramters
 	G_LogPrintf( "ClientConnect: %i\n", clientNum );
