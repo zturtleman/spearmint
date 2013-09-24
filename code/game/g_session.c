@@ -126,7 +126,7 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 			SetTeam( &g_entities[client - level.clients], value );
 		}
 	} else {
-		value = Info_ValueForKey( userinfo, "team" );
+		value = Info_ValueForKey( userinfo, "teampref" );
 		if ( value[0] == 's' ) {
 			// a willing spectator, not a waiting-in-line
 			sess->sessionTeam = TEAM_SPECTATOR;
