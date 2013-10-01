@@ -3532,10 +3532,11 @@ void BotAimAtEnemy(bot_state_t *bs) {
 				}
 			}
 		}
-		//if the projectile does radial damage
-		if (aim_skill > 0.6 && wi.proj.damagetype & DAMAGETYPE_RADIAL) {
-			//if the enemy isn't standing significantly higher than the bot
-			if (entinfo.origin[2] < bs->origin[2] + 16) {
+		//if the projectile does large radial damage
+		if (aim_skill > 0.6 && (wi.proj.damagetype & DAMAGETYPE_RADIAL) && wi.proj.radius > 50) {
+			//if the enemy isn't standing significantly higher than the bot and isn't in water
+			if (entinfo.origin[2] < bs->origin[2] + 16
+				&& !(trap_AAS_PointContents(entinfo.origin) & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA))) {
 				//try to aim at the ground in front of the enemy
 				VectorCopy(entinfo.origin, end);
 				end[2] -= 64;
