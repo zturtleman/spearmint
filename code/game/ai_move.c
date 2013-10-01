@@ -1396,42 +1396,6 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach)
 } //end of the function BotTravel_Walk
 //===========================================================================
 //
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-bot_moveresult_t BotFinishTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach)
-{
-	vec3_t hordir;
-	float dist, speed;
-	bot_moveresult_t_cleared( result );
-	//if not on the ground and changed areas... don't walk back!!
-	//(doesn't seem to help)
-	/*
-	ms->areanum = BotFuzzyPointReachabilityArea(ms->origin);
-	if (ms->areanum == reach->areanum)
-	{
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "BotFinishTravel_Walk: already in reach area\n");
-#endif //DEBUG
-		return result;
-	} //end if*/
-	//go straight to the reachability end
-	hordir[0] = reach->end[0] - ms->origin[0];
-	hordir[1] = reach->end[1] - ms->origin[1];
-	hordir[2] = 0;
-	dist = VectorNormalize(hordir);
-	//
-	if (dist > 100) dist = 100;
-	speed = 400 - (400 - 3 * dist);
-	//
-	EA_Move(ms->client, hordir, speed);
-	VectorCopy(hordir, result.movedir);
-	//
-	return result;
-} //end of the function BotFinishTravel_Walk
-//===========================================================================
-//
 // Parameter:				-
 // Returns:					-
 // Changes Globals:		-
@@ -3416,7 +3380,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			//
 			switch(reach.traveltype & TRAVELTYPE_MASK)
 			{
-				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach); break;//BotFinishTravel_Walk(ms, &reach); break;
+				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach); break;
 				case TRAVEL_CROUCH: /*do nothing*/ break;
 				case TRAVEL_BARRIERJUMP: *result = BotFinishTravel_BarrierJump(ms, &reach); break;
 				case TRAVEL_LADDER: *result = BotTravel_Ladder(ms, &reach); break;
