@@ -486,7 +486,7 @@ void BotInitLevelItems(void)
 	{
 		if (!ic->iteminfo[i].modelindex)
 		{
-			BotAI_Print(PRT_DEVELOPER, "item %s has modelindex 0", ic->iteminfo[i].classname);
+			BotAI_Print(PRT_DEVELOPER, "item %s has modelindex 0\n", ic->iteminfo[i].classname);
 		} //end if
 	} //end for
 
@@ -503,7 +503,7 @@ void BotInitLevelItems(void)
 		} //end for
 		if (i >= ic->numiteminfo)
 		{
-			BotAI_Print(PRT_DEVELOPER, "entity %s unknown item\r\n", classname);
+			//BotAI_Print(PRT_DEVELOPER, "entity %s unknown item\r\n", classname);
 			continue;
 		} //end if
 		//get the origin of the item
