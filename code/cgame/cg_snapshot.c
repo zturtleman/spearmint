@@ -104,7 +104,9 @@ void CG_SetInitialSnapshot( snapshot_t *snap ) {
 	// sort out solid entities
 	CG_BuildSolidList();
 
-	CG_ExecuteNewServerCommands( snap->serverCommandSequence );
+	if ( cgs.previousSnapshotNum != cgs.processedSnapshotNum ) {
+		CG_ExecuteNewServerCommands( snap->serverCommandSequence );
+	}
 
 	// set our local weapon selection pointer to
 	// what the server has indicated the current weapon is
@@ -361,7 +363,7 @@ of an interpolating one)
 
 ============
 */
-void CG_ProcessSnapshots( void ) {
+void CG_ProcessSnapshots( qboolean initialOnly ) {
 	snapshot_t		*snap;
 	int				n;
 
@@ -390,6 +392,10 @@ void CG_ProcessSnapshots( void ) {
 		if ( !( snap->snapFlags & SNAPFLAG_NOT_ACTIVE ) ) {
 			CG_SetInitialSnapshot( snap );
 		}
+	}
+
+	if ( initialOnly ) {
+		return;
 	}
 
 	// loop until we either have a valid nextSnap with a serverTime
@@ -436,6 +442,25 @@ void CG_ProcessSnapshots( void ) {
 		CG_Error( "CG_ProcessSnapshots: cg.nextSnap->serverTime <= cg.time" );
 	}
 
+}
+
+/*
+=============
+CG_RestoreSnapshot
+
+Attempt to restore the last snapshot from before vid_restart.
+=============
+*/
+void CG_RestoreSnapshot( void ) {
+	if ( cgs.processedSnapshotNum <= 1 ) {
+		cgs.previousSnapshotNum = -1;
+		return;
+	}
+
+	cgs.previousSnapshotNum = cgs.processedSnapshotNum;
+	cgs.processedSnapshotNum--;
+
+	CG_ProcessSnapshots( qtrue );
 }
 
 /*

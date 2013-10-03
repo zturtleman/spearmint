@@ -838,7 +838,6 @@ typedef struct {
 	qhandle_t	noammoShader;
 
 	qhandle_t	smokePuffShader;
-	qhandle_t	smokePuffRageProShader;
 	qhandle_t	shotgunSmokePuffShader;
 	qhandle_t	plasmaBallShader;
 	qhandle_t	waterBubbleShader;
@@ -1117,6 +1116,7 @@ typedef struct {
 
 	int				serverCommandSequence;	// reliable command stream counter
 	int				processedSnapshotNum;// the number of snapshots cgame has requested
+	int				previousSnapshotNum;// the snapshot from before vid_restart
 
 	qboolean		localServer;		// detected on startup by checking sv_running
 
@@ -1613,7 +1613,8 @@ localEntity_t *CG_MakeExplosion( vec3_t origin, vec3_t dir,
 //
 // cg_snapshot.c
 //
-void CG_ProcessSnapshots( void );
+void CG_ProcessSnapshots( qboolean initialOnly );
+void CG_RestoreSnapshot( void );
 playerState_t *CG_LocalClientPlayerStateForClientNum( int clientNum );
 
 

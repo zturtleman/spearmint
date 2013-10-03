@@ -249,7 +249,7 @@ void SV_AddPlayer( client_t *client, int localPlayerNum, const char *infoString 
 	}
 
 	if (!newplayer) {
-		NET_OutOfBandPrint( NS_SERVER, client->netchan.remoteAddress, "print \"Couldn't add local player %d, no free player slots!\n\"", localPlayerNum + 1 );
+		NET_OutOfBandPrint( NS_SERVER, client->netchan.remoteAddress, "print\nCouldn't add local player %d, no free player slots!\n", localPlayerNum + 1 );
 		return;
 	}
 
@@ -277,7 +277,7 @@ void SV_AddPlayer( client_t *client, int localPlayerNum, const char *infoString 
 		// we can't just use VM_ArgPtr, because that is only valid inside a VM_Call
 		char *str = VM_ExplicitArgPtr( gvm, denied );
 
-		NET_OutOfBandPrint( NS_SERVER, client->netchan.remoteAddress, "print \"Rejected player: %s\n\"", str );
+		NET_OutOfBandPrint( NS_SERVER, client->netchan.remoteAddress, "print\nRejected player: %s\n", str );
 		Com_DPrintf ("Game rejected a player: %s.\n", str);
 
 		// Free all allocated data on the client structure

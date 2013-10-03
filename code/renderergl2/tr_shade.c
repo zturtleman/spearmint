@@ -1304,7 +1304,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			vec[3] = 0.0f;
 			GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vec);
 
-			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 999999.0f);
+			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0.0f);
 		}
 
 		if (pStage->alphaGen == AGEN_PORTAL)
@@ -1433,7 +1433,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			// set state
 			//
-			if ( pStage->bundle[0].vertexLightmap && ( (r_vertexLight->integer && !r_uiFullScreen->integer) || glConfig.hardwareType == GLHW_PERMEDIA2 ) && r_lightmap->integer )
+			if ( pStage->bundle[0].vertexLightmap && r_vertexLight->integer && !r_uiFullScreen->integer && r_lightmap->integer )
 			{
 				GL_BindToTMU( tr.whiteImage, 0 );
 			}

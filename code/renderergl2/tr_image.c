@@ -102,14 +102,6 @@ void GL_TextureMode( const char *string ) {
 		}
 	}
 
-	// hack to prevent trilinear from being set on voodoo,
-	// because their driver freaks...
-	if ( i == 5 && glConfig.hardwareType == GLHW_3DFX_2D3D ) {
-		ri.Printf( PRINT_ALL, "Refusing to set trilinear on a voodoo.\n" );
-		i = 3;
-	}
-
-
 	if ( i == 6 ) {
 		ri.Printf (PRINT_ALL, "bad filter name\n");
 		return;
@@ -2310,6 +2302,9 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 		qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
 		qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
 		qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
+
+		if (image->flags & IMGFLAG_MIPMAP)
+			qglGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP);
 
 		image->uploadWidth = width;
 		image->uploadHeight = height;

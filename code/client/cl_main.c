@@ -1469,10 +1469,6 @@ void CL_ClearState (void) {
 	DA_Free( &cl.parseEntities );
 
 	Com_Memset( &cl, 0, sizeof( cl ) );
-
-	for (index = 0; index < CL_MAX_SPLITVIEW; index++) {
-		cl.localClients[index].mouseFlags = MOUSE_CLIENT;
-	}
 }
 
 /*
@@ -3127,12 +3123,7 @@ void CL_DrawLoadingScreen( void ) {
 	qhandle_t hShader;
 
 	// Q3A menu background logo
-	if (cls.glconfig.hardwareType == GLHW_RAGEPRO ) {
-		// the blend effect turns to shit with the normal 
-		hShader = re.RegisterShaderNoMip("menubackRagePro");
-	} else {
-		hShader = re.RegisterShaderNoMip("menuback");
-	}
+	hShader = re.RegisterShaderNoMip("menuback");
 
 	// if running in stereo, we need to draw the frame twice
 	if ( cls.glconfig.stereoEnabled || Cvar_VariableIntegerValue( "r_anaglyphMode" ) ) {
