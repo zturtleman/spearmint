@@ -802,7 +802,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				}
 #endif
 			} else {
-				trap_S_StartSound (NULL, es->number, CHAN_AUTO,	trap_S_RegisterSound( item->pickup_sound, qfalse ) );
+				trap_S_StartSound (NULL, es->number, CHAN_AUTO,	cgs.media.itemPickupSounds[ index ] );
 			}
 
 			// show icon and name on status bar
@@ -817,7 +817,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_GLOBAL_ITEM_PICKUP:
 		DEBUGNAME("EV_GLOBAL_ITEM_PICKUP");
 		{
-			gitem_t	*item;
 			int		index;
 
 			index = es->eventParm;		// player predicted
@@ -825,11 +824,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			if ( index < 1 || index >= bg_numItems ) {
 				break;
 			}
-			item = &bg_itemlist[ index ];
 			// powerup pickups are global
-			if( item->pickup_sound ) {
-				trap_S_StartSound (NULL, thisClientNum, CHAN_AUTO, trap_S_RegisterSound( item->pickup_sound, qfalse ) );
-			}
+			trap_S_StartSound (NULL, thisClientNum, CHAN_AUTO, cgs.media.itemPickupSounds[ index ] );
 
 			// show icon and name on status bar
 			for (i = 0; i < CG_MaxSplitView(); i++) {

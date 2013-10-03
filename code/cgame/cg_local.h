@@ -925,6 +925,7 @@ typedef struct {
 	qhandle_t	medalCapture;
 
 	// sounds
+	sfxHandle_t	itemPickupSounds[MAX_ITEMS];
 	sfxHandle_t	quadSound;
 	sfxHandle_t	tracerSound;
 	sfxHandle_t	selectSound;
