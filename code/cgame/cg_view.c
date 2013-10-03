@@ -657,11 +657,6 @@ static void CG_DamageBlendBlob( void ) {
 	//	return;
 	//}
 
-	// ragePro systems can't fade blends, so don't obscure the screen
-	if ( cgs.glconfig.hardwareType == GLHW_RAGEPRO ) {
-		return;
-	}
-
 	maxTime = DAMAGE_TIME;
 	t = cg.time - cg.cur_lc->damageTime;
 	if ( t <= 0 || t >= maxTime ) {

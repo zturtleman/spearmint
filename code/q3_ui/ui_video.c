@@ -295,7 +295,6 @@ typedef struct
 	int texturebits;
 	int geometry;
 	int filter;
-	int driver;
 	qboolean extensions;
 } InitialVideoOptions_s;
 
@@ -305,22 +304,22 @@ static graphicsoptions_t		s_graphicsoptions;
 static InitialVideoOptions_s s_ivo_templates[] =
 {
 	{
-		6, qtrue, 3, 0, 2, 2, 1, 0, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
+		6, qtrue, 3, 0, 2, 2, 1, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
 	},
 	{
-		4, qtrue, 2, 0, 2, 1, 1, 0, qtrue	// JDC: this was tq 3
+		4, qtrue, 2, 0, 2, 1, 1, qtrue	// JDC: this was tq 3
 	},
 	{
-		3, qtrue, 2, 0, 0, 1, 0, 0, qtrue
+		3, qtrue, 2, 0, 0, 1, 0, qtrue
 	},
 	{
-		2, qtrue, 1, 0, 0, 0, 0, 0, qtrue
+		2, qtrue, 1, 0, 0, 0, 0, qtrue
 	},
 	{
-		2, qtrue, 1, 1, 0, 0, 0, 0, qtrue
+		2, qtrue, 1, 1, 0, 0, 0, qtrue
 	},
 	{
-		3, qtrue, 1, 0, 0, 1, 0, 0, qtrue
+		3, qtrue, 1, 0, 0, 1, 0, qtrue
 	}
 };
 
@@ -488,7 +487,6 @@ GraphicsOptions_GetInitialVideo
 */
 static void GraphicsOptions_GetInitialVideo( void )
 {
-	s_ivo.driver      = s_graphicsoptions.driver.curvalue;
 	s_ivo.mode        = s_graphicsoptions.mode.curvalue;
 	s_ivo.fullscreen  = s_graphicsoptions.fs.curvalue;
 	s_ivo.extensions  = s_graphicsoptions.allow_extensions.curvalue;
@@ -548,8 +546,6 @@ static void GraphicsOptions_CheckConfig( void )
 
 	for ( i = 0; i < NUM_IVO_TEMPLATES-1; i++ )
 	{
-		if ( s_ivo_templates[i].driver != s_graphicsoptions.driver.curvalue )
-			continue;
 		if ( GraphicsOptions_FindDetectedResolution(s_ivo_templates[i].mode) != s_graphicsoptions.mode.curvalue )
 			continue;
 		if ( s_ivo_templates[i].fullscreen != s_graphicsoptions.fs.curvalue )
@@ -579,16 +575,6 @@ GraphicsOptions_UpdateMenuItems
 */
 static void GraphicsOptions_UpdateMenuItems( void )
 {
-	if ( s_graphicsoptions.driver.curvalue == 1 )
-	{
-		s_graphicsoptions.fs.curvalue = 1;
-		s_graphicsoptions.fs.generic.flags |= QMF_GRAYED;
-	}
-	else
-	{
-		s_graphicsoptions.fs.generic.flags &= ~QMF_GRAYED;
-	}
-
 	if ( s_graphicsoptions.allow_extensions.curvalue == 0 )
 	{
 		if ( s_graphicsoptions.texturebits.curvalue == 0 )
@@ -616,10 +602,6 @@ static void GraphicsOptions_UpdateMenuItems( void )
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.lighting != s_graphicsoptions.lighting.curvalue )
-	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
-	}
-	if ( s_ivo.driver != s_graphicsoptions.driver.curvalue )
 	{
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
@@ -744,14 +726,6 @@ static void GraphicsOptions_Event( void* ptr, int event ) {
 		// fall through to apply mode constraints
 		
 	case ID_MODE:
-		// clamp 3dfx video modes
-		if ( s_graphicsoptions.driver.curvalue == 1 )
-		{
-			if ( s_graphicsoptions.mode.curvalue < 2 )
-				s_graphicsoptions.mode.curvalue = 2;
-			else if ( s_graphicsoptions.mode.curvalue > 6 )
-				s_graphicsoptions.mode.curvalue = 6;
-		}
 		s_graphicsoptions.ratio.curvalue =
 			resToRatio[ s_graphicsoptions.mode.curvalue ];
 		break;
@@ -924,13 +898,6 @@ GraphicsOptions_MenuInit
 */
 void GraphicsOptions_MenuInit( void )
 {
-	static const char *s_driver_names[] =
-	{
-		"Default",
-		"Voodoo",
-		NULL
-	};
-
 	static const char *tq_names[] =
 	{
 		"Default",
@@ -1065,15 +1032,6 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.list.itemnames        = s_graphics_options_names;
 	y += 2 * ( BIGCHAR_HEIGHT + 2 );
 
-	s_graphicsoptions.driver.generic.type  = MTYPE_SPINCONTROL;
-	s_graphicsoptions.driver.generic.name  = "GL Driver:";
-	s_graphicsoptions.driver.generic.flags = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
-	s_graphicsoptions.driver.generic.x     = 400;
-	s_graphicsoptions.driver.generic.y     = y;
-	s_graphicsoptions.driver.itemnames     = s_driver_names;
-	s_graphicsoptions.driver.curvalue      = (cgs.glconfig.driverType == GLDRV_VOODOO);
-	y += BIGCHAR_HEIGHT+2;
-
 	// references/modifies "r_allowExtensions"
 	s_graphicsoptions.allow_extensions.generic.type     = MTYPE_SPINCONTROL;
 	s_graphicsoptions.allow_extensions.generic.name	    = "GL Extensions:";
@@ -1202,7 +1160,6 @@ void GraphicsOptions_MenuInit( void )
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.network );
 
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.list );
-	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.driver );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.allow_extensions );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.ratio );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.mode );
@@ -1219,12 +1176,6 @@ void GraphicsOptions_MenuInit( void )
 
 	GraphicsOptions_SetMenuItems();
 	GraphicsOptions_GetInitialVideo();
-
-	if ( cgs.glconfig.driverType == GLDRV_ICD &&
-		 cgs.glconfig.hardwareType == GLHW_3DFX_2D3D )
-	{
-		s_graphicsoptions.driver.generic.flags |= QMF_HIDDEN|QMF_INACTIVE;
-	}
 }
 
 

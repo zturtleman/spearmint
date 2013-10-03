@@ -3123,12 +3123,7 @@ void CL_DrawLoadingScreen( void ) {
 	qhandle_t hShader;
 
 	// Q3A menu background logo
-	if (cls.glconfig.hardwareType == GLHW_RAGEPRO ) {
-		// the blend effect turns to shit with the normal 
-		hShader = re.RegisterShaderNoMip("menubackRagePro");
-	} else {
-		hShader = re.RegisterShaderNoMip("menuback");
-	}
+	hShader = re.RegisterShaderNoMip("menuback");
 
 	// if running in stereo, we need to draw the frame twice
 	if ( cls.glconfig.stereoEnabled || Cvar_VariableIntegerValue( "r_anaglyphMode" ) ) {

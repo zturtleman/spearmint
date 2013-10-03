@@ -212,7 +212,7 @@ static	void R_LoadLightmaps( lump_t *l ) {
 	tr.lightmaps = NULL;
 
 	// if we are in r_vertexLight mode, we don't need the lightmaps at all
-	if ( r_vertexLight->integer || glConfig.hardwareType == GLHW_PERMEDIA2 ) {
+	if ( r_vertexLight->integer ) {
 		return;
 	}
 
@@ -330,7 +330,7 @@ static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 	}
 	dsh = &s_worldData.shaders[ _shaderNum ];
 
-	if ( r_vertexLight->integer || glConfig.hardwareType == GLHW_PERMEDIA2 ) {
+	if ( r_vertexLight->integer ) {
 		lightmapNum = LIGHTMAP_BY_VERTEX;
 	}
 
