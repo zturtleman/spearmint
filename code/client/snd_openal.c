@@ -1833,6 +1833,8 @@ static ALuint musicBuffers[NUM_MUSIC_BUFFERS];
 static snd_stream_t *mus_stream;
 static snd_stream_t *intro_stream;
 static char s_backgroundLoop[MAX_QPATH];
+static float s_backgroundVolume;
+static float s_backgroundLoopVolume;
 
 static byte decode_buffer[MUSIC_BUFFER_SIZE];
 
@@ -1971,6 +1973,8 @@ void S_AL_MusicProcess(ALuint b)
 		
 		curstream = mus_stream;
 
+		s_backgroundVolume = s_backgroundLoopVolume;
+
 		if(!curstream)
 		{
 			S_AL_StopBackgroundTrack();
@@ -2007,7 +2011,7 @@ S_AL_StartBackgroundTrack
 =================
 */
 static
-void S_AL_StartBackgroundTrack( const char *intro, const char *loop )
+void S_AL_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume )
 {
 	int i;
 	qboolean issame;
@@ -2022,6 +2026,9 @@ void S_AL_StartBackgroundTrack( const char *intro, const char *loop )
 	S_AL_MusicSourceGet();
 	if(musicSourceHandle == -1)
 		return;
+
+	s_backgroundVolume = Com_Clamp(0, 10, volume);
+	s_backgroundLoopVolume = Com_Clamp(0, 10, loopVolume);
 
 	if (!loop || !*loop)
 	{
@@ -2065,7 +2072,7 @@ void S_AL_StartBackgroundTrack( const char *intro, const char *loop )
 	qalSourceQueueBuffers(musicSource, NUM_MUSIC_BUFFERS, musicBuffers);
 
 	// Set the initial gain property
-	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value);
+	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value * s_backgroundVolume);
 	
 	// Start playing
 	qalSourcePlay(musicSource);
@@ -2108,7 +2115,7 @@ void S_AL_MusicUpdate( void )
 	}
 
 	// Set the gain property
-	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value);
+	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value * s_backgroundVolume);
 }
 
 

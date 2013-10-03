@@ -1330,7 +1330,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_S_SOUNDDURATION:
 		return S_SoundDuration( args[1] );
 	case CG_S_STARTBACKGROUNDTRACK:
-		S_StartBackgroundTrack( VMA(1), VMA(2) );
+		S_StartBackgroundTrack( VMA(1), VMA(2), VMF(3), VMF(3) );
 		return 0;
 	case CG_R_LOADWORLDMAP:
 		re.LoadWorld( VMA(1) );

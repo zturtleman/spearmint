@@ -336,10 +336,10 @@ void S_StartLocalSound( sfxHandle_t sfx, int channelNum )
 S_StartBackgroundTrack
 =================
 */
-void S_StartBackgroundTrack( const char *intro, const char *loop )
+void S_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume )
 {
 	if( si.StartBackgroundTrack ) {
-		si.StartBackgroundTrack( intro, loop );
+		si.StartBackgroundTrack( intro, loop, volume, loopVolume );
 	}
 }
 
@@ -684,11 +684,15 @@ void S_Music_f( void ) {
 	c = Cmd_Argc();
 
 	if ( c == 2 ) {
-		si.StartBackgroundTrack( Cmd_Argv(1), NULL );
+		si.StartBackgroundTrack( Cmd_Argv(1), NULL, 1.0f, 1.0f );
 	} else if ( c == 3 ) {
-		si.StartBackgroundTrack( Cmd_Argv(1), Cmd_Argv(2) );
+		si.StartBackgroundTrack( Cmd_Argv(1), Cmd_Argv(2), 1.0f, 1.0f );
+	} else if ( c == 4 ) {
+		si.StartBackgroundTrack( Cmd_Argv(1), Cmd_Argv(2), atof(Cmd_Argv(3)), atof(Cmd_Argv(3)) );
+	} else if ( c == 5 ) {
+		si.StartBackgroundTrack( Cmd_Argv(1), Cmd_Argv(2), atof(Cmd_Argv(3)), atof(Cmd_Argv(4)) );
 	} else {
-		Com_Printf ("Usage: music <musicfile> [loopfile]\n");
+		Com_Printf ("Usage: music <musicfile> [loopfile] [volume] [loopvolume]\n");
 		return;
 	}
 

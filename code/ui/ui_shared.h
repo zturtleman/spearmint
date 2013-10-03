@@ -366,7 +366,7 @@ typedef struct {
 	void (*Pause)(qboolean b);
 	int (*ownerDrawWidth)(int ownerDraw, float scale);
 	sfxHandle_t (*registerSound)(const char *name, qboolean compressed);
-	void (*startBackgroundTrack)( const char *intro, const char *loop);
+	void (*startBackgroundTrack)( const char *intro, const char *loop, float volume, float loopVolume );
 	void (*stopBackgroundTrack)( void );
 	int (*playCinematic)(const char *name, float x, float y, float w, float h);
 	void (*stopCinematic)(int handle);

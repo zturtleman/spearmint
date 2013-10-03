@@ -1742,7 +1742,7 @@ void CG_StartMusic( void ) {
 	Q_strncpyz( parm1, COM_Parse( &s ), sizeof( parm1 ) );
 	Q_strncpyz( parm2, COM_Parse( &s ), sizeof( parm2 ) );
 
-	trap_S_StartBackgroundTrack( parm1, parm2 );
+	trap_S_StartBackgroundTrack( parm1, parm2, 1.0f, 1.0f );
 }
 #ifdef MISSIONPACK_HUD
 char *CG_GetMenuBuffer(const char *filename) {

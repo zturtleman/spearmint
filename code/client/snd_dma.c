@@ -47,7 +47,8 @@ void S_Base_StopBackgroundTrack( void );
 
 snd_stream_t	*s_backgroundStream = NULL;
 static char		s_backgroundLoop[MAX_QPATH];
-//static char		s_backgroundMusic[MAX_QPATH]; //TTimo: unused
+static float	s_backgroundVolume;
+static float	s_backgroundLoopVolume;
 
 
 // =======================================================================
@@ -1374,20 +1375,23 @@ void S_Base_StopBackgroundTrack( void ) {
 S_StartBackgroundTrack
 ======================
 */
-void S_Base_StartBackgroundTrack( const char *intro, const char *loop ){
+void S_Base_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume ) {
 	if ( !intro ) {
 		intro = "";
 	}
 	if ( !loop || !loop[0] ) {
 		loop = intro;
 	}
-	Com_DPrintf( "S_StartBackgroundTrack( %s, %s )\n", intro, loop );
+	Com_DPrintf( "S_StartBackgroundTrack( %s, %s, %f, %f )\n", intro, loop, volume, loopVolume );
 
 	if(!*intro)
 	{
 		S_Base_StopBackgroundTrack();
 		return;
 	}
+
+	s_backgroundVolume = Com_Clamp(0, 10, volume);
+	s_backgroundLoopVolume = Com_Clamp(0, 10, loopVolume);
 
 	if( !loop ) {
 		s_backgroundLoop[0] = 0;
@@ -1468,7 +1472,8 @@ void S_UpdateBackgroundTrack( void ) {
 		{
 			// add to raw buffer
 			S_Base_RawSamples(0, fileSamples, s_backgroundStream->info.rate,
-				s_backgroundStream->info.width, s_backgroundStream->info.channels, raw, s_musicVolume->value, -1);
+				s_backgroundStream->info.width, s_backgroundStream->info.channels, raw,
+				s_musicVolume->value * s_backgroundVolume, -1);
 		}
 		else
 		{
@@ -1477,7 +1482,8 @@ void S_UpdateBackgroundTrack( void ) {
 			{
 				S_CodecCloseStream(s_backgroundStream);
 				s_backgroundStream = NULL;
-				S_Base_StartBackgroundTrack( s_backgroundLoop, s_backgroundLoop );
+				S_Base_StartBackgroundTrack( s_backgroundLoop, s_backgroundLoop,
+					s_backgroundLoopVolume, s_backgroundLoopVolume );
 				if(!s_backgroundStream)
 					return;
 			}
