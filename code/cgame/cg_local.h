@@ -949,7 +949,7 @@ typedef struct {
 	sfxHandle_t	sfx_chghit;
 	sfxHandle_t	sfx_chghitflesh;
 	sfxHandle_t	sfx_chghitmetal;
-	sfxHandle_t	sfx_chgstart;
+	sfxHandle_t	sfx_chgstop;
 	sfxHandle_t kamikazeExplodeSound;
 	sfxHandle_t kamikazeImplodeSound;
 	sfxHandle_t kamikazeFarSound;
