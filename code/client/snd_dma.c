@@ -45,10 +45,12 @@ void S_Update_( void );
 void S_Base_StopAllSounds(void);
 void S_Base_StopBackgroundTrack( void );
 
-snd_stream_t	*s_backgroundStream = NULL;
-static char		s_backgroundLoop[MAX_QPATH];
-static float	s_backgroundVolume;
-static float	s_backgroundLoopVolume;
+snd_stream_t	*s_backgroundStream[MAX_STREAMING_SOUNDS] = {NULL};
+static float	s_backgroundVolume[MAX_STREAMING_SOUNDS];
+static char		s_backgroundLoop[MAX_STREAMING_SOUNDS][MAX_QPATH];
+static float	s_backgroundLoopVolume[MAX_STREAMING_SOUNDS];
+static int		s_backgroundEntityNum[MAX_STREAMING_SOUNDS];
+static int		s_backgroundPlayCount[MAX_STREAMING_SOUNDS];
 
 
 // =======================================================================
@@ -112,11 +114,6 @@ void S_Base_SoundInfo(void) {
 		Com_Printf("%5d submission_chunk\n", dma.submission_chunk);
 		Com_Printf("%5d speed\n", dma.speed);
 		Com_Printf("%p dma buffer\n", dma.buffer);
-		if ( s_backgroundStream ) {
-			Com_Printf("Background file: %s\n", s_backgroundLoop );
-		} else {
-			Com_Printf("No background file.\n" );
-		}
 
 	}
 	Com_Printf("----------------------\n" );
@@ -1287,7 +1284,7 @@ void S_Base_Update( void ) {
 	}
 
 	// add raw data from streamed samples
-	S_UpdateBackgroundTrack();
+	S_UpdateStreamingSounds();
 
 	// mix some sound
 	S_Update_();
@@ -1422,42 +1419,133 @@ background music functions
 
 /*
 ======================
-S_StopBackgroundTrack
+S_StopStreamingSound
 ======================
 */
-void S_Base_StopBackgroundTrack( void ) {
-	if(!s_backgroundStream)
+void S_Base_StopStreamingSound( int stream ) {
+	if(stream < 0 || stream >= MAX_STREAMING_SOUNDS)
 		return;
-	S_CodecCloseStream(s_backgroundStream);
-	s_backgroundStream = NULL;
-	s_rawend[0] = 0;
+	if(!s_backgroundStream[stream])
+		return;
+	S_CodecCloseStream(s_backgroundStream[stream]);
+	s_backgroundStream[stream] = NULL;
+	s_rawend[stream] = 0;
 }
 
 /*
 ======================
-S_OpenBackgroundStream
+S_StopBackgroundTrack
 ======================
 */
-static void S_OpenBackgroundStream( const char *filename ) {
+void S_Base_StopBackgroundTrack( void ) {
+	S_Base_StopStreamingSound( 0 );
+}
+
+/*
+======================
+S_Base_OpenStream
+======================
+*/
+void S_Base_OpenStream( int stream, const char *filename ) {
 	// close the background track, but DON'T reset s_rawend
 	// if restarting the same back ground track
-	if(s_backgroundStream)
+	if(s_backgroundStream[stream])
 	{
-		S_CodecCloseStream(s_backgroundStream);
-		s_backgroundStream = NULL;
+		S_CodecCloseStream(s_backgroundStream[stream]);
+		s_backgroundStream[stream] = NULL;
 	}
 
 	// Open stream
-	s_backgroundStream = S_CodecOpenStream(filename);
-	if(!s_backgroundStream) {
+	s_backgroundStream[stream] = S_CodecOpenStream(filename);
+	if(!s_backgroundStream[stream]) {
 		Com_Printf( S_COLOR_YELLOW "WARNING: couldn't open music file %s\n", filename );
 		return;
 	}
 
-	if(s_backgroundStream->info.channels != 2 || (s_backgroundStream->info.rate != 22050 && s_backgroundStream->info.rate != 44100)) {
+	if(s_backgroundStream[stream]->info.channels != 2 || (s_backgroundStream[stream]->info.rate != 22050 && s_backgroundStream[stream]->info.rate != 44100)) {
 		Com_Printf(S_COLOR_YELLOW "WARNING: music file %s is not 22kHz or 44.1kHz stereo\n", filename );
 	}
 }
+
+/*
+======================
+S_StartStreamingSound
+======================
+*/
+void S_Base_StartStreamingSound( int stream, int entityNum, const char *filename, float volume ) {
+	if ( !filename ) {
+		filename = "";
+	}
+	Com_DPrintf( "S_Base_StartStreamingSound( %d, %d, %s, %f )\n", stream, entityNum, filename, volume );
+
+	if(stream < 0 || stream >= MAX_STREAMING_SOUNDS)
+		return;
+
+	if(!*filename)
+	{
+		S_Base_StopStreamingSound(stream);
+		return;
+	}
+
+	s_backgroundVolume[stream] = Com_Clamp(0, 10, volume);
+	s_backgroundEntityNum[stream] = entityNum;
+
+	s_backgroundLoop[stream][0] = 0;
+	s_backgroundPlayCount[stream] = 0;
+
+	S_Base_OpenStream( stream, filename );
+}
+
+/*
+======================
+S_QueueStreamingSound
+======================
+*/
+void S_Base_QueueStreamingSound( int stream, const char *filename, float volume ) {
+	if(stream < 0 || stream >= MAX_STREAMING_SOUNDS)
+		return;
+
+	if( !filename ) {
+		s_backgroundLoop[stream][0] = 0;
+	} else {
+		Q_strncpyz( s_backgroundLoop[stream], filename, sizeof( s_backgroundLoop[0] ) );
+	}
+
+	s_backgroundLoopVolume[stream] = Com_Clamp(0, 10, volume);
+}
+
+/*
+======================
+S_GetStreamPlayCount
+
+when it changes, you can queue the next track
+======================
+*/
+int S_Base_GetStreamPlayCount( int stream ) {
+	if ((stream < 0) || (stream >= MAX_STREAMING_SOUNDS))
+		return 0;
+
+	return s_backgroundPlayCount[stream];
+}
+
+#if 0
+/*
+=================
+S_SetStreamVolume
+
+for music, call each frame with s_musicVolume->value
+
+this is bad for trying to fade in or out a stream at beginning for end, would be fine if don't care _where_ in the stream the change happens.
+=================
+*/
+static
+void S_Base_SetStreamVolume( int stream, float volume ) {
+	if ((stream < 0) || (stream >= MAX_STREAMING_SOUNDS))
+		return;
+
+	s_backgroundVolume[stream] = Com_Clamp(0, 10, volume);
+}
+#endif
 
 /*
 ======================
@@ -1465,100 +1553,87 @@ S_StartBackgroundTrack
 ======================
 */
 void S_Base_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume ) {
-	if ( !intro ) {
-		intro = "";
-	}
-	if ( !loop || !loop[0] ) {
-		loop = intro;
-	}
-	Com_DPrintf( "S_StartBackgroundTrack( %s, %s, %f, %f )\n", intro, loop, volume, loopVolume );
-
-	if(!*intro)
-	{
-		S_Base_StopBackgroundTrack();
-		return;
-	}
-
-	s_backgroundVolume = Com_Clamp(0, 10, volume);
-	s_backgroundLoopVolume = Com_Clamp(0, 10, loopVolume);
-
-	Q_strncpyz( s_backgroundLoop, loop, sizeof( s_backgroundLoop ) );
-
-	S_OpenBackgroundStream( intro );
+	S_Base_StartStreamingSound( 0, -1, intro, volume );
+	S_Base_QueueStreamingSound( 0, loop, loopVolume );
 }
 
 /*
 ======================
-S_UpdateBackgroundTrack
+S_UpdateStreamingSounds
 ======================
 */
-void S_UpdateBackgroundTrack( void ) {
+void S_UpdateStreamingSounds( void ) {
 	int		bufferSamples;
 	int		fileSamples;
 	byte	raw[30000];		// just enough to fit in a mac stack frame
 	int		fileBytes;
 	int		r;
+	int		stream;
 
-	if(!s_backgroundStream) {
-		return;
-	}
-
-	// don't bother playing anything if musicvolume is 0
-	if ( s_musicVolume->value <= 0 ) {
-		return;
-	}
-
-	// see how many samples should be copied into the raw buffer
-	if ( s_rawend[0] < s_soundtime ) {
-		s_rawend[0] = s_soundtime;
-	}
-
-	while ( s_rawend[0] < s_soundtime + MAX_RAW_SAMPLES ) {
-		bufferSamples = MAX_RAW_SAMPLES - (s_rawend[0] - s_soundtime);
-
-		// decide how much data needs to be read from the file
-		fileSamples = bufferSamples * s_backgroundStream->info.rate / dma.speed;
-
-		if (!fileSamples)
-			return;
-
-		// our max buffer size
-		fileBytes = fileSamples * (s_backgroundStream->info.width * s_backgroundStream->info.channels);
-		if ( fileBytes > sizeof(raw) ) {
-			fileBytes = sizeof(raw);
-			fileSamples = fileBytes / (s_backgroundStream->info.width * s_backgroundStream->info.channels);
+	for ( stream = 0; stream < MAX_STREAMING_SOUNDS; stream++ ) {
+		if(!s_backgroundStream[stream]) {
+			continue;
 		}
 
-		// Read
-		r = S_CodecReadStream(s_backgroundStream, fileBytes, raw);
-		if(r < fileBytes)
-		{
-			fileSamples = r / (s_backgroundStream->info.width * s_backgroundStream->info.channels);
+		// don't bother playing anything if musicvolume is 0
+		if ( s_musicVolume->value <= 0 ) {
+			continue;
 		}
 
-		if(r > 0)
-		{
-			// add to raw buffer
-			S_Base_RawSamples(0, fileSamples, s_backgroundStream->info.rate,
-				s_backgroundStream->info.width, s_backgroundStream->info.channels, raw,
-				s_musicVolume->value * s_backgroundVolume, -1);
+		// see how many samples should be copied into the raw buffer
+		if ( s_rawend[stream] < s_soundtime ) {
+			s_rawend[stream] = s_soundtime;
 		}
-		else
-		{
-			// loop
-			if(s_backgroundLoop[0])
+
+		while ( s_rawend[stream] < s_soundtime + MAX_RAW_SAMPLES ) {
+			bufferSamples = MAX_RAW_SAMPLES - (s_rawend[stream] - s_soundtime);
+
+			// decide how much data needs to be read from the file
+			fileSamples = bufferSamples * s_backgroundStream[stream]->info.rate / dma.speed;
+
+			if (!fileSamples)
+				break;
+
+			// our max buffer size
+			fileBytes = fileSamples * (s_backgroundStream[stream]->info.width * s_backgroundStream[stream]->info.channels);
+			if ( fileBytes > sizeof(raw) ) {
+				fileBytes = sizeof(raw);
+				fileSamples = fileBytes / (s_backgroundStream[stream]->info.width * s_backgroundStream[stream]->info.channels);
+			}
+
+			// Read
+			r = S_CodecReadStream(s_backgroundStream[stream], fileBytes, raw);
+			if(r < fileBytes)
 			{
-				S_OpenBackgroundStream( s_backgroundLoop );
-				if(!s_backgroundStream)
-					return;
+				fileSamples = r / (s_backgroundStream[stream]->info.width * s_backgroundStream[stream]->info.channels);
+			}
+
+			if(r > 0)
+			{
+				// add to raw buffer
+				S_Base_RawSamples(stream, fileSamples, s_backgroundStream[stream]->info.rate,
+					s_backgroundStream[stream]->info.width, s_backgroundStream[stream]->info.channels, raw,
+					s_musicVolume->value * s_backgroundVolume[stream], s_backgroundEntityNum[stream]);
 			}
 			else
 			{
-				S_Base_StopBackgroundTrack();
-				return;
+				// loop
+				if(s_backgroundLoop[stream][0])
+				{
+					s_backgroundVolume[stream] = s_backgroundLoopVolume[stream];
+					s_backgroundPlayCount[stream]++;
+					S_Base_OpenStream( stream, s_backgroundLoop[stream] );
+					if(!s_backgroundStream[stream])
+						break;
+				}
+				else
+				{
+					S_Base_StopStreamingSound(stream);
+					break;
+				}
 			}
-		}
 
+		}
 	}
 }
 

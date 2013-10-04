@@ -28,6 +28,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
+#define MAX_STREAMING_SOUNDS 24
 
 void S_Init( void );
 void S_Shutdown( void );
@@ -79,7 +80,7 @@ void S_ClearSoundBuffer( void );
 
 void SNDDMA_Activate( void );
 
-void S_UpdateBackgroundTrack( void );
+void S_UpdateStreamingSounds( void );
 
 
 #ifdef USE_VOIP

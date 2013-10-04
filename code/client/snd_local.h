@@ -227,7 +227,7 @@ extern	vec3_t	listener_up;
 extern	dma_t	dma;
 
 #define	MAX_RAW_SAMPLES	16384
-#define MAX_RAW_STREAMS (MAX_CLIENTS * 2 + 1)
+#define MAX_RAW_STREAMS (MAX_CLIENTS * 2 + MAX_STREAMING_SOUNDS)
 extern	portable_samplepair_t s_rawsamples[MAX_RAW_STREAMS][MAX_RAW_SAMPLES];
 extern	int		s_rawend[MAX_RAW_STREAMS];
 

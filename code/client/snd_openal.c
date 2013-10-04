@@ -1658,6 +1658,11 @@ ALuint S_AL_SrcGet(srcHandle_t src)
 
 //===========================================================================
 
+#define NUM_MUSIC_BUFFERS	4
+#define MUSIC_BUFFER_SIZE 4096
+
+static byte decode_buffer[MUSIC_BUFFER_SIZE];
+
 // Q3A cinematics use up to 12 buffers at once
 #define MAX_STREAM_BUFFERS 20
 
@@ -1667,6 +1672,12 @@ static ALuint streamSources[MAX_RAW_STREAMS];
 static ALuint streamBuffers[MAX_RAW_STREAMS][MAX_STREAM_BUFFERS];
 static int streamNumBuffers[MAX_RAW_STREAMS];
 static int streamBufIndex[MAX_RAW_STREAMS];
+
+static snd_stream_t *streamSoundStreams[MAX_STREAMING_SOUNDS];
+static float streamVolume[MAX_STREAMING_SOUNDS];
+static char streamQueued[MAX_STREAMING_SOUNDS][MAX_QPATH];
+static float streamQueuedVolume[MAX_STREAMING_SOUNDS];
+static int streamPlayCount[MAX_STREAMING_SOUNDS];
 
 /*
 =================
@@ -1739,6 +1750,9 @@ static void S_AL_FreeStreamChannel( int stream )
 	if ((stream < 0) || (stream >= MAX_RAW_STREAMS))
 		return;
 
+	if(streamSourceHandles[stream] == -1)
+		return;
+
 	// Detach any buffers
 	qalSourcei(streamSources[stream], AL_BUFFER, 0);
 
@@ -1753,6 +1767,12 @@ static void S_AL_FreeStreamChannel( int stream )
 	S_AL_SrcKill(streamSourceHandles[stream]);
 	streamSources[stream] = 0;
 	streamSourceHandles[stream] = -1;
+
+	if(stream < MAX_STREAMING_SOUNDS && streamSoundStreams[stream])
+	{
+		S_CodecCloseStream(streamSoundStreams[stream]);
+		streamSoundStreams[stream] = NULL;
+	}
 }
 
 /*
@@ -1840,6 +1860,76 @@ void S_AL_RawSamples(int stream, int samples, int rate, int width, int channels,
 
 /*
 =================
+S_AL_StreamingSoundProcess
+=================
+*/
+static
+qboolean S_AL_StreamingSoundProcess( int stream, ALuint b )
+{
+	ALenum error;
+	int l;
+	ALuint format;
+	snd_stream_t *curstream;
+
+	if ((stream < 0) || (stream >= MAX_STREAMING_SOUNDS))
+		return qfalse;
+
+	S_AL_ClearError( qfalse );
+
+	curstream = streamSoundStreams[stream];
+
+	if(!curstream)
+		return qfalse;
+
+	l = S_CodecReadStream(curstream, MUSIC_BUFFER_SIZE, decode_buffer);
+
+	// Ran out data to read
+	if(l == 0)
+	{
+		S_CodecCloseStream(curstream);
+
+		if (streamQueued[stream][0])
+		{
+			streamPlayCount[stream]++;
+			streamVolume[stream] = streamQueuedVolume[stream];
+			curstream = S_CodecOpenStream(streamQueued[stream]);
+		}
+		else
+		{
+			streamPlayCount[stream] = 1;
+			curstream = NULL;
+		}
+
+		streamSoundStreams[stream] = curstream;
+
+		if (!curstream)
+			return qfalse;
+	}
+
+	format = S_AL_Format(curstream->info.width, curstream->info.channels);
+
+	if( l == 0 )
+	{
+		// We have no data to buffer, so buffer silence
+		byte dummyData[ 2 ] = { 0 };
+
+		qalBufferData( b, AL_FORMAT_MONO16, (void *)dummyData, 2, 44100 );
+	}
+	else
+		qalBufferData(b, format, decode_buffer, l, curstream->info.rate);
+
+	if( ( error = qalGetError( ) ) != AL_NO_ERROR )
+	{
+		Com_DPrintf( S_COLOR_RED "ERROR: while buffering data for audio stream - %s\n",
+				S_AL_ErrorMsg( error ) );
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+=================
 S_AL_StreamUpdate
 =================
 */
@@ -1860,7 +1950,22 @@ void S_AL_StreamUpdate( int stream )
 	while( numBuffers-- )
 	{
 		ALuint buffer;
+
 		qalSourceUnqueueBuffers(streamSources[stream], 1, &buffer);
+
+		if ( S_AL_StreamingSoundProcess(stream, buffer) )
+		{
+			ALenum error;
+
+			qalSourceQueueBuffers(streamSources[stream], 1, &buffer);
+
+			if( ( error = qalGetError( ) ) != AL_NO_ERROR )
+			{
+				Com_DPrintf( S_COLOR_RED "ERROR: after queueing data for audio stream - %s\n",
+						S_AL_ErrorMsg( error ) );
+			}
+		}
+
 	}
 
 	// Start the streamSource playing if necessary
@@ -1873,13 +1978,22 @@ void S_AL_StreamUpdate( int stream )
 
 		// If there are no buffers queued up, release the streamSource
 		if( !numBuffers )
+		{
 			S_AL_FreeStreamChannel( stream );
+			return;
+		}
 	}
 
 	if( !streamPlaying[stream] && numBuffers )
 	{
 		qalSourcePlay( streamSources[stream] );
 		streamPlaying[stream] = qtrue;
+	}
+
+	if ( stream < MAX_STREAMING_SOUNDS )
+	{
+		// Set the gain property
+		S_AL_Gain(streamSources[stream], s_alGain->value * s_musicVolume->value * streamVolume[stream]);
 	}
 }
 
@@ -1903,87 +2017,120 @@ void S_AL_StreamDie( int stream )
 	S_AL_FreeStreamChannel(stream);
 }
 
+/*
+=================
+S_AL_StartStreamingSound
+=================
+*/
+static
+void S_AL_StartStreamingSound( int stream, int entityNum, const char *filename, float volume )
+{
+	ALuint musicBuffers[NUM_MUSIC_BUFFERS];
+	int i;
+
+	if ((stream < 0) || (stream >= MAX_STREAMING_SOUNDS))
+		return;
+
+	// Stop any existing music that might be playing
+	S_AL_StreamDie( stream );
+
+	if(!filename || !*filename)
+		return;
+
+	// Allocate a music source
+	S_AL_AllocateStreamChannel(stream, entityNum);
+	if(streamSourceHandles[stream] == -1)
+		return;
+
+	streamVolume[stream] = Com_Clamp(0, 10, volume);
+	streamQueued[stream][0] = 0;
+	streamPlayCount[stream] = 0;
+
+	streamSoundStreams[stream] = S_CodecOpenStream(filename);
+	if(!streamSoundStreams[stream])
+	{
+		S_AL_FreeStreamChannel( stream );
+		return;
+	}
+
+	// Generate the musicBuffers
+	if (!S_AL_GenBuffers(NUM_MUSIC_BUFFERS, musicBuffers, "music"))
+		return;
+
+	// Queue the musicBuffers up
+	for(i = 0; i < NUM_MUSIC_BUFFERS; i++)
+	{
+		S_AL_StreamingSoundProcess(stream, musicBuffers[i]);
+	}
+
+	qalSourceQueueBuffers(streamSources[stream], NUM_MUSIC_BUFFERS, musicBuffers);
+
+	// Set the initial gain property
+	if(entityNum < 0)
+	{
+		S_AL_Gain(streamSources[stream], s_alGain->value * s_musicVolume->value * streamVolume[stream]);
+	}
+
+	// Start playing
+	qalSourcePlay(streamSources[stream]);
+
+	streamPlaying[stream] = qtrue;
+}
+
+/*
+=================
+S_AL_QueueStreamingSound
+=================
+*/
+static
+void S_AL_QueueStreamingSound( int stream, const char *filename, float volume ) {
+	if ((stream < 0) || (stream >= MAX_STREAMING_SOUNDS))
+		return;
+
+	if (!filename)
+		streamQueued[stream][0] = 0;
+	else
+		Q_strncpyz( streamQueued[stream], filename, sizeof( streamQueued[0] ) );
+
+	streamQueuedVolume[stream] = Com_Clamp(0, 10, volume);
+}
+
+#if 0
+/*
+=================
+S_AL_GetStreamPlayCount
+
+when it changes, you can queue the next track
+=================
+*/
+static
+int S_AL_GetStreamPlayCount( int stream ) {
+	if ((stream < 0) || (stream >= MAX_STREAMING_SOUNDS))
+		return 0;
+
+	return streamPlayCount[stream];
+}
+
+/*
+=================
+S_AL_SetStreamVolume
+
+for music, call each frame with s_musicVolume->value
+
+this is bad for trying to fade in or out a stream at beginning for end, would be fine if don't care _where_ in the stream the change happens.
+=================
+*/
+static
+void S_AL_SetStreamVolume( int stream, float volume ) {
+	if ((stream < 0) || (stream >= MAX_STREAMING_SOUNDS))
+		return;
+
+	streamVolume[stream] = Com_Clamp(0, 10, volume);
+}
+#endif
 
 //===========================================================================
 
-
-#define NUM_MUSIC_BUFFERS	4
-#define	MUSIC_BUFFER_SIZE 4096
-
-static qboolean musicPlaying = qfalse;
-static srcHandle_t musicSourceHandle = -1;
-static ALuint musicSource;
-static ALuint musicBuffers[NUM_MUSIC_BUFFERS];
-
-static snd_stream_t *mus_stream;
-static snd_stream_t *intro_stream;
-static char s_backgroundLoop[MAX_QPATH];
-static float s_backgroundVolume;
-static float s_backgroundLoopVolume;
-
-static byte decode_buffer[MUSIC_BUFFER_SIZE];
-
-/*
-=================
-S_AL_MusicSourceGet
-=================
-*/
-static void S_AL_MusicSourceGet( void )
-{
-	// Allocate a musicSource at high priority
-	musicSourceHandle = S_AL_SrcAlloc(SRCPRI_STREAM, -2, 0);
-	if(musicSourceHandle == -1)
-		return;
-
-	// Lock the musicSource so nobody else can use it, and get the raw musicSource
-	S_AL_SrcLock(musicSourceHandle);
-	musicSource = S_AL_SrcGet(musicSourceHandle);
-
-	// make sure that after unmuting the S_AL_Gain in S_Update() does not turn
-	// volume up prematurely for this source
-	srcList[musicSourceHandle].scaleGain = 0.0f;
-
-	// Set some musicSource parameters
-	qalSource3f(musicSource, AL_POSITION,        0.0, 0.0, 0.0);
-	qalSource3f(musicSource, AL_VELOCITY,        0.0, 0.0, 0.0);
-	qalSource3f(musicSource, AL_DIRECTION,       0.0, 0.0, 0.0);
-	qalSourcef (musicSource, AL_ROLLOFF_FACTOR,  0.0          );
-	qalSourcei (musicSource, AL_SOURCE_RELATIVE, AL_TRUE      );
-}
-
-/*
-=================
-S_AL_MusicSourceFree
-=================
-*/
-static void S_AL_MusicSourceFree( void )
-{
-	// Release the output musicSource
-	S_AL_SrcUnlock(musicSourceHandle);
-	S_AL_SrcKill(musicSourceHandle);
-	musicSource = 0;
-	musicSourceHandle = -1;
-}
-
-/*
-=================
-S_AL_CloseMusicFiles
-=================
-*/
-static void S_AL_CloseMusicFiles(void)
-{
-	if(intro_stream)
-	{
-		S_CodecCloseStream(intro_stream);
-		intro_stream = NULL;
-	}
-	
-	if(mus_stream)
-	{
-		S_CodecCloseStream(mus_stream);
-		mus_stream = NULL;
-	}
-}
 
 /*
 =================
@@ -1993,96 +2140,7 @@ S_AL_StopBackgroundTrack
 static
 void S_AL_StopBackgroundTrack( void )
 {
-	if(!musicPlaying)
-		return;
-
-	// Stop playing
-	qalSourceStop(musicSource);
-
-	// Detach any buffers
-	qalSourcei(musicSource, AL_BUFFER, 0);
-
-	// Delete the buffers
-	qalDeleteBuffers(NUM_MUSIC_BUFFERS, musicBuffers);
-
-	// Free the musicSource
-	S_AL_MusicSourceFree();
-
-	// Unload the stream
-	S_AL_CloseMusicFiles();
-
-	musicPlaying = qfalse;
-}
-
-/*
-=================
-S_AL_MusicProcess
-=================
-*/
-static
-void S_AL_MusicProcess(ALuint b)
-{
-	ALenum error;
-	int l;
-	ALuint format;
-	snd_stream_t *curstream;
-
-	S_AL_ClearError( qfalse );
-
-	if(intro_stream)
-		curstream = intro_stream;
-	else
-		curstream = mus_stream;
-
-	if(!curstream)
-		return;
-
-	l = S_CodecReadStream(curstream, MUSIC_BUFFER_SIZE, decode_buffer);
-
-	// Run out data to read, start at the beginning again
-	if(l == 0)
-	{
-		S_CodecCloseStream(curstream);
-
-		// the intro stream just finished playing so we don't need to reopen
-		// the music stream.
-		if(intro_stream)
-			intro_stream = NULL;
-		else
-			mus_stream = S_CodecOpenStream(s_backgroundLoop);
-		
-		curstream = mus_stream;
-
-		s_backgroundVolume = s_backgroundLoopVolume;
-
-		if(!curstream)
-		{
-			S_AL_StopBackgroundTrack();
-			return;
-		}
-
-		l = S_CodecReadStream(curstream, MUSIC_BUFFER_SIZE, decode_buffer);
-	}
-
-	format = S_AL_Format(curstream->info.width, curstream->info.channels);
-
-	if( l == 0 )
-	{
-		// We have no data to buffer, so buffer silence
-		byte dummyData[ 2 ] = { 0 };
-
-		qalBufferData( b, AL_FORMAT_MONO16, (void *)dummyData, 2, 44100 );
-	}
-	else
-		qalBufferData(b, format, decode_buffer, l, curstream->info.rate);
-
-	if( ( error = qalGetError( ) ) != AL_NO_ERROR )
-	{
-		S_AL_StopBackgroundTrack( );
-		Com_Printf( S_COLOR_RED "ERROR: while buffering data for music stream - %s\n",
-				S_AL_ErrorMsg( error ) );
-		return;
-	}
+	S_AL_FreeStreamChannel( 0 );
 }
 
 /*
@@ -2093,110 +2151,8 @@ S_AL_StartBackgroundTrack
 static
 void S_AL_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume )
 {
-	int i;
-	qboolean issame;
-
-	// Stop any existing music that might be playing
-	S_AL_StopBackgroundTrack();
-
-	if((!intro || !*intro) && (!loop || !*loop))
-		return;
-
-	// Allocate a musicSource
-	S_AL_MusicSourceGet();
-	if(musicSourceHandle == -1)
-		return;
-
-	s_backgroundVolume = Com_Clamp(0, 10, volume);
-	s_backgroundLoopVolume = Com_Clamp(0, 10, loopVolume);
-
-	if (!loop || !*loop)
-	{
-		loop = intro;
-		issame = qtrue;
-	}
-	else if(intro && *intro && !strcmp(intro, loop))
-		issame = qtrue;
-	else
-		issame = qfalse;
-
-	// Copy the loop over
-	strncpy( s_backgroundLoop, loop, sizeof( s_backgroundLoop ) );
-
-	if(!issame)
-	{
-		// Open the intro and don't mind whether it succeeds.
-		// The important part is the loop.
-		intro_stream = S_CodecOpenStream(intro);
-	}
-	else
-		intro_stream = NULL;
-
-	mus_stream = S_CodecOpenStream(s_backgroundLoop);
-	if(!mus_stream)
-	{
-		S_AL_CloseMusicFiles();
-		S_AL_MusicSourceFree();
-		return;
-	}
-
-	// Generate the musicBuffers
-	if (!S_AL_GenBuffers(NUM_MUSIC_BUFFERS, musicBuffers, "music"))
-		return;
-	
-	// Queue the musicBuffers up
-	for(i = 0; i < NUM_MUSIC_BUFFERS; i++)
-	{
-		S_AL_MusicProcess(musicBuffers[i]);
-	}
-
-	qalSourceQueueBuffers(musicSource, NUM_MUSIC_BUFFERS, musicBuffers);
-
-	// Set the initial gain property
-	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value * s_backgroundVolume);
-	
-	// Start playing
-	qalSourcePlay(musicSource);
-
-	musicPlaying = qtrue;
-}
-
-/*
-=================
-S_AL_MusicUpdate
-=================
-*/
-static
-void S_AL_MusicUpdate( void )
-{
-	int		numBuffers;
-	ALint	state;
-
-	if(!musicPlaying)
-		return;
-
-	qalGetSourcei( musicSource, AL_BUFFERS_PROCESSED, &numBuffers );
-	while( numBuffers-- )
-	{
-		ALuint b;
-		qalSourceUnqueueBuffers(musicSource, 1, &b);
-		S_AL_MusicProcess(b);
-		qalSourceQueueBuffers(musicSource, 1, &b);
-	}
-
-	// Hitches can cause OpenAL to be starved of buffers when streaming.
-	// If this happens, it will stop playback. This restarts the source if
-	// it is no longer playing, and if there are buffers available
-	qalGetSourcei( musicSource, AL_SOURCE_STATE, &state );
-	qalGetSourcei( musicSource, AL_BUFFERS_QUEUED, &numBuffers );
-	if( state == AL_STOPPED && numBuffers )
-	{
-		Com_DPrintf( S_COLOR_YELLOW "Restarted OpenAL music\n" );
-		qalSourcePlay(musicSource);
-	}
-
-	// Set the gain property
-	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value * s_backgroundVolume);
+	S_AL_StartStreamingSound( 0, -1, intro, volume );
+	S_AL_QueueStreamingSound( 0, loop, loopVolume );
 }
 
 
@@ -2232,7 +2188,6 @@ void S_AL_StopAllSounds( void )
 {
 	int i;
 	S_AL_SrcShutup();
-	S_AL_StopBackgroundTrack();
 	for (i = 0; i < MAX_RAW_STREAMS; i++)
 		S_AL_StreamDie(i);
 }
@@ -2301,7 +2256,6 @@ void S_AL_Update( void )
 	// Update streams
 	for (i = 0; i < MAX_RAW_STREAMS; i++)
 		S_AL_StreamUpdate(i);
-	S_AL_MusicUpdate();
 
 	// Doppler
 	if(s_doppler->modified)
@@ -2462,7 +2416,6 @@ void S_AL_Shutdown( void )
 	int i;
 	for (i = 0; i < MAX_RAW_STREAMS; i++)
 		S_AL_StreamDie(i);
-	S_AL_StopBackgroundTrack( );
 	S_AL_SrcShutdown( );
 	S_AL_BufferShutdown( );
 
