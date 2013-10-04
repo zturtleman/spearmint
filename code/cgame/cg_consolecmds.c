@@ -591,6 +591,75 @@ static void CG_RemapShader_f( void ) {
 	trap_R_RemapShader( shader1, shader2, timeoffset );
 }
 
+/*
+=================
+CG_Play_f
+=================
+*/
+void CG_Play_f( void ) {
+	int 		i;
+	int			c;
+	sfxHandle_t	h;
+
+	c = trap_Argc();
+
+	if( c < 2 ) {
+		Com_Printf ("Usage: play <sound filename> [sound filename] [sound filename] ...\n");
+		return;
+	}
+
+	for( i = 1; i < c; i++ ) {
+		h = trap_S_RegisterSound( CG_Argv( i ), qfalse );
+
+		if( h ) {
+			trap_S_StartLocalSound( h, CHAN_LOCAL_SOUND );
+		}
+	}
+}
+
+/*
+=================
+S_Music_f
+=================
+*/
+void CG_Music_f( void ) {
+	int		c;
+	char	intro[MAX_QPATH];
+	char	loop[MAX_QPATH];
+	float	volume;
+	float	loopVolume;
+
+	c = trap_Argc();
+
+	if ( c < 2 || c > 5 ) {
+		Com_Printf ("Usage: music <musicfile> [loopfile] [volume] [loopvolume]\n");
+		return;
+	}
+
+	trap_Argv( 1, intro, sizeof( intro ) );
+	trap_Argv( 2, loop, sizeof( loop ) );
+
+	volume = loopVolume = 1.0f;
+
+	if ( c > 3 ) {
+		volume = loopVolume = atof( CG_Argv( 3 ) );
+	}
+	if ( c > 4 ) {
+		loopVolume = atof( CG_Argv( 4 ) );
+	}
+
+	trap_S_StartBackgroundTrack( intro, loop, volume, loopVolume );
+}
+
+/*
+=================
+CG_StopMusic_f
+=================
+*/
+void CG_StopMusic_f( void ) {
+	trap_S_StopBackgroundTrack();
+}
+
 static consoleCommand_t	cg_commands[] = {
 	{ "testgun", CG_TestGun_f, CMD_INGAME },
 	{ "testmodel", CG_TestModel_f, CMD_INGAME },
@@ -613,7 +682,10 @@ static consoleCommand_t	cg_commands[] = {
 	//{ "camera", CG_Camera_f, CMD_INGAME },
 	{ "loaddeferred", CG_LoadDeferredPlayers, CMD_INGAME },
 	{ "generateTracemap", CG_GenerateTracemap, CMD_INGAME },
-	{ "remapShader", CG_RemapShader_f, 0 }
+	{ "remapShader", CG_RemapShader_f, 0 },
+	{ "play", CG_Play_f, 0 },
+	{ "music", CG_Music_f, 0 },
+	{ "stopmusic", CG_StopMusic_f, 0 }
 };
 
 static int cg_numCommands = ARRAY_LEN( cg_commands );
