@@ -123,6 +123,7 @@ cvar_t  *r_cameraExposure;
 cvar_t  *r_softOverbright;
 
 cvar_t  *r_hdr;
+cvar_t  *r_floatLightmap;
 cvar_t  *r_postProcess;
 
 cvar_t  *r_toneMap;
@@ -1006,16 +1007,6 @@ void GL_SetDefaultState( void )
 	qglDisable( GL_CULL_FACE );
 	qglDisable( GL_BLEND );
 
-	qglColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
-	qglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
-	qglClearDepth( 1.0 );
-
-	qglDrawBuffer( GL_FRONT );
-	qglClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_ACCUM_BUFFER_BIT|GL_STENCIL_BUFFER_BIT );
-
-	qglDrawBuffer( GL_BACK );
-	qglClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_ACCUM_BUFFER_BIT|GL_STENCIL_BUFFER_BIT );
-
 	if (glRefConfig.seamlessCubeMap)
 		qglEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
@@ -1217,6 +1208,7 @@ void R_Register( void )
 	r_softOverbright = ri.Cvar_Get( "r_softOverbright", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_hdr = ri.Cvar_Get( "r_hdr", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_floatLightmap = ri.Cvar_Get( "r_floatLightmap", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_postProcess = ri.Cvar_Get( "r_postProcess", "1", CVAR_ARCHIVE );
 
 	r_toneMap = ri.Cvar_Get( "r_toneMap", "1", CVAR_ARCHIVE | CVAR_LATCH );

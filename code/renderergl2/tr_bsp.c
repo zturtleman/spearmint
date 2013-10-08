@@ -238,7 +238,7 @@ float R_ProcessLightmap( byte **pic, int in_padding, int width, int height, byte
 
 			VectorScale(color, lightScale, color);
 
-			if (glRefConfig.textureFloat && glRefConfig.halfFloatPixel)
+			if (glRefConfig.textureFloat && glRefConfig.halfFloatPixel && r_floatLightmap->integer)
 				ColorToRGBA16F(color, (unsigned short *)(&( *pic_out )[j*8]));
 			else
 				ColorToRGBM(color, &( *pic_out )[j*4]);
@@ -402,7 +402,7 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 
 	if (r_hdr->integer)
 	{
-		if (glRefConfig.textureFloat && glRefConfig.halfFloatPixel)
+		if (glRefConfig.textureFloat && glRefConfig.halfFloatPixel && r_floatLightmap->integer)
 			textureInternalFormat = GL_RGBA16F_ARB;
 		else
 			textureInternalFormat = GL_RGBA8;

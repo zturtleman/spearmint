@@ -304,11 +304,9 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 								"#define alphaGen_t\n"
 								"#define AGEN_LIGHTING_SPECULAR %i\n"
 								"#define AGEN_PORTAL %i\n"
-								"#define AGEN_FRESNEL %i\n"
 								"#endif\n",
 								AGEN_LIGHTING_SPECULAR,
-								AGEN_PORTAL,
-								AGEN_FRESNEL));
+								AGEN_PORTAL));
 
 	Q_strcat(dest, size,
 							 va("#ifndef texenv_t\n"
@@ -917,7 +915,7 @@ void GLSL_InitGPUShaders(void)
 		if (i & GENERICDEF_USE_LIGHTMAP)
 			Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
 
-		if (r_hdr->integer && !(glRefConfig.textureFloat && glRefConfig.halfFloatPixel))
+		if (r_hdr->integer && !(glRefConfig.textureFloat && glRefConfig.halfFloatPixel && r_floatLightmap->integer))
 			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
 
 		if (!GLSL_InitGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, extradefines, qtrue, fallbackShader_generic_vp, fallbackShader_generic_fp))
@@ -1046,7 +1044,7 @@ void GLSL_InitGPUShaders(void)
 			Q_strcat(extradefines, 1024, "#define SWIZZLE_NORMALMAP\n");
 		}
 
-		if (r_hdr->integer && !(glRefConfig.textureFloat && glRefConfig.halfFloatPixel))
+		if (r_hdr->integer && !(glRefConfig.textureFloat && glRefConfig.halfFloatPixel && r_floatLightmap->integer))
 			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
 
 		if (i & LIGHTDEF_LIGHTTYPE_MASK)
@@ -1839,7 +1837,6 @@ shaderProgram_t *GLSL_GetGenericShaderProgram(int stage)
 	{
 		case AGEN_LIGHTING_SPECULAR:
 		case AGEN_PORTAL:
-		case AGEN_FRESNEL:
 			shaderAttribs |= GENERICDEF_USE_RGBAGEN;
 			break;
 		default:

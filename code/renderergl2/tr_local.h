@@ -261,7 +261,6 @@ typedef enum {
 	AGEN_WAVEFORM,
 	AGEN_PORTAL,
 	AGEN_CONST,
-	AGEN_FRESNEL
 } alphaGen_t;
 
 typedef enum {
@@ -2088,6 +2087,7 @@ extern  cvar_t  *r_mergeLeafSurfaces;
 extern  cvar_t  *r_softOverbright;
 
 extern  cvar_t  *r_hdr;
+extern  cvar_t  *r_floatLightmap;
 extern  cvar_t  *r_postProcess;
 
 extern  cvar_t  *r_toneMap;
