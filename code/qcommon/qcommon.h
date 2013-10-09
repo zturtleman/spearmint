@@ -750,6 +750,25 @@ qboolean FS_Which(const char *filename, void *searchPath);
 /*
 ==============================================================
 
+Game config, settings loaded from gameconfig.txt
+
+==============================================================
+*/
+
+#define MAX_GAMEDIRS 16 // max gamedirs a mod can have (read from gameconfig.txt)
+
+typedef struct {
+	char	gameDirs[MAX_GAMEDIRS][MAX_QPATH];
+	int		numGameDirs;
+
+	char	defaultSound[MAX_QPATH];
+} gameConfig_t;
+
+extern gameConfig_t com_gameConfig;
+
+/*
+==============================================================
+
 Edit fields and command line history/completion
 
 ==============================================================

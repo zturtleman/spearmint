@@ -417,12 +417,17 @@ void S_Base_BeginRegistration( void ) {
 	s_soundMuted = qfalse;		// we can play again
 
 	if (s_numSfx == 0) {
+		int default_sfx;
+
 		SND_setup();
 
 		Com_Memset(s_knownSfx, '\0', sizeof(s_knownSfx));
 		Com_Memset(sfxHash, '\0', sizeof(sfx_t *) * LOOP_HASH);
 
-		S_Base_RegisterSound("sound/feedback/hit.wav", qfalse);		// changed to a sound in baseq3
+		default_sfx = S_Base_RegisterSound(com_gameConfig.defaultSound, qfalse);
+
+		if ( s_knownSfx[default_sfx].defaultSound )
+			Com_Error( ERR_FATAL, "Can't load default sound effect %s", com_gameConfig.defaultSound );
 	}
 }
 
