@@ -139,6 +139,9 @@
 		<Unit filename="../../code/cgame/cg_event.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/cgame/cg_field.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/cgame/cg_info.c">
 			<Option compilerVar="CC" />
 		</Unit>

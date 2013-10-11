@@ -49,6 +49,7 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 void CG_Shutdown( void );
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
 static char *CG_VoIPString( int localClientNum );
+void Message_Key( int key, qboolean down );
 
 
 /*
@@ -93,6 +94,11 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 			if ( key == K_ESCAPE && down && !( trap_Key_GetCatcher( ) & KEYCATCH_UI ) ) {
 				uiClientState_t cls;
 
+				if ( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
+					Message_Key( arg0, arg1 );
+					return 0;
+				}
+
 				trap_GetClientState( &cls );
 
 				if ( cls.connState == CA_ACTIVE && trap_GetDemoState() != DS_PLAYBACK ) {
@@ -105,7 +111,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 			}
 		}
 
-		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
+		if ( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
+			Message_Key( arg0, arg1 );
+		} else if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
 			CG_KeyEvent(arg0, arg1);
 		} else {
 			UI_KeyEvent(arg0, arg1);
@@ -2604,6 +2612,9 @@ Draw the frame
 */
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime ) {
 
+	cg.realFrameTime = realTime - cg.realTime;
+	cg.realTime = realTime;
+
 	// update cvars
 	CG_UpdateCvars();
 
@@ -2627,6 +2638,53 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	if ( state >= CA_CONNECTING && state < CA_ACTIVE ) {
 		UI_DrawConnectScreen( ( state >= CA_LOADING ) );
 	}
+}
+
+/*
+================
+Message_Key
+
+In game talk message
+================
+*/
+void Message_Key( int key, qboolean down ) {
+	char	buffer[MAX_STRING_CHARS];
+
+	if ( !down ) {
+		return;
+	}
+
+	if ( key & K_CHAR_FLAG ) {
+		key &= ~K_CHAR_FLAG;
+		MField_CharEvent( &cg.chatField, key );
+		return;
+	}
+
+	if ( key == K_ESCAPE ) {
+		trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
+		MField_Clear( &cg.chatField );
+		return;
+	}
+
+	if ( key == K_ENTER || key == K_KP_ENTER ) {
+		if ( cg.chatField.buffer[0] && cg.connected ) {
+			if (cg.chat_playerNum != -1 ) {
+				Com_sprintf( buffer, sizeof( buffer ), "tell %i \"%s\"\n", cg.chat_playerNum, cg.chatField.buffer );
+			} else if (cg.chat_team) {
+				Com_sprintf( buffer, sizeof( buffer ), "say_team \"%s\"\n", cg.chatField.buffer );
+			} else {
+				Com_sprintf( buffer, sizeof( buffer ), "say \"%s\"\n", cg.chatField.buffer );
+			}
+
+			trap_SendClientCommand( buffer );
+		}
+
+		trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
+		MField_Clear( &cg.chatField );
+		return;
+	}
+
+	MField_KeyDownEvent( &cg.chatField, key );
 }
 
 /*

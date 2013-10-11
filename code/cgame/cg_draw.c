@@ -3218,6 +3218,31 @@ void CG_DrawDemoRecording( void ) {
 }
 
 /*
+=================
+CG_DrawMessageMode
+=================
+*/
+void CG_DrawMessageMode( void ) {
+	const char *prompt;
+
+	if ( !( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) ) {
+		return;
+	}
+
+	if ( cg.chat_team ) {
+		prompt = "Team Say:";
+	} else {
+		prompt = "Say:";
+	}
+
+	// draw the chat line
+	CG_DrawBigString( 8, 232, prompt, 1.0f );
+
+	MField_Draw( &cg.chatField, 8 + ( strlen( prompt ) * BIGCHAR_WIDTH ), 232,
+			BIGCHAR_WIDTH, BIGCHAR_HEIGHT, g_color_table[ColorIndex(COLOR_WHITE)] );
+}
+
+/*
 =====================
 CG_DrawScreen2D
 
@@ -3247,6 +3272,7 @@ void CG_DrawScreen2D( stereoFrame_t stereoView ) {
 	}
 
 	CG_DrawDemoRecording();
+	CG_DrawMessageMode();
 }
 
 

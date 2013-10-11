@@ -98,67 +98,6 @@ void Con_ToggleMenu_f( void ) {
 
 /*
 ================
-Con_MessageMode_f
-================
-*/
-void Con_MessageMode_f (void) {
-	chat_playerNum = -1;
-	chat_team = qfalse;
-	Field_Clear( &chatField );
-	chatField.widthInChars = 30;
-
-	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
-}
-
-/*
-================
-Con_MessageMode2_f
-================
-*/
-void Con_MessageMode2_f (void) {
-	chat_playerNum = -1;
-	chat_team = qtrue;
-	Field_Clear( &chatField );
-	chatField.widthInChars = 25;
-	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
-}
-
-/*
-================
-Con_MessageMode3_f
-================
-*/
-void Con_MessageMode3_f (void) {
-	chat_playerNum = VM_Call( cgvm, CG_CROSSHAIR_PLAYER, 0 );
-	if ( chat_playerNum < 0 || chat_playerNum >= MAX_CLIENTS ) {
-		chat_playerNum = -1;
-		return;
-	}
-	chat_team = qfalse;
-	Field_Clear( &chatField );
-	chatField.widthInChars = 30;
-	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
-}
-
-/*
-================
-Con_MessageMode4_f
-================
-*/
-void Con_MessageMode4_f (void) {
-	chat_playerNum = VM_Call( cgvm, CG_LAST_ATTACKER, 0 );
-	if ( chat_playerNum < 0 || chat_playerNum >= MAX_CLIENTS ) {
-		chat_playerNum = -1;
-		return;
-	}
-	chat_team = qfalse;
-	Field_Clear( &chatField );
-	chatField.widthInChars = 30;
-	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
-}
-
-/*
-================
 Con_Clear_f
 ================
 */
@@ -362,10 +301,6 @@ void Con_Init (void) {
 
 	Cmd_AddCommand ("toggleconsole", Con_ToggleConsole_f);
 	Cmd_AddCommand ("togglemenu", Con_ToggleMenu_f);
-	Cmd_AddCommand ("messagemode", Con_MessageMode_f);
-	Cmd_AddCommand ("messagemode2", Con_MessageMode2_f);
-	Cmd_AddCommand ("messagemode3", Con_MessageMode3_f);
-	Cmd_AddCommand ("messagemode4", Con_MessageMode4_f);
 	Cmd_AddCommand ("clear", Con_Clear_f);
 	Cmd_AddCommand ("condump", Con_Dump_f);
 	Cmd_SetCommandCompletionFunc( "condump", Cmd_CompleteTxtName );
@@ -380,10 +315,6 @@ void Con_Shutdown(void)
 {
 	Cmd_RemoveCommand("toggleconsole");
 	Cmd_RemoveCommand("togglemenu");
-	Cmd_RemoveCommand("messagemode");
-	Cmd_RemoveCommand("messagemode2");
-	Cmd_RemoveCommand("messagemode3");
-	Cmd_RemoveCommand("messagemode4");
 	Cmd_RemoveCommand("clear");
 	Cmd_RemoveCommand("condump");
 }
@@ -663,27 +594,6 @@ void Con_DrawConsole( void ) {
 
 	if ( con.displayFrac ) {
 		Con_DrawSolidConsole( con.displayFrac );
-	}
-
-	if( Key_GetCatcher( ) & KEYCATCH_UI_CGAME )
-		return;
-
-	// draw the chat line
-	// ZTM: FIXME: Move to cgame or ui
-	if( Key_GetCatcher( ) & KEYCATCH_MESSAGE )
-	{
-		int skip;
-
-		if( chat_team ) {
-			SCR_DrawBigString( 8, 232, "Team Say:", 1.0f, qfalse );
-			skip = 11;
-		} else {
-			SCR_DrawBigString( 8, 232, "Say:", 1.0f, qfalse );
-			skip = 5;
-		}
-
-		Field_BigDraw( &chatField, skip * BIGCHAR_WIDTH, 232,
-				SCREEN_WIDTH - ( skip + 1 ) * BIGCHAR_WIDTH, qtrue, qfalse );
 	}
 }
 

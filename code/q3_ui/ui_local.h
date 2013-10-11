@@ -119,7 +119,6 @@ extern vmCvar_t	ui_ioq3;
 #define LCOLUMN_OFFSET			(-BIGCHAR_WIDTH )
 
 #define SLIDER_RANGE			10
-#define	MAX_EDIT_LINE			256
 
 #define MAX_MENUDEPTH			8
 #define MAX_MENUITEMS			64
@@ -197,14 +196,6 @@ typedef struct
 	void (*statusbar)( void *self );
 	void (*ownerdraw)( void *self );
 } menucommon_s;
-
-typedef struct {
-	int		cursor;
-	int		scroll;
-	int		widthInChars;
-	char	buffer[MAX_EDIT_LINE];
-	int		maxchars;
-} mfield_t;
 
 typedef struct
 {
@@ -322,10 +313,7 @@ extern char	*ui_medalSounds[];
 //
 // ui_mfield.c
 //
-extern void			MField_Clear( mfield_t *edit );
-extern void			MField_KeyDownEvent( mfield_t *edit, int key );
-extern void			MField_CharEvent( mfield_t *edit, int ch );
-extern void			MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color );
+extern void			UI_Field_Draw( mfield_t *edit, int x, int y, int style, vec4_t color );
 extern void			MenuField_Init( menufield_s* m );
 extern void			MenuField_Draw( menufield_s *f );
 extern sfxHandle_t	MenuField_Key( menufield_s* m, int* key );

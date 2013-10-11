@@ -113,6 +113,22 @@ typedef enum {
 
 //=================================================
 
+#define	MAX_EDIT_LINE	256
+typedef struct {
+	int		cursor;
+	int		scroll;
+	int		widthInChars;
+	char	buffer[MAX_EDIT_LINE];
+	int		maxchars;
+} mfield_t;
+
+void	MField_Clear( mfield_t *edit );
+void	MField_KeyDownEvent( mfield_t *edit, int key );
+void	MField_CharEvent( mfield_t *edit, int ch );
+void	MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, vec4_t color );
+
+//=================================================
+
 // player entities need to track more information
 // than any other type of entity.
 
@@ -641,9 +657,12 @@ typedef struct {
 	qboolean	thisFrameTeleport;
 	qboolean	nextFrameTeleport;
 
+	int			realTime;
+	int			realFrameTime;
+
 	int			frametime;		// cg.time - cg.oldTime
 
-	int			time;			// this is the time value that the client
+	int			time;			// this is the server time value that the client
 								// is rendering at.
 	int			oldTime;		// time at last frame, used for missile trails and prediction checking
 
@@ -694,6 +713,11 @@ typedef struct {
 	int			centerPrintY;
 	char		centerPrint[1024];
 	int			centerPrintLines;
+
+	// say, say_team, ...
+	int				chat_playerNum;
+	qboolean		chat_team;
+	mfield_t		chatField;
 
 	// scoreboard
 	int			scoresRequestTime;
@@ -1419,7 +1443,7 @@ void CG_ClearClipRegion( void );
 void CG_DrawString( float x, float y, const char *string, 
 				   float charWidth, float charHeight, const float *modulate );
 void CG_DrawStringExt( int x, int y, const char *string, const float *setColor, 
-		qboolean forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars );
+		int forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars );
 void CG_DrawBigString( int x, int y, const char *s, float alpha );
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawSmallString( int x, int y, const char *s, float alpha );

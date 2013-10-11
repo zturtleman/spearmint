@@ -82,6 +82,66 @@ static void CG_SizeDown_f (void) {
 	trap_Cvar_SetValue("cg_viewsize", Com_Clamp( 30, 100, (int)(cg_viewsize.integer-10) ) );
 }
 
+/*
+================
+CG_MessageMode_f
+================
+*/
+void CG_MessageMode_f( void ) {
+	cg.chat_playerNum = -1;
+	cg.chat_team = qfalse;
+	MField_Clear( &cg.chatField );
+	cg.chatField.widthInChars = 30;
+	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
+/*
+================
+CG_MessageMode2_f
+================
+*/
+void CG_MessageMode2_f( void ) {
+	cg.chat_playerNum = -1;
+	cg.chat_team = qtrue;
+	MField_Clear( &cg.chatField );
+	cg.chatField.widthInChars = 25;
+	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
+/*
+================
+CG_MessageMode3_f
+================
+*/
+void CG_MessageMode3_f( void ) {
+	cg.chat_playerNum = CG_CrosshairPlayer( 0 );
+	if ( cg.chat_playerNum < 0 || cg.chat_playerNum >= MAX_CLIENTS ) {
+		cg.chat_playerNum = -1;
+		return;
+	}
+	cg.chat_team = qfalse;
+	MField_Clear( &cg.chatField );
+	cg.chatField.widthInChars = 30;
+	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
+/*
+================
+CG_MessageMode4_f
+================
+*/
+void CG_MessageMode4_f( void ) {
+	cg.chat_playerNum = CG_LastAttacker( 0 );
+	if ( cg.chat_playerNum < 0 || cg.chat_playerNum >= MAX_CLIENTS ) {
+		cg.chat_playerNum = -1;
+		return;
+	}
+	cg.chat_team = qfalse;
+	MField_Clear( &cg.chatField );
+	cg.chatField.widthInChars = 30;
+	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
 
 /*
 =============
@@ -685,7 +745,11 @@ static consoleCommand_t	cg_commands[] = {
 	{ "remapShader", CG_RemapShader_f, 0 },
 	{ "play", CG_Play_f, 0 },
 	{ "music", CG_Music_f, 0 },
-	{ "stopmusic", CG_StopMusic_f, 0 }
+	{ "stopmusic", CG_StopMusic_f, 0 },
+	{ "messageMode", CG_MessageMode_f },
+	{ "messageMode2", CG_MessageMode2_f },
+	{ "messageMode3", CG_MessageMode3_f },
+	{ "messageMode4", CG_MessageMode4_f }
 };
 
 static int cg_numCommands = ARRAY_LEN( cg_commands );
