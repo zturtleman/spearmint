@@ -1818,6 +1818,10 @@ CL_CGameRendering
 =====================
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
+	if ( !cgvm ) {
+		return;
+	}
+
 	VM_Call( cgvm, CG_REFRESH, cl.serverTime, stereo, clc.demoplaying, clc.state, cls.realtime );
 	VM_Debug( 0 );
 }
