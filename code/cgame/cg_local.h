@@ -715,9 +715,9 @@ typedef struct {
 	int			centerPrintLines;
 
 	// say, say_team, ...
-	int				chat_playerNum;
-	qboolean		chat_team;
-	mfield_t		chatField;
+	char		messageCommand[32];
+	char		messagePrompt[64];
+	mfield_t		messageField;
 
 	// scoreboard
 	int			scoresRequestTime;

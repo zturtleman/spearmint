@@ -2656,35 +2656,29 @@ void Message_Key( int key, qboolean down ) {
 
 	if ( key & K_CHAR_FLAG ) {
 		key &= ~K_CHAR_FLAG;
-		MField_CharEvent( &cg.chatField, key );
+		MField_CharEvent( &cg.messageField, key );
 		return;
 	}
 
 	if ( key == K_ESCAPE ) {
 		trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
-		MField_Clear( &cg.chatField );
+		MField_Clear( &cg.messageField );
 		return;
 	}
 
 	if ( key == K_ENTER || key == K_KP_ENTER ) {
-		if ( cg.chatField.buffer[0] && cg.connected ) {
-			if (cg.chat_playerNum != -1 ) {
-				Com_sprintf( buffer, sizeof( buffer ), "tell %i \"%s\"\n", cg.chat_playerNum, cg.chatField.buffer );
-			} else if (cg.chat_team) {
-				Com_sprintf( buffer, sizeof( buffer ), "say_team \"%s\"\n", cg.chatField.buffer );
-			} else {
-				Com_sprintf( buffer, sizeof( buffer ), "say \"%s\"\n", cg.chatField.buffer );
-			}
+		if ( cg.messageField.buffer[0] && cg.connected ) {
+			Com_sprintf( buffer, sizeof ( buffer ), "%s %s\n", cg.messageCommand, cg.messageField.buffer );
 
 			trap_SendClientCommand( buffer );
 		}
 
 		trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
-		MField_Clear( &cg.chatField );
+		MField_Clear( &cg.messageField );
 		return;
 	}
 
-	MField_KeyDownEvent( &cg.chatField, key );
+	MField_KeyDownEvent( &cg.messageField, key );
 }
 
 /*

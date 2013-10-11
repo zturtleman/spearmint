@@ -88,10 +88,10 @@ CG_MessageMode_f
 ================
 */
 void CG_MessageMode_f( void ) {
-	cg.chat_playerNum = -1;
-	cg.chat_team = qfalse;
-	MField_Clear( &cg.chatField );
-	cg.chatField.widthInChars = 30;
+	Q_strncpyz( cg.messageCommand, "say", sizeof (cg.messageCommand) );
+	Q_strncpyz( cg.messagePrompt, "Say:", sizeof (cg.messagePrompt) );
+	MField_Clear( &cg.messageField );
+	cg.messageField.widthInChars = 30;
 	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
 }
 
@@ -101,10 +101,10 @@ CG_MessageMode2_f
 ================
 */
 void CG_MessageMode2_f( void ) {
-	cg.chat_playerNum = -1;
-	cg.chat_team = qtrue;
-	MField_Clear( &cg.chatField );
-	cg.chatField.widthInChars = 25;
+	Q_strncpyz( cg.messageCommand, "say_team", sizeof (cg.messageCommand) );
+	Q_strncpyz( cg.messagePrompt, "Team Say:", sizeof (cg.messagePrompt) );
+	MField_Clear( &cg.messageField );
+	cg.messageField.widthInChars = 25;
 	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
 }
 
@@ -114,14 +114,14 @@ CG_MessageMode3_f
 ================
 */
 void CG_MessageMode3_f( void ) {
-	cg.chat_playerNum = CG_CrosshairPlayer( 0 );
-	if ( cg.chat_playerNum < 0 || cg.chat_playerNum >= MAX_CLIENTS ) {
-		cg.chat_playerNum = -1;
+	int playerNum = CG_CrosshairPlayer( 0 );
+	if ( playerNum < 0 || playerNum >= MAX_CLIENTS ) {
 		return;
 	}
-	cg.chat_team = qfalse;
-	MField_Clear( &cg.chatField );
-	cg.chatField.widthInChars = 30;
+	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.clientinfo[ playerNum ].name );
+	MField_Clear( &cg.messageField );
+	cg.messageField.widthInChars = 30;
 	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
 }
 
@@ -131,14 +131,14 @@ CG_MessageMode4_f
 ================
 */
 void CG_MessageMode4_f( void ) {
-	cg.chat_playerNum = CG_LastAttacker( 0 );
-	if ( cg.chat_playerNum < 0 || cg.chat_playerNum >= MAX_CLIENTS ) {
-		cg.chat_playerNum = -1;
+	int playerNum = CG_LastAttacker( 0 );
+	if ( playerNum < 0 || playerNum >= MAX_CLIENTS ) {
 		return;
 	}
-	cg.chat_team = qfalse;
-	MField_Clear( &cg.chatField );
-	cg.chatField.widthInChars = 30;
+	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.clientinfo[ playerNum ].name );
+	MField_Clear( &cg.messageField );
+	cg.messageField.widthInChars = 30;
 	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
 }
 
