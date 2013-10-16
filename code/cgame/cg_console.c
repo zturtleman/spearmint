@@ -115,13 +115,35 @@ void Con_ToggleConsole_f (void) {
 Con_LineFeed
 ================
 */
-void Con_LineFeed( void ) {
+void Con_LineFeed( qboolean keepColor ) {
+	char color = 0;
+	int i;
+
+	if ( keepColor ) {
+		// find last color char on line
+		for ( i = con.x-1; i >= 0; i-- ) {
+			if ( Q_IsColorString( &con.lines[con.current % CON_MAXLINES][i] ) ) {
+				color = con.lines[con.current % CON_MAXLINES][i+1];
+				break;
+			}
+		}
+	}
+
 	if ( con.display == con.current ) {
 		con.display++;
 	}
 	con.current++;
-	con.x = 0;
-	con.lines[con.current % CON_MAXLINES][0] = '\0';
+
+	// add last color at start of new line. ignore white, it's the default.
+	if ( keepColor && color != 0 && color != COLOR_WHITE ) {
+		con.lines[con.current % CON_MAXLINES][0] = Q_COLOR_ESCAPE;
+		con.lines[con.current % CON_MAXLINES][1] = color;
+		con.x = 2;
+	} else {
+		con.x = 0;
+	}
+
+	con.lines[con.current % CON_MAXLINES][con.x] = '\0';
 
 	if ( con.current < CON_MAXLINES ) {
 		con.topline = con.current;
@@ -144,7 +166,7 @@ void CG_ConsolePrint( const char *p ) {
 			p++;
 			continue;
 		} else if ( *p == '\n' ) {
-			Con_LineFeed();
+			Con_LineFeed( qfalse );
 			p++;
 			continue;
 		}
@@ -184,9 +206,9 @@ void CG_ConsolePrint( const char *p ) {
 		}
 
 		if ( con.x + wordLen > CON_LINELENGTH ) {
-			Con_LineFeed();
+			Con_LineFeed( qtrue );
 		} else  if ( lineDrawLen + wordDrawLen > con.screenFakeWidth - ( con.sideMargin * 2 ) ) {
-			Con_LineFeed();
+			Con_LineFeed( qtrue );
 		}
 
 		Q_strncpyz( &con.lines[con.current % CON_MAXLINES][con.x], p, wordLen+1 );
