@@ -30,7 +30,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 #include "cg_local.h"
 
-//#define		CON_TEXTSIZE	32768*2
 #define		CON_MAXLINES	512
 #define		CON_LINELENGTH	128
 typedef struct {
