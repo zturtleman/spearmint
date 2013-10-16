@@ -31,8 +31,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "client.h"
 
-cvar_t	*con_autochat;
-
 /*
 ===================
 Con_ToggleMenu_f
@@ -117,8 +115,6 @@ Con_Init
 ================
 */
 void Con_Init (void) {
-	con_autochat = Cvar_Get( "con_autochat", "0", CVAR_ARCHIVE );
-
 	Cmd_AddCommand ("togglemenu", Con_ToggleMenu_f);
 	Cmd_AddCommand ("condump", Con_Dump_f);
 	Cmd_SetCommandCompletionFunc( "condump", Cmd_CompleteTxtName );

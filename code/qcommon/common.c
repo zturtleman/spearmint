@@ -114,6 +114,10 @@ cvar_t	*com_renderer;
 static void	*rendererLib = NULL;
 #endif
 
+#ifndef DEDICATED
+cvar_t	*con_autochat;
+#endif
+
 #if idx64
 	int (*Q_VMftol)(void);
 #elif id386
@@ -2846,6 +2850,10 @@ void Com_Init( char *commandLine ) {
 #endif
 		Cvar_Get("protocol", com_protocol->string, CVAR_ROM);
 
+#ifndef DEDICATED
+	con_autochat = Cvar_Get( "con_autochat", "0", CVAR_ARCHIVE );
+#endif
+
 	Sys_Init();
 
 	Sys_InitPIDFile( FS_GetCurrentGameDir() );
@@ -3665,8 +3673,8 @@ void Field_CompleteCommand( char *cmd,
 		completionString = Cmd_Argv( completionArgument - 1 );
 
 #ifndef DEDICATED
-	// Unconditionally add a '\' to the start of the buffer
-	if( completionField->buffer[ 0 ] &&
+	// Add a '\' to the start of the buffer if it might be sent as chat otherwise
+	if( con_autochat->integer && completionField->buffer[ 0 ] &&
 			completionField->buffer[ 0 ] != '\\' )
 	{
 		if( completionField->buffer[ 0 ] != '/' )

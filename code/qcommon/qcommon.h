@@ -907,6 +907,10 @@ extern	cvar_t	*com_legacyprotocol;
 extern	cvar_t	*com_renderer;
 #endif
 
+#ifndef DEDICATED
+extern	cvar_t	*con_autochat;
+#endif
+
 // com_speeds times
 extern	int		time_game;
 extern	int		time_frontend;
