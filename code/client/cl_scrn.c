@@ -41,24 +41,6 @@ cvar_t		*cl_graphshift;
 
 /*
 ================
-SCR_DrawNamedPic
-
-Coordinates are 640*480 virtual values
-=================
-*/
-void SCR_DrawNamedPic( float x, float y, float width, float height, const char *picname ) {
-	qhandle_t	hShader;
-
-	assert( width != 0 );
-
-	hShader = re.RegisterShader( picname );
-	SCR_AdjustFrom640( &x, &y, &width, &height );
-	re.DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
-}
-
-
-/*
-================
 SCR_AdjustFrom640
 
 Adjusted for resolution and screen aspect ratio
@@ -90,35 +72,6 @@ void SCR_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	if ( h ) {
 		*h *= yscale;
 	}
-}
-
-/*
-================
-SCR_FillRect
-
-Coordinates are 640*480 virtual values
-=================
-*/
-void SCR_FillRect( float x, float y, float width, float height, const float *color ) {
-	re.SetColor( color );
-
-	SCR_AdjustFrom640( &x, &y, &width, &height );
-	re.DrawStretchPic( x, y, width, height, 0, 0, 0, 0, cls.whiteShader );
-
-	re.SetColor( NULL );
-}
-
-
-/*
-================
-SCR_DrawPic
-
-Coordinates are 640*480 virtual values
-=================
-*/
-void SCR_DrawPic( float x, float y, float width, float height, qhandle_t hShader ) {
-	SCR_AdjustFrom640( &x, &y, &width, &height );
-	re.DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
 }
 
 

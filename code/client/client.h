@@ -536,10 +536,6 @@ void	SCR_UpdateScreen (void);
 void	SCR_DebugGraph (float value);
 
 void	SCR_AdjustFrom640( float *x, float *y, float *w, float *h );
-void	SCR_FillRect( float x, float y, float width, float height, 
-					 const float *color );
-void	SCR_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
-void	SCR_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 
 
 //
