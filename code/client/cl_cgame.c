@@ -511,6 +511,28 @@ void CL_CM_LoadMap( const char *mapname ) {
 
 /*
 ====================
+CL_Cmd_AutoComplete
+
+auto-complete cvar names, cmd names, and cmd arguments
+====================
+*/
+void CL_Cmd_AutoComplete( const char *in, char *out, int outSize ) {
+	field_t field;
+
+	if ( !in || !out || outSize <= 0 ) {
+		return;
+	}
+
+	Com_Memset( &field, 0, sizeof ( field ) );
+	Q_strncpyz( field.buffer, in, sizeof ( field.buffer ) );
+
+	Field_AutoComplete( &field );
+
+	Q_strncpyz( out, field.buffer, outSize );
+}
+
+/*
+====================
 LAN_LoadCachedServers
 ====================
 */
@@ -1102,6 +1124,7 @@ CL_ShutdonwCGame
 void CL_ShutdownCGame( void ) {
 	Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_UI_CGAME );
 	cls.cgameStarted = qfalse;
+	cls.printToCgame = qfalse;
 	if ( !cgvm ) {
 		return;
 	}
@@ -1254,6 +1277,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 	case CG_SENDCLIENTCOMMAND:
 		CL_AddReliableCommand(VMA(1), qfalse);
+		return 0;
+	case CG_CMD_AUTOCOMPLETE:
+		CL_Cmd_AutoComplete( VMA(1), VMA(2), args[3] );
 		return 0;
 	case CG_UPDATESCREEN:
 		// this is used during lengthy level loading, so pump message loop
@@ -1486,8 +1512,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
   case CG_KEY_GETCATCHER:
 		return Key_GetCatcher();
   case CG_KEY_SETCATCHER:
-		// Don't allow the cgame module to close the console
-		Key_SetCatcher( args[1] | ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) );
+		Key_SetCatcher( args[1] );
     return 0;
   case CG_KEY_GETKEY:
 		return Key_GetKey( VMA(1), args[2] );
@@ -1682,6 +1707,8 @@ Should only be called by CL_StartHunkUsers
 ====================
 */
 void CL_InitCGame( void ) {
+	char					consoleBuffer[1024];
+	unsigned int		size;
 	qboolean			inGameLoad;
 	const char			*info;
 	const char			*mapname;
@@ -1715,13 +1742,27 @@ void CL_InitCGame( void ) {
 	// init for this gamestate
 	VM_Call( cgvm, CG_INIT, inGameLoad, CL_MAX_SPLITVIEW );
 
+	// feed the console text to cgame
+	Cmd_SaveCmdContext();
+	CON_LogSaveReadPos();
+
+	while ( ( size = CON_LogRead( consoleBuffer, sizeof (consoleBuffer)-1 ) ) > 0 ) {
+		consoleBuffer[size] = '\0';
+
+		Cmd_TokenizeString( consoleBuffer );
+		CL_GameConsoleText( qtrue );
+	}
+
+	CON_LogRestoreReadPos();
+	Cmd_RestoreCmdContext();
+
+	// the messages have been restored, print all new messages to cgame
+	cls.printToCgame = qtrue;
+
 	if ( !inGameLoad ) {
 		// only loading main menu
 		return;
 	}
-
-	// put away the console
-	Con_Close();
 
 	// find the current mapname
 	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
@@ -1803,12 +1844,12 @@ void CL_GameCommand( void ) {
 CL_GameConsoleText
 ====================
 */
-void CL_GameConsoleText( void ) {
+void CL_GameConsoleText( qboolean restoredText ) {
 	if ( !cgvm ) {
 		return;
 	}
 
-	VM_Call( cgvm, CG_CONSOLE_TEXT );
+	VM_Call( cgvm, CG_CONSOLE_TEXT, cls.realtime, restoredText );
 }
 
 

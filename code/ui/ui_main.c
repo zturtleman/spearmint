@@ -5083,6 +5083,7 @@ int UI_MousePosition( int localClientNum )
 	ay = 0;
 	aw = 1;
 	ah = 1;
+	CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
 	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
 	x = ( ( uiInfo.uiDC.cursorx + ax ) * aw );
@@ -5109,6 +5110,7 @@ void UI_SetMousePosition( int localClientNum, int x, int y )
 	ay = 0;
 	aw = 1;
 	ah = 1;
+	CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
 	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
 	uiInfo.uiDC.cursorx = ( x - ax ) / aw;

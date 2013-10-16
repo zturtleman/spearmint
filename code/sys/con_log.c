@@ -37,6 +37,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 static char          consoleLog[ MAX_LOG ];
 static unsigned int  writePos = 0;
 static unsigned int  readPos = 0;
+static unsigned int  savedReadPos = 0;
 
 /*
 ==================
@@ -135,3 +136,24 @@ unsigned int CON_LogRead( char *out, unsigned int outSize )
 
 	return outSize;
 }
+
+/*
+==================
+CON_LogSaveReadPos
+==================
+*/
+void CON_LogSaveReadPos( void )
+{
+	savedReadPos = readPos;
+}
+
+/*
+==================
+CON_LogRestoreReadPos
+==================
+*/
+void CON_LogRestoreReadPos( void )
+{
+	readPos = savedReadPos;
+}
+

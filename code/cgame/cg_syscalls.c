@@ -474,6 +474,10 @@ qboolean trap_GetVoipMuteAll( void ) {
 	return syscall(	CG_GET_VOIP_MUTE_ALL );
 }
 
+void		trap_Cmd_AutoComplete( const char *in, char *out, int outSize ) {
+	syscall( CG_CMD_AUTOCOMPLETE, in, out, outSize );
+}
+
 void		trap_GetGameState( gameState_t *gamestate ) {
 	syscall( CG_GETGAMESTATE, gamestate );
 }

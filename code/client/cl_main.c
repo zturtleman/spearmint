@@ -2957,7 +2957,6 @@ void CL_Frame ( int msec ) {
 			cls.realtime += cls.frametime;
 			SCR_UpdateScreen();
 			S_Update();
-			Con_RunConsole();
 			cls.framecount++;
 			return;
 		}
@@ -3068,8 +3067,6 @@ void CL_Frame ( int msec ) {
 	// advance local effects for next frame
 	SCR_RunCinematic();
 
-	Con_RunConsole();
-
 	cls.framecount++;
 }
 
@@ -3156,12 +3153,6 @@ void CL_InitRenderer( void ) {
 		CL_DrawLoadingScreen();
 		cls.drawnLoadingScreen = qtrue;
 	}
-
-	// load character sets
-	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
-	cls.consoleShader = re.RegisterShader( "console" );
-	g_console_field_width = cls.glconfig.vidWidth / SMALLCHAR_WIDTH - 2;
-	g_consoleField.widthInChars = g_console_field_width;
 }
 
 /*
@@ -3198,10 +3189,6 @@ void CL_StartHunkUsers( qboolean rendererOnly ) {
 	if ( !cls.soundRegistered ) {
 		cls.soundRegistered = qtrue;
 		S_BeginRegistration();
-	}
-
-	if( com_dedicated->integer ) {
-		return;
 	}
 
 	if ( !cls.cgameStarted ) {

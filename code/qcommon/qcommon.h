@@ -1044,7 +1044,7 @@ void CL_Init( void );
 void CL_Disconnect( qboolean showMainMenu );
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit);
 void CL_Frame( int msec );
-void CL_GameConsoleText( void );
+void CL_GameConsoleText( qboolean restoredText );
 void CL_KeyEvent (int key, qboolean down, unsigned time);
 
 void CL_CharEvent( int key );
@@ -1205,6 +1205,19 @@ dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *t
 
 void Sys_RemovePIDFile( const char *gamedir );
 void Sys_InitPIDFile( const char *gamedir );
+
+/*
+==============================================================
+
+CONSOLE LOG ACCESS
+
+==============================================================
+*/
+
+unsigned int CON_LogRead( char *out, unsigned int outSize );
+void CON_LogSaveReadPos( void );
+void CON_LogRestoreReadPos( void );
+
 
 /* This is based on the Adaptive Huffman algorithm described in Sayood's Data
  * Compression book.  The ranks are not actually stored, but implicitly defined

@@ -465,12 +465,12 @@ void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color ) {
 
 /*
 =================
-CG_DrawStrlen
+CG_DrawStrlenEx
 
 Returns character count, skiping color escape codes
 =================
 */
-int CG_DrawStrlen( const char *str ) {
+int CG_DrawStrlenEx( const char *str, int maxchars ) {
 	const char *s = str;
 	int count = 0;
 
@@ -481,9 +481,24 @@ int CG_DrawStrlen( const char *str ) {
 			count++;
 			s++;
 		}
+
+		if ( maxchars > 0 && s - str >= maxchars ) {
+			break;
+		}
 	}
 
 	return count;
+}
+
+/*
+=================
+CG_DrawStrlen
+
+Returns character count, skiping color escape codes
+=================
+*/
+int CG_DrawStrlen( const char *str ) {
+	return CG_DrawStrlenEx( str, 0 );
 }
 
 /*

@@ -1475,8 +1475,6 @@ int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBi
 		if (cinTable[currentHandle].alterGameState) {
 			clc.state = CA_CINEMATIC;
 		}
-		
-		Con_Close();
 
 		s_rawend[0] = s_soundtime;
 

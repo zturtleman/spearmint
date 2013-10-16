@@ -749,7 +749,9 @@ static consoleCommand_t	cg_commands[] = {
 	{ "messageMode", CG_MessageMode_f },
 	{ "messageMode2", CG_MessageMode2_f },
 	{ "messageMode3", CG_MessageMode3_f },
-	{ "messageMode4", CG_MessageMode4_f }
+	{ "messageMode4", CG_MessageMode4_f },
+	{ "clear", Con_ClearConsole_f },
+	{ "toggleconsole", Con_ToggleConsole_f }
 };
 
 static int cg_numCommands = ARRAY_LEN( cg_commands );

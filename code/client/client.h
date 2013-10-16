@@ -101,8 +101,6 @@ typedef struct {
 	int		p_realtime;			// cls.realtime when packet was sent
 } outPacket_t;
 
-extern int g_console_field_width;
-
 // Client Active Local Client
 typedef struct {
 	int			mouseDx[2], mouseDy[2];	// added to by mouse events
@@ -335,6 +333,8 @@ typedef struct {
 	qboolean	soundRegistered;
 	qboolean	cgameStarted;
 
+	qboolean	printToCgame;			// enabled after restoring console text to cgame
+
 	int			framecount;
 	int			frametime;			// msec since last frame
 
@@ -365,7 +365,6 @@ typedef struct {
 	qboolean	drawnLoadingScreen;
 	qhandle_t	charSetShader;
 	qhandle_t	whiteShader;
-	qhandle_t	consoleShader;
 } clientStatic_t;
 
 extern	clientStatic_t		cls;
@@ -524,25 +523,10 @@ qboolean CL_UpdateVisiblePings_f( int source );
 //
 // console
 //
-void Con_DrawCharacter (int cx, int line, int num);
-
-void Con_CheckResize (void);
 void Con_Init(void);
 void Con_Shutdown(void);
-void Con_Clear_f (void);
-void Con_ToggleConsole_f (void);
-void Con_DrawNotify (void);
 void Con_ClearNotify (void);
-void Con_RunConsole (void);
-void Con_DrawConsole (void);
-void Con_PageUp( void );
-void Con_PageDown( void );
-void Con_Top( void );
-void Con_Bottom( void );
 void Con_Close( void );
-
-void CL_LoadConsoleHistory( void );
-void CL_SaveConsoleHistory( void );
 
 //
 // cl_scrn.c

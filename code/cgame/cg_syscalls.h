@@ -48,6 +48,7 @@ float		trap_GetVoipPower( int clientNum );
 float		trap_GetVoipGain( int clientNum );
 qboolean	trap_GetVoipMute( int clientNum );
 qboolean	trap_GetVoipMuteAll( void );
+void		trap_Cmd_AutoComplete( const char *in, char *out, int outSize );
 
 
 // The glconfig_t will not change during the life of a cgame.

@@ -782,6 +782,7 @@ typedef struct {
 typedef struct {
 	qhandle_t	charsetShader;
 	qhandle_t	whiteShader;
+	qhandle_t	consoleShader;
 
 #ifdef MISSIONPACK
 	qhandle_t	redCubeModel;
@@ -1225,6 +1226,10 @@ extern	weaponInfo_t	cg_weapons[MAX_WEAPONS];
 extern	itemInfo_t		cg_items[MAX_ITEMS];
 extern	markPoly_t		cg_markPolys[MAX_MARK_POLYS];
 
+extern	vmCvar_t		con_conspeed;
+extern	vmCvar_t		con_autochat;
+extern	vmCvar_t		con_autoclear;
+
 extern	vmCvar_t		cg_centertime;
 extern	vmCvar_t		cg_runpitch;
 extern	vmCvar_t		cg_runroll;
@@ -1388,7 +1393,7 @@ score_t *CG_GetSelectedScore( void );
 void CG_BuildSpectatorString( void );
 
 void CG_RemoveNotifyLine( cglc_t *localClient );
-void CG_AddNotifyText( void );
+void CG_AddNotifyText( int realTime, qboolean restoredText );
 
 void CG_SetupDlightstyles( void );
 
@@ -1440,6 +1445,8 @@ void CG_DrawNamedPic( float x, float y, float width, float height, const char *p
 void CG_SetClipRegion( float x, float y, float w, float h );
 void CG_ClearClipRegion( void );
 
+void CG_DrawChar( int x, int y, int width, int height, int ch );
+
 void CG_DrawString( float x, float y, const char *string, 
 				   float charWidth, float charHeight, const float *modulate );
 void CG_DrawStringExt( int x, int y, const char *string, const float *setColor, 
@@ -1449,6 +1456,7 @@ void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawSmallString( int x, int y, const char *s, float alpha );
 void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color );
 
+int CG_DrawStrlenEx( const char *str, int maxchars );
 int CG_DrawStrlen( const char *str );
 
 float	*CG_FadeColor( int startMsec, int totalMsec );
@@ -1667,6 +1675,17 @@ void CG_DrawInformation( void );
 //
 qboolean CG_DrawOldScoreboard( void );
 void CG_DrawOldTourneyScoreboard( void );
+
+//
+// cg_console.c
+//
+void CG_ConsoleInit( void );
+void CG_ConsolePrint( const char *text );
+void CG_CloseConsole( void );
+void Con_ClearConsole_f( void );
+void Con_ToggleConsole_f( void );
+void CG_RunConsole( connstate_t state );
+void Console_Key ( int key, qboolean down );
 
 //
 // cg_consolecmds.c
