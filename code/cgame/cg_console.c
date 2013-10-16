@@ -744,7 +744,7 @@ void CG_ConsoleInit( void ) {
 	// fit across whole screen inside of a 640x480 box
 	con.screenFakeWidth = cgs.glconfig.vidWidth / cgs.screenXScale;
 
-	//g_console_field_width = con.screenFakeWidth / SMALLCHAR_WIDTH - 2;
+	g_console_field_width = con.screenFakeWidth / SMALLCHAR_WIDTH - 2;
 
 	MField_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;
