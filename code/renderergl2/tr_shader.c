@@ -2959,7 +2959,7 @@ static qboolean CollapseStagesToGLSL(void)
 	{
 		// if 2+ stages and first stage is lightmap, switch them
 		// this makes it easier for the later bits to process
-		if (stages[0].active && stages[0].bundle[0].isLightmap && stages[1].active)
+		if (stages[0].active && stages[0].bundle[0].tcGen == TCGEN_LIGHTMAP && stages[1].active)
 		{
 			int blendBits = stages[1].stateBits & ( GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS );
 
@@ -2996,7 +2996,7 @@ static qboolean CollapseStagesToGLSL(void)
 				break;
 			}
 
-			if (pStage->bundle[0].isLightmap)
+			if (pStage->bundle[0].tcGen == TCGEN_LIGHTMAP)
 			{
 				int blendBits = pStage->stateBits & ( GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS );
 				
@@ -3013,6 +3013,7 @@ static qboolean CollapseStagesToGLSL(void)
 				case TCGEN_TEXTURE:
 				case TCGEN_LIGHTMAP:
 				case TCGEN_ENVIRONMENT_MAPPED:
+				case TCGEN_VECTOR:
 					break;
 				default:
 					skip = qtrue;
@@ -3047,7 +3048,7 @@ static qboolean CollapseStagesToGLSL(void)
 				continue;
 
 			// skip lightmaps
-			if (pStage->bundle[0].isLightmap)
+			if (pStage->bundle[0].tcGen == TCGEN_LIGHTMAP)
 				continue;
 
 			diffuse  = pStage;
@@ -3089,7 +3090,7 @@ static qboolean CollapseStagesToGLSL(void)
 						break;
 
 					case ST_COLORMAP:
-						if (pStage2->bundle[0].isLightmap)
+						if (pStage2->bundle[0].tcGen == TCGEN_LIGHTMAP)
 						{
 							lightmap = pStage2;
 						}
@@ -3131,7 +3132,7 @@ static qboolean CollapseStagesToGLSL(void)
 			if (!pStage->active)
 				continue;
 
-			if (pStage->bundle[0].isLightmap)
+			if (pStage->bundle[0].tcGen == TCGEN_LIGHTMAP)
 			{
 				pStage->active = qfalse;
 			}
@@ -3197,7 +3198,7 @@ static qboolean CollapseStagesToGLSL(void)
 			if (pStage->adjustColorsForFog)
 				continue;
 
-			if (pStage->bundle[TB_DIFFUSEMAP].isLightmap)
+			if (pStage->bundle[TB_DIFFUSEMAP].tcGen == TCGEN_LIGHTMAP)
 			{
 				pStage->glslShaderGroup = tr.lightallShader;
 				pStage->glslShaderIndex = LIGHTDEF_USE_LIGHTMAP;
@@ -3206,6 +3207,7 @@ static qboolean CollapseStagesToGLSL(void)
 				pStage->bundle[TB_LIGHTMAP] = pStage->bundle[TB_DIFFUSEMAP];
 				pStage->bundle[TB_DIFFUSEMAP].image[0] = tr.whiteImage;
 				pStage->bundle[TB_DIFFUSEMAP].isLightmap = qfalse;
+				pStage->bundle[TB_DIFFUSEMAP].tcGen = TCGEN_TEXTURE;
 			}
 		}
 	}
@@ -3227,6 +3229,9 @@ static qboolean CollapseStagesToGLSL(void)
 			{
 				pStage->glslShaderGroup = tr.lightallShader;
 				pStage->glslShaderIndex = LIGHTDEF_USE_LIGHT_VECTOR;
+
+				if (pStage->bundle[0].tcGen != TCGEN_TEXTURE || pStage->bundle[0].numTexMods != 0)
+					pStage->glslShaderIndex |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
 			}
 		}
 	}
