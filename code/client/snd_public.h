@@ -36,7 +36,7 @@ void S_Shutdown( void );
 void S_StartSound( vec3_t origin, int entnum, int entchannel, sfxHandle_t sfx );
 void S_StartLocalSound( sfxHandle_t sfx, int channelNum );
 
-void S_StartBackgroundTrack( const char *intro, const char *loop );
+void S_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume );
 void S_StopBackgroundTrack( void );
 
 // cinematics and voice-over-network will send raw samples

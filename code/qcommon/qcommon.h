@@ -750,6 +750,25 @@ qboolean FS_Which(const char *filename, void *searchPath);
 /*
 ==============================================================
 
+Game config, settings loaded from gameconfig.txt
+
+==============================================================
+*/
+
+#define MAX_GAMEDIRS 16 // max gamedirs a mod can have (read from gameconfig.txt)
+
+typedef struct {
+	char	gameDirs[MAX_GAMEDIRS][MAX_QPATH];
+	int		numGameDirs;
+
+	char	defaultSound[MAX_QPATH];
+} gameConfig_t;
+
+extern gameConfig_t com_gameConfig;
+
+/*
+==============================================================
+
 Edit fields and command line history/completion
 
 ==============================================================
@@ -886,6 +905,10 @@ extern	cvar_t	*com_legacyprotocol;
 
 #ifdef USE_RENDERER_DLOPEN
 extern	cvar_t	*com_renderer;
+#endif
+
+#ifndef DEDICATED
+extern	cvar_t	*con_autochat;
 #endif
 
 // com_speeds times
@@ -1025,7 +1048,7 @@ void CL_Init( void );
 void CL_Disconnect( qboolean showMainMenu );
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit);
 void CL_Frame( int msec );
-void CL_GameConsoleText( void );
+void CL_GameConsoleText( qboolean restoredText );
 void CL_KeyEvent (int key, qboolean down, unsigned time);
 
 void CL_CharEvent( int key );
@@ -1186,6 +1209,19 @@ dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *t
 
 void Sys_RemovePIDFile( const char *gamedir );
 void Sys_InitPIDFile( const char *gamedir );
+
+/*
+==============================================================
+
+CONSOLE LOG ACCESS
+
+==============================================================
+*/
+
+unsigned int CON_LogRead( char *out, unsigned int outSize );
+void CON_LogSaveReadPos( void );
+void CON_LogRestoreReadPos( void );
+
 
 /* This is based on the Adaptive Huffman algorithm described in Sayood's Data
  * Compression book.  The ranks are not actually stored, but implicitly defined

@@ -336,10 +336,10 @@ void S_StartLocalSound( sfxHandle_t sfx, int channelNum )
 S_StartBackgroundTrack
 =================
 */
-void S_StartBackgroundTrack( const char *intro, const char *loop )
+void S_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume )
 {
 	if( si.StartBackgroundTrack ) {
-		si.StartBackgroundTrack( intro, loop );
+		si.StartBackgroundTrack( intro, loop, volume, loopVolume );
 	}
 }
 
@@ -641,77 +641,6 @@ void S_MasterGain( float gain )
 
 /*
 =================
-S_Play_f
-=================
-*/
-void S_Play_f( void ) {
-	int 		i;
-	int			c;
-	sfxHandle_t	h;
-
-	if( !si.RegisterSound || !si.StartLocalSound ) {
-		return;
-	}
-
-	c = Cmd_Argc();
-
-	if( c < 2 ) {
-		Com_Printf ("Usage: play <sound filename> [sound filename] [sound filename] ...\n");
-		return;
-	}
-
-	for( i = 1; i < c; i++ ) {
-		h = si.RegisterSound( Cmd_Argv(i), qfalse );
-
-		if( h ) {
-			si.StartLocalSound( h, CHAN_LOCAL_SOUND );
-		}
-	}
-}
-
-/*
-=================
-S_Music_f
-=================
-*/
-void S_Music_f( void ) {
-	int		c;
-
-	if( !si.StartBackgroundTrack ) {
-		return;
-	}
-
-	c = Cmd_Argc();
-
-	if ( c == 2 ) {
-		si.StartBackgroundTrack( Cmd_Argv(1), NULL );
-	} else if ( c == 3 ) {
-		si.StartBackgroundTrack( Cmd_Argv(1), Cmd_Argv(2) );
-	} else {
-		Com_Printf ("Usage: music <musicfile> [loopfile]\n");
-		return;
-	}
-
-}
-
-/*
-=================
-S_Music_f
-=================
-*/
-void S_StopMusic_f( void )
-{
-	if(!si.StopBackgroundTrack)
-		return;
-
-	si.StopBackgroundTrack();
-}
-
-
-//=============================================================================
-
-/*
-=================
 S_Init
 =================
 */
@@ -738,9 +667,6 @@ void S_Init( void )
 		S_CodecInit( );
 		S_ListenersInit( );
 
-		Cmd_AddCommand( "play", S_Play_f );
-		Cmd_AddCommand( "music", S_Music_f );
-		Cmd_AddCommand( "stopmusic", S_StopMusic_f );
 		Cmd_AddCommand( "s_list", S_SoundList );
 		Cmd_AddCommand( "s_stop", S_StopAllSounds );
 		Cmd_AddCommand( "s_info", S_SoundInfo );
@@ -785,9 +711,6 @@ void S_Shutdown( void )
 
 	Com_Memset( &si, 0, sizeof( soundInterface_t ) );
 
-	Cmd_RemoveCommand( "play" );
-	Cmd_RemoveCommand( "music");
-	Cmd_RemoveCommand( "stopmusic");
 	Cmd_RemoveCommand( "s_list" );
 	Cmd_RemoveCommand( "s_stop" );
 	Cmd_RemoveCommand( "s_info" );

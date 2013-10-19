@@ -299,8 +299,8 @@ int trap_S_SoundDuration( sfxHandle_t handle ) {
 	return syscall( CG_S_SOUNDDURATION, handle );
 }
 
-void	trap_S_StartBackgroundTrack( const char *intro, const char *loop ) {
-	syscall( CG_S_STARTBACKGROUNDTRACK, intro, loop );
+void	trap_S_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume ) {
+	syscall( CG_S_STARTBACKGROUNDTRACK, intro, loop, PASSFLOAT( volume ), PASSFLOAT( loopVolume ) );
 }
 
 void	trap_S_StopBackgroundTrack( void ) {
@@ -472,6 +472,10 @@ qboolean trap_GetVoipMute( int clientNum ) {
 
 qboolean trap_GetVoipMuteAll( void ) {
 	return syscall(	CG_GET_VOIP_MUTE_ALL );
+}
+
+void		trap_Cmd_AutoComplete( const char *in, char *out, int outSize ) {
+	syscall( CG_CMD_AUTOCOMPLETE, in, out, outSize );
 }
 
 void		trap_GetGameState( gameState_t *gamestate ) {

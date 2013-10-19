@@ -74,6 +74,7 @@ equ	trap_GetVoipPower					-106
 equ	trap_GetVoipGain					-107
 equ	trap_GetVoipMute					-108
 equ	trap_GetVoipMuteAll					-109
+equ	trap_Cmd_AutoComplete			-110
 
 equ	trap_GetGameState					-151
 equ	trap_GetCurrentSnapshotNumber		-152

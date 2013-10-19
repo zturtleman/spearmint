@@ -218,6 +218,11 @@ static sfxHandle_t S_AL_BufferFind(const char *filename)
 		return 0;
 	}
 
+	if ( filename[0] == '*' ) {
+		Com_Printf( S_COLOR_YELLOW "WARNING: Tried to load player sound directly: %s\n", filename );
+		return 0;
+	}
+
 	for(i = 0; i < numSfx; i++)
 	{
 		if(!Q_stricmp(knownSfx[i].filename, filename))
@@ -252,10 +257,8 @@ S_AL_BufferUseDefault
 */
 static void S_AL_BufferUseDefault(sfxHandle_t sfx)
 {
-	if(sfx == default_sfx)
-		Com_Error(ERR_FATAL, "Can't load default sound effect %s", knownSfx[sfx].filename);
-
-	Com_Printf( S_COLOR_YELLOW "WARNING: Using default sound for %s\n", knownSfx[sfx].filename);
+	if (sfx != default_sfx)
+		Com_Printf( S_COLOR_YELLOW "WARNING: Using default sound for %s\n", knownSfx[sfx].filename);
 	knownSfx[sfx].isDefault = qtrue;
 	knownSfx[sfx].buffer = knownSfx[default_sfx].buffer;
 }
@@ -334,10 +337,6 @@ static void S_AL_BufferLoad(sfxHandle_t sfx, qboolean cache)
 
 	// Nothing?
 	if(curSfx->filename[0] == '\0')
-		return;
-
-	// Player SFX
-	if(curSfx->filename[0] == '*')
 		return;
 
 	// Already done?
@@ -459,8 +458,12 @@ qboolean S_AL_BufferInit( void )
 	numSfx = 0;
 
 	// Load the default sound, and lock it
-	default_sfx = S_AL_BufferFind("sound/feedback/hit.wav");
+	default_sfx = S_AL_BufferFind(com_gameConfig.defaultSound);
 	S_AL_BufferUse(default_sfx);
+
+	if( knownSfx[default_sfx].isDefault )
+		Com_Error( ERR_FATAL, "Can't load default sound effect %s", com_gameConfig.defaultSound );
+
 	knownSfx[default_sfx].isLocked = qtrue;
 
 	// All done
@@ -1833,6 +1836,8 @@ static ALuint musicBuffers[NUM_MUSIC_BUFFERS];
 static snd_stream_t *mus_stream;
 static snd_stream_t *intro_stream;
 static char s_backgroundLoop[MAX_QPATH];
+static float s_backgroundVolume;
+static float s_backgroundLoopVolume;
 
 static byte decode_buffer[MUSIC_BUFFER_SIZE];
 
@@ -1971,6 +1976,8 @@ void S_AL_MusicProcess(ALuint b)
 		
 		curstream = mus_stream;
 
+		s_backgroundVolume = s_backgroundLoopVolume;
+
 		if(!curstream)
 		{
 			S_AL_StopBackgroundTrack();
@@ -2007,7 +2014,7 @@ S_AL_StartBackgroundTrack
 =================
 */
 static
-void S_AL_StartBackgroundTrack( const char *intro, const char *loop )
+void S_AL_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume )
 {
 	int i;
 	qboolean issame;
@@ -2022,6 +2029,9 @@ void S_AL_StartBackgroundTrack( const char *intro, const char *loop )
 	S_AL_MusicSourceGet();
 	if(musicSourceHandle == -1)
 		return;
+
+	s_backgroundVolume = Com_Clamp(0, 10, volume);
+	s_backgroundLoopVolume = Com_Clamp(0, 10, loopVolume);
 
 	if (!loop || !*loop)
 	{
@@ -2065,7 +2075,7 @@ void S_AL_StartBackgroundTrack( const char *intro, const char *loop )
 	qalSourceQueueBuffers(musicSource, NUM_MUSIC_BUFFERS, musicBuffers);
 
 	// Set the initial gain property
-	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value);
+	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value * s_backgroundVolume);
 	
 	// Start playing
 	qalSourcePlay(musicSource);
@@ -2108,7 +2118,7 @@ void S_AL_MusicUpdate( void )
 	}
 
 	// Set the gain property
-	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value);
+	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value * s_backgroundVolume);
 }
 
 

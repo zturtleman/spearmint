@@ -114,6 +114,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_LightUp",       GLSL_VEC3 },
 	{ "u_LightRight",    GLSL_VEC3 },
 	{ "u_LightOrigin",   GLSL_VEC4 },
+	{ "u_ModelLightDir", GLSL_VEC3 },
 	{ "u_LightRadius",   GLSL_FLOAT },
 	{ "u_AmbientLight",  GLSL_VEC3 },
 	{ "u_DirectedLight", GLSL_VEC3 },
@@ -132,11 +133,12 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_VertexLerp"  , GLSL_FLOAT },
 	{ "u_MaterialInfo", GLSL_VEC2 },
 
-	{ "u_ViewInfo",    GLSL_VEC4 },
-	{ "u_ViewOrigin",  GLSL_VEC3 },
-	{ "u_ViewForward", GLSL_VEC3 },
-	{ "u_ViewLeft",    GLSL_VEC3 },
-	{ "u_ViewUp",      GLSL_VEC3 },
+	{ "u_ViewInfo",        GLSL_VEC4 },
+	{ "u_ViewOrigin",      GLSL_VEC3 },
+	{ "u_LocalViewOrigin", GLSL_VEC3 },
+	{ "u_ViewForward",     GLSL_VEC3 },
+	{ "u_ViewLeft",        GLSL_VEC3 },
+	{ "u_ViewUp",          GLSL_VEC3 },
 
 	{ "u_InvTexRes",           GLSL_VEC2 },
 	{ "u_AutoExposureMinMax",  GLSL_VEC2 },
@@ -304,11 +306,9 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 								"#define alphaGen_t\n"
 								"#define AGEN_LIGHTING_SPECULAR %i\n"
 								"#define AGEN_PORTAL %i\n"
-								"#define AGEN_FRESNEL %i\n"
 								"#endif\n",
 								AGEN_LIGHTING_SPECULAR,
-								AGEN_PORTAL,
-								AGEN_FRESNEL));
+								AGEN_PORTAL));
 
 	Q_strcat(dest, size,
 							 va("#ifndef texenv_t\n"
@@ -917,7 +917,7 @@ void GLSL_InitGPUShaders(void)
 		if (i & GENERICDEF_USE_LIGHTMAP)
 			Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
 
-		if (r_hdr->integer && !(glRefConfig.textureFloat && glRefConfig.halfFloatPixel))
+		if (r_hdr->integer && !(glRefConfig.textureFloat && glRefConfig.halfFloatPixel && r_floatLightmap->integer))
 			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
 
 		if (!GLSL_InitGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, extradefines, qtrue, fallbackShader_generic_vp, fallbackShader_generic_fp))
@@ -1046,7 +1046,7 @@ void GLSL_InitGPUShaders(void)
 			Q_strcat(extradefines, 1024, "#define SWIZZLE_NORMALMAP\n");
 		}
 
-		if (r_hdr->integer && !(glRefConfig.textureFloat && glRefConfig.halfFloatPixel))
+		if (r_hdr->integer && !(glRefConfig.textureFloat && glRefConfig.halfFloatPixel && r_floatLightmap->integer))
 			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
 
 		if (i & LIGHTDEF_LIGHTTYPE_MASK)
@@ -1706,7 +1706,7 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 	// position/normal/tangent/bitangent are always set in case of animation
 	oldFrame = glState.vertexAttribsOldFrame;
 	newFrame = glState.vertexAttribsNewFrame;
-	animated = (oldFrame != newFrame) && (glState.vertexAttribsInterpolation > 0.0f);
+	animated = glState.vertexAnimation;
 	
 	if((attribBits & ATTR_POSITION) && (!(glState.vertexAttribPointersSet & ATTR_POSITION) || animated))
 	{
@@ -1839,7 +1839,6 @@ shaderProgram_t *GLSL_GetGenericShaderProgram(int stage)
 	{
 		case AGEN_LIGHTING_SPECULAR:
 		case AGEN_PORTAL:
-		case AGEN_FRESNEL:
 			shaderAttribs |= GENERICDEF_USE_RGBAGEN;
 			break;
 		default:
@@ -1856,7 +1855,7 @@ shaderProgram_t *GLSL_GetGenericShaderProgram(int stage)
 		shaderAttribs |= GENERICDEF_USE_DEFORM_VERTEXES;
 	}
 
-	if (glState.vertexAttribsInterpolation > 0.0f && backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
+	if (glState.vertexAnimation)
 	{
 		shaderAttribs |= GENERICDEF_USE_VERTEX_ANIMATION;
 	}

@@ -309,6 +309,7 @@
 		<Unit filename="../../code/game/g_syscalls.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/game/g_syscalls.h" />
 		<Unit filename="../../code/game/g_target.c">
 			<Option compilerVar="CC" />
 		</Unit>

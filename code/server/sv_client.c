@@ -1785,7 +1785,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		player = cl->localPlayers[lc];
 
 		if (!player) {
-			Com_DPrintf( S_COLOR_YELLOW "WARNING: got move cmd for non-existant local player %d from %s\n", lc, SV_ClientName( cl ) );
 			continue;
 		}
 

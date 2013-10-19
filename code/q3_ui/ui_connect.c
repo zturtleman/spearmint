@@ -220,7 +220,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 
 		Menu_AddItem( &s_ingame_menu, ( void * ) &s_customize_player_action );
 
-		MField_Draw( &passwordField );
+		UI_Field_Draw( &passwordField );
 	}
 #endif
 

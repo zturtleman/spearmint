@@ -180,7 +180,7 @@ or configs will never get loaded from disk!
 
 */
 
-#define MAX_GAMEDIRS 16 // max gamedirs a mod can have (read from gameconfig.txt)
+gameConfig_t com_gameConfig;
 
 // every time a new pk3 file is built, this checksum must be updated.
 // the easiest way to get it is to just run the game and see what it spits out
@@ -3485,21 +3485,27 @@ const char *FS_PortableHomePath(void) {
 
 /*
 ===================
-FS_LoadGameSearchPaths
+FS_LoadGameConfig
 
 Load additional search paths, from current search path
+
+Add gameDirs in forward search order
+
+Example: A mod for Quake III: Team Arena would have
+gameDirs[0]: missionpack
+gameDirs[1]: baseq3
 ===================
 */
-static qboolean FS_LoadGameSearchPaths( char gameDirs[MAX_GAMEDIRS][MAX_QPATH], int *pNumGameDirs ) {
+static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 	union {
 		char *c;
 		void *v;
 	} buffer;
 	int				len;
-	int				numGameDirs;
 	char			*text_p, *token;
 
-	*pNumGameDirs = numGameDirs = 0;
+	// default to ioq3 defaultSound
+	Q_strncpyz( com_gameConfig.defaultSound, "sound/feedback/hit.wav", sizeof (com_gameConfig.defaultSound) );
 
 	len = FS_ReadFile( "gameconfig.txt", &buffer.v );
 
@@ -3525,53 +3531,35 @@ static qboolean FS_LoadGameSearchPaths( char gameDirs[MAX_GAMEDIRS][MAX_QPATH], 
 				continue;
 			}
 
-			if ( numGameDirs >= MAX_GAMEDIRS ) {
+			if ( config->numGameDirs >= MAX_GAMEDIRS ) {
 				Com_Printf( "WARNING: Excessive game directories in gameconfig.txt (max is %d)\n", MAX_GAMEDIRS );
 			} else if ( Q_stricmp( fs_gamedirvar->string, token ) == 0 ) {
 				Com_Printf( "WARNING: Ignoring gamedir %s listed in gameconfig.txt (it's the current fs_game)\n", token );
 			} else {
-				Q_strncpyz( gameDirs[numGameDirs], token, MAX_QPATH );
-				numGameDirs++;
+				Q_strncpyz( config->gameDirs[config->numGameDirs], token, sizeof (config->gameDirs[0]) );
+				config->numGameDirs++;
 			}
 
 			// skip the rest in case want to add additional options here later
 			SkipRestOfLine( &text_p );
+		} else if ( Q_stricmp( token, "defaultSound" ) == 0 ) {
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token )
+				continue;
+
+			Q_strncpyz( config->defaultSound, token, sizeof (config->defaultSound) );
+
+			// skip the rest in case want to add additional options here later
+			SkipRestOfLine( &text_p );
 		} else {
+			Com_Printf("Unknown token '%s' in gameconfig.txt\n", token);
 			// ignore unknown parms
 			SkipRestOfLine( &text_p );
 		}
 	}
 
-	*pNumGameDirs = numGameDirs;
-
 	FS_FreeFile( buffer.v );
 	return qtrue;
-}
-
-/*
-================
-FS_GetGameSearchPath
-
-Add gameDirs in forward search order
-
-Example: A mod for Quake III: Team Arena would have
-gameDirs[0]: missionpack
-gameDirs[1]: baseq3
-================
-*/
-static void FS_GetGameSearchPath( const char *gamedir, char gameDirs[MAX_GAMEDIRS][MAX_QPATH], int *pNumGameDirs ) {
-	if ( FS_LoadGameSearchPaths( gameDirs, pNumGameDirs ) ) {
-		return;
-	}
-
-	Com_DPrintf("failed loading gameconfig.txt\n");
-
-	// Hack so Team Arena doesn't need gameconfig.txt
-	if ( Q_stricmp( gamedir, BASETA ) == 0 ) {
-		Com_Printf("HACK: Adding %s to search path for Team Arena...\n", BASEQ3);
-		Q_strncpyz( gameDirs[0], BASEQ3, MAX_QPATH );
-		*pNumGameDirs = 1;
-	}
 }
 
 // XXX
@@ -3614,8 +3602,6 @@ FS_Startup
 static void FS_Startup( qboolean quiet )
 {
 	const char	*homePath;
-	char		gameDirs[MAX_GAMEDIRS][MAX_QPATH];
-	int			numGameDirs;
 	char		description[MAX_QPATH];
 	int			i;
 
@@ -3645,15 +3631,26 @@ static void FS_Startup( qboolean quiet )
 	// load the game search paths so can load gameconfig.txt from a pk3.
 	FS_AddGame( fs_gamedirvar->string );
 
-	FS_GetGameSearchPath( fs_gamedirvar->string, gameDirs, &numGameDirs );
+	Com_Memset( &com_gameConfig, 0, sizeof (com_gameConfig) );
 
-	if ( numGameDirs > 0 ) {
+	if ( !FS_LoadGameConfig( &com_gameConfig ) ) {
+		Com_DPrintf("failed loading gameconfig.txt\n");
+
+		// Hack so Team Arena doesn't need gameconfig.txt
+		if ( Q_stricmp( fs_gamedirvar->string, BASETA ) == 0 ) {
+			Com_Printf("HACK: Adding %s to search path for Team Arena...\n", BASEQ3);
+			Q_strncpyz( com_gameConfig.gameDirs[0], BASEQ3, sizeof (com_gameConfig.gameDirs[0]) );
+			com_gameConfig.numGameDirs = 1;
+		}
+	}
+
+	if ( com_gameConfig.numGameDirs > 0 ) {
 		// hide fs_game path
 		FS_StashSearchPath();
 
 		// add extra gamedirs in reverse order
-		for ( i = numGameDirs-1; i >= 0; --i ) {
-			FS_AddGame( gameDirs[i] );
+		for ( i = com_gameConfig.numGameDirs-1; i >= 0; --i ) {
+			FS_AddGame( com_gameConfig.gameDirs[i] );
 		}
 
 		// put fs_game at the head of list

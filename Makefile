@@ -2274,6 +2274,7 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/bg_lib.o \
   $(B)/$(BASEGAME)/cgame/bg_tracemap.o \
   $(B)/$(BASEGAME)/cgame/cg_atmospheric.o \
+  $(B)/$(BASEGAME)/cgame/cg_console.o \
   $(B)/$(BASEGAME)/cgame/cg_consolecmds.o \
   $(B)/$(BASEGAME)/cgame/cg_newdraw.o \
   $(B)/$(BASEGAME)/cgame/cg_draw.o \
@@ -2281,6 +2282,7 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/cg_effects.o \
   $(B)/$(BASEGAME)/cgame/cg_ents.o \
   $(B)/$(BASEGAME)/cgame/cg_event.o \
+  $(B)/$(BASEGAME)/cgame/cg_field.o \
   $(B)/$(BASEGAME)/cgame/cg_info.o \
   $(B)/$(BASEGAME)/cgame/cg_input.o \
   $(B)/$(BASEGAME)/cgame/cg_localents.o \
@@ -2365,6 +2367,7 @@ MPCGOBJ_ = \
   $(B)/$(MISSIONPACK)/cgame/bg_lib.o \
   $(B)/$(MISSIONPACK)/cgame/bg_tracemap.o \
   $(B)/$(MISSIONPACK)/cgame/cg_atmospheric.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_console.o \
   $(B)/$(MISSIONPACK)/cgame/cg_consolecmds.o \
   $(B)/$(MISSIONPACK)/cgame/cg_newdraw.o \
   $(B)/$(MISSIONPACK)/cgame/cg_draw.o \
@@ -2372,6 +2375,7 @@ MPCGOBJ_ = \
   $(B)/$(MISSIONPACK)/cgame/cg_effects.o \
   $(B)/$(MISSIONPACK)/cgame/cg_ents.o \
   $(B)/$(MISSIONPACK)/cgame/cg_event.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_field.o \
   $(B)/$(MISSIONPACK)/cgame/cg_info.o \
   $(B)/$(MISSIONPACK)/cgame/cg_input.o \
   $(B)/$(MISSIONPACK)/cgame/cg_localents.o \

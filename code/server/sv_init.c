@@ -511,11 +511,12 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	// clear the whole hunk because we're (re)loading the server
 	Hunk_Clear();
 
-	// Restart renderer
 #ifdef DEDICATED
+	// Restart renderer
 	SV_InitDedicatedRef();
 #else
-	CL_StartHunkUsers( qtrue );
+	// Restart renderer, and if dedicated start cgame
+	CL_StartHunkUsers( !com_dedicated->integer );
 #endif
 
 	// clear collision map data

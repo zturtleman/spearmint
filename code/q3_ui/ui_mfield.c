@@ -32,13 +32,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 /*
 ===================
-MField_Draw
+UI_Field_Draw
 
 Handles horizontal scrolling and cursor blinking
 x, y, are in pixels
 ===================
 */
-void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color ) {
+void UI_Field_Draw( mfield_t *edit, int x, int y, int style, vec4_t color ) {
 	int		len;
 	int		charw;
 	int		drawLen;
@@ -114,186 +114,6 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color ) {
 	}
 	
 	UI_DrawChar( x + ( edit->cursor - prestep ) * charw, y, cursorChar, style & ~(UI_CENTER|UI_RIGHT), color );
-}
-
-/*
-================
-MField_Paste
-================
-*/
-void MField_Paste( mfield_t *edit ) {
-	char	pasteBuffer[64];
-	int		pasteLen, i;
-
-	trap_GetClipboardData( pasteBuffer, 64 );
-
-	// send as if typed, so insert / overstrike works properly
-	pasteLen = strlen( pasteBuffer );
-	for ( i = 0 ; i < pasteLen ; i++ ) {
-		MField_CharEvent( edit, pasteBuffer[i] );
-	}
-}
-
-/*
-=================
-MField_KeyDownEvent
-
-Performs the basic line editing functions for the console,
-in-game talk, and menu fields
-
-Key events are used for non-printable characters, others are gotten from char events.
-=================
-*/
-void MField_KeyDownEvent( mfield_t *edit, int key ) {
-	int		len;
-
-	// shift-insert is paste
-	if ( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && trap_Key_IsDown( K_SHIFT ) ) {
-		MField_Paste( edit );
-		return;
-	}
-
-	len = strlen( edit->buffer );
-
-	if ( key == K_DEL || key == K_KP_DEL ) {
-		if ( edit->cursor < len ) {
-			memmove( edit->buffer + edit->cursor, 
-				edit->buffer + edit->cursor + 1, len - edit->cursor );
-		}
-		return;
-	}
-
-	if ( key == K_RIGHTARROW || key == K_KP_RIGHTARROW ) 
-	{
-		if ( edit->cursor < len ) {
-			edit->cursor++;
-		}
-		if ( edit->cursor >= edit->scroll + edit->widthInChars && edit->cursor <= len )
-		{
-			edit->scroll++;
-		}
-		return;
-	}
-
-	if ( key == K_LEFTARROW || key == K_KP_LEFTARROW ) 
-	{
-		if ( edit->cursor > 0 ) {
-			edit->cursor--;
-		}
-		if ( edit->cursor < edit->scroll )
-		{
-			edit->scroll--;
-		}
-		return;
-	}
-
-	if ( key == K_HOME || key == K_KP_HOME || ( tolower(key) == 'a' && trap_Key_IsDown( K_CTRL ) ) ) {
-		edit->cursor = 0;
-		edit->scroll = 0;
-		return;
-	}
-
-	if ( key == K_END || key == K_KP_END || ( tolower(key) == 'e' && trap_Key_IsDown( K_CTRL ) ) ) {
-		edit->cursor = len;
-		edit->scroll = len - edit->widthInChars + 1;
-		if (edit->scroll < 0)
-			edit->scroll = 0;
-		return;
-	}
-
-	if ( key == K_INS || key == K_KP_INS ) {
-		trap_Key_SetOverstrikeMode( !trap_Key_GetOverstrikeMode() );
-		return;
-	}
-}
-
-/*
-==================
-MField_CharEvent
-==================
-*/
-void MField_CharEvent( mfield_t *edit, int ch ) {
-	int		len;
-
-	if ( ch == 'v' - 'a' + 1 ) {	// ctrl-v is paste
-		MField_Paste( edit );
-		return;
-	}
-
-	if ( ch == 'c' - 'a' + 1 ) {	// ctrl-c clears the field
-		MField_Clear( edit );
-		return;
-	}
-
-	len = strlen( edit->buffer );
-
-	if ( ch == 'h' - 'a' + 1 )	{	// ctrl-h is backspace
-		if ( edit->cursor > 0 ) {
-			memmove( edit->buffer + edit->cursor - 1, 
-				edit->buffer + edit->cursor, len + 1 - edit->cursor );
-			edit->cursor--;
-			if ( edit->cursor < edit->scroll )
-			{
-				edit->scroll--;
-			}
-		}
-		return;
-	}
-
-	if ( ch == 'a' - 'a' + 1 ) {	// ctrl-a is home
-		edit->cursor = 0;
-		edit->scroll = 0;
-		return;
-	}
-
-	if ( ch == 'e' - 'a' + 1 ) {	// ctrl-e is end
-		edit->cursor = len;
-		edit->scroll = edit->cursor - edit->widthInChars + 1;
-		if (edit->scroll < 0)
-			edit->scroll = 0;
-		return;
-	}
-
-	//
-	// ignore any other non printable chars
-	//
-	if ( ch < 32 ) {
-		return;
-	}
-
-	if ( !trap_Key_GetOverstrikeMode() ) {	
-		if ((edit->cursor == MAX_EDIT_LINE - 1) || (edit->maxchars && edit->cursor >= edit->maxchars))
-			return;
-	} else {
-		// insert mode
-		if (( len == MAX_EDIT_LINE - 1 ) || (edit->maxchars && len >= edit->maxchars))
-			return;
-		memmove( edit->buffer + edit->cursor + 1, edit->buffer + edit->cursor, len + 1 - edit->cursor );
-	}
-
-	edit->buffer[edit->cursor] = ch;
-	if (!edit->maxchars || edit->cursor < edit->maxchars-1)
-		edit->cursor++;
-
-	if ( edit->cursor >= edit->widthInChars )
-	{
-		edit->scroll++;
-	}
-
-	if ( edit->cursor == len + 1) {
-		edit->buffer[edit->cursor] = 0;
-	}
-}
-
-/*
-==================
-MField_Clear
-==================
-*/
-void MField_Clear( mfield_t *edit ) {
-	edit->buffer[0] = 0;
-	edit->cursor = 0;
-	edit->scroll = 0;
 }
 
 /*
@@ -386,7 +206,7 @@ void MenuField_Draw( menufield_s *f )
 		UI_DrawString( x - w, y, f->generic.name, style|UI_RIGHT, color );
 	}
 
-	MField_Draw( &f->field, x + w, y, style, color );
+	UI_Field_Draw( &f->field, x + w, y, style, color );
 }
 
 /*

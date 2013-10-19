@@ -200,6 +200,7 @@ typedef enum {
 	CG_GET_VOIP_GAIN,
 	CG_GET_VOIP_MUTE_CLIENT,
 	CG_GET_VOIP_MUTE_ALL,
+	CG_CMD_AUTOCOMPLETE,
 
 	// note: these were not originally available in ui
 	CG_GETGAMESTATE = 150,
@@ -420,9 +421,14 @@ typedef enum {
 //	void (*CG_EventHandling)(int type);
 
 	CG_CONSOLE_TEXT,
-//	void (*CG_ConsoleText)( void );
+//	void (*CG_ConsoleText)( int realTime, qboolean restoredText );
 //	pass text that has been printed to the console to cgame
 //	use Cmd_Argc() / Cmd_Argv() to read it
+//	if restoredText is qtrue, text is being added from before cgame was loaded.
+
+	CG_CONSOLE_CLOSE,
+//	void Con_Close( void );
+//	force console to close, used before loading screens
 
 	CG_WANTSBINDKEYS,
 //	qboolean CG_WantsBindKeys( void );

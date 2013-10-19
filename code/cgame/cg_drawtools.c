@@ -385,7 +385,7 @@ Coordinates are at 640 by 480 virtual resolution
 ==================
 */
 void CG_DrawStringExt( int x, int y, const char *string, const float *setColor, 
-		qboolean forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars ) {
+		int forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars ) {
 	vec4_t		color;
 	const char	*s;
 	int			xx;
@@ -403,7 +403,7 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 		xx = x;
 		cnt = 0;
 		while ( *s && cnt < maxChars) {
-			if ( Q_IsColorString( s ) ) {
+			if ( Q_IsColorString( s ) && forceColor != 2 ) {
 				s += 2;
 				continue;
 			}
@@ -421,13 +421,15 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 	trap_R_SetColor( setColor );
 	while ( *s && cnt < maxChars) {
 		if ( Q_IsColorString( s ) ) {
-			if ( !forceColor ) {
+			if ( forceColor != 1 ) {
 				memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
 				color[3] = setColor[3];
 				trap_R_SetColor( color );
 			}
-			s += 2;
-			continue;
+			if ( forceColor != 2 ) {
+				s += 2;
+				continue;
+			}
 		}
 		CG_DrawChar( xx, y, charWidth, charHeight, *s );
 		xx += charWidth;
@@ -463,12 +465,12 @@ void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color ) {
 
 /*
 =================
-CG_DrawStrlen
+CG_DrawStrlenEx
 
 Returns character count, skiping color escape codes
 =================
 */
-int CG_DrawStrlen( const char *str ) {
+int CG_DrawStrlenEx( const char *str, int maxchars ) {
 	const char *s = str;
 	int count = 0;
 
@@ -479,9 +481,24 @@ int CG_DrawStrlen( const char *str ) {
 			count++;
 			s++;
 		}
+
+		if ( maxchars > 0 && s - str >= maxchars ) {
+			break;
+		}
 	}
 
 	return count;
+}
+
+/*
+=================
+CG_DrawStrlen
+
+Returns character count, skiping color escape codes
+=================
+*/
+int CG_DrawStrlen( const char *str ) {
+	return CG_DrawStrlenEx( str, 0 );
 }
 
 /*

@@ -5083,6 +5083,7 @@ int UI_MousePosition( int localClientNum )
 	ay = 0;
 	aw = 1;
 	ah = 1;
+	CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
 	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
 	x = ( ( uiInfo.uiDC.cursorx + ax ) * aw );
@@ -5109,6 +5110,7 @@ void UI_SetMousePosition( int localClientNum, int x, int y )
 	ay = 0;
 	aw = 1;
 	ah = 1;
+	CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
 	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
 
 	uiInfo.uiDC.cursorx = ( x - ax ) / aw;
@@ -5149,7 +5151,7 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			trap_Cvar_SetValue( "sv_killserver", 1 );
 			UI_EnterMenu();
 			//trap_S_StartLocalSound( trap_S_RegisterSound("sound/misc/menu_background.wav", qfalse) , CHAN_LOCAL_SOUND );
-			//trap_S_StartBackgroundTrack("sound/misc/menu_background.wav", NULL);
+			//trap_S_StartBackgroundTrack("sound/misc/menu_background.wav", NULL, 1.0f, 1.0f);
 			if (uiInfo.inGameLoad) {
 				UI_LoadNonIngame();
 			}

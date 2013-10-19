@@ -101,8 +101,6 @@ typedef struct {
 	int		p_realtime;			// cls.realtime when packet was sent
 } outPacket_t;
 
-extern int g_console_field_width;
-
 // Client Active Local Client
 typedef struct {
 	int			mouseDx[2], mouseDy[2];	// added to by mouse events
@@ -335,6 +333,8 @@ typedef struct {
 	qboolean	soundRegistered;
 	qboolean	cgameStarted;
 
+	qboolean	printToCgame;			// enabled after restoring console text to cgame
+
 	int			framecount;
 	int			frametime;			// msec since last frame
 
@@ -363,9 +363,7 @@ typedef struct {
 	// rendering info
 	glconfig_t	glconfig;
 	qboolean	drawnLoadingScreen;
-	qhandle_t	charSetShader;
 	qhandle_t	whiteShader;
-	qhandle_t	consoleShader;
 } clientStatic_t;
 
 extern	clientStatic_t		cls;
@@ -410,13 +408,11 @@ extern	cvar_t	*cl_activeAction;
 
 extern	cvar_t	*cl_allowDownload;
 extern  cvar_t  *cl_downloadMethod;
-extern	cvar_t	*cl_conXOffset;
 extern	cvar_t	*cl_inGameVideo;
 
 extern	cvar_t	*cl_lanForcePackets;
 extern	cvar_t	*cl_autoRecordDemo;
 
-extern	cvar_t	*con_autochat;
 extern	cvar_t	*cl_consoleKeys;
 
 #ifdef USE_MUMBLE
@@ -524,25 +520,10 @@ qboolean CL_UpdateVisiblePings_f( int source );
 //
 // console
 //
-void Con_DrawCharacter (int cx, int line, int num);
-
-void Con_CheckResize (void);
 void Con_Init(void);
 void Con_Shutdown(void);
-void Con_Clear_f (void);
-void Con_ToggleConsole_f (void);
-void Con_DrawNotify (void);
 void Con_ClearNotify (void);
-void Con_RunConsole (void);
-void Con_DrawConsole (void);
-void Con_PageUp( void );
-void Con_PageDown( void );
-void Con_Top( void );
-void Con_Bottom( void );
 void Con_Close( void );
-
-void CL_LoadConsoleHistory( void );
-void CL_SaveConsoleHistory( void );
 
 //
 // cl_scrn.c
@@ -552,18 +533,7 @@ void	SCR_UpdateScreen (void);
 
 void	SCR_DebugGraph (float value);
 
-int		SCR_GetBigStringWidth( const char *str );	// returns in virtual 640x480 coordinates
-
 void	SCR_AdjustFrom640( float *x, float *y, float *w, float *h );
-void	SCR_FillRect( float x, float y, float width, float height, 
-					 const float *color );
-void	SCR_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
-void	SCR_DrawNamedPic( float x, float y, float width, float height, const char *picname );
-
-void	SCR_DrawBigString( int x, int y, const char *s, float alpha, qboolean noColorEscape );			// draws a string with embedded color control characters with fade
-void	SCR_DrawBigStringColor( int x, int y, const char *s, vec4_t color, qboolean noColorEscape );	// ignores embedded color control characters
-void	SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape );
-void	SCR_DrawSmallChar( int x, int y, int ch );
 
 
 //
