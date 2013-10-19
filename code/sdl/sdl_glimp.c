@@ -226,6 +226,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 	bytesPerPixel = 4;
 	internalIcon = qfalse;
 
+#ifdef USE_ICON
 	// try to load 32 x 32 icon
 	if ( r_forceWindowIcon32->integer ) {
 		R_LoadImage( "windowicon32", &pixelData, &width, &height );
@@ -261,6 +262,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 			0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
 #endif
 			);
+#endif
 
 	// If a window exists, note its display index
 	if( SDL_window != NULL )

@@ -305,11 +305,15 @@ IN_GobbleMotionEvents
 static void IN_GobbleMotionEvents( void )
 {
 	SDL_Event dummy[ 1 ];
+	int val = 0;
 
 	// Gobble any mouse motion events
 	SDL_PumpEvents( );
-	while( SDL_PeepEvents( dummy, 1, SDL_GETEVENT,
-		SDL_MOUSEMOTION, SDL_MOUSEMOTION ) ) { }
+	while( ( val = SDL_PeepEvents( dummy, 1, SDL_GETEVENT,
+		SDL_MOUSEMOTION, SDL_MOUSEMOTION ) ) > 0 ) { }
+
+	if ( val < 0 )
+		Com_Printf( "IN_GobbleMotionEvents failed: %s\n", SDL_GetError( ) );
 }
 
 /*
@@ -640,6 +644,9 @@ IN_ShutdownJoystick
 static void IN_ShutdownJoystick( void )
 {
 	int		i;
+
+	if ( !SDL_WasInit( SDL_INIT_JOYSTICK ) )
+		return;
 
 	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
 		if (stick[i]) {
@@ -1087,7 +1094,7 @@ IN_InitKeyLockStates
 */
 void IN_InitKeyLockStates( void )
 {
-	unsigned char *keystate = SDL_GetKeyboardState(NULL);
+	const unsigned char *keystate = SDL_GetKeyboardState(NULL);
 
 	keys[K_SCROLLOCK].down = keystate[SDL_SCANCODE_SCROLLLOCK];
 	keys[K_KP_NUMLOCK].down = keystate[SDL_SCANCODE_NUMLOCKCLEAR];
