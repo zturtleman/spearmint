@@ -106,7 +106,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	CS_INTERMISSION			22		// when 1, fraglimit/timelimit has been hit and intermission will start in a second or two
 #define CS_FLAGSTATUS			23		// string indicating flag status in CTF
 #define CS_SHADERSTATE			24
-#define CS_BOTINFO				25
 
 #define	CS_ITEMS				27		// string of 0's and 1's that tell which items are present
 
@@ -116,8 +115,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define CS_LOCATIONS			(CS_PLAYERS+MAX_CLIENTS)
 #define CS_PARTICLES			(CS_LOCATIONS+MAX_LOCATIONS)
 #define CS_DLIGHTS              (CS_PARTICLES+MAX_LOCATIONS)
+#define CS_BOTINFO				(CS_DLIGHTS+MAX_DLIGHT_CONFIGSTRINGS)
 
-#define CS_MAX					(CS_DLIGHTS+MAX_DLIGHT_CONFIGSTRINGS)
+#define CS_MAX					(CS_BOTINFO+MAX_CLIENTS)
 
 #if (CS_MAX) > MAX_CONFIGSTRINGS
 #error overflow: (CS_MAX) > MAX_CONFIGSTRINGS
