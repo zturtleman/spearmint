@@ -344,6 +344,8 @@ New cvars
 
   ui_stretch                        - stretch menus to fill wide/narrow screens
 
+  bot_report                        - show bot info on HUD when following bot
+                                      in spectator mode
 
 New commands
   video [filename]        - start video capture (use with demo command)
@@ -383,8 +385,7 @@ New commands
                             `levelshot 512'. defaults to 128.
 
   botreport               - shows what bots are doing, must set
-                            bot_report 1 (which also enables info on HUD
-                            when following bot in spectator mode)
+                            bot_report 1
 
 
 Removed cvars
