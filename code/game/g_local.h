@@ -723,6 +723,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 int BotAIShutdownClient( int client, qboolean restart );
 int BotAIStartFrame( int time );
 void BotTestAAS(vec3_t origin);
+void Svcmd_BotTeamplayReport_f( void );
 
 #include "g_team.h" // teamplay specific stuff
 #include "g_syscalls.h"

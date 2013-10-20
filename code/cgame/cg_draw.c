@@ -2622,11 +2622,9 @@ static qboolean CG_DrawBotInfo( int y ) {
 		return qfalse;
 	}
 
-	leader = Info_ValueForKey(info, "l");
-	carrying = Info_ValueForKey(info, "c");
 	action = Info_ValueForKey(info, "a");
 
-	if ( action[0] ) {
+	if ( *action ) {
 		x = 0.5 * ( 640 - BIGCHAR_WIDTH * CG_DrawStrlen( action ) );
 
 		CG_DrawBigString( x, y, action, 1.0F );
@@ -2634,7 +2632,9 @@ static qboolean CG_DrawBotInfo( int y ) {
 		y += BIGCHAR_HEIGHT + 2;
 	}
 
-	if ( leader[0] == 'L' ) {
+	leader = Info_ValueForKey(info, "l");
+
+	if ( *leader ) {
 		str = "bot is leader";
 		x = 0.5 * ( 640 - BIGCHAR_WIDTH * CG_DrawStrlen( str ) );
 
@@ -2643,7 +2643,9 @@ static qboolean CG_DrawBotInfo( int y ) {
 		y += BIGCHAR_HEIGHT + 2;
 	}
 
-	if ( carrying[0] != ' ' ) {
+	carrying = Info_ValueForKey(info, "c");
+
+	if ( *carrying ) {
 		str = va("bot carrying: %s", carrying);
 		x = 0.5 * ( 640 - BIGCHAR_WIDTH * CG_DrawStrlen( str ) );
 
