@@ -561,6 +561,14 @@ void BotUpdateInfoConfigStrings(void) {
 	int i;
 	char buf[MAX_INFO_STRING];
 
+	//let bot_report 0 run once to clear strings
+	if (bot_report.modificationCount != level.botReportModificationCount) {
+		level.botReportModificationCount = bot_report.modificationCount;
+	}
+	else if (!bot_report.integer) {
+		return;
+	}
+
 	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
 		//
 		if ( !botstates[i] || !botstates[i]->inuse )
@@ -570,7 +578,13 @@ void BotUpdateInfoConfigStrings(void) {
 		//if no config string or no name
 		if (!strlen(buf) || !strlen(Info_ValueForKey(buf, "n")))
 			continue;
-		BotSetInfoConfigString(botstates[i]);
+		//
+		if (!bot_report.integer) {
+			trap_SetConfigstring(CS_BOTINFO+i, "");
+		}
+		else {
+			BotSetInfoConfigString(botstates[i]);
+		}
 	}
 }
 
@@ -1364,6 +1378,8 @@ int BotAIShutdownClient(int client, qboolean restart) {
 		trap_BotEnterChat(bs->cs, bs->client, CHAT_ALL);
 	}
 
+	trap_SetConfigstring(CS_BOTINFO + bs->client, "");
+
 	BotFreeMoveState(bs->ms);
 	//free the goal state`			
 	BotFreeGoalState(bs->gs);
@@ -1504,11 +1520,11 @@ int BotAIStartFrame(int time) {
 	trap_Cvar_Update(&bot_droppedweight);
 	trap_Cvar_Update(&bot_offhandgrapple);
 
-	if (bot_report.integer) {
+//	if (bot_report.integer) {
 //		BotTeamplayReport();
 //		trap_Cvar_SetValue("bot_report", 0);
-		BotUpdateInfoConfigStrings();
-	}
+//	}
+	BotUpdateInfoConfigStrings();
 
 	if (bot_pause.integer) {
 		// execute bot user commands every frame
@@ -1764,6 +1780,8 @@ int BotAISetup( int restart ) {
 	trap_Cvar_Register(&bot_interbreedbots, "bot_interbreedbots", "10", 0);
 	trap_Cvar_Register(&bot_interbreedcycle, "bot_interbreedcycle", "20", 0);
 	trap_Cvar_Register(&bot_interbreedwrite, "bot_interbreedwrite", "", 0);
+
+	level.botReportModificationCount = bot_report.modificationCount;
 
 	//if the game isn't restarted for a tournament
 	if (!restart) {
