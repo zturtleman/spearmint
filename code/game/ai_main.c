@@ -90,6 +90,8 @@ vmCvar_t bot_report;
 vmCvar_t bot_testsolid;
 vmCvar_t bot_testclusters;
 vmCvar_t bot_developer;
+vmCvar_t bot_shownodechanges;
+vmCvar_t bot_showteamgoals;
 vmCvar_t bot_interbreedchar;
 vmCvar_t bot_interbreedbots;
 vmCvar_t bot_interbreedcycle;
@@ -1440,6 +1442,8 @@ int BotAIStartFrame(int time) {
 	trap_Cvar_Update(&bot_report);
 	trap_Cvar_Update(&bot_droppedweight);
 	trap_Cvar_Update(&bot_offhandgrapple);
+	trap_Cvar_Update(&bot_shownodechanges);
+	trap_Cvar_Update(&bot_showteamgoals);
 
 	BotUpdateInfoConfigStrings();
 
@@ -1693,6 +1697,8 @@ int BotAISetup( int restart ) {
 	trap_Cvar_Register(&bot_testsolid, "bot_testsolid", "0", CVAR_CHEAT);
 	trap_Cvar_Register(&bot_testclusters, "bot_testclusters", "0", CVAR_CHEAT);
 	trap_Cvar_Register(&bot_developer, "bot_developer", "0", CVAR_CHEAT);
+	trap_Cvar_Register(&bot_shownodechanges, "bot_shownodechanges", "0", CVAR_CHEAT);
+	trap_Cvar_Register(&bot_showteamgoals, "bot_showteamgoals", "0", CVAR_CHEAT);
 	trap_Cvar_Register(&bot_interbreedchar, "bot_interbreedchar", "", 0);
 	trap_Cvar_Register(&bot_interbreedbots, "bot_interbreedbots", "10", 0);
 	trap_Cvar_Register(&bot_interbreedcycle, "bot_interbreedcycle", "20", 0);

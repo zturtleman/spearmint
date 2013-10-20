@@ -346,6 +346,10 @@ New cvars
 
   bot_report                        - show bot info on HUD when following bot
                                       in spectator mode
+  bot_shownodechanges               - show bot AI node state changes, useful
+                                      for debugging bot behavior
+  bot_showteamgoals                 - show bot team goal changes, useful for
+                                      debugging bot teamplay behavior
 
 New commands
   video [filename]        - start video capture (use with demo command)

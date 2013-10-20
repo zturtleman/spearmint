@@ -774,9 +774,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 		BotSetTeamStatus(bs);
 	}
 	bs->owndecision_time = FloatTime() + 5;
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 /*
@@ -1019,9 +1017,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 		BotSetTeamStatus(bs);
 	}
 	bs->owndecision_time = FloatTime() + 5;
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 /*

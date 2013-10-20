@@ -1036,9 +1036,7 @@ void BotUpdateEntityItems(void)
 										ic->iteminfo[li->iteminfo].mins, ic->iteminfo[li->iteminfo].maxs,
 										li->goalorigin);
 					} //end if
-#ifdef DEBUG
-					BotAI_Print(PRT_DEVELOPER, "linked item %s to an entity", ic->iteminfo[li->iteminfo].classname);
-#endif //DEBUG
+					//BotAI_Print(PRT_DEVELOPER, "linked item %s to an entity\n", ic->iteminfo[li->iteminfo].classname);
 					break;
 				} //end if
 			} //end else
@@ -1318,9 +1316,7 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 				//push the goal on the stack
 				BotPushGoal(gs, &goal);
 				//
-#ifdef DEBUG
-				BotAI_Print(PRT_MESSAGE, "chosen roam goal area %d\n", goal.areanum);
-#endif //DEBUG
+				BotAI_Print(PRT_DEVELOPER, "chosen roam goal area %d\n", goal.areanum);
 				return qtrue;
 			} //end if
 		} //end if

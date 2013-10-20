@@ -68,7 +68,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 int notleader[MAX_CLIENTS];
 
-#ifdef DEBUG
 /*
 ==================
 BotPrintTeamGoal
@@ -77,6 +76,10 @@ BotPrintTeamGoal
 void BotPrintTeamGoal(bot_state_t *bs) {
 	char netname[MAX_NETNAME];
 	float t;
+
+	if (!bot_showteamgoals.integer) {
+		return;
+	}
 
 	ClientName(bs->client, netname, sizeof(netname));
 	t = bs->teamgoal_time - FloatTime();
@@ -156,7 +159,6 @@ void BotPrintTeamGoal(bot_state_t *bs) {
 		}
 	}
 }
-#endif //DEBUG
 
 /*
 ==================
@@ -607,9 +609,7 @@ void BotMatch_HelpAccompany(bot_state_t *bs, bot_match_t *match) {
 		// remember last ordered task
 		BotRememberLastOrderedTask(bs);
 	}
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 /*
@@ -655,9 +655,7 @@ void BotMatch_DefendKeyArea(bot_state_t *bs, bot_match_t *match) {
 	BotSetTeamStatus(bs);
 	// remember last ordered task
 	BotRememberLastOrderedTask(bs);
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 /*
@@ -695,9 +693,7 @@ void BotMatch_GetItem(bot_state_t *bs, bot_match_t *match) {
 	bs->teamgoal_time = FloatTime() + TEAM_GETITEM_TIME;
 	//
 	BotSetTeamStatus(bs);
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 /*
@@ -787,9 +783,7 @@ void BotMatch_Camp(bot_state_t *bs, bot_match_t *match) {
 	BotSetTeamStatus(bs);
 	// remember last ordered task
 	BotRememberLastOrderedTask(bs);
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 /*
@@ -826,9 +820,7 @@ void BotMatch_Patrol(bot_state_t *bs, bot_match_t *match) {
 	BotSetTeamStatus(bs);
 	// remember last ordered task
 	BotRememberLastOrderedTask(bs);
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 /*
@@ -878,9 +870,7 @@ void BotMatch_GetFlag(bot_state_t *bs, bot_match_t *match) {
 	BotSetTeamStatus(bs);
 	// remember last ordered task
 	BotRememberLastOrderedTask(bs);
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 /*
@@ -925,9 +915,7 @@ void BotMatch_AttackEnemyBase(bot_state_t *bs, bot_match_t *match) {
 	BotSetTeamStatus(bs);
 	// remember last ordered task
 	BotRememberLastOrderedTask(bs);
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 #ifdef MISSIONPACK
@@ -968,9 +956,7 @@ void BotMatch_Harvest(bot_state_t *bs, bot_match_t *match) {
 	BotSetTeamStatus(bs);
 	// remember last ordered task
 	BotRememberLastOrderedTask(bs);
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 #endif
 
@@ -1015,9 +1001,7 @@ void BotMatch_RushBase(bot_state_t *bs, bot_match_t *match) {
 	bs->rushbaseaway_time = 0;
 	//
 	BotSetTeamStatus(bs);
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 /*
@@ -1104,9 +1088,7 @@ void BotMatch_ReturnFlag(bot_state_t *bs, bot_match_t *match) {
 	bs->rushbaseaway_time = 0;
 	//
 	BotSetTeamStatus(bs);
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 /*
@@ -1720,9 +1702,7 @@ void BotMatch_Kill(bot_state_t *bs, bot_match_t *match) {
 	bs->teamgoal_time = FloatTime() + TEAM_KILL_SOMEONE;
 	//
 	BotSetTeamStatus(bs);
-#ifdef DEBUG
 	BotPrintTeamGoal(bs);
-#endif //DEBUG
 }
 
 /*
