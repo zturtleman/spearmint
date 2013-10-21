@@ -434,7 +434,7 @@ typedef enum {
 //	qboolean CG_WantsBindKeys( void );
 
 	CG_CREATE_USER_CMD
-//	usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, int frameMsec, float mx, float my );
+//	usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, int frameMsec, float mx, float my, qboolean anykeydown );
 
 } cgameExport_t;
 

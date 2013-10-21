@@ -1760,7 +1760,7 @@ int CG_NewParticleArea ( int num );
 //
 void CG_RegisterInputCvars( void );
 void CG_UpdateInputCvars( void );
-usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMsec, float mx, float my );
+usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMsec, float mx, float my, qboolean anykeydown );
 
 void IN_CenterView( int localPlayerNum );
 
