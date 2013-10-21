@@ -49,7 +49,7 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 void CG_Shutdown( void );
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
 static char *CG_VoIPString( int localClientNum );
-void CG_DistributeKeyEvent( int key, qboolean down, unsigned time );
+void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state );
 
 
 /*
@@ -87,7 +87,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_VOIP_STRING:
 		return (intptr_t)CG_VoIPString(arg0);
 	case CG_KEY_EVENT:
-		CG_DistributeKeyEvent(arg0, arg1, arg2);
+		CG_DistributeKeyEvent(arg0, arg1, arg2, arg3);
 		return 0;
 	case CG_MOUSE_EVENT:
 		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
@@ -138,6 +138,7 @@ itemInfo_t			cg_items[MAX_ITEMS];
 vmCvar_t	con_conspeed;
 vmCvar_t	con_autochat;
 vmCvar_t	con_autoclear;
+vmCvar_t	cg_dedicated;
 
 vmCvar_t	cg_railTrailTime;
 vmCvar_t	cg_centertime;
@@ -298,6 +299,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &con_conspeed, "scr_conspeed", "3", 0, RANGE_FLOAT(0.1, 100) },
 	{ &con_autochat, "con_autochat", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &con_autoclear, "con_autoclear", "0", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_dedicated, "dedicated", "0", 0, RANGE_ALL },
 
 	{ &cg_ignore, "cg_ignore", "0", 0, RANGE_ALL },	// used for debugging
 	{ &cg_zoomFov, "cg_zoomfov", "22.5", CVAR_ARCHIVE, RANGE_FLOAT(1, 160) },
@@ -2460,7 +2462,7 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	CG_ConsoleInit();
 
-	if ( trap_Cvar_VariableIntegerValue( "dedicated" ) ) {
+	if ( cg_dedicated.integer ) {
 		trap_Key_SetCatcher( KEYCATCH_CONSOLE );
 		return;
 	}
@@ -2621,6 +2623,10 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	// update cvars
 	CG_UpdateCvars();
 
+	if ( !cg_dedicated.integer && state == CA_DISCONNECTED && !UI_IsFullscreen() ) {
+		UI_SetActiveMenu( UIMENU_MAIN );
+	}
+
 	if ( state >= CA_LOADING && !UI_IsFullscreen() ) {
 #ifdef MISSIONPACK_HUD
 		Init_Display(&cgDC);
@@ -2677,15 +2683,12 @@ an action started before a mode switch.
 
 ===================
 */
-void CG_ParseBinding( int key, qboolean down, unsigned time )
+void CG_ParseBinding( int key, qboolean down, unsigned time, connstate_t state, int keyCatcher )
 {
 	char buf[ MAX_STRING_CHARS ], *p = buf, *end;
 	qboolean allCommands, allowUpCmds;
-	uiClientState_t cls;
 
-	trap_GetClientState( &cls );
-
-	if( cls.connState == CA_DISCONNECTED && trap_Key_GetCatcher( ) == 0 )
+	if( state == CA_DISCONNECTED && keyCatcher == 0 )
 		return;
 
 	trap_Key_GetBindingBuf( key, buf, sizeof ( buf ) );
@@ -2694,10 +2697,10 @@ void CG_ParseBinding( int key, qboolean down, unsigned time )
 		return;
 
 	// run all bind commands if console, ui, etc aren't reading keys
-	allCommands = ( trap_Key_GetCatcher( ) == 0 );
+	allCommands = ( keyCatcher == 0 );
 
 	// allow button up commands if in game even if key catcher is set
-	allowUpCmds = ( cls.connState != CA_DISCONNECTED );
+	allowUpCmds = ( state != CA_DISCONNECTED );
 
 	while( 1 )
 	{
@@ -2778,7 +2781,8 @@ void Message_Key( int key, qboolean down ) {
 CG_DistributeKeyEvent
 ================
 */
-void CG_DistributeKeyEvent( int key, qboolean down, unsigned time ) {
+void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state ) {
+	int keyCatcher;
 
 	// console key is hardcoded, so the user can never unbind it
 	if( key == K_CONSOLE || ( key == K_ESCAPE && trap_Key_IsDown( K_SHIFT ) ) ) {
@@ -2788,36 +2792,46 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time ) {
 		return;
 	}
 
-	if ( key == K_ESCAPE && down && !( trap_Key_GetCatcher( ) & KEYCATCH_UI ) ) {
-		uiClientState_t cls;
+	// reduce redundent system calls
+	keyCatcher = trap_Key_GetCatcher( );
 
-		if ( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
-			Message_Key( key, down );
+	// keys can still be used for bound actions
+	if ( ( key < 128 || key == K_MOUSE1 ) &&
+		( trap_GetDemoState() == DS_PLAYBACK || state == CA_CINEMATIC ) && keyCatcher == 0 ) {
+
+		if ( cg_cameraMode.integer == 0 ) {
+			trap_Cvar_Set ("nextdemo","");
+			key = K_ESCAPE;
+		}
+	}
+
+	// escape is always handled special
+	if ( key == K_ESCAPE ) {
+		if ( down && !( keyCatcher & ( KEYCATCH_UI | KEYCATCH_CGAME | KEYCATCH_MESSAGE ) ) ) {
+			if ( state == CA_ACTIVE && trap_GetDemoState() != DS_PLAYBACK ) {
+				UI_SetActiveMenu( UIMENU_INGAME );
+			} else if ( state != CA_DISCONNECTED ) {
+				trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
+			}
+
 			return;
 		}
 
-		trap_GetClientState( &cls );
-
-		if ( cls.connState == CA_ACTIVE && trap_GetDemoState() != DS_PLAYBACK ) {
-			UI_SetActiveMenu( UIMENU_INGAME );
-		} else if ( cls.connState != CA_DISCONNECTED ) {
-			trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
-		}
-		return;
-	}
-
-	if ( key != K_ESCAPE ) {
+		// skip console
+		keyCatcher &= ~KEYCATCH_CONSOLE;
+	} else {
 		// send the bound action
-		CG_ParseBinding( key, down, time );
+		CG_ParseBinding( key, down, time, state, keyCatcher );
 	}
 
-	if ( trap_Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
+	// distribute the key down event to the apropriate handler
+	if ( keyCatcher & KEYCATCH_CONSOLE ) {
 		Console_Key( key, down );
-	} else if ( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
+	} else if ( keyCatcher & KEYCATCH_MESSAGE ) {
 		Message_Key( key, down );
-	} else if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
+	} else if ( cg.connected && ( keyCatcher & KEYCATCH_CGAME ) ) {
 		CG_KeyEvent( key, down );
-	} else if ( trap_Key_GetCatcher( ) & KEYCATCH_UI ) {
+	} else if ( keyCatcher & KEYCATCH_UI ) {
 		UI_KeyEvent( key, down );
 	}
 }

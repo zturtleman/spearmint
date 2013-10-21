@@ -767,18 +767,8 @@ void CL_KeyDownEvent( int key, unsigned time, qboolean onlybinds )
 		return;
 	}
 
-	// keys can still be used for bound actions
-	if ( ( key < 128 || key == K_MOUSE1 ) &&
-		( clc.demoplaying || clc.state == CA_CINEMATIC ) && Key_GetCatcher( ) == 0 ) {
-
-		if (Cvar_VariableValue ("com_cameraMode") == 0) {
-			Cvar_Set ("nextdemo","");
-			key = K_ESCAPE;
-		}
-	}
-
 	if ( cgvm && ( !onlybinds || VM_Call( cgvm, CG_WANTSBINDKEYS ) ) ) {
-		VM_Call( cgvm, CG_KEY_EVENT, key, qtrue, time );
+		VM_Call( cgvm, CG_KEY_EVENT, key, qtrue, time, clc.state );
 	}
 }
 
@@ -801,7 +791,7 @@ void CL_KeyUpEvent( int key, unsigned time, qboolean onlybinds )
 	}
 
 	if ( cgvm && ( !onlybinds || VM_Call( cgvm, CG_WANTSBINDKEYS ) ) ) {
-		VM_Call( cgvm, CG_KEY_EVENT, key, qfalse, time );
+		VM_Call( cgvm, CG_KEY_EVENT, key, qfalse, time, clc.state );
 	}
 }
 

@@ -1229,6 +1229,7 @@ extern	markPoly_t		cg_markPolys[MAX_MARK_POLYS];
 extern	vmCvar_t		con_conspeed;
 extern	vmCvar_t		con_autochat;
 extern	vmCvar_t		con_autoclear;
+extern	vmCvar_t		cg_dedicated;
 
 extern	vmCvar_t		cg_centertime;
 extern	vmCvar_t		cg_runpitch;
