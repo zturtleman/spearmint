@@ -49,8 +49,7 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 void CG_Shutdown( void );
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
 static char *CG_VoIPString( int localClientNum );
-void CG_ParseBinding( int key, qboolean down, unsigned time );
-void Message_Key( int key, qboolean down );
+void CG_DistributeKeyEvent( int key, qboolean down, unsigned time );
 
 
 /*
@@ -88,54 +87,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_VOIP_STRING:
 		return (intptr_t)CG_VoIPString(arg0);
 	case CG_KEY_EVENT:
-		{
-			int key = arg0;
-			qboolean down = arg1;
-			unsigned time = arg2;
-
-			// console key is hardcoded, so the user can never unbind it
-			if( key == K_CONSOLE || ( key == K_ESCAPE && trap_Key_IsDown( K_SHIFT ) ) )
-			{
-				if ( down ) {
-					Con_ToggleConsole_f();
-				}
-				return 0;
-			}
-
-			if ( key == K_ESCAPE && down && !( trap_Key_GetCatcher( ) & KEYCATCH_UI ) ) {
-				uiClientState_t cls;
-
-				if ( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
-					Message_Key( arg0, arg1 );
-					return 0;
-				}
-
-				trap_GetClientState( &cls );
-
-				if ( cls.connState == CA_ACTIVE && trap_GetDemoState() != DS_PLAYBACK ) {
-					UI_SetActiveMenu( UIMENU_INGAME );
-				}
-				else if ( cls.connState != CA_DISCONNECTED ) {
-					trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
-				}
-				return 0;
-			}
-
-			if ( key != K_ESCAPE ) {
-				// send the bound action
-				CG_ParseBinding( key, down, time );
-			}
-		}
-
-		if ( trap_Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
-			Console_Key( arg0, arg1 );
-		} else if ( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
-			Message_Key( arg0, arg1 );
-		} else if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
-			CG_KeyEvent(arg0, arg1);
-		} else if ( trap_Key_GetCatcher( ) & KEYCATCH_UI ) {
-			UI_KeyEvent(arg0, arg1);
-		}
+		CG_DistributeKeyEvent(arg0, arg1, arg2);
 		return 0;
 	case CG_MOUSE_EVENT:
 		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
@@ -2819,6 +2771,55 @@ void Message_Key( int key, qboolean down ) {
 	}
 
 	MField_KeyDownEvent( &cg.messageField, key );
+}
+
+/*
+================
+CG_DistributeKeyEvent
+================
+*/
+void CG_DistributeKeyEvent( int key, qboolean down, unsigned time ) {
+
+	// console key is hardcoded, so the user can never unbind it
+	if( key == K_CONSOLE || ( key == K_ESCAPE && trap_Key_IsDown( K_SHIFT ) ) ) {
+		if ( down ) {
+			Con_ToggleConsole_f();
+		}
+		return;
+	}
+
+	if ( key == K_ESCAPE && down && !( trap_Key_GetCatcher( ) & KEYCATCH_UI ) ) {
+		uiClientState_t cls;
+
+		if ( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
+			Message_Key( key, down );
+			return;
+		}
+
+		trap_GetClientState( &cls );
+
+		if ( cls.connState == CA_ACTIVE && trap_GetDemoState() != DS_PLAYBACK ) {
+			UI_SetActiveMenu( UIMENU_INGAME );
+		} else if ( cls.connState != CA_DISCONNECTED ) {
+			trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
+		}
+		return;
+	}
+
+	if ( key != K_ESCAPE ) {
+		// send the bound action
+		CG_ParseBinding( key, down, time );
+	}
+
+	if ( trap_Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
+		Console_Key( key, down );
+	} else if ( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
+		Message_Key( key, down );
+	} else if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
+		CG_KeyEvent( key, down );
+	} else if ( trap_Key_GetCatcher( ) & KEYCATCH_UI ) {
+		UI_KeyEvent( key, down );
+	}
 }
 
 /*
