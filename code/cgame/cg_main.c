@@ -133,7 +133,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 			Message_Key( arg0, arg1 );
 		} else if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
 			CG_KeyEvent(arg0, arg1);
-		} else {
+		} else if ( trap_Key_GetCatcher( ) & KEYCATCH_UI ) {
 			UI_KeyEvent(arg0, arg1);
 		}
 		return 0;
