@@ -885,6 +885,7 @@ int BotGetNextCampSpotGoal(int num, bot_goal_t *goal)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
+#if 0
 void BotFindEntityForLevelItem(levelitem_t *li)
 {
 	int ent, modelindex;
@@ -896,6 +897,7 @@ void BotFindEntityForLevelItem(levelitem_t *li)
 	if (!itemconfig) return;
 	for (ent = BotNextEntity(0); ent; ent = BotNextEntity(ent))
 	{
+		if (g_entities[ent].s.eType != ET_ITEM) continue;
 		//get the model index of the entity
 		modelindex = g_entities[ent].s.modelindex;
 		//
@@ -919,6 +921,7 @@ void BotFindEntityForLevelItem(levelitem_t *li)
 		} //end if
 	} //end for
 } //end of the function BotFindEntityForLevelItem
+#endif
 //===========================================================================
 //
 // Parameter:			-
