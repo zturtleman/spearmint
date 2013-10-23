@@ -48,9 +48,16 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	ARMOR_PROTECTION	0.66
 
 #define	MAX_LOCATIONS		64
-#define	MAX_ITEMS			256
-#define	MAX_MODELS			256		// these are sent over the net as 8 bits
-#define	MAX_SOUNDS			256		// so they cannot be blindly increased
+
+#define	MODELINDEX_BITS		10
+
+// these are networked using the modelindex and/or modelindex2 field, must fit in MODELINDEX_BITS
+#define	MAX_SUBMODELS		1024	// max bsp models, q3map2 limits to 1024 via MAX_MAP_MODELS
+#define	MAX_ITEMS			256		// max item types
+#define	MAX_MODELS			256		// max model filenames set by game VM
+
+#define	MAX_SOUNDS			256		// this is sent over the net as 8 bits (in eventParm)
+									// so they cannot be blindly increased
 
 #define	RANK_TIED_FLAG		0x4000
 

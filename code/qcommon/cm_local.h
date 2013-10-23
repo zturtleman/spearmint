@@ -32,9 +32,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "qcommon.h"
 #include "cm_polylib.h"
 
-#define	MAX_SUBMODELS			512
-#define	BOX_MODEL_HANDLE		511
-#define CAPSULE_MODEL_HANDLE	510
+// fake submodel handles
+#define	BOX_MODEL_HANDLE		( cm.numSubModels )
+#define CAPSULE_MODEL_HANDLE	( cm.numSubModels + 1 )
 
 
 typedef struct {
