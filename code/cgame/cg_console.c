@@ -263,12 +263,12 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	int				lines;
 	vec4_t			color;
 
-	lines = SCREEN_HEIGHT * frac;
+	if ( frac > 1 )
+		frac = 1;
+
+	lines = cgs.glconfig.vidHeight * frac / cgs.screenYScale;
 	if (lines <= 0)
 		return;
-
-	if (lines > SCREEN_HEIGHT )
-		lines = SCREEN_HEIGHT;
 
 	CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
 
