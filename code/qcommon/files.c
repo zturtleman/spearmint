@@ -3503,9 +3503,13 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 	} buffer;
 	int				len;
 	char			*text_p, *token;
+	qboolean		firstLine = qtrue;
+#ifndef DEDICATED
+	loadingScreen_t	*screen;
 
 	// default to ioq3 defaultSound
-	Q_strncpyz( com_gameConfig.defaultSound, "sound/feedback/hit.wav", sizeof (com_gameConfig.defaultSound) );
+	Q_strncpyz( config->defaultSound, "sound/feedback/hit.wav", sizeof (config->defaultSound) );
+#endif
 
 	len = FS_ReadFile( "gameconfig.txt", &buffer.v );
 
@@ -3516,6 +3520,13 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 	text_p = buffer.c;
 
 	while ( 1 ) {
+		if ( firstLine )
+			firstLine = qfalse;
+		else {
+			// skip the rest in case want to add additional options here later
+			SkipRestOfLine( &text_p );
+		}
+
 		token = COM_Parse( &text_p );
 		if ( !*token )
 			break;
@@ -3527,7 +3538,6 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 
 			if ( FS_CheckDirTraversal( token ) ) {
 				Com_Printf( S_COLOR_YELLOW "WARNING: invalid gamedir %s in gameconfig.txt\n", token );
-				SkipRestOfLine( &text_p );
 				continue;
 			}
 
@@ -3539,22 +3549,44 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 				Q_strncpyz( config->gameDirs[config->numGameDirs], token, sizeof (config->gameDirs[0]) );
 				config->numGameDirs++;
 			}
-
-			// skip the rest in case want to add additional options here later
-			SkipRestOfLine( &text_p );
 		} else if ( Q_stricmp( token, "defaultSound" ) == 0 ) {
+#ifndef DEDICATED
 			token = COM_ParseExt( &text_p, qfalse );
 			if ( !*token )
 				continue;
 
 			Q_strncpyz( config->defaultSound, token, sizeof (config->defaultSound) );
+#endif
+		} else if ( Q_stricmp( token, "addLoadingScreen" ) == 0 ) {
+#ifndef DEDICATED
+			// Example: addLoadingScreen menuback ( 0 0 0 ) 1.33333
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token )
+				continue;
 
-			// skip the rest in case want to add additional options here later
-			SkipRestOfLine( &text_p );
+			if ( config->numLoadingScreens >= MAX_LOADINGSCREENS ) {
+				Com_Printf( "WARNING: Excessive loading screens in gameconfig.txt (max is %d)\n", MAX_LOADINGSCREENS );
+				continue;
+			}
+
+			screen = &config->loadingScreens[ config->numLoadingScreens ];
+
+			config->numLoadingScreens++;
+
+			Q_strncpyz( screen->shaderName, token, sizeof (screen->shaderName) );
+
+			Parse1DMatrix( &text_p, 3, screen->color );
+
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token ) {
+				screen->aspect = 1;
+				continue;
+			}
+
+			screen->aspect = atof( token );
+#endif
 		} else {
 			Com_Printf("Unknown token '%s' in gameconfig.txt\n", token);
-			// ignore unknown parms
-			SkipRestOfLine( &text_p );
 		}
 	}
 

@@ -756,12 +756,24 @@ Game config, settings loaded from gameconfig.txt
 */
 
 #define MAX_GAMEDIRS 16 // max gamedirs a mod can have (read from gameconfig.txt)
+#define MAX_LOADINGSCREENS	200
+
+typedef struct loadingScreen_s {
+	char	shaderName[MAX_QPATH];
+	float	aspect;
+	vec3_t	color;
+} loadingScreen_t;
 
 typedef struct {
 	char	gameDirs[MAX_GAMEDIRS][MAX_QPATH];
 	int		numGameDirs;
 
+#ifndef DEDICATED
 	char	defaultSound[MAX_QPATH];
+
+	loadingScreen_t	loadingScreens[MAX_LOADINGSCREENS];
+	int			numLoadingScreens;
+#endif
 } gameConfig_t;
 
 extern gameConfig_t com_gameConfig;

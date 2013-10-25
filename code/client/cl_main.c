@@ -104,6 +104,8 @@ cvar_t	*cl_guidServerUniq;
 
 cvar_t	*cl_consoleKeys;
 
+cvar_t	*cl_loadingScreenIndex;
+
 cvar_t	*cl_rate;
 
 clientActive_t		cl;
@@ -1997,6 +1999,8 @@ void CL_Vid_Restart_f( void ) {
 		cls.cgameStarted = qfalse;
 		cls.soundRegistered = qfalse;
 
+		cls.drawnLoadingScreen = qfalse;
+
 		// unpause so the cgame definately gets a snapshot and renders a frame
 		Cvar_Set("cl_paused", "0");
 
@@ -3076,18 +3080,27 @@ void CL_Frame ( int msec ) {
 ==========
 CL_DrawCenteredPic
 
-In widescreen, center shader.
+Draw shader at specified aspect scale to fit entirely on screen.
 ==========
 */
-void CL_DrawCenteredPic(qhandle_t hShader)
+void CL_DrawCenteredPic( qhandle_t hShader, float aspect )
 {
-	float x = 0, y = 0, w = SCREEN_WIDTH, h = SCREEN_HEIGHT;
+	float x, y, w, h;
 
-	SCR_AdjustFrom640( &x, &y, &w, &h );
-	// adjust for wide screens
-	if ( cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ) {
-		x += 0.5 * ( cls.glconfig.vidWidth - ( cls.glconfig.vidHeight * 640 / 480 ) );
-		w -= ( cls.glconfig.vidWidth - ( cls.glconfig.vidHeight * 640 / 480 ) );
+	if ( cls.glconfig.vidWidth > cls.glconfig.vidHeight * aspect ) {
+		// wide screen
+		w = cls.glconfig.vidHeight * aspect;
+		h = cls.glconfig.vidHeight;
+
+		x = 0.5f * ( cls.glconfig.vidWidth - w );
+		y = 0;
+	} else {
+		// narrow screen
+		w = cls.glconfig.vidWidth;
+		h = cls.glconfig.vidWidth / aspect;
+
+		x = 0;
+		y = 0.5f * ( cls.glconfig.vidHeight - h );
 	}
 
 	re.DrawStretchPic( x, y, w, h, 0, 0, 1, 1, hShader );
@@ -3098,16 +3111,15 @@ void CL_DrawCenteredPic(qhandle_t hShader)
 CL_DrawLoadingScreenFrame
 ============
 */
-void CL_DrawLoadingScreenFrame( stereoFrame_t stereoFrame, qhandle_t hShader )
+void CL_DrawLoadingScreenFrame( stereoFrame_t stereoFrame, qhandle_t hShader, vec4_t color, float aspect )
 {
 	re.BeginFrame( stereoFrame );
 
-	// Need to draw extra stuff or screen is completely white for some shaders.
-	re.SetColor( g_color_table[0] );
+	re.SetColor( color );
 	re.DrawStretchPic( 0, 0, cls.glconfig.vidWidth, cls.glconfig.vidHeight, 0, 0, 0, 0, cls.whiteShader );
 	re.SetColor( NULL );
 
-	CL_DrawCenteredPic( hShader );
+	CL_DrawCenteredPic( hShader, aspect );
 }
 
 /*
@@ -3116,17 +3128,36 @@ CL_DrawLoadingScreen
 ============
 */
 void CL_DrawLoadingScreen( void ) {
+	int screenNum;
+	loadingScreen_t	*screen;
 	qhandle_t hShader;
+	vec4_t color;
 
-	// Q3A menu background logo
-	hShader = re.RegisterShaderNoMip("menuback");
+	if ( com_gameConfig.numLoadingScreens <= 0 ) {
+		return;
+	}
+
+	if ( cl_loadingScreenIndex->integer >= 0 ) {
+		screenNum = cl_loadingScreenIndex->integer % com_gameConfig.numLoadingScreens;
+	} else {
+		screenNum = 0;
+	}
+
+	Cvar_SetValue( "cl_loadingScreenIndex", screenNum + 1 );
+
+	screen = &com_gameConfig.loadingScreens[screenNum];
+
+	hShader = re.RegisterShaderNoMip( screen->shaderName );
+
+	VectorCopy( screen->color, color );
+	color[3] = 1.0f;
 
 	// if running in stereo, we need to draw the frame twice
 	if ( cls.glconfig.stereoEnabled || Cvar_VariableIntegerValue( "r_anaglyphMode" ) ) {
-		CL_DrawLoadingScreenFrame( STEREO_LEFT, hShader );
-		CL_DrawLoadingScreenFrame( STEREO_RIGHT, hShader );
+		CL_DrawLoadingScreenFrame( STEREO_LEFT, hShader, color, screen->aspect );
+		CL_DrawLoadingScreenFrame( STEREO_RIGHT, hShader, color, screen->aspect );
 	} else {
-		CL_DrawLoadingScreenFrame( STEREO_CENTER, hShader );
+		CL_DrawLoadingScreenFrame( STEREO_CENTER, hShader, color, screen->aspect );
 	}
 
 	if ( com_speeds->integer ) {
@@ -3454,6 +3485,8 @@ void CL_Init( void ) {
 
 	// ~ and `, as keys and characters
 	cl_consoleKeys = Cvar_Get( "cl_consoleKeys", "~ ` 0x7e 0x60", CVAR_ARCHIVE);
+
+	cl_loadingScreenIndex = Cvar_Get( "cl_loadingScreenIndex", "0", CVAR_ARCHIVE );
 
 	// select which local client (using bits) should join a server on connect
 	Cvar_Get ("cl_localClients", "1", 0 );
