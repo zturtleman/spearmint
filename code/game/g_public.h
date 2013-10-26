@@ -159,6 +159,7 @@ typedef enum {
 	G_FS_READ,			// ( void *buffer, int len, fileHandle_t f );
 	G_FS_WRITE,			// ( const void *buffer, int len, fileHandle_t f );
 	G_FS_SEEK,
+	G_FS_TELL,			// ( fileHandle_t f );
 	G_FS_FCLOSE_FILE,	// ( fileHandle_t f );
 	G_FS_GETFILELIST,
 	G_FS_DELETE,		// ( const void *path );
