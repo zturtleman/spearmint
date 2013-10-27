@@ -778,6 +778,10 @@ void FS_SV_Rename( const char *from, const char *to, qboolean safe ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
+	if ( !from || !*from || !to || !*to || Q_stricmp( from, to ) == 0 ) {
+		return;
+	}
+
 	// don't let sound stutter
 	S_ClearSoundBuffer();
 
@@ -812,6 +816,10 @@ qboolean FS_Rename( const char *from, const char *to ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
+	if ( !from || !*from || !to || !*to || Q_stricmp( from, to ) == 0 ) {
+		return qfalse;
+	}
+
 	// don't let sound stutter
 	S_ClearSoundBuffer();
 
@@ -844,6 +852,10 @@ on files returned by FS_FOpenFile...
 void FS_FCloseFile( fileHandle_t f ) {
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
+	}
+
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
+		return;
 	}
 
 	if (fsh[f].zipFile == qtrue) {
@@ -1565,7 +1577,7 @@ int FS_Delete( char *filename ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
-	if ( !filename || filename[0] == 0 ) {
+	if ( !filename || !*filename ) {
 		return 0;
 	}
 
@@ -1608,7 +1620,7 @@ int FS_Read2( void *buffer, int len, fileHandle_t f ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
-	if ( !f ) {
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
 		return 0;
 	}
 	if (fsh[f].streamed) {
@@ -1632,7 +1644,11 @@ int FS_Read( void *buffer, int len, fileHandle_t f ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
-	if ( !f ) {
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
+		return 0;
+	}
+
+	if ( !buffer || len < 1 ) {
 		return 0;
 	}
 
@@ -1686,7 +1702,11 @@ int FS_Write( const void *buffer, int len, fileHandle_t h ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
-	if ( !h ) {
+	if ( h < 1 || h >= MAX_FILE_HANDLES ) {
+		return 0;
+	}
+
+	if ( !buffer || len < 1 ) {
 		return 0;
 	}
 
@@ -1745,6 +1765,10 @@ int FS_Seek( fileHandle_t f, long offset, int origin ) {
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
+		return -1;
+	}
+
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
 		return -1;
 	}
 
@@ -2489,6 +2513,14 @@ FS_GetFileList
 int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize ) {
 	int		nFiles, i, nTotal, nLen;
 	char **pFiles = NULL;
+
+	if ( !path || !listbuf || bufsize < 1 ) {
+		return 0;
+	}
+
+	if ( !extension ) {
+		extension = "";
+	}
 
 	*listbuf = 0;
 	nFiles = 0;
@@ -4389,6 +4421,10 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	int		r;
 	qboolean	sync;
 
+	if ( !qpath || !*qpath ) {
+		return -1;
+	}
+
 	sync = qfalse;
 
 	switch( mode ) {
@@ -4396,6 +4432,9 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 			r = FS_FOpenFileRead( qpath, f, qtrue );
 			break;
 		case FS_WRITE:
+			if (!f) {
+				return -1;
+			}
 			*f = FS_FOpenFileWrite( qpath );
 			r = 0;
 			if (*f == 0) {
@@ -4405,6 +4444,9 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 		case FS_APPEND_SYNC:
 			sync = qtrue;
 		case FS_APPEND:
+			if (!f) {
+				return -1;
+			}
 			*f = FS_FOpenFileAppend( qpath );
 			r = 0;
 			if (*f == 0) {
@@ -4435,6 +4477,15 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 
 int		FS_FTell( fileHandle_t f ) {
 	int pos;
+
+	if ( !fs_searchpaths ) {
+		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
+	}
+
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
+		return -1;
+	}
+
 	if (fsh[f].zipFile == qtrue) {
 		pos = unztell(fsh[f].handleFiles.file.z);
 	} else {
