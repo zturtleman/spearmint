@@ -60,9 +60,6 @@ polyBuffer_t* CG_PB_FindFreePolyBuffer( qhandle_t shader, int numVerts, int numI
 			continue;
 		}
 
-		cg_polyBuffersInuse[i] = qtrue;
-		cg_polyBuffers[i].shader = shader;
-
 		return &cg_polyBuffers[i];
 	}
 
