@@ -1985,10 +1985,10 @@ static void R_RadixSort( drawSurf_t *source, int size )
 
 /*
 =================
-R_AddDrawSurf
+R_AddEntDrawSurf
 =================
 */
-void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, 
+void R_AddEntDrawSurf( trRefEntity_t *ent, surfaceType_t *surface, shader_t *shader, 
 				   int fogIndex, int dlightMap, int pshadowMap, int cubemap ) {
 	int			index;
 
@@ -2002,6 +2002,16 @@ void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
 	tr.refdef.drawSurfs[index].cubemapIndex = cubemap;
 	tr.refdef.drawSurfs[index].surface = surface;
 	tr.refdef.numDrawSurfs++;
+}
+
+/*
+=================
+R_AddDrawSurf
+=================
+*/
+void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, 
+				   int fogIndex, int dlightMap, int pshadowMap, int cubemap ) {
+	R_AddEntDrawSurf( NULL, surface, shader, fogIndex, dlightMap, pshadowMap, cubemap );
 }
 
 /*

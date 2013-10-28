@@ -59,7 +59,7 @@ void R_AddAnimSurfaces( trRefEntity_t *ent ) {
 	surface = (md4Surface_t *)( (byte *)lod + lod->ofsSurfaces );
 	for ( i = 0 ; i < lod->numSurfaces ; i++ ) {
 		shader = R_GetShaderByHandle( surface->shaderIndex );
-		R_AddDrawSurf( (void *)surface, shader, 0 /*fogNum*/, qfalse );
+		R_AddEntDrawSurf( ent, (void *)surface, shader, 0 /*fogNum*/, qfalse );
 		surface = (md4Surface_t *)( (byte *)surface + surface->ofsEnd );
 	}
 }
@@ -425,7 +425,7 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 		}
 
 		if (!personalModel)
-			R_AddDrawSurf( (void *)surface, shader, fogNum, qfalse );
+			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, qfalse );
 
 		surface = (mdrSurface_t *)( (byte *)surface + surface->ofsEnd );
 	}

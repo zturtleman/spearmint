@@ -2098,6 +2098,9 @@ void R_DecomposeSort( const drawSurf_t *drawSurf, shader_t **shader, int *sortOr
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, 
 				   int fogIndex, int dlightMap, int pshadowMap, int cubemap );
 
+void R_AddEntDrawSurf( trRefEntity_t *ent, surfaceType_t *surface, shader_t *shader, 
+				   int fogIndex, int dlightMap, int pshadowMap, int cubemap );
+
 void R_CalcTangentSpace(vec3_t tangent, vec3_t bitangent, vec3_t normal,
                         const vec3_t v0, const vec3_t v1, const vec3_t v2, const vec2_t t0, const vec2_t t1, const vec2_t t2);
 qboolean R_CalcTangentVectors(srfVert_t * dv[3]);
