@@ -1991,13 +1991,20 @@ R_AddEntDrawSurf
 void R_AddEntDrawSurf( trRefEntity_t *ent, surfaceType_t *surface, shader_t *shader, 
 				   int fogIndex, int dlightMap, int pshadowMap, int cubemap ) {
 	int			index;
+	int			sortOrder;
+
+	if ( ent && ( ent->e.renderfx & RF_FORCE_ENT_ALPHA ) ) {
+		sortOrder = SS_BLEND0;
+	} else {
+		sortOrder = shader->sort;
+	}
 
 	// instead of checking for overflow, we just mask the index
 	// so it wraps around
 	index = tr.refdef.numDrawSurfs & DRAWSURF_MASK;
 	// the sort data is packed into a single 64 bit value so it can be
 	// compared quickly during the qsorting process
-	R_ComposeSort(&tr.refdef.drawSurfs[index], shader->sortedIndex, shader->sort,
+	R_ComposeSort(&tr.refdef.drawSurfs[index], shader->sortedIndex, sortOrder,
 					tr.shiftedEntityNum, fogIndex, dlightMap, pshadowMap);
 	tr.refdef.drawSurfs[index].cubemapIndex = cubemap;
 	tr.refdef.drawSurfs[index].surface = surface;
