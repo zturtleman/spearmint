@@ -1361,6 +1361,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	qboolean overridealpha;
 	int oldAlphaGen;
 	int oldStateBits;
+	qboolean overridecolor;
+	int oldRgbGen;
 
 	for ( stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
@@ -1388,6 +1390,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else
 		{
 			overridealpha = qfalse;
+		}
+
+		// override the shader color channels if requested
+		if ( backEnd.currentEntity && backEnd.currentEntity->e.renderfx & RF_RGB_TINT )
+		{
+			overridecolor = qtrue;
+			oldRgbGen = pStage->rgbGen;
+			pStage->rgbGen = CGEN_ENTITY;
+		}
+		else
+		{
+			overridecolor = qfalse;
 		}
 
 		ComputeColors( pStage );
@@ -1446,6 +1460,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			pStage->alphaGen = oldAlphaGen;
 			pStage->stateBits = oldStateBits;
+		}
+
+		if ( overridecolor )
+		{
+			pStage->rgbGen = oldRgbGen;
 		}
 
 		// allow skipping out to show just lightmaps during development
