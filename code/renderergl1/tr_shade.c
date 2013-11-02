@@ -1430,12 +1430,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			// set state
 			//
-			if ( pStage->bundle[0].vertexLightmap && ( r_vertexLight->integer && !r_uiFullScreen->integer ) && r_lightmap->integer )
-			{
-				GL_Bind( tr.whiteImage );
-			}
-			else
-				R_BindAnimatedImage( &pStage->bundle[0] );
+			R_BindAnimatedImage( &pStage->bundle[0] );
 
 			// per stage fogging (detail textures)
 			if ( tess.shader->noFog && pStage->isFogged ) {
@@ -1468,7 +1463,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 
 		// allow skipping out to show just lightmaps during development
-		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap || pStage->bundle[0].vertexLightmap ) )
+		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap ) )
 		{
 			break;
 		}

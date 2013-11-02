@@ -3817,7 +3817,7 @@ static shader_t *FinishShader( void ) {
 	//
 	// if we are in r_vertexLight mode, never use a lightmap texture
 	//
-	if ( stage > 1 && r_vertexLight->integer && !r_uiFullScreen->integer ) {
+	if ( stage > 1 && r_vertexLight->integer && hasLightmapStage ) {
 		VertexLightingCollapse();
 		hasLightmapStage = qfalse;
 	}

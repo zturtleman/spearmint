@@ -192,11 +192,6 @@ void RB_FogOn( void ) {
 		return;
 	}
 
-//	if(r_uiFullScreen->integer) {	// don't fog in the menu
-//		R_FogOff();
-//		return;
-//	}
-
 	if ( !r_useGlFog->integer ) {
 		return;
 	}

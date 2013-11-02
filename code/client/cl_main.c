@@ -1540,9 +1540,6 @@ void CL_Disconnect( qboolean showMainMenu ) {
 		return;
 	}
 
-	// shutting down the client so enter full screen ui mode
-	Cvar_Set("r_uiFullScreen", "1");
-
 	if ( clc.demorecording ) {
 		CL_StopRecord_f ();
 	}
@@ -2149,9 +2146,6 @@ void CL_DownloadsComplete( void ) {
 
 	// let the client game init and load data
 	clc.state = CA_LOADING;
-
-	// starting to load a map so we get out of full screen ui mode
-	Cvar_Set("r_uiFullScreen", "0");
 
 	// flush client memory and start loading stuff
 	// this will also (re)load the cgame vm
