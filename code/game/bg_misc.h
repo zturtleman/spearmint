@@ -84,7 +84,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 
 
-#define MAX_DLIGHT_CONFIGSTRINGS 16
+#define MAX_DLIGHT_CONFIGSTRINGS 128
 
 //
 // config strings are a general means of communicating variable length strings
