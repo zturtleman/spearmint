@@ -45,7 +45,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define SVF_CLIENTMASK 0x00000002
 
 #define SVF_BOT					0x00000008	// set if the entity is a bot
-#define	SVF_BROADCAST			0x00000020	// send to all connected clients
+#define	SVF_BROADCAST			0x00000020	// send to all connected clients (r.cullDistance will still be checked)
 #define	SVF_PORTAL				0x00000040	// merge a second pvs at origin2 into snapshots
 #define	SVF_USE_CURRENT_ORIGIN	0x00000080	// entity->r.currentOrigin instead of entity->s.origin
 											// for link position (missiles and movers)
@@ -86,6 +86,9 @@ typedef struct {
 	// ent->r.ownerNum == passEntityNum	(don't interact with your own missiles)
 	// entity[ent->r.ownerNum].r.ownerNum == passEntityNum	(don't interact with other missiles from owner)
 	int			ownerNum;
+
+	// if set, entity is only sent to client if distance between entity and client <= cullDistance (even if SVF_BROADCAST is set)
+	int			cullDistance;
 
 	// if set, portal entities are only sent to client if distance between portal and client <= portalCullDistance
 	int			portalCullDistance;
