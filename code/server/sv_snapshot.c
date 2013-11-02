@@ -429,23 +429,9 @@ static void SV_AddEntitiesVisibleFromPoint( int clientNum, vec3_t origin, client
 			continue;
 		}
 
-		// entities can be flagged to be sent to only one client
-		if ( ent->r.svFlags & SVF_SINGLECLIENT ) {
-			if ( ent->r.singleClient != clientNum ) {
-				continue;
-			}
-		}
-		// entities can be flagged to be sent to everyone but one client
-		if ( ent->r.svFlags & SVF_NOTSINGLECLIENT ) {
-			if ( ent->r.singleClient == clientNum ) {
-				continue;
-			}
-		}
 		// entities can be flagged to be sent to a given mask of clients
 		if ( ent->r.svFlags & SVF_CLIENTMASK ) {
-			if ( clientNum >= 32 )
-				Com_Error( ERR_DROP, "SVF_CLIENTMASK: clientNum >= 32" );
-			if (~ent->r.singleClient & (1 << clientNum))
+			if ( !Com_ClientListContains( &ent->r.sendClients, clientNum ) )
 				continue;
 		}
 

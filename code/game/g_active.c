@@ -715,8 +715,9 @@ SendPendingPredictableEvents
 */
 void SendPendingPredictableEvents( playerState_t *ps ) {
 	gentity_t *t;
-	int event, seq;
+	int event, seq, i;
 	int extEvent, number;
+	gconnection_t *connection;
 
 	// if there are still events pending
 	if ( ps->entityEventSequence < ps->eventSequence ) {
@@ -737,8 +738,12 @@ void SendPendingPredictableEvents( playerState_t *ps ) {
 		t->s.otherEntityNum = ps->clientNum;
 		t->s.contents = 0;
 		// send to everyone except the client who generated the event
-		t->r.svFlags |= SVF_NOTSINGLECLIENT;
-		t->r.singleClient = ps->clientNum;
+		t->r.svFlags |= SVF_CLIENTMASK;
+		Com_ClientListAll( &t->r.sendClients );
+		connection = &level.connections[ level.clients[ ps->clientNum ].pers.connectionNum ];
+		for (i = 0; i < connection->numLocalPlayers; i++ ) {
+			Com_ClientListRemove( &t->r.sendClients, connection->localPlayerNums[i] );
+		}
 		// set back external event
 		ps->externalEvent = extEvent;
 	}

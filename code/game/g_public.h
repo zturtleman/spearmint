@@ -40,18 +40,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 // special server behaviors
 #define	SVF_NOCLIENT			0x00000001	// don't send entity to clients, even if it has effects
 
-// TTimo
-// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=551
-#define SVF_CLIENTMASK 0x00000002
+#define SVF_CLIENTMASK			0x00000002 // send to limited list of clients
 
 #define SVF_BOT					0x00000008	// set if the entity is a bot
 #define	SVF_BROADCAST			0x00000020	// send to all connected clients (r.cullDistance will still be checked)
 #define	SVF_PORTAL				0x00000040	// merge a second pvs at origin2 into snapshots
 #define	SVF_USE_CURRENT_ORIGIN	0x00000080	// entity->r.currentOrigin instead of entity->s.origin
 											// for link position (missiles and movers)
-#define SVF_SINGLECLIENT		0x00000100	// only send to a single client (entityShared_t->singleClient)
-#define SVF_NOTSINGLECLIENT		0x00000200	// send entity to everyone but one client
-											// (entityShared_t->singleClient)
 
 #define SVF_VISDUMMY            0x00000400  // this ent is a "visibility dummy" and needs it's master to be sent to clients that can see it even if they can't see the master ent
 #define SVF_VISDUMMY_MULTIPLE   0x00000800  // so that one vis dummy can add to snapshot multiple speakers
@@ -67,9 +62,8 @@ typedef struct {
 
 	int			svFlags;			// SVF_NOCLIENT, SVF_BROADCAST, etc
 
-	// only send to this client when SVF_SINGLECLIENT is set	
-	// if SVF_CLIENTMASK is set, use bitmask for clients to send to (maxclients must be <= 32, up to the mod to enforce this)
-	int			singleClient;		
+	// if SVF_CLIENTMASK is set, use bitmask for clients to send to
+	clientList_t	sendClients;
 
 	vec3_t		absmin, absmax;		// derived from mins/maxs and origin + rotation
 

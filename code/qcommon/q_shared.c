@@ -1502,6 +1502,30 @@ void Com_ClientListRemove( clientList_t *list, int clientNum )
 
 /*
 ============
+Com_ClientListClear
+============
+*/
+void Com_ClientListClear( clientList_t *list ) {
+	if ( !list )
+		return;
+
+	list->lo = list->hi = 0u;
+}
+
+/*
+============
+Com_ClientListAll
+============
+*/
+void Com_ClientListAll( clientList_t *list ) {
+	if ( !list )
+		return;
+
+	list->lo = list->hi = ~0u;
+}
+
+/*
+============
 Com_ClientListString
 ============
 */
