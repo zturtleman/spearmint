@@ -172,8 +172,6 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 	uiClientState_t	cstate;
 	char			info[MAX_INFO_VALUE];
 
-	Menu_Cache();
-
 	if ( !overlay ) {
 		// draw the dialog background
 		CG_ClearScreen();
