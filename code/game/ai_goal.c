@@ -885,6 +885,7 @@ int BotGetNextCampSpotGoal(int num, bot_goal_t *goal)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
+#if 0
 void BotFindEntityForLevelItem(levelitem_t *li)
 {
 	int ent, modelindex;
@@ -896,6 +897,7 @@ void BotFindEntityForLevelItem(levelitem_t *li)
 	if (!itemconfig) return;
 	for (ent = BotNextEntity(0); ent; ent = BotNextEntity(ent))
 	{
+		if (g_entities[ent].s.eType != ET_ITEM) continue;
 		//get the model index of the entity
 		modelindex = g_entities[ent].s.modelindex;
 		//
@@ -919,6 +921,7 @@ void BotFindEntityForLevelItem(levelitem_t *li)
 		} //end if
 	} //end for
 } //end of the function BotFindEntityForLevelItem
+#endif
 //===========================================================================
 //
 // Parameter:			-
@@ -1036,9 +1039,7 @@ void BotUpdateEntityItems(void)
 										ic->iteminfo[li->iteminfo].mins, ic->iteminfo[li->iteminfo].maxs,
 										li->goalorigin);
 					} //end if
-#ifdef DEBUG
-					BotAI_Print(PRT_DEVELOPER, "linked item %s to an entity", ic->iteminfo[li->iteminfo].classname);
-#endif //DEBUG
+					//BotAI_Print(PRT_DEVELOPER, "linked item %s to an entity\n", ic->iteminfo[li->iteminfo].classname);
 					break;
 				} //end if
 			} //end else
@@ -1318,9 +1319,7 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 				//push the goal on the stack
 				BotPushGoal(gs, &goal);
 				//
-#ifdef DEBUG
-				BotAI_Print(PRT_MESSAGE, "chosen roam goal area %d\n", goal.areanum);
-#endif //DEBUG
+				BotAI_Print(PRT_DEVELOPER, "chosen roam goal area %d\n", goal.areanum);
 				return qtrue;
 			} //end if
 		} //end if

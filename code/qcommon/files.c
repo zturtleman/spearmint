@@ -279,9 +279,9 @@ typedef struct qfile_us {
 typedef struct {
 	qfile_ut	handleFiles;
 	qboolean	handleSync;
-	int			baseOffset;
 	int			fileSize;
 	int			zipFilePos;
+	int			zipFileLen;
 	qboolean	zipFile;
 	qboolean	streamed;
 	char		name[MAX_ZPATH];
@@ -778,6 +778,10 @@ void FS_SV_Rename( const char *from, const char *to, qboolean safe ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
+	if ( !from || !*from || !to || !*to || Q_stricmp( from, to ) == 0 ) {
+		return;
+	}
+
 	// don't let sound stutter
 	S_ClearSoundBuffer();
 
@@ -812,6 +816,10 @@ qboolean FS_Rename( const char *from, const char *to ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
+	if ( !from || !*from || !to || !*to || Q_stricmp( from, to ) == 0 ) {
+		return qfalse;
+	}
+
 	// don't let sound stutter
 	S_ClearSoundBuffer();
 
@@ -844,6 +852,10 @@ on files returned by FS_FOpenFile...
 void FS_FCloseFile( fileHandle_t f ) {
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
+	}
+
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
+		return;
 	}
 
 	if (fsh[f].zipFile == qtrue) {
@@ -1254,6 +1266,7 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 					// open the file in the zip
 					unzOpenCurrentFile(fsh[*file].handleFiles.file.z);
 					fsh[*file].zipFilePos = pakFile->pos;
+					fsh[*file].zipFileLen = pakFile->len;
 
 					if(fs_debug->integer)
 					{
@@ -1564,7 +1577,7 @@ int FS_Delete( char *filename ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
-	if ( !filename || filename[0] == 0 ) {
+	if ( !filename || !*filename ) {
 		return 0;
 	}
 
@@ -1607,7 +1620,7 @@ int FS_Read2( void *buffer, int len, fileHandle_t f ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
-	if ( !f ) {
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
 		return 0;
 	}
 	if (fsh[f].streamed) {
@@ -1631,7 +1644,11 @@ int FS_Read( void *buffer, int len, fileHandle_t f ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
-	if ( !f ) {
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
+		return 0;
+	}
+
+	if ( !buffer || len < 1 ) {
 		return 0;
 	}
 
@@ -1685,7 +1702,11 @@ int FS_Write( const void *buffer, int len, fileHandle_t h ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
-	if ( !h ) {
+	if ( h < 1 || h >= MAX_FILE_HANDLES ) {
+		return 0;
+	}
+
+	if ( !buffer || len < 1 ) {
 		return 0;
 	}
 
@@ -1747,30 +1768,65 @@ int FS_Seek( fileHandle_t f, long offset, int origin ) {
 		return -1;
 	}
 
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
+		return -1;
+	}
+
 	if (fsh[f].streamed) {
+		int r;
 		fsh[f].streamed = qfalse;
-		FS_Seek( f, offset, origin );
+		r = FS_Seek( f, offset, origin );
 		fsh[f].streamed = qtrue;
+		return r;
 	}
 
 	if (fsh[f].zipFile == qtrue) {
-		//FIXME: this is incomplete and really, really
-		//crappy (but better than what was here before)
+		//FIXME: this is really, really crappy
+		//(but better than what was here before)
 		byte	buffer[PK3_SEEK_BUFFER_SIZE];
-		int		remainder = offset;
+		int		remainder;
+		int		currentPosition = FS_FTell( f );
 
-		if( offset < 0 || origin == FS_SEEK_END ) {
-			Com_Error( ERR_FATAL, "Negative offsets and FS_SEEK_END not implemented "
-					"for FS_Seek on pk3 file contents" );
-			return -1;
+		// change negative offsets into FS_SEEK_SET
+		if ( offset < 0 ) {
+			switch( origin ) {
+				case FS_SEEK_END:
+					remainder = fsh[f].zipFileLen + offset;
+					break;
+
+				case FS_SEEK_CUR:
+					remainder = currentPosition + offset;
+					break;
+
+				case FS_SEEK_SET:
+				default:
+					remainder = 0;
+					break;
+			}
+
+			if ( remainder < 0 ) {
+				remainder = 0;
+			}
+
+			origin = FS_SEEK_SET;
+		} else {
+			if ( origin == FS_SEEK_END ) {
+				remainder = fsh[f].zipFileLen - currentPosition + offset;
+			} else {
+				remainder = offset;
+			}
 		}
 
 		switch( origin ) {
 			case FS_SEEK_SET:
+				if ( remainder == currentPosition ) {
+					return offset;
+				}
 				unzSetOffset(fsh[f].handleFiles.file.z, fsh[f].zipFilePos);
 				unzOpenCurrentFile(fsh[f].handleFiles.file.z);
 				//fallthrough
 
+			case FS_SEEK_END:
 			case FS_SEEK_CUR:
 				while( remainder > PK3_SEEK_BUFFER_SIZE ) {
 					FS_Read( buffer, PK3_SEEK_BUFFER_SIZE, f );
@@ -1778,12 +1834,10 @@ int FS_Seek( fileHandle_t f, long offset, int origin ) {
 				}
 				FS_Read( buffer, remainder, f );
 				return offset;
-				break;
 
 			default:
 				Com_Error( ERR_FATAL, "Bad origin in FS_Seek" );
 				return -1;
-				break;
 		}
 	} else {
 		FILE *file;
@@ -2459,6 +2513,14 @@ FS_GetFileList
 int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize ) {
 	int		nFiles, i, nTotal, nLen;
 	char **pFiles = NULL;
+
+	if ( !path || !listbuf || bufsize < 1 ) {
+		return 0;
+	}
+
+	if ( !extension ) {
+		extension = "";
+	}
 
 	*listbuf = 0;
 	nFiles = 0;
@@ -3503,9 +3565,13 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 	} buffer;
 	int				len;
 	char			*text_p, *token;
+	qboolean		firstLine = qtrue;
+#ifndef DEDICATED
+	loadingScreen_t	*screen;
 
 	// default to ioq3 defaultSound
-	Q_strncpyz( com_gameConfig.defaultSound, "sound/feedback/hit.wav", sizeof (com_gameConfig.defaultSound) );
+	Q_strncpyz( config->defaultSound, "sound/feedback/hit.wav", sizeof (config->defaultSound) );
+#endif
 
 	len = FS_ReadFile( "gameconfig.txt", &buffer.v );
 
@@ -3516,6 +3582,13 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 	text_p = buffer.c;
 
 	while ( 1 ) {
+		if ( firstLine )
+			firstLine = qfalse;
+		else {
+			// skip the rest in case want to add additional options here later
+			SkipRestOfLine( &text_p );
+		}
+
 		token = COM_Parse( &text_p );
 		if ( !*token )
 			break;
@@ -3527,7 +3600,6 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 
 			if ( FS_CheckDirTraversal( token ) ) {
 				Com_Printf( S_COLOR_YELLOW "WARNING: invalid gamedir %s in gameconfig.txt\n", token );
-				SkipRestOfLine( &text_p );
 				continue;
 			}
 
@@ -3539,22 +3611,44 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 				Q_strncpyz( config->gameDirs[config->numGameDirs], token, sizeof (config->gameDirs[0]) );
 				config->numGameDirs++;
 			}
-
-			// skip the rest in case want to add additional options here later
-			SkipRestOfLine( &text_p );
 		} else if ( Q_stricmp( token, "defaultSound" ) == 0 ) {
+#ifndef DEDICATED
 			token = COM_ParseExt( &text_p, qfalse );
 			if ( !*token )
 				continue;
 
 			Q_strncpyz( config->defaultSound, token, sizeof (config->defaultSound) );
+#endif
+		} else if ( Q_stricmp( token, "addLoadingScreen" ) == 0 ) {
+#ifndef DEDICATED
+			// Example: addLoadingScreen menuback ( 0 0 0 ) 1.33333
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token )
+				continue;
 
-			// skip the rest in case want to add additional options here later
-			SkipRestOfLine( &text_p );
+			if ( config->numLoadingScreens >= MAX_LOADINGSCREENS ) {
+				Com_Printf( "WARNING: Excessive loading screens in gameconfig.txt (max is %d)\n", MAX_LOADINGSCREENS );
+				continue;
+			}
+
+			screen = &config->loadingScreens[ config->numLoadingScreens ];
+
+			config->numLoadingScreens++;
+
+			Q_strncpyz( screen->shaderName, token, sizeof (screen->shaderName) );
+
+			Parse1DMatrix( &text_p, 3, screen->color );
+
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token ) {
+				screen->aspect = 1;
+				continue;
+			}
+
+			screen->aspect = atof( token );
+#endif
 		} else {
 			Com_Printf("Unknown token '%s' in gameconfig.txt\n", token);
-			// ignore unknown parms
-			SkipRestOfLine( &text_p );
 		}
 	}
 
@@ -4327,6 +4421,10 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	int		r;
 	qboolean	sync;
 
+	if ( !qpath || !*qpath ) {
+		return -1;
+	}
+
 	sync = qfalse;
 
 	switch( mode ) {
@@ -4334,6 +4432,9 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 			r = FS_FOpenFileRead( qpath, f, qtrue );
 			break;
 		case FS_WRITE:
+			if (!f) {
+				return -1;
+			}
 			*f = FS_FOpenFileWrite( qpath );
 			r = 0;
 			if (*f == 0) {
@@ -4343,6 +4444,9 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 		case FS_APPEND_SYNC:
 			sync = qtrue;
 		case FS_APPEND:
+			if (!f) {
+				return -1;
+			}
 			*f = FS_FOpenFileAppend( qpath );
 			r = 0;
 			if (*f == 0) {
@@ -4359,11 +4463,6 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	}
 
 	if ( *f ) {
-		if (fsh[*f].zipFile == qtrue) {
-			fsh[*f].baseOffset = unztell(fsh[*f].handleFiles.file.z);
-		} else {
-			fsh[*f].baseOffset = ftell(fsh[*f].handleFiles.file.o);
-		}
 		fsh[*f].fileSize = r;
 		fsh[*f].streamed = qfalse;
 
@@ -4378,6 +4477,15 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 
 int		FS_FTell( fileHandle_t f ) {
 	int pos;
+
+	if ( !fs_searchpaths ) {
+		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
+	}
+
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
+		return -1;
+	}
+
 	if (fsh[f].zipFile == qtrue) {
 		pos = unztell(fsh[f].handleFiles.file.z);
 	} else {

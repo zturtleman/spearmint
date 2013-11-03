@@ -543,10 +543,10 @@ static void CG_Missile( centity_t *cent ) {
 		weapon->missileTrailFunc( cent, weapon );
 	}
 /*
-	if ( cent->currentState.modelindex == TEAM_RED ) {
+	if ( s1->team == TEAM_RED ) {
 		col = 1;
 	}
-	else if ( cent->currentState.modelindex == TEAM_BLUE ) {
+	else if ( s1->team == TEAM_BLUE ) {
 		col = 2;
 	}
 	else {

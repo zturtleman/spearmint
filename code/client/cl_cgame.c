@@ -1257,6 +1257,8 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return FS_Write( VMA(1), args[2], args[3] );
 	case CG_FS_SEEK:
 		return FS_Seek( args[1], args[2], args[3] );
+	case CG_FS_TELL:
+		return FS_FTell( args[1] );
 	case CG_FS_FCLOSEFILE:
 		FS_FCloseFile( args[1] );
 		return 0;

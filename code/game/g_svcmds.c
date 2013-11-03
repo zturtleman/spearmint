@@ -328,8 +328,8 @@ void	Svcmd_EntityList_f (void) {
 	int			e;
 	gentity_t		*check;
 
-	check = g_entities+1;
-	for (e = 1; e < level.num_entities ; e++, check++) {
+	check = g_entities;
+	for (e = 0; e < level.num_entities ; e++, check++) {
 		if ( !check->inuse ) {
 			continue;
 		}
@@ -481,6 +481,7 @@ struct svcmd
   { "addbot", qfalse, Svcmd_AddBot_f },
   { "addip", qfalse, Svcmd_AddIP_f },
   { "botlist", qfalse, Svcmd_BotList_f },
+  { "botreport", qfalse, Svcmd_BotTeamplayReport_f },
   { "entityList", qfalse, Svcmd_EntityList_f },
   { "forceTeam", qfalse, Svcmd_ForceTeam_f },
   { "listip", qfalse, Svcmd_ListIPs_f },

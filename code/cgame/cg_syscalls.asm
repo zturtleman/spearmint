@@ -49,20 +49,21 @@ equ trap_FS_FOpenFile					-44
 equ trap_FS_Read						-45
 equ trap_FS_Write						-46
 equ trap_FS_Seek						-47
-equ trap_FS_FCloseFile					-48
-equ trap_FS_GetFileList					-49
-equ trap_FS_Delete						-50
-equ trap_FS_Rename						-51
+equ trap_FS_Tell						-48
+equ trap_FS_FCloseFile					-49
+equ trap_FS_GetFileList					-50
+equ trap_FS_Delete						-51
+equ trap_FS_Rename						-52
 
-equ trap_PC_AddGlobalDefine				-52
-equ trap_PC_RemoveAllGlobalDefines		-53
-equ trap_PC_LoadSource					-54
-equ trap_PC_FreeSource					-55
-equ trap_PC_ReadToken					-56
-equ trap_PC_UnreadToken					-57
-equ trap_PC_SourceFileAndLine			-58
+equ trap_PC_AddGlobalDefine				-53
+equ trap_PC_RemoveAllGlobalDefines		-54
+equ trap_PC_LoadSource					-55
+equ trap_PC_FreeSource					-56
+equ trap_PC_ReadToken					-57
+equ trap_PC_UnreadToken					-58
+equ trap_PC_SourceFileAndLine			-59
 
-equ trap_Alloc							-59
+equ trap_Alloc							-60
 
 
 equ	trap_GetClipboardData				-101

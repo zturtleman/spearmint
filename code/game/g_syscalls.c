@@ -95,6 +95,10 @@ int trap_FS_Seek( fileHandle_t f, long offset, int origin ) {
 	return syscall( G_FS_SEEK, f, offset, origin );
 }
 
+int trap_FS_Tell( fileHandle_t f ) {
+	return syscall( G_FS_TELL, f );
+}
+
 void	trap_FS_FCloseFile( fileHandle_t f ) {
 	syscall( G_FS_FCLOSE_FILE, f );
 }

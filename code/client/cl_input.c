@@ -198,24 +198,6 @@ void CL_MouseMove(calc_t *lc, float *outmx, float *outmy)
 
 /*
 ==============
-CL_CmdButtons
-==============
-*/
-void CL_CmdButtons( usercmd_t *cmd ) {
-	if ( Key_GetCatcher( ) ) {
-		cmd->buttons |= BUTTON_TALK;
-	}
-
-	// allow the game to know if any key at all is
-	// currently pressed, even if it isn't bound to anything
-	if ( anykeydown && Key_GetCatcher( ) == 0 ) {
-		cmd->buttons |= BUTTON_ANY;
-	}
-}
-
-
-/*
-==============
 CL_FinishMove
 ==============
 */
@@ -244,14 +226,12 @@ usercmd_t CL_CreateCmd( int localClientNum ) {
 		// get basic movement from mouse
 		CL_MouseMove( lc, &mx, &my );
 
-		vmCmd = VM_ExplicitArgPtr( cgvm, VM_Call( cgvm, CG_CREATE_USER_CMD, localClientNum, com_frameTime, frame_msec, FloatAsInt( mx ), FloatAsInt( my ) ) );
+		vmCmd = VM_ExplicitArgPtr( cgvm, VM_Call( cgvm, CG_CREATE_USER_CMD, localClientNum, com_frameTime, frame_msec, FloatAsInt( mx ), FloatAsInt( my ), anykeydown ) );
 
 		if ( vmCmd ) {
 			Com_Memcpy( &cmd, vmCmd, sizeof( cmd ) );
 		}
 	}
-
-	CL_CmdButtons( &cmd );
 
 	// store out the final values
 	CL_FinishMove( &cmd );

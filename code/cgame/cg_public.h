@@ -174,6 +174,7 @@ typedef enum {
 	CG_FS_READ,
 	CG_FS_WRITE,
 	CG_FS_SEEK,
+	CG_FS_TELL,
 	CG_FS_FCLOSEFILE,
 	CG_FS_GETFILELIST,
 	CG_FS_DELETE,
@@ -434,7 +435,7 @@ typedef enum {
 //	qboolean CG_WantsBindKeys( void );
 
 	CG_CREATE_USER_CMD
-//	usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, int frameMsec, float mx, float my );
+//	usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, int frameMsec, float mx, float my, qboolean anykeydown );
 
 } cgameExport_t;
 

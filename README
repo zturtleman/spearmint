@@ -344,6 +344,12 @@ New cvars
 
   ui_stretch                        - stretch menus to fill wide/narrow screens
 
+  bot_report                        - show bot info on HUD when following bot
+                                      in spectator mode
+  bot_shownodechanges               - show bot AI node state changes, useful
+                                      for debugging bot behavior
+  bot_showteamgoals                 - show bot team goal changes, useful for
+                                      debugging bot teamplay behavior
 
 New commands
   video [filename]        - start video capture (use with demo command)
@@ -381,6 +387,9 @@ New commands
 
   levelshot <size>        - spearmint allows setting levelshot size, example
                             `levelshot 512'. defaults to 128.
+
+  botreport               - shows what bots are doing, must set
+                            bot_report 1
 
 
 Removed cvars

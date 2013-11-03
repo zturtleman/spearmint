@@ -1185,8 +1185,8 @@ typedef struct {
 	sfxHandle_t		gameSounds[MAX_SOUNDS];
 
 	int				numInlineModels;
-	qhandle_t		inlineDrawModel[MAX_MODELS];
-	vec3_t			inlineModelMidpoints[MAX_MODELS];
+	qhandle_t		inlineDrawModel[MAX_SUBMODELS];
+	vec3_t			inlineModelMidpoints[MAX_SUBMODELS];
 
 	clientInfo_t	clientinfo[MAX_CLIENTS];
 
@@ -1229,6 +1229,7 @@ extern	markPoly_t		cg_markPolys[MAX_MARK_POLYS];
 extern	vmCvar_t		con_conspeed;
 extern	vmCvar_t		con_autochat;
 extern	vmCvar_t		con_autoclear;
+extern	vmCvar_t		cg_dedicated;
 
 extern	vmCvar_t		cg_centertime;
 extern	vmCvar_t		cg_runpitch;
@@ -1759,7 +1760,7 @@ int CG_NewParticleArea ( int num );
 //
 void CG_RegisterInputCvars( void );
 void CG_UpdateInputCvars( void );
-usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMsec, float mx, float my );
+usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMsec, float mx, float my, qboolean anykeydown );
 
 void IN_CenterView( int localPlayerNum );
 

@@ -447,7 +447,7 @@ void CG_MouseMove(cglc_t *lc, clientInput_t *ci, usercmd_t *cmd, float mx, float
 CG_CmdButtons
 ==============
 */
-void CG_CmdButtons( clientInput_t *ci, usercmd_t *cmd ) {
+void CG_CmdButtons( clientInput_t *ci, usercmd_t *cmd, qboolean anykeydown ) {
 	int		i;
 
 	//
@@ -460,6 +460,15 @@ void CG_CmdButtons( clientInput_t *ci, usercmd_t *cmd ) {
 			cmd->buttons |= 1 << i;
 		}
 		ci->in_buttons[i].wasPressed = qfalse;
+	}
+
+	if ( trap_Key_GetCatcher( ) ) {
+		cmd->buttons |= BUTTON_TALK;
+	}
+	// allow the game to know if any key at all is
+	// currently pressed, even if it isn't bound to anything
+	else if ( anykeydown ) {
+		cmd->buttons |= BUTTON_ANY;
 	}
 }
 
@@ -483,7 +492,7 @@ void CG_FinishMove( cglc_t *lc, usercmd_t *cmd ) {
 CG_CreateUserCmd
 =================
 */
-usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMsec, float mx, float my ) {
+usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMsec, float mx, float my, qboolean anykeydown ) {
 	static usercmd_t cmd;
 	vec3_t		oldAngles;
 	cglc_t		*lc;
@@ -502,7 +511,7 @@ usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMs
 
 	Com_Memset( &cmd, 0, sizeof( cmd ) );
 
-	CG_CmdButtons( ci, &cmd );
+	CG_CmdButtons( ci, &cmd, anykeydown );
 
 	// get basic movement from keyboard
 	CG_KeyMove( ci, &cmd );

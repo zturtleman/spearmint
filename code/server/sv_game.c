@@ -430,6 +430,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return FS_Write( VMA(1), args[2], args[3] );
 	case G_FS_SEEK:
 		return FS_Seek( args[1], args[2], args[3] );
+	case G_FS_TELL:
+		return FS_FTell( args[1] );
 	case G_FS_FCLOSE_FILE:
 		FS_FCloseFile( args[1] );
 		return 0;

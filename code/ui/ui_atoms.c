@@ -296,9 +296,6 @@ update frame time, commands are executed by CG_ConsoleCommand
 void UI_ConsoleCommand( int realTime ) {
 	uiInfo.uiDC.frameTime = realTime - uiInfo.uiDC.realTime;
 	uiInfo.uiDC.realTime = realTime;
-
-	// ensure minimum menu data is available
-	//Menu_Cache();
 }
 
 qboolean UI_CursorInRect (int x, int y, int width, int height)

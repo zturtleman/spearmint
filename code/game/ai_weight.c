@@ -333,11 +333,9 @@ weightconfig_t *ReadWeightConfig(char *filename)
 	int source;
 	fuzzyseperator_t *fs;
 	weightconfig_t *config = NULL;
-#ifdef DEBUG
 	int starttime;
 
 	starttime = trap_Milliseconds();
-#endif //DEBUG
 
 	if (!BotLibVarGetValue("bot_reloadcharacters"))
 	{
@@ -480,9 +478,7 @@ weightconfig_t *ReadWeightConfig(char *filename)
 	trap_PC_FreeSource(source);
 	//if the file was located in a pak file
 	BotAI_Print(PRT_DEVELOPER, "loaded %s\n", filename);
-#ifdef DEBUG
 	BotAI_Print(PRT_DEVELOPER, "weights loaded in %d msec\n", trap_Milliseconds() - starttime);
-#endif //DEBUG
 	//
 	config->valid = qtrue;
 	//

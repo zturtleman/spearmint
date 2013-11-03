@@ -1358,6 +1358,11 @@ void SetIteratorFog( void ) {
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
 	int stage;
+	qboolean overridealpha;
+	int oldAlphaGen;
+	int oldStateBits;
+	qboolean overridecolor;
+	int oldRgbGen;
 
 	for ( stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
@@ -1366,6 +1371,37 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		if ( !pStage )
 		{
 			break;
+		}
+
+		// override the shader alpha channel if requested
+		if ( backEnd.currentEntity && backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA )
+		{
+			overridealpha = qtrue;
+			oldAlphaGen = pStage->alphaGen;
+			oldStateBits = pStage->stateBits;
+			pStage->alphaGen = AGEN_ENTITY;
+
+			// set bits for blendfunc blend
+			pStage->stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+
+			// keep the original alphafunc, if any
+			pStage->stateBits |= ( oldStateBits & GLS_ATEST_BITS );
+		}
+		else
+		{
+			overridealpha = qfalse;
+		}
+
+		// override the shader color channels if requested
+		if ( backEnd.currentEntity && backEnd.currentEntity->e.renderfx & RF_RGB_TINT )
+		{
+			overridecolor = qtrue;
+			oldRgbGen = pStage->rgbGen;
+			pStage->rgbGen = CGEN_ENTITY;
+		}
+		else
+		{
+			overridecolor = qfalse;
 		}
 
 		ComputeColors( pStage );
@@ -1414,6 +1450,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			R_DrawElements( input->numIndexes, input->indexes );
 		}
+
+		if ( overridealpha )
+		{
+			pStage->alphaGen = oldAlphaGen;
+			pStage->stateBits = oldStateBits;
+		}
+
+		if ( overridecolor )
+		{
+			pStage->rgbGen = oldRgbGen;
+		}
+
 		// allow skipping out to show just lightmaps during development
 		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap ) )
 		{
