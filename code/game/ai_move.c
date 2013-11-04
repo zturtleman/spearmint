@@ -3507,10 +3507,18 @@ int BotSetupMoveAI(void)
 {
 	BotSetBrushModelTypes();
 
-	phys_maxbarrier = BotLibVarGetValue("phys_maxbarrier");
-
 	return BLERR_NOERROR;
 } //end of the function BotSetupMoveAI
+//===========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
+void BotInitPhysicsSettings(void)
+{
+	phys_maxbarrier = BotLibVarGetValue("phys_maxbarrier");
+} //end of the function BotInitPhysicsSettings
 //===========================================================================
 //
 // Parameter:			-

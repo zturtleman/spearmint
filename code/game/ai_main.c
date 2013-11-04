@@ -1392,6 +1392,7 @@ int BotAILoadMap( int restart ) {
 	if (!restart) {
 		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 		trap_BotLibLoadMap( mapname.string );
+		BotInitPhysicsSettings();
 	}
 
 	//initialize the items in the level
