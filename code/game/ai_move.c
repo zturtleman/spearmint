@@ -422,32 +422,7 @@ int BotReachabilityArea(vec3_t origin, int testground)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int BotOriginOfMoverWithModelNum(int modelnum, vec3_t origin)
-{
-	int i;
-	gentity_t *ent;
-
-	for (i = 0; i < level.num_entities; i++)
-	{
-		ent = &level.gentities[i];
-		if (ent->s.eType == ET_MOVER)
-		{
-			if (ent->s.modelindex == modelnum)
-			{
-				VectorCopy(ent->r.currentOrigin, origin);
-				return qtrue;
-			} //end if
-		} //end if
-	} //end for
-	return qfalse;
-} //end of the function BotOriginOfMoverWithModelNum
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-void BotBSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t mins, vec3_t maxs, vec3_t origin) {
+qboolean BotBSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t mins, vec3_t maxs, vec3_t origin) {
 	int i;
 	gentity_t *ent;
 
@@ -470,10 +445,11 @@ void BotBSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t mins, vec3_t 
 				if (origin) {
 					VectorCopy(ent->r.currentOrigin, origin);
 				}
-				return;
+				return qtrue;
 			} //end if
 		} //end if
 	} //end for
+	return qfalse;
 } //end of the function BotBSPModelMinsMaxsOrigin
 //===========================================================================
 //
@@ -491,9 +467,7 @@ int BotOnMover(vec3_t origin, int entnum, aas_reachability_t *reach)
 
 	modelnum = reach->facenum & 0x0000FFFF;
 	//get some bsp model info
-	BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, NULL);
-	//
-	if (!BotOriginOfMoverWithModelNum(modelnum, modelorigin))
+	if (!BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, modelorigin))
 	{
 		BotAI_Print(PRT_MESSAGE, "no entity with model %d\n", modelnum);
 		return qfalse;
@@ -535,9 +509,7 @@ int MoverDown(aas_reachability_t *reach)
 
 	modelnum = reach->facenum & 0x0000FFFF;
 	//get some bsp model info
-	BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, origin);
-	//
-	if (!BotOriginOfMoverWithModelNum(modelnum, origin))
+	if (!BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, origin))
 	{
 		BotAI_Print(PRT_MESSAGE, "no entity with model %d\n", modelnum);
 		return qfalse;
@@ -1023,24 +995,24 @@ int BotPredictVisiblePosition(vec3_t origin, int areanum, bot_goal_t *goal, int 
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void MoverBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter)
+qboolean MoverBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter)
 {
 	int modelnum;
 	vec3_t mins, maxs, origin, mids;
-	vec3_t angles = {0, 0, 0};
+	vec3_t angles;
 
 	modelnum = reach->facenum & 0x0000FFFF;
 	//get some bsp model info
-	BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, origin);
-	//
-	if (!BotOriginOfMoverWithModelNum(modelnum, origin))
+	if (!BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, origin))
 	{
 		BotAI_Print(PRT_MESSAGE, "no entity with model %d\n", modelnum);
+		return qfalse;
 	} //end if
 	//get a point just above the plat in the bottom position
 	VectorAdd(mins, maxs, mids);
 	VectorMA(origin, 0.5, mids, bottomcenter);
 	bottomcenter[2] = reach->start[2];
+	return qtrue;
 } //end of the function MoverBottomCenter
 //===========================================================================
 //
@@ -2060,8 +2032,17 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 {
 	vec3_t dir, dir1, dir2, hordir, bottomcenter;
 	float dist, dist1, dist2, speed;
+	int modelnum;
 	bot_moveresult_t_cleared( result );
 
+	//
+	modelnum = reach->facenum & 0x0000FFFF;
+	if (!BotBSPModelMinsMaxsOrigin(modelnum, NULL, NULL, NULL, NULL))
+	{
+		//stop using this reachability
+		ms->reachability_time = 0;
+		return result;
+	} //end if
 	//if standing on the plat
 	if (BotOnMover(ms->origin, ms->entitynum, reach))
 	{
@@ -2212,7 +2193,10 @@ bot_moveresult_t BotFinishTravel_Elevator(bot_movestate_t *ms, aas_reachability_
 	bot_moveresult_t_cleared( result );
 
 	//
-	MoverBottomCenter(reach, bottomcenter);
+	if (!MoverBottomCenter(reach, bottomcenter))
+	{
+		return result;
+	}
 	VectorSubtract(bottomcenter, ms->origin, bottomdir);
 	//
 	VectorSubtract(reach->end, ms->origin, topdir);
@@ -2235,21 +2219,19 @@ bot_moveresult_t BotFinishTravel_Elevator(bot_movestate_t *ms, aas_reachability_
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void BotFuncBobStartEnd(aas_reachability_t *reach, vec3_t start, vec3_t end, vec3_t origin)
+qboolean BotFuncBobStartEnd(aas_reachability_t *reach, vec3_t start, vec3_t end, vec3_t origin)
 {
 	int spawnflags, modelnum;
 	vec3_t mins, maxs, mid, angles = {0, 0, 0};
 	int num0, num1;
 
 	modelnum = reach->facenum & 0x0000FFFF;
-	if (!BotOriginOfMoverWithModelNum(modelnum, origin))
+	//get some bsp model info
+	if (!BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, origin))
 	{
 		BotAI_Print(PRT_MESSAGE, "BotFuncBobStartEnd: no entity with model %d\n", modelnum);
-		VectorSet(start, 0, 0, 0);
-		VectorSet(end, 0, 0, 0);
-		return;
+		return qfalse;
 	} //end if
-	BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, NULL);
 	VectorAdd(mins, maxs, mid);
 	VectorScale(mid, 0.5, mid);
 	VectorCopy(mid, start);
@@ -2286,6 +2268,7 @@ void BotFuncBobStartEnd(aas_reachability_t *reach, vec3_t start, vec3_t end, vec
 		origin[1] = mid[1];
 		origin[2] += mid[2];
 	} //end else
+	return qtrue;
 } //end of the function BotFuncBobStartEnd
 //===========================================================================
 //
@@ -2300,7 +2283,12 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 	bot_moveresult_t_cleared( result );
 
 	//
-	BotFuncBobStartEnd(reach, bob_start, bob_end, bob_origin);
+	if (!BotFuncBobStartEnd(reach, bob_start, bob_end, bob_origin))
+	{
+		//stop using this reachability
+		ms->reachability_time = 0;
+		return result;
+	} //end if
 	//if standing ontop of the func_bobbing
 	if (BotOnMover(ms->origin, ms->entitynum, reach))
 	{
@@ -2457,7 +2445,10 @@ bot_moveresult_t BotFinishTravel_FuncBobbing(bot_movestate_t *ms, aas_reachabili
 	float dist, speed;
 
 	//
-	BotFuncBobStartEnd(reach, bob_start, bob_end, bob_origin);
+	if (!BotFuncBobStartEnd(reach, bob_start, bob_end, bob_origin))
+	{
+		return result;
+	}
 	//
 	VectorSubtract(bob_origin, bob_end, dir);
 	dist = VectorLength(dir);
