@@ -541,15 +541,15 @@ static void ProjectDlightTexture_altivec( void ) {
 			{
 				vec3_t	dir;
 
-				dir[ 0 ] = radius - fabs( dist[ 0 ] );
+				dir[ 0 ] = radius - fabs( dist0 );
 				if ( dir[ 0 ] <= 0.0f ) {
 					continue;
 				}
-				dir[ 1 ] = radius - fabs( dist[ 1 ] );
+				dir[ 1 ] = radius - fabs( dist1 );
 				if ( dir[ 1 ] <= 0.0f ) {
 					continue;
 				}
-				dir[ 2 ] = radius - fabs( dist[ 2 ] );
+				dir[ 2 ] = radius - fabs( dist2 );
 				if ( dir[ 2 ] <= 0.0f ) {
 					continue;
 				}
