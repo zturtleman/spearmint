@@ -668,7 +668,7 @@ void BotEntityInfo(int entnum, aas_entityinfo_t *info) {
 	info->update_time = ent->update_time;
 	info->ltime = ent->ltime;
 	info->number = entnum;
-	VectorCopy(ent->r.currentOrigin, info->origin);
+	VectorCopy(ent->visorigin, info->origin);
 	if (entnum < MAX_CLIENTS) {
 		VectorCopy(ent->s.apos.trBase, info->angles);
 	} else {
@@ -1567,9 +1567,11 @@ int BotAIStartFrame(int time) {
 				state.solid = SOLID_BBOX;
 				VectorCopy(state.angles, ent->lastAngles);
 			}
+			//previous frame visorigin
+			VectorCopy( ent->visorigin, ent->lastvisorigin );
 			//if the origin changed
-			if ( !VectorCompare( state.origin, ent->lastvisorigin ) ) {
-				VectorCopy( state.origin, ent->lastvisorigin );
+			if ( !VectorCompare( state.origin, ent->visorigin ) ) {
+				VectorCopy( state.origin, ent->visorigin );
 				state.relink = qtrue;
 			}
 			//if the bounding box size changed
