@@ -670,7 +670,6 @@ void BotEntityInfo(int entnum, aas_entityinfo_t *info) {
 	info->number = entnum;
 	VectorCopy(ent->visorigin, info->origin);
 	VectorCopy(ent->lastAngles, info->angles);
-	VectorCopy(ent->s.origin2, info->old_origin);
 	VectorCopy(ent->lastvisorigin, info->lastvisorigin);
 	VectorCopy(ent->s.mins, info->mins);
 	VectorCopy(ent->s.maxs, info->maxs);
