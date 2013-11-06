@@ -669,11 +669,7 @@ void BotEntityInfo(int entnum, aas_entityinfo_t *info) {
 	info->ltime = ent->ltime;
 	info->number = entnum;
 	VectorCopy(ent->visorigin, info->origin);
-	if (entnum < MAX_CLIENTS) {
-		VectorCopy(ent->s.apos.trBase, info->angles);
-	} else {
-		VectorCopy(ent->r.currentAngles, info->angles);
-	}
+	VectorCopy(ent->lastAngles, info->angles);
 	VectorCopy(ent->s.origin2, info->old_origin);
 	VectorCopy(ent->lastvisorigin, info->lastvisorigin);
 	VectorCopy(ent->s.mins, info->mins);
