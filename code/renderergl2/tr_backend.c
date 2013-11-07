@@ -1062,9 +1062,9 @@ const void* RB_Draw2dPolys( const void* data ) {
 	// FIXME: HUGE hack
 	if (glRefConfig.framebufferObject)
 	{
-		if (backEnd.framePostProcessed)
+		if (!tr.renderFbo || backEnd.framePostProcessed)
 		{
-			FBO_Bind(tr.screenScratchFbo);
+			FBO_Bind(NULL);
 		}
 		else
 		{
@@ -1130,9 +1130,9 @@ const void *RB_RotatedPic( const void *data ) {
 	// FIXME: HUGE hack
 	if (glRefConfig.framebufferObject)
 	{
-		if (backEnd.framePostProcessed)
+		if (!tr.renderFbo || backEnd.framePostProcessed)
 		{
-			FBO_Bind(tr.screenScratchFbo);
+			FBO_Bind(NULL);
 		}
 		else
 		{
@@ -1226,9 +1226,9 @@ const void *RB_StretchPicGradient( const void *data ) {
 	// FIXME: HUGE hack
 	if (glRefConfig.framebufferObject)
 	{
-		if (backEnd.framePostProcessed)
+		if (!tr.renderFbo || backEnd.framePostProcessed)
 		{
-			FBO_Bind(tr.screenScratchFbo);
+			FBO_Bind(NULL);
 		}
 		else
 		{
