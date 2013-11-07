@@ -478,7 +478,7 @@ static void ProjectDlightTexture( void ) {
 }
 
 
-static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t vertColor )
+static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t vertColor, int blend )
 {
 	baseColor[0] = 
 	baseColor[1] =
@@ -647,6 +647,23 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 			break;
 	}
 
+	// multiply color by overbrightbits if this isn't a blend
+	if (r_softOverbright->integer && tr.overbrightBits 
+	 && !((blend & GLS_SRCBLEND_BITS) == GLS_SRCBLEND_DST_COLOR)
+	 && !((blend & GLS_SRCBLEND_BITS) == GLS_SRCBLEND_ONE_MINUS_DST_COLOR)
+	 && !((blend & GLS_DSTBLEND_BITS) == GLS_DSTBLEND_SRC_COLOR)
+	 && !((blend & GLS_DSTBLEND_BITS) == GLS_DSTBLEND_ONE_MINUS_SRC_COLOR))
+	{
+		float scale = 1 << tr.overbrightBits;
+
+		baseColor[0] *= scale;
+		baseColor[1] *= scale;
+		baseColor[2] *= scale;
+		vertColor[0] *= scale;
+		vertColor[1] *= scale;
+		vertColor[2] *= scale;
+	}
+
 	// FIXME: find some way to implement this.
 #if 0
 	// if in greyscale rendering mode turn all color values into greyscale.
@@ -797,7 +814,7 @@ static void ForwardDlight( void ) {
 		{
 			int index = pStage->glslShaderIndex;
 
-			index &= ~(LIGHTDEF_LIGHTTYPE_MASK | LIGHTDEF_USE_DELUXEMAP);
+			index &= ~LIGHTDEF_LIGHTTYPE_MASK;
 			index |= LIGHTDEF_USE_LIGHT_VECTOR;
 
 			sp = &tr.lightallShader[index];
@@ -836,7 +853,7 @@ static void ForwardDlight( void ) {
 			vec4_t baseColor;
 			vec4_t vertColor;
 
-			ComputeShaderColors(pStage, baseColor, vertColor);
+			ComputeShaderColors(pStage, baseColor, vertColor, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE);
 
 			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, baseColor);
 			GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
@@ -1227,11 +1244,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
 
-			if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && (index & LIGHTDEF_LIGHTTYPE_MASK) && input->cubemapIndex)
-			{
-				index |= LIGHTDEF_USE_CUBEMAP;
-			}
-
 			if (r_lightmap->integer && index & LIGHTDEF_USE_LIGHTMAP)
 			{
 				index = LIGHTDEF_USE_LIGHTMAP;
@@ -1275,7 +1287,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			vec4_t baseColor;
 			vec4_t vertColor;
 
-			ComputeShaderColors(pStage, baseColor, vertColor);
+			ComputeShaderColors(pStage, baseColor, vertColor, pStage->stateBits);
 
 			if ((backEnd.refdef.colorScale != 1.0f) && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
 			{
@@ -1357,6 +1369,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else if ( pStage->glslShaderGroup == tr.lightallShader )
 		{
 			int i;
+			vec4_t enableTextures;
 
 			if ((backEnd.viewParms.flags & VPF_USESUNLIGHT) && (pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK))
 			{
@@ -1366,73 +1379,78 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 			}
 
+			VectorSet4(enableTextures, 0, 0, 0, 0);
 			if ((r_lightmap->integer == 1 || r_lightmap->integer == 2) && pStage->bundle[TB_LIGHTMAP].image[0])
 			{
 				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
 				{
-					if (pStage->bundle[i].image[0])
-					{
-						switch(i)
-						{
-							case TB_LIGHTMAP:
-								R_BindAnimatedImageToTMU( &pStage->bundle[TB_LIGHTMAP], i);
-								break;
-
-							case TB_DIFFUSEMAP:
-							case TB_SPECULARMAP:
-							case TB_SHADOWMAP:
-							case TB_CUBEMAP:
-							default:
-								GL_BindToTMU( tr.whiteImage, i);
-								break;
-
-							case TB_NORMALMAP:
-							case TB_DELUXEMAP:
-								GL_BindToTMU( tr.greyImage, i);
-								break;
-						}
-					}
+					if (i == TB_LIGHTMAP)
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_LIGHTMAP], i);
+					else
+						GL_BindToTMU( tr.whiteImage, i );
 				}
 			}
 			else if (r_lightmap->integer == 3 && pStage->bundle[TB_DELUXEMAP].image[0])
 			{
 				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
 				{
-					if (pStage->bundle[i].image[0])
-					{
-						switch(i)
-						{
-							case TB_LIGHTMAP:
-								R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], i);
-								break;
-
-							case TB_DIFFUSEMAP:
-							case TB_SPECULARMAP:
-							case TB_SHADOWMAP:
-							case TB_CUBEMAP:
-							default:
-								GL_BindToTMU( tr.whiteImage, i);
-								break;
-
-							case TB_NORMALMAP:
-							case TB_DELUXEMAP:
-								GL_BindToTMU( tr.greyImage, i);
-								break;
-						}
-					}
+					if (i == TB_LIGHTMAP)
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], i);
+					else
+						GL_BindToTMU( tr.whiteImage, i );
 				}
-
 			}
 			else
 			{
-				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
+				qboolean light = (pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK) != 0;
+				qboolean fastLight = !(r_normalMapping->integer || r_specularMapping->integer);
+
+				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
+
+				if (pStage->bundle[TB_LIGHTMAP].image[0])
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_LIGHTMAP], TB_LIGHTMAP);
+
+				// bind textures that are sampled and used in the glsl shader, and
+				// bind whiteImage to textures that are sampled but zeroed in the glsl shader
+				//
+				// alternatives:
+				//  - use the last bound texture
+				//     -> costs more to sample a higher res texture then throw out the result
+				//  - disable texture sampling in glsl shader with #ifdefs, as before
+				//     -> increases the number of shaders that must be compiled
+				//
+				if (light && !fastLight)
 				{
-					if (pStage->bundle[i].image[0])
+					if (pStage->bundle[TB_NORMALMAP].image[0])
 					{
-						R_BindAnimatedImageToTMU( &pStage->bundle[i], i);
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
+						enableTextures[0] = 1.0f;
 					}
+					else if (r_normalMapping->integer)
+						GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
+
+					if (pStage->bundle[TB_DELUXEMAP].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], TB_DELUXEMAP);
+						enableTextures[1] = 1.0f;
+					}
+					else if (r_deluxeMapping->integer)
+						GL_BindToTMU( tr.whiteImage, TB_DELUXEMAP );
+
+					if (pStage->bundle[TB_SPECULARMAP].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_SPECULARMAP], TB_SPECULARMAP);
+						enableTextures[2] = 1.0f;
+					}
+					else if (r_specularMapping->integer)
+						GL_BindToTMU( tr.whiteImage, TB_SPECULARMAP );
 				}
+
+				enableTextures[3] = (r_cubeMapping->integer && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
 			}
+
+			GLSL_SetUniformVec4(sp, UNIFORM_ENABLETEXTURES, enableTextures);
 		}
 		else if ( pStage->bundle[1].image[0] != 0 )
 		{
