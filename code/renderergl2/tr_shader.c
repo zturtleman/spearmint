@@ -1546,6 +1546,10 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->bundle[0].tcGen = TCGEN_ENVIRONMENT_MAPPED;
 			}
+			else if ( !Q_stricmp( token, "cel" ) )
+			{
+				stage->bundle[0].tcGen = TCGEN_ENVIRONMENT_CELSHADE_MAPPED;
+			}
 			else if ( !Q_stricmp( token, "lightmap" ) )
 			{
 				stage->bundle[0].tcGen = TCGEN_LIGHTMAP;
@@ -3012,6 +3016,7 @@ static qboolean CollapseStagesToGLSL(void)
 				case TCGEN_TEXTURE:
 				case TCGEN_LIGHTMAP:
 				case TCGEN_ENVIRONMENT_MAPPED:
+				case TCGEN_ENVIRONMENT_CELSHADE_MAPPED:
 				case TCGEN_VECTOR:
 					break;
 				default:
@@ -3102,6 +3107,7 @@ static qboolean CollapseStagesToGLSL(void)
 
 			tcgen = qfalse;
 			if (diffuse->bundle[0].tcGen == TCGEN_ENVIRONMENT_MAPPED
+			    || diffuse->bundle[0].tcGen == TCGEN_ENVIRONMENT_CELSHADE_MAPPED
 			    || diffuse->bundle[0].tcGen == TCGEN_LIGHTMAP
 			    || diffuse->bundle[0].tcGen == TCGEN_VECTOR)
 			{

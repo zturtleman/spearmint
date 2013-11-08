@@ -195,7 +195,8 @@ typedef enum {
 	TCGEN_TEXTURE,
 	TCGEN_ENVIRONMENT_MAPPED,
 	TCGEN_FOG,
-	TCGEN_VECTOR			// S and T from world coordinates
+	TCGEN_VECTOR,			// S and T from world coordinates
+	TCGEN_ENVIRONMENT_CELSHADE_MAPPED
 } texCoordGen_t;
 
 typedef enum {
@@ -1568,6 +1569,7 @@ void	R_TransformClipToWindow( const vec4_t clip, const viewParms_t *view, vec4_t
 
 void	RB_DeformTessGeometry( void );
 
+void	RB_CalcEnvironmentCelShadeTexCoords( float *dstTexCoords );
 void	RB_CalcEnvironmentTexCoords( float *dstTexCoords );
 void	RB_CalcFogTexCoords( float *dstTexCoords );
 void	RB_CalcScrollTexCoords( const float scroll[2], float *dstTexCoords );

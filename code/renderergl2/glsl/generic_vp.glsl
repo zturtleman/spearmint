@@ -18,6 +18,7 @@ uniform vec4   u_DiffuseTexOffTurb;
 
 #if defined(USE_TCGEN) || defined(USE_RGBAGEN)
 uniform vec3   u_LocalViewOrigin;
+uniform vec3   u_ModelLightDir;
 #endif
 
 #if defined(USE_TCGEN)
@@ -48,7 +49,6 @@ uniform int    u_ColorGen;
 uniform int    u_AlphaGen;
 uniform vec3   u_AmbientLight;
 uniform vec3   u_DirectedLight;
-uniform vec3   u_ModelLightDir;
 uniform float  u_PortalRange;
 #endif
 
@@ -129,6 +129,11 @@ vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3
 	else if (TCGen == TCGEN_VECTOR)
 	{
 		tex = vec2(dot(position, TCGenVector0), dot(position, TCGenVector1));
+	}
+	else if (TCGen == TCGEN_ENVIRONMENT_CELSHADE_MAPPED)
+	{
+		tex.s = 0.5 + dot(normal, u_ModelLightDir) * 0.5;
+		tex.t = 0.5;
 	}
 	
 	return tex;

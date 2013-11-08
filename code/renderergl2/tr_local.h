@@ -284,7 +284,8 @@ typedef enum {
 	TCGEN_TEXTURE,
 	TCGEN_ENVIRONMENT_MAPPED,
 	TCGEN_FOG,
-	TCGEN_VECTOR			// S and T from world coordinates
+	TCGEN_VECTOR,			// S and T from world coordinates
+	TCGEN_ENVIRONMENT_CELSHADE_MAPPED
 } texCoordGen_t;
 
 typedef enum {
