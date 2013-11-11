@@ -1251,7 +1251,7 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		{
 			tri[j] = LittleLong(indexes[i + j]);
 			
-			if(tri[j] < 0 || tri[j] >= numVerts)
+			if(tri[j] >= numVerts)
 			{
 				ri.Error(ERR_DROP, "Bad index in foliage surface");
 			}
