@@ -354,7 +354,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },
 	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE | CVAR_USERINFO_ALL, RANGE_BOOL },
 #ifdef MISSIONPACK
 	{ &cg_deferPlayers, "cg_deferPlayers", "0", CVAR_ARCHIVE, RANGE_BOOL },
 #else
