@@ -166,6 +166,8 @@ typedef struct bot_state_s
 	int lastframe_health;							//health value the last frame
 	int lasthitcount;								//number of hits last frame
 	int chatto;										//chat to all or team
+	int enemyteamscore;								//enemy team score
+	int ownteamscore;								//own team score
 	float walker;									//walker charactertic
 	float ltime;									//local bot time
 	float entergame_time;							//time the bot entered the game
