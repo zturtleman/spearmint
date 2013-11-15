@@ -2246,6 +2246,45 @@ int TeamPlayIsOn(void) {
 
 /*
 ==================
+BotCanCamp
+==================
+*/
+qboolean BotCanCamp(bot_state_t *bs) {
+	// if the bot's team does not lead
+	if (g_gametype.integer >= GT_TEAM && bs->ownteamscore < bs->enemyteamscore) return qfalse;
+	// if the enemy is located way higher than the bot
+	if (bs->inventory[ENEMY_HEIGHT] > 200) return qfalse;
+	// if the bot is very low on health
+	if (bs->inventory[INVENTORY_HEALTH] < 60) return qfalse;
+	// if the bot is low on health
+	if (bs->inventory[INVENTORY_HEALTH] < 80) {
+		// if the bot has insufficient armor
+		if (bs->inventory[INVENTORY_ARMOR] < 40) return qfalse;
+	}
+	// if the bot has the quad powerup
+	if (bs->inventory[INVENTORY_QUAD]) return qfalse;
+	// if the bot has the invisibility powerup
+	if (bs->inventory[INVENTORY_INVISIBILITY]) return qfalse;
+	// if the bot has the regen powerup
+	if (bs->inventory[INVENTORY_REGEN]) return qfalse;
+	// if the bot has the haste powerup
+	if (bs->inventory[INVENTORY_HASTE]) return qfalse;
+	// the bot should have at least have a good weapon with some ammo
+	if (!(bs->inventory[INVENTORY_ROCKETLAUNCHER] > 0 && bs->inventory[INVENTORY_ROCKETS] > 10)
+		&& !(bs->inventory[INVENTORY_RAILGUN] > 0 && bs->inventory[INVENTORY_SLUGS] > 10)
+		&& !(bs->inventory[INVENTORY_PLASMAGUN] > 0 && bs->inventory[INVENTORY_CELLS] > 80)
+#ifdef MISSIONPACK
+		&& !(bs->inventory[INVENTORY_CHAINGUN] > 0 && bs->inventory[INVENTORY_BELT] > 80)
+#endif
+		&& !(bs->inventory[INVENTORY_BFG10K] > 0 && bs->inventory[INVENTORY_BFGAMMO] > 10)) {
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+==================
 BotAggression
 ==================
 */
@@ -2567,13 +2606,7 @@ int BotWantsToCamp(bot_state_t *bs) {
 		return qfalse;
 	}
 	//if the bot isn't healthy enough
-	if (BotAggression(bs) < 50) return qfalse;
-	//the bot should have at least have the rocket launcher, the railgun or the bfg10k with some ammo
-	if ((bs->inventory[INVENTORY_ROCKETLAUNCHER] <= 0 || bs->inventory[INVENTORY_ROCKETS] < 10) &&
-		(bs->inventory[INVENTORY_RAILGUN] <= 0 || bs->inventory[INVENTORY_SLUGS] < 10) &&
-		(bs->inventory[INVENTORY_BFG10K] <= 0 || bs->inventory[INVENTORY_BFGAMMO] < 10)) {
-		return qfalse;
-	}
+	if (!BotCanCamp(bs)) return qfalse;
 	//find the closest camp spot
 	besttraveltime = 99999;
 	for (cs = BotGetNextCampSpotGoal(0, &goal); cs; cs = BotGetNextCampSpotGoal(cs, &goal)) {
