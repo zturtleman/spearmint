@@ -3141,7 +3141,7 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (curenemy < 0 && (healthdecrease || EntityIsShooting(&entinfo)))
 			f = 360;
 		else
-			f = 90 + 90 - (90 - (squaredist > Square(810) ? Square(810) : squaredist) / (810 * 9));
+			f = 160;
 		//check if the enemy is visible
 		vis = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, f, i);
 		if (vis <= 0) continue;
