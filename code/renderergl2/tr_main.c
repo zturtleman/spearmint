@@ -1067,7 +1067,7 @@ void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 	glMatrix[11] = 0;
 	glMatrix[15] = 1;
 
-	Matrix16Copy(glMatrix, or->transformMatrix);
+	Mat4Copy(glMatrix, or->transformMatrix);
 	myGlMultMatrix( glMatrix, viewParms->world.modelMatrix, or->modelMatrix );
 
 	// calculate the viewer origin in the model's space
@@ -2921,7 +2921,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 
 	// Create bounds for light projection using slice of view projection
 	{
-		matrix_t lightViewMatrix;
+		mat4_t lightViewMatrix;
 		vec4_t point, base, lightViewPoint;
 		float lx, ly;
 
@@ -2929,7 +2929,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 		point[3] = 1;
 		lightViewPoint[3] = 1;
 
-		Matrix16View(lightViewAxis, lightOrigin, lightViewMatrix);
+		Mat4View(lightViewAxis, lightOrigin, lightViewMatrix);
 
 		ClearBounds(lightviewBounds[0], lightviewBounds[1]);
 
@@ -2940,22 +2940,22 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 
 		VectorMA(base,   lx, fd->viewaxis[1], point);
 		VectorMA(point,  ly, fd->viewaxis[2], point);
-		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		Mat4Transform(lightViewMatrix, point, lightViewPoint);
 		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
 
 		VectorMA(base,  -lx, fd->viewaxis[1], point);
 		VectorMA(point,  ly, fd->viewaxis[2], point);
-		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		Mat4Transform(lightViewMatrix, point, lightViewPoint);
 		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
 
 		VectorMA(base,   lx, fd->viewaxis[1], point);
 		VectorMA(point, -ly, fd->viewaxis[2], point);
-		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		Mat4Transform(lightViewMatrix, point, lightViewPoint);
 		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
 
 		VectorMA(base,  -lx, fd->viewaxis[1], point);
 		VectorMA(point, -ly, fd->viewaxis[2], point);
-		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		Mat4Transform(lightViewMatrix, point, lightViewPoint);
 		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
 		
 
@@ -2966,22 +2966,22 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 
 		VectorMA(base,   lx, fd->viewaxis[1], point);
 		VectorMA(point,  ly, fd->viewaxis[2], point);
-		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		Mat4Transform(lightViewMatrix, point, lightViewPoint);
 		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
 
 		VectorMA(base,  -lx, fd->viewaxis[1], point);
 		VectorMA(point,  ly, fd->viewaxis[2], point);
-		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		Mat4Transform(lightViewMatrix, point, lightViewPoint);
 		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
 
 		VectorMA(base,   lx, fd->viewaxis[1], point);
 		VectorMA(point, -ly, fd->viewaxis[2], point);
-		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		Mat4Transform(lightViewMatrix, point, lightViewPoint);
 		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
 
 		VectorMA(base,  -lx, fd->viewaxis[1], point);
 		VectorMA(point, -ly, fd->viewaxis[2], point);
-		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		Mat4Transform(lightViewMatrix, point, lightViewPoint);
 		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
 
 		if (!glRefConfig.depthClamp)
@@ -3081,7 +3081,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 			R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
 		}
 
-		Matrix16Multiply(tr.viewParms.projectionMatrix, tr.viewParms.world.modelMatrix, tr.refdef.sunShadowMvp[level]);
+		Mat4Multiply(tr.viewParms.projectionMatrix, tr.viewParms.world.modelMatrix, tr.refdef.sunShadowMvp[level]);
 	}
 }
 
