@@ -195,6 +195,7 @@ struct gentity_s {
 	qboolean	botvalid;
 	float		update_time;
 	float		ltime;
+	vec3_t		visorigin;
 	vec3_t		lastvisorigin;
 	vec3_t		lastAngles;
 	vec3_t		lastMins;

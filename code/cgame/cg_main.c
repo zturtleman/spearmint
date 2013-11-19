@@ -354,7 +354,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },
 	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE | CVAR_USERINFO_ALL, RANGE_BOOL },
 #ifdef MISSIONPACK
 	{ &cg_deferPlayers, "cg_deferPlayers", "0", CVAR_ARCHIVE, RANGE_BOOL },
 #else
@@ -528,10 +528,6 @@ void CG_RegisterUserCvars( void ) {
 
 		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_model"), teamModelNames[i], userInfo[i] | CVAR_ARCHIVE );
 		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_headmodel"), teamHeadModelNames[i], userInfo[i] | CVAR_ARCHIVE );
-
-		// ZTM: TODO: Move this somewhere else so one can set teampref on CLI startup args?
-		// clear team preference if was previously set (only want it used for one game)
-		trap_Cvar_Set( Com_LocalClientCvarName(i, "teampref"), "" );
 	}
 }
 
@@ -2502,6 +2498,9 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	clientNums[3] = clientNum3;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
+		// clear team preference if was previously set (only want it used for one game)
+		trap_Cvar_Set( Com_LocalClientCvarName(i, "teampref"), "" );
+
 		if (clientNums[i] < 0 || clientNums[i] >= MAX_CLIENTS) {
 			cg.localClients[i].clientNum = -1;
 			continue;

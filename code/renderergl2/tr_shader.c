@@ -1546,6 +1546,10 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->bundle[0].tcGen = TCGEN_ENVIRONMENT_MAPPED;
 			}
+			else if ( !Q_stricmp( token, "cel" ) )
+			{
+				stage->bundle[0].tcGen = TCGEN_ENVIRONMENT_CELSHADE_MAPPED;
+			}
 			else if ( !Q_stricmp( token, "lightmap" ) )
 			{
 				stage->bundle[0].tcGen = TCGEN_LIGHTMAP;
@@ -2632,7 +2636,7 @@ static void ComputeVertexAttribs(void)
 #ifdef USE_VERT_TANGENT_SPACE
 			if ((pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK) && !(r_normalMapping->integer == 0 && r_specularMapping->integer == 0))
 			{
-				shader.vertexAttribs |= ATTR_BITANGENT | ATTR_TANGENT;
+				shader.vertexAttribs |= ATTR_TANGENT;
 			}
 #endif
 
@@ -2885,7 +2889,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		//ri.Printf(PRINT_ALL, ", deluxemap");
 		diffuse->bundle[TB_DELUXEMAP] = lightmap->bundle[0];
 		diffuse->bundle[TB_DELUXEMAP].image[0] = tr.deluxemaps[shader.lightmapIndex];
-		defs |= LIGHTDEF_USE_DELUXEMAP;
 	}
 
 	if (r_normalMapping->integer)
@@ -3013,6 +3016,7 @@ static qboolean CollapseStagesToGLSL(void)
 				case TCGEN_TEXTURE:
 				case TCGEN_LIGHTMAP:
 				case TCGEN_ENVIRONMENT_MAPPED:
+				case TCGEN_ENVIRONMENT_CELSHADE_MAPPED:
 				case TCGEN_VECTOR:
 					break;
 				default:
@@ -3103,6 +3107,7 @@ static qboolean CollapseStagesToGLSL(void)
 
 			tcgen = qfalse;
 			if (diffuse->bundle[0].tcGen == TCGEN_ENVIRONMENT_MAPPED
+			    || diffuse->bundle[0].tcGen == TCGEN_ENVIRONMENT_CELSHADE_MAPPED
 			    || diffuse->bundle[0].tcGen == TCGEN_LIGHTMAP
 			    || diffuse->bundle[0].tcGen == TCGEN_VECTOR)
 			{
@@ -3202,8 +3207,6 @@ static qboolean CollapseStagesToGLSL(void)
 			{
 				pStage->glslShaderGroup = tr.lightallShader;
 				pStage->glslShaderIndex = LIGHTDEF_USE_LIGHTMAP;
-				if (r_deluxeMapping->integer && tr.worldDeluxeMapping)
-					pStage->glslShaderIndex |= LIGHTDEF_USE_DELUXEMAP;
 				pStage->bundle[TB_LIGHTMAP] = pStage->bundle[TB_DIFFUSEMAP];
 				pStage->bundle[TB_DIFFUSEMAP].image[0] = tr.whiteImage;
 				pStage->bundle[TB_DIFFUSEMAP].isLightmap = qfalse;
@@ -3236,7 +3239,7 @@ static qboolean CollapseStagesToGLSL(void)
 		}
 	}
 
-	// insert default normal and specular textures if necessary
+	// insert default material info if needed
 	for (i = 0; i < MAX_SHADER_STAGES; i++)
 	{
 		shaderStage_t *pStage = &stages[i];
@@ -3250,14 +3253,8 @@ static qboolean CollapseStagesToGLSL(void)
 		if ((pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK) == 0)
 			continue;
 
-		if (!pStage->bundle[TB_NORMALMAP].image[0] && r_normalMapping->integer)
-		{
-			pStage->bundle[TB_NORMALMAP].image[0] = tr.greyImage;
-		}
-
 		if (!pStage->bundle[TB_SPECULARMAP].image[0] && r_specularMapping->integer)
 		{
-			pStage->bundle[TB_SPECULARMAP].image[0] = tr.whiteImage;
 			if (!pStage->materialInfo[0])
 				pStage->materialInfo[0] = r_baseSpecular->value;
 			if (!pStage->materialInfo[1])

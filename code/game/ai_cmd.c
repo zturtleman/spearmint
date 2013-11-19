@@ -1751,6 +1751,7 @@ void BotMatch_CTF(bot_state_t *bs, bot_match_t *match) {
 		if (match->subtype & ST_1FCTFGOTFLAG) {
 			trap_BotMatchVariable(match, NETNAME, netname, sizeof(netname));
 			bs->flagcarrier = ClientFromName(netname);
+			bs->lastflagcapture_time = FloatTime();
 		}
 	}
 #endif

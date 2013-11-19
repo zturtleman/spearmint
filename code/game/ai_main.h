@@ -166,6 +166,8 @@ typedef struct bot_state_s
 	int lastframe_health;							//health value the last frame
 	int lasthitcount;								//number of hits last frame
 	int chatto;										//chat to all or team
+	int enemyteamscore;								//enemy team score
+	int ownteamscore;								//own team score
 	float walker;									//walker charactertic
 	float ltime;									//local bot time
 	float entergame_time;							//time the bot entered the game
@@ -291,7 +293,6 @@ typedef struct aas_entityinfo_s
 	int		number;			// number of the entity
 	vec3_t	origin;			// origin of the entity
 	vec3_t	angles;			// angles of the model
-	vec3_t	old_origin;		// for lerping
 	vec3_t	lastvisorigin;	// last visible origin
 	vec3_t	mins;			// bounding box minimums
 	vec3_t	maxs;			// bounding box maximums

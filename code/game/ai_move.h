@@ -176,6 +176,8 @@ void BotAddAvoidSpot(int movestate, vec3_t origin, float radius, int type);
 void BotSetBrushModelTypes(void);
 //setup movement AI
 int BotSetupMoveAI(void);
+//setup AAS physics
+void BotInitPhysicsSettings(void);
 //shutdown movement AI
 void BotShutdownMoveAI(void);
 

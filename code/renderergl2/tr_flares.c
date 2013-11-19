@@ -100,6 +100,19 @@ int flareCoeff;
 
 /*
 ==================
+R_SetFlareCoeff
+==================
+*/
+static void R_SetFlareCoeff( void ) {
+
+	if(r_flareCoeff->value == 0.0f)
+		flareCoeff = atof(FLARE_STDCOEFF);
+	else
+		flareCoeff = r_flareCoeff->value;
+}
+
+/*
+==================
 R_ClearFlares
 ==================
 */
@@ -114,6 +127,8 @@ void R_ClearFlares( void ) {
 		r_flareStructs[i].next = r_inactiveFlares;
 		r_inactiveFlares = &r_flareStructs[i];
 	}
+
+	R_SetFlareCoeff();
 }
 
 
@@ -481,7 +496,7 @@ void RB_RenderFlares (void) {
 	flare_t		*f;
 	flare_t		**prev;
 	qboolean	draw;
-	matrix_t    oldmodelview, oldprojection, matrix;
+	mat4_t    oldmodelview, oldprojection, matrix;
 
 	if ( !r_flares->integer ) {
 		return;
@@ -489,11 +504,7 @@ void RB_RenderFlares (void) {
 
 	if(r_flareCoeff->modified)
 	{
-		if(r_flareCoeff->value == 0.0f)
-			flareCoeff = atof(FLARE_STDCOEFF);
-		else
-			flareCoeff = r_flareCoeff->value;
-			
+		R_SetFlareCoeff();
 		r_flareCoeff->modified = qfalse;
 	}
 
@@ -546,11 +557,11 @@ void RB_RenderFlares (void) {
 		qglDisable (GL_CLIP_PLANE0);
 	}
 
-	Matrix16Copy(glState.projection, oldprojection);
-	Matrix16Copy(glState.modelview, oldmodelview);
-	Matrix16Identity(matrix);
+	Mat4Copy(glState.projection, oldprojection);
+	Mat4Copy(glState.modelview, oldmodelview);
+	Mat4Identity(matrix);
 	GL_SetModelviewMatrix(matrix);
-	Matrix16Ortho( backEnd.viewParms.viewportX, backEnd.viewParms.viewportX + backEnd.viewParms.viewportWidth,
+	Mat4Ortho( backEnd.viewParms.viewportX, backEnd.viewParms.viewportX + backEnd.viewParms.viewportWidth,
 	               backEnd.viewParms.viewportY, backEnd.viewParms.viewportY + backEnd.viewParms.viewportHeight,
 	               -99999, 99999, matrix );
 	GL_SetProjectionMatrix(matrix);
