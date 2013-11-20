@@ -639,7 +639,7 @@ void R_LevelShot( screenshotType_e type, const char *ext ) {
 	if (height > glConfig.vidHeight)
 		height = glConfig.vidHeight;
 
-	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s%s", tr.world->baseName, ext);
+	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s_small%s", tr.world->baseName, ext);
 
 	source = RB_ReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, &offset, &spadlen);
 
@@ -716,10 +716,13 @@ void R_ScreenShotTGA_f (void) {
 	char	checkname[MAX_OSPATH];
 	static	int	lastNumber = -1;
 	qboolean	silent;
+	qboolean	levelshot;
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
 		R_LevelShot( ST_TGA, ".tga" );
-		return;
+		levelshot = qtrue;
+	} else {
+		levelshot = qfalse;
 	}
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
@@ -728,7 +731,9 @@ void R_ScreenShotTGA_f (void) {
 		silent = qfalse;
 	}
 
-	if ( ri.Cmd_Argc() == 2 && !silent ) {
+	if ( levelshot ) {
+		sprintf( checkname, "levelshots/%s.tga", tr.world->baseName );
+	} else if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.tga", ri.Cmd_Argv( 1 ) );
 	} else {
@@ -769,10 +774,13 @@ void R_ScreenShotJPEG_f (void) {
 	char		checkname[MAX_OSPATH];
 	static	int	lastNumber = -1;
 	qboolean	silent;
+	qboolean	levelshot;
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
 		R_LevelShot( ST_JPEG, ".jpg" );
-		return;
+		levelshot = qtrue;
+	} else {
+		levelshot = qfalse;
 	}
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
@@ -781,7 +789,9 @@ void R_ScreenShotJPEG_f (void) {
 		silent = qfalse;
 	}
 
-	if ( ri.Cmd_Argc() == 2 && !silent ) {
+	if ( levelshot ) {
+		sprintf( checkname, "levelshots/%s.jpg", tr.world->baseName );
+	} else if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.jpg", ri.Cmd_Argv( 1 ) );
 	} else {
@@ -822,10 +832,13 @@ void R_ScreenShotPNG_f (void) {
 	char	checkname[MAX_OSPATH];
 	static	int	lastNumber = -1;
 	qboolean	silent;
+	qboolean	levelshot;
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
 		R_LevelShot( ST_PNG, ".png" );
-		return;
+		levelshot = qtrue;
+	} else {
+		levelshot = qfalse;
 	}
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
@@ -834,7 +847,9 @@ void R_ScreenShotPNG_f (void) {
 		silent = qfalse;
 	}
 
-	if ( ri.Cmd_Argc() == 2 && !silent ) {
+	if ( levelshot ) {
+		sprintf( checkname, "levelshots/%s.png", tr.world->baseName );
+	} else if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.png", ri.Cmd_Argv( 1 ) );
 	} else {
