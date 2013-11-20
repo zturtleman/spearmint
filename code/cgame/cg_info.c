@@ -164,7 +164,7 @@ void CG_DrawInformation( void ) {
 	sysInfo = CG_ConfigString( CS_SYSTEMINFO );
 
 	s = Info_ValueForKey( info, "mapname" );
-	levelshot = trap_R_RegisterShaderNoMip( va( "levelshots/%s.tga", s ) );
+	levelshot = trap_R_RegisterShaderNoMip( va( "levelshots/%s", s ) );
 	if ( !levelshot ) {
 		levelshot = trap_R_RegisterShaderNoMip( "menu/art/unknownmap" );
 	}

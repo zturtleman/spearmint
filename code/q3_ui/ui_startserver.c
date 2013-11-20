@@ -210,7 +210,10 @@ static void StartServer_Update( void ) {
 		info = UI_GetArenaInfoByNumber( s_startserver.maplist[ top + i ]);
 		Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
 
-		Com_sprintf( picname[i], sizeof(picname[i]), "levelshots/%s", mapname );
+		Com_sprintf( picname[i], sizeof(picname[i]), "levelshots/%s_small", mapname );
+		if ( !trap_R_RegisterShaderNoMip( picname[i] ) ) {
+			Com_sprintf( picname[i], sizeof(picname[i]), "levelshots/%s", mapname );
+		}
 
 		s_startserver.mappics[i].generic.flags &= ~QMF_HIGHLIGHT;
 		s_startserver.mappics[i].generic.name   = picname[i];
@@ -617,8 +620,11 @@ void StartServer_Cache( void )
 			info = UI_GetArenaInfoByNumber( i );
 			Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
 	
-			Com_sprintf( picname, sizeof(picname), "levelshots/%s", mapname );
-			trap_R_RegisterShaderNoMip(picname);
+			Com_sprintf( picname, sizeof(picname), "levelshots/%s_small", mapname );
+			if ( !trap_R_RegisterShaderNoMip( picname ) ) {
+				Com_sprintf( picname, sizeof(picname), "levelshots/%s", mapname );
+				trap_R_RegisterShaderNoMip(picname);
+			}
 		}
 	}
 }
@@ -1291,7 +1297,11 @@ static void ServerOptions_SetMenuItems( void ) {
 	info = UI_GetArenaInfoByNumber( s_startserver.maplist[ s_startserver.currentmap ]);
 	Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
 	Q_strupr( mapname );
-	Com_sprintf( picname, 64, "levelshots/%s", mapname );
+
+	Com_sprintf( picname, sizeof(picname), "levelshots/%s_small", mapname );
+	if ( !trap_R_RegisterShaderNoMip( picname ) ) {
+		Com_sprintf( picname, sizeof(picname), "levelshots/%s", mapname );
+	}
 	s_serveroptions.mappic.generic.name = picname;
 
 	// set the map name
