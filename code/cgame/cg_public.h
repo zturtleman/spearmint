@@ -359,7 +359,9 @@ typedef enum {
 	CG_GETAPIVERSION,	// system reserved
 
 	CG_INIT,
-//	void	UI_Init( qboolean inGameLoad, int maxSplitView );
+//	void	UI_Init( qboolean inGameLoad, int maxSplitView, int playVideo );
+	// playVideo = 1 means first game to run and no start up arguments
+	// playVideo = 2 means switched to a new game/mod and not connecting to a server
 
 	CG_INGAME_INIT,
 //	void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 )

@@ -1742,7 +1742,10 @@ void CL_InitCGame( void ) {
 	inGameLoad = ( clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC );
 
 	// init for this gamestate
-	VM_Call( cgvm, CG_INIT, inGameLoad, CL_MAX_SPLITVIEW );
+	VM_Call( cgvm, CG_INIT, inGameLoad, CL_MAX_SPLITVIEW, com_playVideo );
+
+	// only play opening video once per-game load
+	com_playVideo = 0;
 
 	// feed the console text to cgame
 	Cmd_SaveCmdContext();

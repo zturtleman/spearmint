@@ -44,7 +44,7 @@ int redTeamNameModificationCount = -1;
 int blueTeamNameModificationCount = -1;
 #endif
 
-void CG_Init( qboolean inGameLoad, int maxSplitView );
+void CG_Init( qboolean inGameLoad, int maxSplitView, int playVideo );
 void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
 void CG_Shutdown( void );
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
@@ -66,7 +66,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_GETAPIVERSION:
 		return ( CG_API_MAJOR_VERSION << 16) | ( CG_API_MINOR_VERSION & 0xFFFF );
 	case CG_INIT:
-		CG_Init( arg0, arg1 );
+		CG_Init( arg0, arg1, arg2 );
 		return 0;
 	case CG_INGAME_INIT:
 		CG_Ingame_Init( arg0, arg1, arg2, arg3, arg4, arg5, arg6 );
@@ -240,6 +240,7 @@ vmCvar_t	cg_coronafardist;
 vmCvar_t	cg_coronas;
 vmCvar_t	cg_fovAspectAdjust;
 vmCvar_t	cg_fadeExplosions;
+vmCvar_t	cg_introPlayed;
 vmCvar_t	ui_stretch;
 
 #ifdef MISSIONPACK
@@ -421,6 +422,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_fadeExplosions, "cg_fadeExplosions", "0", CVAR_ARCHIVE, RANGE_BOOL },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
+	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &ui_stretch, "ui_stretch", "0", CVAR_ARCHIVE, RANGE_BOOL },
 };
 
@@ -2414,7 +2416,7 @@ CG_Init
 Called after every cgame load, such as main menu, level change, or subsystem restart
 =================
 */
-void CG_Init( qboolean inGameLoad, int maxSplitView ) {
+void CG_Init( qboolean inGameLoad, int maxSplitView, int playVideo ) {
 
 	// clear everything
 	memset( &cgs, 0, sizeof( cgs ) );
@@ -2467,6 +2469,15 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 	if ( cg_dedicated.integer ) {
 		trap_Key_SetCatcher( KEYCATCH_CONSOLE );
 		return;
+	}
+
+	// if the user didn't give any commands, run default action
+	if ( playVideo == 1 ) {
+		trap_Cmd_ExecuteText( EXEC_APPEND, "cinematic idlogo.RoQ\n" );
+		if( !cg_introPlayed.integer ) {
+			trap_Cvar_SetValue( "com_introPlayed", 1 );
+			trap_Cvar_Set( "nextmap", "cinematic intro.RoQ" );
+		}
 	}
 
 #ifdef MISSIONPACK_HUD
