@@ -767,7 +767,7 @@ void CG_Cinematic_f( void ) {
 	y = 0;
 	width = SCREEN_WIDTH;
 	height = SCREEN_HEIGHT;
-	CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
+	CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
 	CG_AdjustFrom640( &x, &y, &width, &height );
 
 	cg.cinematicHandle = trap_CIN_PlayCinematic( arg, x, y, width, height, bits );

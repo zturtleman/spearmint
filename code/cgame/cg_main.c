@@ -2629,6 +2629,7 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	CG_UpdateCvars();
 
 	if ( state == CA_CINEMATIC && cg.cinematicHandle >= 0 ) {
+		CG_ClearScreen();
 		trap_CIN_DrawCinematic( cg.cinematicHandle );
 
 		if ( trap_CIN_RunCinematic( cg.cinematicHandle ) == FMV_EOF ) {
