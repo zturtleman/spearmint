@@ -720,6 +720,59 @@ void CG_StopMusic_f( void ) {
 	trap_S_StopBackgroundTrack();
 }
 
+/*
+=================
+CG_StopCinematic_f
+=================
+*/
+void CG_StopCinematic_f( void ) {
+	if ( cg.cinematicHandle < 0 )
+		return;
+
+	trap_CIN_StopCinematic(cg.cinematicHandle);
+	cg.cinematicHandle = -1;
+	//trap_S_StopAllSounds();
+}
+
+/*
+=================
+CG_Cinematic_f
+=================
+*/
+void CG_Cinematic_f( void ) {
+	char	arg[MAX_QPATH];
+	char	s[6];
+	float	x, y, width, height;
+	int		bits = CIN_system;
+	uiClientState_t cls;
+
+	trap_GetClientState( &cls );
+
+	Com_DPrintf("CG_Cinematic_f\n");
+	CG_StopCinematic_f();
+
+	trap_Argv( 1, arg, sizeof( arg ) );
+	trap_Argv( 2, s, sizeof( s ) );
+
+	if (s[0] == '1' || Q_stricmp(arg,"demoend.roq")==0 || Q_stricmp(arg,"end.roq")==0) {
+		bits |= CIN_hold;
+	}
+	if (s[0] == '2') {
+		bits |= CIN_loop;
+	}
+
+	//trap_S_StopAllSounds();
+
+	x = 0;
+	y = 0;
+	width = SCREEN_WIDTH;
+	height = SCREEN_HEIGHT;
+	CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
+	CG_AdjustFrom640( &x, &y, &width, &height );
+
+	cg.cinematicHandle = trap_CIN_PlayCinematic( arg, x, y, width, height, bits );
+}
+
 static consoleCommand_t	cg_commands[] = {
 	{ "testgun", CG_TestGun_f, CMD_INGAME },
 	{ "testmodel", CG_TestModel_f, CMD_INGAME },
@@ -746,6 +799,8 @@ static consoleCommand_t	cg_commands[] = {
 	{ "play", CG_Play_f, 0 },
 	{ "music", CG_Music_f, 0 },
 	{ "stopmusic", CG_StopMusic_f, 0 },
+	{ "cinematic", CG_Cinematic_f, 0 },
+	{ "stopcinematic", CG_StopCinematic_f, 0 },
 	{ "messageMode", CG_MessageMode_f },
 	{ "messageMode2", CG_MessageMode2_f },
 	{ "messageMode3", CG_MessageMode3_f },

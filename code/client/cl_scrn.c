@@ -162,12 +162,8 @@ This will be called twice if rendering in stereo mode
 void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	re.BeginFrame( stereoFrame );
 
-	if ( clc.state == CA_CINEMATIC ) {
-		SCR_DrawCinematic();
-	} else {
-		// draw UI and/or game scene
-		CL_CGameRendering(stereoFrame);
-	}
+	// draw UI and/or game scene
+	CL_CGameRendering(stereoFrame);
 
 	// debug graph can be drawn on top of anything
 	if ( cl_debuggraph->integer || cl_timegraph->integer ) {

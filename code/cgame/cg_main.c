@@ -2424,6 +2424,7 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 	memset( cg_items, 0, sizeof(cg_items) );
 
 	cg.connected = inGameLoad;
+	cg.cinematicHandle = -1;
 
 	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 
@@ -2627,11 +2628,19 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	// update cvars
 	CG_UpdateCvars();
 
+	if ( state == CA_CINEMATIC && cg.cinematicHandle >= 0 ) {
+		trap_CIN_DrawCinematic( cg.cinematicHandle );
+
+		if ( trap_CIN_RunCinematic( cg.cinematicHandle ) == FMV_EOF ) {
+			CG_StopCinematic_f();
+		}
+	}
+
 	if ( !cg_dedicated.integer && state == CA_DISCONNECTED && !UI_IsFullscreen() ) {
 		UI_SetActiveMenu( UIMENU_MAIN );
 	}
 
-	if ( state >= CA_LOADING && !UI_IsFullscreen() ) {
+	if ( state >= CA_LOADING && state != CA_CINEMATIC && !UI_IsFullscreen() ) {
 #ifdef MISSIONPACK_HUD
 		Init_Display(&cgDC);
 #endif
@@ -2814,6 +2823,8 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		if ( down && !( keyCatcher & ( KEYCATCH_UI | KEYCATCH_CGAME | KEYCATCH_MESSAGE ) ) ) {
 			if ( state == CA_ACTIVE && trap_GetDemoState() != DS_PLAYBACK ) {
 				UI_SetActiveMenu( UIMENU_INGAME );
+			} else if ( state == CA_CINEMATIC ) {
+				CG_StopCinematic_f();
 			} else if ( state != CA_DISCONNECTED ) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
 			}

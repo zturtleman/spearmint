@@ -1590,7 +1590,6 @@ void CL_Disconnect( qboolean showMainMenu ) {
 		VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_NONE );
 	}
 
-	SCR_StopCinematic ();
 	S_ClearSoundBuffer();
 
 	// send a disconnect message to the server
@@ -1764,9 +1763,8 @@ CL_Disconnect_f
 ==================
 */
 void CL_Disconnect_f( void ) {
-	SCR_StopCinematic();
 	Cvar_Set("ui_singlePlayerActive", "0");
-	if ( clc.state != CA_DISCONNECTED && clc.state != CA_CINEMATIC ) {
+	if ( clc.state != CA_DISCONNECTED ) {
 		Com_Error (ERR_DISCONNECT, "Disconnected from server");
 	}
 }
@@ -3062,9 +3060,6 @@ void CL_Frame ( int msec ) {
 	CL_UpdateMumble();
 #endif
 
-	// advance local effects for next frame
-	SCR_RunCinematic();
-
 	cls.framecount++;
 }
 
@@ -3530,7 +3525,6 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("record", CL_Record_f);
 	Cmd_AddCommand ("demo", CL_PlayDemo_f);
 	Cmd_SetCommandCompletionFunc( "demo", CL_CompleteDemoName );
-	Cmd_AddCommand ("cinematic", CL_PlayCinematic_f);
 	Cmd_AddCommand ("stoprecord", CL_StopRecord_f);
 	Cmd_AddCommand ("connect", CL_Connect_f);
 	Cmd_AddCommand ("reconnect", CL_Reconnect_f);
