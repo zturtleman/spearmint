@@ -136,7 +136,6 @@ typedef struct {
 static cinematics_t		cin;
 static cin_cache		cinTable[MAX_VIDEO_HANDLES];
 static int				currentHandle = -1;
-static int				CL_handle = -1;
 
 extern int				s_soundtime;		// sample PAIRS
 
@@ -1289,7 +1288,6 @@ static void RoQShutdown( void ) {
 			Cbuf_ExecuteText( EXEC_APPEND, va("%s\n", s) );
 			Cvar_Set( "nextmap", "" );
 		}
-		CL_handle = -1;
 	}
 	cinTable[currentHandle].fileName[0] = 0;
 	currentHandle = -1;
@@ -1312,6 +1310,7 @@ e_status CIN_StopCinematic(int handle) {
 	}
 
 	if (cinTable[currentHandle].alterGameState) {
+		S_StopAllSounds(); // ZTM: FIXME: would it be better to add new trap for cgame?
 		if ( clc.state != CA_CINEMATIC ) {
 			return cinTable[currentHandle].status;
 		}
@@ -1472,11 +1471,15 @@ int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBi
 		cinTable[currentHandle].status = FMV_PLAY;
 		Com_DPrintf("trFMV::play(), playing %s\n", arg);
 
+		s_rawend[0] = s_soundtime;
+
 		if (cinTable[currentHandle].alterGameState) {
 			clc.state = CA_CINEMATIC;
-		}
 
-		s_rawend[0] = s_soundtime;
+			do {
+				CIN_RunCinematic(currentHandle);
+			} while (cinTable[currentHandle].buf == NULL && cinTable[currentHandle].status == FMV_PLAY);		// wait for first frame (load codebook and sound)
+		}
 
 		return currentHandle;
 	}
@@ -1596,64 +1599,6 @@ void CIN_DrawCinematic (int handle) {
 
 	re.DrawStretchRaw( x, y, w, h, cinTable[handle].drawX, cinTable[handle].drawY, buf, handle, cinTable[handle].dirty);
 	cinTable[handle].dirty = qfalse;
-}
-
-void CL_PlayCinematic_f(void) {
-	char	*arg, *s;
-	float	x, y, width, height;
-	int bits = CIN_system;
-
-	Com_DPrintf("CL_PlayCinematic_f\n");
-	if (clc.state == CA_CINEMATIC) {
-		SCR_StopCinematic();
-	}
-
-	arg = Cmd_Argv( 1 );
-	s = Cmd_Argv(2);
-
-	if ((s && s[0] == '1') || Q_stricmp(arg,"demoend.roq")==0 || Q_stricmp(arg,"end.roq")==0) {
-		bits |= CIN_hold;
-	}
-	if (s && s[0] == '2') {
-		bits |= CIN_loop;
-	}
-
-	S_StopAllSounds ();
-
-	x = 0;
-	y = 0;
-	width = SCREEN_WIDTH;
-	height = SCREEN_HEIGHT;
-	SCR_AdjustFrom640( &x, &y, &width, &height );
-
-	CL_handle = CIN_PlayCinematic( arg, x, y, width, height, bits );
-	if (CL_handle >= 0) {
-		do {
-			SCR_RunCinematic();
-		} while (cinTable[currentHandle].buf == NULL && cinTable[currentHandle].status == FMV_PLAY);		// wait for first frame (load codebook and sound)
-	}
-}
-
-
-void SCR_DrawCinematic (void) {
-	if (CL_handle >= 0 && CL_handle < MAX_VIDEO_HANDLES) {
-		CIN_DrawCinematic(CL_handle);
-	}
-}
-
-void SCR_RunCinematic (void)
-{
-	if (CL_handle >= 0 && CL_handle < MAX_VIDEO_HANDLES) {
-		CIN_RunCinematic(CL_handle);
-	}
-}
-
-void SCR_StopCinematic(void) {
-	if (CL_handle >= 0 && CL_handle < MAX_VIDEO_HANDLES) {
-		CIN_StopCinematic(CL_handle);
-		S_StopAllSounds ();
-		CL_handle = -1;
-	}
 }
 
 void CIN_UploadCinematic(int handle) {

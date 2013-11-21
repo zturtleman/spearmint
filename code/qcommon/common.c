@@ -88,7 +88,6 @@ cvar_t	*com_showtrace;
 cvar_t	*com_version;
 cvar_t	*com_singlePlayerActive;
 cvar_t	*com_buildScript;	// for automated data building scripts
-cvar_t	*com_introPlayed;
 cvar_t	*cl_paused;
 cvar_t	*sv_paused;
 cvar_t  *cl_packetdelay;
@@ -139,6 +138,8 @@ qboolean	com_fullyInitialized = qfalse;
 int			com_gameRestarting = 0;
 
 char	com_errorMessage[MAXPRINTMSG];
+
+int		com_playVideo = 0;
 
 void Com_WriteConfig_f( void );
 void CIN_CloseAllVideos( void );
@@ -2596,6 +2597,9 @@ void Com_GameRestart(qboolean disconnect)
 			// change was triggered by a connect to server because the
 			// new network settings might make the connection fail.
 			NET_Restart_f();
+
+			// switching from another game and not connection to a server
+			com_playVideo = 2;
 		}
 
 		if(com_gameRestarting & 2)
@@ -2832,8 +2836,6 @@ void Com_Init( char *commandLine ) {
 	com_busyWait = Cvar_Get("com_busyWait", "0", CVAR_ARCHIVE);
 	Cvar_Get("com_errorMessage", "", CVAR_ROM | CVAR_NORESTART);
 
-	com_introPlayed = Cvar_Get( "com_introplayed", "0", CVAR_ARCHIVE);
-
 	com_productName = Cvar_Get( "com_productName", PRODUCT_NAME, CVAR_ROM );
 
 	s = va("%s %s %s", Q3_VERSION, PLATFORM_STRING, __DATE__ );
@@ -2877,14 +2879,8 @@ void Com_Init( char *commandLine ) {
 
 	// add + commands from command line
 	if ( !Com_AddStartupCommands() ) {
-		// if the user didn't give any commands, run default action
-		if ( !com_dedicated->integer ) {
-			Cbuf_AddText ("cinematic idlogo.RoQ\n");
-			if( !com_introPlayed->integer ) {
-				Cvar_Set( com_introPlayed->name, "1" );
-				Cvar_Set( "nextmap", "cinematic intro.RoQ" );
-			}
-		}
+		// first fs_game, no startup arguments
+		com_playVideo = 1;
 	}
 
 	CL_StartHunkUsers( qfalse );

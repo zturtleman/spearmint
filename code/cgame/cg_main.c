@@ -44,7 +44,7 @@ int redTeamNameModificationCount = -1;
 int blueTeamNameModificationCount = -1;
 #endif
 
-void CG_Init( qboolean inGameLoad, int maxSplitView );
+void CG_Init( qboolean inGameLoad, int maxSplitView, int playVideo );
 void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
 void CG_Shutdown( void );
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
@@ -66,7 +66,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_GETAPIVERSION:
 		return ( CG_API_MAJOR_VERSION << 16) | ( CG_API_MINOR_VERSION & 0xFFFF );
 	case CG_INIT:
-		CG_Init( arg0, arg1 );
+		CG_Init( arg0, arg1, arg2 );
 		return 0;
 	case CG_INGAME_INIT:
 		CG_Ingame_Init( arg0, arg1, arg2, arg3, arg4, arg5, arg6 );
@@ -240,6 +240,7 @@ vmCvar_t	cg_coronafardist;
 vmCvar_t	cg_coronas;
 vmCvar_t	cg_fovAspectAdjust;
 vmCvar_t	cg_fadeExplosions;
+vmCvar_t	cg_introPlayed;
 vmCvar_t	ui_stretch;
 
 #ifdef MISSIONPACK
@@ -421,6 +422,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_fadeExplosions, "cg_fadeExplosions", "0", CVAR_ARCHIVE, RANGE_BOOL },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
+	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &ui_stretch, "ui_stretch", "0", CVAR_ARCHIVE, RANGE_BOOL },
 };
 
@@ -2414,7 +2416,7 @@ CG_Init
 Called after every cgame load, such as main menu, level change, or subsystem restart
 =================
 */
-void CG_Init( qboolean inGameLoad, int maxSplitView ) {
+void CG_Init( qboolean inGameLoad, int maxSplitView, int playVideo ) {
 
 	// clear everything
 	memset( &cgs, 0, sizeof( cgs ) );
@@ -2424,6 +2426,7 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 	memset( cg_items, 0, sizeof(cg_items) );
 
 	cg.connected = inGameLoad;
+	cg.cinematicHandle = -1;
 
 	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 
@@ -2466,6 +2469,15 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 	if ( cg_dedicated.integer ) {
 		trap_Key_SetCatcher( KEYCATCH_CONSOLE );
 		return;
+	}
+
+	// if the user didn't give any commands, run default action
+	if ( playVideo == 1 ) {
+		trap_Cmd_ExecuteText( EXEC_APPEND, "cinematic idlogo.RoQ\n" );
+		if( !cg_introPlayed.integer ) {
+			trap_Cvar_SetValue( "com_introPlayed", 1 );
+			trap_Cvar_Set( "nextmap", "cinematic intro.RoQ" );
+		}
 	}
 
 #ifdef MISSIONPACK_HUD
@@ -2627,11 +2639,20 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	// update cvars
 	CG_UpdateCvars();
 
+	if ( state == CA_CINEMATIC && cg.cinematicHandle >= 0 ) {
+		CG_ClearScreen();
+		trap_CIN_DrawCinematic( cg.cinematicHandle );
+
+		if ( trap_CIN_RunCinematic( cg.cinematicHandle ) == FMV_EOF ) {
+			CG_StopCinematic_f();
+		}
+	}
+
 	if ( !cg_dedicated.integer && state == CA_DISCONNECTED && !UI_IsFullscreen() ) {
 		UI_SetActiveMenu( UIMENU_MAIN );
 	}
 
-	if ( state >= CA_LOADING && !UI_IsFullscreen() ) {
+	if ( state >= CA_LOADING && state != CA_CINEMATIC && !UI_IsFullscreen() ) {
 #ifdef MISSIONPACK_HUD
 		Init_Display(&cgDC);
 #endif
@@ -2814,6 +2835,8 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		if ( down && !( keyCatcher & ( KEYCATCH_UI | KEYCATCH_CGAME | KEYCATCH_MESSAGE ) ) ) {
 			if ( state == CA_ACTIVE && trap_GetDemoState() != DS_PLAYBACK ) {
 				UI_SetActiveMenu( UIMENU_INGAME );
+			} else if ( state == CA_CINEMATIC ) {
+				CG_StopCinematic_f();
 			} else if ( state != CA_DISCONNECTED ) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
 			}
