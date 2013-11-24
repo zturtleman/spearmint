@@ -2727,10 +2727,6 @@ void FS_GetModDescription( const char *modDir, char *description, int descriptio
 		}
 
 		FS_FCloseFile(descHandle);
-	} else if ( !Q_stricmp( modDir, BASEQ3 ) ) {
-		Q_strncpyz( description, "Quake III Arena", descriptionLen );
-	} else if ( !Q_stricmp( modDir, BASETA ) ) {
-		Q_strncpyz( description, "Quake III: Team Arena", descriptionLen );
 	} else {
 		Q_strncpyz( description, modDir, descriptionLen );
 	}
@@ -3699,14 +3695,7 @@ static void FS_Startup( qboolean quiet )
 	Com_Memset( &com_gameConfig, 0, sizeof (com_gameConfig) );
 
 	if ( !FS_LoadGameConfig( &com_gameConfig ) ) {
-		Com_DPrintf("failed loading gameconfig.txt\n");
-
-		// Hack so Team Arena doesn't need gameconfig.txt
-		if ( Q_stricmp( fs_gamedirvar->string, BASETA ) == 0 ) {
-			Com_Printf("HACK: Adding %s to search path for Team Arena...\n", BASEQ3);
-			Q_strncpyz( com_gameConfig.gameDirs[0], BASEQ3, sizeof (com_gameConfig.gameDirs[0]) );
-			com_gameConfig.numGameDirs = 1;
-		}
+		Com_Printf("WARNING: Failed to load gameconfig.txt\n");
 	}
 
 	if ( com_gameConfig.numGameDirs > 0 ) {
