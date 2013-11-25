@@ -968,6 +968,7 @@ static void RB_SurfaceLightningBolt( void ) {
 	}
 }
 
+#if 0
 /*
 ** VectorArrayNormalize
 *
@@ -1023,12 +1024,14 @@ static void VectorArrayNormalize(vec4_t *normals, unsigned int count)
 #endif
 
 }
+#endif
 
 
 
 /*
 ** LerpMeshVertexes
 */
+#if 0
 #if idppc_altivec
 static void LerpMeshVertexes_altivec(md3Surface_t *surf, float backlerp)
 {
@@ -1157,6 +1160,7 @@ static void LerpMeshVertexes_altivec(md3Surface_t *surf, float backlerp)
     	VectorArrayNormalize((vec4_t *)tess.normal[tess.numVertexes], numVerts);
    	}
 }
+#endif
 #endif
 
 static void LerpMeshVertexes_scalar(mdvSurface_t *surf, float backlerp)
