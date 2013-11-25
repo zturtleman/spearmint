@@ -3279,7 +3279,6 @@ we are not interested in a download string format, we want something human-reada
 ================
 */
 qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
-	searchpath_t	*sp;
 	pakType_t		pakType;
 	char *origpos = neededpaks;
 	int i;
