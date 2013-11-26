@@ -312,25 +312,27 @@ EntityIsInvisible
 ==================
 */
 qboolean EntityIsInvisible(aas_entityinfo_t *entinfo) {
-	// a shooting player is always visible
-	if (EntityIsShooting(entinfo)) {
-		return qfalse;
-	}
-	// the flag is always visible
-	if (EntityCarriesFlag(entinfo)) {
-		return qfalse;
-	}
-#ifdef MISSIONPACK
-	// cubes are always visible
-	if (EntityCarriesCubes(entinfo)) {
-		return qfalse;
-	}
-	// cubes are always visible
-	if (EntityHasKamikaze(entinfo)) {
-		return qfalse;
-	}
-#endif
+	// if player is invisible
 	if (entinfo->powerups & (1 << PW_INVIS)) {
+		// a shooting player is always visible
+		if (EntityIsShooting(entinfo)) {
+			return qfalse;
+		}
+		// the flag is always visible
+		if (EntityCarriesFlag(entinfo)) {
+			return qfalse;
+		}
+#ifdef MISSIONPACK
+		// cubes are always visible
+		if (EntityCarriesCubes(entinfo)) {
+			return qfalse;
+		}
+		// kamikaze are always visible
+		if (EntityHasKamikaze(entinfo)) {
+			return qfalse;
+		}
+#endif
+		// invisible
 		return qtrue;
 	}
 	return qfalse;
