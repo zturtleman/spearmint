@@ -1046,8 +1046,7 @@ int SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 
 	if(!cl->download)
 	{
-		qboolean idPack = qfalse;
-		qboolean pakAllowDownload = qtrue;
+		pakType_t pakType = PAK_UNKNOWN;
 	
  		// Chop off filename extension.
 		Com_sprintf(pakbuf, sizeof(pakbuf), "%s", cl->downloadName);
@@ -1076,8 +1075,7 @@ int SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 						// now that we know the file is referenced,
 						// check whether it's legal to download it
 						// or if it is a default pak.
-						idPack = FS_idPak(pakbuf, BASETA, NUM_TA_PAKS) || FS_idPak(pakbuf, BASEQ3, NUM_ID_PAKS);
-						pakAllowDownload = FS_PakAllowDownload(pakbuf);
+						pakType = FS_ReferencedPakType(curindex);
 						break;
 					}
 				}
@@ -1089,7 +1087,7 @@ int SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 		// We open the file here
 		if ( !(sv_allowDownload->integer & DLF_ENABLE) ||
 			(sv_allowDownload->integer & DLF_NO_UDP) ||
-			idPack || !pakAllowDownload || unreferenced ||
+			pakType != PAK_FREE || unreferenced ||
 			( cl->downloadSize = FS_SV_FOpenFileRead( cl->downloadName, &cl->download ) ) < 0 ) {
 			// cannot auto-download file
 			if(unreferenced)
@@ -1097,15 +1095,15 @@ int SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 				Com_Printf("clientDownload: %d : \"%s\" is not referenced and cannot be downloaded.\n", (int) (cl - svs.clients), cl->downloadName);
 				Com_sprintf(errorMessage, sizeof(errorMessage), "File \"%s\" is not referenced and cannot be downloaded.", cl->downloadName);
 			}
-			else if (idPack) {
-				Com_Printf("clientDownload: %d : \"%s\" cannot download id pk3 files\n", (int) (cl - svs.clients), cl->downloadName);
-				Com_sprintf(errorMessage, sizeof(errorMessage), "Cannot autodownload id pk3 file \"%s\"", cl->downloadName);
+			else if ( pakType == PAK_COMMERCIAL ) {
+				Com_Printf("clientDownload: %d : \"%s\" cannot download commercial pk3 files\n", (int) (cl - svs.clients), cl->downloadName);
+				Com_sprintf(errorMessage, sizeof(errorMessage), "Cannot autodownload commercial pk3 file \"%s\"", cl->downloadName);
 			}
-			else if (!pakAllowDownload)
+			else if ( pakType == PAK_NO_DOWNLOAD )
 			{
 				// Don't auto download default pk3s
-				Com_Printf("clientDownload: %d : \"%s\" cannot download default pk3 files\n", (int) (cl - svs.clients), cl->downloadName);
-				Com_sprintf(errorMessage, sizeof(errorMessage), "Cannot autodownload default pk3 file \"%s\"", cl->downloadName);
+				Com_Printf("clientDownload: %d : \"%s\" cannot download a pk3 file\n", (int) (cl - svs.clients), cl->downloadName);
+				Com_sprintf(errorMessage, sizeof(errorMessage), "Cannot autodownload pk3 file \"%s\"", cl->downloadName);
 			}
 			else if ( !(sv_allowDownload->integer & DLF_ENABLE) ||
 				(sv_allowDownload->integer & DLF_NO_UDP) ) {

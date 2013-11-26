@@ -603,9 +603,13 @@ issues.
 ==============================================================
 */
 
-// number of id paks that will never be autodownloaded from baseq3/missionpack
-#define NUM_ID_PAKS		9
-#define NUM_TA_PAKS		4
+typedef enum {
+	PAK_UNKNOWN,
+	PAK_FREE,
+	PAK_NO_DOWNLOAD,
+	PAK_COMMERCIAL,
+	PAK_MAX
+} pakType_t;
 
 #define	MAX_FILE_HANDLES	64
 
@@ -732,8 +736,7 @@ void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames );
 // sole exception of .cfg files.
 
 qboolean FS_CheckDirTraversal(const char *checkdir);
-qboolean FS_idPak(char *pak, char *base, int numPaks);
-qboolean FS_PakAllowDownload( char *pak );
+pakType_t FS_ReferencedPakType( int refpak );
 qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring );
 
 qboolean FS_Rename( const char *from, const char *to );

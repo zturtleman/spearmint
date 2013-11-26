@@ -242,22 +242,6 @@ qboolean EntityCarriesFlag(aas_entityinfo_t *entinfo) {
 
 /*
 ==================
-EntityIsInvisible
-==================
-*/
-qboolean EntityIsInvisible(aas_entityinfo_t *entinfo) {
-	// the flag is always visible
-	if (EntityCarriesFlag(entinfo)) {
-		return qfalse;
-	}
-	if (entinfo->powerups & (1 << PW_INVIS)) {
-		return qtrue;
-	}
-	return qfalse;
-}
-
-/*
-==================
 EntityIsShooting
 ==================
 */
@@ -321,7 +305,39 @@ qboolean EntityCarriesCubes(aas_entityinfo_t *entinfo) {
 		return qtrue;
 	return qfalse;
 }
-
+#endif
+/*
+==================
+EntityIsInvisible
+==================
+*/
+qboolean EntityIsInvisible(aas_entityinfo_t *entinfo) {
+	// if player is invisible
+	if (entinfo->powerups & (1 << PW_INVIS)) {
+		// a shooting player is always visible
+		if (EntityIsShooting(entinfo)) {
+			return qfalse;
+		}
+		// the flag is always visible
+		if (EntityCarriesFlag(entinfo)) {
+			return qfalse;
+		}
+#ifdef MISSIONPACK
+		// cubes are always visible
+		if (EntityCarriesCubes(entinfo)) {
+			return qfalse;
+		}
+		// kamikaze are always visible
+		if (EntityHasKamikaze(entinfo)) {
+			return qfalse;
+		}
+#endif
+		// invisible
+		return qtrue;
+	}
+	return qfalse;
+}
+#ifdef MISSIONPACK
 /*
 ==================
 Bot1FCTFCarryingFlag
@@ -3031,7 +3047,7 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	int i, healthdecrease;
 	float f, alertness, easyfragger, vis;
 	float squaredist, cursquaredist;
-	aas_entityinfo_t entinfo, curenemyinfo;
+	aas_entityinfo_t entinfo, curenemyinfo, curbotinfo;
 	vec3_t dir, angles;
 
 	alertness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
@@ -3111,8 +3127,8 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (!entinfo.valid) continue;
 		//if the enemy isn't dead and the enemy isn't the bot self
 		if (EntityIsDead(&entinfo) || entinfo.number == bs->entitynum) continue;
-		//if the enemy is invisible and not shooting
-		if (EntityIsInvisible(&entinfo) && !EntityIsShooting(&entinfo)) {
+		//if the enemy is invisible
+		if (EntityIsInvisible(&entinfo)) {
 			continue;
 		}
 		//if not an easy fragger don't shoot at chatting players
@@ -3145,9 +3161,17 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		//check if the enemy is visible
 		vis = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, f, i);
 		if (vis <= 0) continue;
-		//if the enemy is quite far away, not shooting and the bot is not damaged
-		if (curenemy < 0 && squaredist > Square(100) && !healthdecrease && !EntityIsShooting(&entinfo))
-		{
+		// if the enemy is quite far away and doesn't have a flag or cubes and the bot is not damaged try to ignore this enemy
+		if (curenemy < 0 && squaredist > Square(100) && !healthdecrease && !EntityCarriesFlag(&entinfo)
+#ifdef MISSIONPACK
+			&& !EntityCarriesCubes(&entinfo)
+#endif
+			) {
+			BotEntityInfo(bs->client, &curbotinfo);
+			// if the bot is invisible and want to get the flag, ignore enemies
+			if (EntityIsInvisible(&curbotinfo) && bs->ltgtype == LTG_GETFLAG) {
+				continue;
+			}
 			//check if we can avoid this enemy
 			VectorSubtract(bs->origin, entinfo.origin, dir);
 			vectoangles(dir, angles);

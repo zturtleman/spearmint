@@ -187,13 +187,11 @@ gameConfig_t com_gameConfig;
 
 #define MAX_PAKSUMS 64
 
-#define PAK_NODOWNLOAD 1
-
 typedef struct {
 	char gamename[MAX_QPATH];
 	char pakname[MAX_QPATH];
 	unsigned checksum;
-	int flags;
+	qboolean nodownload;
 } purePak_t;
 
 purePak_t com_purePaks[MAX_PAKSUMS];
@@ -230,6 +228,7 @@ typedef struct {
 	int				checksum;					// checksum of the zip
 	int				numfiles;					// number of files in pk3
 	qboolean			referenced;					// is pk3 referenced?
+	pakType_t		pakType;						// is it a commercial pak?
 	int				hashSize;					// hash table size (power of 2)
 	fileInPack_t*	*hashTable;					// hash table
 	fileInPack_t*	buildBuffer;				// buffer with the filenames etc.
@@ -2728,10 +2727,6 @@ void FS_GetModDescription( const char *modDir, char *description, int descriptio
 		}
 
 		FS_FCloseFile(descHandle);
-	} else if ( !Q_stricmp( modDir, BASEQ3 ) ) {
-		Q_strncpyz( description, "Quake III Arena", descriptionLen );
-	} else if ( !Q_stricmp( modDir, BASETA ) ) {
-		Q_strncpyz( description, "Quake III: Team Arena", descriptionLen );
 	} else {
 		Q_strncpyz( description, modDir, descriptionLen );
 	}
@@ -3225,38 +3220,19 @@ void FS_AddGameDirectory( const char *path, const char *dir ) {
 
 /*
 ================
-FS_idPak
+FS_ReferencedPakType
 ================
 */
-qboolean FS_idPak(char *pak, char *base, int numPaks)
-{
-	int i;
+pakType_t FS_ReferencedPakType( int refpak ) {
+	searchpath_t *sp;
 
-	for (i = 0; i < NUM_ID_PAKS; i++) {
-		if ( !FS_FilenameCompare(pak, va("%s/pak%d", base, i)) ) {
-			break;
+	for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
+		if ( sp->pack && sp->pack->checksum == fs_serverReferencedPaks[refpak] ) {
+			return sp->pack->pakType;
 		}
 	}
-	if (i < numPaks) {
-		return qtrue;
-	}
-	return qfalse;
-}
 
-/*
-================
-FS_PakAllowDownload
-================
-*/
-qboolean FS_PakAllowDownload( char *pak ) {
-	int i;
-
-	for (i = 0; i < fs_numPaksums; i++) {
-		if ( ( com_purePaks[i].flags & PAK_NODOWNLOAD ) && !FS_FilenameCompare(pak, va("%s/%s", com_purePaks[i].gamename, com_purePaks[i].pakname)) ) {
-			return qfalse;
-		}
-	}
-	return qtrue;
+	return PAK_UNKNOWN;
 }
 
 /*
@@ -3303,8 +3279,7 @@ we are not interested in a download string format, we want something human-reada
 ================
 */
 qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
-	searchpath_t	*sp;
-	qboolean havepak;
+	pakType_t		pakType;
 	char *origpos = neededpaks;
 	int i;
 
@@ -3316,12 +3291,10 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 	for ( i = 0 ; i < fs_numServerReferencedPaks ; i++ )
 	{
 		// Ok, see if we have this pak file
-		havepak = qfalse;
+		pakType = FS_ReferencedPakType( i );
 
 		// never autodownload any of the id or paks which don't allow it
-		if ( FS_idPak(fs_serverReferencedPakNames[i], BASEQ3, NUM_ID_PAKS)
-			|| FS_idPak(fs_serverReferencedPakNames[i], BASETA, NUM_TA_PAKS)
-			|| !FS_PakAllowDownload(fs_serverReferencedPakNames[i]) )
+		if ( pakType == PAK_COMMERCIAL || pakType == PAK_NO_DOWNLOAD )
 		{
 			continue;
 		}
@@ -3333,14 +3306,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 			continue;
 		}
 
-		for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
-			if ( sp->pack && sp->pack->checksum == fs_serverReferencedPaks[i] ) {
-				havepak = qtrue; // This is it!
-				break;
-			}
-		}
-
-		if ( !havepak && fs_serverReferencedPakNames[i] && *fs_serverReferencedPakNames[i] ) { 
+		if ( pakType == PAK_UNKNOWN && fs_serverReferencedPakNames[i] && *fs_serverReferencedPakNames[i] ) { 
 			// Don't got it
 
 			if (dlstring)
@@ -3728,14 +3694,7 @@ static void FS_Startup( qboolean quiet )
 	Com_Memset( &com_gameConfig, 0, sizeof (com_gameConfig) );
 
 	if ( !FS_LoadGameConfig( &com_gameConfig ) ) {
-		Com_DPrintf("failed loading gameconfig.txt\n");
-
-		// Hack so Team Arena doesn't need gameconfig.txt
-		if ( Q_stricmp( fs_gamedirvar->string, BASETA ) == 0 ) {
-			Com_Printf("HACK: Adding %s to search path for Team Arena...\n", BASEQ3);
-			Q_strncpyz( com_gameConfig.gameDirs[0], BASEQ3, sizeof (com_gameConfig.gameDirs[0]) );
-			com_gameConfig.numGameDirs = 1;
-		}
+		Com_Printf("WARNING: Failed to load gameconfig.txt\n");
 	}
 
 	if ( com_gameConfig.numGameDirs > 0 ) {
@@ -3784,6 +3743,84 @@ static void FS_Startup( qboolean quiet )
 
 		Com_Printf( "----------------------\n" );
 		Com_Printf( "%d files in pk3 files\n", fs_packFiles );
+	}
+}
+
+struct {
+	unsigned int checksum;
+	char *gamename;
+	char *basename;
+} commercialPaks[] = {
+	// quake3
+	{ 1042450890u, "demoq3", "pak0" },
+	{ 4204185745u, "baseq3", "pak0" },
+	{ 4193093146u, "baseq3", "pak1" },
+	{ 2353701282u, "baseq3", "pak2" },
+	{ 3321918099u, "baseq3", "pak3" },
+	{ 2809125413u, "baseq3", "pak4" },
+	{ 1185311901u, "baseq3", "pak5" },
+	{ 750524939u,  "baseq3", "pak6" },
+	{ 2842227859u, "baseq3", "pak7" },
+	{ 3662040954u, "baseq3", "pak8" },
+
+	// team arena
+	{ 1185930068u, "tademo", "pak0" },
+	{ 946490770u, "missionpack", "pak0" },
+	{ 1414087181u,"missionpack", "pak1" },
+	{ 409244605u, "missionpack", "pak2" },
+	{ 648653547u, "missionpack", "pak3" },
+
+	// rtcw
+	{ 1731729369u, "demomain", "pak0" },
+	{ 1787286276u, "main", "pak0" },
+	{ 825182904u, "main", "mp_pak0" },
+	{ 1872082070u, "main", "mp_pak1" },
+	{ 220365352u, "main", "mp_pak2" },
+	{ 1130325916u, "main", "mp_pak3" },
+	{ 3272074268u, "main", "mp_pak4" },
+	{ 3805724433u, "main", "mp_pak5" },
+	{ 2334312393u, "main", "sp_pak1" },
+	{ 1078227215u, "main", "sp_pak2" },
+	{ 2334312393u, "main", "sp_pak3" },
+	{ 1078227215u, "main", "sp_pak4" },
+
+	// et
+	{ 1627565872u, "etmain", "pak0" },
+	{ 1587932567u,"etmain", "pak1" },
+	{ 3477493040u, "etmain", "pak2" },
+};
+
+int numCommercialPaks = ARRAY_LEN( commercialPaks );
+
+/*
+===================
+FS_DetectCommercialPaks
+
+Do not remove!
+===================
+*/
+void FS_DetectCommercialPaks( void ) {
+	searchpath_t *path;
+	int i;
+
+	for( path = fs_searchpaths; path; path = path->next ) {
+		if ( !path->pack )
+			continue;
+
+		for ( i = 0; i < numCommercialPaks; ++i ) {
+			if ( path->pack->checksum == commercialPaks[i].checksum
+				&& Q_stricmp( path->pack->pakGamename, commercialPaks[i].gamename ) == 0
+				&& Q_stricmp( path->pack->pakBasename, commercialPaks[i].basename ) == 0 ) {
+				//Com_DPrintf("Found commercial pak: %s (original %s%c%s)\n", path->pack->pakFilename,
+				//		   commercialPaks[i].gamename, PATH_SEP, commercialPaks[i].basename );
+				path->pack->pakType = PAK_COMMERCIAL;
+				break;
+			}
+		}
+
+		if ( i != numCommercialPaks ) {
+			path->pack->pakType = PAK_FREE;
+		}
 	}
 }
 
@@ -3886,13 +3923,13 @@ static qboolean FS_LoadPakChecksums( const char *gamedir ) {
 			com_purePaks[fs_numPaksums].checksum = (unsigned)atoi(token);
 
 			// read optional keywords
-			com_purePaks[fs_numPaksums].flags = 0;
+			com_purePaks[fs_numPaksums].nodownload = qfalse;
 			while ( 1 ) {
 				token = COM_ParseExt( &text_p, qfalse );
 				if ( !*token )
 					break;
 				if ( Q_stricmp( token, "nodownload" ) == 0 ) {
-					com_purePaks[fs_numPaksums].flags |= PAK_NODOWNLOAD;
+					com_purePaks[fs_numPaksums].nodownload = qtrue;
 				} else {
 					Com_Printf( "Unknown pak keyword '%s' in %s\n", token, path );
 				}
@@ -3984,12 +4021,16 @@ static void FS_CheckPaks( qboolean quiet )
 
 	badGames[0] = '\0';
 
+	FS_DetectCommercialPaks();
 	FS_ReorderPaksumsPaks();
 
 	for (pak = 0; pak < fs_numPaksums; pak++) {
 		for( path = fs_searchpaths; path; path = path->next ) {
 			if ( path->pack && Q_stricmp( path->pack->pakGamename, com_purePaks[pak].gamename ) == 0
 				&& Q_stricmp( path->pack->pakBasename, com_purePaks[pak].pakname ) == 0 ) {
+				if ( path->pack->pakType != PAK_COMMERCIAL && com_purePaks[pak].nodownload ) {
+					path->pack->pakType = PAK_NO_DOWNLOAD;
+				}
 				break;
 			}
 		}
