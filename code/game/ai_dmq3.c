@@ -3169,7 +3169,7 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			) {
 			BotEntityInfo(bs->client, &curbotinfo);
 			// if the bot is invisible and want to get the flag, ignore enemies
-			if (EntityIsInvisible(curbotinfo) && bs->ltgtype == LTG_GETFLAG) {
+			if (EntityIsInvisible(&curbotinfo) && bs->ltgtype == LTG_GETFLAG) {
 				continue;
 			}
 			//check if we can avoid this enemy
