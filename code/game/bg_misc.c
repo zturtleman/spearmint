@@ -955,7 +955,7 @@ vmNetField_t	bg_entityStateFields[] =
 { NETF(pos.trType), 8 },
 { NETF(eFlags), 32 },
 { NETF(otherEntityNum), GENTITYNUM_BITS },
-{ NETF(weapon), 8 },
+{ NETF(weapon), MAX( 8, WEAPONNUM_BITS ) }, // because 'weapon' is used for things besides weaponnum it must be minimum of 8 bits
 { NETF(clientNum), 8 },
 { NETF(angles[1]), 0 },
 { NETF(pos.trDuration), 32 },
