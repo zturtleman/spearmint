@@ -812,7 +812,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	// add the legs
 	//
 	legs.hModel = pi->legsModel;
-	legs.customSkin = pi->legsSkin;
+	legs.customSkin = CG_AddSkinToFrame( &pi->modelSkin );
 
 	VectorCopy( origin, legs.origin );
 
@@ -834,7 +834,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 		return;
 	}
 
-	torso.customSkin = pi->torsoSkin;
+	torso.customSkin = legs.customSkin;
 
 	VectorCopy( origin, torso.lightingOrigin );
 
@@ -851,7 +851,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	if (!head.hModel) {
 		return;
 	}
-	head.customSkin = pi->headSkin;
+	head.customSkin = legs.customSkin;
 
 	VectorCopy( origin, head.lightingOrigin );
 
@@ -1031,26 +1031,29 @@ UI_RegisterClientSkin
 */
 static qboolean	UI_RegisterClientSkin( playerInfo_t *pi, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName , const char *teamName) {
 	char		filename[MAX_QPATH];
+	qboolean	legsSkin, torsoSkin, headSkin;
+
+	legsSkin = torsoSkin = headSkin = qfalse;
 
 	if (teamName && *teamName) {
 		Com_sprintf( filename, sizeof( filename ), "models/players/%s/%s/lower_%s.skin", modelName, teamName, skinName );
 	} else {
 		Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower_%s.skin", modelName, skinName );
 	}
-	pi->legsSkin = trap_R_RegisterSkin( filename );
+	legsSkin = CG_RegisterSkin( filename, &pi->modelSkin, qfalse );
 
 	if (teamName && *teamName) {
 		Com_sprintf( filename, sizeof( filename ), "models/players/%s/%s/upper_%s.skin", modelName, teamName, skinName );
 	} else {
 		Com_sprintf( filename, sizeof( filename ), "models/players/%s/upper_%s.skin", modelName, skinName );
 	}
-	pi->torsoSkin = trap_R_RegisterSkin( filename );
+	torsoSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
 
 	if ( UI_FindClientHeadFile( filename, sizeof(filename), teamName, headModelName, headSkinName, "head", "skin" ) ) {
-		pi->headSkin = trap_R_RegisterSkin( filename );
+		headSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
 	}
 
-	if ( !pi->legsSkin || !pi->torsoSkin || !pi->headSkin ) {
+	if ( !legsSkin || !torsoSkin || !headSkin ) {
 		return qfalse;
 	}
 

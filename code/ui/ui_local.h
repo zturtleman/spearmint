@@ -185,15 +185,14 @@ void UI_UpdateCvars(void);
 typedef struct {
 	// model info
 	qhandle_t		legsModel;
-	qhandle_t		legsSkin;
 	lerpFrame_t		legs;
 
 	qhandle_t		torsoModel;
-	qhandle_t		torsoSkin;
 	lerpFrame_t		torso;
 
 	qhandle_t		headModel;
-	qhandle_t		headSkin;
+
+	cgSkin_t		modelSkin;
 
 	animation_t		animations[MAX_TOTALANIMATIONS];
 

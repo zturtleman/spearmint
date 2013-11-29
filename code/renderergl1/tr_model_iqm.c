@@ -828,7 +828,7 @@ Add all surfaces of this model
 void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	iqmData_t		*data;
 	srfIQModel_t		*surface;
-	int			i;
+	int			i, j;
 	qboolean		personalModel;
 	int			cull;
 	int			fogNum;
@@ -888,18 +888,27 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	for ( i = 0 ; i < data->num_surfaces ; i++ ) {
 		if(ent->e.customShader)
 			shader = R_GetShaderByHandle( ent->e.customShader );
-		else if(ent->e.customSkin > 0 && ent->e.customSkin < tr.numSkins)
+		else if(ent->e.customSkin > 0 && ent->e.customSkin <= tr.refdef.numSkins)
 		{
-			skin = R_GetSkinByHandle(ent->e.customSkin);
+			skin = &tr.refdef.skins[ent->e.customSkin - 1];
 			shader = tr.defaultShader;
 
-			for(skinSurf = skin->surfaces; skinSurf; skinSurf = skinSurf->next)
+			for(j = 0 ; j < skin->numSurfaces ; j++)
 			{
+				skinSurf = &tr.skinSurfaces[ skin->surfaces[ j ] ];
+
 				if (!strcmp(skinSurf->name, surface->name))
 				{
 					shader = skinSurf->shader;
 					break;
 				}
+			}
+
+			// If skin specified a shader/image that doesn't exist, it uses default shader.
+			// HACK: For compatibility with quake3 skins, don't render missing shaders listed in skins.
+			if ( shader == tr.defaultShader && j != skin->numSurfaces ) {
+				surface++;
+				continue;
 			}
 		} else {
 			shader = surface->shader;

@@ -1037,11 +1037,11 @@ static void CG_TeamBase( centity_t *cent ) {
 
 		if ( cent->currentState.modelindex == TEAM_RED ) {
 			model.hModel = cgs.media.harvesterModel;
-			model.customSkin = cgs.media.harvesterRedSkin;
+			model.customSkin = CG_AddSkinToFrame( &cgs.media.harvesterRedSkin );
 		}
 		else if ( cent->currentState.modelindex == TEAM_BLUE ) {
 			model.hModel = cgs.media.harvesterModel;
-			model.customSkin = cgs.media.harvesterBlueSkin;
+			model.customSkin = CG_AddSkinToFrame( &cgs.media.harvesterBlueSkin );
 		}
 		else {
 			model.hModel = cgs.media.harvesterNeutralModel;

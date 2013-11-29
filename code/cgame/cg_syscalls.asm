@@ -116,7 +116,7 @@ equ trap_CM_TransformedBiSphereTrace	-214
 
 
 equ	trap_R_RegisterModel				-301
-equ	trap_R_RegisterSkin					-302
+equ	trap_R_RegisterShaderEx				-302
 equ	trap_R_RegisterShader				-303
 equ	trap_R_RegisterShaderNoMip			-304
 equ trap_R_RegisterFont					-305
@@ -138,6 +138,8 @@ equ trap_R_DrawStretchPicGradient		-320
 equ trap_R_Add2dPolys					-321
 equ	trap_R_AddPolysToScene				-322
 equ	trap_R_AddPolyBufferToScene			-323
+equ	trap_R_AllocSkinSurface				-324
+equ	trap_R_AddSkinToFrame				-325
 
 equ	trap_R_LoadWorldMap					-351
 equ trap_GetEntityToken					-352

@@ -807,7 +807,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	// add the legs
 	//
 	legs.hModel = pi->legsModel;
-	legs.customSkin = pi->legsSkin;
+	legs.customSkin = CG_AddSkinToFrame( &pi->modelSkin );
 
 	VectorCopy( origin, legs.origin );
 
@@ -829,7 +829,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 		return;
 	}
 
-	torso.customSkin = pi->torsoSkin;
+	torso.customSkin = legs.customSkin;
 
 	VectorCopy( origin, torso.lightingOrigin );
 
@@ -846,7 +846,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	if (!head.hModel) {
 		return;
 	}
-	head.customSkin = pi->headSkin;
+	head.customSkin = legs.customSkin;
 
 	VectorCopy( origin, head.lightingOrigin );
 
@@ -960,20 +960,20 @@ UI_RegisterClientSkin
 */
 static qboolean UI_RegisterClientSkin( playerInfo_t *pi, const char *modelName, const char *skinName ) {
 	char		filename[MAX_QPATH];
+	qboolean	legsSkin, torsoSkin, headSkin;
 
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower_%s.skin", modelName, skinName );
-	pi->legsSkin = trap_R_RegisterSkin( filename );
+	legsSkin = CG_RegisterSkin( filename, &pi->modelSkin, qfalse );
 
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/upper_%s.skin", modelName, skinName );
-	pi->torsoSkin = trap_R_RegisterSkin( filename );
+	torsoSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
 
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/head_%s.skin", modelName, skinName );
-	pi->headSkin = trap_R_RegisterSkin( filename );
+	headSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
 
-	if ( !pi->legsSkin || !pi->torsoSkin || !pi->headSkin ) {
+	if ( !legsSkin || !torsoSkin || !headSkin ) {
 		return qfalse;
 	}
-
 	return qtrue;
 }
 

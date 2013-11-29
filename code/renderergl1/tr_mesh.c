@@ -272,7 +272,7 @@ R_AddMD3Surfaces
 =================
 */
 void R_AddMD3Surfaces( trRefEntity_t *ent ) {
-	int				i;
+	int				i, j;
 	md3Header_t		*header = NULL;
 	md3Surface_t	*surface = NULL;
 	md3Shader_t		*md3Shader = NULL;
@@ -343,26 +343,28 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 
 		if ( ent->e.customShader ) {
 			shader = R_GetShaderByHandle( ent->e.customShader );
-		} else if ( ent->e.customSkin > 0 && ent->e.customSkin < tr.numSkins ) {
+		} else if ( ent->e.customSkin > 0 && ent->e.customSkin <= tr.refdef.numSkins ) {
 			skin_t *skin;
 			skinSurface_t *skinSurf;
 
-			skin = R_GetSkinByHandle( ent->e.customSkin );
+			skin = &tr.refdef.skins[ent->e.customSkin - 1];
 
-			// match the surface name to something in the skin file
+			// match the surface name to something in the skin
 			shader = tr.defaultShader;
-			for ( skinSurf = skin->surfaces ; skinSurf ; skinSurf = skinSurf->next ) {
+			for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
+				skinSurf = &tr.skinSurfaces[ skin->surfaces[ j ] ];
 				// the names have both been lowercased
 				if ( !strcmp( skinSurf->name, surface->name ) ) {
 					shader = skinSurf->shader;
 					break;
 				}
 			}
-			if (shader == tr.defaultShader) {
-				ri.Printf( PRINT_DEVELOPER, "WARNING: no shader for surface %s in skin %s\n", surface->name, skin->name);
-			}
-			else if (shader->defaultShader) {
-				ri.Printf( PRINT_DEVELOPER, "WARNING: shader %s in skin %s not found\n", shader->name, skin->name);
+
+			// If skin specified a shader/image that doesn't exist, it uses default shader.
+			// HACK: For compatibility with quake3 skins, don't render missing shaders listed in skins.
+			if ( shader == tr.defaultShader && j != skin->numSurfaces ) {
+				surface = (md3Surface_t *)( (byte *)surface + surface->ofsEnd );
+				continue;
 			}
 		} else if ( surface->numShaders <= 0 ) {
 			shader = tr.defaultShader;

@@ -323,8 +323,8 @@ qhandle_t trap_R_RegisterModel( const char *name ) {
 	return syscall( CG_R_REGISTERMODEL, name );
 }
 
-qhandle_t trap_R_RegisterSkin( const char *name ) {
-	return syscall( CG_R_REGISTERSKIN, name );
+qhandle_t trap_R_RegisterShaderEx( const char *name, int lightmapIndex, qboolean mipRawImage ) {
+	return syscall( CG_R_REGISTERSHADEREX, name, lightmapIndex, mipRawImage );
 }
 
 qhandle_t trap_R_RegisterShader( const char *name ) {
@@ -337,6 +337,14 @@ qhandle_t trap_R_RegisterShaderNoMip( const char *name ) {
 
 void trap_R_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
 	syscall(CG_R_REGISTERFONT, fontName, pointSize, font );
+}
+
+qhandle_t	trap_R_AllocSkinSurface( const char *surface, qhandle_t hShader ) {
+	return syscall( CG_R_ALLOCSKINSURFACE, surface, hShader );
+}
+
+qhandle_t	trap_R_AddSkinToFrame( int numSurfaces, const qhandle_t *surfaces ) {
+	return syscall( CG_R_ADDSKINTOFRAME, numSurfaces, surfaces );
 }
 
 void	trap_R_ClearScene( void ) {
