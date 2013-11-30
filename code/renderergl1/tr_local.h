@@ -519,7 +519,6 @@ typedef enum {
 	SF_POLY,
 	SF_POLYBUFFER,
 	SF_MD3,
-	SF_MD4,
 	SF_MDR,
 	SF_IQM,
 	SF_FLARE,
@@ -839,7 +838,6 @@ typedef enum {
 	MOD_BAD,
 	MOD_BRUSH,
 	MOD_MESH,
-	MOD_MD4,
 	MOD_MDR,
 	MOD_IQM
 } modtype_t;
@@ -852,7 +850,7 @@ typedef struct model_s {
 	int			dataSize;	// just for listing purposes
 	bmodel_t	*bmodel;		// only if type == MOD_BRUSH
 	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_MESH
-	void	*modelData;			// only if type == (MOD_MD4 | MOD_MDR | MOD_IQM)
+	void	*modelData;			// only if type == (MOD_MDR | MOD_IQM)
 
 	int			 numLods;
 } model_t;
@@ -1537,9 +1535,8 @@ ANIMATED MODELS
 
 // void R_MakeAnimModel( model_t *model );      haven't seen this one really, so not needed I guess.
 void R_AddAnimSurfaces( trRefEntity_t *ent );
-void RB_SurfaceAnim( md4Surface_t *surfType );
 void R_MDRAddAnimSurfaces( trRefEntity_t *ent );
-void RB_MDRSurfaceAnim( md4Surface_t *surface );
+void RB_MDRSurfaceAnim( mdrSurface_t *surface );
 void MC_UnCompress(float mat[3][4],const unsigned char * comp);
 qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name );
 void R_AddIQMSurfaces( trRefEntity_t *ent );
