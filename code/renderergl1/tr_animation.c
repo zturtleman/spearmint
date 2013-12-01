@@ -266,9 +266,7 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 				}
 			}
 
-			// If skin specified a shader/image that doesn't exist, it uses default shader.
-			// HACK: For compatibility with quake3 skins, don't render missing shaders listed in skins.
-			if ( shader == tr.defaultShader && j != skin->numSurfaces ) {
+			if (shader == tr.nodrawShader) {
 				surface = (mdrSurface_t *)( (byte *)surface + surface->ofsEnd );
 				continue;
 			}

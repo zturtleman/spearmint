@@ -1736,6 +1736,7 @@ typedef struct {
 	FBO_t                   *renderCubeFbo;
 
 	shader_t				*defaultShader;
+	shader_t				*nodrawShader;
 	shader_t				*shadowShader;
 	shader_t				*projectionShadowShader;
 

@@ -1004,6 +1004,7 @@ typedef struct {
 	image_t					*identityLightImage;	// full of tr.identityLightByte
 
 	shader_t				*defaultShader;
+	shader_t				*nodrawShader;
 	shader_t				*shadowShader;
 	shader_t				*projectionShadowShader;
 

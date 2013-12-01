@@ -788,6 +788,7 @@ typedef struct {
 	qhandle_t	charsetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
+	qhandle_t	nodrawShader;
 
 #ifdef MISSIONPACK
 	qhandle_t	redCubeModel;

@@ -2438,6 +2438,7 @@ void CG_Init( qboolean inGameLoad, int maxSplitView, int playVideo ) {
 	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
 	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
 	cgs.media.consoleShader		= trap_R_RegisterShader( "console" );
+	cgs.media.nodrawShader		= trap_R_RegisterShaderEx( "nodraw", LIGHTMAP_NONE, qtrue );
 
 	// get the rendering configuration from the client system
 	trap_GetGlconfig( &cgs.glconfig );

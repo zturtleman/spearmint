@@ -569,6 +569,12 @@ qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append ) {
 		}
 
 		hShader = trap_R_RegisterShaderEx( shaderName, LIGHTMAP_NONE, qtrue );
+
+		// for compatibility with quake3 skins, don't render missing shaders listed in skins
+		if ( !hShader ) {
+			hShader = cgs.media.nodrawShader;
+		}
+
 		skin->surfaces[skin->numSurfaces] = trap_R_AllocSkinSurface( surfName, hShader );
 		skin->numSurfaces++;
 	}
