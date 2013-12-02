@@ -819,20 +819,25 @@ Called for both a full init and a restart
 ==================
 */
 static void SV_InitGameVM( qboolean restart ) {
-	unsigned int	version, major, minor;
+	char			apiName[64];
+	int				major, minor;
 	int				i;
 
+	VM_GetVersion( gvm, GAME_GETAPINAME, GAME_GETAPIVERSION, apiName, sizeof(apiName), &major, &minor );
+	Com_DPrintf("Loading Game VM with API %s %d.%d\n", apiName, major, minor);
+
 	// sanity check
-	version = VM_SafeCall( gvm, GAME_GETAPIVERSION );
-	major = (version >> 16) & 0xFFFF;
-	minor = version & 0xFFFF;
-	Com_DPrintf("Loading game with version %x.%x\n", major, minor);
-	if (major != GAME_API_MAJOR_VERSION || minor > GAME_API_MINOR_VERSION) {
+	if ( !strcmp( apiName, GAME_API_NAME ) && major == GAME_API_MAJOR_VERSION
+		&& ( ( major > 0 && minor <= GAME_API_MINOR_VERSION )
+		  || ( major == 0 && minor == GAME_API_MINOR_VERSION ) ) ) {
+		// Supported API
+	} else {
 		// Free gvm now, so GAME_SHUTDOWN doesn't get called later.
 		VM_Free( gvm );
 		gvm = NULL;
 
-		Com_Error(ERR_DROP, "Game is version %x.%x, expected %x.%x", major, minor, GAME_API_MAJOR_VERSION, GAME_API_MINOR_VERSION );
+		Com_Error(ERR_DROP, "Game VM uses unsupported API %s %d.%d, %s %d.%d",
+				  apiName, major, minor, GAME_API_NAME, GAME_API_MAJOR_VERSION, GAME_API_MINOR_VERSION );
 	}
 
 	// start the entity parsing at the beginning

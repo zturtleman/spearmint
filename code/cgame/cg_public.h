@@ -31,8 +31,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 #ifndef __CG_PUBLIC_H__
 #define __CG_PUBLIC_H__
 
-#define CG_API_MAJOR_VERSION	0xdead
-#define CG_API_MINOR_VERSION	0xbeef
+#define CG_API_NAME				"SPEARMINT_CGAME"
+
+// major 0 means each minor is an API break.
+// major > 0 means each major is an API break and each minor extends API.
+#define CG_API_MAJOR_VERSION	0
+#define CG_API_MINOR_VERSION	0
+
 
 #define	CMD_BACKUP			64	
 #define	CMD_MASK			(CMD_BACKUP - 1)
@@ -358,9 +363,10 @@ functions exported to the main executable
 */
 
 typedef enum {
-	CG_GETAPIVERSION,	// system reserved
+	CG_GETAPINAME = 100,
+	CG_GETAPIVERSION,
 
-	CG_INIT,
+	CG_INIT = 200,
 //	void	UI_Init( qboolean inGameLoad, int maxSplitView, int playVideo );
 	// playVideo = 1 means first game to run and no start up arguments
 	// playVideo = 2 means switched to a new game/mod and not connecting to a server

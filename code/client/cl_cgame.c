@@ -1720,7 +1720,8 @@ void CL_InitCGame( void ) {
 	const char			*mapname;
 	int					t1, t2;
 	int					index;
-	unsigned int		version, major, minor;
+	char				apiName[64];
+	int					major, minor;
 
 	t1 = Sys_Milliseconds();
 
@@ -1730,17 +1731,21 @@ void CL_InitCGame( void ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}
 
+	VM_GetVersion( cgvm, CG_GETAPINAME, CG_GETAPIVERSION, apiName, sizeof(apiName), &major, &minor );
+	Com_DPrintf("Loading CGame VM with API (%s %d.%d)\n", apiName, major, minor);
+
 	// sanity check
-	version = VM_SafeCall( cgvm, CG_GETAPIVERSION );
-	major = (version >> 16) & 0xFFFF;
-	minor = version & 0xFFFF;
-	Com_DPrintf("Loading cgame with version %x.%x\n", major, minor);
-	if ( major != CG_API_MAJOR_VERSION || minor > CG_API_MINOR_VERSION ) {
+	if ( !strcmp( apiName, CG_API_NAME ) && major == CG_API_MAJOR_VERSION
+		&& ( ( major > 0 && minor <= CG_API_MINOR_VERSION )
+		  || ( major == 0 && minor == CG_API_MINOR_VERSION ) ) ) {
+		// Supported API
+	} else {
 		// Free cgvm now, so CG_SHUTDOWN doesn't get called later.
 		VM_Free( cgvm );
 		cgvm = NULL;
 
-		Com_Error( ERR_DROP, "CGame is version %x.%x, expected %x.%x", major, minor, CG_API_MAJOR_VERSION, CG_API_MINOR_VERSION );
+		Com_Error( ERR_DROP, "CGame VM uses unsupported API (%s %d.%d), expected %s %d.%d",
+				  apiName, major, minor, CG_API_NAME, CG_API_MAJOR_VERSION, CG_API_MINOR_VERSION );
 	}
 
 	inGameLoad = ( clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC );

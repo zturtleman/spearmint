@@ -370,6 +370,8 @@ vm_t	*VM_Restart(vm_t *vm, qboolean unpure);
 intptr_t		QDECL VM_Call( vm_t *vm, int callNum, ... );
 intptr_t		QDECL VM_SafeCall( vm_t *vm, int callnum );
 
+void	VM_GetVersion( vm_t *vm, int nameCallNum, int versionCallNum, char *apiName, int apiNameSize, int *major, int *minor );
+
 void	VM_Debug( int level );
 
 void	*VM_ArgPtr( intptr_t intValue );

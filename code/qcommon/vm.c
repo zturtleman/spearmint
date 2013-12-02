@@ -887,7 +887,10 @@ intptr_t QDECL VM_Call( vm_t *vm, int callnum, ... )
 vm_t *safeVM = NULL;
 
 intptr_t VM_APISafeSystemCalls( intptr_t *args ) {
-	Com_Error(ERR_FATAL, "%s vm tried to make an unsafe syscall, it may be an incompatible quake3 vm", safeVM ? safeVM->name : "unknown");
+	Com_Printf("*** Unsafe VM API system call detected:\n");
+	Com_Printf("*** The %s VM tried to make an API call during API setup process, since we\n", safeVM ? safeVM->name : "unknown");
+	Com_Printf("*** haven't finished checking the API name/version we don't know what it should do.\n");
+	Com_Error(ERR_FATAL, "Incompatible %s VM (tried to make an API system call before init)", safeVM ? safeVM->name : "unknown");
 	return 0;
 }
 
@@ -912,6 +915,35 @@ intptr_t QDECL VM_SafeCall( vm_t *vm, int callnum )
 	vm->systemCall = savedSystemCall;
 
 	return value;
+}
+
+void VM_GetVersion( vm_t *vm, int nameCallNum, int versionCallNum, char *apiName, int apiNameSize, int *major, int *minor ) {
+	const char			*apiNamePtr;
+	unsigned int		version;
+	int					i;
+
+	apiNamePtr = VM_ExplicitArgPtr( vm, VM_SafeCall( vm, nameCallNum ) );
+	version = VM_SafeCall( vm, versionCallNum );
+	*major = (version >> 16) & 0xFFFF;
+	*minor = version & 0xFFFF;
+
+	// make sure API name is a graphic string and length < 64
+	if ( apiNamePtr ) {
+		for (i = 0; i < apiNameSize; i++) {
+			if ( !apiNamePtr[i])
+				break;
+			if ( !isgraph( apiNamePtr[i]) ) {
+				apiNamePtr = NULL;
+				break;
+			}
+		}
+		if ( i == 0 || i == apiNameSize )
+			apiNamePtr = NULL;
+	}
+	if ( !apiNamePtr ) {
+		apiNamePtr = "Unknown";
+	}
+	Q_strncpyz( apiName, apiNamePtr, apiNameSize );
 }
 
 //=================================================================
