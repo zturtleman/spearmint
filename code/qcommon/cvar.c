@@ -575,6 +575,12 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, int defaultFlags, qb
 
 	if (!force)
 	{
+		if ( (var->flags & (CVAR_SYSTEMINFO|CVAR_SERVER_CREATED)) && !com_sv_running->integer && CL_ConnectedToServer() )
+		{
+			Com_Printf ("%s can only be set by server.\n", var_name);
+			return var;
+		}
+
 		if (var->flags & CVAR_ROM)
 		{
 			Com_Printf ("%s is read only.\n", var_name);
@@ -611,12 +617,6 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, int defaultFlags, qb
 		if ( (var->flags & CVAR_CHEAT) && !cvar_cheats->integer )
 		{
 			Com_Printf ("%s is cheat protected.\n", var_name);
-			return var;
-		}
-
-		if ( (var->flags & CVAR_SYSTEMINFO) && !com_sv_running->integer && CL_ConnectedToServer() )
-		{
-			Com_Printf ("%s can only be set by server.\n", var_name);
 			return var;
 		}
 	}
@@ -689,7 +689,7 @@ void Cvar_Server_Set( const char *var_name, const char *value )
 	int flags = Cvar_Flags( var_name );
 
 	// If this cvar may not be modified by a server discard the value.
-	if(!(flags & (CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED)))
+	if((flags != CVAR_NONEXISTENT) && !(flags & (CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED)))
 	{
 		Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", var_name, value);
 		return;
@@ -706,7 +706,7 @@ void Cvar_Server_Set( const char *var_name, const char *value )
 		return;
 	}
 
-	Cvar_Set2( var_name, value, CVAR_SERVER_CREATED | CVAR_ROM, qtrue );
+	Cvar_Set2( var_name, value, CVAR_SERVER_CREATED, qtrue );
 }
 
 /*
