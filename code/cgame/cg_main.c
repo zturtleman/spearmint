@@ -123,7 +123,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_CREATE_USER_CMD:
 		return (intptr_t)CG_CreateUserCmd(arg0, arg1, arg2, IntAsFloat(arg3), IntAsFloat(arg4), arg5);
 	default:
-		CG_Error( "vmMain: unknown command %i", command );
+		CG_Error( "cgame vmMain: unknown command %i", command );
 		break;
 	}
 	return -1;

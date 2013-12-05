@@ -227,6 +227,8 @@ This must be the very first function compiled into the .q3vm file
 */
 Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11  ) {
 	switch ( command ) {
+	case GAME_GETAPINAME:
+		return (intptr_t)GAME_API_NAME;
 	case GAME_GETAPIVERSION:
 		return ( GAME_API_MAJOR_VERSION << 16) | ( GAME_API_MINOR_VERSION & 0xFFFF );
 	case GAME_INIT:
@@ -266,6 +268,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return G_MapRestart( arg0, arg1 );
 	case BOTAI_START_FRAME:
 		return BotAIStartFrame( arg0 );
+	default:
+		G_Error( "game vmMain: unknown command %i", command );
+		break;
 	}
 
 	return -1;
