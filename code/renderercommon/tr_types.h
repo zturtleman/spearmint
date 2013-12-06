@@ -43,7 +43,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	REFENTITYNUM_WORLD	((1<<REFENTITYNUM_BITS) - 1)
 
 // renderfx flags
-#define	RF_MINLIGHT		0x0001		// allways have some light (viewmodel, some items)
+#define	RF_NO_DIRECTED_LIGHT	0x0001	// don't use directed light from world light grid or dlights
 #define	RF_ONLY_MIRROR		0x0002		// only draw in mirrors and portals
 #define	RF_NO_MIRROR		0x0004		// do not draw in mirrors or portals
 #define	RF_DEPTHHACK		0x0008		// for view weapon Z crunching
@@ -52,6 +52,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 						// DEPTHHACK in stereo rendering mode, with the difference that the
 						// projection matrix won't be hacked to reduce the stereo separation as
 						// is done for the gun.
+
+#define	RF_CONST_AMBIENT	0x0020		// use refEntity->ambientLight instead of world light grid + refEntity->ambientLight
 
 #define	RF_NOSHADOW		0x0040		// don't add stencil shadows
 
@@ -150,6 +152,7 @@ typedef struct {
 	byte		shaderRGBA[4];		// colors used by rgbgen entity shaders
 	float		shaderTexCoord[2];	// texture coordinates used by tcMod entity modifiers
 	float		shaderTime;			// subtracted from refdef time to control effect start times
+	float		ambientLight[3];	// add to light grid ambient light or use instead of light grid (RF_CONST_AMBIENT)
 
 	// extra sprite information
 	float		radius;

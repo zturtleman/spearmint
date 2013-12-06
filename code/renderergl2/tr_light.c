@@ -188,6 +188,9 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t *world ) {
 	vec3_t	direction;
 	float	totalFactor;
 
+	if ( ( ent->e.renderfx & RF_CONST_AMBIENT ) && ( ent->e.renderfx & RF_NO_DIRECTED_LIGHT ) )
+		return;
+
 	if ( ent->e.renderfx & RF_LIGHTING_ORIGIN ) {
 		// seperate lightOrigins are needed so an object that is
 		// sinking into the ground can still be lit, and so
@@ -409,58 +412,69 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 		VectorCopy( tr.sunDirection, ent->lightDir );
 	}
 
-	// bonus items and view weapons have a fixed minimum add
-	if ( !r_hdr->integer /* ent->e.renderfx & RF_MINLIGHT */ ) {
-		// give everything a minimum light add
-		ent->ambientLight[0] += tr.identityLight * 32;
-		ent->ambientLight[1] += tr.identityLight * 32;
-		ent->ambientLight[2] += tr.identityLight * 32;
+	// only use ambient light from refent
+	if ( ent->e.renderfx & RF_CONST_AMBIENT ) {
+		VectorClear( ent->ambientLight );
 	}
 
-	//
-	// modify the light by dynamic lights
-	//
-	d = VectorLength( ent->directedLight );
-	VectorScale( ent->lightDir, d, lightDir );
+	// add ambient light from refent
+	for ( i = 0; i < 3; i++ ) {
+		ent->ambientLight[i] += tr.identityLight * Com_Clamp( -255, 255, ent->e.ambientLight[i] );
 
-	for ( i = 0 ; i < refdef->num_dlights ; i++ ) {
-		dl = &refdef->dlights[i];
+		if ( ent->ambientLight[i] < 0 ) {
+			ent->ambientLight[i] = 0;
+		}
+	}
 
-		if ( !( dl->flags & REF_GRID_DLIGHT ) ) {
-			continue;
-		}
+	if ( ent->e.renderfx & RF_NO_DIRECTED_LIGHT ) {
+		VectorClear( ent->directedLight );
+		VectorClear( lightDir );
+	} else {
+		//
+		// modify the light by dynamic lights
+		//
+		d = VectorLength( ent->directedLight );
+		VectorScale( ent->lightDir, d, lightDir );
 
-		// directional dlight, origin is a directional normal
-		if ( dl->flags & REF_DIRECTED_DLIGHT ) {
-			modulate = dl->intensity * 255.0;
-			VectorCopy( dl->origin, dir );
-		}
-		// ET dlight
-		else if ( dl->flags & REF_VERTEX_DLIGHT )
-		{
-			VectorSubtract( dl->origin, lightOrigin, dir );
-			d = dl->radius - VectorNormalize( dir );
-			if ( d <= 0.0 ) {
-				modulate = 0;
-			} else {
-				modulate = dl->intensity * d;
-			}
-		}
-		// Q3 dlight
-		else
-		{
-			VectorSubtract( dl->origin, lightOrigin, dir );
-			d = VectorNormalize( dir );
-			modulate = DLIGHT_AT_RADIUS * ( dl->radius * dl->radius );
-			if ( d < DLIGHT_MINIMUM_RADIUS ) {
-				d = DLIGHT_MINIMUM_RADIUS;
+		for ( i = 0 ; i < refdef->num_dlights ; i++ ) {
+			dl = &refdef->dlights[i];
+
+			if ( !( dl->flags & REF_GRID_DLIGHT ) ) {
+				continue;
 			}
 
-			modulate = modulate / ( d * d ) * dl->intensity;
-		}
+			// directional dlight, origin is a directional normal
+			if ( dl->flags & REF_DIRECTED_DLIGHT ) {
+				modulate = dl->intensity * 255.0;
+				VectorCopy( dl->origin, dir );
+			}
+			// ET dlight
+			else if ( dl->flags & REF_VERTEX_DLIGHT )
+			{
+				VectorSubtract( dl->origin, lightOrigin, dir );
+				d = dl->radius - VectorNormalize( dir );
+				if ( d <= 0.0 ) {
+					modulate = 0;
+				} else {
+					modulate = dl->intensity * d;
+				}
+			}
+			// Q3 dlight
+			else
+			{
+				VectorSubtract( dl->origin, lightOrigin, dir );
+				d = VectorNormalize( dir );
+				modulate = DLIGHT_AT_RADIUS * ( dl->radius * dl->radius );
+				if ( d < DLIGHT_MINIMUM_RADIUS ) {
+					d = DLIGHT_MINIMUM_RADIUS;
+				}
 
-		VectorMA( ent->directedLight, modulate, dl->color, ent->directedLight );
-		VectorMA( lightDir, modulate, dir, lightDir );
+				modulate = modulate / ( d * d ) * dl->intensity;
+			}
+
+			VectorMA( ent->directedLight, modulate, dl->color, ent->directedLight );
+			VectorMA( lightDir, modulate, dir, lightDir );
+		}
 	}
 
 	// clamp ambient
