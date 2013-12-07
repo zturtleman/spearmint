@@ -1757,7 +1757,7 @@ static void CG_TrailItem( centity_t *cent, qhandle_t hModel ) {
 	AnglesToAxis( angles, ent.axis );
 
 	ent.hModel = hModel;
-	trap_R_AddRefEntityToScene( &ent );
+	CG_AddRefEntityWithMinLight( &ent );
 }
 
 
@@ -1781,7 +1781,7 @@ static void CG_PlayerFlag( centity_t *cent, const cgSkin_t *skin, refEntity_t *t
 	pole.shadowPlane = torso->shadowPlane;
 	pole.renderfx = torso->renderfx;
 	CG_PositionEntityOnTag( &pole, torso, torso->hModel, "tag_flag" );
-	trap_R_AddRefEntityToScene( &pole );
+	CG_AddRefEntityWithMinLight( &pole );
 
 	// show the flag model
 	memset( &flag, 0, sizeof(flag) );
@@ -1874,7 +1874,7 @@ static void CG_PlayerFlag( centity_t *cent, const cgSkin_t *skin, refEntity_t *t
 	AnglesToAxis( angles, flag.axis );
 	CG_PositionRotatedEntityOnTag( &flag, &pole, pole.hModel, "tag_flag" );
 
-	trap_R_AddRefEntityToScene( &flag );
+	CG_AddRefEntityWithMinLight( &flag );
 }
 
 
@@ -1939,7 +1939,7 @@ static void CG_PlayerTokens( centity_t *cent, int renderfx ) {
 		VectorCopy(trail->positions[i], ent.origin);
 		angle = (((cg.time + 500 * MAX_SKULLTRAIL - 500 * i) / 16) & 255) * (M_PI * 2) / 255;
 		ent.origin[2] += sin(angle) * 10;
-		trap_R_AddRefEntityToScene( &ent );
+		CG_AddRefEntityWithMinLight( &ent );
 		VectorCopy(trail->positions[i], origin);
 	}
 }
@@ -2264,7 +2264,7 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state ) {
 
 	if ( state->powerups & ( 1 << PW_INVIS ) ) {
 		ent->customShader = cgs.media.invisShader;
-		trap_R_AddRefEntityToScene( ent );
+		CG_AddRefEntityWithMinLight( ent );
 	} else {
 		/*
 		if ( state->eFlags & EF_KAMIKAZE ) {
@@ -2272,10 +2272,10 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state ) {
 				ent->customShader = cgs.media.blueKamikazeShader;
 			else
 				ent->customShader = cgs.media.redKamikazeShader;
-			trap_R_AddRefEntityToScene( ent );
+			CG_AddRefEntityWithMinLight( ent );
 		}
 		else {*/
-			trap_R_AddRefEntityToScene( ent );
+			CG_AddRefEntityWithMinLight( ent );
 		//}
 
 		if ( state->powerups & ( 1 << PW_QUAD ) )
@@ -2284,17 +2284,17 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state ) {
 				ent->customShader = cgs.media.redQuadShader;
 			else
 				ent->customShader = cgs.media.quadShader;
-			trap_R_AddRefEntityToScene( ent );
+			CG_AddRefEntityWithMinLight( ent );
 		}
 		if ( state->powerups & ( 1 << PW_REGEN ) ) {
 			if ( ( ( cg.time / 100 ) % 10 ) == 1 ) {
 				ent->customShader = cgs.media.regenShader;
-				trap_R_AddRefEntityToScene( ent );
+				CG_AddRefEntityWithMinLight( ent );
 			}
 		}
 		if ( state->powerups & ( 1 << PW_BATTLESUIT ) ) {
 			ent->customShader = cgs.media.battleSuitShader;
-			trap_R_AddRefEntityToScene( ent );
+			CG_AddRefEntityWithMinLight( ent );
 		}
 	}
 }
@@ -2504,9 +2504,9 @@ void CG_Player( centity_t *cent ) {
 			CrossProduct(skull.axis[1], skull.axis[2], skull.axis[0]);
 
 			skull.hModel = cgs.media.kamikazeHeadModel;
-			trap_R_AddRefEntityToScene( &skull );
+			CG_AddRefEntityWithMinLight( &skull );
 			skull.hModel = cgs.media.kamikazeHeadTrail;
-			trap_R_AddRefEntityToScene( &skull );
+			CG_AddRefEntityWithMinLight( &skull );
 		}
 		else {
 			// three skulls spinning around the player
@@ -2533,11 +2533,11 @@ void CG_Player( centity_t *cent ) {
 			*/
 
 			skull.hModel = cgs.media.kamikazeHeadModel;
-			trap_R_AddRefEntityToScene( &skull );
+			CG_AddRefEntityWithMinLight( &skull );
 			// flip the trail because this skull is spinning in the other direction
 			VectorInverse(skull.axis[1]);
 			skull.hModel = cgs.media.kamikazeHeadTrail;
-			trap_R_AddRefEntityToScene( &skull );
+			CG_AddRefEntityWithMinLight( &skull );
 
 			angle = ((cg.time / 4) & 255) * (M_PI * 2) / 255 + M_PI;
 			if (angle > M_PI * 2)
@@ -2563,9 +2563,9 @@ void CG_Player( centity_t *cent ) {
 			*/
 
 			skull.hModel = cgs.media.kamikazeHeadModel;
-			trap_R_AddRefEntityToScene( &skull );
+			CG_AddRefEntityWithMinLight( &skull );
 			skull.hModel = cgs.media.kamikazeHeadTrail;
-			trap_R_AddRefEntityToScene( &skull );
+			CG_AddRefEntityWithMinLight( &skull );
 
 			angle = ((cg.time / 3) & 255) * (M_PI * 2) / 255 + 0.5 * M_PI;
 			if (angle > M_PI * 2)
@@ -2581,9 +2581,9 @@ void CG_Player( centity_t *cent ) {
 			CrossProduct(skull.axis[1], skull.axis[2], skull.axis[0]);
 
 			skull.hModel = cgs.media.kamikazeHeadModel;
-			trap_R_AddRefEntityToScene( &skull );
+			CG_AddRefEntityWithMinLight( &skull );
 			skull.hModel = cgs.media.kamikazeHeadTrail;
-			trap_R_AddRefEntityToScene( &skull );
+			CG_AddRefEntityWithMinLight( &skull );
 		}
 	}
 
@@ -2593,7 +2593,7 @@ void CG_Player( centity_t *cent ) {
 		powerup.frame = 0;
 		powerup.oldframe = 0;
 		powerup.customSkin = 0;
-		trap_R_AddRefEntityToScene( &powerup );
+		CG_AddRefEntityWithMinLight( &powerup );
 	}
 	if ( cent->currentState.powerups & ( 1 << PW_SCOUT ) ) {
 		memcpy(&powerup, &torso, sizeof(torso));
@@ -2601,7 +2601,7 @@ void CG_Player( centity_t *cent ) {
 		powerup.frame = 0;
 		powerup.oldframe = 0;
 		powerup.customSkin = 0;
-		trap_R_AddRefEntityToScene( &powerup );
+		CG_AddRefEntityWithMinLight( &powerup );
 	}
 	if ( cent->currentState.powerups & ( 1 << PW_DOUBLER ) ) {
 		memcpy(&powerup, &torso, sizeof(torso));
@@ -2609,7 +2609,7 @@ void CG_Player( centity_t *cent ) {
 		powerup.frame = 0;
 		powerup.oldframe = 0;
 		powerup.customSkin = 0;
-		trap_R_AddRefEntityToScene( &powerup );
+		CG_AddRefEntityWithMinLight( &powerup );
 	}
 	if ( cent->currentState.powerups & ( 1 << PW_AMMOREGEN ) ) {
 		memcpy(&powerup, &torso, sizeof(torso));
@@ -2617,7 +2617,7 @@ void CG_Player( centity_t *cent ) {
 		powerup.frame = 0;
 		powerup.oldframe = 0;
 		powerup.customSkin = 0;
-		trap_R_AddRefEntityToScene( &powerup );
+		CG_AddRefEntityWithMinLight( &powerup );
 	}
 	if ( cent->currentState.powerups & ( 1 << PW_INVULNERABILITY ) ) {
 		if ( !ci->invulnerabilityStartTime ) {
@@ -2650,7 +2650,7 @@ void CG_Player( centity_t *cent ) {
 		VectorSet( powerup.axis[0], c, 0, 0 );
 		VectorSet( powerup.axis[1], 0, c, 0 );
 		VectorSet( powerup.axis[2], 0, 0, c );
-		trap_R_AddRefEntityToScene( &powerup );
+		CG_AddRefEntityWithMinLight( &powerup );
 	}
 
 	t = cg.time - ci->medkitUsageTime;
@@ -2677,7 +2677,7 @@ void CG_Player( centity_t *cent ) {
 			powerup.shaderRGBA[2] = 0xff;
 			powerup.shaderRGBA[3] = 0xff;
 		}
-		trap_R_AddRefEntityToScene( &powerup );
+		CG_AddRefEntityWithMinLight( &powerup );
 	}
 #endif // MISSIONPACK
 

@@ -1565,6 +1565,7 @@ void CG_PainEvent( centity_t *cent, int health );
 //
 // cg_ents.c
 //
+void CG_AddRefEntityWithMinLight( const refEntity_t *entity );
 void CG_SetEntitySoundPosition( centity_t *cent );
 void CG_AddPacketEntities( void );
 void CG_Beam( centity_t *cent );

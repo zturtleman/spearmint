@@ -311,7 +311,7 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin
 	refdef.time = cg.time;
 
 	trap_R_ClearScene();
-	trap_R_AddRefEntityToScene( &ent );
+	CG_AddRefEntityWithMinLight( &ent );
 	trap_R_RenderScene( &refdef );
 }
 

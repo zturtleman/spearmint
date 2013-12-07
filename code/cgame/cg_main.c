@@ -2336,7 +2336,7 @@ void CG_LoadHudMenu( void ) {
 	cgDC.drawSides = &CG_DrawSides;
 	cgDC.drawTopBottom = &CG_DrawTopBottom;
 	cgDC.clearScene = &trap_R_ClearScene;
-	cgDC.addRefEntityToScene = &trap_R_AddRefEntityToScene;
+	cgDC.addRefEntityToScene = &CG_AddRefEntityWithMinLight;
 	cgDC.renderScene = &trap_R_RenderScene;
 	cgDC.registerFont = &trap_R_RegisterFont;
 	cgDC.ownerDrawItem = &CG_OwnerDraw;
