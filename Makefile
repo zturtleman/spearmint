@@ -132,7 +132,7 @@ endif
 
 MISSIONPACK_CFLAGS+=-DMODDIR=\"$(MISSIONPACK)\"
 
-# Add "-DEXAMPLE" to define EXAMPLE in engine and game/cgame/ui.
+# Add "-DEXAMPLE" to define EXAMPLE in engine and game/cgame.
 ifndef BUILD_DEFINES
 BUILD_DEFINES =
 endif
@@ -952,7 +952,7 @@ ifeq ($(USE_FREETYPE),1)
 endif
 
 ifndef FULLBINEXT
-  FULLBINEXT=.$(ARCH)$(BINEXT)
+  FULLBINEXT=_$(ARCH)$(BINEXT)
 endif
 
 ifndef SHLIBNAME
@@ -965,14 +965,14 @@ endif
 
 ifneq ($(BUILD_CLIENT),0)
   ifneq ($(USE_RENDERER_DLOPEN),0)
-    TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT) $(B)/renderer_opengl1_$(SHLIBNAME)
+    TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT) $(B)/mint-renderer-opengl1_$(SHLIBNAME)
     ifneq ($(BUILD_RENDERER_OPENGL2), 0)
-      TARGETS += $(B)/renderer_opengl2_$(SHLIBNAME)
+      TARGETS += $(B)/mint-renderer-opengl2_$(SHLIBNAME)
     endif
   else
     TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT)
     ifneq ($(BUILD_RENDERER_OPENGL2), 0)
-      TARGETS += $(B)/$(CLIENTBIN)_opengl2$(FULLBINEXT)
+      TARGETS += $(B)/$(CLIENTBIN)-opengl2$(FULLBINEXT)
     endif
   endif
 endif
@@ -980,26 +980,26 @@ endif
 ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
     TARGETS += \
-      $(B)/$(BASEGAME)/cgame$(SHLIBNAME) \
-      $(B)/$(BASEGAME)/game$(SHLIBNAME)
+      $(B)/$(BASEGAME)/mint-cgame_$(SHLIBNAME) \
+      $(B)/$(BASEGAME)/mint-game_$(SHLIBNAME)
   endif
   ifneq ($(BUILD_MISSIONPACK),0)
     TARGETS += \
-      $(B)/$(MISSIONPACK)/cgame$(SHLIBNAME) \
-      $(B)/$(MISSIONPACK)/game$(SHLIBNAME)
+      $(B)/$(MISSIONPACK)/mint-cgame_$(SHLIBNAME) \
+      $(B)/$(MISSIONPACK)/mint-game_$(SHLIBNAME)
   endif
 endif
 
 ifneq ($(BUILD_GAME_QVM),0)
   ifneq ($(BUILD_BASEGAME),0)
     TARGETS += \
-      $(B)/$(BASEGAME)/vm/cgame.qvm \
-      $(B)/$(BASEGAME)/vm/game.qvm
+      $(B)/$(BASEGAME)/vm/mint-cgame.qvm \
+      $(B)/$(BASEGAME)/vm/mint-game.qvm
   endif
   ifneq ($(BUILD_MISSIONPACK),0)
     TARGETS += \
-      $(B)/$(MISSIONPACK)/vm/cgame.qvm \
-      $(B)/$(MISSIONPACK)/vm/game.qvm
+      $(B)/$(MISSIONPACK)/vm/mint-cgame.qvm \
+      $(B)/$(MISSIONPACK)/vm/mint-game.qvm
   endif
 endif
 
@@ -2096,12 +2096,12 @@ $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(LIBSDLMAIN)
 		-o $@ $(Q3OBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(LIBS)
 
-$(B)/renderer_opengl1_$(SHLIBNAME): $(Q3ROBJ) $(JPGOBJ) $(FTOBJ)
+$(B)/mint-renderer-opengl1_$(SHLIBNAME): $(Q3ROBJ) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 
-$(B)/renderer_opengl2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ)
+$(B)/mint-renderer-opengl2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
@@ -2347,11 +2347,11 @@ Q3CGOBJ_ = \
 Q3CGOBJ = $(Q3CGOBJ_) $(B)/$(BASEGAME)/cgame/cg_syscalls.o
 Q3CGVMOBJ = $(Q3CGOBJ_:%.o=%.asm)
 
-$(B)/$(BASEGAME)/cgame$(SHLIBNAME): $(Q3CGOBJ)
+$(B)/$(BASEGAME)/mint-cgame_$(SHLIBNAME): $(Q3CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3CGOBJ)
 
-$(B)/$(BASEGAME)/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/mint-cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm
 
@@ -2404,11 +2404,11 @@ MPCGOBJ_ = \
 MPCGOBJ = $(MPCGOBJ_) $(B)/$(MISSIONPACK)/cgame/cg_syscalls.o
 MPCGVMOBJ = $(MPCGOBJ_:%.o=%.asm)
 
-$(B)/$(MISSIONPACK)/cgame$(SHLIBNAME): $(MPCGOBJ)
+$(B)/$(MISSIONPACK)/mint-cgame_$(SHLIBNAME): $(MPCGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPCGOBJ)
 
-$(B)/$(MISSIONPACK)/vm/cgame.qvm: $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/mint-cgame.qvm: $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm
 
@@ -2462,11 +2462,11 @@ Q3GOBJ_ = \
 Q3GOBJ = $(Q3GOBJ_) $(B)/$(BASEGAME)/game/g_syscalls.o
 Q3GVMOBJ = $(Q3GOBJ_:%.o=%.asm)
 
-$(B)/$(BASEGAME)/game$(SHLIBNAME): $(Q3GOBJ)
+$(B)/$(BASEGAME)/mint-game_$(SHLIBNAME): $(Q3GOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
 
-$(B)/$(BASEGAME)/vm/game.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/mint-game.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm
 
@@ -2518,11 +2518,11 @@ MPGOBJ_ = \
 MPGOBJ = $(MPGOBJ_) $(B)/$(MISSIONPACK)/game/g_syscalls.o
 MPGVMOBJ = $(MPGOBJ_:%.o=%.asm)
 
-$(B)/$(MISSIONPACK)/game$(SHLIBNAME): $(MPGOBJ)
+$(B)/$(MISSIONPACK)/mint-game_$(SHLIBNAME): $(MPGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPGOBJ)
 
-$(B)/$(MISSIONPACK)/vm/game.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/mint-game.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(MPGVMOBJ) $(GDIR)/g_syscalls.asm
 
@@ -2813,9 +2813,9 @@ endif
 ifneq ($(BUILD_CLIENT),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)$(FULLBINEXT)
   ifneq ($(USE_RENDERER_DLOPEN),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl1_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl1_$(SHLIBNAME)
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/mint-renderer-opengl1_$(SHLIBNAME) $(COPYBINDIR)/mint-renderer-opengl1_$(SHLIBNAME)
     ifneq ($(BUILD_RENDERER_OPENGL2),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl2_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl2_$(SHLIBNAME)
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/mint-renderer-opengl2_$(SHLIBNAME) $(COPYBINDIR)/mint-renderer-opengl2_$(SHLIBNAME)
     endif
   endif
 endif
@@ -2828,19 +2828,15 @@ endif
 
 ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/cgame$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/mint-cgame_$(SHLIBNAME) \
 					$(COPYDIR)/$(BASEGAME)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/game$(SHLIBNAME) \
-					$(COPYDIR)/$(BASEGAME)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/ui$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/mint-game_$(SHLIBNAME) \
 					$(COPYDIR)/$(BASEGAME)/.
   endif
   ifneq ($(BUILD_MISSIONPACK),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/cgame$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/mint-cgame_$(SHLIBNAME) \
 					$(COPYDIR)/$(MISSIONPACK)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/game$(SHLIBNAME) \
-					$(COPYDIR)/$(MISSIONPACK)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/ui$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/mint-game_$(SHLIBNAME) \
 					$(COPYDIR)/$(MISSIONPACK)/.
   endif
 endif

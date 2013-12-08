@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="Release baseq3 Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/release-codeblocks-x86/baseq3/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86/baseq3/mint-game_x86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -25,7 +25,7 @@
 			</Target>
 			<Target title="Debug baseq3 Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/debug-codeblocks-x86/baseq3/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86/baseq3/mint-game_x86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -42,7 +42,7 @@
 			</Target>
 			<Target title="Release missionpack Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/release-codeblocks-x86/missionpack/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86/missionpack/mint-game_x86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -60,7 +60,7 @@
 			</Target>
 			<Target title="Debug missionpack Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/debug-codeblocks-x86/missionpack/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86/missionpack/mint-game_x86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -77,7 +77,7 @@
 			</Target>
 			<Target title="Release baseq3 Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86/baseq3/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86/baseq3/mint-game_x86.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -91,7 +91,7 @@
 			</Target>
 			<Target title="Debug baseq3 Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86/baseq3/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86/baseq3/mint-game_x86.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -104,7 +104,7 @@
 			</Target>
 			<Target title="Release missionpack Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86/missionpack/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86/missionpack/mint-game_x86.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -118,7 +118,7 @@
 			</Target>
 			<Target title="Debug missionpack Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86/missionpack/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86/missionpack/mint-game_x86.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -132,7 +132,7 @@
 			</Target>
 			<Target title="Release baseq3 Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86_64/baseq3/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86_64/baseq3/mint-game_x86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86_64/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -145,7 +145,7 @@
 			</Target>
 			<Target title="Debug baseq3 Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86_64/baseq3/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86_64/baseq3/mint-game_x86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86_64/baseq3/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -158,7 +158,7 @@
 			</Target>
 			<Target title="Release missionpack Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86_64/missionpack/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86_64/missionpack/mint-game_x86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86_64/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -172,7 +172,7 @@
 			</Target>
 			<Target title="Debug missionpack Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86_64/missionpack/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86_64/missionpack/mint-game_x86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86_64/missionpack/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />

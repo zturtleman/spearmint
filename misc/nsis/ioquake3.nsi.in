@@ -11,8 +11,8 @@
 !define URL "http://github.com/zturtleman/spearmint/"
 
 !define GAMENAME "Spearmint"
-!define CLIENT "spearmint.x86.exe"
-!define SERVER "spearmint-server.x86.exe"
+!define CLIENT "spearmint_x86.exe"
+!define SERVER "spearmint-server_x86.exe"
 !define GAMEDIR "Spearmint"
 !define GAMEKEY "spearmint"
 
@@ -102,8 +102,8 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
   File "../../build/release-mingw32-x86/${SERVER}"
   File "../../build/release-mingw32-x86/${CLIENT}"
 !ifdef USE_RENDERER_DLOPEN
-  File "../../build/release-mingw32-x86/renderer_opengl1_x86.dll"
-  File "../../build/release-mingw32-x86/renderer_opengl2_x86.dll"
+  File "../../build/release-mingw32-x86/mint-renderer-opengl1_x86.dll"
+  File "../../build/release-mingw32-x86/mint-renderer-opengl2_x86.dll"
 !endif
 
   File "../../COPYING.txt"
@@ -112,14 +112,12 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
   File "../../voip-readme.txt"
 
   SetOutPath "$INSTDIR\${MODDIR}"
-  File "../../build/release-mingw32-x86/${MODDIR}/cgamex86.dll"
-  File "../../build/release-mingw32-x86/${MODDIR}/gamex86.dll"
-  File "../../build/release-mingw32-x86/${MODDIR}/uix86.dll"
+  File "../../build/release-mingw32-x86/${MODDIR}/mint-cgame_x86.dll"
+  File "../../build/release-mingw32-x86/${MODDIR}/mint-game_x86.dll"
 !ifdef MODDIR2
   SetOutPath "$INSTDIR\${MODDIR2}"
-  File "../../build/release-mingw32-x86/${MODDIR2}/cgamex86.dll"
-  File "../../build/release-mingw32-x86/${MODDIR2}/gamex86.dll"
-  File "../../build/release-mingw32-x86/${MODDIR2}/uix86.dll"
+  File "../../build/release-mingw32-x86/${MODDIR2}/mint-cgame_x86.dll"
+  File "../../build/release-mingw32-x86/${MODDIR2}/mint-game_x86.dll"
 !endif
 
   ; Write the installation path into the registry
@@ -178,19 +176,17 @@ Section "Uninstall"
   DeleteRegKey SHCTX "Software\${GAMEKEY}"
 
   ; Remove files and uninstaller
-  Delete $INSTDIR\${MODDIR}\cgamex86.dll
-  Delete $INSTDIR\${MODDIR}\gamex86.dll
-  Delete $INSTDIR\${MODDIR}\uix86.dll
+  Delete $INSTDIR\${MODDIR}\mint-cgame_x86.dll
+  Delete $INSTDIR\${MODDIR}\mint-game_x86.dll
 !ifdef MODDIR2
-  Delete $INSTDIR\${MODDIR2}\cgamex86.dll
-  Delete $INSTDIR\${MODDIR2}\gamex86.dll
-  Delete $INSTDIR\${MODDIR2}\uix86.dll
+  Delete $INSTDIR\${MODDIR2}\mint-cgame_x86.dll
+  Delete $INSTDIR\${MODDIR2}\mint-game_x86.dll
 !endif
   Delete $INSTDIR\${CLIENT}
   Delete $INSTDIR\${SERVER}
 !ifdef USE_RENDERER_DLOPEN
-  Delete $INSTDIR\renderer_opengl1_x86.dll
-  Delete $INSTDIR\renderer_opengl2_x86.dll
+  Delete $INSTDIR\mint-renderer-opengl1_x86.dll
+  Delete $INSTDIR\mint-renderer-opengl2_x86.dll
 !endif
 
   Delete $INSTDIR\COPYING.txt

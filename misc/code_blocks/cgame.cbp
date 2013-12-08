@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/release-codeblocks-x86/baseq3/cgamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86/baseq3/mint-cgame_x86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/baseq3/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -25,7 +25,7 @@
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/debug-codeblocks-x86/baseq3/cgamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86/baseq3/mint-cgame_x86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/baseq3/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -41,7 +41,7 @@
 			</Target>
 			<Target title="Release Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86/baseq3/cgamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86/baseq3/mint-cgame_x86.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/baseq3/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -55,7 +55,7 @@
 			</Target>
 			<Target title="Debug Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86/baseq3/cgamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86/baseq3/mint-cgame_x86.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/baseq3/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -68,7 +68,7 @@
 			</Target>
 			<Target title="Release Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86_64/baseq3/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86_64/baseq3/mint-cgame_x86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86_64/baseq3/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -82,7 +82,7 @@
 			</Target>
 			<Target title="Debug Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86_64/baseq3/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86_64/baseq3/mint-cgame_x86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86_64/baseq3/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />

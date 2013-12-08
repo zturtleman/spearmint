@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/release-codeblocks-x86/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86/spearmint_x86.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
@@ -44,7 +44,7 @@
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/debug-codeblocks-x86/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86/spearmint_x86.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
@@ -80,7 +80,7 @@
 			</Target>
 			<Target title="Release Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86/spearmint.x86" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86/spearmint_x86" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
@@ -100,7 +100,7 @@
 			</Target>
 			<Target title="Debug Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86/spearmint.x86" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86/spearmint_x86" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
@@ -120,7 +120,7 @@
 			</Target>
 			<Target title="Release Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86_64/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/release-codeblocks-x86_64/spearmint_x86_64" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/release-codeblocks-x86_64/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
@@ -140,7 +140,7 @@
 			</Target>
 			<Target title="Debug Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86_64/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option output="../../build/debug-codeblocks-x86_64/spearmint_x86_64" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/debug-codeblocks-x86_64/client" />
 				<Option type="0" />
 				<Option compiler="gcc" />
