@@ -595,7 +595,7 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, int defaultFlags, qb
 	if ( var->explicitSet != ( value != NULL ) ) {
 		var->explicitSet = ( value != NULL );
 
-		// update config file
+		// update config file even if value hasn't changed
 		if ( var->flags & CVAR_ARCHIVE ) {
 			cvar_modifiedFlags |= CVAR_ARCHIVE;
 		}
