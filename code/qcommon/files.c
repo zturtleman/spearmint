@@ -3531,6 +3531,7 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 	} buffer;
 	int				len;
 	char			*text_p, *token;
+	char			cvarName[256], cvarValue[256];
 	qboolean		firstLine = qtrue;
 #ifndef DEDICATED
 	loadingScreen_t	*screen;
@@ -3577,6 +3578,20 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 				Q_strncpyz( config->gameDirs[config->numGameDirs], token, sizeof (config->gameDirs[0]) );
 				config->numGameDirs++;
 			}
+		} else if ( Q_stricmp( token, "cvarDefault" ) == 0 ) {
+			// cvar name
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token )
+				continue;
+			Q_strncpyz( cvarName, token, sizeof (cvarName) );
+
+			// value
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token )
+				continue;
+			Q_strncpyz( cvarValue, token, sizeof (cvarValue) );
+
+			Cvar_SetDefault( cvarName, cvarValue );
 		} else if ( Q_stricmp( token, "defaultSound" ) == 0 ) {
 #ifndef DEDICATED
 			token = COM_ParseExt( &text_p, qfalse );

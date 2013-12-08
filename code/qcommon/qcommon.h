@@ -520,6 +520,9 @@ void	Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultVa
 void	Cvar_Update( vmCvar_t *vmCvar );
 // updates an interpreted modules' version of a cvar
 
+cvar_t *Cvar_SetDefault( const char *var_name, const char *value );
+// if cvar exists, change the default value of the cvar. Otherwise, create using Cvar_Get.
+
 cvar_t *Cvar_Set2( const char *var_name, const char *value, int defaultFlags, qboolean force );
 //
 
