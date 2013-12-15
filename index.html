@@ -1,55 +1,57 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Spearmint by zturtleman</title>
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="javascripts/respond.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
     <!--[if lt IE 9]>
-      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <!--[if lt IE 8]>
-    <link rel="stylesheet" href="stylesheets/ie.css">
-    <![endif]-->
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
+    <title>Spearmint by zturtleman</title>
   </head>
+
   <body>
-      <div id="header">
-        <nav>
-          <li class="fork"><a href="https://github.com/zturtleman/spearmint">View On GitHub</a></li>
-          <li class="downloads"><a href="https://github.com/zturtleman/spearmint/zipball/master">ZIP</a></li>
-          <li class="downloads"><a href="https://github.com/zturtleman/spearmint/tarball/master">TAR</a></li>
-          <li class="title">DOWNLOADS</li>
-        </nav>
-      </div><!-- end header -->
+    <header>
+      <div class="inner">
+        <h1>Spearmint</h1>
+        <h2>An updated id Tech 3 engine for continuing the classics and creating new games.</h2>
+        <a href="https://github.com/zturtleman/spearmint" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
 
-    <div class="wrapper">
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <p><strong>Spearmint</strong> is a <a href="http://ioquake3.org">ioquake3</a> based game engine that has two main goals;</p>
 
-      <section>
-        <div id="title">
-          <h1>Spearmint</h1>
-          <p>An extended Quake III Arena engine for creating standalone games.</p>
-          <hr>
-          <span class="credits left">Project maintained by <a href="https://github.com/zturtleman">zturtleman</a></span>
-          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
-        </div>
-
-        <p>The intent of this project is to provide a version of ioquake3 which may be used for further development of standalone games.</p>
-
-<p>Some of the major features currently implemented are:</p>
+<ol>
+<li>provide a flexible engine for creating new games and mods.</li>
+<li>support features from (and running) various id Tech 3-based games.</li>
+</ol><p>Some of the major features are:</p>
 
 <ul>
-<li>Four player splitscreen, offline and in network games.</li>
-<li>Extended API for <a href="http://github.com/zturtleman/spearmint/wiki/Game%20API">Game</a> and <a href="http://github.com/zturtleman/spearmint/wiki/CGame%20API">CGame/UI</a>, includes some of the features from RTCW, WolfET, Tremulous, World of Padman, and Turtle Arena.</li>
-<li>Additional <a href="http://github.com/zturtleman/spearmint/wiki/Shaders">shader</a> settings.</li>
-<li>Merged UI VM into CGame VM, easier to modify and uses less resources.</li>
-<li>Moved a lot of code from server and client to Game and CGame VMs; including <a href="https://github.com/zturtleman/spearmint/blob/master/code/cgame/cg_console.c">console</a>, chat input overlay, <a href="https://github.com/zturtleman/spearmint/blob/master/code/cgame/cg_input.c">usercmd_t creation</a>, and a lot of <a href="https://github.com/zturtleman/spearmint/tree/master/code/game">bot AI code</a>.</li>
-<li>Removed code not needed for standalone games (CD Key handling, authentication server code, sending pk3 checksums to server, and PunkBuster UI code).</li>
-<li>Ogg Opus, Ogg Vorbis, FreeType support enabled by default. Source and headers included in local source tree for easy compiling.</li>
+<li>Four player splitscreen</li>
+<li>Moved a lot of code from server and client to Game and CGame VMs;
+
+<ul>
+<li>including <a href="https://github.com/zturtleman/spearmint/blob/master/code/cgame/cg_console.c">console</a>, chat input overlay, <a href="https://github.com/zturtleman/spearmint/blob/master/code/cgame/cg_input.c">usercmd_t creation</a>, and a lot of <a href="https://github.com/zturtleman/spearmint/tree/master/code/game">bot AI code</a>.</li>
+</ul>
+</li>
+<li>Allow games to modify <code>entityState_t</code> and <code>playerState_t</code> without changing the engine.</li>
+<li>Extended API for <a href="http://github.com/zturtleman/spearmint/wiki/Game%20API">Game</a> and <a href="http://github.com/zturtleman/spearmint/wiki/CGame%20API">CGame/UI</a>, includes some of the features from;
+
+<ul>
+<li>RTCW, WolfET, Tremulous, Turtle Arena, and World of Padman</li>
+</ul>
+</li>
+<li>Merged UI VM into CGame VM, easier to modify as a whole / more flexible.</li>
+<li>Additional <a href="http://github.com/zturtleman/spearmint/wiki/Shaders">shader</a> keywords.</li>
 </ul><p>Read more at the <a href="http://github.com/zturtleman/spearmint/wiki">Spearmint wiki</a>.</p>
 
 <h2>
@@ -57,10 +59,10 @@
 
 <ul>
 <li>Get the source and compile it using make. The game will be in <code>build/release-YOURPLATFORM-YOURARCH/</code>.</li>
-<li>Copy your Quake III Arena pak[0-8].pk3 into <code>build/release-YOURPLATFORM-YOURARCH/baseq3</code>. (Don't own Q3? Buy it on <a href="http://store.steampowered.com/sub/433/">Steam</a>.)</li>
+<li>Copy your Quake III Arena <code>pak[0-8].pk3</code> into <code>build/release-YOURPLATFORM-YOURARCH/baseq3</code>. (Don't own Q3? Buy it on <a href="http://store.steampowered.com/sub/433/">Steam</a>.)</li>
 <li>Get the Spearmint Q3A patch files from <a href="https://github.com/zturtleman/spearmint-patch-data">here</a> and put in <code>build/release-YOURPLATFORM-YOURARCH/baseq3/</code>
 </li>
-<li>Run <code>build/release-YOURPLATFORM-YOURARCH/spearmint.YOURARCH</code>
+<li>Run <code>build/release-YOURPLATFORM-YOURARCH/spearmint_YOURARCH</code>
 </li>
 </ul><p>You can add splitscreen players after you start or join a server using the in-game menu.</p>
 
@@ -69,16 +71,31 @@
 
 <ul>
 <li>Follow the steps for Quake III Arena above.</li>
-<li>Copy your Quake III: Team Arena pak[0-3].pk3 into <code>build/release-YOURPLATFORM-YOURARCH/missionpack</code>. (Don't own Team Arena? Buy it on <a href="http://store.steampowered.com/sub/433/">Steam</a>.)</li>
+<li>Copy your Quake III: Team Arena <code>pak[0-3].pk3</code> into <code>build/release-YOURPLATFORM-YOURARCH/missionpack</code>. (Don't own Team Arena? Buy it on <a href="http://store.steampowered.com/sub/433/">Steam</a>.)</li>
 <li>Get the Spearmint Q3TA patch files from <a href="https://github.com/zturtleman/spearmint-patch-data">here</a> and put in <code>build/release-YOURPLATFORM-YOURARCH/missionpack/</code>
 </li>
-<li>Run <code>build/release-YOURPLATFORM-YOURARCH/spearmint.YOURARCH</code> and choose Team Arena from the menu.</li>
-</ul><p>You can add splitscreen players after you start or join a server using the console (open/close using shift+esc or ~). 2dropin, 3dropin, and 4dropin commands add splitscreen players. 2dropout, 3dropout, and 4dropout commands remove splitscreen players.</p>
-      </section>
+<li>Run <code>build/release-YOURPLATFORM-YOURARCH/spearmint_YOURARCH</code> and choose Team Arena from the menu.</li>
+</ul><p>The UI currently lacks support for splitscreen. You can add splitscreen players after you start or join a server using the console (open/close using shift+esc or ~). 2dropin, 3dropin, and 4dropin commands add splitscreen players. 2dropout, 3dropout, and 4dropout commands remove splitscreen players. You'll need to manually bind controls, example <code>bind u +2forward</code> to have u move player 2 forward. Type <code>+2</code> then press tab to see full list.</p>
+        </section>
 
+        <aside id="sidebar">
+          <a href="https://github.com/zturtleman/spearmint/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/zturtleman/spearmint/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/zturtleman/spearmint"></a> is maintained by <a href="https://github.com/zturtleman">zturtleman</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
     </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-              <script type="text/javascript">
+
+            <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
           </script>
