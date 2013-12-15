@@ -30,6 +30,75 @@ Suite 120, Rockville, Maryland 20850 USA.
 // tr_vbo.c
 #include "tr_local.h"
 
+
+uint32_t R_VboPackTangent(vec4_t v)
+{
+	if (glRefConfig.packedNormalDataType == GL_UNSIGNED_INT_2_10_10_10_REV)
+	{
+		return (((uint32_t)(v[3] * 1.5f   + 2.0f  )) << 30)
+		     | (((uint32_t)(v[2] * 511.5f + 512.0f)) << 20)
+		     | (((uint32_t)(v[1] * 511.5f + 512.0f)) << 10)
+		     | (((uint32_t)(v[0] * 511.5f + 512.0f)));
+	}
+	else
+	{
+		return (((uint32_t)(v[3] * 127.5f + 128.0f)) << 24)
+		     | (((uint32_t)(v[2] * 127.5f + 128.0f)) << 16)
+		     | (((uint32_t)(v[1] * 127.5f + 128.0f)) << 8)
+		     | (((uint32_t)(v[0] * 127.5f + 128.0f)));
+	}
+}
+
+uint32_t R_VboPackNormal(vec3_t v)
+{
+	if (glRefConfig.packedNormalDataType == GL_UNSIGNED_INT_2_10_10_10_REV)
+	{
+		return (((uint32_t)(v[2] * 511.5f + 512.0f)) << 20)
+		     | (((uint32_t)(v[1] * 511.5f + 512.0f)) << 10)
+		     | (((uint32_t)(v[0] * 511.5f + 512.0f)));
+	}
+	else
+	{
+		return (((uint32_t)(v[2] * 127.5f + 128.0f)) << 16)
+		     | (((uint32_t)(v[1] * 127.5f + 128.0f)) << 8)
+		     | (((uint32_t)(v[0] * 127.5f + 128.0f)));
+	}
+}
+
+void R_VboUnpackTangent(vec4_t v, uint32_t b)
+{
+	if (glRefConfig.packedNormalDataType == GL_UNSIGNED_INT_2_10_10_10_REV)
+	{
+		v[0] = ((b)       & 0x3ff) * 1.0f/511.5f - 1.0f;
+		v[1] = ((b >> 10) & 0x3ff) * 1.0f/511.5f - 1.0f;
+		v[2] = ((b >> 20) & 0x3ff) * 1.0f/511.5f - 1.0f;
+		v[3] = ((b >> 30) & 0x3)   * 1.0f/1.5f   - 1.0f;
+	}
+	else
+	{
+		v[0] = ((b)       & 0xff) * 1.0f/127.5f - 1.0f;
+		v[1] = ((b >> 8)  & 0xff) * 1.0f/127.5f - 1.0f;
+		v[2] = ((b >> 16) & 0xff) * 1.0f/127.5f - 1.0f;
+		v[3] = ((b >> 24) & 0xff) * 1.0f/127.5f - 1.0f;
+	}
+}
+
+void R_VboUnpackNormal(vec3_t v, uint32_t b)
+{
+	if (glRefConfig.packedNormalDataType == GL_UNSIGNED_INT_2_10_10_10_REV)
+	{
+		v[0] = ((b)       & 0x3ff) * 1.0f/511.5f - 1.0f;
+		v[1] = ((b >> 10) & 0x3ff) * 1.0f/511.5f - 1.0f;
+		v[2] = ((b >> 20) & 0x3ff) * 1.0f/511.5f - 1.0f;
+	}
+	else
+	{
+		v[0] = ((b)       & 0xff) * 1.0f/127.5f - 1.0f;
+		v[1] = ((b >> 8)  & 0xff) * 1.0f/127.5f - 1.0f;
+		v[2] = ((b >> 16) & 0xff) * 1.0f/127.5f - 1.0f;
+	}
+}
+
 /*
 ============
 R_CreateVBO
@@ -150,14 +219,14 @@ VBO_t          *R_CreateVBO2(const char *name, int numVertexes, srfVert_t * vert
 		if(stateBits & ATTR_NORMAL)
 		{
 			vbo->ofs_normal = dataSize;
-			dataSize += sizeof(uint8_t) * 4;
+			dataSize += sizeof(uint32_t);
 		}
 
 #ifdef USE_VERT_TANGENT_SPACE
 		if(stateBits & ATTR_TANGENT)
 		{
 			vbo->ofs_tangent = dataSize;
-			dataSize += sizeof(uint8_t) * 4;
+			dataSize += sizeof(uint32_t);
 		}
 #endif
 
@@ -182,7 +251,7 @@ VBO_t          *R_CreateVBO2(const char *name, int numVertexes, srfVert_t * vert
 		if(stateBits & ATTR_LIGHTDIRECTION)
 		{
 			vbo->ofs_lightdir = dataSize;
-			dataSize += sizeof(verts[0].lightdir);
+			dataSize += sizeof(uint32_t);
 		}
 
 		vbo->stride_xyz         = dataSize;
@@ -212,31 +281,22 @@ VBO_t          *R_CreateVBO2(const char *name, int numVertexes, srfVert_t * vert
 			// normal
 			if(stateBits & ATTR_NORMAL)
 			{
-				uint8_t *p = data + dataOfs;
+				uint32_t *p = (uint32_t *)(data + dataOfs);
 
-				p[0] = (uint8_t)(verts[i].normal[0] * 127.5f + 128.0f);
-				p[1] = (uint8_t)(verts[i].normal[1] * 127.5f + 128.0f);
-				p[2] = (uint8_t)(verts[i].normal[2] * 127.5f + 128.0f);
-				p[3] = 0;
+				*p = R_VboPackNormal(verts[i].normal);
 
-				dataOfs += sizeof(uint8_t) * 4;
+				dataOfs += sizeof(uint32_t);
 			}
 
 #ifdef USE_VERT_TANGENT_SPACE
 			// tangent
 			if(stateBits & ATTR_TANGENT)
 			{
-				vec3_t nxt;
-				uint8_t *p = data + dataOfs;
+				uint32_t *p = (uint32_t *)(data + dataOfs);
 
-				CrossProduct(verts[i].normal, verts[i].tangent, nxt);
+				*p = R_VboPackTangent(verts[i].tangent);
 
-				p[0] = (uint8_t)(verts[i].tangent[0] * 127.5f + 128.0f);
-				p[1] = (uint8_t)(verts[i].tangent[1] * 127.5f + 128.0f);
-				p[2] = (uint8_t)(verts[i].tangent[2] * 127.5f + 128.0f);				
-				p[3] = (uint8_t)(verts[i].tangent[3] * 127.5f + 128.0f);
-
-				dataOfs += sizeof(uint8_t) * 4;
+				dataOfs += sizeof(uint32_t);
 			}
 #endif
 
@@ -264,8 +324,11 @@ VBO_t          *R_CreateVBO2(const char *name, int numVertexes, srfVert_t * vert
 			// feed vertex light directions
 			if(stateBits & ATTR_LIGHTDIRECTION)
 			{
-				memcpy(data + dataOfs, &verts[i].lightdir, sizeof(verts[i].lightdir));
-				dataOfs += sizeof(verts[i].lightdir);
+				uint32_t *p = (uint32_t *)(data + dataOfs);
+
+				*p = R_VboPackNormal(verts[i].lightdir);
+
+				dataOfs += sizeof(uint32_t);
 			}
 		}
 	}
@@ -276,13 +339,13 @@ VBO_t          *R_CreateVBO2(const char *name, int numVertexes, srfVert_t * vert
 
 		if(stateBits & ATTR_NORMAL)
 		{
-			dataSize += sizeof(uint8_t) * 4;
+			dataSize += sizeof(uint32_t);
 		}
 
 #ifdef USE_VERT_TANGENT_SPACE
 		if(stateBits & ATTR_TANGENT)
 		{
-			dataSize += sizeof(uint8_t) * 4;
+			dataSize += sizeof(uint32_t);
 		}
 #endif
 
@@ -303,7 +366,7 @@ VBO_t          *R_CreateVBO2(const char *name, int numVertexes, srfVert_t * vert
 
 		if(stateBits & ATTR_LIGHTDIRECTION)
 		{
-			dataSize += sizeof(verts[0].lightdir);
+			dataSize += sizeof(uint32_t);
 		}
 
 		// create VBO
@@ -322,14 +385,14 @@ VBO_t          *R_CreateVBO2(const char *name, int numVertexes, srfVert_t * vert
 		vbo->ofs_lightdir       = 0;
 
 		vbo->stride_xyz         = sizeof(verts[0].xyz);
-		vbo->stride_normal      = sizeof(uint8_t) * 4;
+		vbo->stride_normal      = sizeof(uint32_t);
 #ifdef USE_VERT_TANGENT_SPACE
-		vbo->stride_tangent     = sizeof(uint8_t) * 4;
+		vbo->stride_tangent     = sizeof(uint32_t);
 #endif
 		vbo->stride_vertexcolor = sizeof(verts[0].vertexColors);
 		vbo->stride_st          = sizeof(verts[0].st);
 		vbo->stride_lightmap    = sizeof(verts[0].lightmap);
-		vbo->stride_lightdir    = sizeof(verts[0].lightdir);
+		vbo->stride_lightdir    = sizeof(uint32_t);
 
 		//ri.Printf(PRINT_ALL, "2CreateVBO: %d, %d %d %d %d %d, %d %d %d %d %d\n", dataSize, vbo->ofs_xyz, vbo->ofs_normal, vbo->ofs_st, vbo->ofs_lightmap, vbo->ofs_vertexcolor,
 			//vbo->stride_xyz, vbo->stride_normal, vbo->stride_st, vbo->stride_lightmap, vbo->stride_vertexcolor);
@@ -347,14 +410,11 @@ VBO_t          *R_CreateVBO2(const char *name, int numVertexes, srfVert_t * vert
 			vbo->ofs_normal = dataOfs;
 			for (i = 0; i < numVertexes; i++)
 			{
-				uint8_t *p = data + dataOfs;
+				uint32_t *p = (uint32_t *)(data + dataOfs);
 
-				p[0] = (uint8_t)(verts[i].normal[0] * 127.5f + 128.0f);
-				p[1] = (uint8_t)(verts[i].normal[1] * 127.5f + 128.0f);
-				p[2] = (uint8_t)(verts[i].normal[2] * 127.5f + 128.0f);
-				p[3] = 0;
+				*p = R_VboPackNormal(verts[i].normal);
 
-				dataOfs += sizeof(uint8_t) * 4;
+				dataOfs += sizeof(uint32_t);
 			}
 		}
 
@@ -365,17 +425,11 @@ VBO_t          *R_CreateVBO2(const char *name, int numVertexes, srfVert_t * vert
 			vbo->ofs_tangent = dataOfs;
 			for (i = 0; i < numVertexes; i++)
 			{
-				vec3_t nxt;
-				uint8_t *p = data + dataOfs;
+				uint32_t *p = (uint32_t *)(data + dataOfs);
 
-				CrossProduct(verts[i].normal, verts[i].tangent, nxt);
+				*p = R_VboPackTangent(verts[i].tangent);
 
-				p[0] = (uint8_t)(verts[i].tangent[0] * 127.5f + 128.0f);
-				p[1] = (uint8_t)(verts[i].tangent[1] * 127.5f + 128.0f);
-				p[2] = (uint8_t)(verts[i].tangent[2] * 127.5f + 128.0f);
-				p[3] = (uint8_t)(verts[i].tangent[3] * 127.5f + 128.0f);
-
-				dataOfs += sizeof(uint8_t) * 4;
+				dataOfs += sizeof(uint32_t);
 			}
 		}
 #endif
@@ -419,8 +473,11 @@ VBO_t          *R_CreateVBO2(const char *name, int numVertexes, srfVert_t * vert
 			vbo->ofs_lightdir = dataOfs;
 			for (i = 0; i < numVertexes; i++)
 			{
-				memcpy(data + dataOfs, &verts[i].lightdir, sizeof(verts[i].lightdir));
-				dataOfs += sizeof(verts[i].lightdir);
+				uint32_t *p = (uint32_t *)(data + dataOfs);
+
+				*p = R_VboPackNormal(verts[i].lightdir);
+
+				dataOfs += sizeof(uint32_t);
 			}
 		}
 	}
