@@ -647,7 +647,7 @@ just use Spearmint.
 If you really changed parts that would make vanilla Spearmint incompatible with
 your mod, we have included another way to conveniently build a stand-alone
 binary. Just run make. Don't forget to edit the PRODUCT_NAME and subsequent
-#defines in qcommon/q_shared.h with information appropriate for your project.
+ #defines in qcommon/q_shared.h with information appropriate for your project.
 
 ## Standalone game licensing
 
