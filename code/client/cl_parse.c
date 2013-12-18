@@ -306,17 +306,6 @@ void CL_ParseSnapshot( msg_t *msg ) {
 		}
 	}
 
-	// read areamask
-	len = MSG_ReadByte( msg );
-	
-	if(len > sizeof(newSnap.areamask))
-	{
-		Com_Error (ERR_DROP,"CL_ParseSnapshot: Invalid size %d for areamask", len);
-		return;
-	}
-	
-	MSG_ReadData( msg, &newSnap.areamask, len);
-
 	DA_Clear( &cl.tempSnapshotPS );
 
 	// read playerinfo
@@ -337,6 +326,17 @@ void CL_ParseSnapshot( msg_t *msg ) {
 			newSnap.lcIndex[i] = -1;
 			newSnap.clientNums[i] = -1;
 		}
+
+		// read areamask
+		len = MSG_ReadByte( msg );
+
+		if(len > sizeof(newSnap.areamask[0]))
+		{
+			Com_Error (ERR_DROP,"CL_ParseSnapshot: Invalid size %d for areamask", len);
+			return;
+		}
+
+		MSG_ReadData( msg, &newSnap.areamask[i], len);
 	}
 
 	for (i = 0; i < MAX_SPLITVIEW; i++) {

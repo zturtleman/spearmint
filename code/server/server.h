@@ -111,8 +111,8 @@ typedef struct {
 
 
 typedef struct {
-	int				areabytes;
-	byte			areabits[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
+	int				areabytes[MAX_SPLITVIEW];
+	byte			areabits[MAX_SPLITVIEW][MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 	int				numPSs;
 	darray_t		playerStates;
 	int				lcIndex[MAX_SPLITVIEW];
