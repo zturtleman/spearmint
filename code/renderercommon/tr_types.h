@@ -86,12 +86,6 @@ typedef struct {
 	byte		modulate[4];
 } polyVert_t;
 
-typedef struct poly_s {
-	qhandle_t			hShader;
-	int					numVerts;
-	polyVert_t			*verts;
-} poly_t;
-
 // =========================================
 // Gordon, these MUST NOT exceed the values for SHADER_MAX_VERTEXES/SHADER_MAX_INDEXES
 #define MAX_PB_VERTS    1025 // SHADER_MAX_VERTEXES
