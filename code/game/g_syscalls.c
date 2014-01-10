@@ -30,18 +30,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 #include "g_local.h"
 
-// this file is only included when building a dll
-// g_syscalls.asm is included instead when building a qvm
-#ifdef Q3_VM
-#error "Do not use in VM build"
-#endif
-
+#ifndef Q3_VM
 static intptr_t (QDECL *syscall)( intptr_t arg, ... ) = (intptr_t (QDECL *)( intptr_t, ...))-1;
-
 
 Q_EXPORT void dllEntry( intptr_t (QDECL *syscallptr)( intptr_t arg,... ) ) {
 	syscall = syscallptr;
 }
+#endif
 
 int PASSFLOAT( float x ) {
 	floatint_t fi;
@@ -56,8 +51,10 @@ void	trap_Print( const char *text ) {
 void trap_Error( const char *text )
 {
 	syscall( G_ERROR, text );
+#ifndef Q3_VM
 	// shut up GCC warning about returning functions, because we know better
 	exit(1);
+#endif
 }
 
 int		trap_Milliseconds( void ) {

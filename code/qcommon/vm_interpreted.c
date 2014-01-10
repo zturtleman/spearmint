@@ -516,10 +516,10 @@ nextInstruction2:
 						for (i = 0; i < ARRAY_LEN(argarr); ++i) {
 							argarr[i] = *(++imagePtr);
 						}
-						r = vm->systemCall( argarr );
+						r = VM_QvmSyscall( argarr );
 					} else {
 						intptr_t* argptr = (intptr_t *)&image[ programStack + 4 ];
-						r = vm->systemCall( argptr );
+						r = VM_QvmSyscall( argptr );
 					}
 				}
 

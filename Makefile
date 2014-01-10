@@ -2265,7 +2265,7 @@ $(B)/$(SERVERBIN)$(FULLBINEXT): $(Q3DOBJ)
 ## BASEGAME CGAME
 #############################################################################
 
-Q3CGOBJ_ = \
+Q3CGOBJ = \
   $(B)/$(BASEGAME)/cgame/cg_main.o \
   $(B)/$(BASEGAME)/cgame/bg_misc.o \
   $(B)/$(BASEGAME)/cgame/bg_pmove.o \
@@ -2295,6 +2295,7 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/cg_servercmds.o \
   $(B)/$(BASEGAME)/cgame/cg_snapshot.o \
   $(B)/$(BASEGAME)/cgame/cg_spawn.o \
+  $(B)/$(BASEGAME)/cgame/cg_syscalls.o \
   $(B)/$(BASEGAME)/cgame/cg_view.o \
   $(B)/$(BASEGAME)/cgame/cg_weapons.o \
   \
@@ -2343,22 +2344,21 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
 
-Q3CGOBJ = $(Q3CGOBJ_) $(B)/$(BASEGAME)/cgame/cg_syscalls.o
-Q3CGVMOBJ = $(Q3CGOBJ_:%.o=%.asm)
+Q3CGVMOBJ = $(Q3CGOBJ:%.o=%.asm)
 
 $(B)/$(BASEGAME)/mint-cgame_$(SHLIBNAME): $(Q3CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3CGOBJ)
 
-$(B)/$(BASEGAME)/vm/mint-cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/mint-cgame.qvm: $(Q3CGVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ $(Q3CGVMOBJ) $(GDIR)/bg_syscalls.asm
 
 #############################################################################
 ## MISSIONPACK CGAME
 #############################################################################
 
-MPCGOBJ_ = \
+MPCGOBJ = \
   $(B)/$(MISSIONPACK)/cgame/cg_main.o \
   $(B)/$(MISSIONPACK)/cgame/bg_misc.o \
   $(B)/$(MISSIONPACK)/cgame/bg_pmove.o \
@@ -2388,6 +2388,7 @@ MPCGOBJ_ = \
   $(B)/$(MISSIONPACK)/cgame/cg_servercmds.o \
   $(B)/$(MISSIONPACK)/cgame/cg_snapshot.o \
   $(B)/$(MISSIONPACK)/cgame/cg_spawn.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_syscalls.o \
   $(B)/$(MISSIONPACK)/cgame/cg_view.o \
   $(B)/$(MISSIONPACK)/cgame/cg_weapons.o \
   \
@@ -2400,16 +2401,15 @@ MPCGOBJ_ = \
   $(B)/$(MISSIONPACK)/qcommon/q_math.o \
   $(B)/$(MISSIONPACK)/qcommon/q_shared.o
 
-MPCGOBJ = $(MPCGOBJ_) $(B)/$(MISSIONPACK)/cgame/cg_syscalls.o
-MPCGVMOBJ = $(MPCGOBJ_:%.o=%.asm)
+MPCGVMOBJ = $(MPCGOBJ:%.o=%.asm)
 
 $(B)/$(MISSIONPACK)/mint-cgame_$(SHLIBNAME): $(MPCGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPCGOBJ)
 
-$(B)/$(MISSIONPACK)/vm/mint-cgame.qvm: $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/mint-cgame.qvm: $(MPCGVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ $(MPCGVMOBJ) $(GDIR)/bg_syscalls.asm
 
 
 
@@ -2417,7 +2417,7 @@ $(B)/$(MISSIONPACK)/vm/mint-cgame.qvm: $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q
 ## BASEGAME GAME
 #############################################################################
 
-Q3GOBJ_ = \
+Q3GOBJ = \
   $(B)/$(BASEGAME)/game/g_main.o \
   $(B)/$(BASEGAME)/game/ai_chat.o \
   $(B)/$(BASEGAME)/game/ai_cmd.o \
@@ -2449,6 +2449,7 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/g_session.o \
   $(B)/$(BASEGAME)/game/g_spawn.o \
   $(B)/$(BASEGAME)/game/g_svcmds.o \
+  $(B)/$(BASEGAME)/game/g_syscalls.o \
   $(B)/$(BASEGAME)/game/g_target.o \
   $(B)/$(BASEGAME)/game/g_team.o \
   $(B)/$(BASEGAME)/game/g_trigger.o \
@@ -2458,22 +2459,21 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
 
-Q3GOBJ = $(Q3GOBJ_) $(B)/$(BASEGAME)/game/g_syscalls.o
-Q3GVMOBJ = $(Q3GOBJ_:%.o=%.asm)
+Q3GVMOBJ = $(Q3GOBJ:%.o=%.asm)
 
 $(B)/$(BASEGAME)/mint-game_$(SHLIBNAME): $(Q3GOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
 
-$(B)/$(BASEGAME)/vm/mint-game.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/mint-game.qvm: $(Q3GVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ $(Q3GVMOBJ) $(GDIR)/bg_syscalls.asm
 
 #############################################################################
 ## MISSIONPACK GAME
 #############################################################################
 
-MPGOBJ_ = \
+MPGOBJ = \
   $(B)/$(MISSIONPACK)/game/g_main.o \
   $(B)/$(MISSIONPACK)/game/ai_chat.o \
   $(B)/$(MISSIONPACK)/game/ai_cmd.o \
@@ -2505,6 +2505,7 @@ MPGOBJ_ = \
   $(B)/$(MISSIONPACK)/game/g_session.o \
   $(B)/$(MISSIONPACK)/game/g_spawn.o \
   $(B)/$(MISSIONPACK)/game/g_svcmds.o \
+  $(B)/$(MISSIONPACK)/game/g_syscalls.o \
   $(B)/$(MISSIONPACK)/game/g_target.o \
   $(B)/$(MISSIONPACK)/game/g_team.o \
   $(B)/$(MISSIONPACK)/game/g_trigger.o \
@@ -2514,16 +2515,15 @@ MPGOBJ_ = \
   $(B)/$(MISSIONPACK)/qcommon/q_math.o \
   $(B)/$(MISSIONPACK)/qcommon/q_shared.o
 
-MPGOBJ = $(MPGOBJ_) $(B)/$(MISSIONPACK)/game/g_syscalls.o
-MPGVMOBJ = $(MPGOBJ_:%.o=%.asm)
+MPGVMOBJ = $(MPGOBJ:%.o=%.asm)
 
 $(B)/$(MISSIONPACK)/mint-game_$(SHLIBNAME): $(MPGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPGOBJ)
 
-$(B)/$(MISSIONPACK)/vm/mint-game.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/mint-game.qvm: $(MPGVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(MPGVMOBJ) $(GDIR)/g_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ $(MPGVMOBJ) $(GDIR)/bg_syscalls.asm
 
 
 

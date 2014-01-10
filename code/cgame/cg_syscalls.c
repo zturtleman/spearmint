@@ -27,12 +27,6 @@ terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
 Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
-//
-// cg_syscalls.c -- this file is only included when building a dll
-// cg_syscalls.asm is included instead when building a qvm
-#ifdef Q3_VM
-#error "Do not use in VM build"
-#endif
 
 #include "../qcommon/q_shared.h"
 #include "../renderercommon/tr_types.h"
@@ -40,13 +34,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "cg_public.h"
 #include "cg_syscalls.h"
 
+#ifndef Q3_VM
 static intptr_t (QDECL *syscall)( intptr_t arg, ... ) = (intptr_t (QDECL *)( intptr_t, ...))-1;
-
 
 Q_EXPORT void dllEntry( intptr_t (QDECL  *syscallptr)( intptr_t arg,... ) ) {
 	syscall = syscallptr;
 }
-
+#endif
 
 int PASSFLOAT( float x ) {
 	floatint_t fi;
@@ -60,8 +54,10 @@ void	trap_Print( const char *fmt ) {
 
 void	trap_Error(const char *fmt) {
 	syscall(CG_ERROR, fmt);
+#ifndef Q3_VM
 	// shut up GCC warning about returning functions, because we know better
 	exit(1);
+#endif
 }
 
 int		trap_Milliseconds( void ) {

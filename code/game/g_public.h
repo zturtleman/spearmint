@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define	GAME_API_MAJOR_VERSION	0
-#define	GAME_API_MINOR_VERSION	0
+#define	GAME_API_MINOR_VERSION	1
 
 
 // entity->svFlags
@@ -111,12 +111,12 @@ typedef struct {
 //
 // system traps provided by the main engine
 //
+// also see qvmTraps_t in qcommon.h for QVM-specific system calls
+//
 typedef enum {
 	//============== general Quake services ==================
 
-	// See sharedTraps_t in qcommon.h for TRAP_MEMSET=0, etc
-
-	G_PRINT = 20,	// ( const char *string );
+	G_PRINT = 0,	// ( const char *string );
 	// print message on the local console
 
 	G_ERROR,		// ( const char *string );

@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	2
+#define CG_API_MINOR_VERSION	3
 
 
 #define	CMD_BACKUP			64	
@@ -140,15 +140,15 @@ typedef enum {
 
 functions imported from the main executable
 
+also see qvmTraps_t in qcommon.h for QVM-specific system calls
+
 ==================================================================
 */
 
 typedef enum {
 	//============== general Quake services ==================
 
-	// See sharedTraps_t in qcommon.h for TRAP_MEMSET=0, etc
-
-	CG_PRINT = 20,
+	CG_PRINT = 0,
 	CG_ERROR,
 	CG_MILLISECONDS,
 	CG_REAL_TIME,

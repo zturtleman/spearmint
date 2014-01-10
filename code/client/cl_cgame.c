@@ -1145,60 +1145,6 @@ The cgame module is making a system call
 */
 intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	switch( args[0] ) {
-	case TRAP_MEMSET:
-		Com_Memset( VMA(1), args[2], args[3] );
-		return args[1];
-
-	case TRAP_MEMCPY:
-		Com_Memcpy( VMA(1), VMA(2), args[3] );
-		return args[1];
-
-	case TRAP_STRNCPY:
-		strncpy( VMA(1), VMA(2), args[3] );
-		return args[1];
-
-	case TRAP_SIN:
-		return FloatAsInt( sin( VMF(1) ) );
-
-	case TRAP_COS:
-		return FloatAsInt( cos( VMF(1) ) );
-
-	case TRAP_ATAN2:
-		return FloatAsInt( atan2( VMF(1), VMF(2) ) );
-
-	case TRAP_SQRT:
-		return FloatAsInt( sqrt( VMF(1) ) );
-
-	case TRAP_FLOOR:
-		return FloatAsInt( floor( VMF(1) ) );
-
-	case TRAP_CEIL:
-		return FloatAsInt( ceil( VMF(1) ) );
-
-	case TRAP_ACOS:
-		return FloatAsInt( Q_acos( VMF(1) ) );
-
-	case TRAP_ASIN:
-		return FloatAsInt( Q_asin( VMF(1) ) );
-
-	case TRAP_TAN:
-		return FloatAsInt( tan( VMF(1) ) );
-
-	case TRAP_ATAN:
-		return FloatAsInt( atan( VMF(1) ) );
-
-	case TRAP_POW:
-		return FloatAsInt( pow( VMF(1), VMF(2) ) );
-
-	case TRAP_EXP:
-		return FloatAsInt( exp( VMF(1) ) );
-
-	case TRAP_LOG:
-		return FloatAsInt( log( VMF(1) ) );
-
-	case TRAP_LOG10:
-		return FloatAsInt( log10( VMF(1) ) );
-
 	case CG_PRINT:
 		Com_Printf( "%s", (const char*)VMA(1) );
 		return 0;
