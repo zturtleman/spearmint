@@ -250,7 +250,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 		Com_Error( ERR_DROP, "Received unexpected snapshot" );
 	}
 
-	if ( !cl.cgamePlayerStateSize || !cl.cgamePlayerStateSize ) {
+	if ( !cl.cgamePlayerStateSize || !cl.cgameEntityStateSize ) {
 		Com_Error( ERR_DROP, "cgame needs to call trap_SetNetFields" );
 	}
 
