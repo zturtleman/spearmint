@@ -1471,7 +1471,9 @@ int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBi
 		cinTable[currentHandle].status = FMV_PLAY;
 		Com_DPrintf("trFMV::play(), playing %s\n", arg);
 
-		s_rawend[0] = s_soundtime;
+		if (!cinTable[currentHandle].silent) {
+			s_rawend[0] = s_soundtime;
+		}
 
 		if (cinTable[currentHandle].alterGameState) {
 			clc.state = CA_CINEMATIC;
