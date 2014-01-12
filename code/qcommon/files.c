@@ -2703,9 +2703,7 @@ void FS_GetModDescription( const char *modDir, char *description, int descriptio
 	int				nDescLen;
 	FILE			*file;
 
-	descPath[0] = '\0';
-	strcpy(descPath, modDir);
-	strcat(descPath, "/description.txt");
+	Com_sprintf( descPath, sizeof ( descPath ), "%s/description.txt", modDir );
 	nDescLen = FS_SV_FOpenFileRead( descPath, &descHandle );
 
 	if ( nDescLen > 0 && descHandle) {
