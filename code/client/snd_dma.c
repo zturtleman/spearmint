@@ -1442,11 +1442,7 @@ void S_Base_StartBackgroundTrack( const char *intro, const char *loop, float vol
 	s_backgroundVolume = Com_Clamp(0, 10, volume);
 	s_backgroundLoopVolume = Com_Clamp(0, 10, loopVolume);
 
-	if( !loop ) {
-		s_backgroundLoop[0] = 0;
-	} else {
-		Q_strncpyz( s_backgroundLoop, loop, sizeof( s_backgroundLoop ) );
-	}
+	Q_strncpyz( s_backgroundLoop, loop, sizeof( s_backgroundLoop ) );
 
 	S_OpenBackgroundStream( intro );
 }
