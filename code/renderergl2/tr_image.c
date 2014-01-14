@@ -2592,7 +2592,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	if ( flags & IMGFLAG_LIGHTMAP ) {
 		byte *newPic;
 
-		if (r_hdr->integer && glRefConfig.textureFloat && glRefConfig.halfFloatPixel) {
+		if (r_hdr->integer && glRefConfig.textureFloat && glRefConfig.halfFloatPixel && r_floatLightmap->integer) {
 			textureInternalFormat = GL_RGBA16F_ARB;
 			newPic = ri.Malloc( width * height * 4 * 2 );
 		} else {
