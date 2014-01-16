@@ -976,6 +976,53 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			break;
 		}
 		//
+		// check special case for map16/map32/mapcomp/mapnocomp (compression enabled)
+		if ( !Q_stricmp( token, "map16" ) ) {    // only use this texture if 16 bit color depth
+			if ( glConfig.colorBits <= 16 ) {
+				token = "map";   // use this map
+			} else {
+				COM_ParseExt( text, qfalse );   // ignore the map
+				continue;
+			}
+		} else if ( !Q_stricmp( token, "map32" ) )    { // only use this texture if 16 bit color depth
+			if ( glConfig.colorBits > 16 ) {
+				token = "map";   // use this map
+			} else {
+				COM_ParseExt( text, qfalse );   // ignore the map
+				continue;
+			}
+		} else if ( !Q_stricmp( token, "mapcomp" ) )    { // only use this texture if compression is enabled
+			if ( glConfig.textureCompression && r_ext_compressed_textures->integer ) {
+				token = "map";   // use this map
+			} else {
+				COM_ParseExt( text, qfalse );   // ignore the map
+				continue;
+			}
+		} else if ( !Q_stricmp( token, "mapnocomp" ) )    { // only use this texture if compression is not available or disabled
+			if ( !glConfig.textureCompression ) {
+				token = "map";   // use this map
+			} else {
+				COM_ParseExt( text, qfalse );   // ignore the map
+				continue;
+			}
+		} else if ( !Q_stricmp( token, "animmapcomp" ) )    { // only use this texture if compression is enabled
+			if ( glConfig.textureCompression && r_ext_compressed_textures->integer ) {
+				token = "animmap";   // use this map
+			} else {
+				while ( token[0] )
+					COM_ParseExt( text, qfalse );   // ignore the map
+				continue;
+			}
+		} else if ( !Q_stricmp( token, "animmapnocomp" ) )    { // only use this texture if compression is not available or disabled
+			if ( !glConfig.textureCompression ) {
+				token = "animmap";   // use this map
+			} else {
+				while ( token[0] )
+					COM_ParseExt( text, qfalse );   // ignore the map
+				continue;
+			}
+		}
+		//
 		// map <name>
 		//
 		else if ( !Q_stricmp( token, "map" ) )
