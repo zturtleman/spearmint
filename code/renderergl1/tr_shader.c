@@ -946,9 +946,12 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				return qfalse;
 			}
 
-			if ( !Q_stricmp( token, "$whiteimage" ) )
-			{
+			if ( !Q_stricmp( token, "$whiteimage" ) || !Q_stricmp( token, "*white" ) ) {
 				stage->bundle[0].image[0] = tr.whiteImage;
+				continue;
+			}
+			else if ( !Q_stricmp( token, "$dlight" ) ) {
+				stage->bundle[0].image[0] = tr.dlightImage;
 				continue;
 			}
 			else if ( !Q_stricmp( token, "$lightmap" ) )
@@ -1019,18 +1022,14 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				return qfalse;
 			}
 
-//----(SA)	fixes startup error and allows polygon shadows to work again
 			if ( !Q_stricmp( token, "$whiteimage" ) || !Q_stricmp( token, "*white" ) ) {
-//----(SA)	end
 				stage->bundle[0].image[0] = tr.whiteImage;
 				continue;
 			}
-//----(SA) added
 			else if ( !Q_stricmp( token, "$dlight" ) ) {
 				stage->bundle[0].image[0] = tr.dlightImage;
 				continue;
 			}
-//----(SA) end
 			else if ( !Q_stricmp( token, "$lightmap" ) ) {
 				stage->bundle[0].isLightmap = qtrue;
 				if ( shader.lightmapIndex < 0 || !tr.lightmaps ) {
@@ -1938,7 +1937,7 @@ static qboolean ParseShader( char **text )
 			continue;
 		}
 		// no mip maps
-		else if ( !Q_stricmp( token, "nomipmaps" ) )
+		else if ( !Q_stricmp( token, "nomipmaps" ) || ( !Q_stricmp( token,"nomipmap" ) )  )
 		{
 			shader.noMipMaps = qtrue;
 			shader.noPicMip = qtrue;
