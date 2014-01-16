@@ -934,8 +934,10 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		{
 			break;
 		}
+
 		//
 		// check special case for map16/map32/mapcomp/mapnocomp (compression enabled)
+		//
 		if ( !Q_stricmp( token, "map16" ) ) {    // only use this texture if 16 bit color depth
 			if ( glConfig.colorBits <= 16 ) {
 				token = "map";   // use this map
@@ -983,10 +985,11 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				continue;
 			}
 		}
+
 		//
 		// map <name>
 		//
-		else if ( !Q_stricmp( token, "map" ) )
+		if ( !Q_stricmp( token, "map" ) )
 		{
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] )
