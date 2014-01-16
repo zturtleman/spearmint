@@ -984,7 +984,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				COM_ParseExt( text, qfalse );   // ignore the map
 				continue;
 			}
-		} else if ( !Q_stricmp( token, "map32" ) )    { // only use this texture if 16 bit color depth
+		} else if ( !Q_stricmp( token, "map32" ) )    { // only use this texture if more than 16 bit color depth
 			if ( glConfig.colorBits > 16 ) {
 				token = "map";   // use this map
 			} else {
@@ -992,33 +992,35 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				continue;
 			}
 		} else if ( !Q_stricmp( token, "mapcomp" ) )    { // only use this texture if compression is enabled
-			if ( glConfig.textureCompression && r_ext_compressed_textures->integer ) {
+			if ( glConfig.textureCompression != TC_NONE ) {
 				token = "map";   // use this map
 			} else {
 				COM_ParseExt( text, qfalse );   // ignore the map
 				continue;
 			}
 		} else if ( !Q_stricmp( token, "mapnocomp" ) )    { // only use this texture if compression is not available or disabled
-			if ( !glConfig.textureCompression ) {
+			if ( glConfig.textureCompression == TC_NONE ) {
 				token = "map";   // use this map
 			} else {
 				COM_ParseExt( text, qfalse );   // ignore the map
 				continue;
 			}
 		} else if ( !Q_stricmp( token, "animmapcomp" ) )    { // only use this texture if compression is enabled
-			if ( glConfig.textureCompression && r_ext_compressed_textures->integer ) {
+			if ( glConfig.textureCompression != TC_NONE ) {
 				token = "animmap";   // use this map
 			} else {
-				while ( token[0] )
-					COM_ParseExt( text, qfalse );   // ignore the map
+				while ( token[0] ) {
+					token = COM_ParseExt( text, qfalse );   // ignore the map
+				}
 				continue;
 			}
 		} else if ( !Q_stricmp( token, "animmapnocomp" ) )    { // only use this texture if compression is not available or disabled
-			if ( !glConfig.textureCompression ) {
+			if ( glConfig.textureCompression == TC_NONE ) {
 				token = "animmap";   // use this map
 			} else {
-				while ( token[0] )
-					COM_ParseExt( text, qfalse );   // ignore the map
+				while ( token[0] ) {
+					token = COM_ParseExt( text, qfalse );   // ignore the map
+				}
 				continue;
 			}
 		}
