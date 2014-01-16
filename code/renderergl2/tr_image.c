@@ -1575,9 +1575,16 @@ static void RawImage_ScaleToPower2( byte **data, int *inout_width, int *inout_he
 	int height =        *inout_height;
 	int scaled_width;
 	int scaled_height;
-	qboolean picmip = flags & IMGFLAG_PICMIP;
+	int picmip;
 	qboolean mipmap = flags & IMGFLAG_MIPMAP;
 	qboolean clampToEdge = flags & IMGFLAG_CLAMPTOEDGE;
+
+	if ( flags & IMGFLAG_PICMIP2 )
+		picmip = r_picmip2->integer;
+	else if ( flags & IMGFLAG_PICMIP )
+		picmip = r_picmip->integer;
+	else
+		picmip = 0;
 
 	//
 	// convert to exact power of 2 sizes
@@ -1685,8 +1692,8 @@ static void RawImage_ScaleToPower2( byte **data, int *inout_width, int *inout_he
 	// perform optional picmip operation
 	//
 	if ( picmip ) {
-		scaled_width >>= r_picmip->integer;
-		scaled_height >>= r_picmip->integer;
+		scaled_width >>= picmip;
+		scaled_height >>= picmip;
 	}
 
 	//

@@ -54,6 +54,7 @@ typedef enum
 	IMGFLAG_SRGB           = 0x0080,
 	IMGFLAG_GENNORMALMAP   = 0x0100,
 	IMGFLAG_LIGHTMAP       = 0x0200,
+	IMGFLAG_PICMIP2        = 0x0400,
 } imgFlags_t;
 
 typedef struct image_s {

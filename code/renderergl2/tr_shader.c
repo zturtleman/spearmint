@@ -38,6 +38,7 @@ static char *s_shaderText;
 static	shaderStage_t	stages[MAX_SHADER_STAGES];		
 static	shader_t		shader;
 static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS];
+static	imgFlags_t		shader_picmipFlag;
 
 // these are here because they are only referenced while parsing a shader
 static char implicitMap[ MAX_QPATH ];
@@ -1082,7 +1083,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 					flags |= IMGFLAG_MIPMAP;
 
 				if (!shader.noPicMip)
-					flags |= IMGFLAG_PICMIP;
+					flags |= shader_picmipFlag;
 
 				if (stage->type == ST_NORMALMAP || stage->type == ST_NORMALPARALLAXMAP)
 				{
@@ -1129,7 +1130,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				flags |= IMGFLAG_MIPMAP;
 
 			if (!shader.noPicMip)
-				flags |= IMGFLAG_PICMIP;
+				flags |= shader_picmipFlag;
 
 			if (stage->type == ST_NORMALMAP || stage->type == ST_NORMALPARALLAXMAP)
 			{
@@ -1221,7 +1222,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 						flags |= IMGFLAG_MIPMAP;
 
 					if (!shader.noPicMip)
-						flags |= IMGFLAG_PICMIP;
+						flags |= shader_picmipFlag;
 
 					if (r_srgb->integer)
 						flags |= IMGFLAG_SRGB;
@@ -1888,7 +1889,7 @@ static void ParseSkyParms( char **text ) {
 	static char	*suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"};
 	char		pathname[MAX_QPATH];
 	int			i;
-	imgFlags_t imgFlags = IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
+	imgFlags_t imgFlags = IMGFLAG_MIPMAP | shader_picmipFlag;
 
 	if (r_srgb->integer)
 		imgFlags |= IMGFLAG_SRGB;
@@ -2232,6 +2233,11 @@ static qboolean ParseShader( char **text )
 		else if ( !Q_stricmp( token, "nopicmip" ) )
 		{
 			shader.noPicMip = qtrue;
+			continue;
+		}
+		// character picmip adjustment
+		else if ( !Q_stricmp( token, "picmip2" ) ) {
+			shader_picmipFlag = IMGFLAG_PICMIP2;
 			continue;
 		}
 		// polygonOffset
@@ -4152,6 +4158,8 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		stages[i].bundle[0].texMods = texMods[i];
 	}
 
+	shader_picmipFlag = IMGFLAG_PICMIP;
+
 	// default to no implicit mappings
 	implicitMap[ 0 ] = '\0';
 	implicitStateBits = GLS_DEFAULT;
@@ -4210,7 +4218,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 		if (mipRawImage)
 		{
-			flags |= IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
+			flags |= IMGFLAG_MIPMAP | shader_picmipFlag;
 
 			if (r_genNormalMaps->integer)
 				flags |= IMGFLAG_GENNORMALMAP;

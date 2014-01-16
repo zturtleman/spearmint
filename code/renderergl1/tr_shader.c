@@ -38,6 +38,7 @@ static char *s_shaderText;
 static	shaderStage_t	stages[MAX_SHADER_STAGES];		
 static	shader_t		shader;
 static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS];
+static	imgFlags_t		shader_picmipFlag;
 
 // these are here because they are only referenced while parsing a shader
 static char implicitMap[ MAX_QPATH ];
@@ -1025,7 +1026,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 					flags |= IMGFLAG_MIPMAP;
 
 				if (!shader.noPicMip)
-					flags |= IMGFLAG_PICMIP;
+					flags |= shader_picmipFlag;
 
 				stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 
@@ -1055,7 +1056,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				flags |= IMGFLAG_MIPMAP;
 
 			if (!shader.noPicMip)
-				flags |= IMGFLAG_PICMIP;
+				flags |= shader_picmipFlag;
 
 			stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 			if ( !stage->bundle[0].image[0] )
@@ -1129,7 +1130,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 						flags |= IMGFLAG_MIPMAP;
 
 					if (!shader.noPicMip)
-						flags |= IMGFLAG_PICMIP;
+						flags |= shader_picmipFlag;
 
 					stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
 					if ( !stage->bundle[0].image[num] )
@@ -1694,7 +1695,7 @@ static void ParseSkyParms( char **text ) {
 	static char	*suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"};
 	char		pathname[MAX_QPATH];
 	int			i;
-	imgFlags_t imgFlags = IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
+	imgFlags_t imgFlags = IMGFLAG_MIPMAP | shader_picmipFlag;
 
 	// outerbox
 	token = COM_ParseExt( text, qfalse );
@@ -1999,6 +2000,11 @@ static qboolean ParseShader( char **text )
 		else if ( !Q_stricmp( token, "nopicmip" ) )
 		{
 			shader.noPicMip = qtrue;
+			continue;
+		}
+		// character picmip adjustment
+		else if ( !Q_stricmp( token, "picmip2" ) ) {
+			shader_picmipFlag = IMGFLAG_PICMIP2;
 			continue;
 		}
 		// polygonOffset
@@ -3409,6 +3415,8 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		stages[i].bundle[0].texMods = texMods[i];
 	}
 
+	shader_picmipFlag = IMGFLAG_PICMIP;
+
 	// FIXME: set these "need" values apropriately
 	shader.needsNormal = qtrue;
 	shader.needsST1 = qtrue;
@@ -3470,7 +3478,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 		if (mipRawImage)
 		{
-			flags |= IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
+			flags |= IMGFLAG_MIPMAP | shader_picmipFlag;
 		}
 		else
 		{

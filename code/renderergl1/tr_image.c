@@ -556,7 +556,7 @@ extern qboolean charSet;
 static void Upload32( unsigned *data, 
 						  int width, int height, 
 						  qboolean mipmap, 
-						  qboolean picmip, 
+						  int picmip, 
 							qboolean lightMap,
 						  int *format, 
 						  int *pUploadWidth, int *pUploadHeight )
@@ -594,8 +594,8 @@ static void Upload32( unsigned *data,
 	// perform optional picmip operation
 	//
 	if ( picmip ) {
-		scaled_width >>= r_picmip->integer;
-		scaled_height >>= r_picmip->integer;
+		scaled_width >>= picmip;
+		scaled_height >>= picmip;
 	}
 
 	//
@@ -846,6 +846,7 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height,
 		imgType_t type, imgFlags_t flags, int internalFormat ) {
 	image_t		*image;
 	qboolean	isLightmap = qfalse;
+	int			picmip;
 	long		hash;
 	int         glWrapClampMode;
 
@@ -889,9 +890,16 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height,
 
 	GL_Bind(image);
 
+	if ( image->flags & IMGFLAG_PICMIP2 )
+		picmip = r_picmip2->integer;
+	else if ( image->flags & IMGFLAG_PICMIP )
+		picmip = r_picmip->integer;
+	else
+		picmip = 0;
+
 	Upload32( (unsigned *)pic, image->width, image->height, 
 								image->flags & IMGFLAG_MIPMAP,
-								image->flags & IMGFLAG_PICMIP,
+								picmip,
 								isLightmap,
 								&image->internalFormat,
 								&image->uploadWidth,
