@@ -232,6 +232,9 @@ vmCvar_t	cg_oldRail;
 vmCvar_t	cg_oldRocket;
 vmCvar_t	cg_oldPlasma;
 vmCvar_t	cg_trueLightning;
+vmCvar_t	cg_railWidth;
+vmCvar_t	cg_railCoreWidth;
+vmCvar_t	cg_railSegmentLength;
 vmCvar_t	cg_atmosphericEffects;
 vmCvar_t	cg_teamDmLeadAnnouncements;
 vmCvar_t	cg_voipShowMeter;
@@ -412,6 +415,9 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_oldRocket, "cg_oldRocket", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_oldPlasma, "cg_oldPlasma", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_railWidth, "cg_railWidth", "16", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_railCoreWidth, "cg_railCoreWidth", "6", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_railSegmentLength, "cg_railSegmentLength", "32", CVAR_ARCHIVE, RANGE_FLOAT( 1, 1000 ) },
 	{ &cg_atmosphericEffects, "cg_atmosphericEffects", "1", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_teamDmLeadAnnouncements, "cg_teamDmLeadAnnouncements", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_voipShowMeter, "cg_voipShowMeter", "1", CVAR_ARCHIVE, RANGE_BOOL },

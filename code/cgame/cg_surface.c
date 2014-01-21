@@ -132,7 +132,7 @@ static void CG_DoRailDiscs( qhandle_t hShader, byte color[4], int numSegs, const
 	int i, j;
 	vec3_t	pos[4];
 	vec3_t	v;
-	int		spanWidth = 16 /*r_railWidth->integer*/;
+	int		spanWidth = cg_railWidth.integer;
 	float c, s;
 	float		scale;
 	polyVert_t	verts[4];
@@ -201,12 +201,12 @@ void CG_SurfaceRailRings( const refEntity_t *originEnt ) {
 	VectorSubtract( end, start, vec );
 	len = VectorNormalize( vec );
 	MakeNormalVectors( vec, right, up );
-	numSegs = ( len ) / 32.0f /*r_railSegmentLength->value*/;
+	numSegs = ( len ) / cg_railSegmentLength.value;
 	if ( numSegs <= 0 ) {
 		numSegs = 1;
 	}
 
-	VectorScale( vec, 32.0f /*r_railSegmentLength->value*/, vec );
+	VectorScale( vec, cg_railSegmentLength.value, vec );
 
 	CG_DoRailDiscs( re.customShader, re.shaderRGBA, numSegs, start, vec, right, up );
 }
@@ -294,7 +294,7 @@ void CG_SurfaceRailCore( const refEntity_t *originEnt ) {
 	CrossProduct( v1, v2, right );
 	VectorNormalize( right );
 
-	CG_DoRailCore( verts, re.shaderRGBA, start, end, right, len, 6 /*r_railCoreWidth->integer*/ );
+	CG_DoRailCore( verts, re.shaderRGBA, start, end, right, len, cg_railCoreWidth.integer );
 
 	trap_R_AddPolyRefEntityToScene( &re, 4, verts, 1 );
 }
