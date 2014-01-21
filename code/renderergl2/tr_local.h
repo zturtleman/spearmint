@@ -2617,7 +2617,8 @@ typedef enum {
 // the limits apply to the sum of all scenes in a frame --
 // the main view, all the 3D icons, etc
 #define	MAX_POLYS		600
-#define	MAX_POLYVERTS	3000
+#define	MAX_POLYVERTS	6000 // used for raw polys and RT_POLY entities
+#define	MAX_POLYBUFFERS	128
 
 // all of the information needed by the back end must be
 // contained in a backEndData_t
@@ -2630,7 +2631,7 @@ typedef struct {
 	qhandle_t	skinSurfaces[MAX_SKINSURFACES];
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
-	srfPolyBuffer_t *polybuffers;//[MAX_POLYS];
+	srfPolyBuffer_t *polybuffers;//[MAX_POLYBUFFERS];
 	pshadow_t pshadows[MAX_CALC_PSHADOWS];
 	renderCommandList_t	commands;
 } backEndData_t;
