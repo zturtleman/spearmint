@@ -1664,6 +1664,16 @@ playerState_t *CG_LocalClientPlayerStateForClientNum( int clientNum );
 
 
 //
+// cg_surface.c
+//
+qboolean CG_AddCustomSurface( const refEntity_t *re );
+void CG_SurfaceSprite( const refEntity_t *re );
+void CG_SurfaceRailRings( const refEntity_t *re );
+void CG_SurfaceRailCore( const refEntity_t *re );
+void CG_SurfaceLightningBolt( const refEntity_t *re );
+void CG_SurfaceBeam( const refEntity_t *re );
+
+//
 // cg_spawn.c
 //
 qboolean    CG_SpawnString( const char *key, const char *defaultString, char **out );

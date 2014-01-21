@@ -108,13 +108,16 @@ typedef enum {
 	RT_MODEL,
 	RT_POLY,
 	RT_SPRITE,
+	RT_PORTALSURFACE,		// doesn't draw anything, just info for portals
+
+	RT_MAX_REF_ENTITY_TYPE,
+
+	// ZTM: FIXME: these are only used in cgame...
 	RT_BEAM,
 	RT_RAIL_CORE,
 	RT_RAIL_RINGS,
-	RT_LIGHTNING,
-	RT_PORTALSURFACE,		// doesn't draw anything, just info for portals
+	RT_LIGHTNING
 
-	RT_MAX_REF_ENTITY_TYPE
 } refEntityType_t;
 
 typedef struct {

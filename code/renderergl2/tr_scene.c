@@ -341,7 +341,7 @@ RE_AddRefEntityToScene
 
 =====================
 */
-void RE_AddRefEntityToScene( const refEntity_t *ent ) {
+void RE_AddRefEntityToScene( const refEntity_t *ent, int numVerts, const polyVert_t *verts, int numPolys ) {
 	vec3_t cross;
 
 	if ( !tr.registered ) {
@@ -361,6 +361,28 @@ void RE_AddRefEntityToScene( const refEntity_t *ent ) {
 	}
 	if ( (int)ent->reType < 0 || ent->reType >= RT_MAX_REF_ENTITY_TYPE ) {
 		ri.Error( ERR_DROP, "RE_AddRefEntityToScene: bad reType %i", ent->reType );
+	}
+
+	if ( ent->reType == RT_POLY ) {
+		int totalVerts = numVerts * numPolys;
+
+		if ( !verts || numVerts <= 0 || numPolys <= 0 ) {
+			ri.Printf( PRINT_WARNING, "WARNING: RE_AddRefEntityToScene: RT_POLY without poly info\n");
+			return;
+		}
+
+		if ( r_numpolyverts + totalVerts > max_polyverts ) {
+			ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddRefEntityToScene: r_max_polyverts reached\n");
+			return;
+		}
+
+		backEndData->entities[r_numentities].numPolys = numPolys;
+		backEndData->entities[r_numentities].numVerts = numVerts;
+		backEndData->entities[r_numentities].verts = &backEndData->polyVerts[r_numpolyverts];
+
+		Com_Memcpy( backEndData->entities[r_numentities].verts, verts, totalVerts * sizeof( *verts ) );
+
+		r_numpolyverts += totalVerts;
 	}
 
 	backEndData->entities[r_numentities].e = *ent;

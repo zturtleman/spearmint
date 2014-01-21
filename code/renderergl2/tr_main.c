@@ -2129,6 +2129,7 @@ static void R_AddEntitySurface (int entityNum)
 	trRefEntity_t	*ent;
 	shader_t		*shader;
 	qboolean		onlyRenderShadows;
+	srfPoly_t		polySurf;
 
 	tr.currentEntityNum = entityNum;
 
@@ -2167,13 +2168,21 @@ static void R_AddEntitySurface (int entityNum)
 	switch ( ent->e.reType ) {
 	case RT_PORTALSURFACE:
 		break;		// don't draw anything
+
 	case RT_SPRITE:
-	case RT_BEAM:
-	case RT_LIGHTNING:
-	case RT_RAIL_CORE:
-	case RT_RAIL_RINGS:
 		shader = R_GetShaderByHandle( ent->e.customShader );
 		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, 0, 0 /*cubeMap*/ );
+		break;
+
+	case RT_POLY:
+		// setup poly surface to find fog num
+		polySurf.surfaceType = SF_POLY;
+		polySurf.hShader = ent->e.customShader;
+		polySurf.numVerts = ent->numVerts * ent->numPolys;
+		polySurf.verts = ent->verts;
+
+		shader = R_GetShaderByHandle( ent->e.customShader );
+		R_AddDrawSurf( &entitySurface, shader, R_PolyFogNum( &polySurf ), 0, 0, 0 /*cubeMap*/ );
 		break;
 
 	case RT_MODEL:

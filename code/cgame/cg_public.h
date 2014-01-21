@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	3
+#define CG_API_MINOR_VERSION	4
 
 
 #define	CMD_BACKUP			64	
@@ -271,6 +271,7 @@ typedef enum {
 	CG_R_ADDPOLYBUFFERTOSCENE,
 	CG_R_ALLOCSKINSURFACE,
 	CG_R_ADDSKINTOFRAME,
+	CG_R_ADDPOLYREFENTITYTOSCENE,
 
 	// note: these were not originally available in ui
 	CG_R_LOADWORLDMAP = 350,

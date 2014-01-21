@@ -104,6 +104,11 @@ typedef struct {
 	vec3_t		ambientLight;	// color normalized to 0-255
 	int			ambientLightInt;	// 32 bit rgba packed
 	vec3_t		directedLight;
+
+	// for RT_POLY entities
+	int			numPolys;
+	int			numVerts;
+	polyVert_t	*verts;
 } trRefEntity_t;
 
 
@@ -1986,6 +1991,7 @@ void R_AddBeamSurfaces( trRefEntity_t *e );
 void R_AddRailSurfaces( trRefEntity_t *e, qboolean isUnderwater );
 void R_AddLightningBoltSurfaces( trRefEntity_t *e );
 
+int R_PolyFogNum( srfPoly_t *poly );
 void R_AddPolygonSurfaces( void );
 void R_AddPolygonBufferSurfaces( void );
 
@@ -2398,8 +2404,8 @@ void R_InitNextFrame( void );
 qhandle_t RE_AddSkinToFrame( int numSurfaces, const qhandle_t *surfaces );
 
 void RE_ClearScene( void );
-void RE_AddRefEntityToScene( const refEntity_t *ent );
-void RE_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
+void RE_AddRefEntityToScene( const refEntity_t *ent, int numVerts, const polyVert_t *verts, int numPolys );
+void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys );
 void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void RE_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
 void RE_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );

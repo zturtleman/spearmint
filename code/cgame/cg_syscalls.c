@@ -34,6 +34,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "cg_public.h"
 #include "cg_syscalls.h"
 
+// ZTM: TODO: move usage of this out of this file?
+qboolean CG_AddCustomSurface( const refEntity_t *re );
+
 #ifndef Q3_VM
 static intptr_t (QDECL *syscall)( intptr_t arg, ... ) = (intptr_t (QDECL *)( intptr_t, ...))-1;
 
@@ -347,7 +350,15 @@ void	trap_R_ClearScene( void ) {
 	syscall( CG_R_CLEARSCENE );
 }
 
+void	trap_R_AddPolyRefEntityToScene( const refEntity_t *re, int numVerts, const polyVert_t *verts, int numPolys ) {
+	syscall( CG_R_ADDPOLYREFENTITYTOSCENE, re, numVerts, verts, numPolys );
+}
+
 void	trap_R_AddRefEntityToScene( const refEntity_t *re ) {
+	if ( CG_AddCustomSurface( re ) ) {
+		return;
+	}
+
 	syscall( CG_R_ADDREFENTITYTOSCENE, re );
 }
 
