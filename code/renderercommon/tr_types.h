@@ -68,6 +68,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define RF_FORCE_ENT_ALPHA	0x0400		// override shader alpha value and take the one from the entity
 #define	RF_RGB_TINT			0x0800		// override shader color values and take the ones from the entity
 
+#define	RF_AUTOAXIS			0x1000		// Similar to autosprite, rotate model forward/side axiis to face screen (including in mirrors and portals)
+#define	RF_AUTOAXIS2		0x2000		// Similar to autosprite2, rotate RT_POLY_LOCAL side axis to face screen (including in mirrors and portals)
+
 // refdef flags
 #define RDF_NOWORLDMODEL	0x0001		// used for player configuration screen
 #define RDF_UNDERWATER		0x0002		// underwater
@@ -106,7 +109,8 @@ typedef struct polyBuffer_s {
 
 typedef enum {
 	RT_MODEL,
-	RT_POLY,
+	RT_POLY_GLOBAL,			// verts are in world coords
+	RT_POLY_LOCAL,			// verts are in local space; relative to ref entity origin and axis. useful for RF_AUTOAXIS
 	RT_SPRITE,
 	RT_PORTALSURFACE,		// doesn't draw anything, just info for portals
 

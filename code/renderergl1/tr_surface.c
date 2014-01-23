@@ -1013,7 +1013,8 @@ static void RB_SurfaceEntity( surfaceType_t *surfType ) {
 	case RT_SPRITE:
 		RB_SurfaceSprite();
 		break;
-	case RT_POLY:
+	case RT_POLY_GLOBAL:
+	case RT_POLY_LOCAL:
 		{
 			trRefEntity_t	*ent;
 			srfPoly_t		polySurf;

@@ -363,7 +363,7 @@ void RE_AddRefEntityToScene( const refEntity_t *ent, int numVerts, const polyVer
 		ri.Error( ERR_DROP, "RE_AddRefEntityToScene: bad reType %i", ent->reType );
 	}
 
-	if ( ent->reType == RT_POLY ) {
+	if ( ent->reType == RT_POLY_GLOBAL || ent->reType == RT_POLY_LOCAL ) {
 		int totalVerts = numVerts * numPolys;
 
 		if ( !verts || numVerts <= 0 || numPolys <= 0 ) {

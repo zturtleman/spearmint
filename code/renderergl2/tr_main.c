@@ -1036,16 +1036,43 @@ void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 	vec3_t	delta;
 	float	axisLength;
 
-	if ( ent->e.reType != RT_MODEL ) {
+	if ( ent->e.reType != RT_MODEL && ent->e.reType != RT_POLY_LOCAL ) {
 		*or = viewParms->world;
 		return;
 	}
 
 	VectorCopy( ent->e.origin, or->origin );
 
-	VectorCopy( ent->e.axis[0], or->axis[0] );
-	VectorCopy( ent->e.axis[1], or->axis[1] );
-	VectorCopy( ent->e.axis[2], or->axis[2] );
+	if ( ent->e.renderfx & RF_AUTOAXIS ) {
+		VectorCopy( viewParms->or.axis[0], or->axis[0] ); VectorScale( or->axis[0], -1, or->axis[0]);
+		VectorCopy( viewParms->or.axis[1], or->axis[1] ); if ( !viewParms->isMirror ) VectorScale( or->axis[1], -1, or->axis[1]);
+		VectorCopy( viewParms->or.axis[2], or->axis[2] ); VectorScale( or->axis[2], -1, or->axis[2]);
+	} else if ( ent->e.renderfx & RF_AUTOAXIS2 ) {
+		vec3_t v1, v2;
+
+		// compute forward vector
+		VectorSubtract( ent->e.origin, ent->e.oldorigin, or->axis[0] );
+		VectorNormalize( or->axis[0] );
+
+		// compute side vector
+		VectorSubtract( ent->e.oldorigin, viewParms->or.origin, v1 );
+		VectorNormalize( v1 );
+		VectorSubtract( ent->e.origin, viewParms->or.origin, v2 );
+		VectorNormalize( v2 );
+		CrossProduct( v1, v2, or->axis[2] );
+		VectorNormalize( or->axis[2] );
+
+		// compute up vector
+		CrossProduct( or->axis[0], or->axis[2], or->axis[1] );
+
+		// find midpoint
+		VectorAdd( ent->e.origin, ent->e.oldorigin, or->origin );
+		VectorScale( or->origin, 0.5f, or->origin );
+	} else {
+		VectorCopy( ent->e.axis[0], or->axis[0] );
+		VectorCopy( ent->e.axis[1], or->axis[1] );
+		VectorCopy( ent->e.axis[2], or->axis[2] );
+	}
 
 	glMatrix[0] = or->axis[0][0];
 	glMatrix[4] = or->axis[1][0];
@@ -2174,7 +2201,8 @@ static void R_AddEntitySurface (int entityNum)
 		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, 0, 0 /*cubeMap*/ );
 		break;
 
-	case RT_POLY:
+	case RT_POLY_GLOBAL:
+	case RT_POLY_LOCAL:
 		// setup poly surface to find fog num
 		polySurf.surfaceType = SF_POLY;
 		polySurf.hShader = ent->e.customShader;
