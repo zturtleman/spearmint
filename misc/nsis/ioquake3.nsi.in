@@ -5,8 +5,6 @@
 !define VERSION "XXXVERSIONXXX"
 !define RELEASE "XXXRELEASEXXX"
 
-!define MODDIR "baseq3"
-!define MODDIR2 "missionpack"
 !define PUBLISHER "The Spearmint Team"
 !define URL "http://github.com/zturtleman/spearmint/"
 
@@ -111,15 +109,6 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
   File "../../id-readme.txt"
   File "../../voip-readme.txt"
 
-  SetOutPath "$INSTDIR\${MODDIR}"
-  File "../../build/release-mingw32-x86/${MODDIR}/mint-cgame_x86.dll"
-  File "../../build/release-mingw32-x86/${MODDIR}/mint-game_x86.dll"
-!ifdef MODDIR2
-  SetOutPath "$INSTDIR\${MODDIR2}"
-  File "../../build/release-mingw32-x86/${MODDIR2}/mint-cgame_x86.dll"
-  File "../../build/release-mingw32-x86/${MODDIR2}/mint-game_x86.dll"
-!endif
-
   ; Write the installation path into the registry
   WriteRegStr SHCTX "Software\${GAMEKEY}" ${MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME} "$INSTDIR"
   WriteRegStr SHCTX "Software\${GAMEKEY}" ${MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_VALUENAME} "$MultiUser.InstallMode"
@@ -176,12 +165,6 @@ Section "Uninstall"
   DeleteRegKey SHCTX "Software\${GAMEKEY}"
 
   ; Remove files and uninstaller
-  Delete $INSTDIR\${MODDIR}\mint-cgame_x86.dll
-  Delete $INSTDIR\${MODDIR}\mint-game_x86.dll
-!ifdef MODDIR2
-  Delete $INSTDIR\${MODDIR2}\mint-cgame_x86.dll
-  Delete $INSTDIR\${MODDIR2}\mint-game_x86.dll
-!endif
   Delete $INSTDIR\${CLIENT}
   Delete $INSTDIR\${SERVER}
 !ifdef USE_RENDERER_DLOPEN
@@ -220,10 +203,6 @@ Section "Uninstall"
 
   ; Remove directories used
   RMDir "$SMPROGRAMS\${GAMENAME}"
-  RMDir "$INSTDIR\${MODDIR}"
-!ifdef MODDIR2
-  RMDir "$INSTDIR\${MODDIR2}"
-!endif
   RMDir "$INSTDIR"
 
 SectionEnd
