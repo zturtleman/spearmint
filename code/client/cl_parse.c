@@ -250,7 +250,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 		Com_Error( ERR_DROP, "Received unexpected snapshot" );
 	}
 
-	if ( !cl.cgamePlayerStateSize || !cl.cgamePlayerStateSize ) {
+	if ( !cl.cgamePlayerStateSize || !cl.cgameEntityStateSize ) {
 		Com_Error( ERR_DROP, "cgame needs to call trap_SetNetFields" );
 	}
 
@@ -306,17 +306,6 @@ void CL_ParseSnapshot( msg_t *msg ) {
 		}
 	}
 
-	// read areamask
-	len = MSG_ReadByte( msg );
-	
-	if(len > sizeof(newSnap.areamask))
-	{
-		Com_Error (ERR_DROP,"CL_ParseSnapshot: Invalid size %d for areamask", len);
-		return;
-	}
-	
-	MSG_ReadData( msg, &newSnap.areamask, len);
-
 	DA_Clear( &cl.tempSnapshotPS );
 
 	// read playerinfo
@@ -337,6 +326,17 @@ void CL_ParseSnapshot( msg_t *msg ) {
 			newSnap.lcIndex[i] = -1;
 			newSnap.clientNums[i] = -1;
 		}
+
+		// read areamask
+		len = MSG_ReadByte( msg );
+
+		if(len > sizeof(newSnap.areamask[0]))
+		{
+			Com_Error (ERR_DROP,"CL_ParseSnapshot: Invalid size %d for areamask", len);
+			return;
+		}
+
+		MSG_ReadData( msg, &newSnap.areamask[i], len);
 	}
 
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
@@ -797,7 +797,7 @@ void CL_ParseVoip ( msg_t *msg ) {
 	const int packetsize = MSG_ReadShort(msg);
 	const int flags = MSG_ReadBits(msg, VOIP_FLAGCNT);
 	char encoded[1024];
-	int seqdiff = sequence - clc.voipIncomingSequence[sender];
+	int seqdiff;
 	int written = 0;
 	float voipPower = 0.0f;
 	int i, j;
@@ -841,6 +841,8 @@ void CL_ParseVoip ( msg_t *msg ) {
 	// !!! FIXME: make sure data is narrowband? Does decoder handle this?
 
 	Com_DPrintf("VoIP: packet accepted!\n");
+
+	seqdiff = sequence - clc.voipIncomingSequence[sender];
 
 	// This is a new "generation" ... a new recording started, reset the bits.
 	if (generation != clc.voipIncomingGeneration[sender]) {

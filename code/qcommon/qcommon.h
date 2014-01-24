@@ -264,7 +264,7 @@ PROTOCOL
 ==============================================================
 */
 
-#define	PROTOCOL_VERSION	1
+#define	PROTOCOL_VERSION	2
 #define PROTOCOL_LEGACY_VERSION	0
 
 // maintain a list of compatible protocols for demo playing
@@ -353,8 +353,9 @@ typedef enum {
 	TRAP_POW,
 	TRAP_EXP,
 	TRAP_LOG,
-	TRAP_LOG10
-} sharedTraps_t;
+	TRAP_LOG10,
+	TRAP_SYSCALL
+} qvmTraps_t;
 
 void	VM_Init( void );
 vm_t	*VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *), 
@@ -369,6 +370,8 @@ vm_t	*VM_Restart(vm_t *vm, qboolean unpure);
 
 intptr_t		QDECL VM_Call( vm_t *vm, int callNum, ... );
 intptr_t		QDECL VM_SafeCall( vm_t *vm, int callnum );
+
+void	VM_GetVersion( vm_t *vm, int nameCallNum, int versionCallNum, char *apiName, int apiNameSize, int *major, int *minor );
 
 void	VM_Debug( int level );
 
@@ -517,6 +520,9 @@ void	Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultVa
 
 void	Cvar_Update( vmCvar_t *vmCvar );
 // updates an interpreted modules' version of a cvar
+
+cvar_t *Cvar_SetDefault( const char *var_name, const char *value );
+// if cvar exists, change the default value of the cvar. Otherwise, create using Cvar_Get.
 
 cvar_t *Cvar_Set2( const char *var_name, const char *value, int defaultFlags, qboolean force );
 //

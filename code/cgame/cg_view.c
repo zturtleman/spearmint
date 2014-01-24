@@ -117,7 +117,7 @@ Replaces the current view weapon with the given model
 void CG_TestGun_f (void) {
 	CG_TestModel_f();
 	cg.testGun = qtrue;
-	cg.testModelEntity.renderfx = RF_DEPTHHACK | RF_NO_MIRROR | RF_MINLIGHT;
+	cg.testModelEntity.renderfx = RF_DEPTHHACK | RF_NO_MIRROR;
 }
 
 
@@ -172,7 +172,7 @@ static void CG_AddTestModel (void) {
 		}
 	}
 
-	trap_R_AddRefEntityToScene( &cg.testModelEntity );
+	CG_AddRefEntityWithMinLight( &cg.testModelEntity );
 }
 
 
@@ -1056,7 +1056,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			CG_AddTestModel();
 		}
 		cg.refdef.time = cg.time;
-		memcpy( cg.refdef.areamask, cg.snap->areamask, sizeof( cg.refdef.areamask ) );
+		memcpy( cg.refdef.areamask, cg.snap->areamask[cg.snap->lcIndex[i]], sizeof( cg.refdef.areamask ) );
 
 		// warning sounds when powerup is wearing off
 		CG_PowerupTimerSounds();

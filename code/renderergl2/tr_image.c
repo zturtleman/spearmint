@@ -1575,9 +1575,16 @@ static void RawImage_ScaleToPower2( byte **data, int *inout_width, int *inout_he
 	int height =        *inout_height;
 	int scaled_width;
 	int scaled_height;
-	qboolean picmip = flags & IMGFLAG_PICMIP;
+	int picmip;
 	qboolean mipmap = flags & IMGFLAG_MIPMAP;
 	qboolean clampToEdge = flags & IMGFLAG_CLAMPTOEDGE;
+
+	if ( flags & IMGFLAG_PICMIP2 )
+		picmip = r_picmip2->integer;
+	else if ( flags & IMGFLAG_PICMIP )
+		picmip = r_picmip->integer;
+	else
+		picmip = 0;
 
 	//
 	// convert to exact power of 2 sizes
@@ -1685,8 +1692,8 @@ static void RawImage_ScaleToPower2( byte **data, int *inout_width, int *inout_he
 	// perform optional picmip operation
 	//
 	if ( picmip ) {
-		scaled_width >>= r_picmip->integer;
-		scaled_height >>= r_picmip->integer;
+		scaled_width >>= picmip;
+		scaled_height >>= picmip;
 	}
 
 	//
@@ -2592,7 +2599,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	if ( flags & IMGFLAG_LIGHTMAP ) {
 		byte *newPic;
 
-		if (r_hdr->integer && glRefConfig.textureFloat && glRefConfig.halfFloatPixel) {
+		if (r_hdr->integer && glRefConfig.textureFloat && glRefConfig.halfFloatPixel && r_floatLightmap->integer) {
 			textureInternalFormat = GL_RGBA16F_ARB;
 			newPic = ri.Malloc( width * height * 4 * 2 );
 		} else {
@@ -3057,25 +3064,34 @@ void R_CreateBuiltinImages( void ) {
 			tr.quarterImage[x] = R_CreateImage(va("*quarter%d", x), NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 		}
 
-		tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
-
 		if (r_ssao->integer)
 		{
 			tr.screenSsaoImage = R_CreateImage("*screenSsao", NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 			tr.hdrDepthImage = R_CreateImage("*hdrDepth", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_INTENSITY32F_ARB);
 		}
 
-		for( x = 0; x < MAX_DRAWN_PSHADOWS; x++)
+		if (r_shadows->integer == 4)
 		{
-			tr.pshadowMaps[x] = R_CreateImage(va("*shadowmap%i", x), NULL, PSHADOW_MAP_SIZE, PSHADOW_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
+			for( x = 0; x < MAX_DRAWN_PSHADOWS; x++)
+			{
+				tr.pshadowMaps[x] = R_CreateImage(va("*shadowmap%i", x), NULL, PSHADOW_MAP_SIZE, PSHADOW_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
+			}
 		}
 
-		for ( x = 0; x < 3; x++)
+		if (r_sunlightMode->integer)
 		{
-			tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer, r_shadowMapSize->integer, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_DEPTH_COMPONENT24_ARB);
+			for ( x = 0; x < 3; x++)
+			{
+				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer, r_shadowMapSize->integer, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_DEPTH_COMPONENT24_ARB);
+			}
+
+			tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 		}
 
-		tr.renderCubeImage = R_CreateImage("*renderCube", NULL, CUBE_MAP_SIZE, CUBE_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, rgbFormat);
+		if (r_cubeMapping->integer)
+		{
+			tr.renderCubeImage = R_CreateImage("*renderCube", NULL, CUBE_MAP_SIZE, CUBE_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, rgbFormat);
+		}
 	}
 }
 
@@ -3238,121 +3254,69 @@ SKINS
 
 /*
 ===============
-RE_RegisterSkin
-
+RE_AllocSkinSurface
 ===============
 */
-qhandle_t RE_RegisterSkin( const char *name ) {
-	qhandle_t	hSkin;
-	skin_t		*skin;
-	skinSurface_t	*surf, *lastSurf;
-	union {
-		char *c;
-		void *v;
-	} text;
-	char		*text_p;
-	char		*token;
-	char		surfName[MAX_QPATH];
-	char		shaderName[MAX_QPATH];
+qhandle_t	RE_AllocSkinSurface( const char *name, qhandle_t hShader ) {
+	qhandle_t		hSurf;
+	skinSurface_t	*surf;
+	shader_t		*shader;
+	char			*reuseName;
+	int				nameLen;
+	char			localName[MAX_QPATH];
 
 	if ( !name || !name[0] ) {
-		ri.Printf( PRINT_DEVELOPER, "Empty name passed to RE_RegisterSkin\n" );
+		ri.Printf( PRINT_DEVELOPER, "Empty name passed to RE_AllocSkinSurface\n" );
 		return 0;
 	}
 
 	if ( strlen( name ) >= MAX_QPATH ) {
-		ri.Printf( PRINT_DEVELOPER, "Skin name exceeds MAX_QPATH\n" );
+		ri.Printf( PRINT_DEVELOPER, "Skin surface name exceeds MAX_QPATH\n" );
 		return 0;
 	}
 
-	if ( !COM_CompareExtension( name, ".skin" ) ) {
-		ri.Printf( PRINT_DEVELOPER, "WARNING: RE_RegisterSkin ignoring '%s', must have \".skin\" extension\n", name );
-		return 0;
-	}
+	Q_strncpyz( localName, name, sizeof(localName) );
 
-	// see if the skin is already loaded
-	for ( hSkin = 1; hSkin < tr.numSkins ; hSkin++ ) {
-		skin = tr.skins[hSkin];
-		if ( !Q_stricmp( skin->name, name ) ) {
-			if( !skin->surfaces ) {
-				return 0;		// default skin
+	// lowercase the surface name so skin compares are faster
+	Q_strlwr( localName );
+
+	reuseName = NULL;
+	shader = R_GetShaderByHandle( hShader );
+
+	// see if the surface is already loaded
+	for ( hSurf = 1; hSurf < tr.numSkinSurfaces ; hSurf++ ) {
+		surf = &tr.skinSurfaces[hSurf];
+		if ( !strcmp( surf->name, localName ) ) {
+			if ( surf->shader == shader ) {
+				return hSurf;
 			}
-			return hSkin;
+			reuseName = surf->name;
 		}
 	}
 
-	// allocate a new skin
-	if ( tr.numSkins == MAX_SKINS ) {
-		ri.Printf( PRINT_WARNING, "WARNING: RE_RegisterSkin( '%s' ) MAX_SKINS hit\n", name );
-		return 0;
-	}
-	tr.numSkins++;
-	skin = ri.Hunk_Alloc( sizeof( skin_t ), h_low );
-	tr.skins[hSkin] = skin;
-	Q_strncpyz( skin->name, name, sizeof( skin->name ) );
-	skin->surfaces = lastSurf = NULL;
-
-	R_IssuePendingRenderCommands();
-
-	// load and parse the skin file
-    ri.FS_ReadFile( name, &text.v );
-	if ( !text.c ) {
+	if ( tr.numSkinSurfaces >= MAX_SKINSURFACES ) {
+		ri.Printf( PRINT_WARNING, "WARNING: RE_AllocSkinSurface( '%s' ) MAX_SKINSURFACES hit\n", name );
 		return 0;
 	}
 
-	text_p = text.c;
-	while ( text_p && *text_p ) {
-		// get surface name
-		token = COM_ParseExt2( &text_p, qtrue, ',' );
-		Q_strncpyz( surfName, token, sizeof( surfName ) );
+	// add a new skin surface
+	tr.numSkinSurfaces++;
 
-		if ( !token[0] ) {
-			break;
-		}
-		// lowercase the surface name so skin compares are faster
-		Q_strlwr( surfName );
+	surf = &tr.skinSurfaces[hSurf];
+	surf->shader = shader;
 
-		if ( *text_p == ',' ) {
-			text_p++;
-		}
+	if ( reuseName ) {
+		surf->name = reuseName;
+	} else {
+		nameLen = strlen( localName ) + 1;
 
-		if ( !Q_stricmpn( token, "tag_", 4 ) ) {
-			SkipRestOfLine( &text_p );
-			continue;
-		}
+		surf->name = ri.Hunk_Alloc( nameLen, h_low );
+		tr.skinSurfaceNameMemory += nameLen;
 
-		// skip RTCW/ET skin settings
-		if ( !Q_stricmpn( token, "md3_", 4 ) || !Q_stricmp( token, "playerscale" ) ) {
-			SkipRestOfLine( &text_p );
-			continue;
-		}
-
-		// parse the shader name
-		token = COM_ParseExt2( &text_p, qfalse, ',' );
-		Q_strncpyz( shaderName, token, sizeof( shaderName ) );
-
-		surf = ri.Hunk_Alloc( sizeof( skinSurface_t ), h_low );
-		Q_strncpyz( surf->name, surfName, sizeof( surf->name ) );
-		surf->shader = R_FindShader( shaderName, LIGHTMAP_NONE, qtrue );
-
-		if ( !skin->surfaces ) {
-			skin->surfaces = surf;
-		} else if ( lastSurf ) {
-			lastSurf->next = surf;
-		}
-
-		lastSurf = surf;
+		Q_strncpyz( surf->name, localName, nameLen );
 	}
 
-	ri.FS_FreeFile( text.v );
-
-
-	// never let a skin have 0 shaders
-	if ( !skin->surfaces ) {
-		return 0;		// use default skin
-	}
-
-	return hSkin;
+	return hSurf;
 }
 
 
@@ -3362,25 +3326,7 @@ R_InitSkins
 ===============
 */
 void	R_InitSkins( void ) {
-	skin_t		*skin;
-
-	tr.numSkins = 1;
-
-	// make the default skin have all default shaders
-	skin = tr.skins[0] = ri.Hunk_Alloc( sizeof( skin_t ), h_low );
-	Q_strncpyz( skin->name, "<default skin>", sizeof( skin->name )  );
-}
-
-/*
-===============
-R_GetSkinByHandle
-===============
-*/
-skin_t	*R_GetSkinByHandle( qhandle_t hSkin ) {
-	if ( hSkin < 1 || hSkin >= tr.numSkins ) {
-		return tr.skins[0];
-	}
-	return tr.skins[ hSkin ];
+	tr.numSkinSurfaces = 1;
 }
 
 /*
@@ -3390,19 +3336,16 @@ R_SkinList_f
 */
 void	R_SkinList_f( void ) {
 	int			i;
-	skin_t		*skin;
 	skinSurface_t *surf;
 
+	ri.Printf (PRINT_ALL, "Skin surface name memory: %d bytes\n", tr.skinSurfaceNameMemory);
 	ri.Printf (PRINT_ALL, "------------------\n");
 
-	for ( i = 0 ; i < tr.numSkins ; i++ ) {
-		skin = tr.skins[i];
+	for ( i = 1 ; i < tr.numSkinSurfaces ; i++ ) {
+		surf = &tr.skinSurfaces[i];
 
-		ri.Printf( PRINT_ALL, "%3i:%s\n", i, skin->name );
-		for ( surf = skin->surfaces ; surf ; surf = surf->next ) {
-			ri.Printf( PRINT_ALL, "       %s = %s\n", 
-				surf->name, surf->shader->name );
-		}
+		ri.Printf( PRINT_ALL, "%3i: %s = %s\n",
+				i, surf->name, surf->shader->name );
 	}
 	ri.Printf (PRINT_ALL, "------------------\n");
 }

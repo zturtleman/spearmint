@@ -38,6 +38,7 @@ static char *s_shaderText;
 static	shaderStage_t	stages[MAX_SHADER_STAGES];		
 static	shader_t		shader;
 static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS];
+static	imgFlags_t		shader_picmipFlag;
 
 // these are here because they are only referenced while parsing a shader
 static char implicitMap[ MAX_QPATH ];
@@ -86,7 +87,7 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 
 	sh = R_FindShaderByName( shaderName );
 	if (sh == NULL || sh == tr.defaultShader) {
-		h = RE_RegisterShaderLightMap(shaderName, 0);
+		h = RE_RegisterShaderEx(shaderName, 0, qtrue);
 		sh = R_GetShaderByHandle(h);
 	}
 	if (sh == NULL || sh == tr.defaultShader) {
@@ -96,7 +97,7 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 
 	sh2 = R_FindShaderByName( newShaderName );
 	if (sh2 == NULL || sh2 == tr.defaultShader) {
-		h = RE_RegisterShaderLightMap(newShaderName, 0);
+		h = RE_RegisterShaderEx(newShaderName, 0, qtrue);
 		sh2 = R_GetShaderByHandle(h);
 	}
 
@@ -934,10 +935,62 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		{
 			break;
 		}
+
+		//
+		// check special case for map16/map32/mapcomp/mapnocomp (compression enabled)
+		//
+		if ( !Q_stricmp( token, "map16" ) ) {    // only use this texture if 16 bit color depth
+			if ( glConfig.colorBits <= 16 ) {
+				token = "map";   // use this map
+			} else {
+				COM_ParseExt( text, qfalse );   // ignore the map
+				continue;
+			}
+		} else if ( !Q_stricmp( token, "map32" ) )    { // only use this texture if more than 16 bit color depth
+			if ( glConfig.colorBits > 16 ) {
+				token = "map";   // use this map
+			} else {
+				COM_ParseExt( text, qfalse );   // ignore the map
+				continue;
+			}
+		} else if ( !Q_stricmp( token, "mapcomp" ) )    { // only use this texture if compression is enabled
+			if ( glConfig.textureCompression != TC_NONE ) {
+				token = "map";   // use this map
+			} else {
+				COM_ParseExt( text, qfalse );   // ignore the map
+				continue;
+			}
+		} else if ( !Q_stricmp( token, "mapnocomp" ) )    { // only use this texture if compression is not available or disabled
+			if ( glConfig.textureCompression == TC_NONE ) {
+				token = "map";   // use this map
+			} else {
+				COM_ParseExt( text, qfalse );   // ignore the map
+				continue;
+			}
+		} else if ( !Q_stricmp( token, "animmapcomp" ) )    { // only use this texture if compression is enabled
+			if ( glConfig.textureCompression != TC_NONE ) {
+				token = "animmap";   // use this map
+			} else {
+				while ( token[0] ) {
+					token = COM_ParseExt( text, qfalse );   // ignore the map
+				}
+				continue;
+			}
+		} else if ( !Q_stricmp( token, "animmapnocomp" ) )    { // only use this texture if compression is not available or disabled
+			if ( glConfig.textureCompression == TC_NONE ) {
+				token = "animmap";   // use this map
+			} else {
+				while ( token[0] ) {
+					token = COM_ParseExt( text, qfalse );   // ignore the map
+				}
+				continue;
+			}
+		}
+
 		//
 		// map <name>
 		//
-		else if ( !Q_stricmp( token, "map" ) )
+		if ( !Q_stricmp( token, "map" ) )
 		{
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] )
@@ -946,9 +999,12 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				return qfalse;
 			}
 
-			if ( !Q_stricmp( token, "$whiteimage" ) )
-			{
+			if ( !Q_stricmp( token, "$whiteimage" ) || !Q_stricmp( token, "*white" ) ) {
 				stage->bundle[0].image[0] = tr.whiteImage;
+				continue;
+			}
+			else if ( !Q_stricmp( token, "$dlight" ) ) {
+				stage->bundle[0].image[0] = tr.dlightImage;
 				continue;
 			}
 			else if ( !Q_stricmp( token, "$lightmap" ) )
@@ -970,7 +1026,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 					flags |= IMGFLAG_MIPMAP;
 
 				if (!shader.noPicMip)
-					flags |= IMGFLAG_PICMIP;
+					flags |= shader_picmipFlag;
 
 				stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 
@@ -1000,7 +1056,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				flags |= IMGFLAG_MIPMAP;
 
 			if (!shader.noPicMip)
-				flags |= IMGFLAG_PICMIP;
+				flags |= shader_picmipFlag;
 
 			stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 			if ( !stage->bundle[0].image[0] )
@@ -1019,21 +1075,17 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				return qfalse;
 			}
 
-//----(SA)	fixes startup error and allows polygon shadows to work again
 			if ( !Q_stricmp( token, "$whiteimage" ) || !Q_stricmp( token, "*white" ) ) {
-//----(SA)	end
 				stage->bundle[0].image[0] = tr.whiteImage;
 				continue;
 			}
-//----(SA) added
 			else if ( !Q_stricmp( token, "$dlight" ) ) {
 				stage->bundle[0].image[0] = tr.dlightImage;
 				continue;
 			}
-//----(SA) end
 			else if ( !Q_stricmp( token, "$lightmap" ) ) {
 				stage->bundle[0].isLightmap = qtrue;
-				if ( shader.lightmapIndex < 0 ) {
+				if ( shader.lightmapIndex < 0 || !tr.lightmaps ) {
 					stage->bundle[0].image[0] = tr.whiteImage;
 				} else {
 					stage->bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex];
@@ -1078,7 +1130,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 						flags |= IMGFLAG_MIPMAP;
 
 					if (!shader.noPicMip)
-						flags |= IMGFLAG_PICMIP;
+						flags |= shader_picmipFlag;
 
 					stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
 					if ( !stage->bundle[0].image[num] )
@@ -1438,6 +1490,14 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		}
 	}
 
+	// if shader stage references a lightmap, but no lightmap is present
+	// (vertex-approximated surfaces), then set cgen to vertex
+	if (stage->bundle[0].isLightmap && shader.lightmapIndex < 0 &&
+		stage->bundle[0].image[0] == tr.whiteImage)
+	{
+		stage->bundle[0].isLightmap = qfalse;
+		stage->rgbGen = CGEN_EXACT_VERTEX;
+	}
 
 	//
 	// implicitly assume that a GL_ONE GL_ZERO blend mask disables blending
@@ -1635,7 +1695,7 @@ static void ParseSkyParms( char **text ) {
 	static char	*suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"};
 	char		pathname[MAX_QPATH];
 	int			i;
-	imgFlags_t imgFlags = IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
+	imgFlags_t imgFlags = IMGFLAG_MIPMAP | shader_picmipFlag;
 
 	// outerbox
 	token = COM_ParseExt( text, qfalse );
@@ -1930,7 +1990,7 @@ static qboolean ParseShader( char **text )
 			continue;
 		}
 		// no mip maps
-		else if ( !Q_stricmp( token, "nomipmaps" ) )
+		else if ( !Q_stricmp( token, "nomipmaps" ) || ( !Q_stricmp( token,"nomipmap" ) )  )
 		{
 			shader.noMipMaps = qtrue;
 			shader.noPicMip = qtrue;
@@ -1940,6 +2000,11 @@ static qboolean ParseShader( char **text )
 		else if ( !Q_stricmp( token, "nopicmip" ) )
 		{
 			shader.noPicMip = qtrue;
+			continue;
+		}
+		// character picmip adjustment
+		else if ( !Q_stricmp( token, "picmip2" ) ) {
+			shader_picmipFlag = IMGFLAG_PICMIP2;
 			continue;
 		}
 		// polygonOffset
@@ -3350,6 +3415,8 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		stages[i].bundle[0].texMods = texMods[i];
 	}
 
+	shader_picmipFlag = IMGFLAG_PICMIP;
+
 	// FIXME: set these "need" values apropriately
 	shader.needsNormal = qtrue;
 	shader.needsST1 = qtrue;
@@ -3411,7 +3478,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 		if (mipRawImage)
 		{
-			flags |= IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
+			flags |= IMGFLAG_MIPMAP | shader_picmipFlag;
 		}
 		else
 		{
@@ -3487,16 +3554,13 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 
 /* 
 ====================
-RE_RegisterShader
+RE_RegisterShaderEx
 
 This is the exported shader entry point for the rest of the system
 It will always return an index that will be valid.
-
-This should really only be used for explicit shaders, because there is no
-way to ask for different implicit lighting modes (vertex, lightmap, etc)
 ====================
 */
-qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
+qhandle_t RE_RegisterShaderEx( const char *name, int lightmapIndex, qboolean mipRawImage ) {
 	shader_t	*sh;
 
 	if ( strlen( name ) >= MAX_QPATH ) {
@@ -3504,7 +3568,7 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
 		return 0;
 	}
 
-	sh = R_FindShader( name, lightmapIndex, qtrue );
+	sh = R_FindShader( name, lightmapIndex, mipRawImage );
 
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
@@ -3531,25 +3595,7 @@ way to ask for different implicit lighting modes (vertex, lightmap, etc)
 ====================
 */
 qhandle_t RE_RegisterShader( const char *name ) {
-	shader_t	*sh;
-
-	if ( strlen( name ) >= MAX_QPATH ) {
-		ri.Printf( PRINT_ALL, "Shader name exceeds MAX_QPATH\n" );
-		return 0;
-	}
-
-	sh = R_FindShader( name, LIGHTMAP_2D, qtrue );
-
-	// we want to return 0 if the shader failed to
-	// load for some reason, but R_FindShader should
-	// still keep a name allocated for it, so if
-	// something calls RE_RegisterShader again with
-	// the same name, we don't try looking for it again
-	if ( sh->defaultShader ) {
-		return 0;
-	}
-
-	return sh->index;
+	return RE_RegisterShaderEx( name, LIGHTMAP_2D, qtrue );
 }
 
 
@@ -3561,25 +3607,7 @@ For menu graphics that should never be picmiped
 ====================
 */
 qhandle_t RE_RegisterShaderNoMip( const char *name ) {
-	shader_t	*sh;
-
-	if ( strlen( name ) >= MAX_QPATH ) {
-		ri.Printf( PRINT_ALL, "Shader name exceeds MAX_QPATH\n" );
-		return 0;
-	}
-
-	sh = R_FindShader( name, LIGHTMAP_2D, qfalse );
-
-	// we want to return 0 if the shader failed to
-	// load for some reason, but R_FindShader should
-	// still keep a name allocated for it, so if
-	// something calls RE_RegisterShader again with
-	// the same name, we don't try looking for it again
-	if ( sh->defaultShader ) {
-		return 0;
-	}
-
-	return sh->index;
+	return RE_RegisterShaderEx( name, LIGHTMAP_2D, qfalse );
 }
 
 /*
@@ -3849,6 +3877,10 @@ static void CreateInternalShaders( void ) {
 	stages[0].active = qtrue;
 	stages[0].stateBits = GLS_DEFAULT;
 	tr.defaultShader = FinishShader();
+
+	// used for skins for disable surfaces
+	Q_strncpyz( shader.name, "nodraw", sizeof( shader.name ) );
+	tr.nodrawShader = FinishShader();
 
 	// shadow shader is just a marker
 	Q_strncpyz( shader.name, "<stencil shadow>", sizeof( shader.name ) );

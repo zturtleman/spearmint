@@ -31,8 +31,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 #ifndef __CG_PUBLIC_H__
 #define __CG_PUBLIC_H__
 
-#define CG_API_MAJOR_VERSION	0xdead
-#define CG_API_MINOR_VERSION	0xbeef
+#define CG_API_NAME				"SPEARMINT_CGAME"
+
+// major 0 means each minor is an API break.
+// major > 0 means each major is an API break and each minor extends API.
+#define CG_API_MAJOR_VERSION	0
+#define CG_API_MINOR_VERSION	5
+
 
 #define	CMD_BACKUP			64	
 #define	CMD_MASK			(CMD_BACKUP - 1)
@@ -54,7 +59,7 @@ typedef struct {
 
 	int				serverTime;		// server time the message is valid for (in msec)
 
-	byte			areamask[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
+	byte			areamask[MAX_SPLITVIEW][MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 
 	int				lcIndex[MAX_SPLITVIEW];		// Local Client Indexes
 	int				clientNums[MAX_SPLITVIEW];
@@ -135,15 +140,15 @@ typedef enum {
 
 functions imported from the main executable
 
+also see qvmTraps_t in qcommon.h for QVM-specific system calls
+
 ==================================================================
 */
 
 typedef enum {
 	//============== general Quake services ==================
 
-	// See sharedTraps_t in qcommon.h for TRAP_MEMSET=0, etc
-
-	CG_PRINT = 20,
+	CG_PRINT = 0,
 	CG_ERROR,
 	CG_MILLISECONDS,
 	CG_REAL_TIME,
@@ -242,7 +247,7 @@ typedef enum {
 
 
 	CG_R_REGISTERMODEL = 300,
-	CG_R_REGISTERSKIN,
+	CG_R_REGISTERSHADEREX,
 	CG_R_REGISTERSHADER,
 	CG_R_REGISTERSHADERNOMIP,
 	CG_R_REGISTERFONT,
@@ -264,6 +269,9 @@ typedef enum {
 	CG_R_DRAW2DPOLYS,
 	CG_R_ADDPOLYSTOSCENE,
 	CG_R_ADDPOLYBUFFERTOSCENE,
+	CG_R_ALLOCSKINSURFACE,
+	CG_R_ADDSKINTOFRAME,
+	CG_R_ADDPOLYREFENTITYTOSCENE,
 
 	// note: these were not originally available in ui
 	CG_R_LOADWORLDMAP = 350,
@@ -356,9 +364,10 @@ functions exported to the main executable
 */
 
 typedef enum {
-	CG_GETAPIVERSION,	// system reserved
+	CG_GETAPINAME = 100,
+	CG_GETAPIVERSION,
 
-	CG_INIT,
+	CG_INIT = 200,
 //	void	UI_Init( qboolean inGameLoad, int maxSplitView, int playVideo );
 	// playVideo = 1 means first game to run and no start up arguments
 	// playVideo = 2 means switched to a new game/mod and not connecting to a server

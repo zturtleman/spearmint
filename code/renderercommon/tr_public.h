@@ -60,9 +60,10 @@ typedef struct {
 	// size display elements
 	void	(*BeginRegistration)( glconfig_t *config );
 	qhandle_t (*RegisterModel)( const char *name );
-	qhandle_t (*RegisterSkin)( const char *name );
+	qhandle_t (*RegisterShaderEx)( const char *name, int lightmap, qboolean mip );
 	qhandle_t (*RegisterShader)( const char *name );
 	qhandle_t (*RegisterShaderNoMip)( const char *name );
+	qhandle_t (*AllocSkinSurface)( const char *name, qhandle_t hShader );
 	void	(*LoadWorld)( const char *name );
 
 	// the vis data is a large enough block of data that we go to the trouble
@@ -76,8 +77,8 @@ typedef struct {
 	// a scene is built up by calls to R_ClearScene and the various R_Add functions.
 	// Nothing is drawn until R_RenderScene is called.
 	void	(*ClearScene)( void );
-	void	(*AddRefEntityToScene)( const refEntity_t *re );
-	void	(*AddPolyToScene)( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
+	void	(*AddRefEntityToScene)( const refEntity_t *re, int numVerts, const polyVert_t *verts, int numPolys );
+	void	(*AddPolyToScene)( qhandle_t hShader , int numVerts, const polyVert_t *verts, int numPolys );
 	void	(*AddPolyBufferToScene)( polyBuffer_t* pPolyBuffer );
 	int		(*LightForPoint)( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
 	void	(*AddLightToScene)( const vec3_t org, float radius, float intensity, float r, float g, float b );
@@ -97,6 +98,7 @@ typedef struct {
 	void	(*UploadCinematic) (int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty);
 
 	void	(*BeginFrame)( stereoFrame_t stereoFrame );
+	qhandle_t (*AddSkinToFrame)( int numSurfaces, const qhandle_t *surfaces );
 
 	// if the pointers are not NULL, timing info will be returned
 	void	(*EndFrame)( int *frontEndMsec, int *backEndMsec );

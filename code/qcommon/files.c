@@ -1416,7 +1416,7 @@ int FS_FindVM(void **startSearch, char *found, int foundlen, const char *name, i
 		Com_Error(ERR_FATAL, "Filesystem call made without initialization");
 
 	if(enableDll)
-		Com_sprintf(dllName, sizeof(dllName), "%s" ARCH_STRING DLL_EXT, name);
+		Com_sprintf(dllName, sizeof(dllName), "%s_" ARCH_STRING DLL_EXT, name);
 
 	Com_sprintf(qvmName, sizeof(qvmName), "vm/%s.qvm", name);
 
@@ -2703,9 +2703,7 @@ void FS_GetModDescription( const char *modDir, char *description, int descriptio
 	int				nDescLen;
 	FILE			*file;
 
-	descPath[0] = '\0';
-	strcpy(descPath, modDir);
-	strcat(descPath, "/description.txt");
+	Com_sprintf( descPath, sizeof ( descPath ), "%s/description.txt", modDir );
 	nDescLen = FS_SV_FOpenFileRead( descPath, &descHandle );
 
 	if ( nDescLen > 0 && descHandle) {
@@ -3531,6 +3529,7 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 	} buffer;
 	int				len;
 	char			*text_p, *token;
+	char			cvarName[256], cvarValue[256];
 	qboolean		firstLine = qtrue;
 #ifndef DEDICATED
 	loadingScreen_t	*screen;
@@ -3577,6 +3576,20 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 				Q_strncpyz( config->gameDirs[config->numGameDirs], token, sizeof (config->gameDirs[0]) );
 				config->numGameDirs++;
 			}
+		} else if ( Q_stricmp( token, "cvarDefault" ) == 0 ) {
+			// cvar name
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token )
+				continue;
+			Q_strncpyz( cvarName, token, sizeof (cvarName) );
+
+			// value
+			token = COM_ParseExt( &text_p, qfalse );
+			if ( !*token )
+				continue;
+			Q_strncpyz( cvarValue, token, sizeof (cvarValue) );
+
+			Cvar_SetDefault( cvarName, cvarValue );
 		} else if ( Q_stricmp( token, "defaultSound" ) == 0 ) {
 #ifndef DEDICATED
 			token = COM_ParseExt( &text_p, qfalse );

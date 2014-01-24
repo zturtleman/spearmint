@@ -459,6 +459,7 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 		
 	var->name = CopyString (var_name);
 	var->string = CopyString (var_value);
+	var->explicitSet = qfalse;
 	var->modified = qtrue;
 	var->modificationCount = 1;
 	var->value = atof (var->string);
@@ -487,6 +488,45 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 
 	var->hashPrev = NULL;
 	hashTable[hash] = var;
+
+	return var;
+}
+
+/*
+============
+Cvar_SetDefault
+
+Change default value of a cvar, or create if it doesn't exist
+============
+*/
+cvar_t *Cvar_SetDefault( const char *var_name, const char *var_value ) {
+	cvar_t *var;
+
+	if ( !Cvar_ValidateString( var_name ) ) {
+		Com_Printf("invalid cvar name string: %s\n", var_name );
+		var_name = "BADNAME";
+	}
+
+	var = Cvar_FindVar (var_name);
+
+	if(var)
+	{
+		var_value = Cvar_Validate(var, var_value, qfalse);
+
+		// if not explicitly set, change value
+		if(!var->explicitSet)
+		{
+			Cvar_SetSafe( var_name, var_value );
+			var->explicitSet = qfalse;
+		}
+
+		Z_Free( var->resetString );
+		var->resetString = CopyString( var_value );
+	}
+	else
+	{
+		var = Cvar_Get( var_name, var_value, 0 );
+	}
 
 	return var;
 }
@@ -546,7 +586,19 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, int defaultFlags, qb
 			return NULL;
 		}
 		// create it
-		return Cvar_Get( var_name, value, defaultFlags );
+		var = Cvar_Get( var_name, value, defaultFlags );
+		var->explicitSet = qtrue;
+		return var;
+	}
+
+	// explicit set state change
+	if ( var->explicitSet != ( value != NULL ) ) {
+		var->explicitSet = ( value != NULL );
+
+		// update config file even if value hasn't changed
+		if ( var->flags & CVAR_ARCHIVE ) {
+			cvar_modifiedFlags |= CVAR_ARCHIVE;
+		}
 	}
 
 	if (!value ) {
@@ -575,6 +627,12 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, int defaultFlags, qb
 
 	if (!force)
 	{
+		if ( (var->flags & (CVAR_SYSTEMINFO|CVAR_SERVER_CREATED)) && !com_sv_running->integer && CL_ConnectedToServer() )
+		{
+			Com_Printf ("%s can only be set by server.\n", var_name);
+			return var;
+		}
+
 		if (var->flags & CVAR_ROM)
 		{
 			Com_Printf ("%s is read only.\n", var_name);
@@ -611,12 +669,6 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, int defaultFlags, qb
 		if ( (var->flags & CVAR_CHEAT) && !cvar_cheats->integer )
 		{
 			Com_Printf ("%s is cheat protected.\n", var_name);
-			return var;
-		}
-
-		if ( (var->flags & CVAR_SYSTEMINFO) && !com_sv_running->integer && CL_ConnectedToServer() )
-		{
-			Com_Printf ("%s can only be set by server.\n", var_name);
 			return var;
 		}
 	}
@@ -689,7 +741,7 @@ void Cvar_Server_Set( const char *var_name, const char *value )
 	int flags = Cvar_Flags( var_name );
 
 	// If this cvar may not be modified by a server discard the value.
-	if(!(flags & (CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED)))
+	if((flags != CVAR_NONEXISTENT) && !(flags & (CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED)))
 	{
 		Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", var_name, value);
 		return;
@@ -706,7 +758,7 @@ void Cvar_Server_Set( const char *var_name, const char *value )
 		return;
 	}
 
-	Cvar_Set2( var_name, value, CVAR_SERVER_CREATED | CVAR_ROM, qtrue );
+	Cvar_Set2( var_name, value, CVAR_SERVER_CREATED, qtrue );
 }
 
 /*
@@ -815,7 +867,7 @@ void Cvar_SetCheatState(void)
 				var->latchedString = NULL;
 			}
 			if (strcmp(var->resetString,var->string))
-				Cvar_Set(var->name, var->resetString);
+				Cvar_ForceReset(var->name);
 		}
 	}
 }
@@ -1003,6 +1055,9 @@ void Cvar_WriteVariables(fileHandle_t f)
 			continue;
 
 		if( var->flags & CVAR_ARCHIVE ) {
+			if ( !var->explicitSet )
+				continue;
+
 			// write the latched value, even if it hasn't taken effect yet
 			if ( var->latchedString ) {
 				if( strlen( var->name ) + strlen( var->latchedString ) + 10 > sizeof( buffer ) ) {
@@ -1213,7 +1268,7 @@ void Cvar_Restart(qboolean unsetVM)
 		if(!(curvar->flags & (CVAR_ROM | CVAR_INIT | CVAR_NORESTART)))
 		{
 			// Just reset the rest to their default values.
-			Cvar_SetSafe(curvar->name, curvar->resetString);
+			Cvar_Reset(curvar->name);
 		}
 		
 		curvar = curvar->next;
@@ -1306,13 +1361,22 @@ Cvar_CheckRange
 */
 void Cvar_CheckRange( cvar_t *var, float min, float max, qboolean integral )
 {
+	qboolean explicitSet;
+
+	explicitSet = var->explicitSet;
+
 	var->validate = qtrue;
 	var->min = min;
 	var->max = max;
 	var->integral = integral;
 
 	// Force an initial range check
-	Cvar_Set( var->name, var->string );
+	if (strcmp(var->resetString,var->string))
+		Cvar_Set( var->name, var->string );
+	else
+		Cvar_Reset( var->name );
+
+	var->explicitSet = explicitSet;
 }
 
 /*
@@ -1338,13 +1402,7 @@ void Cvar_CheckRangeSafe( const char *varName, float min, float max, qboolean in
 		return;
 	}
 
-	var->validate = qtrue;
-	var->min = min;
-	var->max = max;
-	var->integral = integral;
-
-	// Force an initial range check
-	Cvar_Set( var->name, var->string );
+	Cvar_CheckRange( var, min, max, integral );
 }
 
 /*

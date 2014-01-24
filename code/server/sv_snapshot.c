@@ -221,10 +221,6 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 
 	MSG_WriteByte (msg, snapFlags);
 
-	// send over the areabits
-	MSG_WriteByte (msg, frame->areabytes);
-	MSG_WriteData (msg, frame->areabits, frame->areabytes);
-
 	// send playerstates
 	if (frame->numPSs > MAX_SPLITVIEW) {
 		Com_DPrintf(S_COLOR_YELLOW "Warning: Almost sent numPSs as %d (max=%d)\n", frame->numPSs, MAX_SPLITVIEW);
@@ -236,6 +232,10 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
 		MSG_WriteByte (msg, frame->lcIndex[i]);
 		MSG_WriteByte (msg, frame->clientNums[i]);
+
+		// send over the areabits
+		MSG_WriteByte (msg, frame->areabytes[i]);
+		MSG_WriteData (msg, frame->areabits[i], frame->areabytes[i]);
 	}
 
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
@@ -384,7 +384,7 @@ static void SV_AddEntToSnapshot( clientSnapshot_t *frame, svEntity_t *svEnt, sha
 SV_AddEntitiesVisibleFromPoint
 ===============
 */
-static void SV_AddEntitiesVisibleFromPoint( int clientNum, vec3_t origin, clientSnapshot_t *frame, 
+static void SV_AddEntitiesVisibleFromPoint( int psIndex, int clientNum, vec3_t origin, clientSnapshot_t *frame, 
 									snapshotEntityNumbers_t *eNums, qboolean portal ) {
 	int		e, i;
 	sharedEntity_t *ent;
@@ -407,7 +407,7 @@ static void SV_AddEntitiesVisibleFromPoint( int clientNum, vec3_t origin, client
 	clientcluster = CM_LeafCluster (leafnum);
 
 	// calculate the visible areas
-	frame->areabytes = CM_WriteAreaBits( frame->areabits, clientarea );
+	frame->areabytes[psIndex] = CM_WriteAreaBits( frame->areabits[psIndex], clientarea );
 
 	clientpvs = CM_ClusterPVS (clientcluster);
 
@@ -574,7 +574,7 @@ static void SV_AddEntitiesVisibleFromPoint( int clientNum, vec3_t origin, client
 					continue;
 				}
 			}
-			SV_AddEntitiesVisibleFromPoint( clientNum, ent->s.origin2, frame, eNums, qtrue );
+			SV_AddEntitiesVisibleFromPoint( psIndex, clientNum, ent->s.origin2, frame, eNums, qtrue );
 		}
 
 	}
@@ -596,6 +596,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	clientSnapshot_t			*frame;
 	snapshotEntityNumbers_t		entityNumbers;
 	int							i;
+	int							psIndex;
 	sharedEntityState_t			*state;
 	svEntity_t					*svEnt;
 	int							clientNum;
@@ -664,7 +665,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 
 		// add all the entities directly visible to the eye, which
 		// may include portal entities that merge other viewpoints
-		SV_AddEntitiesVisibleFromPoint( SV_SnapshotPlayer(frame, i)->clientNum, org, frame, &entityNumbers, qfalse );
+		SV_AddEntitiesVisibleFromPoint( i, SV_SnapshotPlayer(frame, i)->clientNum, org, frame, &entityNumbers, qfalse );
 	}
 
 	// if there were portals visible, there may be out of order entities
@@ -676,8 +677,10 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 
 	// now that all viewpoint's areabits have been OR'd together, invert
 	// all of them to make it a mask vector, which is what the renderer wants
-	for ( i = 0 ; i < MAX_MAP_AREA_BYTES/4 ; i++ ) {
-		((int *)frame->areabits)[i] = ((int *)frame->areabits)[i] ^ -1;
+	for ( psIndex = 0; psIndex < frame->numPSs; psIndex++ ) {
+		for ( i = 0 ; i < MAX_MAP_AREA_BYTES/4 ; i++ ) {
+			((int *)frame->areabits[psIndex])[i] = ((int *)frame->areabits[psIndex])[i] ^ -1;
+		}
 	}
 
 	// copy the entity states out

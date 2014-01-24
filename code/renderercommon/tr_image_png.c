@@ -2286,7 +2286,7 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 		{
 			case PNG_ColourType_Grey :
 			{
-				if(!ChunkHeaderLength == 2)
+				if(ChunkHeaderLength != 2)
 				{
 					CloseBufferedFile(ThePNG);
 
@@ -2308,7 +2308,7 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 
 			case PNG_ColourType_True :
 			{
-				if(!ChunkHeaderLength == 6)
+				if(ChunkHeaderLength != 6)
 				{
 					CloseBufferedFile(ThePNG);
 

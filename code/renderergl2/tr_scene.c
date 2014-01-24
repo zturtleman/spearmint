@@ -38,6 +38,9 @@ int			r_firstSceneDlight;
 int			r_numcoronas;
 int			r_firstSceneCorona;
 
+int			r_numskins;
+int			r_numskinsurfaces;
+
 int			r_numentities;
 int			r_firstSceneEntity;
 
@@ -67,6 +70,9 @@ void R_InitNextFrame( void ) {
 	r_numcoronas = 0;
 	r_firstSceneCorona = 0;
 
+	r_numskins = 0;
+	r_numskinsurfaces = 0;
+
 	r_numentities = 0;
 	r_firstSceneEntity = 0;
 
@@ -92,6 +98,69 @@ void RE_ClearScene( void ) {
 	r_firstSceneEntity = r_numentities;
 	r_firstScenePoly = r_numpolys;
 	r_firstScenePolybuffer = r_numpolybuffers;
+}
+
+/*
+=====================
+RE_AddSkinToFrame
+
+=====================
+*/
+qhandle_t RE_AddSkinToFrame( int numSurfaces, const qhandle_t *surfaces ) {
+	int		i, j;
+
+	if ( !tr.registered ) {
+		return 0;
+	}
+	if ( numSurfaces <= 0 ) {
+		return 0;
+	}
+
+	// validate surfaces (should only fail if there is a bug in cgame)
+	for ( i = 0; i < numSurfaces; i++ ) {
+		if ( surfaces[i] < 0 || surfaces[i] >= tr.numSkinSurfaces ) {
+			ri.Printf(PRINT_DEVELOPER, "RE_AddSkinToFrame: Dropping skin, surface index out of range\n");
+			return 0;
+		}
+	}
+
+	// check if skin was already added this frame
+	for ( i = 0; i < r_numskins; i++ ) {
+		if ( backEndData->skins[i].numSurfaces != numSurfaces )
+			continue;
+
+		for ( j = 0; j < numSurfaces; j++ ) {
+			if ( backEndData->skins[i].surfaces[j] != surfaces[j] ) {
+				break;
+			}
+		}
+
+		if ( j == numSurfaces ) {
+			return i+1;
+		}
+	}
+
+	if ( r_numskins >= MAX_SKINS ) {
+		ri.Printf(PRINT_DEVELOPER, "RE_AddSkinToFrame: Dropping skin, reached MAX_SKINS\n");
+		return 0;
+	}
+	if ( r_numskinsurfaces + numSurfaces > MAX_SKINSURFACES ) {
+		ri.Printf(PRINT_DEVELOPER, "RE_AddSkinToFrame: Dropping skin, reached MAX_SKINSURFACES\n");
+		return 0;
+	}
+
+	// create new skin
+	backEndData->skins[r_numskins].surfaces = &backEndData->skinSurfaces[r_numskinsurfaces];
+	backEndData->skins[r_numskins].numSurfaces = numSurfaces;
+
+	for ( i = 0; i < numSurfaces; i++ ) {
+		backEndData->skinSurfaces[r_numskinsurfaces+i] = surfaces[i];
+	}
+
+	r_numskinsurfaces += numSurfaces;
+	r_numskins++;
+
+	return r_numskins;
 }
 
 /*
@@ -272,7 +341,7 @@ RE_AddRefEntityToScene
 
 =====================
 */
-void RE_AddRefEntityToScene( const refEntity_t *ent ) {
+void RE_AddRefEntityToScene( const refEntity_t *ent, int numVerts, const polyVert_t *verts, int numPolys ) {
 	vec3_t cross;
 
 	if ( !tr.registered ) {
@@ -292,6 +361,28 @@ void RE_AddRefEntityToScene( const refEntity_t *ent ) {
 	}
 	if ( (int)ent->reType < 0 || ent->reType >= RT_MAX_REF_ENTITY_TYPE ) {
 		ri.Error( ERR_DROP, "RE_AddRefEntityToScene: bad reType %i", ent->reType );
+	}
+
+	if ( ent->reType == RT_POLY_GLOBAL || ent->reType == RT_POLY_LOCAL ) {
+		int totalVerts = numVerts * numPolys;
+
+		if ( !verts || numVerts <= 0 || numPolys <= 0 ) {
+			ri.Printf( PRINT_WARNING, "WARNING: RE_AddRefEntityToScene: RT_POLY without poly info\n");
+			return;
+		}
+
+		if ( r_numpolyverts + totalVerts > max_polyverts ) {
+			ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddRefEntityToScene: r_max_polyverts reached\n");
+			return;
+		}
+
+		backEndData->entities[r_numentities].numPolys = numPolys;
+		backEndData->entities[r_numentities].numVerts = numVerts;
+		backEndData->entities[r_numentities].verts = &backEndData->polyVerts[r_numpolyverts];
+
+		Com_Memcpy( backEndData->entities[r_numentities].verts, verts, totalVerts * sizeof( *verts ) );
+
+		r_numpolyverts += totalVerts;
 	}
 
 	backEndData->entities[r_numentities].e = *ent;
@@ -535,6 +626,9 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.numDrawSurfs = r_firstSceneDrawSurf;
 	tr.refdef.drawSurfs = backEndData->drawSurfs;
 
+	tr.refdef.numSkins = r_numskins;
+	tr.refdef.skins = backEndData->skins;
+
 	tr.refdef.num_entities = r_numentities - r_firstSceneEntity;
 	tr.refdef.entities = &backEndData->entities[r_firstSceneEntity];
 
@@ -626,7 +720,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 	}
 
 	// playing with even more shadows
-	if(glRefConfig.framebufferObject && !( fd->rdflags & RDF_NOWORLDMODEL ) && (r_forceSun->integer || tr.sunShadows))
+	if(glRefConfig.framebufferObject && r_sunlightMode->integer && !( fd->rdflags & RDF_NOWORLDMODEL ) && (r_forceSun->integer || tr.sunShadows))
 	{
 		R_RenderSunShadowMaps(fd, 0);
 		R_RenderSunShadowMaps(fd, 1);

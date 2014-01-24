@@ -143,10 +143,14 @@ qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
 // all media should be registered during level startup to prevent
 // hitches during gameplay
 qhandle_t	trap_R_RegisterModel( const char *name );			// returns rgb axis if not found
-qhandle_t	trap_R_RegisterSkin( const char *name );			// returns all white if not found
+qhandle_t	trap_R_RegisterShaderEx( const char *name, int lightmapIndex, qboolean mipRawImage ); // returns all white if not found
 qhandle_t	trap_R_RegisterShader( const char *name );			// returns all white if not found
 qhandle_t	trap_R_RegisterShaderNoMip( const char *name );			// returns all white if not found
 void		trap_R_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font);
+
+// skin (entity model surface remap) management
+qhandle_t	trap_R_AllocSkinSurface( const char *surface, qhandle_t hShader );
+qhandle_t	trap_R_AddSkinToFrame( int numSurfaces, const qhandle_t *surfaces );
 
 // a scene is built up by calls to R_ClearScene and the various R_Add functions.
 // Nothing is drawn until R_RenderScene is called.
@@ -155,6 +159,7 @@ void		trap_R_AddRefEntityToScene( const refEntity_t *re );
 
 // polys are intended for simple wall marks, not really for doing
 // significant construction
+void		trap_R_AddPolyRefEntityToScene( const refEntity_t *re, int numVerts, const polyVert_t *verts, int numPolys );
 void		trap_R_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts );
 void		trap_R_AddPolysToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int numPolys );
 void        trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );

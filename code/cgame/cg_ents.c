@@ -32,6 +32,27 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "cg_local.h"
 
+/*
+======================
+CG_AddRefEntityWithMinLight
+======================
+*/
+void CG_AddRefEntityWithMinLight( const refEntity_t *entity ) {
+	refEntity_t re;
+
+	if ( !entity ) {
+		return;
+	}
+
+	re = *entity;
+
+	// give everything a minimum light add
+	re.ambientLight[0] = 32;
+	re.ambientLight[1] = 32;
+	re.ambientLight[2] = 32;
+
+	trap_R_AddRefEntityToScene( &re );
+}
 
 /*
 ======================
@@ -307,7 +328,7 @@ static void CG_General( centity_t *cent ) {
 	AnglesToAxis( cent->lerpAngles, ent.axis );
 
 	// add to refresh list
-	trap_R_AddRefEntityToScene (&ent);
+	CG_AddRefEntityWithMinLight (&ent);
 }
 
 /*
@@ -368,7 +389,7 @@ static void CG_Item( centity_t *cent ) {
 		ent.shaderRGBA[1] = 255;
 		ent.shaderRGBA[2] = 255;
 		ent.shaderRGBA[3] = 255;
-		trap_R_AddRefEntityToScene(&ent);
+		CG_AddRefEntityWithMinLight(&ent);
 		return;
 	}
 
@@ -433,13 +454,6 @@ static void CG_Item( centity_t *cent ) {
 		frac = 1.0;
 	}
 
-	// items without glow textures need to keep a minimum light value
-	// so they are always visible
-	if ( ( item->giType == IT_WEAPON ) ||
-		 ( item->giType == IT_ARMOR ) ) {
-		ent.renderfx |= RF_MINLIGHT;
-	}
-
 	// increase the size of the weapons when they are presented as items
 	if ( item->giType == IT_WEAPON ) {
 		VectorScale( ent.axis[0], 1.5, ent.axis[0] );
@@ -461,7 +475,7 @@ static void CG_Item( centity_t *cent ) {
 #endif
 
 	// add to refresh list
-	trap_R_AddRefEntityToScene(&ent);
+	CG_AddRefEntityWithMinLight(&ent);
 
 #ifdef MISSIONPACK
 	if ( item->giType == IT_WEAPON && wi->barrelModel ) {
@@ -480,7 +494,7 @@ static void CG_Item( centity_t *cent ) {
 		AxisCopy( ent.axis, barrel.axis );
 		barrel.nonNormalizedAxes = ent.nonNormalizedAxes;
 
-		trap_R_AddRefEntityToScene( &barrel );
+		CG_AddRefEntityWithMinLight( &barrel );
 	}
 #endif
 
@@ -509,7 +523,7 @@ static void CG_Item( centity_t *cent ) {
 					VectorScale( ent.axis[2], frac, ent.axis[2] );
 					ent.nonNormalizedAxes = qtrue;
 				}
-				trap_R_AddRefEntityToScene( &ent );
+				CG_AddRefEntityWithMinLight( &ent );
 			}
 		}
 	}
@@ -584,7 +598,7 @@ static void CG_Missile( centity_t *cent ) {
 		ent.radius = 16;
 		ent.rotation = 0;
 		ent.customShader = cgs.media.plasmaBallShader;
-		trap_R_AddRefEntityToScene( &ent );
+		CG_AddRefEntityWithMinLight( &ent );
 		return;
 	}
 
@@ -671,7 +685,7 @@ static void CG_Grapple( centity_t *cent ) {
 		ent.axis[0][2] = 1;
 	}
 
-	trap_R_AddRefEntityToScene( &ent );
+	CG_AddRefEntityWithMinLight( &ent );
 }
 
 /*
@@ -704,13 +718,13 @@ static void CG_Mover( centity_t *cent ) {
 	}
 
 	// add to refresh list
-	trap_R_AddRefEntityToScene(&ent);
+	CG_AddRefEntityWithMinLight(&ent);
 
 	// add the secondary model
 	if ( s1->modelindex2 ) {
 		ent.skinNum = 0;
 		ent.hModel = cgs.gameModels[s1->modelindex2];
-		trap_R_AddRefEntityToScene(&ent);
+		CG_AddRefEntityWithMinLight(&ent);
 	}
 
 }
@@ -738,7 +752,7 @@ void CG_Beam( centity_t *cent ) {
 	ent.renderfx = RF_NOSHADOW;
 
 	// add to refresh list
-	trap_R_AddRefEntityToScene(&ent);
+	CG_AddRefEntityWithMinLight(&ent);
 }
 
 
@@ -771,7 +785,7 @@ static void CG_Portal( centity_t *cent ) {
 	ent.skinNum = s1->clientNum/256.0 * 360;	// roll offset
 
 	// add to refresh list
-	trap_R_AddRefEntityToScene(&ent);
+	CG_AddRefEntityWithMinLight(&ent);
 }
 
 
@@ -930,7 +944,7 @@ static void CG_TeamBase( centity_t *cent ) {
 		else {
 			model.hModel = cgs.media.neutralFlagBaseModel;
 		}
-		trap_R_AddRefEntityToScene( &model );
+		CG_AddRefEntityWithMinLight( &model );
 	}
 #ifdef MISSIONPACK
 	else if ( cgs.gametype == GT_OBELISK ) {
@@ -942,7 +956,7 @@ static void CG_TeamBase( centity_t *cent ) {
 		AnglesToAxis( cent->currentState.angles, model.axis );
 
 		model.hModel = cgs.media.overloadBaseModel;
-		trap_R_AddRefEntityToScene( &model );
+		CG_AddRefEntityWithMinLight( &model );
 		// if hit
 		if ( cent->currentState.frame == 1) {
 			// show hit model
@@ -954,7 +968,7 @@ static void CG_TeamBase( centity_t *cent ) {
 			model.shaderRGBA[3] = 0xff;
 			//
 			model.hModel = cgs.media.overloadEnergyModel;
-			trap_R_AddRefEntityToScene( &model );
+			CG_AddRefEntityWithMinLight( &model );
 		}
 		// if respawning
 		if ( cent->currentState.frame == 2) {
@@ -981,7 +995,7 @@ static void CG_TeamBase( centity_t *cent ) {
 			model.shaderRGBA[3] = c * 0xff;
 
 			model.hModel = cgs.media.overloadLightsModel;
-			trap_R_AddRefEntityToScene( &model );
+			CG_AddRefEntityWithMinLight( &model );
 			// show the target
 			if (t > h) {
 				if ( !cent->muzzleFlashTime ) {
@@ -1003,7 +1017,7 @@ static void CG_TeamBase( centity_t *cent ) {
 				//
 				model.origin[2] += OBELISK_TARGET_HEIGHT;
 				model.hModel = cgs.media.overloadTargetModel;
-				trap_R_AddRefEntityToScene( &model );
+				CG_AddRefEntityWithMinLight( &model );
 			}
 			else {
 				//FIXME: show animated smoke
@@ -1020,11 +1034,11 @@ static void CG_TeamBase( centity_t *cent ) {
 			model.shaderRGBA[3] = 0xff;
 			// show the lights
 			model.hModel = cgs.media.overloadLightsModel;
-			trap_R_AddRefEntityToScene( &model );
+			CG_AddRefEntityWithMinLight( &model );
 			// show the target
 			model.origin[2] += 56;
 			model.hModel = cgs.media.overloadTargetModel;
-			trap_R_AddRefEntityToScene( &model );
+			CG_AddRefEntityWithMinLight( &model );
 		}
 	}
 	else if ( cgs.gametype == GT_HARVESTER ) {
@@ -1037,17 +1051,17 @@ static void CG_TeamBase( centity_t *cent ) {
 
 		if ( cent->currentState.modelindex == TEAM_RED ) {
 			model.hModel = cgs.media.harvesterModel;
-			model.customSkin = cgs.media.harvesterRedSkin;
+			model.customSkin = CG_AddSkinToFrame( &cgs.media.harvesterRedSkin );
 		}
 		else if ( cent->currentState.modelindex == TEAM_BLUE ) {
 			model.hModel = cgs.media.harvesterModel;
-			model.customSkin = cgs.media.harvesterBlueSkin;
+			model.customSkin = CG_AddSkinToFrame( &cgs.media.harvesterBlueSkin );
 		}
 		else {
 			model.hModel = cgs.media.harvesterNeutralModel;
 			model.customSkin = 0;
 		}
-		trap_R_AddRefEntityToScene( &model );
+		CG_AddRefEntityWithMinLight( &model );
 	}
 #endif
 }

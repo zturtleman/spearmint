@@ -1037,6 +1037,7 @@ struct cvar_s {
 	char			*resetString;		// cvar_restart will reset to this value
 	char			*latchedString;		// for CVAR_LATCH vars
 	int				flags;
+	qboolean	explicitSet;		// cvar has been explicitly set
 	qboolean	modified;			// set each time the cvar is changed
 	int				modificationCount;	// incremented each time the cvar is changed
 	float			value;				// atof( string )

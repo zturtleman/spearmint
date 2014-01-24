@@ -27,12 +27,6 @@ terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
 Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
-//
-// cg_syscalls.c -- this file is only included when building a dll
-// cg_syscalls.asm is included instead when building a qvm
-#ifdef Q3_VM
-#error "Do not use in VM build"
-#endif
 
 #include "../qcommon/q_shared.h"
 #include "../renderercommon/tr_types.h"
@@ -40,13 +34,16 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "cg_public.h"
 #include "cg_syscalls.h"
 
-static intptr_t (QDECL *syscall)( intptr_t arg, ... ) = (intptr_t (QDECL *)( intptr_t, ...))-1;
+// ZTM: TODO: move usage of this out of this file?
+qboolean CG_AddCustomSurface( const refEntity_t *re );
 
+#ifndef Q3_VM
+static intptr_t (QDECL *syscall)( intptr_t arg, ... ) = (intptr_t (QDECL *)( intptr_t, ...))-1;
 
 Q_EXPORT void dllEntry( intptr_t (QDECL  *syscallptr)( intptr_t arg,... ) ) {
 	syscall = syscallptr;
 }
-
+#endif
 
 int PASSFLOAT( float x ) {
 	floatint_t fi;
@@ -60,8 +57,10 @@ void	trap_Print( const char *fmt ) {
 
 void	trap_Error(const char *fmt) {
 	syscall(CG_ERROR, fmt);
+#ifndef Q3_VM
 	// shut up GCC warning about returning functions, because we know better
 	exit(1);
+#endif
 }
 
 int		trap_Milliseconds( void ) {
@@ -323,8 +322,8 @@ qhandle_t trap_R_RegisterModel( const char *name ) {
 	return syscall( CG_R_REGISTERMODEL, name );
 }
 
-qhandle_t trap_R_RegisterSkin( const char *name ) {
-	return syscall( CG_R_REGISTERSKIN, name );
+qhandle_t trap_R_RegisterShaderEx( const char *name, int lightmapIndex, qboolean mipRawImage ) {
+	return syscall( CG_R_REGISTERSHADEREX, name, lightmapIndex, mipRawImage );
 }
 
 qhandle_t trap_R_RegisterShader( const char *name ) {
@@ -339,11 +338,27 @@ void trap_R_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) 
 	syscall(CG_R_REGISTERFONT, fontName, pointSize, font );
 }
 
+qhandle_t	trap_R_AllocSkinSurface( const char *surface, qhandle_t hShader ) {
+	return syscall( CG_R_ALLOCSKINSURFACE, surface, hShader );
+}
+
+qhandle_t	trap_R_AddSkinToFrame( int numSurfaces, const qhandle_t *surfaces ) {
+	return syscall( CG_R_ADDSKINTOFRAME, numSurfaces, surfaces );
+}
+
 void	trap_R_ClearScene( void ) {
 	syscall( CG_R_CLEARSCENE );
 }
 
+void	trap_R_AddPolyRefEntityToScene( const refEntity_t *re, int numVerts, const polyVert_t *verts, int numPolys ) {
+	syscall( CG_R_ADDPOLYREFENTITYTOSCENE, re, numVerts, verts, numPolys );
+}
+
 void	trap_R_AddRefEntityToScene( const refEntity_t *re ) {
+	if ( CG_AddCustomSurface( re ) ) {
+		return;
+	}
+
 	syscall( CG_R_ADDREFENTITYTOSCENE, re );
 }
 

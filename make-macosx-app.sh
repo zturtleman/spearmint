@@ -136,32 +136,28 @@ IOQ3_RENDERER_GL1_ARCHS=""
 IOQ3_RENDERER_GL2_ARCHS=""
 IOQ3_CGAME_ARCHS=""
 IOQ3_GAME_ARCHS=""
-IOQ3_UI_ARCHS=""
 IOQ3_MP_CGAME_ARCHS=""
 IOQ3_MP_GAME_ARCHS=""
-IOQ3_MP_UI_ARCHS=""
 
 BASEDIR="baseq3"
 MISSIONPACKDIR="missionpack"
 
-CGAME="cgame"
-GAME="game"
-UI="ui"
+CGAME="mint-cgame"
+GAME="mint-game"
 
-RENDERER_OPENGL="renderer_opengl"
+RENDERER_OPENGL="mint-renderer-opengl"
 
 EXECUTABLE_NAME="spearmint"
 DEDICATED_NAME="spearmint-server"
 
 CGAME_NAME="${CGAME}.dylib"
 GAME_NAME="${GAME}.dylib"
-UI_NAME="${UI}.dylib"
 
 RENDERER_OPENGL1_NAME="${RENDERER_OPENGL}1.dylib"
 RENDERER_OPENGL2_NAME="${RENDERER_OPENGL}2.dylib"
 
 ICNSDIR="misc"
-ICNS="quake3_flat.icns"
+ICNS="quake3.icns"
 PKGINFO="APPLIOQ3"
 
 OBJROOT="build"
@@ -177,13 +173,12 @@ EXECUTABLE_FOLDER_PATH="${CONTENTS_FOLDER_PATH}/MacOS"
 for ARCH in $SEARCH_ARCHS; do
 	CURRENT_ARCH=${ARCH}
 	BUILT_PRODUCTS_DIR="${OBJROOT}/${TARGET_NAME}-darwin-${CURRENT_ARCH}"
-	IOQ3_CLIENT="${EXECUTABLE_NAME}.${CURRENT_ARCH}"
-	IOQ3_SERVER="${DEDICATED_NAME}.${CURRENT_ARCH}"
+	IOQ3_CLIENT="${EXECUTABLE_NAME}_${CURRENT_ARCH}"
+	IOQ3_SERVER="${DEDICATED_NAME}_${CURRENT_ARCH}"
 	IOQ3_RENDERER_GL1="${RENDERER_OPENGL}1_${CURRENT_ARCH}.dylib"
 	IOQ3_RENDERER_GL2="${RENDERER_OPENGL}2_${CURRENT_ARCH}.dylib"
-	IOQ3_CGAME="${CGAME}${CURRENT_ARCH}.dylib"
-	IOQ3_GAME="${GAME}${CURRENT_ARCH}.dylib"
-	IOQ3_UI="${UI}${CURRENT_ARCH}.dylib"
+	IOQ3_CGAME="${CGAME}_${CURRENT_ARCH}.dylib"
+	IOQ3_GAME="${GAME}_${CURRENT_ARCH}.dylib"
 
 	if [ ! -d ${BUILT_PRODUCTS_DIR} ]; then
 		CURRENT_ARCH=""
@@ -217,18 +212,12 @@ for ARCH in $SEARCH_ARCHS; do
 	if [ -e ${BUILT_PRODUCTS_DIR}/${BASEDIR}/${IOQ3_GAME} ]; then
 		IOQ3_GAME_ARCHS="${BUILT_PRODUCTS_DIR}/${BASEDIR}/${IOQ3_GAME} ${IOQ3_GAME_ARCHS}"
 	fi
-	if [ -e ${BUILT_PRODUCTS_DIR}/${BASEDIR}/${IOQ3_UI} ]; then
-		IOQ3_UI_ARCHS="${BUILT_PRODUCTS_DIR}/${BASEDIR}/${IOQ3_UI} ${IOQ3_UI_ARCHS}"
-	fi
 	# missionpack
-	if [ -e ${BUILT_PRODUCTS_DIR}/${BASEDIR}/${IOQ3_MP_CGAME} ]; then
+	if [ -e ${BUILT_PRODUCTS_DIR}/${MISSIONPACKDIR}/${IOQ3_CGAME} ]; then
 		IOQ3_MP_CGAME_ARCHS="${BUILT_PRODUCTS_DIR}/${MISSIONPACKDIR}/${IOQ3_CGAME} ${IOQ3_MP_CGAME_ARCHS}"
 	fi
-	if [ -e ${BUILT_PRODUCTS_DIR}/${BASEDIR}/${IOQ3_MP_GAME} ]; then
+	if [ -e ${BUILT_PRODUCTS_DIR}/${MISSIONPACKDIR}/${IOQ3_GAME} ]; then
 		IOQ3_MP_GAME_ARCHS="${BUILT_PRODUCTS_DIR}/${MISSIONPACKDIR}/${IOQ3_GAME} ${IOQ3_MP_GAME_ARCHS}"
-	fi
-	if [ -e ${BUILT_PRODUCTS_DIR}/${BASEDIR}/${IOQ3_MP_UI} ]; then
-		IOQ3_MP_UI_ARCHS="${BUILT_PRODUCTS_DIR}/${MISSIONPACKDIR}/${IOQ3_UI} ${IOQ3_MP_UI_ARCHS}"
 	fi
 
 	#echo "valid arch: ${ARCH}"
@@ -292,7 +281,7 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
     <key>CFBundleExecutable</key>
     <string>${EXECUTABLE_NAME}</string>
     <key>CFBundleIconFile</key>
-    <string>quake3_flat</string>
+    <string>quake3</string>
     <key>CFBundleIdentifier</key>
     <string>org.ioquake.${PRODUCT_NAME}</string>
     <key>CFBundleInfoDictionaryVersion</key>
@@ -361,15 +350,11 @@ symlinkArch "${RENDERER_OPENGL}2" "${RENDERER_OPENGL}2" "_" "${BUNDLEBINDIR}"
 # game
 action ${BUNDLEBINDIR}/${BASEDIR}/${CGAME_NAME}			"${IOQ3_CGAME_ARCHS}"
 action ${BUNDLEBINDIR}/${BASEDIR}/${GAME_NAME}			"${IOQ3_GAME_ARCHS}"
-action ${BUNDLEBINDIR}/${BASEDIR}/${UI_NAME}			"${IOQ3_UI_ARCHS}"
-symlinkArch "${CGAME}"	"${CGAME}"	""	"${BUNDLEBINDIR}/${BASEDIR}"
-symlinkArch "${GAME}"	"${GAME}"	""	"${BUNDLEBINDIR}/${BASEDIR}"
-symlinkArch "${UI}"		"${UI}"		""	"${BUNDLEBINDIR}/${BASEDIR}"
+symlinkArch "${CGAME}"	"${CGAME}"	"_"	"${BUNDLEBINDIR}/${BASEDIR}"
+symlinkArch "${GAME}"	"${GAME}"	"_"	"${BUNDLEBINDIR}/${BASEDIR}"
 
 # missionpack
 action ${BUNDLEBINDIR}/${MISSIONPACKDIR}/${CGAME_NAME}	"${IOQ3_MP_CGAME_ARCHS}"
 action ${BUNDLEBINDIR}/${MISSIONPACKDIR}/${GAME_NAME}	"${IOQ3_MP_GAME_ARCHS}"
-action ${BUNDLEBINDIR}/${MISSIONPACKDIR}/${UI_NAME}		"${IOQ3_MP_UI_ARCHS}"
-symlinkArch "${CGAME}"	"${CGAME}"	""	"${BUNDLEBINDIR}/${MISSIONPACKDIR}"
-symlinkArch "${GAME}"	"${GAME}"	""	"${BUNDLEBINDIR}/${MISSIONPACKDIR}"
-symlinkArch "${UI}"		"${UI}"		""	"${BUNDLEBINDIR}/${MISSIONPACKDIR}"
+symlinkArch "${CGAME}"	"${CGAME}"	"_"	"${BUNDLEBINDIR}/${MISSIONPACKDIR}"
+symlinkArch "${GAME}"	"${GAME}"	"_"	"${BUNDLEBINDIR}/${MISSIONPACKDIR}"

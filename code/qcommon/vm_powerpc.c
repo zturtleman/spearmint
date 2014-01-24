@@ -369,7 +369,7 @@ VM_AsmCall( int callSyscallInvNum, int callProgramStack )
 		// generated code does not invert syscall number
 		argPosition[ 0 ] = -1 - callSyscallInvNum;
 
-		ret = currentVM->systemCall( argPosition );
+		ret = VM_QvmSyscall( argPosition );
 	} else {
 		intptr_t args[MAX_VMSYSCALL_ARGS];
 
@@ -380,7 +380,7 @@ VM_AsmCall( int callSyscallInvNum, int callProgramStack )
 		for( i = 1; i < ARRAY_LEN(args); i++ )
 			args[ i ] = argPosition[ i ];
 
-		ret = currentVM->systemCall( args );
+		ret = VM_QvmSyscall( args );
 	}
 
 	currentVM = savedVM;

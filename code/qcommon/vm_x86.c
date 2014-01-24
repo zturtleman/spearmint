@@ -433,10 +433,10 @@ static void DoSyscall(void)
 		for(index = 1; index < ARRAY_LEN(args); index++)
 			args[index] = data[index];
 			
-		vm_opStackBase[vm_opStackOfs + 1] = savedVM->systemCall(args);
+		vm_opStackBase[vm_opStackOfs + 1] = VM_QvmSyscall( args );
 #else
 		data[0] = ~vm_syscallNum;
-		vm_opStackBase[vm_opStackOfs + 1] = savedVM->systemCall((intptr_t *) data);
+		vm_opStackBase[vm_opStackOfs + 1] = VM_QvmSyscall( (intptr_t *) data);
 #endif
 	}
 	else

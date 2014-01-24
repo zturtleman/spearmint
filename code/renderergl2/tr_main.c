@@ -1036,16 +1036,43 @@ void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 	vec3_t	delta;
 	float	axisLength;
 
-	if ( ent->e.reType != RT_MODEL ) {
+	if ( ent->e.reType != RT_MODEL && ent->e.reType != RT_POLY_LOCAL ) {
 		*or = viewParms->world;
 		return;
 	}
 
 	VectorCopy( ent->e.origin, or->origin );
 
-	VectorCopy( ent->e.axis[0], or->axis[0] );
-	VectorCopy( ent->e.axis[1], or->axis[1] );
-	VectorCopy( ent->e.axis[2], or->axis[2] );
+	if ( ent->e.renderfx & RF_AUTOAXIS ) {
+		VectorCopy( viewParms->or.axis[0], or->axis[0] ); VectorScale( or->axis[0], -1, or->axis[0]);
+		VectorCopy( viewParms->or.axis[1], or->axis[1] ); if ( !viewParms->isMirror ) VectorScale( or->axis[1], -1, or->axis[1]);
+		VectorCopy( viewParms->or.axis[2], or->axis[2] ); VectorScale( or->axis[2], -1, or->axis[2]);
+	} else if ( ent->e.renderfx & RF_AUTOAXIS2 ) {
+		vec3_t v1, v2;
+
+		// compute forward vector
+		VectorSubtract( ent->e.origin, ent->e.oldorigin, or->axis[0] );
+		VectorNormalize( or->axis[0] );
+
+		// compute side vector
+		VectorSubtract( ent->e.oldorigin, viewParms->or.origin, v1 );
+		VectorNormalize( v1 );
+		VectorSubtract( ent->e.origin, viewParms->or.origin, v2 );
+		VectorNormalize( v2 );
+		CrossProduct( v1, v2, or->axis[2] );
+		VectorNormalize( or->axis[2] );
+
+		// compute up vector
+		CrossProduct( or->axis[0], or->axis[2], or->axis[1] );
+
+		// find midpoint
+		VectorAdd( ent->e.origin, ent->e.oldorigin, or->origin );
+		VectorScale( or->origin, 0.5f, or->origin );
+	} else {
+		VectorCopy( ent->e.axis[0], or->axis[0] );
+		VectorCopy( ent->e.axis[1], or->axis[1] );
+		VectorCopy( ent->e.axis[2], or->axis[2] );
+	}
 
 	glMatrix[0] = or->axis[0][0];
 	glMatrix[4] = or->axis[1][0];
@@ -1818,9 +1845,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 			shortest = len;
 		}
 
-		tNormal[0] = tess.normal[tess.indexes[i]][0] / 127.5f - 1.0f;
-		tNormal[1] = tess.normal[tess.indexes[i]][1] / 127.5f - 1.0f;
-		tNormal[2] = tess.normal[tess.indexes[i]][2] / 127.5f - 1.0f;
+		R_VboUnpackNormal(tNormal, tess.normal[tess.indexes[i]]);
 
 		if ( DotProduct( normal, tNormal ) >= 0 )
 		{
@@ -2131,6 +2156,7 @@ static void R_AddEntitySurface (int entityNum)
 	trRefEntity_t	*ent;
 	shader_t		*shader;
 	qboolean		onlyRenderShadows;
+	srfPoly_t		polySurf;
 
 	tr.currentEntityNum = entityNum;
 
@@ -2169,13 +2195,22 @@ static void R_AddEntitySurface (int entityNum)
 	switch ( ent->e.reType ) {
 	case RT_PORTALSURFACE:
 		break;		// don't draw anything
+
 	case RT_SPRITE:
-	case RT_BEAM:
-	case RT_LIGHTNING:
-	case RT_RAIL_CORE:
-	case RT_RAIL_RINGS:
 		shader = R_GetShaderByHandle( ent->e.customShader );
 		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, 0, 0 /*cubeMap*/ );
+		break;
+
+	case RT_POLY_GLOBAL:
+	case RT_POLY_LOCAL:
+		// setup poly surface to find fog num
+		polySurf.surfaceType = SF_POLY;
+		polySurf.hShader = ent->e.customShader;
+		polySurf.numVerts = ent->numVerts * ent->numPolys;
+		polySurf.verts = ent->verts;
+
+		shader = R_GetShaderByHandle( ent->e.customShader );
+		R_AddDrawSurf( &entitySurface, shader, R_PolyFogNum( &polySurf ), 0, 0, 0 /*cubeMap*/ );
 		break;
 
 	case RT_MODEL:
@@ -2188,17 +2223,13 @@ static void R_AddEntitySurface (int entityNum)
 		} else {
 			// Check if model format doesn't support only rendering shadows
 			if (onlyRenderShadows && (tr.currentModel->type == MOD_BAD
-				|| tr.currentModel->type == MOD_BRUSH
-				|| tr.currentModel->type == MOD_MD4)) {
+				|| tr.currentModel->type == MOD_BRUSH)) {
 				break;
 			}
 
 			switch ( tr.currentModel->type ) {
 			case MOD_MESH:
 				R_AddMD3Surfaces( ent );
-				break;
-			case MOD_MD4:
-				R_AddAnimSurfaces( ent );
 				break;
 			case MOD_MDR:
 				R_MDRAddAnimSurfaces( ent );
@@ -2491,12 +2522,6 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 				}
 				break;
 
-				case MOD_MD4:
-				{
-					// FIXME: actually calculate the radius and bounds, this is a horrible hack
-					radius = r_pshadowDist->value / 2.0f;
-				}
-				break;
 				case MOD_MDR:
 				{
 					// FIXME: never actually tested this
@@ -3151,7 +3176,7 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 
 		// FIXME: sun shadows aren't rendered correctly in cubemaps
 		// fix involves changing r_FBufScale to fit smaller cubemap image size, or rendering cubemap to framebuffer first
-		if(0) //(glRefConfig.framebufferObject && (r_forceSun->integer || tr.sunShadows))
+		if(0) //(glRefConfig.framebufferObject && r_sunlightMode->integer && (r_forceSun->integer || tr.sunShadows))
 		{
 			R_RenderSunShadowMaps(&refdef, 0);
 			R_RenderSunShadowMaps(&refdef, 1);

@@ -85,6 +85,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 { "CVUP4", OP_IGNORE },
 { "CVUU4", OP_IGNORE },
 
+{ "CVUU2", OP_IGNORE },
 { "CVUU1", OP_IGNORE },
 
 { "NEGF4", OP_NEGF },

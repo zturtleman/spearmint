@@ -115,6 +115,7 @@ char    *vtos( const vec3_t v ) {
 
 void SP_misc_gamemodel( void ) {
 	char* model;
+	char* skin;
 	vec_t angle;
 	vec3_t angles;
 
@@ -140,6 +141,8 @@ void SP_misc_gamemodel( void ) {
 
 	CG_SpawnString( "model", "", &model );
 
+	CG_SpawnString( "skin", "", &skin );
+
 	CG_SpawnVector( "origin", "0 0 0", org );
 
 	if ( !CG_SpawnVector( "angles", "0 0 0", angles ) ) {
@@ -156,6 +159,11 @@ void SP_misc_gamemodel( void ) {
 
 	gamemodel = &cgs.miscGameModels[cg.numMiscGameModels++];
 	gamemodel->model = trap_R_RegisterModel( model );
+
+	if ( *skin ) {
+		CG_RegisterSkin( skin, &gamemodel->skin, qfalse );
+	}
+
 	AnglesToAxis( angles, gamemodel->axes );
 	for ( i = 0; i < 3; i++ ) {
 		VectorScale( gamemodel->axes[i], vScale[i], gamemodel->axes[i] );

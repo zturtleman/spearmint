@@ -172,6 +172,13 @@ typedef struct {
 	qboolean		barrelSpinning;
 } playerEntity_t;
 
+
+#define MAX_CG_SKIN_SURFACES 32
+typedef struct {
+	int numSurfaces;
+	qhandle_t surfaces[MAX_CG_SKIN_SURFACES];
+} cgSkin_t;
+
 //=================================================
 
 
@@ -233,7 +240,7 @@ typedef struct markPoly_s {
 	qhandle_t	markShader;
 	qboolean	alphaFade;		// fade alpha instead of rgb
 	float		color[4];
-	poly_t		poly;
+	int			numVerts;
 	polyVert_t	verts[MAX_VERTS_ON_POLY];
 } markPoly_t;
 
@@ -392,13 +399,10 @@ typedef struct {
 	gender_t		gender;			// from model
 
 	qhandle_t		legsModel;
-	qhandle_t		legsSkin;
-
 	qhandle_t		torsoModel;
-	qhandle_t		torsoSkin;
-
 	qhandle_t		headModel;
-	qhandle_t		headSkin;
+
+	cgSkin_t		modelSkin;
 
 	qhandle_t		modelIcon;
 
@@ -784,6 +788,7 @@ typedef struct {
 	qhandle_t	charsetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
+	qhandle_t	nodrawShader;
 
 #ifdef MISSIONPACK
 	qhandle_t	redCubeModel;
@@ -801,9 +806,9 @@ typedef struct {
 	qhandle_t	flagPoleModel;
 	qhandle_t	flagFlapModel;
 
-	qhandle_t	redFlagFlapSkin;
-	qhandle_t	blueFlagFlapSkin;
-	qhandle_t	neutralFlagFlapSkin;
+	cgSkin_t	redFlagFlapSkin;
+	cgSkin_t	blueFlagFlapSkin;
+	cgSkin_t	neutralFlagFlapSkin;
 
 	qhandle_t	redFlagBaseModel;
 	qhandle_t	blueFlagBaseModel;
@@ -816,8 +821,8 @@ typedef struct {
 	qhandle_t	overloadEnergyModel;
 
 	qhandle_t	harvesterModel;
-	qhandle_t	harvesterRedSkin;
-	qhandle_t	harvesterBlueSkin;
+	cgSkin_t	harvesterRedSkin;
+	cgSkin_t	harvesterBlueSkin;
 	qhandle_t	harvesterNeutralModel;
 #endif
 
@@ -1121,6 +1126,7 @@ typedef struct {
 
 typedef struct cg_gamemodel_s {
 	qhandle_t model;
+	cgSkin_t skin;
 	vec3_t org;
 	vec3_t axes[3];
 	vec_t radius;
@@ -1320,6 +1326,9 @@ extern	vmCvar_t		cg_oldRail;
 extern	vmCvar_t		cg_oldRocket;
 extern	vmCvar_t		cg_oldPlasma;
 extern	vmCvar_t		cg_trueLightning;
+extern	vmCvar_t		cg_railWidth;
+extern	vmCvar_t		cg_railCoreWidth;
+extern	vmCvar_t		cg_railSegmentLength;
 extern	vmCvar_t		cg_atmosphericEffects;
 extern	vmCvar_t		cg_teamDmLeadAnnouncements;
 extern	vmCvar_t		cg_voipShowMeter;
@@ -1515,7 +1524,7 @@ void CG_InitTeamChat( void );
 void CG_GetTeamColor(vec4_t *color);
 const char *CG_GetGameStatusText( void );
 const char *CG_GetKillerText( void );
-void CG_Draw3DModel(float x, float y, float w, float h, qhandle_t model, qhandle_t skin, vec3_t origin, vec3_t angles);
+void CG_Draw3DModel(float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles);
 void CG_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader);
 void CG_CheckOrderPending( int localPlayerNum );
 const char *CG_GameTypeString( void );
@@ -1532,6 +1541,8 @@ qboolean CG_AnyScoreboardShowing( void );
 void CG_Player( centity_t *cent );
 void CG_ResetPlayerEntity( centity_t *cent );
 void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state );
+qhandle_t CG_AddSkinToFrame( const cgSkin_t *skin );
+qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append );
 void CG_NewClientInfo( int clientNum );
 sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName );
 
@@ -1558,6 +1569,7 @@ void CG_PainEvent( centity_t *cent, int health );
 //
 // cg_ents.c
 //
+void CG_AddRefEntityWithMinLight( const refEntity_t *entity );
 void CG_SetEntitySoundPosition( centity_t *cent );
 void CG_AddPacketEntities( void );
 void CG_Beam( centity_t *cent );
@@ -1653,6 +1665,16 @@ void CG_ProcessSnapshots( qboolean initialOnly );
 void CG_RestoreSnapshot( void );
 playerState_t *CG_LocalClientPlayerStateForClientNum( int clientNum );
 
+
+//
+// cg_surface.c
+//
+qboolean CG_AddCustomSurface( const refEntity_t *re );
+void CG_SurfaceSprite( const refEntity_t *re );
+void CG_SurfaceRailRings( const refEntity_t *re );
+void CG_SurfaceRailCore( const refEntity_t *re );
+void CG_SurfaceLightningBolt( const refEntity_t *re );
+void CG_SurfaceBeam( const refEntity_t *re );
 
 //
 // cg_spawn.c

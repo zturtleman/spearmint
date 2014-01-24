@@ -31,8 +31,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // g_public.h -- game module information visible to server
 
-#define	GAME_API_MAJOR_VERSION	0xdead
-#define	GAME_API_MINOR_VERSION	0xbeef
+#define GAME_API_NAME			"SPEARMINT_GAME"
+
+// major 0 means each minor is an API break.
+// major > 0 means each major is an API break and each minor extends API.
+#define	GAME_API_MAJOR_VERSION	0
+#define	GAME_API_MINOR_VERSION	1
+
 
 // entity->svFlags
 // the server does not know how to interpret most of the values
@@ -106,12 +111,12 @@ typedef struct {
 //
 // system traps provided by the main engine
 //
+// also see qvmTraps_t in qcommon.h for QVM-specific system calls
+//
 typedef enum {
 	//============== general Quake services ==================
 
-	// See sharedTraps_t in qcommon.h for TRAP_MEMSET=0, etc
-
-	G_PRINT = 20,	// ( const char *string );
+	G_PRINT = 0,	// ( const char *string );
 	// print message on the local console
 
 	G_ERROR,		// ( const char *string );
@@ -378,9 +383,10 @@ typedef enum {
 // functions exported by the game subsystem
 //
 typedef enum {
-	GAME_GETAPIVERSION = 0,	// system reserved
+	GAME_GETAPINAME = 100,
+	GAME_GETAPIVERSION,
 
-	GAME_INIT,	// ( int levelTime, int randomSeed, int restart );
+	GAME_INIT = 200,	// ( int levelTime, int randomSeed, int restart );
 	// init and shutdown will be called every single level
 	// The game should call G_GET_ENTITY_TOKEN to parse through all the
 	// entity configuration text and spawn gentities.

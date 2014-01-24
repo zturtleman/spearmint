@@ -1145,60 +1145,6 @@ The cgame module is making a system call
 */
 intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	switch( args[0] ) {
-	case TRAP_MEMSET:
-		Com_Memset( VMA(1), args[2], args[3] );
-		return args[1];
-
-	case TRAP_MEMCPY:
-		Com_Memcpy( VMA(1), VMA(2), args[3] );
-		return args[1];
-
-	case TRAP_STRNCPY:
-		strncpy( VMA(1), VMA(2), args[3] );
-		return args[1];
-
-	case TRAP_SIN:
-		return FloatAsInt( sin( VMF(1) ) );
-
-	case TRAP_COS:
-		return FloatAsInt( cos( VMF(1) ) );
-
-	case TRAP_ATAN2:
-		return FloatAsInt( atan2( VMF(1), VMF(2) ) );
-
-	case TRAP_SQRT:
-		return FloatAsInt( sqrt( VMF(1) ) );
-
-	case TRAP_FLOOR:
-		return FloatAsInt( floor( VMF(1) ) );
-
-	case TRAP_CEIL:
-		return FloatAsInt( ceil( VMF(1) ) );
-
-	case TRAP_ACOS:
-		return FloatAsInt( Q_acos( VMF(1) ) );
-
-	case TRAP_ASIN:
-		return FloatAsInt( Q_asin( VMF(1) ) );
-
-	case TRAP_TAN:
-		return FloatAsInt( tan( VMF(1) ) );
-
-	case TRAP_ATAN:
-		return FloatAsInt( atan( VMF(1) ) );
-
-	case TRAP_POW:
-		return FloatAsInt( pow( VMF(1), VMF(2) ) );
-
-	case TRAP_EXP:
-		return FloatAsInt( exp( VMF(1) ) );
-
-	case TRAP_LOG:
-		return FloatAsInt( log( VMF(1) ) );
-
-	case TRAP_LOG10:
-		return FloatAsInt( log10( VMF(1) ) );
-
 	case CG_PRINT:
 		Com_Printf( "%s", (const char*)VMA(1) );
 		return 0;
@@ -1365,8 +1311,8 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0; 
 	case CG_R_REGISTERMODEL:
 		return re.RegisterModel( VMA(1) );
-	case CG_R_REGISTERSKIN:
-		return re.RegisterSkin( VMA(1) );
+	case CG_R_REGISTERSHADEREX:
+		return re.RegisterShaderEx( VMA(1), args[2], args[3] );
 	case CG_R_REGISTERSHADER:
 		return re.RegisterShader( VMA(1) );
 	case CG_R_REGISTERSHADERNOMIP:
@@ -1374,11 +1320,18 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_REGISTERFONT:
 		re.RegisterFont( VMA(1), args[2], VMA(3));
 		return 0;
+	case CG_R_ALLOCSKINSURFACE:
+		return re.AllocSkinSurface( VMA(1), args[2] );
+	case CG_R_ADDSKINTOFRAME:
+		return re.AddSkinToFrame( args[1], VMA(2) );
 	case CG_R_CLEARSCENE:
 		re.ClearScene();
 		return 0;
 	case CG_R_ADDREFENTITYTOSCENE:
-		re.AddRefEntityToScene( VMA(1) );
+		re.AddRefEntityToScene( VMA(1), 0, NULL, 0 );
+		return 0;
+	case CG_R_ADDPOLYREFENTITYTOSCENE:
+		re.AddRefEntityToScene( VMA(1), args[2], VMA(3), args[4] );
 		return 0;
 	case CG_R_ADDPOLYTOSCENE:
 		re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
@@ -1716,27 +1669,32 @@ void CL_InitCGame( void ) {
 	const char			*mapname;
 	int					t1, t2;
 	int					index;
-	unsigned int		version, major, minor;
+	char				apiName[64];
+	int					major, minor;
 
 	t1 = Sys_Milliseconds();
 
 	// load the dll or bytecode
-	cgvm = VM_Create( "cgame", CL_CgameSystemCalls, Cvar_VariableValue( "vm_cgame" ) );
+	cgvm = VM_Create( "mint-cgame", CL_CgameSystemCalls, Cvar_VariableValue( "vm_cgame" ) );
 	if ( !cgvm ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}
 
+	VM_GetVersion( cgvm, CG_GETAPINAME, CG_GETAPIVERSION, apiName, sizeof(apiName), &major, &minor );
+	Com_DPrintf("Loading CGame VM with API (%s %d.%d)\n", apiName, major, minor);
+
 	// sanity check
-	version = VM_SafeCall( cgvm, CG_GETAPIVERSION );
-	major = (version >> 16) & 0xFFFF;
-	minor = version & 0xFFFF;
-	Com_DPrintf("Loading cgame with version %x.%x\n", major, minor);
-	if ( major != CG_API_MAJOR_VERSION || minor > CG_API_MINOR_VERSION ) {
+	if ( !strcmp( apiName, CG_API_NAME ) && major == CG_API_MAJOR_VERSION
+		&& ( ( major > 0 && minor <= CG_API_MINOR_VERSION )
+		  || ( major == 0 && minor == CG_API_MINOR_VERSION ) ) ) {
+		// Supported API
+	} else {
 		// Free cgvm now, so CG_SHUTDOWN doesn't get called later.
 		VM_Free( cgvm );
 		cgvm = NULL;
 
-		Com_Error( ERR_DROP, "CGame is version %x.%x, expected %x.%x", major, minor, CG_API_MAJOR_VERSION, CG_API_MINOR_VERSION );
+		Com_Error( ERR_DROP, "CGame VM uses unsupported API (%s %d.%d), expected %s %d.%d",
+				  apiName, major, minor, CG_API_NAME, CG_API_MAJOR_VERSION, CG_API_MINOR_VERSION );
 	}
 
 	inGameLoad = ( clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC );

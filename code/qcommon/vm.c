@@ -366,6 +366,59 @@ intptr_t QDECL VM_DllSyscall( intptr_t arg, ... ) {
 #endif
 }
 
+/*
+============
+VM_QvmSyscall
+
+QVM bytecode interpreters call this when QVM makes a system call
+============
+*/
+intptr_t VM_QvmSyscall( intptr_t *args ) {
+	switch (args[0]) {
+	case TRAP_MEMSET:
+		Com_Memset( VMA(1), args[2], args[3] );
+		return args[1];
+	case TRAP_MEMCPY:
+		Com_Memcpy( VMA(1), VMA(2), args[3] );
+		return args[1];
+	case TRAP_STRNCPY:
+		strncpy( VMA(1), VMA(2), args[3] );
+		return args[1];
+	case TRAP_SIN:
+		return FloatAsInt( sin( VMF(1) ) );
+	case TRAP_COS:
+		return FloatAsInt( cos( VMF(1) ) );
+	case TRAP_ATAN2:
+		return FloatAsInt( atan2( VMF(1), VMF(2) ) );
+	case TRAP_SQRT:
+		return FloatAsInt( sqrt( VMF(1) ) );
+	case TRAP_FLOOR:
+		return FloatAsInt( floor( VMF(1) ) );
+	case TRAP_CEIL:
+		return FloatAsInt( ceil( VMF(1) ) );
+	case TRAP_ACOS:
+		return FloatAsInt( Q_acos( VMF(1) ) );
+	case TRAP_ASIN:
+		return FloatAsInt( Q_asin( VMF(1) ) );
+	case TRAP_TAN:
+		return FloatAsInt( tan( VMF(1) ) );
+	case TRAP_ATAN:
+		return FloatAsInt( atan( VMF(1) ) );
+	case TRAP_POW:
+		return FloatAsInt( pow( VMF(1), VMF(2) ) );
+	case TRAP_EXP:
+		return FloatAsInt( exp( VMF(1) ) );
+	case TRAP_LOG:
+		return FloatAsInt( log( VMF(1) ) );
+	case TRAP_LOG10:
+		return FloatAsInt( log10( VMF(1) ) );
+	case TRAP_SYSCALL:
+		return currentVM->systemCall( &args[1] );
+	default:
+		assert(0);
+		Com_Error( ERR_DROP, "Unknown QVM-specific system call: %ld", (long int) args[0] );
+	}
+}
 
 /*
 =================
@@ -887,7 +940,10 @@ intptr_t QDECL VM_Call( vm_t *vm, int callnum, ... )
 vm_t *safeVM = NULL;
 
 intptr_t VM_APISafeSystemCalls( intptr_t *args ) {
-	Com_Error(ERR_FATAL, "%s vm tried to make an unsafe syscall, it may be an incompatible quake3 vm", safeVM ? safeVM->name : "unknown");
+	Com_Printf("*** Unsafe VM API system call detected:\n");
+	Com_Printf("*** The %s VM tried to make an API call during API setup process, since we\n", safeVM ? safeVM->name : "unknown");
+	Com_Printf("*** haven't finished checking the API name/version we don't know what it should do.\n");
+	Com_Error(ERR_FATAL, "Incompatible %s VM (tried to make an API system call before init)", safeVM ? safeVM->name : "unknown");
 	return 0;
 }
 
@@ -912,6 +968,35 @@ intptr_t QDECL VM_SafeCall( vm_t *vm, int callnum )
 	vm->systemCall = savedSystemCall;
 
 	return value;
+}
+
+void VM_GetVersion( vm_t *vm, int nameCallNum, int versionCallNum, char *apiName, int apiNameSize, int *major, int *minor ) {
+	const char			*apiNamePtr;
+	unsigned int		version;
+	int					i;
+
+	apiNamePtr = VM_ExplicitArgPtr( vm, VM_SafeCall( vm, nameCallNum ) );
+	version = VM_SafeCall( vm, versionCallNum );
+	*major = (version >> 16) & 0xFFFF;
+	*minor = version & 0xFFFF;
+
+	// make sure API name is a graphic string and length < 64
+	if ( apiNamePtr ) {
+		for (i = 0; i < apiNameSize; i++) {
+			if ( !apiNamePtr[i])
+				break;
+			if ( !isgraph( apiNamePtr[i]) ) {
+				apiNamePtr = NULL;
+				break;
+			}
+		}
+		if ( i == 0 || i == apiNameSize )
+			apiNamePtr = NULL;
+	}
+	if ( !apiNamePtr ) {
+		apiNamePtr = "Unknown";
+	}
+	Q_strncpyz( apiName, apiNamePtr, apiNameSize );
 }
 
 //=================================================================

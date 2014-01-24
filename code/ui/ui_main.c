@@ -4897,7 +4897,7 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	uiInfo.uiDC.drawSides = &CG_DrawSides;
 	uiInfo.uiDC.drawTopBottom = &CG_DrawTopBottom;
 	uiInfo.uiDC.clearScene = &trap_R_ClearScene;
-	uiInfo.uiDC.addRefEntityToScene = &trap_R_AddRefEntityToScene;
+	uiInfo.uiDC.addRefEntityToScene = &CG_AddRefEntityWithMinLight;
 	uiInfo.uiDC.renderScene = &trap_R_RenderScene;
 	uiInfo.uiDC.registerFont = &trap_R_RegisterFont;
 	uiInfo.uiDC.ownerDrawItem = &UI_OwnerDraw;

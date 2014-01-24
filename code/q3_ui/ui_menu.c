@@ -221,7 +221,7 @@ static void Main_MenuDraw( void ) {
 	ent.renderfx = RF_LIGHTING_ORIGIN | RF_NOSHADOW;
 	VectorCopy( ent.origin, ent.oldorigin );
 
-	trap_R_AddRefEntityToScene( &ent );
+	CG_AddRefEntityWithMinLight( &ent );
 
 	trap_R_RenderScene( &refdef );
 	

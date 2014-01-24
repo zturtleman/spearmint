@@ -8,21 +8,21 @@
                |     |_|                                       |
                `--- https://github.com/zturtleman/spearmint ---'
 
-The intent of this project is to provide a version of ioquake3 which may be used
-for further development of standalone games.
-Some of the major Spearmint features currently implemented are:
+**Spearmint** has two main goals;
 
-  * Four player splitscreen, offline and in network games
-  * Extended API for game, cgame, and ui, includes some of the features from
-           RTCW, WolfET, Tremulous, and World of Padman
-  * Modified pure pk3 system, see PAKSUMS wiki page
-  * Improved game, cgame, and ui API version handling
-  * Removed code not needed for standalone games
-           (CD Key handling, authentication server code, and punkbuster ui code)
-  * Ogg Opus and Ogg Vorbis support enabled by default, source and headers
-           included in local source tree for easy compiling
-  * FreeType support enabled by default, source and headers included in local
-           source tree for easy compiling
+  1. provide a flexible engine for creating new games and mods.
+  2. support features from (and running) various id Tech 3-based games.
+
+Some of the major Spearmint features are:
+
+  * Four player splitscreen
+  * Moved a lot of code from server and client to Game and CGame VMs;
+    * including console, chat input overlay, `usercmd_t` creation, and a lot of bot AI code.
+  * Allow games to modify `entityState_t` and `playerState_t` without changing the engine.
+  * Extended API for Game and CGame/UI, includes some of the features from;
+    * RTCW, WolfET, Tremulous, Turtle Arena, and World of Padman
+  * Merged UI VM into CGame VM, easier to modify as a whole / more flexible.
+  * Additional shader keywords.
 
 Some of the major ioquake3 features currently implemented are:
 
@@ -647,7 +647,7 @@ just use Spearmint.
 If you really changed parts that would make vanilla Spearmint incompatible with
 your mod, we have included another way to conveniently build a stand-alone
 binary. Just run make. Don't forget to edit the PRODUCT_NAME and subsequent
-#defines in qcommon/q_shared.h with information appropriate for your project.
+ #defines in qcommon/q_shared.h with information appropriate for your project.
 
 ## Standalone game licensing
 

@@ -43,7 +43,6 @@ backEndState_t backEnd;
 shaderCommands_t	tess;
 
 shader_t localShader;
-skin_t localSkin;
 
 cvar_t *r_shadows = NULL;
 
@@ -93,15 +92,7 @@ void R_Init( void ) {
 	localShader.defaultShader = qtrue;
 	tr.defaultShader = &localShader;
 
-	// dummy skin
-	Q_strncpyz(localSkin.name, "<default>", sizeof (localSkin.name));
-	localSkin.surfaces = NULL;
-
 	R_ModelInit();
-}
-
-skin_t *R_GetSkinByHandle(qhandle_t handle) {
-	return &localSkin;
 }
 
 shader_t *R_FindShader(const char *name, int lightmapIndex, qboolean mipRawImage ) {

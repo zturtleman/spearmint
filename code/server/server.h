@@ -111,8 +111,8 @@ typedef struct {
 
 
 typedef struct {
-	int				areabytes;
-	byte			areabits[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
+	int				areabytes[MAX_SPLITVIEW];
+	byte			areabits[MAX_SPLITVIEW][MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 	int				numPSs;
 	darray_t		playerStates;
 	int				lcIndex[MAX_SPLITVIEW];
@@ -214,7 +214,7 @@ typedef struct client_s {
 #endif
 
 	int				oldServerTime;
-	qboolean		csUpdated[MAX_CONFIGSTRINGS+1];	
+	qboolean		csUpdated[MAX_CONFIGSTRINGS];
 	
 #ifdef LEGACY_PROTOCOL
 	qboolean		compat;

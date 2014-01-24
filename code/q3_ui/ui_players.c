@@ -807,7 +807,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	// add the legs
 	//
 	legs.hModel = pi->legsModel;
-	legs.customSkin = pi->legsSkin;
+	legs.customSkin = CG_AddSkinToFrame( &pi->modelSkin );
 
 	VectorCopy( origin, legs.origin );
 
@@ -815,7 +815,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	legs.renderfx = renderfx;
 	VectorCopy (legs.origin, legs.oldorigin);
 
-	trap_R_AddRefEntityToScene( &legs );
+	CG_AddRefEntityWithMinLight( &legs );
 
 	if (!legs.hModel) {
 		return;
@@ -829,7 +829,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 		return;
 	}
 
-	torso.customSkin = pi->torsoSkin;
+	torso.customSkin = legs.customSkin;
 
 	VectorCopy( origin, torso.lightingOrigin );
 
@@ -837,7 +837,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 
 	torso.renderfx = renderfx;
 
-	trap_R_AddRefEntityToScene( &torso );
+	CG_AddRefEntityWithMinLight( &torso );
 
 	//
 	// add the head
@@ -846,7 +846,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	if (!head.hModel) {
 		return;
 	}
-	head.customSkin = pi->headSkin;
+	head.customSkin = legs.customSkin;
 
 	VectorCopy( origin, head.lightingOrigin );
 
@@ -854,7 +854,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 
 	head.renderfx = renderfx;
 
-	trap_R_AddRefEntityToScene( &head );
+	CG_AddRefEntityWithMinLight( &head );
 
 	//
 	// add the gun
@@ -871,7 +871,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 		VectorCopy( origin, gun.lightingOrigin );
 		UI_PositionEntityOnTag( &gun, &torso, pi->torsoModel, "tag_weapon");
 		gun.renderfx = renderfx;
-		trap_R_AddRefEntityToScene( &gun );
+		CG_AddRefEntityWithMinLight( &gun );
 	}
 
 	//
@@ -900,7 +900,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 
 		UI_PositionRotatedEntityOnTag( &barrel, &gun, pi->weaponModel, "tag_barrel");
 
-		trap_R_AddRefEntityToScene( &barrel );
+		CG_AddRefEntityWithMinLight( &barrel );
 	}
 
 	//
@@ -919,7 +919,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 			VectorCopy( origin, flash.lightingOrigin );
 			UI_PositionEntityOnTag( &flash, &gun, pi->weaponModel, "tag_flash");
 			flash.renderfx = renderfx;
-			trap_R_AddRefEntityToScene( &flash );
+			CG_AddRefEntityWithMinLight( &flash );
 		}
 
 		// make a dlight for the flash
@@ -960,20 +960,20 @@ UI_RegisterClientSkin
 */
 static qboolean UI_RegisterClientSkin( playerInfo_t *pi, const char *modelName, const char *skinName ) {
 	char		filename[MAX_QPATH];
+	qboolean	legsSkin, torsoSkin, headSkin;
 
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower_%s.skin", modelName, skinName );
-	pi->legsSkin = trap_R_RegisterSkin( filename );
+	legsSkin = CG_RegisterSkin( filename, &pi->modelSkin, qfalse );
 
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/upper_%s.skin", modelName, skinName );
-	pi->torsoSkin = trap_R_RegisterSkin( filename );
+	torsoSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
 
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/head_%s.skin", modelName, skinName );
-	pi->headSkin = trap_R_RegisterSkin( filename );
+	headSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
 
-	if ( !pi->legsSkin || !pi->torsoSkin || !pi->headSkin ) {
+	if ( !legsSkin || !torsoSkin || !headSkin ) {
 		return qfalse;
 	}
-
 	return qtrue;
 }
 
