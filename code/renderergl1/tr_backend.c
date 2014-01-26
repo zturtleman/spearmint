@@ -514,6 +514,25 @@ void RB_EndDrawingView( void ) {
 	//qglDisable (GL_CLIP_PLANE0);
 }
 
+/*
+==================
+RB_EntityMergable
+==================
+*/
+qboolean RB_EntityMergable( int entityNum, const shader_t *shader ) {
+	if ( entityNum == REFENTITYNUM_WORLD )
+		return shader->entityMergable;
+
+	switch (backEnd.refdef.entities[entityNum].e.reType) {
+		case RT_SPRITE:
+		case RT_POLY_GLOBAL:
+			return shader->entityMergable;
+		case RT_MODEL:
+		case RT_POLY_LOCAL:
+		default:
+			return qfalse;
+	}
+}
 
 #define	MAC_EVENT_PUMP_MSEC		5
 
@@ -569,7 +588,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		// entities merged into a single batch, like smoke and blood puff sprites
 		if ( shader != NULL && ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted 
 			|| sortOrder != oldSortOrder
-			|| ( entityNum != oldEntityNum && !shader->entityMergable ) ) ) {
+			|| ( entityNum != oldEntityNum && !RB_EntityMergable( entityNum, shader) ) ) ) {
 			if (oldShader != NULL) {
 				RB_EndSurface();
 			}
