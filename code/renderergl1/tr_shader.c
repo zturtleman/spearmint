@@ -478,6 +478,10 @@ static unsigned NameToAFunc( const char *funcname )
 	{
 		return GLS_ATEST_GE_80;
 	}
+	else if ( !Q_stricmp( funcname, "GE192" ) )
+	{
+		return GLS_ATEST_GE_C0;
+	}
 
 	ri.Printf( PRINT_WARNING, "WARNING: invalid alphaFunc name '%s' in shader '%s'\n", funcname, shader.name );
 	return 0;
