@@ -78,7 +78,9 @@ cvar_t	*com_timescale;
 cvar_t	*com_fixedtime;
 cvar_t	*com_journal;
 cvar_t	*com_maxfps;
+#if idppc_altivec
 cvar_t	*com_altivec;
+#endif
 cvar_t	*com_timedemo;
 cvar_t	*com_sv_running;
 cvar_t	*com_cl_running;
@@ -2634,6 +2636,7 @@ void Com_GameRestart_f(void)
 	Com_GameRestart(qtrue);
 }
 
+#if idppc_altivec
 static void Com_DetectAltivec(void)
 {
 	// Only detect if user hasn't forcibly disabled it.
@@ -2650,6 +2653,7 @@ static void Com_DetectAltivec(void)
 		}
 	}
 }
+#endif
 
 /*
 =================
@@ -2806,7 +2810,9 @@ void Com_Init( char *commandLine ) {
 	//
 	// init commands and vars
 	//
+#if idppc_altivec
 	com_altivec = Cvar_Get ("com_altivec", "1", CVAR_ARCHIVE);
+#endif
 	com_maxfps = Cvar_Get ("com_maxfps", "85", CVAR_ARCHIVE);
 	com_singlePlayerActive = Cvar_Get ("ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM);
 
@@ -2890,9 +2896,8 @@ void Com_Init( char *commandLine ) {
 
 	com_fullyInitialized = qtrue;
 
-	// always set the cvar, but only print the info if it makes sense.
+#if idppc_altivec
 	Com_DetectAltivec();
-#if idppc
 	Com_Printf ("Altivec support is %s\n", com_altivec->integer ? "enabled" : "disabled");
 #endif
 
@@ -3344,11 +3349,13 @@ void Com_Frame( void ) {
 
 	Cbuf_Execute ();
 
+#if idppc_altivec
 	if (com_altivec->modified)
 	{
 		Com_DetectAltivec();
 		com_altivec->modified = qfalse;
 	}
+#endif
 
 	// mess with msec if needed
 	msec = Com_ModifyMsec(msec);

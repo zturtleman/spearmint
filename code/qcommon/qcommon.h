@@ -907,7 +907,9 @@ extern	cvar_t	*com_unfocused;
 extern	cvar_t	*com_maxfpsUnfocused;
 extern	cvar_t	*com_minimized;
 extern	cvar_t	*com_maxfpsMinimized;
+#if idppc_altivec
 extern	cvar_t	*com_altivec;
+#endif
 extern	cvar_t	*com_homepath;
 
 // both client and server must agree to pause
