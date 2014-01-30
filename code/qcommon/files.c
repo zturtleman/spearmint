@@ -652,6 +652,28 @@ qboolean FS_SV_FileExists( const char *file )
 	return FS_FileInPathExists(testpath);
 }
 
+/*
+================
+FS_SV_RW_FileExists
+
+check base path too
+================
+*/
+qboolean FS_SV_RW_FileExists(const char *file)
+{
+	char *testpath;
+
+	testpath = FS_BuildOSPath( fs_homepath->string, file, "");
+	testpath[strlen(testpath)-1] = '\0';
+
+	if ( FS_FileInPathExists(testpath) )
+		return qtrue;
+
+	testpath = FS_BuildOSPath( fs_basepath->string, file, "");
+	testpath[strlen(testpath)-1] = '\0';
+
+	return FS_FileInPathExists(testpath);
+}
 
 /*
 ===========

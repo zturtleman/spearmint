@@ -700,6 +700,13 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	p = FS_ReferencedPakNames();
 	Cvar_Set( "sv_referencedPakNames", p );
 
+	// set the game title so client can create description.txt
+	if ( !Q_stricmp( com_productName->string, FS_GetCurrentGameDir() ) ) {
+		Cvar_Set( "sv_gameTitle", "" );
+	} else {
+		Cvar_Set( "sv_gameTitle", com_productName->string );
+	}
+
 	// save systeminfo and serverinfo strings
 	Q_strncpyz( systemInfo, Cvar_InfoString_Big( CVAR_SYSTEMINFO ), sizeof( systemInfo ) );
 	cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
@@ -767,6 +774,7 @@ void SV_Init (void)
 	Cvar_Get ("sv_pakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	Cvar_Get ("sv_referencedPaks", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	Cvar_Get ("sv_referencedPakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
+	Cvar_Get ("sv_gameTitle", "", CVAR_SYSTEMINFO | CVAR_ROM );
 
 	// server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );
