@@ -2551,6 +2551,28 @@ int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int
 		return FS_GetModList(listbuf, bufsize);
 	}
 
+	if (Q_stricmp(extension, "$demos") == 0) {
+		// strip extension from list items
+		int extLength = strlen(DEMOEXT)+1;
+		pFiles = FS_ListFiles(path, DEMOEXT, &nFiles);
+
+		for (i =0; i < nFiles; i++) {
+			nLen = strlen(pFiles[i]) + 1 - extLength;
+			if (nTotal + nLen + 1 < bufsize) {
+				Q_strncpyz(listbuf, pFiles[i], nLen);
+				listbuf += nLen;
+				nTotal += nLen;
+			}
+			else {
+				nFiles = i;
+				break;
+			}
+		}
+
+		FS_FreeFileList(pFiles);
+		return nFiles;
+	}
+
 	if (Q_stricmp(extension, "$videos") == 0)
 	{
 		const char *extensions[] = { "RoQ", "roq" };

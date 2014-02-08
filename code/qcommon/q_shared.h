@@ -64,7 +64,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define MAX_TEAMNAME		32
 #define MAX_MASTER_SERVERS      5	// number of supported master servers
 
-#define DEMOEXT	"dm_"			// standard demo extension
+#define DEMOEXT	"mintdemo"			// standard demo extension
 
 #ifdef _MSC_VER
 

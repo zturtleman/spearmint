@@ -31,6 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "client.h"
 #include <limits.h>
+#include <stddef.h>
 
 #include "../sys/sys_local.h"
 
@@ -719,6 +720,30 @@ void CL_StopRecord_f( void ) {
 	len = -1;
 	FS_Write (&len, 4, clc.demofile);
 	FS_Write (&len, 4, clc.demofile);
+
+	// update end time in header
+	if ( FS_Seek (clc.demofile, offsetof( demoHeader_t, endTime ), FS_SEEK_SET) == 0 ) {
+		demoHeader_t	header;
+		qtime_t			now;
+		int				recordEndTime;
+
+		Com_RealTime( &now );
+		recordEndTime = Sys_Milliseconds();
+
+		Com_sprintf( header.endTime, sizeof(header.endTime), "%04d-%02d-%02d %02d:%02d:%02d",
+						1900 + now.tm_year,
+						1 + now.tm_mon,
+						now.tm_mday,
+						now.tm_hour,
+						now.tm_min,
+						now.tm_sec );
+
+		header.runTime = LittleLong( recordEndTime - clc.demoRecordStartTime );
+
+		FS_Write (header.endTime, sizeof(header.endTime), clc.demofile);
+		FS_Write (&header.runTime, sizeof(header.runTime), clc.demofile);
+	}
+
 	FS_FCloseFile (clc.demofile);
 	clc.demofile = 0;
 	clc.demorecording = qfalse;
@@ -766,6 +791,8 @@ void CL_Record_f( void ) {
 	int			len;
 	sharedEntityState_t	*ent;
 	char		*s;
+	demoHeader_t	header;
+	qtime_t			now;
 
 	if ( Cmd_Argc() > 2 ) {
 		Com_Printf ("record <demoname>\n");
@@ -790,24 +817,14 @@ void CL_Record_f( void ) {
 	if ( Cmd_Argc() == 2 ) {
 		s = Cmd_Argv(1);
 		Q_strncpyz( demoName, s, sizeof( demoName ) );
-#ifdef LEGACY_PROTOCOL
-		if(clc.compat)
-			Com_sprintf(name, sizeof(name), "demos/%s.%s%d", demoName, DEMOEXT, com_legacyprotocol->integer);
-		else
-#endif
-			Com_sprintf(name, sizeof(name), "demos/%s.%s%d", demoName, DEMOEXT, com_protocol->integer);
+		Com_sprintf(name, sizeof(name), "demos/%s.%s", demoName, DEMOEXT);
 	} else {
 		int		number;
 
 		// scan for a free demo name
 		for ( number = 0 ; number <= 9999 ; number++ ) {
 			CL_DemoFilename( number, demoName, sizeof( demoName ) );
-#ifdef LEGACY_PROTOCOL
-			if(clc.compat)
-				Com_sprintf(name, sizeof(name), "demos/%s.%s%d", demoName, DEMOEXT, com_legacyprotocol->integer);
-			else
-#endif
-				Com_sprintf(name, sizeof(name), "demos/%s.%s%d", demoName, DEMOEXT, com_protocol->integer);
+			Com_sprintf(name, sizeof(name), "demos/%s.%s", demoName, DEMOEXT);
 
 			if (!FS_FileExists(name))
 				break;	// file doesn't exist
@@ -828,6 +845,32 @@ void CL_Record_f( void ) {
 
 	// don't start saving messages until a non-delta compressed message is received
 	clc.demowaiting = qtrue;
+
+	Com_RealTime( &now );
+	clc.demoRecordStartTime = Sys_Milliseconds();
+
+	// setup demo header
+	Com_Memcpy( header.magic, DEMO_MAGIC, sizeof ( header.magic ) );
+	header.headerSize = LittleLong( sizeof( header ) );
+
+#ifdef LEGACY_PROTOCOL
+	if(clc.compat)
+		header.protocol = LittleLong( com_legacyprotocol->integer );
+	else
+#endif
+		header.protocol = LittleLong( com_protocol->integer );
+
+	Com_sprintf( header.startTime, sizeof(header.startTime), "%04d-%02d-%02d %02d:%02d:%02d",
+					1900 + now.tm_year,
+					1 + now.tm_mon,
+					now.tm_mday,
+					now.tm_hour,
+					now.tm_min,
+					now.tm_sec );
+	Com_Memset( header.endTime, 0, sizeof (header.endTime) );
+
+	// write demo header
+	FS_Write (&header, sizeof(header), clc.demofile);
 
 	// write out the gamestate message
 	MSG_Init (&buf, bufData, sizeof(bufData));
@@ -1043,70 +1086,107 @@ void CL_ReadDemoMessage( void ) {
 
 /*
 ====================
-CL_WalkDemoExt
+CL_ValidDemoFile
+
+if returns true, header looks ok and can probably play it (assuming correct cgame and pk3s).
+if returns false, can't play it.
+if returns false and length == 0, either file not found or it's size is 0...
+if returns false and protocol > 0, it's a unsupported protocol.
 ====================
 */
-static int CL_WalkDemoExt(char *arg, char *name, int *demofile, int *demoLength)
-{
-	int i = 0;
-	int length;
-	*demofile = 0;
+qboolean CL_ValidDemoFile( const char *demoName, int *pProtocol, int *pLength, fileHandle_t *pHandle, char *pStartTime, char *pEndTime, int *pRunTime ) {
+	demoHeader_t	header;
+	char			name[MAX_OSPATH];
+	int				r, i;
+	int				length;
+	int				protocol;
+	int				headerSize;
+	fileHandle_t	f;
 
+	if ( pProtocol )
+		*pProtocol = 0;
+	if ( pLength )
+		*pLength = 0;
+	if ( pHandle )
+		*pHandle = 0;
+	if ( pStartTime )
+		*pStartTime = '\0';
+	if ( pEndTime )
+		*pEndTime = '\0';
+	if ( pRunTime )
+		*pRunTime = 0;
+
+	Com_sprintf(name, sizeof(name), "demos/%s." DEMOEXT, demoName);
+	length = FS_FOpenFileRead(name, &f, qtrue);
+
+	if ( !f ) {
+		return qfalse;
+	}
+
+	if ( pLength ) {
+		*pLength = length;
+	}
+
+	r = FS_Read( &header, sizeof (header), f);
+	if ( r != sizeof (header) || memcmp( header.magic, DEMO_MAGIC, sizeof(header.magic) ) != 0 ) {
+		FS_FCloseFile( f );
+		return qfalse;
+	}
+
+	headerSize = LittleLong( header.headerSize );
+
+	// must meet minimum header size
+	if ( headerSize < offsetof( demoHeader_t, protocol ) + sizeof (int) ) {
+		FS_FCloseFile( f );
+		return qfalse;
+	}
+
+	// optional data
+	if ( pStartTime && headerSize > offsetof( demoHeader_t, startTime )  ) {
+		Q_strncpyz( pStartTime, header.startTime, sizeof (header.startTime) );
+	}
+	if ( pEndTime && headerSize > offsetof( demoHeader_t, endTime )  ) {
+		Q_strncpyz( pEndTime, header.endTime, sizeof (header.endTime) );
+	}
+	if ( pRunTime && headerSize > offsetof( demoHeader_t, runTime ) ) {
+		*pRunTime = LittleLong( header.runTime );
+	}
+
+	// verify protocol
+	protocol = LittleLong( header.protocol );
+
+	if ( pProtocol ) {
+		*pProtocol = protocol;
+	}
+
+	for(i = 0; demo_protocols[i]; i++)
+	{
+		if(demo_protocols[i] == protocol)
+			break;
+	}
+
+	if(demo_protocols[i] || protocol == com_protocol->integer
 #ifdef LEGACY_PROTOCOL
-	if(com_legacyprotocol->integer > 0)
-	{
-		Com_sprintf(name, MAX_OSPATH, "demos/%s.%s%d", arg, DEMOEXT, com_legacyprotocol->integer);
-		length = FS_FOpenFileRead(name, demofile, qtrue);
-		
-		if (*demofile)
-		{
-			*demoLength = length;
-			Com_Printf("Demo file: %s\n", name);
-			return com_legacyprotocol->integer;
-		}
-	}
-	
-	if(com_protocol->integer != com_legacyprotocol->integer)
+	   || protocol == com_legacyprotocol->integer
 #endif
+	  )
 	{
-		Com_sprintf(name, MAX_OSPATH, "demos/%s.%s%d", arg, DEMOEXT, com_protocol->integer);
-		length = FS_FOpenFileRead(name, demofile, qtrue);
-
-		if (*demofile)
-		{
-			*demoLength = length;
-			Com_Printf("Demo file: %s\n", name);
-			return com_protocol->integer;
-		}
+		// valid demo protocol
+	} else {
+		FS_FCloseFile( f );
+		return qfalse;
 	}
 
-	Com_Printf("Not found: %s\n", name);
+	if ( pHandle ) {
+		// skip to end of header so can start reading the demo packets
+		FS_Seek ( clc.demofile, headerSize, FS_SEEK_SET );
 
-	while(demo_protocols[i])
-	{
-#ifdef LEGACY_PROTOCOL
-		if(demo_protocols[i] == com_legacyprotocol->integer)
-			continue;
-#endif
-		if(demo_protocols[i] == com_protocol->integer)
-			continue;
-	
-		Com_sprintf (name, MAX_OSPATH, "demos/%s.%s%d", arg, DEMOEXT, demo_protocols[i]);
-		FS_FOpenFileRead( name, demofile, qtrue );
-		if (*demofile)
-		{
-			*demoLength = length;
-			Com_Printf("Demo file: %s\n", name);
-
-			return demo_protocols[i];
-		}
-		else
-			Com_Printf("Not found: %s\n", name);
-		i++;
+		*pHandle = f;
+	} else {
+		FS_FCloseFile( f );
 	}
-	
-	*demoLength = 0;
-	return -1;
+
+	return qtrue;
 }
 
 /*
@@ -1118,10 +1198,7 @@ static void CL_CompleteDemoName( char *args, int argNum )
 {
 	if( argNum == 2 )
 	{
-		char demoExt[ 16 ];
-
-		Com_sprintf(demoExt, sizeof(demoExt), ".%s%d", DEMOEXT, com_protocol->integer);
-		Field_CompleteFilename( "demos", demoExt, qtrue, qtrue );
+		Field_CompleteFilename( "demos", "." DEMOEXT, qtrue, qtrue );
 	}
 }
 
@@ -1134,10 +1211,12 @@ demo <demoname>
 ====================
 */
 void CL_PlayDemo_f( void ) {
-	char		name[MAX_OSPATH];
-	char		*arg, *ext_test;
-	int			protocol, i;
-	char		retry[MAX_OSPATH];
+	char		*arg;
+	int			protocol;
+	char		demoName[MAX_OSPATH];
+	char		startTime[20];
+	char		endTime[20];
+	int			runTime;
 
 	if (Cmd_Argc() != 2) {
 		Com_Printf ("demo <demoname>\n");
@@ -1153,57 +1232,29 @@ void CL_PlayDemo_f( void ) {
 	
 	CL_Disconnect( qtrue );
 
-	// check for an extension .DEMOEXT_?? (?? is protocol)
-	ext_test = strrchr(arg, '.');
-	
-	if(ext_test && !Q_stricmpn(ext_test + 1, DEMOEXT, ARRAY_LEN(DEMOEXT) - 1))
-	{
-		protocol = atoi(ext_test + ARRAY_LEN(DEMOEXT));
+	COM_StripExtension( arg, demoName, sizeof (demoName));
 
-		for(i = 0; demo_protocols[i]; i++)
-		{
-			if(demo_protocols[i] == protocol)
-				break;
+	if ( !CL_ValidDemoFile( demoName, &protocol, &clc.demoLength, &clc.demofile, startTime, endTime, &runTime ) ) {
+		if ( clc.demoLength == 0 ) {
+			Com_Error( ERR_DROP, "Couldn't open demo %s", demoName );
 		}
-
-		if(demo_protocols[i] || protocol == com_protocol->integer
-#ifdef LEGACY_PROTOCOL
-		   || protocol == com_legacyprotocol->integer
-#endif
-		  )
-		{
-			Com_sprintf(name, sizeof(name), "demos/%s", arg);
-			clc.demoLength = FS_FOpenFileRead(name, &clc.demofile, qtrue);
+		else if ( protocol > 0 ) {
+			Com_Error( ERR_DROP, "Demo %s uses unsupported protocol %d", demoName, protocol );
 		}
-		else
-		{
-			int len;
-
-			Com_Printf("Protocol %d not supported for demos\n", protocol);
-			len = ext_test - arg;
-
-			if(len >= ARRAY_LEN(retry))
-				len = ARRAY_LEN(retry) - 1;
-
-			Q_strncpyz(retry, arg, len + 1);
-			retry[len] = '\0';
-			protocol = CL_WalkDemoExt(retry, name, &clc.demofile, &clc.demoLength);
+		else {
+			Com_Error( ERR_DROP, "Invalid demo %s", demoName );
 		}
 	}
-	else
-		protocol = CL_WalkDemoExt(arg, name, &clc.demofile, &clc.demoLength);
-	
-	if (!clc.demofile) {
-		Com_Error( ERR_DROP, "couldn't open %s", name);
-		return;
-	}
-	Q_strncpyz( clc.demoName, arg, sizeof( clc.demoName ) );
+
+	Com_Printf( "Loading demo '%s' recorded from %s to %s (%d seconds)\n", demoName, startTime, endTime, runTime / 1000 );
+
+	Q_strncpyz( clc.demoName, demoName, sizeof( clc.demoName ) );
 
 	Con_Close();
 
 	clc.state = CA_CONNECTED;
 	clc.demoplaying = qtrue;
-	Q_strncpyz( clc.servername, arg, sizeof( clc.servername ) );
+	Q_strncpyz( clc.servername, demoName, sizeof( clc.servername ) );
 
 #ifdef LEGACY_PROTOCOL
 	if(protocol <= com_legacyprotocol->integer)
