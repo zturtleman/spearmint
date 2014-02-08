@@ -515,8 +515,10 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	// Restart renderer
 	SV_InitDedicatedRef();
 #else
-	// Restart renderer, and if dedicated start cgame
-	CL_StartHunkUsers( !com_dedicated->integer );
+	// ZTM: FIXME: renderer is restarted here for game VM to use,
+	// but client restarts it again after connecting to server.
+	// Restart renderer
+	CL_StartHunkUsers( qtrue );
 #endif
 
 	// clear collision map data
@@ -724,6 +726,14 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	SV_Heartbeat_f();
 
 	Hunk_SetMark();
+
+#ifndef DEDICATED
+	if ( com_dedicated->integer ) {
+		// restart cgame in order to show console for dedicated servers
+		// launched through the regular binary
+		CL_StartHunkUsers( qfalse );
+	}
+#endif
 
 	Com_DPrintf ("-----------------------------------\n");
 }
