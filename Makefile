@@ -234,9 +234,9 @@ BLIBDIR=$(MOUNT_DIR)/botlib
 NDIR=$(MOUNT_DIR)/null
 JPDIR=$(MOUNT_DIR)/jpeg-8c
 SPEEXDIR=$(MOUNT_DIR)/libspeex
-OGGDIR=$(MOUNT_DIR)/libogg-1.3.0
-OPUSDIR=$(MOUNT_DIR)/opus-1.0.2
-OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.2
+OGGDIR=$(MOUNT_DIR)/libogg-1.3.1
+OPUSDIR=$(MOUNT_DIR)/opus-1.1
+OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.5
 ZDIR=$(MOUNT_DIR)/zlib
 FTDIR=$(MOUNT_DIR)/freetype-2.4.11
 NSISDIR=misc/nsis
@@ -530,6 +530,10 @@ ifeq ($(PLATFORM),mingw32)
     ifndef WINDRES
       WINDRES=windres
     endif
+  endif
+
+  ifeq ($(CC),)
+    $(error Cannot find a suitable cross compiler for $(PLATFORM))
   endif
 
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
@@ -1607,10 +1611,15 @@ endif
 ifeq ($(USE_CODEC_OPUS),1)
 ifeq ($(USE_INTERNAL_OPUS),1)
 Q3OBJ += \
+  $(B)/client/opus/analysis.o \
+  $(B)/client/opus/mlp.o \
+  $(B)/client/opus/mlp_data.o \
   $(B)/client/opus/opus.o \
   $(B)/client/opus/opus_decoder.o \
   $(B)/client/opus/opus_encoder.o \
   $(B)/client/opus/opus_multistream.o \
+  $(B)/client/opus/opus_multistream_encoder.o \
+  $(B)/client/opus/opus_multistream_decoder.o \
   $(B)/client/opus/repacketizer.o \
   \
   $(B)/client/opus/bands.o \
@@ -1625,6 +1634,8 @@ Q3OBJ += \
   $(B)/client/opus/mdct.o \
   $(B)/client/opus/modes.o \
   $(B)/client/opus/pitch.o \
+  $(B)/client/opus/celt_encoder.o \
+  $(B)/client/opus/celt_decoder.o \
   $(B)/client/opus/celt_lpc.o \
   $(B)/client/opus/quant_bands.o \
   $(B)/client/opus/rate.o \
@@ -1743,7 +1754,8 @@ Q3OBJ += \
   $(B)/client/info.o \
   $(B)/client/internal.o \
   $(B)/client/opusfile.o \
-  $(B)/client/stream.o
+  $(B)/client/stream.o \
+  $(B)/client/wincerts.o
 endif
 endif
 
