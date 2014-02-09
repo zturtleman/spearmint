@@ -311,8 +311,10 @@ void CL_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int 
 	cl.cgameEntityStateSize = entityStateSize;
 	cl.cgamePlayerStateSize = playerStateSize;
 
-	if ( com_sv_running->integer )
+	// if starting a demo while running a server, allow setting netfields...
+	if ( com_sv_running->integer && !clc.demoplaying ) {
 		return;
+	}
 
 	MSG_SetNetFields( entityStateFields, numEntityStateFields, entityStateSize,
 					  playerStateFields, numPlayerStateFields, playerStateSize );

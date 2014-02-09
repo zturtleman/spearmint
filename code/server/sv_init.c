@@ -885,8 +885,6 @@ void SV_Shutdown( char *finalmsg ) {
 	Com_ShutdownRef();
 #endif
 
-	MSG_ShutdownNetFields();
-
 	// free current level
 	SV_ClearServer();
 
@@ -917,8 +915,11 @@ void SV_Shutdown( char *finalmsg ) {
 
 	Com_Printf( "---------------------------\n" );
 
-	// disconnect any local clients
-	if( sv_killserver->integer != 2 )
+	// when starting a demo while running a server, do not
+	// disconnect any local clients and free netfields
+	if( sv_killserver->integer != 2 ) {
 		CL_Disconnect( qfalse );
+		MSG_ShutdownNetFields();
+	}
 }
 
