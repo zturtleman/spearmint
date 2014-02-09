@@ -643,7 +643,7 @@ void SkipRestOfLineUntilBrace ( char **data ) {
 	p = *data;
 	while ( (c = *p++) != 0 ) {
 		if ( c == '{' || c == '}' ) {
-			*p--;
+			p--;
 			break;
 		}
 		if ( c == '\n' ) {
