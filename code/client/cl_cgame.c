@@ -1446,6 +1446,8 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 	case CG_GETDEMOLENGTH:
 		return CL_DemoLength();
+	case CG_GETDEMOFILEINFO:
+		return CL_ValidDemoFile( VMA(1), VMA(2), VMA(3), NULL, VMA(4), VMA(5), VMA(6) );
 	case CG_SETMAPTITLE:
 		CL_SetMapTitle( VMA(1) );
 		return 0;
