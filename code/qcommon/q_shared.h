@@ -864,6 +864,7 @@ void	COM_MatchToken( char**buf_p, char *match );
 
 qboolean SkipBracedSection (char **program, int depth);
 void SkipRestOfLine ( char **data );
+void SkipRestOfLineUntilBrace ( char **data );
 
 void Parse1DMatrix (char **buf_p, int x, float *m);
 void Parse2DMatrix (char **buf_p, int y, int x, float *m);

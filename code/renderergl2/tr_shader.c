@@ -954,11 +954,18 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 	char *token;
 	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0;
 	qboolean depthMaskExplicit = qfalse;
+	qboolean skipRestOfLine = qfalse;
 
 	stage->active = qtrue;
 
 	while ( 1 )
 	{
+		// skip unused data for known parameters, but not the initial {
+		if ( skipRestOfLine ) {
+			SkipRestOfLineUntilBrace( text );
+		}
+		skipRestOfLine = qtrue;
+
 		token = COM_ParseExt( text, qtrue );
 		if ( !token[0] )
 		{
@@ -2081,6 +2088,7 @@ static qboolean ParseShader( char **text )
 	char *token;
 	int s;
 	int ifIndent = 0;
+	qboolean skipRestOfLine = qfalse;
 
 	s = 0;
 
@@ -2093,6 +2101,12 @@ static qboolean ParseShader( char **text )
 
 	while ( 1 )
 	{
+		if ( skipRestOfLine ) {
+			// skip unused data for known directives
+			SkipRestOfLineUntilBrace( text );
+		}
+		skipRestOfLine = qtrue;
+
 		token = COM_ParseExt( text, qtrue );
 		if ( !token[0] )
 		{
@@ -2130,11 +2144,13 @@ static qboolean ParseShader( char **text )
 			stages[s].active = qtrue;
 			s++;
 
+			// Don't skip data after the }
+			skipRestOfLine = qfalse;
+
 			continue;
 		}
 		// skip stuff that only the QuakeEdRadient needs
 		else if ( !Q_stricmpn( token, "qer", 3 ) ) {
-			SkipRestOfLine( text );
 			continue;
 		}
 		// sun parms
@@ -2207,7 +2223,6 @@ static qboolean ParseShader( char **text )
 			continue;
 		}
 		else if ( !Q_stricmp( token, "tesssize" ) ) {
-			SkipRestOfLine( text );
 			continue;
 		}
 		else if ( !Q_stricmp( token, "clampTime" ) ) {
@@ -2218,7 +2233,6 @@ static qboolean ParseShader( char **text )
 		}
 		// skip stuff that only the q3map needs
 		else if ( !Q_stricmpn( token, "q3map", 5 ) ) {
-			SkipRestOfLine( text );
 			continue;
 		}
 		// skip stuff that only q3map or the server needs
@@ -2300,8 +2314,7 @@ static qboolean ParseShader( char **text )
 			shader.fogParms.density = DEFAULT_FOG_EXP_DENSITY;
 			shader.fogParms.depthForOpaque = atof( token );
 
-			// skip any old gradient directions
-			SkipRestOfLine( text );
+			// note: skips any old gradient directions
 			continue;
 		}
 		// linearFogParms ( <red> <green> <blue> ) <depthForOpaque>
@@ -2320,9 +2333,6 @@ static qboolean ParseShader( char **text )
 			shader.fogParms.fogType = FT_LINEAR;
 			shader.fogParms.density = DEFAULT_FOG_LINEAR_DENSITY;
 			shader.fogParms.depthForOpaque = atof( token );
-
-			// skip any old gradient directions
-			SkipRestOfLine( text );
 			continue;
 		}
 		// portal

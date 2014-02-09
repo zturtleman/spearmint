@@ -490,7 +490,8 @@ char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 		}
 		if ( hasNewLines && !allowLineBreaks )
 		{
-			*data_p = data;
+			// ZTM: Don't move the pointer so that calling SkipRestOfLine afterwards works as expected
+			//*data_p = data;
 			return com_token;
 		}
 
@@ -626,6 +627,25 @@ void SkipRestOfLine ( char **data ) {
 
 	p = *data;
 	while ( (c = *p++) != 0 ) {
+		if ( c == '\n' ) {
+			com_lines++;
+			break;
+		}
+	}
+
+	*data = p;
+}
+
+void SkipRestOfLineUntilBrace ( char **data ) {
+	char	*p;
+	int		c;
+
+	p = *data;
+	while ( (c = *p++) != 0 ) {
+		if ( c == '{' || c == '}' ) {
+			*p--;
+			break;
+		}
 		if ( c == '\n' ) {
 			com_lines++;
 			break;
