@@ -4479,7 +4479,10 @@ void FS_Restart( qboolean gameDirChanged ) {
 			lastValidBase[0] = '\0';
 			lastValidGame[0] = '\0';
 			FS_Restart( qtrue );
-			Com_Error( ERR_DROP, "Invalid game folder" );
+			// if connected to a remote server, try to download the files
+			if ( !com_sv_running->integer && !CL_ConnectedToServer() ) {
+				Com_Error( ERR_DROP, "Invalid game folder" );
+			}
 			return;
 		}
 		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
