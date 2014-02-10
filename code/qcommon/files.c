@@ -3265,11 +3265,11 @@ void FS_AddGameDirectory( const char *path, const char *dir ) {
 FS_ReferencedPakType
 ================
 */
-pakType_t FS_ReferencedPakType( int refpak ) {
+pakType_t FS_ReferencedPakType( int checksum ) {
 	searchpath_t *sp;
 
 	for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
-		if ( sp->pack && sp->pack->checksum == fs_serverReferencedPaks[refpak] ) {
+		if ( sp->pack && sp->pack->checksum == checksum ) {
 			return sp->pack->pakType;
 		}
 	}
@@ -3333,7 +3333,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 	for ( i = 0 ; i < fs_numServerReferencedPaks ; i++ )
 	{
 		// Ok, see if we have this pak file
-		pakType = FS_ReferencedPakType( i );
+		pakType = FS_ReferencedPakType( fs_serverReferencedPaks[ i ] );
 
 		// never autodownload any of the id or paks which don't allow it
 		if ( pakType == PAK_COMMERCIAL || pakType == PAK_NO_DOWNLOAD )
@@ -4254,6 +4254,28 @@ const char *FS_ReferencedPakChecksums( void ) {
 	}
 
 	return info;
+}
+
+/*
+=====================
+FS_ReferencedPakChecksum
+=====================
+*/
+int FS_ReferencedPakChecksum( int n ) {
+	searchpath_t	*search;
+	int				i = 0;
+
+	for ( search = fs_searchpaths ; search ; search = search->next ) {
+		// is the element a pak file?
+		if ( search->pack && search->pack->referenced) {
+			if ( i == n ) {
+				return search->pack->checksum;
+			}
+			i++;
+		}
+	}
+
+	return 0;
 }
 
 /*
