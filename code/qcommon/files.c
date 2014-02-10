@@ -3875,7 +3875,7 @@ void FS_DetectCommercialPaks( void ) {
 			}
 		}
 
-		if ( i != numCommercialPaks ) {
+		if ( i == numCommercialPaks ) {
 			path->pack->pakType = PAK_FREE;
 		}
 	}
