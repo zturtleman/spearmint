@@ -240,6 +240,7 @@ typedef struct {
 	qboolean	firstDemoFrameSkipped;
 	fileHandle_t	demofile;
 	int			demoLength;		// size of playback demo
+	int			demoRecordStartTime;
 
 	int			timeDemoFrames;		// counter of rendered frames
 	int			timeDemoStart;		// cls.realtime before first frame
@@ -376,6 +377,22 @@ extern	qboolean	cl_oldGameSet;
 
 //=============================================================================
 
+#define DEMO_MAGIC "SPEARMINT_DEMO\0"
+
+typedef struct {
+	char	magic[15];
+	int		headerSize;
+	int		protocol;
+
+	// treated as optional, assumed to exist based on headerSize
+	char	startTime[20]; // "YYYY-MM-DD HH:MM:SS\0"
+	char	endTime[20]; // "YYYY-MM-DD HH:MM:SS\0"
+	int		runTime; // Run time in milliseconds. Note: assumed to be directly after endTime when saving demo
+
+} demoHeader_t;
+
+//=============================================================================
+
 extern	vm_t			*cgvm;	// interface to cgame dll or vm
 extern	refexport_t		re;		// interface to refresh .dll
 
@@ -472,6 +489,8 @@ void CL_InitRef( void );
 int CL_ServerStatus( char *serverAddress, char *serverStatusString, int maxLen );
 
 qboolean CL_CheckPaused(void);
+
+qboolean CL_ValidDemoFile( const char *demoName, int *pProtocol, int *pLength, fileHandle_t *pHandle, char *pStartTime, char *pEndTime, int *pRunTime );
 
 //
 // cl_input

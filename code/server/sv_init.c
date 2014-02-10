@@ -453,7 +453,7 @@ static void SV_TouchCGame(void) {
 	fileHandle_t	f;
 	char filename[MAX_QPATH];
 
-	Com_sprintf( filename, sizeof(filename), "vm/%s.qvm", "cgame" );
+	Com_sprintf( filename, sizeof(filename), "vm/%s.qvm", "mint-cgame" );
 	FS_FOpenFileRead( filename, &f, qfalse );
 	if ( f ) {
 		FS_FCloseFile( f );
@@ -515,8 +515,10 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	// Restart renderer
 	SV_InitDedicatedRef();
 #else
-	// Restart renderer, and if dedicated start cgame
-	CL_StartHunkUsers( !com_dedicated->integer );
+	// ZTM: FIXME: renderer is restarted here for game VM to use,
+	// but client restarts it again after connecting to server.
+	// Restart renderer
+	CL_StartHunkUsers( qtrue );
 #endif
 
 	// clear collision map data
@@ -700,6 +702,13 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	p = FS_ReferencedPakNames();
 	Cvar_Set( "sv_referencedPakNames", p );
 
+	// set the game title so client can create description.txt
+	if ( !Q_stricmp( com_productName->string, FS_GetCurrentGameDir() ) ) {
+		Cvar_Set( "sv_gameTitle", "" );
+	} else {
+		Cvar_Set( "sv_gameTitle", com_productName->string );
+	}
+
 	// save systeminfo and serverinfo strings
 	Q_strncpyz( systemInfo, Cvar_InfoString_Big( CVAR_SYSTEMINFO ), sizeof( systemInfo ) );
 	cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
@@ -717,6 +726,14 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	SV_Heartbeat_f();
 
 	Hunk_SetMark();
+
+#ifndef DEDICATED
+	if ( com_dedicated->integer ) {
+		// restart cgame in order to show console for dedicated servers
+		// launched through the regular binary
+		CL_StartHunkUsers( qfalse );
+	}
+#endif
 
 	Com_DPrintf ("-----------------------------------\n");
 }
@@ -767,6 +784,7 @@ void SV_Init (void)
 	Cvar_Get ("sv_pakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	Cvar_Get ("sv_referencedPaks", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	Cvar_Get ("sv_referencedPakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
+	Cvar_Get ("sv_gameTitle", "", CVAR_SYSTEMINFO | CVAR_ROM );
 
 	// server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );
@@ -867,8 +885,6 @@ void SV_Shutdown( char *finalmsg ) {
 	Com_ShutdownRef();
 #endif
 
-	MSG_ShutdownNetFields();
-
 	// free current level
 	SV_ClearServer();
 
@@ -899,8 +915,11 @@ void SV_Shutdown( char *finalmsg ) {
 
 	Com_Printf( "---------------------------\n" );
 
-	// disconnect any local clients
-	if( sv_killserver->integer != 2 )
+	// when starting a demo while running a server, do not
+	// disconnect any local clients and free netfields
+	if( sv_killserver->integer != 2 ) {
 		CL_Disconnect( qfalse );
+		MSG_ShutdownNetFields();
+	}
 }
 

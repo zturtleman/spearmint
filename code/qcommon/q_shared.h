@@ -64,7 +64,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define MAX_TEAMNAME		32
 #define MAX_MASTER_SERVERS      5	// number of supported master servers
 
-#define DEMOEXT	"dm_"			// standard demo extension
+#define DEMOEXT	"mintdemo"			// standard demo extension
 
 #ifdef _MSC_VER
 
@@ -864,6 +864,7 @@ void	COM_MatchToken( char**buf_p, char *match );
 
 qboolean SkipBracedSection (char **program, int depth);
 void SkipRestOfLine ( char **data );
+void SkipRestOfLineUntilBrace ( char **data );
 
 void Parse1DMatrix (char **buf_p, int x, float *m);
 void Parse2DMatrix (char **buf_p, int y, int x, float *m);

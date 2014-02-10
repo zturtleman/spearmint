@@ -311,8 +311,10 @@ void CL_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int 
 	cl.cgameEntityStateSize = entityStateSize;
 	cl.cgamePlayerStateSize = playerStateSize;
 
-	if ( com_sv_running->integer )
+	// if starting a demo while running a server, allow setting netfields...
+	if ( com_sv_running->integer && !clc.demoplaying ) {
 		return;
+	}
 
 	MSG_SetNetFields( entityStateFields, numEntityStateFields, entityStateSize,
 					  playerStateFields, numPlayerStateFields, playerStateSize );
@@ -1446,6 +1448,8 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 	case CG_GETDEMOLENGTH:
 		return CL_DemoLength();
+	case CG_GETDEMOFILEINFO:
+		return CL_ValidDemoFile( VMA(1), VMA(2), VMA(3), NULL, VMA(4), VMA(5), VMA(6) );
 	case CG_SETMAPTITLE:
 		CL_SetMapTitle( VMA(1) );
 		return 0;

@@ -652,6 +652,28 @@ qboolean FS_SV_FileExists( const char *file )
 	return FS_FileInPathExists(testpath);
 }
 
+/*
+================
+FS_SV_RW_FileExists
+
+check base path too
+================
+*/
+qboolean FS_SV_RW_FileExists(const char *file)
+{
+	char *testpath;
+
+	testpath = FS_BuildOSPath( fs_homepath->string, file, "");
+	testpath[strlen(testpath)-1] = '\0';
+
+	if ( FS_FileInPathExists(testpath) )
+		return qtrue;
+
+	testpath = FS_BuildOSPath( fs_basepath->string, file, "");
+	testpath[strlen(testpath)-1] = '\0';
+
+	return FS_FileInPathExists(testpath);
+}
 
 /*
 ===========
@@ -1072,30 +1094,7 @@ Return qtrue if filename has a demo extension
 
 qboolean FS_IsDemoExt(const char *filename, int namelen)
 {
-	char *ext_test;
-	int index, protocol;
-
-	ext_test = strrchr(filename, '.');
-	if(ext_test && !Q_stricmpn(ext_test + 1, DEMOEXT, ARRAY_LEN(DEMOEXT) - 1))
-	{
-		protocol = atoi(ext_test + ARRAY_LEN(DEMOEXT));
-
-		if(protocol == com_protocol->integer)
-			return qtrue;
-
-#ifdef LEGACY_PROTOCOL
-		if(protocol == com_legacyprotocol->integer)
-			return qtrue;
-#endif
-
-		for(index = 0; demo_protocols[index]; index++)
-		{
-			if(demo_protocols[index] == protocol)
-			return qtrue;
-		}
-	}
-
-	return qfalse;
+	return FS_IsExt( filename, "." DEMOEXT, namelen );
 }
 
 /*
@@ -2529,6 +2528,28 @@ int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int
 		return FS_GetModList(listbuf, bufsize);
 	}
 
+	if (Q_stricmp(extension, "$demos") == 0) {
+		// strip extension from list items
+		int extLength = strlen(DEMOEXT)+1;
+		pFiles = FS_ListFiles(path, DEMOEXT, &nFiles);
+
+		for (i =0; i < nFiles; i++) {
+			nLen = strlen(pFiles[i]) + 1 - extLength;
+			if (nTotal + nLen + 1 < bufsize) {
+				Q_strncpyz(listbuf, pFiles[i], nLen);
+				listbuf += nLen;
+				nTotal += nLen;
+			}
+			else {
+				nFiles = i;
+				break;
+			}
+		}
+
+		FS_FreeFileList(pFiles);
+		return nFiles;
+	}
+
 	if (Q_stricmp(extension, "$videos") == 0)
 	{
 		const char *extensions[] = { "RoQ", "roq" };
@@ -3221,11 +3242,11 @@ void FS_AddGameDirectory( const char *path, const char *dir ) {
 FS_ReferencedPakType
 ================
 */
-pakType_t FS_ReferencedPakType( int refpak ) {
+pakType_t FS_ReferencedPakType( int checksum ) {
 	searchpath_t *sp;
 
 	for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
-		if ( sp->pack && sp->pack->checksum == fs_serverReferencedPaks[refpak] ) {
+		if ( sp->pack && sp->pack->checksum == checksum ) {
 			return sp->pack->pakType;
 		}
 	}
@@ -3289,7 +3310,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 	for ( i = 0 ; i < fs_numServerReferencedPaks ; i++ )
 	{
 		// Ok, see if we have this pak file
-		pakType = FS_ReferencedPakType( i );
+		pakType = FS_ReferencedPakType( fs_serverReferencedPaks[ i ] );
 
 		// never autodownload any of the id or paks which don't allow it
 		if ( pakType == PAK_COMMERCIAL || pakType == PAK_NO_DOWNLOAD )
@@ -3831,7 +3852,7 @@ void FS_DetectCommercialPaks( void ) {
 			}
 		}
 
-		if ( i != numCommercialPaks ) {
+		if ( i == numCommercialPaks ) {
 			path->pack->pakType = PAK_FREE;
 		}
 	}
@@ -4214,6 +4235,28 @@ const char *FS_ReferencedPakChecksums( void ) {
 
 /*
 =====================
+FS_ReferencedPakChecksum
+=====================
+*/
+int FS_ReferencedPakChecksum( int n ) {
+	searchpath_t	*search;
+	int				i = 0;
+
+	for ( search = fs_searchpaths ; search ; search = search->next ) {
+		// is the element a pak file?
+		if ( search->pack && search->pack->referenced) {
+			if ( i == n ) {
+				return search->pack->checksum;
+			}
+			i++;
+		}
+	}
+
+	return 0;
+}
+
+/*
+=====================
 FS_ReferencedPakNames
 
 Returns a space separated string containing the names of all referenced pk3 files.
@@ -4413,7 +4456,10 @@ void FS_Restart( qboolean gameDirChanged ) {
 			lastValidBase[0] = '\0';
 			lastValidGame[0] = '\0';
 			FS_Restart( qtrue );
-			Com_Error( ERR_DROP, "Invalid game folder" );
+			// if connected to a remote server, try to download the files
+			if ( !CL_ConnectedToRemoteServer() ) {
+				Com_Error( ERR_DROP, "Invalid game folder" );
+			}
 			return;
 		}
 		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );

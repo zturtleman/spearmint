@@ -1075,7 +1075,7 @@ int SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 						// now that we know the file is referenced,
 						// check whether it's legal to download it
 						// or if it is a default pak.
-						pakType = FS_ReferencedPakType(curindex);
+						pakType = FS_ReferencedPakType( FS_ReferencedPakChecksum( curindex ) );
 						break;
 					}
 				}
@@ -1135,7 +1135,7 @@ int SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 			if(cl->download)
 				FS_FCloseFile(cl->download);
 			
-			return 0;
+			return 1;
 		}
  
 		Com_Printf( "clientDownload: %d : beginning \"%s\"\n", (int) (cl - svs.clients), cl->downloadName );

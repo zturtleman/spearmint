@@ -44,7 +44,9 @@ static void GfxInfo_f( void );
 static void GfxMemInfo_f( void );
 
 #ifdef USE_RENDERER_DLOPEN
+#if idppc_altivec
 cvar_t  *com_altivec;
+#endif
 #endif
 
 cvar_t	*r_flareSize;
@@ -1172,7 +1174,9 @@ R_Register
 void R_Register( void ) 
 {
 	#ifdef USE_RENDERER_DLOPEN
+	#if idppc_altivec
 	com_altivec = ri.Cvar_Get("com_altivec", "1", CVAR_ARCHIVE);
+	#endif
 	#endif	
 
 	//

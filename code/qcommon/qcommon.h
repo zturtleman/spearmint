@@ -666,6 +666,8 @@ fileHandle_t	FS_FOpenFileAppend( const char *filename );
 fileHandle_t	FS_FCreateOpenPipeFile( const char *filename );
 // will properly create any needed paths and deal with seperater character issues
 
+qboolean	FS_SV_FileExists( const char *filename );
+qboolean	FS_SV_RW_FileExists( const char *filename );
 fileHandle_t FS_SV_FOpenFileWrite( const char *filename );
 long		FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );
 void	FS_SV_Rename( const char *from, const char *to, qboolean safe );
@@ -729,6 +731,7 @@ const char *FS_LoadedPakChecksums( void );
 // Returns a space separated string containing the checksums of all loaded pk3 files.
 // Servers with sv_pure set will get this string and pass it to clients.
 
+int			FS_ReferencedPakChecksum( int n );
 const char *FS_ReferencedPakNames( void );
 const char *FS_ReferencedPakChecksums( void );
 // Returns a space separated string containing the checksums of all referenced pk3 files.
@@ -907,7 +910,9 @@ extern	cvar_t	*com_unfocused;
 extern	cvar_t	*com_maxfpsUnfocused;
 extern	cvar_t	*com_minimized;
 extern	cvar_t	*com_maxfpsMinimized;
+#if idppc_altivec
 extern	cvar_t	*com_altivec;
+#endif
 extern	cvar_t	*com_homepath;
 
 // both client and server must agree to pause
@@ -1100,8 +1105,8 @@ void CL_ShutdownAll(qboolean shutdownRef);
 void CL_StartHunkUsers( qboolean rendererOnly );
 // start all the client stuff using the hunk
 
-qboolean CL_ConnectedToServer( void );
-// returns qtrue if connected to a server
+qboolean CL_ConnectedToRemoteServer( void );
+// returns qtrue if connected to a remote server
 
 void Key_KeynameCompletion( void(*callback)(const char *s) );
 // for keyname autocompletion

@@ -53,16 +53,21 @@ The original id software readme that accompanied the Q3 source release has been
 renamed to id-readme.txt so as to prevent confusion. Please refer to the
 web-site for updated status.
 
+# Game Code
 
-# Compilation and installation
+The Quake 3 game, cgame, and ui code and QVM compiler are not included. If you wish to play Quake 3, you'll need to get
+and build https://github.com/zturtleman/mint-arena/ too.
+
+# Engine Compilation and installation
 
 For *nix
   1. Change to the directory containing this readme.
   2. Run 'make'.
 
-For Windows,
-  1. Please refer to the excellent instructions here: 
-     http://wiki.ioquake3.org/Building_ioquake3
+For Windows
+  1. Install mingw-w64
+  2. Change to the directory containing this readme.
+  3. Run 'make'.
 
 For Mac OS X, building a Universal Binary
   1. Install MacOSX SDK packages from XCode.  For maximum compatibility,
@@ -94,16 +99,8 @@ Makefile.local:
   DEFAULT_BASEDIR    - extra path to search for baseq3 and such
   BUILD_SERVER       - build the 'spearmint-server' server binary
   BUILD_CLIENT       - build the 'spearmint' client binary
-  BUILD_BASEGAME     - build the 'baseq3' binaries
-  BUILD_MISSIONPACK  - build the 'missionpack' binaries
-  BUILD_GAME_SO      - build the game shared libraries
-  BUILD_GAME_QVM     - build the game qvms
   SERVERBIN          - rename 'spearmint-server' server binary
   CLIENTBIN          - rename 'spearmint' client binary
-  BASEGAME           - rename 'baseq3'
-  BASEGAME_CFLAGS    - custom CFLAGS for basegame
-  MISSIONPACK        - rename 'missionpack'
-  MISSIONPACK_CFLAGS - custom CFLAGS for missionpack (default '-DMISSIONPACK -DMISSIONPACK_HUD')
   USE_OPENAL         - use OpenAL where available
   USE_OPENAL_DLOPEN  - link with OpenAL at runtime
   USE_CURL           - use libcurl for http/ftp download support

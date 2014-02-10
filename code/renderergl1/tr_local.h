@@ -1285,7 +1285,8 @@ void	GL_Cull( int cullType );
 #define GLS_ATEST_GT_0							0x10000000
 #define GLS_ATEST_LT_80							0x20000000
 #define GLS_ATEST_GE_80							0x40000000
-#define		GLS_ATEST_BITS						0x70000000
+#define GLS_ATEST_GE_C0							0x80000000
+#define		GLS_ATEST_BITS						0xF0000000
 
 #define GLS_DEFAULT			GLS_DEPTHMASK_TRUE
 

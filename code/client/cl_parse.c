@@ -478,12 +478,23 @@ void CL_SystemInfoChanged( void ) {
 		// ehw!
 		if (!Q_stricmp(key, "fs_game"))
 		{
+			if ( gameSet )
+				continue;
+
 			if(FS_CheckDirTraversal(value))
 			{
 				Com_Printf(S_COLOR_YELLOW "WARNING: Server sent invalid fs_game value %s\n", value);
 				continue;
 			}
-				
+
+			// create game title file if does not exist
+			s = Info_ValueForKey( systemInfo, "sv_gameTitle" );
+			if ( ( cl_allowDownload->integer & DLF_ENABLE ) && *s && !FS_SV_RW_FileExists( va("%s/description.txt", value ) ) ) {
+				fileHandle_t f = FS_SV_FOpenFileWrite( va("%s/description.txt", value ) );
+				FS_Write( s, strlen( s ), f );
+				FS_FCloseFile( f );
+			}
+
 			gameSet = qtrue;
 		}
 
