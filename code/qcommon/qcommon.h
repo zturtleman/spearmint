@@ -1105,8 +1105,8 @@ void CL_ShutdownAll(qboolean shutdownRef);
 void CL_StartHunkUsers( qboolean rendererOnly );
 // start all the client stuff using the hunk
 
-qboolean CL_ConnectedToServer( void );
-// returns qtrue if connected to a server
+qboolean CL_ConnectedToRemoteServer( void );
+// returns qtrue if connected to a remote server
 
 void Key_KeynameCompletion( void(*callback)(const char *s) );
 // for keyname autocompletion

@@ -3683,8 +3683,8 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 
 }
 
-qboolean CL_ConnectedToServer( void ) {
-	return ( clc.state >= CA_CONNECTED && !clc.demoplaying );
+qboolean CL_ConnectedToRemoteServer( void ) {
+	return ( com_sv_running && !com_sv_running->integer && clc.state >= CA_CONNECTED && !clc.demoplaying );
 }
 
 static void CL_SetServerInfo(serverInfo_t *server, const char *info, int ping) {

@@ -4480,7 +4480,7 @@ void FS_Restart( qboolean gameDirChanged ) {
 			lastValidGame[0] = '\0';
 			FS_Restart( qtrue );
 			// if connected to a remote server, try to download the files
-			if ( !com_sv_running->integer && !CL_ConnectedToServer() ) {
+			if ( !CL_ConnectedToRemoteServer() ) {
 				Com_Error( ERR_DROP, "Invalid game folder" );
 			}
 			return;
