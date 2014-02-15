@@ -133,6 +133,20 @@ static void Matrix34Invert( float *inMat, float *outMat )
 	outMat[ 7] = -DotProduct(outMat + 4, trans);
 	outMat[11] = -DotProduct(outMat + 8, trans);
 }
+static iqmData_t *R_GetIQMModelDataByHandle( qhandle_t hModel, iqmData_t *defaultData ) {
+	model_t *mod;
+
+	if ( !hModel )
+		return defaultData;
+
+	mod = R_GetModelByHandle( hModel );
+
+	if ( mod->type != MOD_IQM ) {
+		return defaultData;
+	}
+
+	return mod->modelData;
+}
 
 /*
 =================
@@ -152,7 +166,6 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	unsigned short		*framedata;
 	char			*str;
 	int			i, j;
-	float			jointInvMats[IQM_MAX_JOINTS * 12];
 	float			*mat, *matInv;
 	size_t			size, joint_names;
 	iqmData_t		*iqmData;
@@ -217,7 +230,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	blendIndexesType = blendWeightsType = IQM_UBYTE;
 
 	// check and swap vertex arrays
-	if( IQM_CheckRange( header, header->ofs_vertexarrays,
+	if( header->num_vertexarrays && IQM_CheckRange( header, header->ofs_vertexarrays,
 			    header->num_vertexarrays,
 			    sizeof(iqmVertexArray_t) ) ) {
 		return qfalse;
@@ -307,7 +320,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	}
 
 	// check and swap triangles
-	if( IQM_CheckRange( header, header->ofs_triangles,
+	if( header->num_triangles && IQM_CheckRange( header, header->ofs_triangles,
 			    header->num_triangles, sizeof(iqmTriangle_t) ) ) {
 		return qfalse;
 	}
@@ -325,7 +338,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	}
 
 	// check and swap meshes
-	if( IQM_CheckRange( header, header->ofs_meshes,
+	if( header->num_meshes && IQM_CheckRange( header, header->ofs_meshes,
 			    header->num_meshes, sizeof(iqmMesh_t) ) ) {
 		return qfalse;
 	}
@@ -370,8 +383,8 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 		}
 	}
 
-	if( header->num_poses != header->num_joints && header->num_poses != 0 ) {
-		ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has %d poses and %d joints, must have the same number or 0 poses\n",
+	if( header->num_poses != header->num_joints && header->num_poses != 0 && header->num_joints != 0 ) {
+		ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has %d poses and %d joints, must have the same number or 0 poses or 0 joints\n",
 			  mod_name, header->num_poses, header->num_joints );
 		return qfalse;
 	}
@@ -470,6 +483,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	size = sizeof(iqmData_t);
 	size += header->num_meshes * sizeof( srfIQModel_t );
 	size += header->num_joints * 12 * sizeof( float ); // joint mats
+	size += header->num_joints * 12 * sizeof( float ); // joint inv mats
 	size += header->num_poses * header->num_frames * 12 * sizeof( float ); // pose mats
 	if(header->ofs_bounds)
 		size += header->num_frames * 6 * sizeof(float);	// model bounds
@@ -504,7 +518,8 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	iqmData->blendWeightsType = blendWeightsType;
 	iqmData->surfaces     = (srfIQModel_t *)(iqmData + 1);
 	iqmData->jointMats    = (float *) (iqmData->surfaces + iqmData->num_surfaces);
-	iqmData->poseMats     = iqmData->jointMats + 12 * header->num_joints;
+	iqmData->jointInvMats = iqmData->jointMats + 12 * header->num_joints;
+	iqmData->poseMats     = iqmData->jointInvMats + 12 * header->num_joints;
 	if(header->ofs_bounds)
 	{
 		iqmData->bounds       = iqmData->poseMats + 12 * header->num_poses * header->num_frames;
@@ -538,7 +553,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	// calculate joint matrices and their inverses
 	// joint inverses are needed only until the pose matrices are calculated
 	mat = iqmData->jointMats;
-	matInv = jointInvMats;
+	matInv = iqmData->jointInvMats;
 	joint = (iqmJoint_t *)((byte *)header + header->ofs_joints);
 	for( i = 0; i < header->num_joints; i++, joint++ ) {
 		float baseFrame[12], invBaseFrame[12];
@@ -550,7 +565,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 		{
 			Matrix34Multiply( iqmData->jointMats + 12 * joint->parent, baseFrame, mat );
 			mat += 12;
-			Matrix34Multiply( invBaseFrame, jointInvMats + 12 * joint->parent, matInv );
+			Matrix34Multiply( invBaseFrame, iqmData->jointInvMats + 12 * joint->parent, matInv );
 			matInv += 12;
 		}
 		else
@@ -571,7 +586,6 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 			vec3_t	translate;
 			vec4_t	rotate;
 			vec3_t	scale;
-			float	mat1[12], mat2[12];
 
 			translate[0] = pose->channeloffset[0];
 			if( pose->mask & 0x001)
@@ -607,16 +621,8 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 				scale[2] += *framedata++ * pose->channelscale[9];
 
 			// construct transformation matrix
-			JointToMatrix( rotate, scale, translate, mat1 );
-			
-			if( pose->parent >= 0 ) {
-				Matrix34Multiply( iqmData->jointMats + 12 * pose->parent,
-						  mat1, mat2 );
-			} else {
-				Com_Memcpy( mat2, mat1, sizeof(mat1) );
-			}
-			
-			Matrix34Multiply( mat2, jointInvMats + 12 * j, mat );
+			JointToMatrix( rotate, scale, translate, mat );
+
 			mat += 12;
 		}
 	}
@@ -752,24 +758,28 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 R_CullIQM
 =============
 */
-static int R_CullIQM( iqmData_t *data, trRefEntity_t *ent ) {
+static int R_CullIQM( iqmData_t *skeleton, iqmData_t *oldSkeleton, trRefEntity_t *ent ) {
 	vec3_t		bounds[2];
 	vec_t		*oldBounds, *newBounds;
 	int		i;
 
-	if (!data->bounds) {
+	if (skeleton->bounds && oldSkeleton->bounds) {
+		// compute bounds pointers
+		oldBounds = oldSkeleton->bounds + 6*ent->e.oldframe;
+		newBounds = skeleton->bounds + 6*ent->e.frame;
+
+		// calculate a bounding box in the current coordinate system
+		for (i = 0 ; i < 3 ; i++) {
+			bounds[0][i] = oldBounds[i] < newBounds[i] ? oldBounds[i] : newBounds[i];
+			bounds[1][i] = oldBounds[i+3] > newBounds[i+3] ? oldBounds[i+3] : newBounds[i+3];
+		}
+	} else if (skeleton->bounds) {
+		newBounds = skeleton->bounds + 6*ent->e.frame;
+		VectorCopy( newBounds, bounds[0] );
+		VectorCopy( (newBounds+3), bounds[1] );
+	} else {
 		tr.pc.c_box_cull_md3_clip++;
 		return CULL_CLIP;
-	}
-
-	// compute bounds pointers
-	oldBounds = data->bounds + 6*ent->e.oldframe;
-	newBounds = data->bounds + 6*ent->e.frame;
-
-	// calculate a bounding box in the current coordinate system
-	for (i = 0 ; i < 3 ; i++) {
-		bounds[0][i] = oldBounds[i] < newBounds[i] ? oldBounds[i] : newBounds[i];
-		bounds[1][i] = oldBounds[i+3] > newBounds[i+3] ? oldBounds[i+3] : newBounds[i+3];
 	}
 
 	switch ( R_CullLocalBox( bounds ) )
@@ -793,7 +803,7 @@ R_ComputeIQMFogNum
 
 =================
 */
-int R_ComputeIQMFogNum( iqmData_t *data, trRefEntity_t *ent ) {
+int R_ComputeIQMFogNum( iqmData_t *skeleton, trRefEntity_t *ent ) {
 	const vec_t		*bounds;
 	const vec_t		defaultBounds[6] = { -8, -8, -8, 8, 8, 8 };
 	vec3_t			diag, center;
@@ -805,8 +815,8 @@ int R_ComputeIQMFogNum( iqmData_t *data, trRefEntity_t *ent ) {
 	}
 
 	// FIXME: non-normalized axis issues
-	if (data->bounds) {
-		bounds = data->bounds + 6*ent->e.frame;
+	if (skeleton->bounds) {
+		bounds = skeleton->bounds + 6*ent->e.frame;
 	} else {
 		bounds = defaultBounds;
 	}
@@ -827,6 +837,8 @@ Add all surfaces of this model
 */
 void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	iqmData_t		*data;
+	iqmData_t		*skeleton;
+	iqmData_t		*oldSkeleton;
 	srfIQModel_t		*surface;
 	int			i, j;
 	qboolean		personalModel;
@@ -839,12 +851,20 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	data = tr.currentModel->modelData;
 	surface = data->surfaces;
 
+	if ( !data->num_surfaces || !data->num_triangles || !data->num_vertexes ) {
+		ri.Printf( PRINT_WARNING, "WARNING: Tried to render IQM '%s' with no surfaces\n", tr.currentModel->name );
+		return;
+	}
+
+	skeleton = R_GetIQMModelDataByHandle( ent->e.frameModel, data );
+	oldSkeleton = R_GetIQMModelDataByHandle( ent->e.oldframeModel, data );
+
 	// don't add mirror only objects if not in a mirror/portal
 	personalModel = (ent->e.renderfx & RF_ONLY_MIRROR) && !tr.viewParms.isPortal;
 
 	if ( ent->e.renderfx & RF_WRAP_FRAMES ) {
-		ent->e.frame %= data->num_frames;
-		ent->e.oldframe %= data->num_frames;
+		ent->e.frame %= skeleton->num_frames;
+		ent->e.oldframe %= oldSkeleton->num_frames;
 	}
 
 	//
@@ -853,9 +873,9 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	// when the surfaces are rendered, they don't need to be
 	// range checked again.
 	//
-	if ( (ent->e.frame >= data->num_frames) 
+	if ( (ent->e.frame >= skeleton->num_frames) 
 	     || (ent->e.frame < 0)
-	     || (ent->e.oldframe >= data->num_frames)
+	     || (ent->e.oldframe >= oldSkeleton->num_frames)
 	     || (ent->e.oldframe < 0) ) {
 		ri.Printf( PRINT_DEVELOPER, "R_AddIQMSurfaces: no such frame %d to %d for '%s'\n",
 			   ent->e.oldframe, ent->e.frame,
@@ -868,7 +888,7 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	// cull the entire model if merged bounding box of both frames
 	// is outside the view frustum.
 	//
-	cull = R_CullIQM ( data, ent );
+	cull = R_CullIQM ( skeleton, oldSkeleton, ent );
 	if ( cull == CULL_OUT ) {
 		return;
 	}
@@ -883,7 +903,7 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	//
 	// see if we are in a fog volume
 	//
-	fogNum = R_ComputeIQMFogNum( data, ent );
+	fogNum = R_ComputeIQMFogNum( skeleton, ent );
 
 	for ( i = 0 ; i < data->num_surfaces ; i++ ) {
 		if(ent->e.customShader)
@@ -940,13 +960,26 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 }
 
 
-static void ComputePoseMats( iqmData_t *data, int frame, int oldframe,
+static void BuildPoseMat( iqmData_t *iqmData, iqmData_t *skeleton, float *poseMat, int poseNum, int parent, float *mat ) {
+	float tmpMat[12];
+
+	if( parent >= 0 ) {
+		Matrix34Multiply( iqmData->jointMats + 12 * parent, poseMat, tmpMat );
+	} else {
+		Com_Memcpy( tmpMat, poseMat, sizeof(tmpMat) );
+	}
+
+	Matrix34Multiply( tmpMat, iqmData->jointInvMats + 12 * poseNum, mat );
+}
+
+static void ComputePoseMats( iqmData_t *data, iqmData_t *skeleton, iqmData_t *oldSkeleton, int frame, int oldframe,
 			      float backlerp, float *mat ) {
+	float tmpMat1[12], tmpMat2[12];
 	float	*mat1, *mat2;
 	int	*joint = data->jointParents;
 	int	i;
 
-	if ( data->num_poses == 0 ) {
+	if ( skeleton->num_poses == 0 ) {
 		for( i = 0; i < data->num_joints; i++, joint++ ) {
 			if( *joint >= 0 ) {
 				Matrix34Multiply( mat + 12 * *joint,
@@ -958,42 +991,45 @@ static void ComputePoseMats( iqmData_t *data, int frame, int oldframe,
 		return;
 	}
 
-	if ( oldframe == frame ) {
-		mat1 = data->poseMats + 12 * data->num_poses * frame;
-		for( i = 0; i < data->num_poses; i++, joint++ ) {
+	if ( oldframe == frame && skeleton == oldSkeleton ) {
+		mat1 = skeleton->poseMats + 12 * skeleton->num_poses * frame;
+		for( i = 0; i < skeleton->num_poses; i++, joint++ ) {
+			BuildPoseMat( data, skeleton, mat1 + 12*i, i, *joint, tmpMat1 );
 			if( *joint >= 0 ) {
 				Matrix34Multiply( mat + 12 * *joint,
-						  mat1 + 12*i, mat + 12*i );
+						  tmpMat1, mat + 12*i );
 			} else {
-				Com_Memcpy( mat + 12*i, mat1 + 12*i, 12 * sizeof(float) );
+				Com_Memcpy( mat + 12*i, tmpMat1, 12 * sizeof(float) );
 			}
 		}
 	} else  {
-		mat1 = data->poseMats + 12 * data->num_poses * frame;
-		mat2 = data->poseMats + 12 * data->num_poses * oldframe;
+		mat1 = skeleton->poseMats + 12 * skeleton->num_poses * frame;
+		mat2 = oldSkeleton->poseMats + 12 * oldSkeleton->num_poses * oldframe;
 		
-		for( i = 0; i < data->num_poses; i++, joint++ ) {
+		for( i = 0; i < skeleton->num_poses; i++, joint++ ) {
+			BuildPoseMat( data, skeleton, mat1 + 12*i, i, *joint, tmpMat1 );
+			BuildPoseMat( data, oldSkeleton, mat2 + 12*i, i, *joint, tmpMat2 );
 			if( *joint >= 0 ) {
 				float tmpMat[12];
-				InterpolateMatrix( mat1 + 12*i, mat2 + 12*i,
+				InterpolateMatrix( tmpMat1, tmpMat2,
 						   backlerp, tmpMat );
 				Matrix34Multiply( mat + 12 * *joint,
 						  tmpMat, mat + 12*i );
 				
 			} else {
-				InterpolateMatrix( mat1 + 12*i, mat2 + 12*i,
+				InterpolateMatrix( tmpMat1, tmpMat2,
 						   backlerp, mat );
 			}
 		}
 	}
 }
 
-static void ComputeJointMats( iqmData_t *data, int frame, int oldframe,
+static void ComputeJointMats( iqmData_t *data, iqmData_t *skeleton, iqmData_t *oldSkeleton, int frame, int oldframe,
 			      float backlerp, float *mat ) {
 	float	*mat1;
 	int	i;
 
-	ComputePoseMats( data, frame, oldframe, backlerp, mat );
+	ComputePoseMats( data, skeleton, oldSkeleton, frame, oldframe, backlerp, mat );
 
 	for( i = 0; i < data->num_joints; i++ ) {
 		float outmat[12];
@@ -1004,7 +1040,6 @@ static void ComputeJointMats( iqmData_t *data, int frame, int oldframe,
 		Matrix34Multiply_OnlySetOrigin( outmat, data->jointMats + 12 * i, mat1 );
 	}
 }
-
 
 /*
 =================
@@ -1024,13 +1059,28 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 	vec2_t		(*outTexCoord)[2];
 	color4ub_t	*outColor;
 
-	int	frame = data->num_frames ? backEnd.currentEntity->e.frame % data->num_frames : 0;
-	int	oldframe = data->num_frames ? backEnd.currentEntity->e.oldframe % data->num_frames : 0;
+	iqmData_t	*skeleton = R_GetIQMModelDataByHandle( backEnd.currentEntity->e.frameModel, data );
+	iqmData_t	*oldSkeleton = R_GetIQMModelDataByHandle( backEnd.currentEntity->e.oldframeModel, data );
+
+	int	frame = skeleton->num_frames ? backEnd.currentEntity->e.frame % skeleton->num_frames : 0;
+	int	oldframe = oldSkeleton->num_frames ? backEnd.currentEntity->e.oldframe % oldSkeleton->num_frames : 0;
 	float	backlerp = backEnd.currentEntity->e.backlerp;
 
 	int		*tri;
 	glIndex_t	*ptr;
 	glIndex_t	base;
+
+	if ( data != skeleton && data->num_joints != skeleton->num_poses ) {
+		ri.Printf( PRINT_WARNING, "WARNING: frameModel '%s' for model '%s' has different number of joints\n",
+				R_GetModelByHandle( backEnd.currentEntity->e.frameModel )->name, R_GetModelByHandle( backEnd.currentEntity->e.hModel )->name );
+		skeleton = data;
+	}
+
+	if ( data != oldSkeleton && data->num_joints != oldSkeleton->num_poses ) {
+		ri.Printf( PRINT_WARNING, "WARNING: oldframeModel '%s' for model '%s' has different number of joints\n",
+				R_GetModelByHandle( backEnd.currentEntity->e.oldframeModel )->name, R_GetModelByHandle( backEnd.currentEntity->e.hModel )->name );
+		oldSkeleton = data;
+	}
 
 	RB_CHECKOVERFLOW( surf->num_vertexes, surf->num_triangles * 3 );
 
@@ -1040,8 +1090,8 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 	outColor = &tess.vertexColors[tess.numVertexes];
 
 	// compute interpolated joint matrices
-	if ( data->num_poses > 0 ) {
-		ComputePoseMats( data, frame, oldframe, backlerp, jointMats );
+	if ( skeleton->num_poses > 0 ) {
+		ComputePoseMats( data, skeleton, oldSkeleton, frame, oldframe, backlerp, jointMats );
 	}
 
 	// transform vertexes and fill other data
@@ -1064,7 +1114,7 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 				break;
 		}
 
-		if ( data->num_poses == 0 || numWeights == 0 ) {
+		if ( skeleton->num_poses == 0 || numWeights == 0 ) {
 			// no blend joint, use identity matrix.
 			Com_Memcpy( vtxMat, identityMatrix, 12 * sizeof (float) );
 		} else {
@@ -1165,7 +1215,8 @@ int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
 		return qfalse;
 	}
 
-	ComputeJointMats( data, startFrame, endFrame, frac, jointMats );
+	// ZTM: FIXME: Need a way to specify frameModel and oldframeModel in cgame
+	ComputeJointMats( data, data, data, startFrame, endFrame, frac, jointMats );
 
 	tag->axis[0][0] = jointMats[12 * joint + 0];
 	tag->axis[1][0] = jointMats[12 * joint + 1];

@@ -710,6 +710,7 @@ typedef struct {
 
 	int		*jointParents;
 	float		*jointMats;
+	float		*jointInvMats;
 	float		*poseMats;
 	float		*bounds;
 	char		*names;

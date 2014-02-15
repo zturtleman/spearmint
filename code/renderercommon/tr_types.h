@@ -138,10 +138,12 @@ typedef struct {
 	qboolean	nonNormalizedAxes;	// axis are not normalized, i.e. they have scale
 	float		origin[3];			// also used as MODEL_BEAM's "from"
 	int			frame;				// also used as MODEL_BEAM's diameter
+	qhandle_t	frameModel;			// use skeleton from another model
 
 	// previous data for frame interpolation
 	float		oldorigin[3];		// also used as MODEL_BEAM's "to"
 	int			oldframe;
+	qhandle_t	oldframeModel;		// old skeleton model
 	float		backlerp;			// 0.0 = current, 1.0 = old
 
 	// texturing
