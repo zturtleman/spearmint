@@ -1212,8 +1212,10 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 }
 
 int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
-		  int startFrame, int endFrame, 
+		  qhandle_t frameModel, int startFrame,
+		  qhandle_t endFrameModel, int endFrame,
 		  float frac, const char *tagName ) {
+	iqmData_t	*startSkeleton, *endSkeleton;
 	float	jointMats[IQM_MAX_JOINTS * 12];
 	int	joint;
 	char	*names = data->names;
@@ -1230,8 +1232,10 @@ int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
 		return qfalse;
 	}
 
-	// ZTM: FIXME: Need a way to specify frameModel and oldframeModel in cgame
-	ComputeJointMats( data, data, data, startFrame, endFrame, frac, jointMats );
+	startSkeleton = R_GetIQMModelDataByHandle( frameModel, data );
+	endSkeleton = R_GetIQMModelDataByHandle( endFrameModel, data );
+
+	ComputeJointMats( data, startSkeleton, endSkeleton, startFrame, endFrame, frac, jointMats );
 
 	tag->axis[0][0] = jointMats[12 * joint + 0];
 	tag->axis[1][0] = jointMats[12 * joint + 1];
