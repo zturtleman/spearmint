@@ -1083,6 +1083,7 @@ typedef struct {
 
 	int		*jointParents;
 	float		*jointMats;
+	float		*jointInvMats;
 	float		*poseMats;
 	float		*bounds;
 	char		*names;
@@ -1388,7 +1389,9 @@ typedef struct model_s {
 
 void		R_ModelInit (void);
 model_t		*R_GetModelByHandle( qhandle_t hModel );
-int			R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, 
+int			R_LerpTag( orientation_t *tag, qhandle_t handle,
+					 qhandle_t frameModel, int startFrame,
+					 qhandle_t endFrameModel, int endFrame,
 					 float frac, const char *tagName );
 int			R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 
@@ -2427,7 +2430,8 @@ qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name )
 void R_AddIQMSurfaces( trRefEntity_t *ent );
 void RB_IQMSurfaceAnim( surfaceType_t *surface );
 int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
-                  int startFrame, int endFrame,
+                  qhandle_t frameMode, int startFrame,
+                  qhandle_t endFrameModel, int endFrame,
                   float frac, const char *tagName );
 
 /*

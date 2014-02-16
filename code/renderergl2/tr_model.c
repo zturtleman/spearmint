@@ -1286,7 +1286,9 @@ void R_GetAnimTag( mdrHeader_t *mod, int framenum, const char *tagName, mdvTag_t
 R_LerpTag
 ================
 */
-int R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, 
+int R_LerpTag( orientation_t *tag, qhandle_t handle,
+					 qhandle_t frameModel, int startFrame,
+					 qhandle_t endFrameModel, int endFrame,
 					 float frac, const char *tagName ) {
 	mdvTag_t	*start, *end;
 	mdvTag_t	start_space, end_space;
@@ -1306,7 +1308,8 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFram
 		}
 		else if( model->type == MOD_IQM ) {
 			return R_IQMLerpTag( tag, model->modelData,
-					startFrame, endFrame,
+					frameModel, startFrame,
+					endFrameModel, endFrame,
 					frac, tagName );
 		} else {
 
