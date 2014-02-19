@@ -3209,7 +3209,10 @@ int Com_ModifyMsec( int msec ) {
 		msec = 1;
 	}
 
-	if ( com_sv_running->integer && Com_GameIsSinglePlayer() ) {
+	// ZTM: FIXME: Running non-dedicated network server on client should
+	//             use longer clamp time, but loading renderer causes
+	//             running too many server frames initially.
+	if ( com_sv_running->integer && !com_dedicated->integer ) {
 		// for local single player gaming
 		// we may want to clamp the time to prevent players from
 		// flying off edges when something hitches.
