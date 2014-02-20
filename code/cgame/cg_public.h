@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	8
+#define CG_API_MINOR_VERSION	9
 
 
 #define	CMD_BACKUP			64	
@@ -46,7 +46,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 // needs to be larger than PACKET_BACKUP
 
 
+#ifdef CGAME
 #define	MAX_ENTITIES_IN_SNAPSHOT	256 * MAX_SPLITVIEW
+#endif
 
 // snapshots are a view of the server at a given time
 

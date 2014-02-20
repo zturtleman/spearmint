@@ -245,7 +245,7 @@ void	CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
 CL_GetSnapshot
 ====================
 */
-qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerStates, void *entities ) {
+qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerStates, void *entities, int maxEntitiesInSnapshot ) {
 	clSnapshot_t	*clSnap;
 	int				i, count;
 
@@ -287,9 +287,9 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerS
 	}
 
 	count = clSnap->numEntities;
-	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
-		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, MAX_ENTITIES_IN_SNAPSHOT );
-		count = MAX_ENTITIES_IN_SNAPSHOT;
+	if ( count > maxEntitiesInSnapshot ) {
+		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, maxEntitiesInSnapshot );
+		count = maxEntitiesInSnapshot;
 	}
 	snapshot->numEntities = count;
 	for ( i = 0 ; i < count ; i++ ) {
@@ -1431,7 +1431,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		CL_GetCurrentSnapshotNumber( VMA(1), VMA(2) );
 		return 0;
 	case CG_GETSNAPSHOT:
-		return CL_GetSnapshot( args[1], VMA(2), VMA(3), VMA(4) );
+		return CL_GetSnapshot( args[1], VMA(2), VMA(3), VMA(4), args[5] );
 	case CG_GETSERVERCOMMAND:
 		return CL_GetServerCommand( args[1] );
 	case CG_GETCURRENTCMDNUMBER:
