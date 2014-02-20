@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	13
+#define CG_API_MINOR_VERSION	14
 
 
 #define	CMD_BACKUP			64	
@@ -431,9 +431,6 @@ typedef enum {
 	CG_CONSOLE_CLOSE,
 //	void Con_Close( void );
 //	force console to close, used before loading screens
-
-	CG_WANTSBINDKEYS,
-//	qboolean CG_WantsBindKeys( void );
 
 	CG_CREATE_USER_CMD
 //	usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, int frameMsec, float mx, float my, qboolean anykeydown );

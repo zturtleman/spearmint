@@ -753,7 +753,7 @@ CL_KeyDownEvent
 Called by CL_KeyEvent to handle a keypress
 ===================
 */
-void CL_KeyDownEvent( int key, unsigned time, qboolean onlybinds )
+void CL_KeyDownEvent( int key, unsigned time )
 {
 	keys[key].down = qtrue;
 	keys[key].repeats++;
@@ -767,7 +767,7 @@ void CL_KeyDownEvent( int key, unsigned time, qboolean onlybinds )
 		return;
 	}
 
-	if ( cgvm && ( !onlybinds || VM_Call( cgvm, CG_WANTSBINDKEYS ) ) ) {
+	if ( cgvm ) {
 		VM_Call( cgvm, CG_KEY_EVENT, key, qtrue, time, clc.state );
 	}
 }
@@ -779,7 +779,7 @@ CL_KeyUpEvent
 Called by CL_KeyEvent to handle a keyrelease
 ===================
 */
-void CL_KeyUpEvent( int key, unsigned time, qboolean onlybinds )
+void CL_KeyUpEvent( int key, unsigned time )
 {
 	keys[key].repeats = 0;
 	keys[key].down = qfalse;
@@ -790,7 +790,7 @@ void CL_KeyUpEvent( int key, unsigned time, qboolean onlybinds )
 		anykeydown = 0;
 	}
 
-	if ( cgvm && ( !onlybinds || VM_Call( cgvm, CG_WANTSBINDKEYS ) ) ) {
+	if ( cgvm ) {
 		VM_Call( cgvm, CG_KEY_EVENT, key, qfalse, time, clc.state );
 	}
 }
@@ -803,31 +803,10 @@ Called by the system for both key up and key down events
 ===================
 */
 void CL_KeyEvent (int key, qboolean down, unsigned time) {
-	qboolean onlybinds = qfalse;
-
-	switch ( key ) {
-	case K_KP_PGUP:
-	case K_KP_EQUALS:
-	case K_KP_5:
-	case K_KP_LEFTARROW:
-	case K_KP_UPARROW:
-	case K_KP_RIGHTARROW:
-	case K_KP_DOWNARROW:
-	case K_KP_END:
-	case K_KP_PGDN:
-	case K_KP_INS:
-	case K_KP_DEL:
-	case K_KP_HOME:
-		if ( keys[K_KP_NUMLOCK].down ) {
-			onlybinds = qtrue;
-		}
-		break;
-	}
-
 	if( down )
-		CL_KeyDownEvent( key, time, onlybinds );
+		CL_KeyDownEvent( key, time );
 	else
-		CL_KeyUpEvent( key, time, onlybinds );
+		CL_KeyUpEvent( key, time );
 }
 
 /*
