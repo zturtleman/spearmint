@@ -1670,7 +1670,6 @@ Should only be called by CL_StartHunkUsers
 void CL_InitCGame( void ) {
 	char					consoleBuffer[1024];
 	unsigned int		size;
-	qboolean			inGameLoad;
 	const char			*info;
 	const char			*mapname;
 	int					t1, t2;
@@ -1703,10 +1702,8 @@ void CL_InitCGame( void ) {
 				  apiName, major, minor, CG_API_NAME, CG_API_MAJOR_VERSION, CG_API_MINOR_VERSION );
 	}
 
-	inGameLoad = ( clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC );
-
 	// init for this gamestate
-	VM_Call( cgvm, CG_INIT, inGameLoad, CL_MAX_SPLITVIEW, com_playVideo );
+	VM_Call( cgvm, CG_INIT, clc.state, CL_MAX_SPLITVIEW, com_playVideo );
 
 	// only play opening video once per-game load
 	com_playVideo = 0;
@@ -1728,7 +1725,7 @@ void CL_InitCGame( void ) {
 	// the messages have been restored, print all new messages to cgame
 	cls.printToCgame = qtrue;
 
-	if ( !inGameLoad ) {
+	if ( clc.state <= CA_CONNECTED || clc.state == CA_CINEMATIC ) {
 		// only loading main menu
 		return;
 	}
@@ -1805,7 +1802,7 @@ void CL_GameCommand( void ) {
 		return;
 	}
 
-	VM_Call( cgvm, CG_CONSOLE_COMMAND, cls.realtime );
+	VM_Call( cgvm, CG_CONSOLE_COMMAND, clc.state, cls.realtime );
 }
 
 /*

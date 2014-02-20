@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	9
+#define CG_API_MINOR_VERSION	10
 
 
 #define	CMD_BACKUP			64	
@@ -372,7 +372,7 @@ typedef enum {
 	CG_GETAPIVERSION,
 
 	CG_INIT = 200,
-//	void	UI_Init( qboolean inGameLoad, int maxSplitView, int playVideo );
+//	void	UI_Init( connstate_t state, int maxSplitView, int playVideo );
 	// playVideo = 1 means first game to run and no start up arguments
 	// playVideo = 2 means switched to a new game/mod and not connecting to a server
 
@@ -390,7 +390,7 @@ typedef enum {
 	// oportunity to flush and close any open files
 
 	CG_CONSOLE_COMMAND,
-//	qboolean (*CG_ConsoleCommand)( int realTime );
+//	qboolean (*CG_ConsoleCommand)( connstate_t state, int realTime );
 	// a console command has been issued locally that is not recognized by the
 	// main game system.
 	// use Cmd_Argc() / Cmd_Argv() to read the command, return qfalse if the
