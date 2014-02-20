@@ -135,24 +135,11 @@ CL_GetClientState
 ====================
 */
 static void CL_GetClientState( uiClientState_t *state ) {
-	int		i;
-
 	state->connectPacketCount = clc.connectPacketCount;
 	state->connState = clc.state;
 	Q_strncpyz( state->servername, clc.servername, sizeof( state->servername ) );
 	Q_strncpyz( state->updateInfoString, cls.updateInfoString, sizeof( state->updateInfoString ) );
 	Q_strncpyz( state->messageString, clc.serverMessage, sizeof( state->messageString ) );
-
-	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		state->clientNums[i] = clc.clientNums[i];
-
-		if ( cl.snap.valid && cl.snap.lcIndex[i] != -1 ) {
-			sharedPlayerState_t *ps = (sharedPlayerState_t*) DA_ElementPointer( cl.snap.playerStates, cl.snap.lcIndex[i] );
-			state->psClientNums[i] = ps->clientNum;
-		} else {
-			state->psClientNums[i] = clc.clientNums[i];
-		}
-	}
 }
 
 /*

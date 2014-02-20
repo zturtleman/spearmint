@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	10
+#define CG_API_MINOR_VERSION	11
 
 
 #define	CMD_BACKUP			64	
@@ -98,8 +98,6 @@ typedef enum {
 typedef struct {
 	connstate_t		connState;
 	int				connectPacketCount;
-	int				clientNums[MAX_SPLITVIEW];
-	int				psClientNums[MAX_SPLITVIEW]; // clientNums from player states, which could be followed clients.
 	char			servername[MAX_STRING_CHARS];
 	char			updateInfoString[MAX_STRING_CHARS];
 	char			messageString[MAX_STRING_CHARS];
