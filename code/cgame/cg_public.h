@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	12
+#define CG_API_MINOR_VERSION	13
 
 
 #define	CMD_BACKUP			64	
@@ -79,13 +79,6 @@ typedef struct {
 	playerState_t	pss[MAX_SPLITVIEW];		// complete information about the current players at this time
 #endif
 } snapshot_t;
-
-enum {
-  CGAME_EVENT_NONE,
-  CGAME_EVENT_TEAMMENU,
-  CGAME_EVENT_SCOREBOARD,
-  CGAME_EVENT_EDITHUD
-};
 
 typedef enum {
 	UIMENU_NONE,
@@ -428,9 +421,6 @@ typedef enum {
 
 	CG_SET_ACTIVE_MENU,
 //	void (*CG_SetActiveMenu)( uiMenuCommand_t menu );
-
-	CG_EVENT_HANDLING,
-//	void (*CG_EventHandling)(int type);
 
 	CG_CONSOLE_TEXT,
 //	void (*CG_ConsoleText)( int realTime, qboolean restoredText );
