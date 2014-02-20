@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	11
+#define CG_API_MINOR_VERSION	12
 
 
 #define	CMD_BACKUP			64	
@@ -115,11 +115,9 @@ typedef struct {
 #define SORT_GAMEDIR		8
 
 // server browser sources
-// TTimo: AS_MPLAYER is no longer used
 #define AS_LOCAL			0
-#define AS_MPLAYER		1
+#define AS_FAVORITES		1
 #define AS_GLOBAL			2
-#define AS_FAVORITES	3
 
 typedef enum {
 	DS_NONE,
