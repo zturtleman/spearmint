@@ -233,8 +233,9 @@ CL_GetSnapshot
 ====================
 */
 qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerStates, void *entities, int maxEntitiesInSnapshot ) {
-	clSnapshot_t	*clSnap;
-	int				i, count;
+	sharedPlayerState_t	*ps;
+	clSnapshot_t		*clSnap;
+	int					i, count;
 
 	if ( snapshotNumber > cl.snap.messageNum ) {
 		Com_Error( ERR_DROP, "CL_GetSnapshot: snapshotNumber > cl.snapshot.messageNum" );
@@ -262,15 +263,18 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerS
 	snapshot->serverCommandSequence = clSnap->serverCommandNum;
 	snapshot->ping = clSnap->ping;
 	snapshot->serverTime = clSnap->serverTime;
-	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		snapshot->lcIndex[i] = clSnap->lcIndex[i];
 		snapshot->clientNums[i] = clSnap->clientNums[i];
-	}
 
-	snapshot->numPSs = clSnap->numPSs;
-	for (i = 0; i < snapshot->numPSs; i++) {
-		Com_Memcpy( (byte*)playerStates + i * cl.cgamePlayerStateSize, DA_ElementPointer( clSnap->playerStates, i ), cl.cgamePlayerStateSize );
+		ps = (sharedPlayerState_t*)((byte*)playerStates + i * cl.cgamePlayerStateSize);
+		if ( clSnap->lcIndex[i] == -1 ) {
+			Com_Memset( snapshot->areamask[i], 0, sizeof( snapshot->areamask[0] ) );
+			Com_Memset( ps, 0, cl.cgamePlayerStateSize );
+			ps->clientNum = -1;
+		} else {
+			Com_Memcpy( snapshot->areamask[i], clSnap->areamask[clSnap->lcIndex[i]], sizeof( snapshot->areamask[0] ) );
+			Com_Memcpy( ps, DA_ElementPointer( clSnap->playerStates, clSnap->lcIndex[i] ), cl.cgamePlayerStateSize );
+		}
 	}
 
 	count = clSnap->numEntities;

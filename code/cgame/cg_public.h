@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	14
+#define CG_API_MINOR_VERSION	15
 
 
 #define	CMD_BACKUP			64	
@@ -63,14 +63,12 @@ typedef struct {
 
 	byte			areamask[MAX_SPLITVIEW][MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 
-	int				lcIndex[MAX_SPLITVIEW];		// Local Client Indexes
 	int				clientNums[MAX_SPLITVIEW];
 
 	int				numServerCommands;		// text based server commands to execute when this
 	int				serverCommandSequence;	// snapshot becomes current
 
 	int				numEntities;
-	int				numPSs;
 
 #ifdef CGAME
 	entityState_t	entities[MAX_ENTITIES_IN_SNAPSHOT]; // all of the entities that need to be presented
