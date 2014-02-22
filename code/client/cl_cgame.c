@@ -135,24 +135,11 @@ CL_GetClientState
 ====================
 */
 static void CL_GetClientState( uiClientState_t *state ) {
-	int		i;
-
 	state->connectPacketCount = clc.connectPacketCount;
 	state->connState = clc.state;
 	Q_strncpyz( state->servername, clc.servername, sizeof( state->servername ) );
 	Q_strncpyz( state->updateInfoString, cls.updateInfoString, sizeof( state->updateInfoString ) );
 	Q_strncpyz( state->messageString, clc.serverMessage, sizeof( state->messageString ) );
-
-	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		state->clientNums[i] = clc.clientNums[i];
-
-		if ( cl.snap.valid && cl.snap.lcIndex[i] != -1 ) {
-			sharedPlayerState_t *ps = (sharedPlayerState_t*) DA_ElementPointer( cl.snap.playerStates, cl.snap.lcIndex[i] );
-			state->psClientNums[i] = ps->clientNum;
-		} else {
-			state->psClientNums[i] = clc.clientNums[i];
-		}
-	}
 }
 
 /*
@@ -245,9 +232,10 @@ void	CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
 CL_GetSnapshot
 ====================
 */
-qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerStates, void *entities ) {
-	clSnapshot_t	*clSnap;
-	int				i, count;
+qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerStates, void *entities, int maxEntitiesInSnapshot ) {
+	sharedPlayerState_t	*ps;
+	clSnapshot_t		*clSnap;
+	int					i, count;
 
 	if ( snapshotNumber > cl.snap.messageNum ) {
 		Com_Error( ERR_DROP, "CL_GetSnapshot: snapshotNumber > cl.snapshot.messageNum" );
@@ -275,21 +263,24 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerS
 	snapshot->serverCommandSequence = clSnap->serverCommandNum;
 	snapshot->ping = clSnap->ping;
 	snapshot->serverTime = clSnap->serverTime;
-	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		snapshot->lcIndex[i] = clSnap->lcIndex[i];
 		snapshot->clientNums[i] = clSnap->clientNums[i];
-	}
 
-	snapshot->numPSs = clSnap->numPSs;
-	for (i = 0; i < snapshot->numPSs; i++) {
-		Com_Memcpy( (byte*)playerStates + i * cl.cgamePlayerStateSize, DA_ElementPointer( clSnap->playerStates, i ), cl.cgamePlayerStateSize );
+		ps = (sharedPlayerState_t*)((byte*)playerStates + i * cl.cgamePlayerStateSize);
+		if ( clSnap->lcIndex[i] == -1 ) {
+			Com_Memset( snapshot->areamask[i], 0, sizeof( snapshot->areamask[0] ) );
+			Com_Memset( ps, 0, cl.cgamePlayerStateSize );
+			ps->clientNum = -1;
+		} else {
+			Com_Memcpy( snapshot->areamask[i], clSnap->areamask[clSnap->lcIndex[i]], sizeof( snapshot->areamask[0] ) );
+			Com_Memcpy( ps, DA_ElementPointer( clSnap->playerStates, clSnap->lcIndex[i] ), cl.cgamePlayerStateSize );
+		}
 	}
 
 	count = clSnap->numEntities;
-	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
-		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, MAX_ENTITIES_IN_SNAPSHOT );
-		count = MAX_ENTITIES_IN_SNAPSHOT;
+	if ( count > maxEntitiesInSnapshot ) {
+		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, maxEntitiesInSnapshot );
+		count = maxEntitiesInSnapshot;
 	}
 	snapshot->numEntities = count;
 	for ( i = 0 ; i < count ; i++ ) {
@@ -591,7 +582,6 @@ static void LAN_ResetPings(int source) {
 			servers = &cls.localServers[0];
 			count = MAX_OTHER_SERVERS;
 			break;
-		case AS_MPLAYER:
 		case AS_GLOBAL :
 			servers = &cls.globalServers[0];
 			count = MAX_GLOBAL_SERVERS;
@@ -625,7 +615,6 @@ static int LAN_AddServer(int source, const char *name, const char *address) {
 			count = &cls.numlocalservers;
 			servers = &cls.localServers[0];
 			break;
-		case AS_MPLAYER:
 		case AS_GLOBAL :
 			max = MAX_GLOBAL_SERVERS;
 			count = &cls.numglobalservers;
@@ -669,7 +658,6 @@ static void LAN_RemoveServer(int source, const char *addr) {
 			count = &cls.numlocalservers;
 			servers = &cls.localServers[0];
 			break;
-		case AS_MPLAYER:
 		case AS_GLOBAL :
 			count = &cls.numglobalservers;
 			servers = &cls.globalServers[0];
@@ -707,7 +695,6 @@ static int LAN_GetServerCount( int source ) {
 		case AS_LOCAL :
 			return cls.numlocalservers;
 			break;
-		case AS_MPLAYER:
 		case AS_GLOBAL :
 			return cls.numglobalservers;
 			break;
@@ -731,7 +718,6 @@ static void LAN_GetServerAddressString( int source, int n, char *buf, int buflen
 				return;
 			}
 			break;
-		case AS_MPLAYER:
 		case AS_GLOBAL :
 			if (n >= 0 && n < MAX_GLOBAL_SERVERS) {
 				Q_strncpyz(buf, NET_AdrToStringwPort( cls.globalServers[n].adr) , buflen );
@@ -763,7 +749,6 @@ static void LAN_GetServerInfo( int source, int n, char *buf, int buflen ) {
 				server = &cls.localServers[n];
 			}
 			break;
-		case AS_MPLAYER:
 		case AS_GLOBAL :
 			if (n >= 0 && n < MAX_GLOBAL_SERVERS) {
 				server = &cls.globalServers[n];
@@ -811,7 +796,6 @@ static int LAN_GetServerPing( int source, int n ) {
 				server = &cls.localServers[n];
 			}
 			break;
-		case AS_MPLAYER:
 		case AS_GLOBAL :
 			if (n >= 0 && n < MAX_GLOBAL_SERVERS) {
 				server = &cls.globalServers[n];
@@ -841,7 +825,6 @@ static serverInfo_t *LAN_GetServerPtr( int source, int n ) {
 				return &cls.localServers[n];
 			}
 			break;
-		case AS_MPLAYER:
 		case AS_GLOBAL :
 			if (n >= 0 && n < MAX_GLOBAL_SERVERS) {
 				return &cls.globalServers[n];
@@ -993,7 +976,6 @@ static void LAN_MarkServerVisible(int source, int n, qboolean visible ) {
 			case AS_LOCAL :
 				server = &cls.localServers[0];
 				break;
-			case AS_MPLAYER:
 			case AS_GLOBAL :
 				server = &cls.globalServers[0];
 				count = MAX_GLOBAL_SERVERS;
@@ -1015,7 +997,6 @@ static void LAN_MarkServerVisible(int source, int n, qboolean visible ) {
 					cls.localServers[n].visible = visible;
 				}
 				break;
-			case AS_MPLAYER:
 			case AS_GLOBAL :
 				if (n >= 0 && n < MAX_GLOBAL_SERVERS) {
 					cls.globalServers[n].visible = visible;
@@ -1043,7 +1024,6 @@ static int LAN_ServerIsVisible(int source, int n ) {
 				return cls.localServers[n].visible;
 			}
 			break;
-		case AS_MPLAYER:
 		case AS_GLOBAL :
 			if (n >= 0 && n < MAX_GLOBAL_SERVERS) {
 				return cls.globalServers[n].visible;
@@ -1431,7 +1411,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		CL_GetCurrentSnapshotNumber( VMA(1), VMA(2) );
 		return 0;
 	case CG_GETSNAPSHOT:
-		return CL_GetSnapshot( args[1], VMA(2), VMA(3), VMA(4) );
+		return CL_GetSnapshot( args[1], VMA(2), VMA(3), VMA(4), args[5] );
 	case CG_GETSERVERCOMMAND:
 		return CL_GetServerCommand( args[1] );
 	case CG_GETCURRENTCMDNUMBER:
@@ -1670,7 +1650,6 @@ Should only be called by CL_StartHunkUsers
 void CL_InitCGame( void ) {
 	char					consoleBuffer[1024];
 	unsigned int		size;
-	qboolean			inGameLoad;
 	const char			*info;
 	const char			*mapname;
 	int					t1, t2;
@@ -1703,10 +1682,8 @@ void CL_InitCGame( void ) {
 				  apiName, major, minor, CG_API_NAME, CG_API_MAJOR_VERSION, CG_API_MINOR_VERSION );
 	}
 
-	inGameLoad = ( clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC );
-
 	// init for this gamestate
-	VM_Call( cgvm, CG_INIT, inGameLoad, CL_MAX_SPLITVIEW, com_playVideo );
+	VM_Call( cgvm, CG_INIT, clc.state, CL_MAX_SPLITVIEW, com_playVideo );
 
 	// only play opening video once per-game load
 	com_playVideo = 0;
@@ -1728,7 +1705,7 @@ void CL_InitCGame( void ) {
 	// the messages have been restored, print all new messages to cgame
 	cls.printToCgame = qtrue;
 
-	if ( !inGameLoad ) {
+	if ( clc.state <= CA_CONNECTED || clc.state == CA_CINEMATIC ) {
 		// only loading main menu
 		return;
 	}
@@ -1805,7 +1782,7 @@ void CL_GameCommand( void ) {
 		return;
 	}
 
-	VM_Call( cgvm, CG_CONSOLE_COMMAND, cls.realtime );
+	VM_Call( cgvm, CG_CONSOLE_COMMAND, clc.state, cls.realtime );
 }
 
 /*

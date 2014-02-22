@@ -630,9 +630,11 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	for (i = 0, frame->numPSs = 0; i < MAX_SPLITVIEW; i++) {
 		if ( !client->localPlayers[i] || !client->localPlayers[i]->gentity ) {
 			frame->lcIndex[i] = -1;
+			frame->clientNums[i] = -1;
 			continue;
 		}
-		ps = SV_GameClientNum( client->localPlayers[i] - svs.players );
+		frame->clientNums[i] = client->localPlayers[i] - svs.players;
+		ps = SV_GameClientNum( frame->clientNums[i] );
 		DA_SetElement( &frame->playerStates, frame->numPSs, ps );
 		frame->lcIndex[i] = frame->numPSs;
 		frame->numPSs++;

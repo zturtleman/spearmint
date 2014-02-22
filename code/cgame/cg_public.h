@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	8
+#define CG_API_MINOR_VERSION	15
 
 
 #define	CMD_BACKUP			64	
@@ -46,7 +46,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 // needs to be larger than PACKET_BACKUP
 
 
+#ifdef CGAME
 #define	MAX_ENTITIES_IN_SNAPSHOT	256 * MAX_SPLITVIEW
+#endif
 
 // snapshots are a view of the server at a given time
 
@@ -61,14 +63,12 @@ typedef struct {
 
 	byte			areamask[MAX_SPLITVIEW][MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 
-	int				lcIndex[MAX_SPLITVIEW];		// Local Client Indexes
 	int				clientNums[MAX_SPLITVIEW];
 
 	int				numServerCommands;		// text based server commands to execute when this
 	int				serverCommandSequence;	// snapshot becomes current
 
 	int				numEntities;
-	int				numPSs;
 
 #ifdef CGAME
 	entityState_t	entities[MAX_ENTITIES_IN_SNAPSHOT]; // all of the entities that need to be presented
@@ -77,13 +77,6 @@ typedef struct {
 	playerState_t	pss[MAX_SPLITVIEW];		// complete information about the current players at this time
 #endif
 } snapshot_t;
-
-enum {
-  CGAME_EVENT_NONE,
-  CGAME_EVENT_TEAMMENU,
-  CGAME_EVENT_SCOREBOARD,
-  CGAME_EVENT_EDITHUD
-};
 
 typedef enum {
 	UIMENU_NONE,
@@ -96,8 +89,6 @@ typedef enum {
 typedef struct {
 	connstate_t		connState;
 	int				connectPacketCount;
-	int				clientNums[MAX_SPLITVIEW];
-	int				psClientNums[MAX_SPLITVIEW]; // clientNums from player states, which could be followed clients.
 	char			servername[MAX_STRING_CHARS];
 	char			updateInfoString[MAX_STRING_CHARS];
 	char			messageString[MAX_STRING_CHARS];
@@ -115,11 +106,9 @@ typedef struct {
 #define SORT_GAMEDIR		8
 
 // server browser sources
-// TTimo: AS_MPLAYER is no longer used
 #define AS_LOCAL			0
-#define AS_MPLAYER		1
+#define AS_FAVORITES		1
 #define AS_GLOBAL			2
-#define AS_FAVORITES	3
 
 typedef enum {
 	DS_NONE,
@@ -370,7 +359,7 @@ typedef enum {
 	CG_GETAPIVERSION,
 
 	CG_INIT = 200,
-//	void	UI_Init( qboolean inGameLoad, int maxSplitView, int playVideo );
+//	void	UI_Init( connstate_t state, int maxSplitView, int playVideo );
 	// playVideo = 1 means first game to run and no start up arguments
 	// playVideo = 2 means switched to a new game/mod and not connecting to a server
 
@@ -388,7 +377,7 @@ typedef enum {
 	// oportunity to flush and close any open files
 
 	CG_CONSOLE_COMMAND,
-//	qboolean (*CG_ConsoleCommand)( int realTime );
+//	qboolean (*CG_ConsoleCommand)( connstate_t state, int realTime );
 	// a console command has been issued locally that is not recognized by the
 	// main game system.
 	// use Cmd_Argc() / Cmd_Argv() to read the command, return qfalse if the
@@ -431,9 +420,6 @@ typedef enum {
 	CG_SET_ACTIVE_MENU,
 //	void (*CG_SetActiveMenu)( uiMenuCommand_t menu );
 
-	CG_EVENT_HANDLING,
-//	void (*CG_EventHandling)(int type);
-
 	CG_CONSOLE_TEXT,
 //	void (*CG_ConsoleText)( int realTime, qboolean restoredText );
 //	pass text that has been printed to the console to cgame
@@ -443,9 +429,6 @@ typedef enum {
 	CG_CONSOLE_CLOSE,
 //	void Con_Close( void );
 //	force console to close, used before loading screens
-
-	CG_WANTSBINDKEYS,
-//	qboolean CG_WantsBindKeys( void );
 
 	CG_CREATE_USER_CMD
 //	usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, int frameMsec, float mx, float my, qboolean anykeydown );
