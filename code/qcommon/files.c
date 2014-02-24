@@ -4100,9 +4100,6 @@ static void FS_CheckPaks( qboolean quiet )
 		// have a pure list and pure pk3s
 		Cvar_Set( "fs_pure", "1" );
 	} else {
-#ifndef DEDICATED
-		dialogType_t type = DT_WARNING;
-#endif
 		char line1[256];
 		char line2[256];
 
@@ -4147,7 +4144,7 @@ static void FS_CheckPaks( qboolean quiet )
 
 		if ( fs_pakMismatchWarningDialog ) {
 #ifndef DEDICATED
-			Sys_Dialog( type, va("%s %s", line1, line2), "Unpure" );
+			Sys_Dialog( DT_WARNING, va("%s %s", line1, line2), "Warning" );
 #endif
 		}
 	}
