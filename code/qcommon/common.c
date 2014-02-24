@@ -310,6 +310,9 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	if ( com_buildScript && com_buildScript->integer ) {
 		code = ERR_FATAL;
 	}
+	else if ( !com_fullyInitialized ) {
+		code = ERR_FATAL;
+	}
 
 	// if we are getting a solid stream of ERR_DROP, do an ERR_FATAL
 	currentTime = Sys_Milliseconds();

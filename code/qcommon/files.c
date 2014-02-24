@@ -4117,15 +4117,17 @@ static void FS_CheckPaks( qboolean quiet )
 			FS_GetModDescription( fs_gamedir, badGames, sizeof ( badGames ) );
 		}
 
-		Com_sprintf( line2, sizeof (line2), "You need to reinstall %s in order to play on pure servers.", badGames );
-
 		if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
 			// missing data files are more important than missing PAKSUMS
-			Q_strncpyz( line1, "Unable to locate data files.", sizeof ( line1 ) );
-#ifndef DEDICATED
-			type = DT_ERROR;
-#endif
-		} else if ( !fs_foundPaksums ) {
+			Q_strncpyz( line1, "Unable to locate data files.", sizeof (line1) );
+			Com_sprintf( line2, sizeof (line2), "You need to install %s in order to play", badGames );
+			Com_Error( ERR_DROP, "%s %s", line1, line2 );
+			return;
+		}
+
+		Com_sprintf( line2, sizeof (line2), "You need to reinstall %s in order to play on pure servers.", badGames );
+
+		if ( !fs_foundPaksums ) {
 			// no PAKSUMS files found in search paths
 			Q_strncpyz( line1, "Missing file containing Pk3 checksums.", sizeof ( line1 ) );
 			Com_sprintf( line2, sizeof (line2), "You need a %s%cPAKSUMS file to enable pure mode.", fs_gamedir, PATH_SEP );
