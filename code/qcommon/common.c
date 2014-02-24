@@ -292,17 +292,17 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	int			currentTime;
 	qboolean	restartClient;
 
+	com_errorEntered++;
+	lastErrorCode = code;
+
 	// turn recursive drop into fatal
-	if ( com_errorEntered == 1 && code == ERR_DROP && lastErrorCode == ERR_DROP ) {
+	if ( com_errorEntered == 2 && code == ERR_DROP && lastErrorCode == ERR_DROP ) {
 		code = ERR_FATAL;
 		Com_Printf("recursive error after: %s\n", com_errorMessage);
-	} else if ( com_errorEntered ) {
+	} else if ( com_errorEntered > 1 ) {
 		Sys_Error("recursive error after: %s", com_errorMessage);
 	}
 
-	com_errorEntered++;
-
-	lastErrorCode = code;
 	Cvar_Set("com_errorCode", va("%i", code));
 
 	// when we are running automated scripts, make sure we
