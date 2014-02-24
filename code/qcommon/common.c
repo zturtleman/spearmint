@@ -135,7 +135,7 @@ int		time_backend;		// renderer backend time
 int			com_frameTime;
 int			com_frameNumber;
 
-qboolean	com_errorEntered = qfalse;
+int			com_errorEntered = 0;
 qboolean	com_fullyInitialized = qfalse;
 int			com_gameRestarting = 0;
 
@@ -288,14 +288,21 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	va_list		argptr;
 	static int	lastErrorTime;
 	static int	errorCount;
+	static int	lastErrorCode;
 	int			currentTime;
 	qboolean	restartClient;
 
-	if(com_errorEntered)
+	// turn recursive drop into fatal
+	if ( com_errorEntered == 1 && code == ERR_DROP && lastErrorCode == ERR_DROP ) {
+		code = ERR_FATAL;
+		Com_Printf("recursive error after: %s\n", com_errorMessage);
+	} else if ( com_errorEntered ) {
 		Sys_Error("recursive error after: %s", com_errorMessage);
+	}
 
-	com_errorEntered = qtrue;
+	com_errorEntered++;
 
+	lastErrorCode = code;
 	Cvar_Set("com_errorCode", va("%i", code));
 
 	// when we are running automated scripts, make sure we
