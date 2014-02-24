@@ -1682,6 +1682,8 @@ void CL_InitCGame( void ) {
 				  apiName, major, minor, CG_API_NAME, CG_API_MAJOR_VERSION, CG_API_MINOR_VERSION );
 	}
 
+	FS_GameValid();
+
 	// init for this gamestate
 	VM_Call( cgvm, CG_INIT, clc.state, CL_MAX_SPLITVIEW, com_playVideo );
 

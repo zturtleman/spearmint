@@ -304,8 +304,8 @@ static int		fs_serverReferencedPaks[MAX_SEARCH_PATHS];			// checksums
 static char		*fs_serverReferencedPakNames[MAX_SEARCH_PATHS];		// pk3 names
 
 // last valid game folder used
-char lastValidBase[MAX_OSPATH];
-char lastValidGame[MAX_OSPATH];
+char lastValidBase[MAX_OSPATH] = {0};
+char lastValidGame[MAX_OSPATH] = {0};
 
 #ifdef FS_MISSING
 FILE*		missingFiles = NULL;
@@ -4424,9 +4424,34 @@ void FS_InitFilesystem( void ) {
 	if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
 		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
 	}
+}
 
-	Q_strncpyz(lastValidBase, fs_basepath->string, sizeof(lastValidBase));
-	Q_strncpyz(lastValidGame, fs_gamedirvar->string, sizeof(lastValidGame));
+/*
+================
+FS_TryLastValidGame
+
+Called by Com_Error and FS_Restart if failed during game directory change
+================
+*/
+qboolean FS_TryLastValidGame( void ) {
+	if (!lastValidBase[0]) {
+		return qfalse;
+	}
+
+	FS_PureServerSetLoadedPaks("", "");
+
+	Cvar_Set("fs_basepath", lastValidBase);
+	Cvar_Set("fs_game", lastValidGame);
+	lastValidBase[0] = '\0';
+	lastValidGame[0] = '\0';
+
+	FS_Restart(qtrue);
+
+	// Clean out any user and VM created cvars
+	Cvar_Restart(qtrue);
+	Com_ExecuteCfg();
+
+	return qtrue;
 }
 
 
@@ -4449,13 +4474,7 @@ void FS_Restart( qboolean gameDirChanged ) {
 	if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
 		// this might happen when connecting to a pure server not using BASEGAME/pak0.pk3
 		// (for instance a Team Arena demo server)
-		if (lastValidBase[0]) {
-			FS_PureServerSetLoadedPaks("", "");
-			Cvar_Set("fs_basepath", lastValidBase);
-			Cvar_Set("fs_game", lastValidGame);
-			lastValidBase[0] = '\0';
-			lastValidGame[0] = '\0';
-			FS_Restart( qtrue );
+		if (FS_TryLastValidGame()) {
 			// if connected to a remote server, try to download the files
 			if ( !CL_ConnectedToRemoteServer() ) {
 				Com_Error( ERR_DROP, "Invalid game folder" );
@@ -4476,6 +4495,17 @@ void FS_Restart( qboolean gameDirChanged ) {
 		}
 	}
 
+#ifdef DEDICATED
+	FS_GameValid();
+#endif
+}
+
+/*
+=================
+FS_GameValid
+=================
+*/
+void FS_GameValid( void ) {
 	Q_strncpyz(lastValidBase, fs_basepath->string, sizeof(lastValidBase));
 	Q_strncpyz(lastValidGame, fs_gamedirvar->string, sizeof(lastValidGame));
 

@@ -330,7 +330,14 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 		Cvar_Set("com_errorMessage", com_errorMessage);
 
 	restartClient = ( com_gameRestarting & 2 ) && ( !com_cl_running || !com_cl_running->integer );
-	com_gameRestarting = 0;
+	if ( com_gameRestarting ) {
+		com_gameRestarting = 0;
+
+		if ( code == ERR_DROP && FS_TryLastValidGame() && com_cl_running && com_cl_running->integer ) {
+			CL_Shutdown(va("Change Game Directory: %s", com_errorMessage), qtrue, qtrue);
+			restartClient = qtrue;
+		}
+	}
 
 	if (code == ERR_DISCONNECT || code == ERR_SERVERDISCONNECT) {
 		VM_Forced_Unload_Start();

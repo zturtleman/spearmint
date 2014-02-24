@@ -634,6 +634,9 @@ qboolean FS_ConditionalRestart(qboolean disconnect);
 void	FS_Restart( qboolean gameDirChanged );
 // shutdown and restart the filesystem so changes to fs_gamedir can take effect
 
+void	FS_GameValid( void );
+qboolean FS_TryLastValidGame( void );
+
 void FS_AddGameDirectory( const char *path, const char *dir );
 
 char	**FS_ListFiles( const char *directory, const char *extension, int *numfiles );
@@ -873,6 +876,7 @@ void 		QDECL Com_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf,
 void 		QDECL Com_Error( int code, const char *fmt, ... ) __attribute__ ((noreturn, format(printf, 2, 3)));
 void 		Com_Quit_f( void ) __attribute__ ((noreturn));
 void		Com_GameRestart(qboolean disconnect);
+void		Com_ExecuteCfg(void);
 
 int			Com_Milliseconds( void );	// will be journaled properly
 unsigned	Com_BlockChecksum( const void *buffer, int length );
