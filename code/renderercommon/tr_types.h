@@ -75,6 +75,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define RDF_NOWORLDMODEL	0x0001		// used for player configuration screen
 #define RDF_UNDERWATER		0x0002		// underwater
 #define RDF_HYPERSPACE		0x0004		// teleportation effect
+#define RDF_SUNLIGHT		0x0008		// render sunlight and shadows
 
 // any change in the LIGHTMAP_* defines here MUST be reflected in
 // R_FindShader() in tr_bsp.c
@@ -196,6 +197,14 @@ typedef struct {
 	vec3_t		fogColor;
 	float		fogDepthForOpaque;
 	float		fogDensity;
+
+	// OpenGL2 renderer extras
+	float			blurFactor;
+
+	// specific sun shadow casting information, if RDF_SUNLIGHT
+	float           sunDir[3];
+	float           sunCol[3];
+	float           sunAmbCol[3];
 } refdef_t;
 
 
