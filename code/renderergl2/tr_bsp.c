@@ -173,7 +173,7 @@ void ColorToRGBM(const vec3_t color, unsigned char rgbm[4])
 	vec3_t          sample;
 	float			maxComponent;
 
-	VectorScale(color, 1.0f / 32.0f, sample);
+	VectorCopy(color, sample);
 
 	maxComponent = MAX(sample[0], sample[1]);
 	maxComponent = MAX(maxComponent, sample[2]);
@@ -209,56 +209,58 @@ float R_ProcessLightmap( byte **pic, int in_padding, int width, int height, byte
 	int j;
 	float maxIntensity = 0;
 	double sumIntensity = 0;
-	float lightScale = 1.0f;
-
-	lightScale = pow(2, r_mapOverBrightBits->integer - tr.overbrightBits - 8); //exp2(r_mapOverBrightBits->integer - tr.overbrightBits - 8);
 
 	for ( j = 0; j < width * height; j++ )
 	{
-		if (r_hdr->integer)
+		if (hdrLightmap)
 		{
-			float color[3];
+			vec4_t color;
 
-			if (hdrLightmap)
-			{
 #if 0 // HDRFILE_RGBE
-				float exponent = exp2(( *pic )[j*4+3] - 128);
+			float exponent = exp2(( *pic )[j*4+3] - 128);
 
-				color[0] = ( *pic )[j*4+0] * exponent;
-				color[1] = ( *pic )[j*4+1] * exponent;
-				color[2] = ( *pic )[j*4+2] * exponent;
+			color[0] = ( *pic )[j*4+0] * exponent;
+			color[1] = ( *pic )[j*4+1] * exponent;
+			color[2] = ( *pic )[j*4+2] * exponent;
 #else // HDRFILE_FLOAT
-				memcpy(color, &( *pic )[j*12], 12);
+			memcpy(color, &( *pic )[j*12], 12);
 
-				color[0] = LittleFloat(color[0]);
-				color[1] = LittleFloat(color[1]);
-				color[2] = LittleFloat(color[2]);
+			color[0] = LittleFloat(color[0]);
+			color[1] = LittleFloat(color[1]);
+			color[2] = LittleFloat(color[2]);
 #endif
-			}
-			else
-			{
-				//hack: convert LDR lightmap to HDR one
-				color[0] = (( *pic )[j*in_padding+0] + 1.0f);
-				color[1] = (( *pic )[j*in_padding+1] + 1.0f);
-				color[2] = (( *pic )[j*in_padding+2] + 1.0f);
+			color[3] = 1.0f;
 
-				// if under an arbitrary value (say 12) grey it out
-				// this prevents weird splotches in dimly lit areas
-				if (color[0] + color[1] + color[2] < 12.0f)
-				{
-					float avg = (color[0] + color[1] + color[2]) * 0.3333f;
-					color[0] = avg;
-					color[1] = avg;
-					color[2] = avg;
-				}
-			}
+			R_ColorShiftLightingFloats(color, color, 1.0f/255.0f);
 
-			VectorScale(color, lightScale, color);
-
-			if (glRefConfig.textureFloat && glRefConfig.halfFloatPixel && r_floatLightmap->integer)
+			if (glRefConfig.floatLightmap)
 				ColorToRGBA16F(color, (unsigned short *)(&( *pic_out )[j*8]));
 			else
 				ColorToRGBM(color, &( *pic_out )[j*4]);
+		}
+		else if (glRefConfig.floatLightmap)
+		{
+			vec4_t color;
+
+			//hack: convert LDR lightmap to HDR one
+			color[0] = MAX(( *pic )[j*in_padding+0], 0.499f);
+			color[1] = MAX(( *pic )[j*in_padding+1], 0.499f);
+			color[2] = MAX(( *pic )[j*in_padding+2], 0.499f);
+
+			// if under an arbitrary value (say 12) grey it out
+			// this prevents weird splotches in dimly lit areas
+			if (color[0] + color[1] + color[2] < 12.0f)
+			{
+				float avg = (color[0] + color[1] + color[2]) * 0.3333f;
+				color[0] = avg;
+				color[1] = avg;
+				color[2] = avg;
+			}
+			color[3] = 1.0f;
+
+			R_ColorShiftLightingFloats(color, color, 1.0f/255.0f);
+
+			ColorToRGBA16F(color, (unsigned short *)(&( *pic_out )[j*8]));
 		}
 		else
 		{
@@ -417,13 +419,10 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 		tr.deluxemaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
 	}
 
-	if (r_hdr->integer)
-	{
-		if (glRefConfig.textureFloat && glRefConfig.halfFloatPixel && r_floatLightmap->integer)
-			textureInternalFormat = GL_RGBA16F_ARB;
-		else
-			textureInternalFormat = GL_RGBA8;
-	}
+	if (glRefConfig.floatLightmap)
+		textureInternalFormat = GL_RGBA16F_ARB;
+	else
+		textureInternalFormat = GL_RGBA8;
 
 	if (r_mergeLightmaps->integer)
 	{
@@ -836,9 +835,9 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 			//hack: convert LDR vertex colors to HDR
 			if (r_hdr->integer)
 			{
-				color[0] = verts[i].color[0] + 1.0f;
-				color[1] = verts[i].color[1] + 1.0f;
-				color[2] = verts[i].color[2] + 1.0f;
+				color[0] = MAX(verts[i].color[0], 0.499f);
+				color[1] = MAX(verts[i].color[1], 0.499f);
+				color[2] = MAX(verts[i].color[2], 0.499f);
 			}
 			else
 			{
@@ -980,9 +979,9 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 			//hack: convert LDR vertex colors to HDR
 			if (r_hdr->integer)
 			{
-				color[0] = verts[i].color[0] + 1.0f;
-				color[1] = verts[i].color[1] + 1.0f;
-				color[2] = verts[i].color[2] + 1.0f;
+				color[0] = MAX(verts[i].color[0], 0.499f);
+				color[1] = MAX(verts[i].color[1], 0.499f);
+				color[2] = MAX(verts[i].color[2], 0.499f);
 			}
 			else
 			{
@@ -1092,9 +1091,9 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 			//hack: convert LDR vertex colors to HDR
 			if (r_hdr->integer)
 			{
-				color[0] = verts[i].color[0] + 1.0f;
-				color[1] = verts[i].color[1] + 1.0f;
-				color[2] = verts[i].color[2] + 1.0f;
+				color[0] = MAX(verts[i].color[0], 0.499f);
+				color[1] = MAX(verts[i].color[1], 0.499f);
+				color[2] = MAX(verts[i].color[2], 0.499f);
 			}
 			else
 			{
@@ -1312,9 +1311,9 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 			//hack: convert LDR vertex colors to HDR
 			if (r_hdr->integer)
 			{
-				color[0] = verts[i].color[0] + 1.0f;
-				color[1] = verts[i].color[1] + 1.0f;
-				color[2] = verts[i].color[2] + 1.0f;
+				color[0] = MAX(verts[i].color[0], 0.499f);
+				color[1] = MAX(verts[i].color[1], 0.499f);
+				color[2] = MAX(verts[i].color[2], 0.499f);
 			}
 			else
 			{
