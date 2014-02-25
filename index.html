@@ -53,29 +53,6 @@
 <li>Merged UI VM into CGame VM, easier to modify as a whole / more flexible.</li>
 <li>Additional <a href="http://github.com/zturtleman/spearmint/wiki/Shaders">shader</a> keywords.</li>
 </ul><p>Read more at the <a href="http://github.com/zturtleman/spearmint/wiki">Spearmint wiki</a>.</p>
-
-<h2>
-<a name="running-quake-iii-arena-using-spearmint" class="anchor" href="#running-quake-iii-arena-using-spearmint"><span class="octicon octicon-link"></span></a>Running Quake III Arena using Spearmint</h2>
-
-<ul>
-<li>Get the source and compile it using make. The game will be in <code>build/release-YOURPLATFORM-YOURARCH/</code>.</li>
-<li>Copy your Quake III Arena <code>pak[0-8].pk3</code> into <code>build/release-YOURPLATFORM-YOURARCH/baseq3</code>. (Don't own Q3? Buy it on <a href="http://store.steampowered.com/sub/433/">Steam</a>.)</li>
-<li>Get the Spearmint Q3A patch files from <a href="https://github.com/zturtleman/spearmint-patch-data">here</a> and put in <code>build/release-YOURPLATFORM-YOURARCH/baseq3/</code>
-</li>
-<li>Run <code>build/release-YOURPLATFORM-YOURARCH/spearmint_YOURARCH</code>
-</li>
-</ul><p>You can add splitscreen players after you start or join a server using the in-game menu.</p>
-
-<h2>
-<a name="running-quake-iii-team-arena-using-spearmint" class="anchor" href="#running-quake-iii-team-arena-using-spearmint"><span class="octicon octicon-link"></span></a>Running Quake III: Team Arena using Spearmint</h2>
-
-<ul>
-<li>Follow the steps for Quake III Arena above.</li>
-<li>Copy your Quake III: Team Arena <code>pak[0-3].pk3</code> into <code>build/release-YOURPLATFORM-YOURARCH/missionpack</code>. (Don't own Team Arena? Buy it on <a href="http://store.steampowered.com/sub/433/">Steam</a>.)</li>
-<li>Get the Spearmint Q3TA patch files from <a href="https://github.com/zturtleman/spearmint-patch-data">here</a> and put in <code>build/release-YOURPLATFORM-YOURARCH/missionpack/</code>
-</li>
-<li>Run <code>build/release-YOURPLATFORM-YOURARCH/spearmint_YOURARCH</code> and choose Team Arena from the menu.</li>
-</ul><p>The UI currently lacks support for splitscreen. You can add splitscreen players after you start or join a server using the console (open/close using shift+esc or ~). 2dropin, 3dropin, and 4dropin commands add splitscreen players. 2dropout, 3dropout, and 4dropout commands remove splitscreen players. You'll need to manually bind controls, example <code>bind u +2forward</code> to have u move player 2 forward. Type <code>+2</code> then press tab to see full list.</p>
         </section>
 
         <aside id="sidebar">
