@@ -1211,6 +1211,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_CMD_AUTOCOMPLETE:
 		CL_Cmd_AutoComplete( VMA(1), VMA(2), args[3] );
 		return 0;
+	case CG_SV_SHUTDOWN:
+		SV_Shutdown( VMA(1) );
+		return 0;
 	case CG_UPDATESCREEN:
 		// this is used during lengthy level loading, so pump message loop
 //		Com_EventLoop();	// FIXME: if a server restarts here, BAD THINGS HAPPEN!
