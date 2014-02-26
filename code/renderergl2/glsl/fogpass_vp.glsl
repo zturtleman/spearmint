@@ -85,6 +85,17 @@ vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 
 float CalcFog(vec3 position)
 {
+#if defined(USE_LINEAR_FOG)
+	float s = dot(vec4(position, 1.0), u_FogDistance);
+	float t = dot(vec4(position, 1.0), u_FogDepth);
+
+	float eyeOutside = float(u_FogEyeT < 0.0);
+
+	if ( eyeOutside == 0 )
+		t += u_FogEyeT;
+
+	return s * t;
+#else // EXP FOG
 	float s = dot(vec4(position, 1.0), u_FogDistance) * 8.0;
 	float t = dot(vec4(position, 1.0), u_FogDepth);
 
@@ -95,6 +106,7 @@ float CalcFog(vec3 position)
 	t *= fogged / (t - u_FogEyeT * eyeOutside);
 
 	return s * t;
+#endif
 }
 
 void main()

@@ -964,6 +964,9 @@ void GLSL_InitGPUShaders(void)
 		if (i & FOGDEF_USE_VERTEX_ANIMATION)
 			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
 
+		if (i & FOGDEF_USE_LINEAR_FOG)
+			Q_strcat(extradefines, 1024, "#define USE_LINEAR_FOG\n");
+
 		if (!GLSL_InitGPUShader(&tr.fogShader[i], "fogpass", attribs, qtrue, extradefines, qtrue, fallbackShader_fogpass_vp, fallbackShader_fogpass_fp))
 		{
 			ri.Error(ERR_FATAL, "Could not load fogpass shader!");
