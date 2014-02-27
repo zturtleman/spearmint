@@ -544,6 +544,9 @@ cvar_t	*Cvar_SetValue( const char *var_name, float value );
 void	Cvar_VM_SetValue( const char *var_name, float value, qboolean gamevm );
 // expands value to a string and calls Cvar_Set/Cvar_VM_Set
 
+cvar_t *Cvar_Unset(cvar_t *cv);
+// remove a cvar, returns next cvar in linked list
+
 float	Cvar_VariableValue( const char *var_name );
 int		Cvar_VariableIntegerValue( const char *var_name );
 // returns 0 if not defined or non numeric
@@ -589,6 +592,8 @@ void Cvar_CheckRangeSafe( const char *varName, float min, float max, qboolean in
 
 void	Cvar_Restart(qboolean unsetVM);
 void	Cvar_Restart_f( void );
+
+void	Cvar_ResetDefaultOverrides( void );
 
 void Cvar_CompleteCvarName( char *args, int argNum );
 

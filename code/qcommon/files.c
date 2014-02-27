@@ -4464,6 +4464,8 @@ void FS_Restart( qboolean gameDirChanged ) {
 	// free anything we currently have loaded
 	FS_Shutdown(qfalse);
 
+	Cvar_ResetDefaultOverrides();
+
 	// try to start up normally
 	FS_Startup(!gameDirChanged);
 

@@ -426,6 +426,12 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 			Z_Free( s );
 		}
 
+		if ( var->flags & CVAR_CUSTOM_RESET ) {
+			if ( !var->overriddenResetString ) {
+				var->overriddenResetString = CopyString( var_value );
+			}
+		}
+
 		// ZOID--needs to be set so that cvars the game sets as 
 		// SERVERINFO get sent to clients
 		cvar_modifiedFlags |= flags;
@@ -520,15 +526,61 @@ cvar_t *Cvar_SetDefault( const char *var_name, const char *var_value ) {
 			var->explicitSet = qfalse;
 		}
 
-		Z_Free( var->resetString );
+		if (!strcmp(var->resetString,var_value))
+			return var;
+
+		var->overriddenResetString = var->resetString;
 		var->resetString = CopyString( var_value );
+
+		var->flags |= CVAR_CUSTOM_RESET;
 	}
 	else
 	{
-		var = Cvar_Get( var_name, var_value, 0 );
+		var = Cvar_Get( var_name, var_value, CVAR_CUSTOM_RESET );
 	}
 
 	return var;
+}
+
+/*
+============
+Cvar_ResetDefaultOverrides
+
+Undo the default overrides
+============
+*/
+void Cvar_ResetDefaultOverrides( void )
+{
+	cvar_t	*var;
+
+	var = cvar_vars;
+
+	while(var)
+	{
+		if(var->flags & CVAR_CUSTOM_RESET)
+		{
+			if(var->overriddenResetString)
+			{
+				Z_Free(var->resetString);
+				var->resetString = var->overriddenResetString;
+				var->overriddenResetString = NULL;
+				var->flags &= ~CVAR_CUSTOM_RESET;
+
+				if(!var->explicitSet)
+				{
+					Cvar_SetSafe( var->name, var->resetString );
+					var->explicitSet = qfalse;
+				}
+			}
+			else
+			{
+				var = Cvar_Unset( var );
+				continue;
+			}
+		}
+
+		var = var->next;
+	}
 }
 
 /*
@@ -1189,6 +1241,8 @@ cvar_t *Cvar_Unset(cvar_t *cv)
 		Z_Free(cv->latchedString);
 	if(cv->resetString)
 		Z_Free(cv->resetString);
+	if(cv->overriddenResetString)
+		Z_Free(cv->overriddenResetString);
 
 	if(cv->prev)
 		cv->prev->next = cv->next;

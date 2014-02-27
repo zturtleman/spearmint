@@ -1023,6 +1023,7 @@ default values.
 #define CVAR_USERINFO2		0x4000 // userinfo for second local player
 #define CVAR_USERINFO3		0x8000 // userinfo for third local player
 #define CVAR_USERINFO4		0x10000 // userinfo for fourth local player
+#define CVAR_CUSTOM_RESET	0x20000 // uses a custom game-specific reset string
 // These flags are only returned by the Cvar_Flags() function
 #define CVAR_MODIFIED		0x40000000	// Cvar was modified
 #define CVAR_NONEXISTENT	0x80000000	// Cvar doesn't exist.
@@ -1036,6 +1037,7 @@ struct cvar_s {
 	char			*name;
 	char			*string;
 	char			*resetString;		// cvar_restart will reset to this value
+	char			*overriddenResetString;	// the reset string as defined by code, set when resetString is overridden by gameconfig.txt
 	char			*latchedString;		// for CVAR_LATCH vars
 	int				flags;
 	qboolean	explicitSet;		// cvar has been explicitly set
