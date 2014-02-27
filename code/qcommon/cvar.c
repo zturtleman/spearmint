@@ -568,7 +568,7 @@ void Cvar_ResetDefaultOverrides( void )
 
 				if(!var->explicitSet)
 				{
-					Cvar_SetSafe( var->name, var->resetString );
+					Cvar_ForceReset( var->name );
 					var->explicitSet = qfalse;
 				}
 			}
