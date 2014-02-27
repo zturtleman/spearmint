@@ -318,18 +318,11 @@ New: Support "if cvar" and "if !cvar"
 
 ===============
 */
-static qboolean ParseIf( char **text, int *ifIndent, int braketLevel ) {
+static qboolean ParseIf( char **text ) {
 	char	*token;
-	int		indent;
 	char	*var;
 	qboolean wantValue;
 	int		value;
-	int		initialIfIndent;
-
-	indent = braketLevel;
-
-	initialIfIndent = *ifIndent;
-	*ifIndent = *ifIndent + 1;
 
 	token = COM_ParseExt( text, qfalse );
 	if ( !token[0] ) {
@@ -391,6 +384,20 @@ static qboolean ParseIf( char **text, int *ifIndent, int braketLevel ) {
 		}
 	}
 
+	return qfalse;
+}
+
+#define MAX_IF_RECURSION 10
+static qboolean dealtWithElse[MAX_IF_RECURSION];
+static qboolean SkipIfBlock( char **text, int *ifIndent, int braketLevel ) {
+	char	*token;
+	int		indent;
+	int		initialIfIndent;
+
+	indent = braketLevel;
+
+	initialIfIndent = *ifIndent;
+
 	// Skip tokens inside of if-block
 	while ( 1 ) {
 		token = COM_ParseExt( text, qtrue );
@@ -412,11 +419,28 @@ static qboolean ParseIf( char **text, int *ifIndent, int braketLevel ) {
 		}
 		else if ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "#if" ) ) {
 			*ifIndent = *ifIndent + 1;
+			if ( *ifIndent > MAX_IF_RECURSION ) {
+				*ifIndent = 0;
+				ri.Printf( PRINT_WARNING, "WARNING: 'if' recursion level goes too high (max %d) shader %s\n", MAX_IF_RECURSION, shader.name );
+				return 0;
+			}
+			dealtWithElse[ *ifIndent ] = qfalse;
+		}
+		else if ( !Q_stricmp( token, "else" ) || !Q_stricmp( token, "#else" ) ) {
+			if ( dealtWithElse[ *ifIndent ] ) {
+				ri.Printf( PRINT_WARNING, "WARNING: Unexpected 'else' in shader %s\n", shader.name );
+				return qfalse;
+			}
+			dealtWithElse[ *ifIndent ] = qtrue;
+
+			if ( *ifIndent == initialIfIndent ) {
+				break;
+			}
 		}
 		else if ( !Q_stricmp( token, "endif" ) || !Q_stricmp( token, "#endif" ) ) {
 			*ifIndent = *ifIndent - 1;
 
-			if ( *ifIndent == initialIfIndent ) {
+			if ( *ifIndent == initialIfIndent - 1 ) {
 				break;
 			}
 		}
@@ -434,7 +458,37 @@ static int ParseIfEndif( char **text, char *token, int *ifIndent, int braketLeve
 
 	if ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "#if" ) )
 	{
-		if ( !ParseIf( text, ifIndent, braketLevel ) ) {
+		*ifIndent = *ifIndent + 1;
+		if ( *ifIndent > MAX_IF_RECURSION ) {
+			*ifIndent = 0;
+			ri.Printf( PRINT_WARNING, "WARNING: 'if' recursion level goes too high (max %d) shader %s\n", MAX_IF_RECURSION, shader.name );
+			return 0;
+		}
+		dealtWithElse[ *ifIndent ] = qfalse;
+
+		// if the 'if' is false, skip block
+		if ( !ParseIf( text ) && !SkipIfBlock( text, ifIndent, braketLevel ) ) {
+			return 0;
+		}
+		return 1;
+	}
+	// we only get an else here through error or the 'if' was true
+	else if ( !Q_stricmp( token, "else" ) || !Q_stricmp( token, "#else" ) )
+	{
+		if ( *ifIndent < 1 ) {
+			*ifIndent = 0;
+			ri.Printf( PRINT_WARNING, "WARNING: 'else' without 'if' in shader %s\n", shader.name );
+			return 0;
+		}
+		if ( dealtWithElse[ *ifIndent ] ) {
+			*ifIndent = 0;
+			ri.Printf( PRINT_WARNING, "WARNING: Unexpected 'else' in shader %s\n", shader.name );
+			return 0;
+		}
+		dealtWithElse[ *ifIndent ] = qtrue;
+
+		// skip block
+		if ( !SkipIfBlock( text, ifIndent, braketLevel ) ) {
 			return 0;
 		}
 		return 1;
