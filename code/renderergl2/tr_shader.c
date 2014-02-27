@@ -2351,7 +2351,7 @@ static qboolean ParseShader( char **text )
 			}
 			continue;
 		}
-		// fogParms ( <red> <green> <blue> ) <depthForOpaque>
+		// fogParms ( <red> <green> <blue> ) <depthForOpaque> [fog type]
 		else if ( !Q_stricmp( token, "fogParms" ) )
 		{
 			if ( !ParseVector( text, 3, shader.fogParms.color ) ) {
@@ -2364,29 +2364,25 @@ static qboolean ParseShader( char **text )
 				continue;
 			}
 
-			shader.fogParms.fogType = FT_EXP;
-			shader.fogParms.density = DEFAULT_FOG_EXP_DENSITY;
 			shader.fogParms.depthForOpaque = atof( token );
+
+			// note: there could not be a token, or token might be part of old gradient directions?
+			token = COM_ParseExt( text, qfalse );
+			if ( !*token )
+				token = r_defaultFogParmsType->string;
+
+			if ( !Q_stricmp( token, "linear" ) ) {
+				shader.fogParms.fogType = FT_LINEAR;
+				shader.fogParms.density = DEFAULT_FOG_LINEAR_DENSITY;
+			} else {
+				if ( Q_stricmp( token, "exp" ) )
+					ri.Printf( PRINT_WARNING, "WARNING: unknown fog type '%s' for 'fogParms' keyword in shader '%s'\n", token, shader.name );
+
+				shader.fogParms.fogType = FT_EXP;
+				shader.fogParms.density = DEFAULT_FOG_EXP_DENSITY;
+			}
 
 			// note: skips any old gradient directions
-			continue;
-		}
-		// linearFogParms ( <red> <green> <blue> ) <depthForOpaque>
-		else if ( !Q_stricmp( token, "linearFogParms" ) )
-		{
-			if ( !ParseVector( text, 3, shader.fogParms.color ) ) {
-				return qfalse;
-			}
-
-			token = COM_ParseExt( text, qfalse );
-			if ( !token[0] ) {
-				ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'linearFogParms' keyword in shader '%s'\n", shader.name );
-				continue;
-			}
-
-			shader.fogParms.fogType = FT_LINEAR;
-			shader.fogParms.density = DEFAULT_FOG_LINEAR_DENSITY;
-			shader.fogParms.depthForOpaque = atof( token );
 			continue;
 		}
 		// portal

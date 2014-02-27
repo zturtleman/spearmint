@@ -170,6 +170,7 @@ cvar_t	*r_aviMotionJpegQuality;
 cvar_t	*r_screenshotJpegQuality;
 
 cvar_t	*r_useGlFog;
+cvar_t	*r_defaultFogParmsType;
 
 cvar_t	*r_maxpolys;
 int		max_polys;
@@ -1113,6 +1114,11 @@ void R_Register( void )
 	r_mapOverBrightBits = ri.Cvar_Get ("r_mapOverBrightBits", "2", CVAR_LATCH );
 	r_intensity = ri.Cvar_Get ("r_intensity", "1", CVAR_LATCH );
 	r_singleShader = ri.Cvar_Get ("r_singleShader", "0", CVAR_CHEAT | CVAR_LATCH );
+
+	//
+	// cvars for game-specific overrides
+	//
+	r_defaultFogParmsType = ri.Cvar_Get ("r_defaultfogParmsType", "exp", CVAR_LATCH );
 
 	//
 	// archived variables that can change at any time

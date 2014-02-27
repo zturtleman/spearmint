@@ -1974,6 +1974,8 @@ extern cvar_t	*r_marksOnTriangleMeshes;
 
 extern cvar_t	*r_useGlFog;
 
+extern cvar_t	*r_defaultFogParmsType;
+
 //====================================================================
 
 void R_SwapBuffers( int );
