@@ -375,7 +375,7 @@ string will be returned if the next token is
 a newline.
 ==============
 */
-static char *SkipWhitespace( char *data, qboolean *hasNewLines ) {
+static char *SkipWhitespace( char *data, int *linesSkipped ) {
 	int c;
 
 	while( (c = *data) <= ' ') {
@@ -383,8 +383,7 @@ static char *SkipWhitespace( char *data, qboolean *hasNewLines ) {
 			return NULL;
 		}
 		if( c == '\n' ) {
-			com_lines++;
-			*hasNewLines = qtrue;
+			*linesSkipped += 1;
 		}
 		data++;
 	}
@@ -464,7 +463,7 @@ int COM_Compress( char *data_p ) {
 char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 {
 	int c = 0, len;
-	qboolean hasNewLines = qfalse;
+	int linesSkipped = 0;
 	char *data;
 
 	data = *data_p;
@@ -482,18 +481,20 @@ char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 	while ( 1 )
 	{
 		// skip whitespace
-		data = SkipWhitespace( data, &hasNewLines );
+		data = SkipWhitespace( data, &linesSkipped );
 		if ( !data )
 		{
 			*data_p = NULL;
 			return com_token;
 		}
-		if ( hasNewLines && !allowLineBreaks )
+		if ( data && linesSkipped && !allowLineBreaks )
 		{
 			// ZTM: Don't move the pointer so that calling SkipRestOfLine afterwards works as expected
 			//*data_p = data;
 			return com_token;
 		}
+
+		com_lines += linesSkipped;
 
 		c = *data;
 

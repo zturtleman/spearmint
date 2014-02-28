@@ -1211,6 +1211,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_CMD_AUTOCOMPLETE:
 		CL_Cmd_AutoComplete( VMA(1), VMA(2), args[3] );
 		return 0;
+	case CG_SV_SHUTDOWN:
+		SV_Shutdown( VMA(1) );
+		return 0;
 	case CG_UPDATESCREEN:
 		// this is used during lengthy level loading, so pump message loop
 //		Com_EventLoop();	// FIXME: if a server restarts here, BAD THINGS HAPPEN!
@@ -1681,6 +1684,8 @@ void CL_InitCGame( void ) {
 		Com_Error( ERR_DROP, "CGame VM uses unsupported API (%s %d.%d), expected %s %d.%d",
 				  apiName, major, minor, CG_API_NAME, CG_API_MAJOR_VERSION, CG_API_MINOR_VERSION );
 	}
+
+	FS_GameValid();
 
 	// init for this gamestate
 	VM_Call( cgvm, CG_INIT, clc.state, CL_MAX_SPLITVIEW, com_playVideo );

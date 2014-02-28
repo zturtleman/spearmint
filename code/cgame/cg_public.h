@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	16
+#define CG_API_MINOR_VERSION	17
 
 
 #define	CMD_BACKUP			64	
@@ -196,6 +196,7 @@ typedef enum {
 	CG_GET_VOIP_MUTE_CLIENT,
 	CG_GET_VOIP_MUTE_ALL,
 	CG_CMD_AUTOCOMPLETE,
+	CG_SV_SHUTDOWN,
 
 	// note: these were not originally available in ui
 	CG_GETGAMESTATE = 150,

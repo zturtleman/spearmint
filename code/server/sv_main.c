@@ -699,11 +699,9 @@ void SVC_Info( netadr_t from ) {
 
 	// If not a public server and request is from a master server, don't reply.
 	if ( sv_public->integer != 1 ) {
+		// NOTE: the addresses will only have been resolved if sent a heartbeat
 		for (i = 0; i < MAX_MASTER_SERVERS; i++) {
 			if(!sv_master[i]->string[0])
-				continue;
-
-			if (!SV_RefreshMasterAdr(i))
 				continue;
 
 			for (count = 0; count < 2; count++) {

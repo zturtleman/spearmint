@@ -146,7 +146,7 @@ NET
 
 #define	MAX_PACKET_USERCMDS		32		// max number of usercmd_t in a packet
 
-#define	MAX_SNAPSHOT_ENTITIES	256
+#define	MAX_SNAPSHOT_ENTITIES	512
 
 #define	PORT_ANY			-1
 
@@ -544,6 +544,9 @@ cvar_t	*Cvar_SetValue( const char *var_name, float value );
 void	Cvar_VM_SetValue( const char *var_name, float value, qboolean gamevm );
 // expands value to a string and calls Cvar_Set/Cvar_VM_Set
 
+cvar_t *Cvar_Unset(cvar_t *cv);
+// remove a cvar, returns next cvar in linked list
+
 float	Cvar_VariableValue( const char *var_name );
 int		Cvar_VariableIntegerValue( const char *var_name );
 // returns 0 if not defined or non numeric
@@ -590,6 +593,8 @@ void Cvar_CheckRangeSafe( const char *varName, float min, float max, qboolean in
 void	Cvar_Restart(qboolean unsetVM);
 void	Cvar_Restart_f( void );
 
+void	Cvar_ResetDefaultOverrides( void );
+
 void Cvar_CompleteCvarName( char *args, int argNum );
 
 extern	int			cvar_modifiedFlags;
@@ -633,6 +638,9 @@ void	FS_Shutdown( qboolean closemfp );
 qboolean FS_ConditionalRestart(qboolean disconnect);
 void	FS_Restart( qboolean gameDirChanged );
 // shutdown and restart the filesystem so changes to fs_gamedir can take effect
+
+void	FS_GameValid( void );
+qboolean FS_TryLastValidGame( void );
 
 void FS_AddGameDirectory( const char *path, const char *dir );
 
@@ -873,6 +881,7 @@ void 		QDECL Com_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf,
 void 		QDECL Com_Error( int code, const char *fmt, ... ) __attribute__ ((noreturn, format(printf, 2, 3)));
 void 		Com_Quit_f( void ) __attribute__ ((noreturn));
 void		Com_GameRestart(qboolean disconnect);
+void		Com_ExecuteCfg(void);
 
 int			Com_Milliseconds( void );	// will be journaled properly
 unsigned	Com_BlockChecksum( const void *buffer, int length );
@@ -944,7 +953,7 @@ extern	int		time_backend;		// renderer backend time
 
 extern	int		com_frameTime;
 
-extern	qboolean	com_errorEntered;
+extern	int			com_errorEntered;
 extern	qboolean	com_fullyInitialized;
 
 extern	int		com_playVideo;

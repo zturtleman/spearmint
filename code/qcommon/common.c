@@ -135,7 +135,7 @@ int		time_backend;		// renderer backend time
 int			com_frameTime;
 int			com_frameNumber;
 
-qboolean	com_errorEntered = qfalse;
+int			com_errorEntered = 0;
 qboolean	com_fullyInitialized = qfalse;
 int			com_gameRestarting = 0;
 
@@ -288,19 +288,29 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	va_list		argptr;
 	static int	lastErrorTime;
 	static int	errorCount;
+	static int	lastErrorCode;
 	int			currentTime;
 	qboolean	restartClient;
 
-	if(com_errorEntered)
-		Sys_Error("recursive error after: %s", com_errorMessage);
+	com_errorEntered++;
+	lastErrorCode = code;
 
-	com_errorEntered = qtrue;
+	// turn recursive drop into fatal
+	if ( com_errorEntered == 2 && code == ERR_DROP && lastErrorCode == ERR_DROP ) {
+		code = ERR_FATAL;
+		Com_Printf("recursive error after: %s\n", com_errorMessage);
+	} else if ( com_errorEntered > 1 ) {
+		Sys_Error("recursive error after: %s", com_errorMessage);
+	}
 
 	Cvar_Set("com_errorCode", va("%i", code));
 
 	// when we are running automated scripts, make sure we
 	// know if anything failed
 	if ( com_buildScript && com_buildScript->integer ) {
+		code = ERR_FATAL;
+	}
+	else if ( !com_fullyInitialized ) {
 		code = ERR_FATAL;
 	}
 
@@ -323,7 +333,14 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 		Cvar_Set("com_errorMessage", com_errorMessage);
 
 	restartClient = ( com_gameRestarting & 2 ) && ( !com_cl_running || !com_cl_running->integer );
-	com_gameRestarting = 0;
+	if ( com_gameRestarting ) {
+		com_gameRestarting = 0;
+
+		if ( code == ERR_DROP && FS_TryLastValidGame() && com_cl_running && com_cl_running->integer ) {
+			CL_Shutdown(va("Change Game Directory: %s", com_errorMessage), qtrue, qtrue);
+			restartClient = qtrue;
+		}
+	}
 
 	if (code == ERR_DISCONNECT || code == ERR_SERVERDISCONNECT) {
 		VM_Forced_Unload_Start();

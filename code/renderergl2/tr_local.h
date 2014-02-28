@@ -608,8 +608,9 @@ enum
 {
 	FOGDEF_USE_DEFORM_VERTEXES  = 0x0001,
 	FOGDEF_USE_VERTEX_ANIMATION = 0x0002,
-	FOGDEF_ALL                  = 0x0003,
-	FOGDEF_COUNT                = 0x0004,
+	FOGDEF_USE_LINEAR_FOG       = 0x0004,
+	FOGDEF_ALL                  = 0x0007,
+	FOGDEF_COUNT                = 0x0008,
 };
 
 enum
@@ -1973,6 +1974,8 @@ extern	cvar_t	*r_printShaders;
 extern cvar_t	*r_marksOnTriangleMeshes;
 
 extern cvar_t	*r_useGlFog;
+
+extern cvar_t	*r_defaultFogParmsType;
 
 //====================================================================
 

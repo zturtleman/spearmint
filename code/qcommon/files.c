@@ -304,8 +304,8 @@ static int		fs_serverReferencedPaks[MAX_SEARCH_PATHS];			// checksums
 static char		*fs_serverReferencedPakNames[MAX_SEARCH_PATHS];		// pk3 names
 
 // last valid game folder used
-char lastValidBase[MAX_OSPATH];
-char lastValidGame[MAX_OSPATH];
+char lastValidBase[MAX_OSPATH] = {0};
+char lastValidGame[MAX_OSPATH] = {0};
 
 #ifdef FS_MISSING
 FILE*		missingFiles = NULL;
@@ -4100,9 +4100,6 @@ static void FS_CheckPaks( qboolean quiet )
 		// have a pure list and pure pk3s
 		Cvar_Set( "fs_pure", "1" );
 	} else {
-#ifndef DEDICATED
-		dialogType_t type = DT_WARNING;
-#endif
 		char line1[256];
 		char line2[256];
 
@@ -4117,15 +4114,17 @@ static void FS_CheckPaks( qboolean quiet )
 			FS_GetModDescription( fs_gamedir, badGames, sizeof ( badGames ) );
 		}
 
-		Com_sprintf( line2, sizeof (line2), "You need to reinstall %s in order to play on pure servers.", badGames );
-
 		if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
 			// missing data files are more important than missing PAKSUMS
-			Q_strncpyz( line1, "Unable to locate data files.", sizeof ( line1 ) );
-#ifndef DEDICATED
-			type = DT_ERROR;
-#endif
-		} else if ( !fs_foundPaksums ) {
+			Q_strncpyz( line1, "Unable to locate data files.", sizeof (line1) );
+			Com_sprintf( line2, sizeof (line2), "You need to install %s in order to play", badGames );
+			Com_Error( ERR_DROP, "%s %s", line1, line2 );
+			return;
+		}
+
+		Com_sprintf( line2, sizeof (line2), "You need to reinstall %s in order to play on pure servers.", badGames );
+
+		if ( !fs_foundPaksums ) {
 			// no PAKSUMS files found in search paths
 			Q_strncpyz( line1, "Missing file containing Pk3 checksums.", sizeof ( line1 ) );
 			Com_sprintf( line2, sizeof (line2), "You need a %s%cPAKSUMS file to enable pure mode.", fs_gamedir, PATH_SEP );
@@ -4145,7 +4144,7 @@ static void FS_CheckPaks( qboolean quiet )
 
 		if ( fs_pakMismatchWarningDialog ) {
 #ifndef DEDICATED
-			Sys_Dialog( type, va("%s %s", line1, line2), "Unpure" );
+			Sys_Dialog( DT_WARNING, va("%s %s", line1, line2), "Warning" );
 #endif
 		}
 	}
@@ -4424,9 +4423,34 @@ void FS_InitFilesystem( void ) {
 	if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
 		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
 	}
+}
 
-	Q_strncpyz(lastValidBase, fs_basepath->string, sizeof(lastValidBase));
-	Q_strncpyz(lastValidGame, fs_gamedirvar->string, sizeof(lastValidGame));
+/*
+================
+FS_TryLastValidGame
+
+Called by Com_Error and FS_Restart if failed during game directory change
+================
+*/
+qboolean FS_TryLastValidGame( void ) {
+	if (!lastValidBase[0]) {
+		return qfalse;
+	}
+
+	FS_PureServerSetLoadedPaks("", "");
+
+	Cvar_Set("fs_basepath", lastValidBase);
+	Cvar_Set("fs_game", lastValidGame);
+	lastValidBase[0] = '\0';
+	lastValidGame[0] = '\0';
+
+	FS_Restart(qtrue);
+
+	// Clean out any user and VM created cvars
+	Cvar_Restart(qtrue);
+	Com_ExecuteCfg();
+
+	return qtrue;
 }
 
 
@@ -4440,6 +4464,8 @@ void FS_Restart( qboolean gameDirChanged ) {
 	// free anything we currently have loaded
 	FS_Shutdown(qfalse);
 
+	Cvar_ResetDefaultOverrides();
+
 	// try to start up normally
 	FS_Startup(!gameDirChanged);
 
@@ -4449,13 +4475,7 @@ void FS_Restart( qboolean gameDirChanged ) {
 	if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
 		// this might happen when connecting to a pure server not using BASEGAME/pak0.pk3
 		// (for instance a Team Arena demo server)
-		if (lastValidBase[0]) {
-			FS_PureServerSetLoadedPaks("", "");
-			Cvar_Set("fs_basepath", lastValidBase);
-			Cvar_Set("fs_game", lastValidGame);
-			lastValidBase[0] = '\0';
-			lastValidGame[0] = '\0';
-			FS_Restart( qtrue );
+		if (FS_TryLastValidGame()) {
 			// if connected to a remote server, try to download the files
 			if ( !CL_ConnectedToRemoteServer() ) {
 				Com_Error( ERR_DROP, "Invalid game folder" );
@@ -4476,6 +4496,17 @@ void FS_Restart( qboolean gameDirChanged ) {
 		}
 	}
 
+#ifdef DEDICATED
+	FS_GameValid();
+#endif
+}
+
+/*
+=================
+FS_GameValid
+=================
+*/
+void FS_GameValid( void ) {
 	Q_strncpyz(lastValidBase, fs_basepath->string, sizeof(lastValidBase));
 	Q_strncpyz(lastValidGame, fs_gamedirvar->string, sizeof(lastValidGame));
 

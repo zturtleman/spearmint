@@ -685,6 +685,7 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 {
 	// from RB_CalcFogTexCoords()
 	fog_t  *fog;
+	bmodel_t *bmodel;
 	vec3_t  local;
 	float tcScale;
 
@@ -700,6 +701,7 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 		tcScale = tr.skyFogTcScale;
 	} else {
 		fog = tr.world->fogs + tess.fogNum;
+		bmodel = tr.world->bmodels + fog->modelNum;
 
 		// Global fog
 		if ( fog->originalBrushNumber < 0 ) {
@@ -724,13 +726,23 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 
 	// rotate the gradient vector for this orientation
 	if ( fog && fog->hasSurface ) {
-		fogDepthVector[0] = fog->surface[0] * backEnd.or.axis[0][0] + 
+		vec4_t fogSurface;
+
+		// offset fog surface
+		VectorCopy( fog->surface, fogSurface );
+#if 1 // WolfET
+		fogSurface[ 3 ] = fog->surface[ 3 ] + DotProduct( fogSurface, bmodel->orientation.origin );
+#else
+		fogSurface[ 3 ] = fog->surface[ 3 ];
+#endif
+
+		fogDepthVector[0] = fogSurface[0] * backEnd.or.axis[0][0] + 
 			fog->surface[1] * backEnd.or.axis[0][1] + fog->surface[2] * backEnd.or.axis[0][2];
-		fogDepthVector[1] = fog->surface[0] * backEnd.or.axis[1][0] + 
+		fogDepthVector[1] = fogSurface[0] * backEnd.or.axis[1][0] + 
 			fog->surface[1] * backEnd.or.axis[1][1] + fog->surface[2] * backEnd.or.axis[1][2];
-		fogDepthVector[2] = fog->surface[0] * backEnd.or.axis[2][0] + 
+		fogDepthVector[2] = fogSurface[0] * backEnd.or.axis[2][0] + 
 			fog->surface[1] * backEnd.or.axis[2][1] + fog->surface[2] * backEnd.or.axis[2][2];
-		fogDepthVector[3] = -fog->surface[3] + DotProduct( backEnd.or.origin, fog->surface );
+		fogDepthVector[3] = -fogSurface[3] + DotProduct( backEnd.or.origin, fog->surface );
 
 		*eyeT = DotProduct( backEnd.or.viewOrigin, fogDepthVector ) + fogDepthVector[3];
 	} else {
@@ -1055,7 +1067,6 @@ static void RB_FogPass( void ) {
 
 	ComputeDeformValues(&deformGen, deformParams);
 
-	// ZTM: FIXME: need linear fog shader for FT_LINEAR ?
 	{
 		int index = 0;
 
@@ -1064,6 +1075,9 @@ static void RB_FogPass( void ) {
 
 		if (glState.vertexAnimation)
 			index |= FOGDEF_USE_VERTEX_ANIMATION;
+
+		if ( fogType == FT_LINEAR )
+			index |= FOGDEF_USE_LINEAR_FOG;
 		
 		sp = &tr.fogShader[index];
 	}
