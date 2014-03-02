@@ -77,14 +77,14 @@ typedef struct {
 	// a scene is built up by calls to R_ClearScene and the various R_Add functions.
 	// Nothing is drawn until R_RenderScene is called.
 	void	(*ClearScene)( void );
-	void	(*AddRefEntityToScene)( const refEntity_t *re, int numVerts, const polyVert_t *verts, int numPolys );
+	void	(*AddRefEntityToScene)( const refEntity_t *re, int bufsize, int numVerts, const polyVert_t *verts, int numPolys );
 	void	(*AddPolyToScene)( qhandle_t hShader , int numVerts, const polyVert_t *verts, int numPolys );
 	void	(*AddPolyBufferToScene)( polyBuffer_t* pPolyBuffer );
 	int		(*LightForPoint)( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
 	void	(*AddLightToScene)( const vec3_t org, float radius, float intensity, float r, float g, float b );
 	void	(*AddAdditiveLightToScene)( const vec3_t org, float radius, float intensity, float r, float g, float b );
 	void	(*AddCoronaToScene)( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible );
-	void	(*RenderScene)( const refdef_t *fd );
+	void	(*RenderScene)( const refdef_t *fd, int bufsize );
 
 	void	(*SetColor)( const float *rgba );	// NULL = 1,1,1,1
 	void	(*SetClipRegion)( const float *region );
@@ -114,7 +114,7 @@ typedef struct {
 #ifdef __USEA3D
 	void    (*A3D_RenderGeometry) (void *pVoidA3D, void *pVoidGeom, void *pVoidMat, void *pVoidGeomStatus);
 #endif
-	void	(*RegisterFont)(const char *fontName, int pointSize, fontInfo_t *font);
+	void	(*RegisterFont)(const char *fontName, int pointSize, fontInfo_t *font, int bufsize);
 	void	(*RemapShader)(const char *oldShader, const char *newShader, const char *offsetTime);
 	qboolean (*GetEntityToken)( char *buffer, int size );
 	qboolean (*inPVS)( const vec3_t p1, const vec3_t p2 );

@@ -341,7 +341,7 @@ RE_AddRefEntityToScene
 
 =====================
 */
-void RE_AddRefEntityToScene( const refEntity_t *ent, int numVerts, const polyVert_t *verts, int numPolys ) {
+void RE_AddRefEntityToScene( const refEntity_t *ent, int entBufSize, int numVerts, const polyVert_t *verts, int numPolys ) {
 	if ( !tr.registered ) {
 		return;
 	}
@@ -383,7 +383,7 @@ void RE_AddRefEntityToScene( const refEntity_t *ent, int numVerts, const polyVer
 		r_numpolyverts += totalVerts;
 	}
 
-	backEndData->entities[r_numentities].e = *ent;
+	Com_Memcpy2( &backEndData->entities[r_numentities].e, sizeof ( refEntity_t ), ent, entBufSize );
 	backEndData->entities[r_numentities].lightingCalculated = qfalse;
 
 	r_numentities++;
@@ -481,7 +481,8 @@ Rendering a scene may require multiple views to be rendered
 to handle mirrors,
 @@@@@@@@@@@@@@@@@@@@@
 */
-void RE_RenderScene( const refdef_t *fd ) {
+void RE_RenderScene( const refdef_t *vmRefDef, int vmRefDefSize ) {
+	refdef_t		fd;
 	viewParms_t		parms;
 	int				startTime;
 
@@ -496,46 +497,48 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	startTime = ri.Milliseconds();
 
-	if (!tr.world && !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
+	Com_Memcpy2( &fd, sizeof ( refdef_t ), vmRefDef, vmRefDefSize );
+
+	if (!tr.world && !( fd.rdflags & RDF_NOWORLDMODEL ) ) {
 		ri.Error (ERR_DROP, "R_RenderScene: NULL worldmodel");
 	}
 
-	Com_Memcpy( tr.refdef.text, fd->text, sizeof( tr.refdef.text ) );
+	Com_Memcpy( tr.refdef.text, fd.text, sizeof( tr.refdef.text ) );
 
-	tr.refdef.x = fd->x;
-	tr.refdef.y = fd->y;
-	tr.refdef.width = fd->width;
-	tr.refdef.height = fd->height;
-	tr.refdef.fov_x = fd->fov_x;
-	tr.refdef.fov_y = fd->fov_y;
+	tr.refdef.x = fd.x;
+	tr.refdef.y = fd.y;
+	tr.refdef.width = fd.width;
+	tr.refdef.height = fd.height;
+	tr.refdef.fov_x = fd.fov_x;
+	tr.refdef.fov_y = fd.fov_y;
 
-	VectorCopy( fd->vieworg, tr.refdef.vieworg );
-	VectorCopy( fd->viewaxis[0], tr.refdef.viewaxis[0] );
-	VectorCopy( fd->viewaxis[1], tr.refdef.viewaxis[1] );
-	VectorCopy( fd->viewaxis[2], tr.refdef.viewaxis[2] );
+	VectorCopy( fd.vieworg, tr.refdef.vieworg );
+	VectorCopy( fd.viewaxis[0], tr.refdef.viewaxis[0] );
+	VectorCopy( fd.viewaxis[1], tr.refdef.viewaxis[1] );
+	VectorCopy( fd.viewaxis[2], tr.refdef.viewaxis[2] );
 
-	tr.refdef.time = fd->time;
-	tr.refdef.rdflags = fd->rdflags;
+	tr.refdef.time = fd.time;
+	tr.refdef.rdflags = fd.rdflags;
 
-	tr.refdef.fogType = fd->fogType;
+	tr.refdef.fogType = fd.fogType;
 	if ( tr.refdef.fogType < FT_NONE || tr.refdef.fogType >= FT_MAX_FOG_TYPE ) {
 		tr.refdef.fogType = FT_NONE;
 	}
 
-	tr.refdef.fogColor[0] = fd->fogColor[0] * tr.identityLight;
-	tr.refdef.fogColor[1] = fd->fogColor[1] * tr.identityLight;
-	tr.refdef.fogColor[2] = fd->fogColor[2] * tr.identityLight;
+	tr.refdef.fogColor[0] = fd.fogColor[0] * tr.identityLight;
+	tr.refdef.fogColor[1] = fd.fogColor[1] * tr.identityLight;
+	tr.refdef.fogColor[2] = fd.fogColor[2] * tr.identityLight;
 
 	tr.refdef.fogColorInt = ColorBytes4( tr.refdef.fogColor[0],
 									  tr.refdef.fogColor[1],
 									  tr.refdef.fogColor[2], 1.0 );
 
-	tr.refdef.fogDensity = fd->fogDensity;
+	tr.refdef.fogDensity = fd.fogDensity;
 
 	if ( r_zfar->value ) {
 		tr.refdef.fogDepthForOpaque = r_zfar->value < 1 ? 1 : r_zfar->value;
 	} else {
-		tr.refdef.fogDepthForOpaque = fd->fogDepthForOpaque < 1 ? 1 : fd->fogDepthForOpaque;
+		tr.refdef.fogDepthForOpaque = fd.fogDepthForOpaque < 1 ? 1 : fd.fogDepthForOpaque;
 	}
 	tr.refdef.fogTcScale = R_FogTcScale( tr.refdef.fogType, tr.refdef.fogDepthForOpaque, tr.refdef.fogDensity );
 
@@ -549,8 +552,8 @@ void RE_RenderScene( const refdef_t *fd ) {
 		// compare the area bits
 		areaDiff = 0;
 		for (i = 0 ; i < MAX_MAP_AREA_BYTES/4 ; i++) {
-			areaDiff |= ((int *)tr.refdef.areamask)[i] ^ ((int *)fd->areamask)[i];
-			((int *)tr.refdef.areamask)[i] = ((int *)fd->areamask)[i];
+			areaDiff |= ((int *)tr.refdef.areamask)[i] ^ ((int *)fd.areamask)[i];
+			((int *)tr.refdef.areamask)[i] = ((int *)fd.areamask)[i];
 		}
 
 		if ( areaDiff ) {
@@ -619,12 +622,12 @@ void RE_RenderScene( const refdef_t *fd ) {
 	
 	parms.stereoFrame = tr.refdef.stereoFrame;
 
-	VectorCopy( fd->vieworg, parms.or.origin );
-	VectorCopy( fd->viewaxis[0], parms.or.axis[0] );
-	VectorCopy( fd->viewaxis[1], parms.or.axis[1] );
-	VectorCopy( fd->viewaxis[2], parms.or.axis[2] );
+	VectorCopy( fd.vieworg, parms.or.origin );
+	VectorCopy( fd.viewaxis[0], parms.or.axis[0] );
+	VectorCopy( fd.viewaxis[1], parms.or.axis[1] );
+	VectorCopy( fd.viewaxis[2], parms.or.axis[2] );
 
-	VectorCopy( fd->vieworg, parms.pvsOrigin );
+	VectorCopy( fd.vieworg, parms.pvsOrigin );
 
 	R_RenderView( &parms );
 

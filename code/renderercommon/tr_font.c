@@ -587,8 +587,9 @@ static qboolean R_GetFont(const char *name, int pointSize, fontInfo_t *font) {
 RE_RegisterFont
 ===============
 */
-void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
+void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *vmFont, int vmFontBufSize) {
 	char		strippedName[MAX_QPATH];
+	fontInfo_t	font;
 
 	if (!fontName) {
 		ri.Printf(PRINT_ALL, "RE_RegisterFont: called with empty name\n");
@@ -601,15 +602,19 @@ void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
 
 	R_IssuePendingRenderCommands();
 
-	if ( R_GetFont( fontName, pointSize, font ) )
+	if ( R_GetFont( fontName, pointSize, &font ) ) {
+		Com_Memcpy2( vmFont, vmFontBufSize, &font, sizeof ( fontInfo_t ) );
 		return;
+	}
 
 	COM_StripExtension( fontName, strippedName, sizeof ( strippedName ) );
 
 	// If there is no extension, assume this is loading one of the legacy fonts
 	if( !Q_stricmpn( strippedName, fontName, strlen( fontName ) ) ) {
-		if ( R_GetFont( "fonts/fontImage", pointSize, font ) )
+		if ( R_GetFont( "fonts/fontImage", pointSize, &font ) ){
+			Com_Memcpy2( vmFont, vmFontBufSize, &font, sizeof ( fontInfo_t ) );
 			return;
+		}
 	}
 
 #ifdef BUILD_FREETYPE

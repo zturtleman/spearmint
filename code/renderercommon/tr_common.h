@@ -151,7 +151,7 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 // font stuff
 void R_InitFreeType( void );
 void R_DoneFreeType( void );
-void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font);
+void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *vmFont, int vmFontBufSize);
 
 /*
 ====================================================================
