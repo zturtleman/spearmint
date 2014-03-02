@@ -48,8 +48,8 @@ extern qboolean getCameraInfo(int time, vec3_t *origin, vec3_t *angles);
 CL_GetGameState
 ====================
 */
-void CL_GetGameState( gameState_t *gs ) {
-	*gs = cl.gameState;
+void CL_GetGameState( gameState_t *gs, int size ) {
+	Com_Memcpy2( gs, size, &cl.gameState, sizeof ( gameState_t ) );
 }
 
 /*
@@ -57,8 +57,8 @@ void CL_GetGameState( gameState_t *gs ) {
 CL_GetGlconfig
 ====================
 */
-void CL_GetGlconfig( glconfig_t *glconfig ) {
-	*glconfig = cls.glconfig;
+void CL_GetGlconfig( glconfig_t *glconfig, int size ) {
+	Com_Memcpy2( glconfig, size, &cls.glconfig, sizeof ( glconfig_t ) );
 }
 
 /*
@@ -134,12 +134,16 @@ void CL_GetViewAngles( int localPlayerNum, vec3_t angles ) {
 CL_GetClientState
 ====================
 */
-static void CL_GetClientState( uiClientState_t *state ) {
-	state->connectPacketCount = clc.connectPacketCount;
-	state->connState = clc.state;
-	Q_strncpyz( state->servername, clc.servername, sizeof( state->servername ) );
-	Q_strncpyz( state->updateInfoString, cls.updateInfoString, sizeof( state->updateInfoString ) );
-	Q_strncpyz( state->messageString, clc.serverMessage, sizeof( state->messageString ) );
+static void CL_GetClientState( uiClientState_t *vmState, int vmSize ) {
+	uiClientState_t state;
+
+	state.connectPacketCount = clc.connectPacketCount;
+	state.connState = clc.state;
+	Q_strncpyz( state.servername, clc.servername, sizeof( state.servername ) );
+	Q_strncpyz( state.updateInfoString, cls.updateInfoString, sizeof( state.updateInfoString ) );
+	Q_strncpyz( state.messageString, clc.serverMessage, sizeof( state.messageString ) );
+
+	Com_Memcpy2( vmState, vmSize, &state, sizeof ( uiClientState_t ) );
 }
 
 /*
@@ -232,7 +236,8 @@ void	CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
 CL_GetSnapshot
 ====================
 */
-qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerStates, void *entities, int maxEntitiesInSnapshot ) {
+qboolean	CL_GetSnapshot( int snapshotNumber, vmSnapshot_t *vmSnapshot, int vmSize, void *playerStates, void *entities, int maxEntitiesInSnapshot ) {
+	vmSnapshot_t		snapshot;
 	sharedPlayerState_t	*ps;
 	clSnapshot_t		*clSnap;
 	int					i, count;
@@ -259,20 +264,20 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerS
 	}
 
 	// write the snapshot
-	snapshot->snapFlags = clSnap->snapFlags;
-	snapshot->serverCommandSequence = clSnap->serverCommandNum;
-	snapshot->ping = clSnap->ping;
-	snapshot->serverTime = clSnap->serverTime;
+	snapshot.snapFlags = clSnap->snapFlags;
+	snapshot.serverCommandSequence = clSnap->serverCommandNum;
+	snapshot.ping = clSnap->ping;
+	snapshot.serverTime = clSnap->serverTime;
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		snapshot->clientNums[i] = clSnap->clientNums[i];
+		snapshot.clientNums[i] = clSnap->clientNums[i];
 
 		ps = (sharedPlayerState_t*)((byte*)playerStates + i * cl.cgamePlayerStateSize);
 		if ( clSnap->lcIndex[i] == -1 ) {
-			Com_Memset( snapshot->areamask[i], 0, sizeof( snapshot->areamask[0] ) );
+			Com_Memset( snapshot.areamask[i], 0, sizeof( snapshot.areamask[0] ) );
 			Com_Memset( ps, 0, cl.cgamePlayerStateSize );
 			ps->clientNum = -1;
 		} else {
-			Com_Memcpy( snapshot->areamask[i], clSnap->areamask[clSnap->lcIndex[i]], sizeof( snapshot->areamask[0] ) );
+			Com_Memcpy( snapshot.areamask[i], clSnap->areamask[clSnap->lcIndex[i]], sizeof( snapshot.areamask[0] ) );
 			Com_Memcpy( ps, DA_ElementPointer( clSnap->playerStates, clSnap->lcIndex[i] ), cl.cgamePlayerStateSize );
 		}
 	}
@@ -282,12 +287,14 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerS
 		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, maxEntitiesInSnapshot );
 		count = maxEntitiesInSnapshot;
 	}
-	snapshot->numEntities = count;
+	snapshot.numEntities = count;
 	for ( i = 0 ; i < count ; i++ ) {
 		Com_Memcpy( (byte*)entities + i * cl.cgameEntityStateSize, CL_ParseEntityState( clSnap->parseEntitiesNum + i ), cl.cgameEntityStateSize );
 	}
 
 	// FIXME: configstring changes and server commands!!!
+
+	Com_Memcpy2( vmSnapshot, vmSize, &snapshot, sizeof ( vmSnapshot_t ) );
 
 	return qtrue;
 }
@@ -1303,7 +1310,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_REGISTERSHADERNOMIP:
 		return re.RegisterShaderNoMip( VMA(1) );
 	case CG_R_REGISTERFONT:
-		re.RegisterFont( VMA(1), args[2], VMA(3));
+		re.RegisterFont( VMA(1), args[2], VMA(3), args[4]);
 		return 0;
 	case CG_R_ALLOCSKINSURFACE:
 		return re.AllocSkinSurface( VMA(1), args[2] );
@@ -1313,10 +1320,10 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.ClearScene();
 		return 0;
 	case CG_R_ADDREFENTITYTOSCENE:
-		re.AddRefEntityToScene( VMA(1), 0, NULL, 0 );
+		re.AddRefEntityToScene( VMA(1), args[2], 0, NULL, 0 );
 		return 0;
 	case CG_R_ADDPOLYREFENTITYTOSCENE:
-		re.AddRefEntityToScene( VMA(1), args[2], VMA(3), args[4] );
+		re.AddRefEntityToScene( VMA(1), args[2], args[3], VMA(4), args[5] );
 		return 0;
 	case CG_R_ADDPOLYTOSCENE:
 		re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
@@ -1339,7 +1346,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.AddCoronaToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5), args[6], args[7] );
 		return 0;
 	case CG_R_RENDERSCENE:
-		re.RenderScene( VMA(1) );
+		re.RenderScene( VMA(1), args[2] );
 		return 0;
 	case CG_R_SETCOLOR:
 		re.SetColor( VMA(1) );
@@ -1375,7 +1382,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		CL_GetClipboardData( VMA(1), args[2] );
 		return 0;
 	case CG_GETGLCONFIG:
-		CL_GetGlconfig( VMA(1) );
+		CL_GetGlconfig( VMA(1), args[2] );
 		return 0;
 	case CG_GET_VOIP_TIME:
 #ifdef USE_VOIP
@@ -1408,13 +1415,13 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 #endif
 	case CG_GETGAMESTATE:
-		CL_GetGameState( VMA(1) );
+		CL_GetGameState( VMA(1), args[2] );
 		return 0;
 	case CG_GETCURRENTSNAPSHOTNUMBER:
 		CL_GetCurrentSnapshotNumber( VMA(1), VMA(2) );
 		return 0;
 	case CG_GETSNAPSHOT:
-		return CL_GetSnapshot( args[1], VMA(2), VMA(3), VMA(4), args[5] );
+		return CL_GetSnapshot( args[1], VMA(2), args[3], VMA(4), VMA(5), args[6] );
 	case CG_GETSERVERCOMMAND:
 		return CL_GetServerCommand( args[1] );
 	case CG_GETCURRENTCMDNUMBER:
@@ -1445,7 +1452,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		CL_GetViewAngles( args[1], VMA(2) );
 		return 0;
 	case CG_GETCLIENTSTATE:
-		CL_GetClientState( VMA(1) );
+		CL_GetClientState( VMA(1), args[2] );
 		return 0;
 	case CG_GETCONFIGSTRING:
 		return CL_GetConfigString( args[1], VMA(2), args[3] );

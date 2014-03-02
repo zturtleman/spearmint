@@ -341,7 +341,7 @@ RE_AddRefEntityToScene
 
 =====================
 */
-void RE_AddRefEntityToScene( const refEntity_t *ent, int numVerts, const polyVert_t *verts, int numPolys ) {
+void RE_AddRefEntityToScene( const refEntity_t *ent, int entBufSize, int numVerts, const polyVert_t *verts, int numPolys ) {
 	vec3_t cross;
 
 	if ( !tr.registered ) {
@@ -385,7 +385,7 @@ void RE_AddRefEntityToScene( const refEntity_t *ent, int numVerts, const polyVer
 		r_numpolyverts += totalVerts;
 	}
 
-	backEndData->entities[r_numentities].e = *ent;
+	Com_Memcpy2( &backEndData->entities[r_numentities].e, sizeof ( refEntity_t ), ent, entBufSize );
 	backEndData->entities[r_numentities].lightingCalculated = qfalse;
 
 	CrossProduct(ent->axis[0], ent->axis[1], cross);
@@ -677,7 +677,8 @@ Rendering a scene may require multiple views to be rendered
 to handle mirrors,
 @@@@@@@@@@@@@@@@@@@@@
 */
-void RE_RenderScene( const refdef_t *fd ) {
+void RE_RenderScene( const refdef_t *vmRefDef, int vmRefDefSize ) {
+	refdef_t		fd;
 	viewParms_t		parms;
 	int				startTime;
 
@@ -692,35 +693,37 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	startTime = ri.Milliseconds();
 
-	if (!tr.world && !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
+	Com_Memcpy2( &fd, sizeof ( refdef_t ), vmRefDef, vmRefDefSize );
+
+	if (!tr.world && !( fd.rdflags & RDF_NOWORLDMODEL ) ) {
 		ri.Error (ERR_DROP, "R_RenderScene: NULL worldmodel");
 	}
 
-	RE_BeginScene(fd);
+	RE_BeginScene(&fd);
 
 	// SmileTheory: playing with shadow mapping
-	if (!( fd->rdflags & RDF_NOWORLDMODEL ) && tr.refdef.num_dlights && r_dlightMode->integer >= 2)
+	if (!( fd.rdflags & RDF_NOWORLDMODEL ) && tr.refdef.num_dlights && r_dlightMode->integer >= 2)
 	{
-		R_RenderDlightCubemaps(fd);
+		R_RenderDlightCubemaps(&fd);
 	}
 
 	/* playing with more shadows */
-	if(glRefConfig.framebufferObject && !( fd->rdflags & RDF_NOWORLDMODEL ) && r_shadows->integer == 4)
+	if(glRefConfig.framebufferObject && !( fd.rdflags & RDF_NOWORLDMODEL ) && r_shadows->integer == 4)
 	{
-		R_RenderPshadowMaps(fd);
+		R_RenderPshadowMaps(&fd);
 	}
 
 	// playing with even more shadows
-	if(glRefConfig.framebufferObject && r_sunlightMode->integer && !( fd->rdflags & RDF_NOWORLDMODEL ) && (r_forceSun->integer || tr.sunShadows))
+	if(glRefConfig.framebufferObject && r_sunlightMode->integer && !( fd.rdflags & RDF_NOWORLDMODEL ) && (r_forceSun->integer || tr.sunShadows))
 	{
-		R_RenderSunShadowMaps(fd, 0);
-		R_RenderSunShadowMaps(fd, 1);
-		R_RenderSunShadowMaps(fd, 2);
+		R_RenderSunShadowMaps(&fd, 0);
+		R_RenderSunShadowMaps(&fd, 1);
+		R_RenderSunShadowMaps(&fd, 2);
 	}
 
 	// playing with cube maps
 	// this is where dynamic cubemaps would be rendered
-	if (0) //(glRefConfig.framebufferObject && !( fd->rdflags & RDF_NOWORLDMODEL ))
+	if (0) //(glRefConfig.framebufferObject && !( fd.rdflags & RDF_NOWORLDMODEL ))
 	{
 		int i, j;
 
@@ -751,21 +754,21 @@ void RE_RenderScene( const refdef_t *fd ) {
 	
 	parms.stereoFrame = tr.refdef.stereoFrame;
 
-	VectorCopy( fd->vieworg, parms.or.origin );
-	VectorCopy( fd->viewaxis[0], parms.or.axis[0] );
-	VectorCopy( fd->viewaxis[1], parms.or.axis[1] );
-	VectorCopy( fd->viewaxis[2], parms.or.axis[2] );
+	VectorCopy( fd.vieworg, parms.or.origin );
+	VectorCopy( fd.viewaxis[0], parms.or.axis[0] );
+	VectorCopy( fd.viewaxis[1], parms.or.axis[1] );
+	VectorCopy( fd.viewaxis[2], parms.or.axis[2] );
 
-	VectorCopy( fd->vieworg, parms.pvsOrigin );
+	VectorCopy( fd.vieworg, parms.pvsOrigin );
 
-	if(!( fd->rdflags & RDF_NOWORLDMODEL ) && r_depthPrepass->value && ((r_forceSun->integer) || tr.sunShadows))
+	if(!( fd.rdflags & RDF_NOWORLDMODEL ) && r_depthPrepass->value && ((r_forceSun->integer) || tr.sunShadows))
 	{
 		parms.flags = VPF_USESUNLIGHT;
 	}
 
 	R_RenderView( &parms );
 
-	if(!( fd->rdflags & RDF_NOWORLDMODEL ))
+	if(!( fd.rdflags & RDF_NOWORLDMODEL ))
 		R_AddPostProcessCmd();
 
 	RE_EndScene();
