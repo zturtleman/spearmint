@@ -1436,8 +1436,7 @@ void R_Init( void ) {
 	Com_Memset( &backEnd, 0, sizeof( backEnd ) );
 	Com_Memset( &tess, 0, sizeof( tess ) );
 
-	if(sizeof(glconfig_t) != GLCONFIG_SIZE)
-		ri.Error( ERR_FATAL, "Mod ABI incompatible: sizeof(glconfig_t) == %u != %u", (unsigned int) sizeof(glconfig_t), GLCONFIG_SIZE);
+//	Swap_Init();
 
 	if ( refHeadless ) {
 		// dummy shader
@@ -1449,8 +1448,6 @@ void R_Init( void ) {
 		R_ModelInit();
 		return;
 	}
-
-//	Swap_Init();
 
 	if ( (intptr_t)tess.xyz & 15 ) {
 		ri.Printf( PRINT_WARNING, "tess.xyz not 16 byte aligned\n" );

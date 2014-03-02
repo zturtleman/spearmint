@@ -261,8 +261,4 @@ typedef struct {
 	qboolean				stereoEnabled;
 } glconfig_t;
 
-// Changing glconfig_t breaks VM compatibility.
-// The size is used to check at run-time to make sure you don't break it on accident.
-#define GLCONFIG_SIZE	35916
-
 #endif	// __TR_TYPES_H

@@ -1243,9 +1243,6 @@ void R_Init( void ) {
 	Com_Memset( &backEnd, 0, sizeof( backEnd ) );
 	Com_Memset( &tess, 0, sizeof( tess ) );
 
-	if(sizeof(glconfig_t) != GLCONFIG_SIZE)
-		ri.Error( ERR_FATAL, "Mod ABI incompatible: sizeof(glconfig_t) == %u != %u", (unsigned int) sizeof(glconfig_t), GLCONFIG_SIZE);
-
 //	Swap_Init();
 
 	if ( refHeadless ) {
