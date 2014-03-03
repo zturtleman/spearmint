@@ -2251,8 +2251,6 @@ static qboolean ParseShader( char **text )
 				token = COM_ParseExt( text, qfalse );
 				tr.sunShadowScale = atof(token);
 			}
-
-			SkipRestOfLine( text );
 			continue;
 		}
 		// tonemap parms
@@ -2268,8 +2266,6 @@ static qboolean ParseShader( char **text )
 			tr.autoExposureMinMax[0] = atof( token );
 			token = COM_ParseExt( text, qfalse );
 			tr.autoExposureMinMax[1] = atof( token );
-
-			SkipRestOfLine( text );
 			continue;
 		}
 		else if ( !Q_stricmp( token, "deformVertexes" ) ) {
