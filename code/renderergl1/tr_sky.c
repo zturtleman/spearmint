@@ -774,7 +774,7 @@ Other things could be stuck in here, like birds in the sky, etc
 ================
 */
 void RB_StageIteratorSky( void ) {
-	if ( r_fastsky->integer ) {
+	if ( r_fastsky->integer || ( backEnd.refdef.rdflags & RDF_NOSKY ) ) {
 		return;
 	}
 
