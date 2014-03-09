@@ -1221,7 +1221,6 @@ void R_AddBeamSurfaces( trRefEntity_t *e );
 void R_AddRailSurfaces( trRefEntity_t *e, qboolean isUnderwater );
 void R_AddLightningBoltSurfaces( trRefEntity_t *e );
 
-int R_PolyFogNum( srfPoly_t *poly );
 void R_AddPolygonSurfaces( void );
 void R_AddPolygonBufferSurfaces( void );
 

@@ -1287,6 +1287,38 @@ int R_SpriteFogNum( trRefEntity_t *ent ) {
 }
 
 /*
+=================
+R_PolyEntFogNum
+
+See if poly entity is inside a fog volume
+
+FIXME: RT_POLY_LOCAL with RF_AUTOAXIS should rotate points before adding to mins/maxs
+=================
+*/
+int R_PolyEntFogNum( trRefEntity_t *ent ) {
+	int				i;
+	vec3_t			mins, maxs;
+
+	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
+		return 0;
+	}
+
+	VectorCopy( ent->verts[0].xyz, mins );
+	VectorCopy( ent->verts[0].xyz, maxs );
+	for ( i = 1 ; i < ent->numVerts*ent->numPolys ; i++ ) {
+		AddPointToBounds( ent->verts[i].xyz, mins, maxs );
+	}
+
+	if ( ent->e.reType == RT_POLY_LOCAL ) {
+		VectorAdd( ent->e.origin, mins, mins );
+		VectorAdd( ent->e.origin, maxs, maxs );
+	}
+
+	return R_BoundsFogNum( &tr.refdef, mins, maxs );
+}
+
+
+/*
 ==========================================================================================
 
 DRAWSURF SORTING
@@ -1487,7 +1519,6 @@ void R_AddEntitySurfaces (void) {
 	trRefEntity_t	*ent;
 	shader_t		*shader;
 	qboolean		onlyRenderShadows;
-	srfPoly_t		polySurf;
 
 	if ( !r_drawentities->integer ) {
 		return;
@@ -1539,14 +1570,8 @@ void R_AddEntitySurfaces (void) {
 
 		case RT_POLY_GLOBAL:
 		case RT_POLY_LOCAL:
-			// setup poly surface to find fog num
-			polySurf.surfaceType = SF_POLY;
-			polySurf.hShader = ent->e.customShader;
-			polySurf.numVerts = ent->numVerts * ent->numPolys;
-			polySurf.verts = ent->verts;
-
 			shader = R_GetShaderByHandle( ent->e.customShader );
-			R_AddDrawSurf( &entitySurface, shader, R_PolyFogNum( &polySurf ), 0 );
+			R_AddDrawSurf( &entitySurface, shader, R_PolyEntFogNum( ent ), 0 );
 			break;
 
 		case RT_MODEL:
