@@ -3954,7 +3954,7 @@ static qboolean FS_LoadPakChecksums( const char *gamedir ) {
 				Com_Printf( "'%s' missing checksum in %s\n", com_purePaks[fs_numPaksums].pakname, path );
 				continue;
 			}
-			com_purePaks[fs_numPaksums].checksum = (unsigned)atoi(token);
+			com_purePaks[fs_numPaksums].checksum = strtoul(token, NULL, 10);
 
 			// read optional keywords
 			com_purePaks[fs_numPaksums].nodownload = qfalse;
