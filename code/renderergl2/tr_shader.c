@@ -1266,6 +1266,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		//
 		else if ( !Q_stricmp( token, "animMap" ) || !Q_stricmp( token, "clampAnimMap" ) || !Q_stricmp( token, "oneshotAnimMap" ) || !Q_stricmp( token, "oneshotClampAnimMap" ) )
 		{
+			int	totalImages = 0;
 			imgFlags_t flags = IMGFLAG_NONE;
 
 			stage->bundle[0].loopingImageAnim = qtrue;
@@ -1316,6 +1317,12 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 					}
 					stage->bundle[0].numImageAnimations++;
 				}
+				totalImages++;
+			}
+
+			if ( totalImages > MAX_IMAGE_ANIMATIONS ) {
+				ri.Printf( PRINT_WARNING, "WARNING: Ignoring excess images for '%s' (found %d, max is %d) in shader '%s'\n",
+						keyword, totalImages, MAX_IMAGE_ANIMATIONS, shader.name );
 			}
 		}
 		else if ( !Q_stricmp( token, "videoMap" ) )
