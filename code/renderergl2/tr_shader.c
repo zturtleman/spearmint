@@ -44,6 +44,7 @@ static	imgFlags_t		shader_picmipFlag;
 static char implicitMap[ MAX_QPATH ];
 static unsigned implicitStateBits;
 static cullType_t implicitCullType;
+static char aliasShader[ MAX_QPATH ] = { 0 };
 
 #define FILE_HASH_SIZE		1024
 static	shader_t*		hashTable[FILE_HASH_SIZE];
@@ -2758,6 +2759,20 @@ static qboolean ParseShader( char **text )
 
 			continue;
 		}
+		// aliasShader <shader>
+		else if ( !Q_stricmp( token, "aliasShader" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing shader for 'aliasShader' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			if ( r_aliasShaders->integer && Q_stricmp( token, shader.name ) ) {
+				Q_strncpyz( aliasShader, token, sizeof ( aliasShader ) );
+				return qtrue;
+			}
+		}
 		// unknown directive
 		else
 		{
@@ -4333,6 +4348,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	implicitMap[ 0 ] = '\0';
 	implicitStateBits = GLS_DEFAULT;
 	implicitCullType = CT_FRONT_SIDED;
+	aliasShader[ 0 ] = '\0';
 
 	//
 	// attempt to define shader from an explicit parameter file
@@ -4350,6 +4366,14 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			shader.defaultShader = qtrue;
 			sh = FinishShader();
 			return sh;
+		}
+
+		if ( aliasShader[ 0 ] != '\0' ) {
+			char storedAlias[ MAX_QPATH ];
+
+			Q_strncpyz( storedAlias, aliasShader, sizeof ( storedAlias ) );
+
+			return R_FindShader( storedAlias, lightmapIndex, mipRawImage );
 		}
 
 		// allow implicit mappings
