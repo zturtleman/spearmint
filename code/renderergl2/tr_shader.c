@@ -2644,7 +2644,7 @@ static qboolean ParseShader( char **text )
 		else if ( !Q_stricmp( token, "allowcompress" ) ) {
 			//tr.allowCompress = qtrue;
 			continue;
-		} else if ( !Q_stricmp( token, "nocompress" ) )   {
+		} else if ( !Q_stricmp( token, "nocompress" ) || !Q_stricmp( token, "notc" ) )   {
 			//tr.allowCompress = -1;
 			continue;
 		}
