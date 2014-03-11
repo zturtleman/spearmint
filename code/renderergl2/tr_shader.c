@@ -1005,6 +1005,7 @@ ParseStage
 */
 static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 {
+	char keyword[64];
 	char *token;
 	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0;
 	qboolean depthMaskExplicit = qfalse;
@@ -1026,6 +1027,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			ri.Printf( PRINT_WARNING, "WARNING: no matching '}' found\n" );
 			return qfalse;
 		}
+
+		Q_strncpyz( keyword, token, sizeof ( keyword ) );
 
 		switch ( ParseIfEndif( text, token, ifIndent, 2 ) )
 		{
@@ -1101,7 +1104,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] )
 			{
-				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for 'map' keyword in shader '%s'\n", shader.name );
+				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for '%s' keyword in shader '%s'\n", keyword, shader.name );
 				return qfalse;
 			}
 
@@ -1266,7 +1269,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] )
 			{
-				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for 'animMap' keyword in shader '%s'\n", shader.name );
+				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for '%s' keyword in shader '%s'\n", keyword, shader.name );
 				return qfalse;
 			}
 			stage->bundle[0].imageAnimationSpeed = atof( token );
