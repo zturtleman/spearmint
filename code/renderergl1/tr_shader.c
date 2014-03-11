@@ -2444,6 +2444,17 @@ static qboolean ParseShader( char **text )
 				return qtrue;
 			}
 		}
+		// damageShader <shader> <health>
+		else if ( !Q_stricmp( token, "damageShader" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing shader for 'damageShader' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			ri.Printf( PRINT_WARNING, "WARNING: unsupported damageShader '%s' in '%s'\n", token, shader.name );
+		}
 		// unknown directive
 		else
 		{
