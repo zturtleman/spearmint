@@ -240,7 +240,9 @@ cvar_t	*r_aviMotionJpegQuality;
 cvar_t	*r_screenshotJpegQuality;
 
 cvar_t	*r_useGlFog;
+
 cvar_t	*r_defaultFogParmsType;
+cvar_t	*r_shadersDirectory;
 
 cvar_t	*r_maxpolys;
 int		max_polys;
@@ -1301,6 +1303,7 @@ void R_Register( void )
 	// cvars for game-specific overrides
 	//
 	r_defaultFogParmsType = ri.Cvar_Get ("r_defaultfogParmsType", "exp", CVAR_LATCH );
+	r_shadersDirectory = ri.Cvar_Get( "r_shadersDirectory", "scripts", CVAR_LATCH );
 
 	//
 	// archived variables that can change at any time
