@@ -2011,7 +2011,7 @@ static qboolean ParseShader( char **text )
 			continue;
 		}
 		// sun parms
-		else if ( !Q_stricmp( token, "q3map_sun" ) ) {
+		else if ( !Q_stricmp( token, "sun" ) || !Q_stricmp( token, "q3map_sun" ) ) {
 			float	a, b;
 
 			token = COM_ParseExt( text, qfalse );
