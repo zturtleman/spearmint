@@ -1264,8 +1264,14 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		//
 		// animMap <frequency> <image1> .... <imageN>
 		//
-		else if ( !Q_stricmp( token, "animMap" ) )
+		else if ( !Q_stricmp( token, "animMap" ) || !Q_stricmp( token, "clampAnimMap" ) )
 		{
+			imgFlags_t flags = IMGFLAG_NONE;
+
+			if (!Q_stricmp( token, "clampAnimMap" )) {
+				flags |= IMGFLAG_CLAMPTOEDGE;
+			}
+
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] )
 			{
@@ -1273,6 +1279,15 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				return qfalse;
 			}
 			stage->bundle[0].imageAnimationSpeed = atof( token );
+
+			if (!shader.noMipMaps)
+				flags |= IMGFLAG_MIPMAP;
+
+			if (!shader.noPicMip)
+				flags |= shader_picmipFlag;
+
+			if (r_srgb->integer)
+				flags |= IMGFLAG_SRGB;
 
 			// parse up to MAX_IMAGE_ANIMATIONS animations
 			while ( 1 ) {
@@ -1284,17 +1299,6 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				}
 				num = stage->bundle[0].numImageAnimations;
 				if ( num < MAX_IMAGE_ANIMATIONS ) {
-					imgFlags_t flags = IMGFLAG_NONE;
-
-					if (!shader.noMipMaps)
-						flags |= IMGFLAG_MIPMAP;
-
-					if (!shader.noPicMip)
-						flags |= shader_picmipFlag;
-
-					if (r_srgb->integer)
-						flags |= IMGFLAG_SRGB;
-
 					stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
 					if ( !stage->bundle[0].image[num] )
 					{
