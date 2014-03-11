@@ -364,6 +364,7 @@ typedef struct {
 	image_t			*image[MAX_IMAGE_ANIMATIONS];
 	int				numImageAnimations;
 	float			imageAnimationSpeed;
+	qboolean		loopingImageAnim;
 
 	texCoordGen_t	tcGen;
 	vec3_t			tcGenVectors[2];

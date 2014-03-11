@@ -1264,12 +1264,17 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		//
 		// animMap <frequency> <image1> .... <imageN>
 		//
-		else if ( !Q_stricmp( token, "animMap" ) || !Q_stricmp( token, "clampAnimMap" ) )
+		else if ( !Q_stricmp( token, "animMap" ) || !Q_stricmp( token, "clampAnimMap" ) || !Q_stricmp( token, "oneshotAnimMap" ) )
 		{
 			imgFlags_t flags = IMGFLAG_NONE;
 
+			stage->bundle[0].loopingImageAnim = qtrue;
+
 			if (!Q_stricmp( token, "clampAnimMap" )) {
 				flags |= IMGFLAG_CLAMPTOEDGE;
+			}
+			else if (!Q_stricmp( token, "oneshotAnimMap" )) {
+				stage->bundle[0].loopingImageAnim = qfalse;
 			}
 
 			token = COM_ParseExt( text, qfalse );
