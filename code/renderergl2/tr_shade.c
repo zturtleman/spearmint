@@ -1772,7 +1772,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	// now do fog
 	//
-	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && R_IsGlobalFog( tess.fogNum ) ) ) ) {
+	if ( tess.fogNum && tess.shader->fogPass ) {
 		RB_FogPass();
 	}
 
