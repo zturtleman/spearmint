@@ -58,6 +58,7 @@ cvar_t  *r_displayRefresh;
 
 cvar_t	*r_detailTextures;
 cvar_t	*r_shaderlod;
+cvar_t	*r_aliasShaders;
 
 cvar_t	*r_zfar;
 cvar_t	*r_znear;
@@ -172,7 +173,9 @@ cvar_t	*r_aviMotionJpegQuality;
 cvar_t	*r_screenshotJpegQuality;
 
 cvar_t	*r_useGlFog;
+
 cvar_t	*r_defaultFogParmsType;
+cvar_t	*r_shadersDirectory;
 
 cvar_t	*r_maxpolys;
 int		max_polys;
@@ -1088,6 +1091,7 @@ void R_Register( void )
 	ri.Cvar_CheckRange( r_picmip2, 0, 16, qtrue );
 	r_detailTextures = ri.Cvar_Get( "r_detailtextures", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shaderlod = ri.Cvar_Get( "r_shaderlod", "0.5", CVAR_ARCHIVE | CVAR_LATCH );
+	r_aliasShaders = ri.Cvar_Get( "r_aliasShaders", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_texturebits = ri.Cvar_Get( "r_texturebits", "32", CVAR_ARCHIVE | CVAR_LATCH );
 	r_colorbits = ri.Cvar_Get( "r_colorbits", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_stencilbits = ri.Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1123,6 +1127,7 @@ void R_Register( void )
 	// cvars for game-specific overrides
 	//
 	r_defaultFogParmsType = ri.Cvar_Get ("r_defaultfogParmsType", "exp", CVAR_LATCH );
+	r_shadersDirectory = ri.Cvar_Get( "r_shadersDirectory", "scripts", CVAR_LATCH );
 
 	//
 	// archived variables that can change at any time

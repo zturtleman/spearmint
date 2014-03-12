@@ -278,6 +278,7 @@ typedef struct {
 	image_t			*image[MAX_IMAGE_ANIMATIONS];
 	int				numImageAnimations;
 	float			imageAnimationSpeed;
+	qboolean		loopingImageAnim;
 
 	texCoordGen_t	tcGen;
 	vec3_t			tcGenVectors[2];
@@ -1143,6 +1144,7 @@ extern	cvar_t  *r_drawfoliage;			// disable/enable foliage rendering
 extern	cvar_t	*r_speeds;				// various levels of information display
 extern  cvar_t	*r_detailTextures;		// enables/disables detail texturing stages
 extern	cvar_t	*r_shaderlod;
+extern	cvar_t	*r_aliasShaders;
 extern	cvar_t	*r_novis;				// disable/enable usage of PVS
 extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_facePlaneCull;		// enables culling of planar surfaces with back side test
@@ -1208,6 +1210,7 @@ extern cvar_t	*r_marksOnTriangleMeshes;
 extern cvar_t	*r_useGlFog;
 
 extern cvar_t	*r_defaultFogParmsType;
+extern cvar_t	*r_shadersDirectory;
 
 //====================================================================
 

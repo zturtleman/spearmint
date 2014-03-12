@@ -44,6 +44,7 @@ static	imgFlags_t		shader_picmipFlag;
 static char implicitMap[ MAX_QPATH ];
 static unsigned implicitStateBits;
 static cullType_t implicitCullType;
+static char aliasShader[ MAX_QPATH ] = { 0 };
 
 #define FILE_HASH_SIZE		1024
 static	shader_t*		hashTable[FILE_HASH_SIZE];
@@ -1005,6 +1006,7 @@ ParseStage
 */
 static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 {
+	char keyword[64];
 	char *token;
 	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0;
 	qboolean depthMaskExplicit = qfalse;
@@ -1026,6 +1028,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			ri.Printf( PRINT_WARNING, "WARNING: no matching '}' found\n" );
 			return qfalse;
 		}
+
+		Q_strncpyz( keyword, token, sizeof ( keyword ) );
 
 		switch ( ParseIfEndif( text, token, ifIndent, 2 ) )
 		{
@@ -1101,7 +1105,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] )
 			{
-				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for 'map' keyword in shader '%s'\n", shader.name );
+				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for '%s' keyword in shader '%s'\n", keyword, shader.name );
 				return qfalse;
 			}
 
@@ -1261,15 +1265,40 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		//
 		// animMap <frequency> <image1> .... <imageN>
 		//
-		else if ( !Q_stricmp( token, "animMap" ) )
+		else if ( !Q_stricmp( token, "animMap" ) || !Q_stricmp( token, "clampAnimMap" ) || !Q_stricmp( token, "oneshotAnimMap" ) || !Q_stricmp( token, "oneshotClampAnimMap" ) )
 		{
+			int	totalImages = 0;
+			imgFlags_t flags = IMGFLAG_NONE;
+
+			stage->bundle[0].loopingImageAnim = qtrue;
+
+			if (!Q_stricmp( token, "clampAnimMap" )) {
+				flags |= IMGFLAG_CLAMPTOEDGE;
+			}
+			else if (!Q_stricmp( token, "oneshotAnimMap" )) {
+				stage->bundle[0].loopingImageAnim = qfalse;
+			}
+			else if (!Q_stricmp( token, "oneshotClampAnimMap" )) {
+				flags |= IMGFLAG_CLAMPTOEDGE;
+				stage->bundle[0].loopingImageAnim = qfalse;
+			}
+
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] )
 			{
-				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for 'animMmap' keyword in shader '%s'\n", shader.name );
+				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for '%s' keyword in shader '%s'\n", keyword, shader.name );
 				return qfalse;
 			}
 			stage->bundle[0].imageAnimationSpeed = atof( token );
+
+			if (!shader.noMipMaps)
+				flags |= IMGFLAG_MIPMAP;
+
+			if (!shader.noPicMip)
+				flags |= shader_picmipFlag;
+
+			if (r_srgb->integer)
+				flags |= IMGFLAG_SRGB;
 
 			// parse up to MAX_IMAGE_ANIMATIONS animations
 			while ( 1 ) {
@@ -1281,17 +1310,6 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				}
 				num = stage->bundle[0].numImageAnimations;
 				if ( num < MAX_IMAGE_ANIMATIONS ) {
-					imgFlags_t flags = IMGFLAG_NONE;
-
-					if (!shader.noMipMaps)
-						flags |= IMGFLAG_MIPMAP;
-
-					if (!shader.noPicMip)
-						flags |= shader_picmipFlag;
-
-					if (r_srgb->integer)
-						flags |= IMGFLAG_SRGB;
-
 					stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
 					if ( !stage->bundle[0].image[num] )
 					{
@@ -1300,6 +1318,12 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 					}
 					stage->bundle[0].numImageAnimations++;
 				}
+				totalImages++;
+			}
+
+			if ( totalImages > MAX_IMAGE_ANIMATIONS ) {
+				ri.Printf( PRINT_WARNING, "WARNING: Ignoring excess images for '%s' (found %d, max is %d) in shader '%s'\n",
+						keyword, totalImages, MAX_IMAGE_ANIMATIONS, shader.name );
 			}
 		}
 		else if ( !Q_stricmp( token, "videoMap" ) )
@@ -1307,7 +1331,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] )
 			{
-				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for 'videoMmap' keyword in shader '%s'\n", shader.name );
+				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for 'videoMap' keyword in shader '%s'\n", shader.name );
 				return qfalse;
 			}
 			stage->bundle[0].videoMapHandle = ri.CIN_PlayCinematic( token, 0, 0, 256, 256, (CIN_loop | CIN_silent | CIN_shader));
@@ -2307,7 +2331,7 @@ static qboolean ParseShader( char **text )
 			continue;
 		}
 		// sun parms
-		else if ( !Q_stricmp( token, "q3map_sun" ) || !Q_stricmp( token, "q3map_sunExt" ) || !Q_stricmp( token, "q3gl2_sun" ) ) {
+		else if ( !Q_stricmp( token, "sun" ) || !Q_stricmp( token, "q3map_sun" ) || !Q_stricmp( token, "q3map_sunExt" ) || !Q_stricmp( token, "q3gl2_sun" ) ) {
 			float	a, b;
 			qboolean isGL2Sun = qfalse;
 
@@ -2644,7 +2668,7 @@ static qboolean ParseShader( char **text )
 		else if ( !Q_stricmp( token, "allowcompress" ) ) {
 			//tr.allowCompress = qtrue;
 			continue;
-		} else if ( !Q_stricmp( token, "nocompress" ) )   {
+		} else if ( !Q_stricmp( token, "nocompress" ) || !Q_stricmp( token, "notc" ) )   {
 			//tr.allowCompress = -1;
 			continue;
 		}
@@ -2734,6 +2758,31 @@ static qboolean ParseShader( char **text )
 			}
 
 			continue;
+		}
+		// aliasShader <shader>
+		else if ( !Q_stricmp( token, "aliasShader" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing shader for 'aliasShader' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			if ( r_aliasShaders->integer && Q_stricmp( token, shader.name ) ) {
+				Q_strncpyz( aliasShader, token, sizeof ( aliasShader ) );
+				return qtrue;
+			}
+		}
+		// damageShader <shader> <health>
+		else if ( !Q_stricmp( token, "damageShader" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing shader for 'damageShader' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			ri.Printf( PRINT_WARNING, "WARNING: unsupported damageShader '%s' in '%s'\n", token, shader.name );
 		}
 		// unknown directive
 		else
@@ -4310,6 +4359,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	implicitMap[ 0 ] = '\0';
 	implicitStateBits = GLS_DEFAULT;
 	implicitCullType = CT_FRONT_SIDED;
+	aliasShader[ 0 ] = '\0';
 
 	//
 	// attempt to define shader from an explicit parameter file
@@ -4327,6 +4377,14 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			shader.defaultShader = qtrue;
 			sh = FinishShader();
 			return sh;
+		}
+
+		if ( aliasShader[ 0 ] != '\0' ) {
+			char storedAlias[ MAX_QPATH ];
+
+			Q_strncpyz( storedAlias, aliasShader, sizeof ( storedAlias ) );
+
+			return R_FindShader( storedAlias, lightmapIndex, mipRawImage );
 		}
 
 		// allow implicit mappings
@@ -4607,7 +4665,7 @@ static void ScanAndLoadShaderFiles( void )
 
 	long sum = 0, summand;
 	// scan for shader files
-	shaderFiles = ri.FS_ListFiles( "scripts", ".shader", &numShaderFiles );
+	shaderFiles = ri.FS_ListFiles( r_shadersDirectory->string, ".shader", &numShaderFiles );
 
 	if ( !shaderFiles || !numShaderFiles )
 	{
@@ -4627,7 +4685,7 @@ static void ScanAndLoadShaderFiles( void )
 		// look for a .mtr file first
 		{
 			char *ext;
-			Com_sprintf( filename, sizeof( filename ), "scripts/%s", shaderFiles[i] );
+			Com_sprintf( filename, sizeof( filename ), "%s/%s", r_shadersDirectory->string, shaderFiles[i] );
 			if ( (ext = strrchr(filename, '.')) )
 			{
 				strcpy(ext, ".mtr");
@@ -4635,7 +4693,7 @@ static void ScanAndLoadShaderFiles( void )
 
 			if ( ri.FS_ReadFile( filename, NULL ) <= 0 )
 			{
-				Com_sprintf( filename, sizeof( filename ), "scripts/%s", shaderFiles[i] );
+				Com_sprintf( filename, sizeof( filename ), "%s/%s", r_shadersDirectory->string, shaderFiles[i] );
 			}
 		}
 		
