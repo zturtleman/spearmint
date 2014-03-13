@@ -272,10 +272,10 @@ typedef struct {
 } texModInfo_t;
 
 
-#define	MAX_IMAGE_ANIMATIONS	8
+#define	MAX_IMAGE_ANIMATIONS	64
 
 typedef struct {
-	image_t			*image[MAX_IMAGE_ANIMATIONS];
+	image_t			**image;
 	int				numImageAnimations;
 	float			imageAnimationSpeed;
 	qboolean		loopingImageAnim;

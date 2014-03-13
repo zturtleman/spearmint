@@ -38,6 +38,7 @@ static char *s_shaderText;
 static	shaderStage_t	stages[MAX_SHADER_STAGES];		
 static	shader_t		shader;
 static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS];
+static	image_t			*imageAnimations[MAX_SHADER_STAGES][NUM_TEXTURE_BUNDLES][MAX_IMAGE_ANIMATIONS];
 static	imgFlags_t		shader_picmipFlag;
 
 // these are here because they are only referenced while parsing a shader
@@ -2913,6 +2914,14 @@ static shader_t *GeneratePermanentShader( void ) {
 			size = newShader->stages[i]->bundle[b].numTexMods * sizeof( texModInfo_t );
 			newShader->stages[i]->bundle[b].texMods = ri.Hunk_Alloc( size, h_low );
 			Com_Memcpy( newShader->stages[i]->bundle[b].texMods, stages[i].bundle[b].texMods, size );
+
+			if ( newShader->stages[i]->bundle[b].numImageAnimations )
+				size = newShader->stages[i]->bundle[b].numImageAnimations * sizeof( image_t * );
+			else
+				size = sizeof( image_t * );
+
+			newShader->stages[i]->bundle[b].image = ri.Hunk_Alloc( size, h_low );
+			Com_Memcpy( newShader->stages[i]->bundle[b].image, stages[i].bundle[b].image, size );
 		}
 	}
 
@@ -3560,6 +3569,10 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	shader.lightmapIndex = lightmapIndex;
 	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
 		stages[i].bundle[0].texMods = texMods[i];
+		stages[i].bundle[0].image = imageAnimations[i][0];
+		stages[i].bundle[0].image[0] = NULL;
+		stages[i].bundle[1].image = imageAnimations[i][1];
+		stages[i].bundle[1].image[0] = NULL;
 	}
 
 	shader_picmipFlag = IMGFLAG_PICMIP;
@@ -3692,6 +3705,10 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 	shader.lightmapIndex = lightmapIndex;
 	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
 		stages[i].bundle[0].texMods = texMods[i];
+		stages[i].bundle[0].image = imageAnimations[i][0];
+		stages[i].bundle[0].image[0] = NULL;
+		stages[i].bundle[1].image = imageAnimations[i][1];
+		stages[i].bundle[1].image[0] = NULL;
 	}
 
 	// FIXME: set these "need" values apropriately
@@ -4020,11 +4037,20 @@ CreateInternalShaders
 ====================
 */
 static void CreateInternalShaders( void ) {
+	int i;
+
 	tr.numShaders = 0;
 
 	// init the default shader
 	Com_Memset( &shader, 0, sizeof( shader ) );
 	Com_Memset( &stages, 0, sizeof( stages ) );
+	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
+		stages[i].bundle[0].texMods = texMods[i];
+		stages[i].bundle[0].image = imageAnimations[i][0];
+		stages[i].bundle[0].image[0] = NULL;
+		stages[i].bundle[1].image = imageAnimations[i][1];
+		stages[i].bundle[1].image[0] = NULL;
+	}
 
 	Q_strncpyz( shader.name, "<default>", sizeof( shader.name ) );
 
