@@ -2470,6 +2470,38 @@ static qboolean ParseShader( char **text )
 			}
 			continue;
 		}
+		// lightgridmulamb <scale>  ambient multiplier for lightgrid
+		else if ( !Q_stricmp( token, "lightgridmulamb" ) )
+		{
+			float scale;
+
+			token = COM_ParseExt( text, qfalse );
+			if ( !token[0] ) {
+				ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'lightgridmulamb' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			scale = atof( token );
+			if ( scale > 0 ) {
+				tr.lightGridMulAmbient = scale;
+			}
+		}
+		// lightgridmuldir <scale>  directional multiplier for lightgrid
+		else if ( !Q_stricmp( token, "lightgridmuldir" ) )
+		{
+			float scale;
+
+			token = COM_ParseExt( text, qfalse );
+			if ( !token[0] ) {
+				ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'lightgridmuldir' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			scale = atof( token );
+			if ( scale > 0 ) {
+				tr.lightGridMulDirected = scale;
+			}
+		}
 		// fogParms ( <red> <green> <blue> ) <depthForOpaque> [fog type]
 		else if ( !Q_stricmp( token, "fogParms" ) )
 		{

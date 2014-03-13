@@ -1048,6 +1048,9 @@ typedef struct {
 	vec3_t					sunLight;			// from the sky shader for this level
 	vec3_t					sunDirection;
 
+	float					lightGridMulAmbient;	// lightgrid multipliers specified in sky shader
+	float					lightGridMulDirected;	//
+
 	frontEndCounters_t		pc;
 	int						frontEndMsec;		// not in pc due to clearing issue
 
