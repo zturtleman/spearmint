@@ -1497,7 +1497,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			token = COM_ParseExt( text, qfalse );
 			if ( token[0] == 0 )
 			{
-				ri.Printf( PRINT_WARNING, "WARNING: missing texgen parm in shader '%s'\n", shader.name );
+				ri.Printf( PRINT_WARNING, "WARNING: missing %s parm in shader '%s'\n", keyword, shader.name );
 				continue;
 			}
 
@@ -1526,7 +1526,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 			else 
 			{
-				ri.Printf( PRINT_WARNING, "WARNING: unknown texgen parm in shader '%s'\n", shader.name );
+				ri.Printf( PRINT_WARNING, "WARNING: unknown %s parameter '%s' in shader '%s'\n", keyword, token, shader.name );
 			}
 		}
 		//
