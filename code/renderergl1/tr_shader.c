@@ -3527,7 +3527,7 @@ most world construction surfaces.
 shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImage ) {
 	char		strippedName[MAX_QPATH];
 	char		fileName[MAX_QPATH];
-	int			i, hash;
+	int			i, b, hash;
 	char		*shaderText;
 	image_t		*image;
 	shader_t	*sh;
@@ -3569,10 +3569,10 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	shader.lightmapIndex = lightmapIndex;
 	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
 		stages[i].bundle[0].texMods = texMods[i];
-		stages[i].bundle[0].image = imageAnimations[i][0];
-		stages[i].bundle[0].image[0] = NULL;
-		stages[i].bundle[1].image = imageAnimations[i][1];
-		stages[i].bundle[1].image[0] = NULL;
+		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
+			stages[i].bundle[b].image = imageAnimations[i][b];
+			stages[i].bundle[b].image[0] = NULL;
+		}
 	}
 
 	shader_picmipFlag = IMGFLAG_PICMIP;
@@ -3670,7 +3670,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 
 qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_t *image, qboolean mipRawImage) {
-	int			i, hash;
+	int			i, b, hash;
 	shader_t	*sh;
 
 	hash = generateHashValue(name, FILE_HASH_SIZE);
@@ -3705,10 +3705,10 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 	shader.lightmapIndex = lightmapIndex;
 	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
 		stages[i].bundle[0].texMods = texMods[i];
-		stages[i].bundle[0].image = imageAnimations[i][0];
-		stages[i].bundle[0].image[0] = NULL;
-		stages[i].bundle[1].image = imageAnimations[i][1];
-		stages[i].bundle[1].image[0] = NULL;
+		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
+			stages[i].bundle[b].image = imageAnimations[i][b];
+			stages[i].bundle[b].image[0] = NULL;
+		}
 	}
 
 	// FIXME: set these "need" values apropriately
@@ -4037,7 +4037,7 @@ CreateInternalShaders
 ====================
 */
 static void CreateInternalShaders( void ) {
-	int i;
+	int i, b;
 
 	tr.numShaders = 0;
 
@@ -4046,10 +4046,10 @@ static void CreateInternalShaders( void ) {
 	Com_Memset( &stages, 0, sizeof( stages ) );
 	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
 		stages[i].bundle[0].texMods = texMods[i];
-		stages[i].bundle[0].image = imageAnimations[i][0];
-		stages[i].bundle[0].image[0] = NULL;
-		stages[i].bundle[1].image = imageAnimations[i][1];
-		stages[i].bundle[1].image[0] = NULL;
+		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
+			stages[i].bundle[b].image = imageAnimations[i][b];
+			stages[i].bundle[b].image[0] = NULL;
+		}
 	}
 
 	Q_strncpyz( shader.name, "<default>", sizeof( shader.name ) );
