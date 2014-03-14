@@ -2849,7 +2849,7 @@ void Com_Init( char *commandLine ) {
 	com_sv_running = Cvar_Get ("sv_running", "0", CVAR_ROM);
 	com_cl_running = Cvar_Get ("cl_running", "0", CVAR_ROM);
 	com_buildScript = Cvar_Get( "com_buildScript", "0", 0 );
-	com_ansiColor = Cvar_Get( "com_ansiColor", "1", CVAR_ARCHIVE );
+	com_ansiColor = Cvar_Get( "com_ansiColor", "0", CVAR_ARCHIVE );
 
 	com_unfocused = Cvar_Get( "com_unfocused", "0", CVAR_ROM );
 	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "0", CVAR_ARCHIVE );
