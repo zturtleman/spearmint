@@ -496,7 +496,7 @@ void RB_BeginDrawingView (void) {
 		clearBits |= GL_STENCIL_BUFFER_BIT;
 	}
 	if ( ( backEnd.refdef.fogType == FT_LINEAR || r_fastsky->integer )
-		&& !( backEnd.refdef.rdflags & RDF_NOWORLDMODEL ) ) {
+		&& !( backEnd.refdef.rdflags & (RDF_NOWORLDMODEL|RDF_NOSKY) ) ) {
 		clearBits |= GL_COLOR_BUFFER_BIT;
 
 		qglClearColor( backEnd.refdef.fogColor[ 0 ],
