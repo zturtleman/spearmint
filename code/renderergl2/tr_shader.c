@@ -4939,8 +4939,16 @@ static void CreateExternalShaders( void ) {
 		else
 			image = tr.dlightImage;
 
+		// init the default shader
 		Com_Memset( &shader, 0, sizeof( shader ) );
 		Com_Memset( &stages, 0, sizeof( stages ) );
+		for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
+			stages[i].bundle[0].texMods = texMods[i];
+			for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
+				stages[i].bundle[b].image = imageAnimations[i][b];
+				stages[i].bundle[b].image[0] = NULL;
+			}
+		}
 
 		Q_strncpyz( shader.name, "gfx/2d/sunflare", sizeof( shader.name ) );
 
