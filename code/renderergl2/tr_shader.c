@@ -4933,6 +4933,7 @@ static void CreateExternalShaders( void ) {
 	if (tr.sunFlareShader->defaultShader)
 	{
 		image_t *image;
+		int i, b;
 
 		if (!tr.flareShader->defaultShader && tr.flareShader->stages[0] && tr.flareShader->stages[0]->bundle[0].image[0])
 			image = tr.flareShader->stages[0]->bundle[0].image[0];
