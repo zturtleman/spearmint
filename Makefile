@@ -1425,6 +1425,7 @@ Q3ROBJ = \
   $(B)/renderergl1/tr_backend.o \
   $(B)/renderergl1/tr_bsp.o \
   $(B)/renderergl1/tr_cmds.o \
+  $(B)/renderergl1/tr_cmesh.o \
   $(B)/renderergl1/tr_curve.o \
   $(B)/renderergl1/tr_flares.o \
   $(B)/renderergl1/tr_font.o \

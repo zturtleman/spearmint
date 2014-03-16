@@ -777,6 +777,213 @@ static void RB_SurfaceMesh(md3Surface_t *surface) {
 
 }
 
+/*
+** R_LatLongToNormal
+*/
+void R_LatLongToNormal( vec3_t outNormal, short latLong ) {
+	unsigned lat, lng;
+
+	lat = ( latLong >> 8 ) & 0xff;
+	lng = ( latLong & 0xff );
+	lat *= ( FUNCTABLE_SIZE / 256 );
+	lng *= ( FUNCTABLE_SIZE / 256 );
+
+	// decode X as cos( lat ) * sin( long )
+	// decode Y as sin( lat ) * sin( long )
+	// decode Z as cos( long )
+
+	outNormal[0] = tr.sinTable[( lat + ( FUNCTABLE_SIZE / 4 ) ) & FUNCTABLE_MASK] * tr.sinTable[lng];
+	outNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+	outNormal[2] = tr.sinTable[( lng + ( FUNCTABLE_SIZE / 4 ) ) & FUNCTABLE_MASK];
+}
+
+/*
+** LerpCMeshVertexes
+*/
+static void LerpCMeshVertexes( mdcSurface_t *surf, float backlerp ) {
+	short   *oldXyz, *newXyz, *oldNormals, *newNormals;
+	float   *outXyz, *outNormal;
+	float oldXyzScale, newXyzScale;
+	float oldNormalScale, newNormalScale;
+	int vertNum;
+	unsigned lat, lng;
+	int numVerts;
+
+	int oldBase, newBase;
+	short   *oldComp = NULL, *newComp = NULL; // TTimo: init
+	mdcXyzCompressed_t *oldXyzComp = NULL, *newXyzComp = NULL; // TTimo: init
+	vec3_t oldOfsVec, newOfsVec;
+
+	qboolean hasComp;
+
+	outXyz = tess.xyz[tess.numVertexes];
+	outNormal = tess.normal[tess.numVertexes];
+
+	newBase = (int)*( ( short * )( (byte *)surf + surf->ofsFrameBaseFrames ) + backEnd.currentEntity->e.frame );
+	newXyz = ( short * )( (byte *)surf + surf->ofsXyzNormals )
+			 + ( newBase * surf->numVerts * 4 );
+	newNormals = newXyz + 3;
+
+	hasComp = ( surf->numCompFrames > 0 );
+	if ( hasComp ) {
+		newComp = ( ( short * )( (byte *)surf + surf->ofsFrameCompFrames ) + backEnd.currentEntity->e.frame );
+		if ( *newComp >= 0 ) {
+			newXyzComp = ( mdcXyzCompressed_t * )( (byte *)surf + surf->ofsXyzCompressed )
+						 + ( *newComp * surf->numVerts );
+		}
+	}
+
+	newXyzScale = MD3_XYZ_SCALE * ( 1.0 - backlerp );
+	newNormalScale = 1.0 - backlerp;
+
+	numVerts = surf->numVerts;
+
+	if ( backlerp == 0 ) {
+		//
+		// just copy the vertexes
+		//
+		for ( vertNum = 0 ; vertNum < numVerts ; vertNum++,
+			  newXyz += 4, newNormals += 4,
+			  outXyz += 4, outNormal += 4 )
+		{
+
+			outXyz[0] = newXyz[0] * newXyzScale;
+			outXyz[1] = newXyz[1] * newXyzScale;
+			outXyz[2] = newXyz[2] * newXyzScale;
+
+			// add the compressed ofsVec
+			if ( hasComp && *newComp >= 0 ) {
+				R_MDC_DecodeXyzCompressed( newXyzComp->ofsVec, newOfsVec, outNormal );
+				newXyzComp++;
+				VectorAdd( outXyz, newOfsVec, outXyz );
+			} else {
+				lat = ( newNormals[0] >> 8 ) & 0xff;
+				lng = ( newNormals[0] & 0xff );
+				lat *= 4;
+				lng *= 4;
+
+				outNormal[0] = tr.sinTable[( lat + ( FUNCTABLE_SIZE / 4 ) ) & FUNCTABLE_MASK] * tr.sinTable[lng];
+				outNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+				outNormal[2] = tr.sinTable[( lng + ( FUNCTABLE_SIZE / 4 ) ) & FUNCTABLE_MASK];
+			}
+		}
+	} else {
+		//
+		// interpolate and copy the vertex and normal
+		//
+		oldBase = (int)*( ( short * )( (byte *)surf + surf->ofsFrameBaseFrames ) + backEnd.currentEntity->e.oldframe );
+		oldXyz = ( short * )( (byte *)surf + surf->ofsXyzNormals )
+				 + ( oldBase * surf->numVerts * 4 );
+		oldNormals = oldXyz + 3;
+
+		if ( hasComp ) {
+			oldComp = ( ( short * )( (byte *)surf + surf->ofsFrameCompFrames ) + backEnd.currentEntity->e.oldframe );
+			if ( *oldComp >= 0 ) {
+				oldXyzComp = ( mdcXyzCompressed_t * )( (byte *)surf + surf->ofsXyzCompressed )
+							 + ( *oldComp * surf->numVerts );
+			}
+		}
+
+		oldXyzScale = MD3_XYZ_SCALE * backlerp;
+		oldNormalScale = backlerp;
+
+		for ( vertNum = 0 ; vertNum < numVerts ; vertNum++,
+			  oldXyz += 4, newXyz += 4, oldNormals += 4, newNormals += 4,
+			  outXyz += 4, outNormal += 4 )
+		{
+			vec3_t uncompressedOldNormal, uncompressedNewNormal;
+
+			// interpolate the xyz
+			outXyz[0] = oldXyz[0] * oldXyzScale + newXyz[0] * newXyzScale;
+			outXyz[1] = oldXyz[1] * oldXyzScale + newXyz[1] * newXyzScale;
+			outXyz[2] = oldXyz[2] * oldXyzScale + newXyz[2] * newXyzScale;
+
+			// add the compressed ofsVec
+			if ( hasComp && *newComp >= 0 ) {
+				R_MDC_DecodeXyzCompressed( newXyzComp->ofsVec, newOfsVec, uncompressedNewNormal );
+				newXyzComp++;
+				VectorMA( outXyz, 1.0 - backlerp, newOfsVec, outXyz );
+			} else {
+				lat = ( newNormals[0] >> 8 ) & 0xff;
+				lng = ( newNormals[0] & 0xff );
+				lat *= 4;
+				lng *= 4;
+
+				uncompressedNewNormal[0] = tr.sinTable[( lat + ( FUNCTABLE_SIZE / 4 ) ) & FUNCTABLE_MASK] * tr.sinTable[lng];
+				uncompressedNewNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+				uncompressedNewNormal[2] = tr.sinTable[( lng + ( FUNCTABLE_SIZE / 4 ) ) & FUNCTABLE_MASK];
+			}
+
+			if ( hasComp && *oldComp >= 0 ) {
+				R_MDC_DecodeXyzCompressed( oldXyzComp->ofsVec, oldOfsVec, uncompressedOldNormal );
+				oldXyzComp++;
+				VectorMA( outXyz, backlerp, oldOfsVec, outXyz );
+			} else {
+				lat = ( oldNormals[0] >> 8 ) & 0xff;
+				lng = ( oldNormals[0] & 0xff );
+				lat *= 4;
+				lng *= 4;
+
+				uncompressedOldNormal[0] = tr.sinTable[( lat + ( FUNCTABLE_SIZE / 4 ) ) & FUNCTABLE_MASK] * tr.sinTable[lng];
+				uncompressedOldNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+				uncompressedOldNormal[2] = tr.sinTable[( lng + ( FUNCTABLE_SIZE / 4 ) ) & FUNCTABLE_MASK];
+			}
+
+			outNormal[0] = uncompressedOldNormal[0] * oldNormalScale + uncompressedNewNormal[0] * newNormalScale;
+			outNormal[1] = uncompressedOldNormal[1] * oldNormalScale + uncompressedNewNormal[1] * newNormalScale;
+			outNormal[2] = uncompressedOldNormal[2] * oldNormalScale + uncompressedNewNormal[2] * newNormalScale;
+
+			VectorNormalize( outNormal );
+		}
+	}
+}
+
+/*
+=============
+RB_SurfaceCMesh
+=============
+*/
+void RB_SurfaceCMesh( mdcSurface_t *surface ) {
+	int j;
+	float backlerp;
+	int             *triangles;
+	float           *texCoords;
+	int indexes;
+	int Bob, Doug;
+	int numVerts;
+
+	if (  backEnd.currentEntity->e.oldframe == backEnd.currentEntity->e.frame ) {
+		backlerp = 0;
+	} else  {
+		backlerp = backEnd.currentEntity->e.backlerp;
+	}
+
+	RB_CHECKOVERFLOW( surface->numVerts, surface->numTriangles * 3 );
+
+	LerpCMeshVertexes( surface, backlerp );
+
+	triangles = ( int * )( (byte *)surface + surface->ofsTriangles );
+	indexes = surface->numTriangles * 3;
+	Bob = tess.numIndexes;
+	Doug = tess.numVertexes;
+	for ( j = 0 ; j < indexes ; j++ ) {
+		tess.indexes[Bob + j] = Doug + triangles[j];
+	}
+	tess.numIndexes += indexes;
+
+	texCoords = ( float * )( (byte *)surface + surface->ofsSt );
+
+	numVerts = surface->numVerts;
+	for ( j = 0; j < numVerts; j++ ) {
+		tess.texCoords[Doug + j][0][0] = texCoords[j * 2 + 0];
+		tess.texCoords[Doug + j][0][1] = texCoords[j * 2 + 1];
+		// FIXME: fill in lightmapST for completeness?
+	}
+
+	tess.numVertexes += surface->numVerts;
+
+}
+
 
 static float	LodErrorForVolume( vec3_t local, float radius ) {
 	vec3_t		world;
@@ -1096,6 +1303,7 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_SurfacePolychain,		// SF_POLY,
 	(void(*)(void*))RB_SurfacePolyBuffer,		// SF_POLYBUFFER,
 	(void(*)(void*))RB_SurfaceMesh,			// SF_MD3,
+	(void(*)(void*))RB_SurfaceCMesh,		// SF_MDC,
 	(void(*)(void*))RB_MDRSurfaceAnim,		// SF_MDR,
 	(void(*)(void*))RB_IQMSurfaceAnim,		// SF_IQM,
 	(void(*)(void*))RB_SurfaceFlare,		// SF_FLARE,
