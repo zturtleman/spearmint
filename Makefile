@@ -2174,7 +2174,6 @@ $(B)/ded/%.o: $(RGL1DIR)/%.c
 
 # Extra dependencies to ensure the git version is incorporated
 ifeq ($(USE_GIT),1)
-  $(B)/client/cl_console.o : .git/index
   $(B)/client/common.o : .git/index
   $(B)/ded/common.o : .git/index
 endif
