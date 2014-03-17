@@ -64,6 +64,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define	RF_SHADOW_PLANE		0x0100		// use refEntity->shadowPlane
 #define	RF_WRAP_FRAMES		0x0200		// mod the model frames by the maxframes to allow continuous
+										// animation without needing to know the frame count
 
 #define RF_FORCE_ENT_ALPHA	0x0400		// override shader alpha value and take the one from the entity
 #define	RF_RGB_TINT			0x0800		// override shader color values and take the ones from the entity

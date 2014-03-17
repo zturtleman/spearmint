@@ -38,6 +38,7 @@ static char *s_shaderText;
 static	shaderStage_t	stages[MAX_SHADER_STAGES];		
 static	shader_t		shader;
 static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS];
+static	image_t			*imageAnimations[MAX_SHADER_STAGES][NUM_TEXTURE_BUNDLES][MAX_IMAGE_ANIMATIONS];
 static	imgFlags_t		shader_picmipFlag;
 
 // these are here because they are only referenced while parsing a shader
@@ -1790,7 +1791,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			token = COM_ParseExt( text, qfalse );
 			if ( token[0] == 0 )
 			{
-				ri.Printf( PRINT_WARNING, "WARNING: missing texgen parm in shader '%s'\n", shader.name );
+				ri.Printf( PRINT_WARNING, "WARNING: missing %s parm in shader '%s'\n", keyword, shader.name );
 				continue;
 			}
 
@@ -1819,7 +1820,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 			else 
 			{
-				ri.Printf( PRINT_WARNING, "WARNING: unknown texgen parm in shader '%s'\n", shader.name );
+				ri.Printf( PRINT_WARNING, "WARNING: unknown %s parameter '%s' in shader '%s'\n", keyword, token, shader.name );
 			}
 		}
 		//
@@ -2469,6 +2470,38 @@ static qboolean ParseShader( char **text )
 				tr.sunShaderScale = 1.0f;
 			}
 			continue;
+		}
+		// lightgridmulamb <scale>  ambient multiplier for lightgrid
+		else if ( !Q_stricmp( token, "lightgridmulamb" ) )
+		{
+			float scale;
+
+			token = COM_ParseExt( text, qfalse );
+			if ( !token[0] ) {
+				ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'lightgridmulamb' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			scale = atof( token );
+			if ( scale > 0 ) {
+				tr.lightGridMulAmbient = scale;
+			}
+		}
+		// lightgridmuldir <scale>  directional multiplier for lightgrid
+		else if ( !Q_stricmp( token, "lightgridmuldir" ) )
+		{
+			float scale;
+
+			token = COM_ParseExt( text, qfalse );
+			if ( !token[0] ) {
+				ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'lightgridmuldir' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			scale = atof( token );
+			if ( scale > 0 ) {
+				tr.lightGridMulDirected = scale;
+			}
 		}
 		// fogParms ( <red> <green> <blue> ) <depthForOpaque> [fog type]
 		else if ( !Q_stricmp( token, "fogParms" ) )
@@ -3696,6 +3729,14 @@ static shader_t *GeneratePermanentShader( void ) {
 			size = newShader->stages[i]->bundle[b].numTexMods * sizeof( texModInfo_t );
 			newShader->stages[i]->bundle[b].texMods = ri.Hunk_Alloc( size, h_low );
 			Com_Memcpy( newShader->stages[i]->bundle[b].texMods, stages[i].bundle[b].texMods, size );
+
+			if ( newShader->stages[i]->bundle[b].numImageAnimations )
+				size = newShader->stages[i]->bundle[b].numImageAnimations * sizeof( image_t * );
+			else
+				size = sizeof( image_t * );
+
+			newShader->stages[i]->bundle[b].image = ri.Hunk_Alloc( size, h_low );
+			Com_Memcpy( newShader->stages[i]->bundle[b].image, stages[i].bundle[b].image, size );
 		}
 	}
 
@@ -4302,7 +4343,7 @@ most world construction surfaces.
 shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImage ) {
 	char		strippedName[MAX_QPATH];
 	char		fileName[MAX_QPATH];
-	int			i, hash;
+	int			i, b, hash;
 	char		*shaderText;
 	image_t		*image;
 	shader_t	*sh;
@@ -4344,6 +4385,10 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	shader.lightmapIndex = lightmapIndex;
 	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
 		stages[i].bundle[0].texMods = texMods[i];
+		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
+			stages[i].bundle[b].image = imageAnimations[i][b];
+			stages[i].bundle[b].image[0] = NULL;
+		}
 
 		// default normal/specular
 		VectorSet4(stages[i].normalScale, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -4448,7 +4493,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 
 qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_t *image, qboolean mipRawImage) {
-	int			i, hash;
+	int			i, b, hash;
 	shader_t	*sh;
 
 	hash = generateHashValue(name, FILE_HASH_SIZE);
@@ -4483,6 +4528,10 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 	shader.lightmapIndex = lightmapIndex;
 	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
 		stages[i].bundle[0].texMods = texMods[i];
+		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
+			stages[i].bundle[b].image = imageAnimations[i][b];
+			stages[i].bundle[b].image[0] = NULL;
+		}
 
 		// default normal/specular
 		VectorSet4(stages[i].normalScale, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -4822,11 +4871,20 @@ CreateInternalShaders
 ====================
 */
 static void CreateInternalShaders( void ) {
+	int i, b;
+
 	tr.numShaders = 0;
 
 	// init the default shader
 	Com_Memset( &shader, 0, sizeof( shader ) );
 	Com_Memset( &stages, 0, sizeof( stages ) );
+	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
+		stages[i].bundle[0].texMods = texMods[i];
+		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
+			stages[i].bundle[b].image = imageAnimations[i][b];
+			stages[i].bundle[b].image[0] = NULL;
+		}
+	}
 
 	Q_strncpyz( shader.name, "<default>", sizeof( shader.name ) );
 
@@ -4875,14 +4933,23 @@ static void CreateExternalShaders( void ) {
 	if (tr.sunFlareShader->defaultShader)
 	{
 		image_t *image;
+		int i, b;
 
 		if (!tr.flareShader->defaultShader && tr.flareShader->stages[0] && tr.flareShader->stages[0]->bundle[0].image[0])
 			image = tr.flareShader->stages[0]->bundle[0].image[0];
 		else
 			image = tr.dlightImage;
 
+		// init the default shader
 		Com_Memset( &shader, 0, sizeof( shader ) );
 		Com_Memset( &stages, 0, sizeof( stages ) );
+		for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
+			stages[i].bundle[0].texMods = texMods[i];
+			for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
+				stages[i].bundle[b].image = imageAnimations[i][b];
+				stages[i].bundle[b].image[0] = NULL;
+			}
+		}
 
 		Q_strncpyz( shader.name, "gfx/2d/sunflare", sizeof( shader.name ) );
 

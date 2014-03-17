@@ -1425,6 +1425,7 @@ Q3ROBJ = \
   $(B)/renderergl1/tr_backend.o \
   $(B)/renderergl1/tr_bsp.o \
   $(B)/renderergl1/tr_cmds.o \
+  $(B)/renderergl1/tr_cmesh.o \
   $(B)/renderergl1/tr_curve.o \
   $(B)/renderergl1/tr_flares.o \
   $(B)/renderergl1/tr_font.o \
@@ -2173,7 +2174,6 @@ $(B)/ded/%.o: $(RGL1DIR)/%.c
 
 # Extra dependencies to ensure the git version is incorporated
 ifeq ($(USE_GIT),1)
-  $(B)/client/cl_console.o : .git/index
   $(B)/client/common.o : .git/index
   $(B)/ded/common.o : .git/index
 endif

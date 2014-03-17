@@ -152,7 +152,9 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_PrimaryLightAmbient", GLSL_VEC3  },
 	{ "u_PrimaryLightRadius",  GLSL_FLOAT },
 
-	{ "u_Intensity", GLSL_FLOAT }
+	{ "u_CubeMapInfo", GLSL_VEC4 },
+
+	{ "u_Intensity", GLSL_FLOAT },
 };
 
 
