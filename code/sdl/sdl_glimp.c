@@ -455,9 +455,11 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 		
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
+#if 0 // if multisampling is enabled on X11, this causes create window to fail.
 		// If not allowing software GL, demand accelerated
 		if( !r_allowSoftwareGL->integer )
 			SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
+#endif
 
 		if( ( SDL_window = SDL_CreateWindow( windowTitle, x, y,
 				glConfig.vidWidth, glConfig.vidHeight, flags ) ) == 0 )
@@ -513,6 +515,12 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 	if ( !internalIcon && pixelData ) {
 		ri.Free( pixelData );
 		pixelData = NULL;
+	}
+
+	if( !SDL_window )
+	{
+		ri.Printf( PRINT_ALL, "Couldn't get a visual\n" );
+		return RSERR_INVALID_MODE;
 	}
 
 	GLimp_DetectAvailableModes();
