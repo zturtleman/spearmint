@@ -4086,6 +4086,10 @@ static void FS_CheckPaks( qboolean quiet )
 		}
 
 		if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
+			if ( CL_ConnectedToRemoteServer() ) {
+				return;
+			}
+
 			// missing data files are more important than missing PAKSUMS
 			Q_strncpyz( line1, "Unable to locate data files.", sizeof (line1) );
 			Com_sprintf( line2, sizeof (line2), "You need to install %s in order to play", badGames );
