@@ -197,7 +197,6 @@ typedef struct {
 purePak_t com_purePaks[MAX_PAKSUMS];
 
 qboolean	fs_foundPaksums;
-qboolean	fs_pakMismatchWarningDialog;
 int			fs_numPaksums;
 
 // if this is defined, the executable positively won't work with any paks other
@@ -3543,27 +3542,33 @@ gameDirs[0]: missionpack
 gameDirs[1]: baseq3
 ===================
 */
-static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
+static qboolean FS_LoadGameConfig( gameConfig_t *config, const char *gameDir, qboolean mainGameDir ) {
 	union {
 		char *c;
 		void *v;
 	} buffer;
 	int				len;
 	char			*text_p, *token;
+	char			path[MAX_QPATH];
 	char			cvarName[256], cvarValue[256];
 	qboolean		firstLine = qtrue;
 #ifndef DEDICATED
 	loadingScreen_t	*screen;
 
 	// default to ioq3 defaultSound
-	Q_strncpyz( config->defaultSound, "sound/feedback/hit.wav", sizeof (config->defaultSound) );
+	if ( mainGameDir ) {
+		Q_strncpyz( config->defaultSound, "sound/feedback/hit.wav", sizeof (config->defaultSound) );
+	}
 #endif
 
-	len = FS_ReadFile( "gameconfig.txt", &buffer.v );
+	Com_sprintf( path, sizeof (path), "mint-%s.settings", gameDir );
+	len = FS_ReadFile( path, &buffer.v );
 
 	if ( len <= 0 ) {
 		return qfalse;
 	}
+
+	fs_foundPaksums = qtrue;
 
 	text_p = buffer.c;
 
@@ -3579,20 +3584,31 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 		if ( !*token )
 			break;
 
+		if ( Q_stricmp( token, "paksums" ) == 0 ) {
+			// XXX
+			extern void FS_ParsePakChecksums( char **text, const char *path, const char *gameDir );
+
+			FS_ParsePakChecksums( &text_p, path, gameDir );
+			continue;
+		}
+
+		if ( !mainGameDir )
+			continue;
+
 		if ( Q_stricmp( token, "addGameDir" ) == 0 ) {
 			token = COM_ParseExt( &text_p, qfalse );
 			if ( !*token )
 				continue;
 
 			if ( FS_CheckDirTraversal( token ) ) {
-				Com_Printf( S_COLOR_YELLOW "WARNING: invalid gamedir %s in gameconfig.txt\n", token );
+				Com_Printf( S_COLOR_YELLOW "WARNING: invalid gamedir %s in %s\n", token, path );
 				continue;
 			}
 
 			if ( config->numGameDirs >= MAX_GAMEDIRS ) {
-				Com_Printf( "WARNING: Excessive game directories in gameconfig.txt (max is %d)\n", MAX_GAMEDIRS );
+				Com_Printf( "WARNING: Excessive game directories in %s (max is %d)\n", path, MAX_GAMEDIRS );
 			} else if ( Q_stricmp( fs_gamedirvar->string, token ) == 0 ) {
-				Com_Printf( "WARNING: Ignoring gamedir %s listed in gameconfig.txt (it's the current fs_game)\n", token );
+				Com_Printf( "WARNING: Ignoring gamedir %s listed in %s (it's the current fs_game)\n", token, path );
 			} else {
 				Q_strncpyz( config->gameDirs[config->numGameDirs], token, sizeof (config->gameDirs[0]) );
 				config->numGameDirs++;
@@ -3627,7 +3643,7 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 				continue;
 
 			if ( config->numLoadingScreens >= MAX_LOADINGSCREENS ) {
-				Com_Printf( "WARNING: Excessive loading screens in gameconfig.txt (max is %d)\n", MAX_LOADINGSCREENS );
+				Com_Printf( "WARNING: Excessive loading screens in %s (max is %d)\n", path, MAX_LOADINGSCREENS );
 				continue;
 			}
 
@@ -3648,7 +3664,7 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 			screen->aspect = atof( token );
 #endif
 		} else {
-			Com_Printf("Unknown token '%s' in gameconfig.txt\n", token);
+			Com_Printf("Unknown token '%s' in %s\n", token, path);
 		}
 	}
 
@@ -3658,7 +3674,6 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config ) {
 
 // XXX
 void FS_ClearPakChecksums( void );
-static qboolean FS_LoadPakChecksums( const char *gamedir );
 static void FS_CheckPaks( qboolean quiet );
 
 /*
@@ -3685,7 +3700,7 @@ static void FS_AddGame( const char *gameName ) {
 		FS_AddGameDirectory ( fs_homepath->string, gameName );
 	}
 
-	FS_LoadPakChecksums( gameName );
+	FS_LoadGameConfig( &com_gameConfig, gameName, !Q_stricmp( gameName, fs_gamedirvar->string ) );
 }
 
 /*
@@ -3721,15 +3736,9 @@ static void FS_Startup( qboolean quiet )
 		Cvar_ForceReset("fs_game");
 
 	FS_ClearPakChecksums();
-
-	// load the game search paths so can load gameconfig.txt from a pk3.
-	FS_AddGame( fs_gamedirvar->string );
-
 	Com_Memset( &com_gameConfig, 0, sizeof (com_gameConfig) );
 
-	if ( !FS_LoadGameConfig( &com_gameConfig ) ) {
-		Com_Printf("WARNING: Failed to load gameconfig.txt\n");
-	}
+	FS_AddGame( fs_gamedirvar->string );
 
 	if ( com_gameConfig.numGameDirs > 0 ) {
 		// hide fs_game path
@@ -3884,98 +3893,60 @@ FS_ClearPakChecksums
 */
 void FS_ClearPakChecksums( void ) {
 	fs_foundPaksums = qfalse;
-	fs_pakMismatchWarningDialog = qtrue;
 	fs_numPaksums = 0;
 }
 
 /*
 ===================
-FS_LoadPakChecksums
+FS_ParsePakChecksums
 
 Load checksums for pk3 files in gamedir
 ===================
 */
-static qboolean FS_LoadPakChecksums( const char *gamedir ) {
-	char			*buffer;
-	fileHandle_t	paksumsHandle;
-	char			path[MAX_OSPATH];
-	int				nPaksumsLen;
-	char			*text_p, *token;
+void FS_ParsePakChecksums( char **text, const char *path, const char *gameDir ) {
+	char			*token;
 
-	if ( !gamedir || !*gamedir ) {
-		return qfalse;
+	token = COM_Parse( text );
+	if ( *token != '{' ) {
+		Com_Error( ERR_DROP, "Missing opening brace for paksums in %s\n", path );
 	}
-
-	Com_sprintf( path, sizeof ( path ), "%s/PAKSUMS", gamedir );
-	nPaksumsLen = FS_SV_FOpenFileRead( path, &paksumsHandle );
-
-	if ( nPaksumsLen <= 0 || !paksumsHandle) {
-		return qfalse;
-	}
-
-	fs_foundPaksums = qtrue;
-
-	buffer = Hunk_AllocateTempMemory(nPaksumsLen+1);
-
-	FS_Read( buffer, nPaksumsLen, paksumsHandle );
-
-	// guarantee that it will have a trailing 0 for string operations
-	buffer[nPaksumsLen] = 0;
-
-	FS_FCloseFile( paksumsHandle );
-	paksumsHandle = 0;
-
-	text_p = buffer;
 
 	while ( 1 ) {
-		token = COM_Parse( &text_p );
-		if ( !*token )
+		token = COM_Parse( text );
+		if ( *token == '}' )
 			break;
+		if ( !*token )
+			Com_Error( ERR_DROP, "Missing closing brace for paksums in %s", path );
 
-		if ( Q_stricmp( token, "config" ) == 0 ) {
-			token = COM_ParseExt( &text_p, qfalse );
-			if ( !*token )
-				continue;
-			if ( Q_stricmp( token, "noPakMismatchWarningDialog" ) == 0 ) {
-				fs_pakMismatchWarningDialog = qfalse;
-			} else {
-				Com_Printf( "Unknown config option '%s' in %s\n", token, path );
-			}
-		} else {
-			if ( fs_numPaksums >= MAX_PAKSUMS ) {
-				Com_Error( ERR_DROP, "Too many PAKSUMS (max is %d)", MAX_PAKSUMS );
-			}
+		if ( fs_numPaksums >= MAX_PAKSUMS )
+			Com_Error( ERR_DROP, "Too many paksums (max is %d) in %s", MAX_PAKSUMS, path );
 
-			COM_StripExtension( token, com_purePaks[fs_numPaksums].pakname, sizeof ( com_purePaks[fs_numPaksums].pakname ) );
+		COM_StripExtension( token, com_purePaks[fs_numPaksums].pakname, sizeof ( com_purePaks[fs_numPaksums].pakname ) );
 
-			// read checksum
-			token = COM_ParseExt( &text_p, qfalse );
-			if ( !*token ) {
-				Com_Printf( "'%s' missing checksum in %s\n", com_purePaks[fs_numPaksums].pakname, path );
-				continue;
-			}
-			com_purePaks[fs_numPaksums].checksum = strtoul(token, NULL, 10);
-
-			// read optional keywords
-			com_purePaks[fs_numPaksums].nodownload = qfalse;
-			while ( 1 ) {
-				token = COM_ParseExt( &text_p, qfalse );
-				if ( !*token )
-					break;
-				if ( Q_stricmp( token, "nodownload" ) == 0 ) {
-					com_purePaks[fs_numPaksums].nodownload = qtrue;
-				} else {
-					Com_Printf( "Unknown pak keyword '%s' in %s\n", token, path );
-				}
-			}
-
-			Q_strncpyz( com_purePaks[fs_numPaksums].gamename, gamedir, sizeof ( com_purePaks[fs_numPaksums].gamename ) );
-			fs_numPaksums++;
+		// read checksum
+		token = COM_ParseExt( text, qfalse );
+		if ( !*token ) {
+			Com_Printf( "'%s' missing checksum in %s\n", com_purePaks[fs_numPaksums].pakname, path );
+			continue;
 		}
-	}
+		com_purePaks[fs_numPaksums].checksum = strtoul(token, NULL, 10);
 
-	Hunk_FreeTempMemory( buffer );
-	return qtrue;
+		// read optional keywords
+		com_purePaks[fs_numPaksums].nodownload = qfalse;
+		while ( 1 ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( !*token )
+				break;
+			if ( Q_stricmp( token, "nodownload" ) == 0 ) {
+				com_purePaks[fs_numPaksums].nodownload = qtrue;
+			} else {
+				Com_Printf( "Unknown pak keyword '%s' in %s\n", token, path );
+			}
+		}
+
+		Q_strncpyz( com_purePaks[fs_numPaksums].gamename, gameDir, sizeof ( com_purePaks[fs_numPaksums].gamename ) );
+		fs_numPaksums++;
+	}
 }
 
 /*
@@ -4127,7 +4098,7 @@ static void FS_CheckPaks( qboolean quiet )
 		if ( !fs_foundPaksums ) {
 			// no PAKSUMS files found in search paths
 			Q_strncpyz( line1, "Missing file containing Pk3 checksums.", sizeof ( line1 ) );
-			Com_sprintf( line2, sizeof (line2), "You need a %s%cPAKSUMS file to enable pure mode.", fs_gamedir, PATH_SEP );
+			Com_sprintf( line2, sizeof (line2), "You need a %s%cmint-%s.settings file to enable pure mode.", fs_gamedir, PATH_SEP, fs_gamedir );
 		} else if ( !fs_numPaksums ) {
 			// only empty PAKSUMS files found, probably game under development or doesn't want pure mode
 			Com_Printf( "No Pk3 checksums found, disabling pure mode.\n");
@@ -4142,11 +4113,9 @@ static void FS_CheckPaks( qboolean quiet )
 
 		Com_Printf(S_COLOR_YELLOW "WARNING: %s\n%s\n", line1, line2);
 
-		if ( fs_pakMismatchWarningDialog ) {
 #ifndef DEDICATED
-			Sys_Dialog( DT_WARNING, va("%s %s", line1, line2), "Warning" );
+		Sys_Dialog( DT_WARNING, va("%s %s", line1, line2), "Warning" );
 #endif
-		}
 	}
 }
 
