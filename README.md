@@ -407,7 +407,7 @@ New in Spearmint
 ```
   r_customPixelAspect     - it had no effect
   com_basegame            - replaced manually setting basegame dirs with loading
-                            them from gameconfig.txt in fs_game dir
+                            them from mint-(fs_game).settings
   fs_basegame             - see above
   vm_ui                   - ui VM has been merged into cgame VM
 ```

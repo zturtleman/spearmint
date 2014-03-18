@@ -1036,7 +1036,7 @@ struct cvar_s {
 	char			*name;
 	char			*string;
 	char			*resetString;		// cvar_restart will reset to this value
-	char			*overriddenResetString;	// the reset string as defined by code, set when resetString is overridden by gameconfig.txt
+	char			*overriddenResetString;	// the reset string as defined by code, set when resetString is overridden by Cvar_SetDefault
 	char			*latchedString;		// for CVAR_LATCH vars
 	int				flags;
 	qboolean	explicitSet;		// cvar has been explicitly set
