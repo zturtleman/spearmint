@@ -2001,6 +2001,48 @@ long FS_ReadFileDir(const char *qpath, void *searchPath, qboolean unpure, void *
 
 /*
 ============
+FS_ReadFileFromGameDir
+
+Filename are relative to the quake search path
+a null buffer will just return the file length without loading
+============
+*/
+long FS_ReadFileFromGameDir(const char *qpath, void **buffer, const char *gameDir)
+{
+	searchpath_t *search;
+	char *dirname;
+	long len;
+
+	if(!fs_searchpaths)
+		Com_Error(ERR_FATAL, "Filesystem call made without initialization");
+
+	for(search = fs_searchpaths; search; search = search->next)
+	{
+		if(search->pack) {
+			dirname = search->pack->pakGamename;
+		} else {
+			dirname = search->dir->gamedir;
+		}
+
+		if(Q_stricmp(gameDir, dirname)) {
+			continue;
+		}
+
+		len = FS_ReadFileDir(qpath, search, qfalse, buffer);
+
+		if(len >= 0) {
+			return len;
+		}
+	}
+
+	if (buffer) {
+		*buffer = NULL;
+	}
+	return -1;
+}
+
+/*
+============
 FS_ReadFile
 
 Filename are relative to the quake search path
@@ -3562,8 +3604,8 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config, const char *gameDir, qb
 	}
 #endif
 
-	Com_sprintf( path, sizeof (path), "mint-%s.settings", gameDir );
-	len = FS_ReadFile( path, &buffer.v );
+	Q_strncpyz( path, "mint-game.settings", sizeof (path) );
+	len = FS_ReadFileFromGameDir( path, &buffer.v, gameDir );
 
 	if ( len <= 0 ) {
 		return qfalse;
@@ -4103,7 +4145,7 @@ static void FS_CheckPaks( qboolean quiet )
 		if ( !fs_foundPaksums ) {
 			// no PAKSUMS files found in search paths
 			Q_strncpyz( line1, "Missing file containing Pk3 checksums.", sizeof ( line1 ) );
-			Com_sprintf( line2, sizeof (line2), "You need a %s%cmint-%s.settings file to enable pure mode.", fs_gamedir, PATH_SEP, fs_gamedir );
+			Com_sprintf( line2, sizeof (line2), "You need a %s%cmint-game.settings file to enable pure mode.", fs_gamedir, PATH_SEP );
 		} else if ( !fs_numPaksums ) {
 			// only empty PAKSUMS files found, probably game under development or doesn't want pure mode
 			Com_Printf( "No Pk3 checksums found, disabling pure mode.\n");
