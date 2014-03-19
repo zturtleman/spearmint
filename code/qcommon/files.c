@@ -2010,7 +2010,7 @@ a null buffer will just return the file length without loading
 long FS_ReadFileFromGameDir(const char *qpath, void **buffer, const char *gameDir)
 {
 	searchpath_t *search;
-	char *dirname;
+	const char *dirname;
 	long len;
 
 	if(!fs_searchpaths)
@@ -2020,6 +2020,8 @@ long FS_ReadFileFromGameDir(const char *qpath, void **buffer, const char *gameDi
 	{
 		if(search->pack) {
 			dirname = search->pack->pakGamename;
+		} else if (COM_CompareExtension(search->dir->gamedir, ".pk3dir")) {
+			dirname = Sys_Basename(search->dir->path);
 		} else {
 			dirname = search->dir->gamedir;
 		}
