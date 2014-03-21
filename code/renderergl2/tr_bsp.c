@@ -937,7 +937,7 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 
 	// we may have a nodraw surface, because they might still need to
 	// be around for movement clipping
-	if ( s_worldData.shaders[ LittleLong( ds->shaderNum ) ].surfaceFlags & SURF_NODRAW ) {
+	if ( s_worldData.shaders[ LittleLong( ds->shaderNum ) ].surfaceFlags & r_surfaceFlagNoDraw->integer ) {
 		surf->data = &skipData;
 		return;
 	}

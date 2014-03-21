@@ -1217,6 +1217,7 @@ extern cvar_t	*r_useGlFog;
 
 extern cvar_t	*r_defaultFogParmsType;
 extern cvar_t	*r_shadersDirectory;
+extern cvar_t	*r_surfaceFlagNoDraw;
 
 //====================================================================
 

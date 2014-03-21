@@ -251,7 +251,7 @@ static __attribute__ ((noreturn)) void Sys_Exit( int exitCode )
 	SDL_Quit( );
 #endif
 
-	if( exitCode < 2 )
+	if( exitCode < 2 && com_fullyInitialized )
 	{
 		// Normal exit
 		Sys_RemovePIDFile( FS_GetCurrentGameDir() );

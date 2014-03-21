@@ -770,12 +770,12 @@ qboolean FS_Which(const char *filename, void *searchPath);
 /*
 ==============================================================
 
-Game config, settings loaded from gameconfig.txt
+Game config, loaded from mint-game.settings
 
 ==============================================================
 */
 
-#define MAX_GAMEDIRS 16 // max gamedirs a mod can have (read from gameconfig.txt)
+#define MAX_GAMEDIRS 16 // max gamedirs a mod can have
 #define MAX_LOADINGSCREENS	200
 
 typedef struct loadingScreen_s {

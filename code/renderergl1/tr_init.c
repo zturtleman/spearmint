@@ -176,6 +176,7 @@ cvar_t	*r_useGlFog;
 
 cvar_t	*r_defaultFogParmsType;
 cvar_t	*r_shadersDirectory;
+cvar_t	*r_surfaceFlagNoDraw;
 
 cvar_t	*r_maxpolys;
 int		max_polys;
@@ -1128,6 +1129,7 @@ void R_Register( void )
 	//
 	r_defaultFogParmsType = ri.Cvar_Get ("r_defaultfogParmsType", "exp", CVAR_LATCH );
 	r_shadersDirectory = ri.Cvar_Get( "r_shadersDirectory", "scripts", CVAR_LATCH );
+	r_surfaceFlagNoDraw = ri.Cvar_Get( "r_surfaceFlagNoDraw", "128", CVAR_LATCH ); // Q3's SURF_NODRAW (0x80)
 
 	//
 	// archived variables that can change at any time
