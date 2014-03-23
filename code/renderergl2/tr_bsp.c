@@ -2585,23 +2585,16 @@ static	void R_SetParent (mnode_t *node, mnode_t *parent) {
 		// add node surfaces to bounds
 		if ( node->nummarksurfaces > 0 ) {
 			int c;
-			msurface_t      *mark;
-			surfaceType_t   type;
+			msurface_t      *surf;
+			surfaceType_t   surfaceType;
 
-			// add node surfaces to bounds
-			for ( c = 0; c < node->nummarksurfaces; c++ )
-			{
-				mark = s_worldData.surfaces + *( s_worldData.marksurfaces + node->firstmarksurface + c );
-				type = *( *mark ).data;
-				if ( type != SF_GRID &&
-					 type != SF_FACE &&
-					 type != SF_TRIANGLES &&
-					 type != SF_FOLIAGE ) {
-					continue;
+			for ( c = 0; c < node->nummarksurfaces; c++ ) {
+				surf = s_worldData.surfaces + *( s_worldData.marksurfaces + node->firstmarksurface + c );
+				surfaceType = *surf->data;
+				if ( surfaceType == SF_FACE || surfaceType == SF_GRID || surfaceType == SF_TRIANGLES || surfaceType == SF_FOLIAGE ) {
+					AddPointToBounds( surf->cullinfo.bounds[ 0 ], node->surfMins, node->surfMaxs );
+					AddPointToBounds( surf->cullinfo.bounds[ 1 ], node->surfMins, node->surfMaxs );
 				}
-				AddPointToBounds( mark->cullinfo.bounds[ 0 ], node->surfMins, node->surfMaxs );
-				AddPointToBounds( mark->cullinfo.bounds[ 1 ], node->surfMins, node->surfMaxs );
-				mark++;
 			}
 		}
 
