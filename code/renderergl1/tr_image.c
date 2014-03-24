@@ -1089,7 +1089,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 R_CreateDlightImage
 ================
 */
-#define	DLIGHT_SIZE	16
+#define	DLIGHT_SIZE	128
 static void R_CreateDlightImage( void ) {
 	int		x,y;
 	byte	data[DLIGHT_SIZE][DLIGHT_SIZE][4];
@@ -1102,12 +1102,23 @@ static void R_CreateDlightImage( void ) {
 
 			d = ( DLIGHT_SIZE/2 - 0.5f - x ) * ( DLIGHT_SIZE/2 - 0.5f - x ) +
 				( DLIGHT_SIZE/2 - 0.5f - y ) * ( DLIGHT_SIZE/2 - 0.5f - y );
-			b = 4000 / d;
+			b = DLIGHT_SIZE * DLIGHT_SIZE * 15.625f / d;
 			if (b > 255) {
 				b = 255;
+#if DLIGHT_SIZE >= 64
+			// ZTM: Fade outside edge to look similar to strected 16x16 image.
+			// I choose fading to black using 16 steps, unrelated to original size.
+			// 75 - (FADE_STEPS / 2) = 67. 67 + FADE_STEPS = 83.
+			} else if ( b < 83 && b > 67 ) {
+				b = ( b - 67 ) / 16.0f * 83;
+			} else if ( b <= 67 ) {
+				b = 0;
+			}
+#else
 			} else if ( b < 75 ) {
 				b = 0;
 			}
+#endif
 			data[y][x][0] = 
 			data[y][x][1] = 
 			data[y][x][2] = b;
