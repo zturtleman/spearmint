@@ -257,6 +257,8 @@ static __attribute__ ((noreturn)) void Sys_Exit( int exitCode )
 		Sys_RemovePIDFile( FS_GetCurrentGameDir() );
 	}
 
+	NET_Shutdown( );
+
 	Sys_PlatformExit( );
 
 	exit( exitCode );
