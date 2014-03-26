@@ -2612,7 +2612,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 			pic = newPic;
 		}
 	}
-	else if (r_normalMapping->integer && !(type == IMGTYPE_NORMAL) && (flags & IMGFLAG_PICMIP) && (flags & IMGFLAG_MIPMAP) && (flags & IMGFLAG_GENNORMALMAP))
+	else if (r_normalMapping->integer && !(type == IMGTYPE_NORMAL) && (flags & (IMGFLAG_PICMIP|IMGFLAG_PICMIP2)) && (flags & IMGFLAG_MIPMAP) && (flags & IMGFLAG_GENNORMALMAP))
 	{
 		char normalName[MAX_QPATH];
 		image_t *normalImage;
