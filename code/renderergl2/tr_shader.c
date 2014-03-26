@@ -3204,8 +3204,11 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	if (r_deluxeMapping->integer && tr.worldDeluxeMapping && lightmap)
 	{
+		image_t **origImagePtr = diffuse->bundle[TB_DELUXEMAP].image;
 		//ri.Printf(PRINT_ALL, ", deluxemap");
 		diffuse->bundle[TB_DELUXEMAP] = lightmap->bundle[0];
+		diffuse->bundle[TB_DELUXEMAP].numImageAnimations = 0;
+		diffuse->bundle[TB_DELUXEMAP].image = origImagePtr;
 		diffuse->bundle[TB_DELUXEMAP].image[0] = tr.deluxemaps[shader.lightmapIndex];
 	}
 
