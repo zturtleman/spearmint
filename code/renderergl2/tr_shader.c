@@ -3234,8 +3234,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (normalImg)
 			{
+				image_t **origImagePtr = diffuse->bundle[TB_NORMALMAP].image;
 				diffuse->bundle[TB_NORMALMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_NORMALMAP].numImageAnimations = 0;
+				diffuse->bundle[TB_NORMALMAP].image = origImagePtr;
 				diffuse->bundle[TB_NORMALMAP].image[0] = normalImg;
 
 				if (parallax && r_parallaxMapping->integer)
