@@ -3176,6 +3176,19 @@ static qboolean CollapseMultitexture( void ) {
 	return qtrue;
 }
 
+static void CopyBundle( const textureBundle_t *from, textureBundle_t *to ) {
+	image_t **origImagePtr = to->image;
+	int i, numImages;
+
+	*to = *from;
+
+	to->image = origImagePtr;
+	numImages = MAX( to->numImageAnimations, 1 );
+	for ( i = 0; i < numImages; i++ ) {
+		to->image[i] = from->image[i];
+	}
+}
+
 static void CollapseStagesToLightall(shaderStage_t *diffuse, 
 	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap, 
 	qboolean useLightVector, qboolean useLightVertex, qboolean parallax, qboolean tcgen)
@@ -3190,7 +3203,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	if (lightmap)
 	{
 		//ri.Printf(PRINT_ALL, ", lightmap");
-		diffuse->bundle[TB_LIGHTMAP] = lightmap->bundle[0];
+		CopyBundle( &lightmap->bundle[0], &diffuse->bundle[TB_LIGHTMAP] );
 		defs |= LIGHTDEF_USE_LIGHTMAP;
 	}
 	else if (useLightVector)
@@ -3204,11 +3217,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	if (r_deluxeMapping->integer && tr.worldDeluxeMapping && lightmap)
 	{
-		image_t **origImagePtr = diffuse->bundle[TB_DELUXEMAP].image;
 		//ri.Printf(PRINT_ALL, ", deluxemap");
-		diffuse->bundle[TB_DELUXEMAP] = lightmap->bundle[0];
-		diffuse->bundle[TB_DELUXEMAP].numImageAnimations = 0;
-		diffuse->bundle[TB_DELUXEMAP].image = origImagePtr;
+		CopyBundle( &lightmap->bundle[0], &diffuse->bundle[TB_DELUXEMAP] );
 		diffuse->bundle[TB_DELUXEMAP].image[0] = tr.deluxemaps[shader.lightmapIndex];
 	}
 
@@ -3218,7 +3228,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		if (normal)
 		{
 			//ri.Printf(PRINT_ALL, ", normalmap %s", normal->bundle[0].image[0]->imgName);
-			diffuse->bundle[TB_NORMALMAP] = normal->bundle[0];
+			CopyBundle( &normal->bundle[0], &diffuse->bundle[TB_NORMALMAP] );
 			if (parallax && r_parallaxMapping->integer)
 				defs |= LIGHTDEF_USE_PARALLAXMAP;
 
@@ -3237,10 +3247,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (normalImg)
 			{
-				image_t **origImagePtr = diffuse->bundle[TB_NORMALMAP].image;
-				diffuse->bundle[TB_NORMALMAP] = diffuse->bundle[0];
-				diffuse->bundle[TB_NORMALMAP].numImageAnimations = 0;
-				diffuse->bundle[TB_NORMALMAP].image = origImagePtr;
+				CopyBundle( &diffuse->bundle[0], &diffuse->bundle[TB_NORMALMAP] );
 				diffuse->bundle[TB_NORMALMAP].image[0] = normalImg;
 
 				if (parallax && r_parallaxMapping->integer)
@@ -3256,7 +3263,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		if (specular)
 		{
 			//ri.Printf(PRINT_ALL, ", specularmap %s", specular->bundle[0].image[0]->imgName);
-			diffuse->bundle[TB_SPECULARMAP] = specular->bundle[0];
+			CopyBundle( &specular->bundle[0], &diffuse->bundle[TB_SPECULARMAP] );
 			VectorCopy4(specular->specularScale, diffuse->specularScale);
 		}
 	}
@@ -3533,7 +3540,7 @@ static qboolean CollapseStagesToGLSL(void)
 			{
 				pStage->glslShaderGroup = tr.lightallShader;
 				pStage->glslShaderIndex = LIGHTDEF_USE_LIGHTMAP;
-				pStage->bundle[TB_LIGHTMAP] = pStage->bundle[TB_DIFFUSEMAP];
+				CopyBundle( &pStage->bundle[TB_DIFFUSEMAP], &pStage->bundle[TB_LIGHTMAP] );
 				pStage->bundle[TB_DIFFUSEMAP].image[0] = tr.whiteImage;
 				pStage->bundle[TB_DIFFUSEMAP].isLightmap = qfalse;
 				pStage->bundle[TB_DIFFUSEMAP].tcGen = TCGEN_TEXTURE;
