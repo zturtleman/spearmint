@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define	GAME_API_MAJOR_VERSION	0
-#define	GAME_API_MINOR_VERSION	3
+#define	GAME_API_MINOR_VERSION	4
 
 
 // entity->svFlags
@@ -374,9 +374,6 @@ typedef enum {
 	BOTLIB_AI_SET_CHAT_NAME,
 	BOTLIB_AI_NUM_INITIAL_CHATS,
 	BOTLIB_AI_GET_CHAT_MESSAGE,
-
-	// gen
-	BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION,
 
 	BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX,
 

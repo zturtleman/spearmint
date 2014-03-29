@@ -739,10 +739,6 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		botlib_export->ai.BotSetChatName( args[1], VMA(2), args[3] );
 		return 0;
 
-	case BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION:
-		return botlib_export->ai.GeneticParentsAndChildSelection(args[1], VMA(2), VMA(3), VMA(4), VMA(5));
-
-
 	default:
 		Com_Error( ERR_DROP, "Bad game system trap: %ld", (long int) args[0] );
 	}

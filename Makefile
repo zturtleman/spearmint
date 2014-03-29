@@ -1294,7 +1294,6 @@ Q3OBJ = \
   $(B)/client/be_aas_sample.o \
   $(B)/client/be_ai_char.o \
   $(B)/client/be_ai_chat.o \
-  $(B)/client/be_ai_gen.o \
   $(B)/client/be_interface.o \
   $(B)/client/l_crc.o \
   $(B)/client/l_libvar.o \
@@ -1901,7 +1900,6 @@ Q3DOBJ = \
   $(B)/ded/be_aas_sample.o \
   $(B)/ded/be_ai_char.o \
   $(B)/ded/be_ai_chat.o \
-  $(B)/ded/be_ai_gen.o \
   $(B)/ded/be_interface.o \
   $(B)/ded/l_crc.o \
   $(B)/ded/l_libvar.o \

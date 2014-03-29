@@ -287,10 +287,6 @@ typedef struct ai_export_s
 	int		(*BotLoadChatFile)(int chatstate, char *chatfile, char *chatname);
 	void	(*BotSetChatGender)(int chatstate, int gender);
 	void	(*BotSetChatName)(int chatstate, char *name, int client);
-	//-----------------------------------
-	// be_ai_gen.h
-	//-----------------------------------
-	int		(*GeneticParentsAndChildSelection)(int numranks, float *ranks, int *parent1, int *parent2, int *child);
 } ai_export_t;
 
 //bot AI library imported functions

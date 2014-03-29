@@ -53,7 +53,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "be_ai_chat.h"
 #include "be_ai_char.h"
-#include "be_ai_gen.h"
 
 //library globals in a structure
 botlib_globals_t botlibglobals;
@@ -781,10 +780,6 @@ static void Init_AI_Export( ai_export_t *ai ) {
 	ai->BotLoadChatFile = BotLoadChatFile;
 	ai->BotSetChatGender = BotSetChatGender;
 	ai->BotSetChatName = BotSetChatName;
-	//-----------------------------------
-	// be_ai_gen.h
-	//-----------------------------------
-	ai->GeneticParentsAndChildSelection = GeneticParentsAndChildSelection;
 }
 
 
