@@ -455,6 +455,12 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_TRACECAPSULE:
 		SV_Trace( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], TT_CAPSULE );
 		return 0;
+	case G_CLIPTOENTITIES:
+		SV_ClipToEntities( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], TT_AABB );
+		return 0;
+	case G_CLIPTOENTITIESCAPSULE:
+		SV_ClipToEntities( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], TT_CAPSULE );
+		return 0;
 	case G_POINT_CONTENTS:
 		return SV_PointContents( VMA(1), args[2] );
 	case G_SET_BRUSH_MODEL:

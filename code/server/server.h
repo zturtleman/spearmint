@@ -506,6 +506,8 @@ void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const ve
 
 // passEntityNum is explicitly excluded from clipping checks (normally ENTITYNUM_NONE)
 
+void SV_ClipToEntities( trace_t *trace, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int entityNum, int contentmask, traceType_t type );
+// clip to entities, but not world
 
 void SV_ClipToEntity( trace_t *trace, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int entityNum, int contentmask, traceType_t type );
 // clip to a specific entity
