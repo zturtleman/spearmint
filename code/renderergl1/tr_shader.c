@@ -508,19 +508,34 @@ static int ParseIfEndif( char **text, char *token, int *ifIndent, int braketLeve
 
 /*
 ===============
+ParseOptionalToken
+===============
+*/
+static qboolean ParseOptionalToken( char **text, const char *expected ) {
+	char *oldText = *text;
+	char *token;
+
+	token = COM_ParseExt( text, qfalse );
+	if ( strcmp( token, expected ) ) {
+		*text = oldText;
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+===============
 ParseVector
 ===============
 */
 static qboolean ParseVector( char **text, int count, float *v ) {
-	char	*token;
+	qboolean openParen, closeParen;
+	char	*token, *end;
 	int		i;
 
 	// FIXME: spaces are currently required after parens, should change parseext...
-	token = COM_ParseExt( text, qfalse );
-	if ( strcmp( token, "(" ) ) {
-		ri.Printf( PRINT_WARNING, "WARNING: missing parenthesis in shader '%s'\n", shader.name );
-		return qfalse;
-	}
+	openParen = ParseOptionalToken( text, "(" );
 
 	for ( i = 0 ; i < count ; i++ ) {
 		token = COM_ParseExt( text, qfalse );
@@ -528,11 +543,14 @@ static qboolean ParseVector( char **text, int count, float *v ) {
 			ri.Printf( PRINT_WARNING, "WARNING: missing vector element in shader '%s'\n", shader.name );
 			return qfalse;
 		}
-		v[i] = atof( token );
+		v[i] = strtod( token, &end );
+		if ( *end != '\0' ) {
+			ri.Printf( PRINT_WARNING, "WARNING: vector element '%s' in shader '%s' is not a number\n", token, shader.name );
+		}
 	}
 
-	token = COM_ParseExt( text, qfalse );
-	if ( strcmp( token, ")" ) ) {
+	closeParen = ParseOptionalToken( text, ")" );
+	if ( closeParen != openParen ) {
 		ri.Printf( PRINT_WARNING, "WARNING: missing parenthesis in shader '%s'\n", shader.name );
 		return qfalse;
 	}
