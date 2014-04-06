@@ -2152,6 +2152,11 @@ static qboolean ParseShader( char **text )
 			ParseSurfaceParm( text );
 			continue;
 		}
+		// force 32 bit
+		else if ( !Q_stricmp( token, "force32bit" ) ) {
+			// ZTM: FIXME: Actually support force32bit
+			continue;
+		}
 		// no mip maps
 		else if ( !Q_stricmp( token, "nomipmaps" ) || ( !Q_stricmp( token,"nomipmap" ) )  )
 		{
