@@ -128,6 +128,32 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 
 /*
 ==============
+R_DiffuseColorGen
+
+It's implied that AGEN_SKIP can be used with any returned color gen.
+
+Returns diffuse color gen for lightmap index.
+==============
+*/
+static ID_INLINE colorGen_t R_DiffuseColorGen( int lightmapIndex ) {
+	colorGen_t rgbGen;
+
+	// lighting diffuse only works on entities, not 2D or world
+	if ( lightmapIndex == LIGHTMAP_NONE ) {
+		rgbGen = CGEN_LIGHTING_DIFFUSE;
+	} else if ( lightmapIndex == LIGHTMAP_2D ) {
+		rgbGen = CGEN_VERTEX;
+	} else {
+		// world; LIGHTMAP_BY_VERTEX, LIGHTMAP_WHITEIMAGE, or a real lightmap
+		// already overbright shifted, so use exact
+		rgbGen = CGEN_EXACT_VERTEX;
+	}
+
+	return rgbGen;
+}
+
+/*
+==============
 RE_SetSurfaceShader
 
 Set shader for given world surface
@@ -238,7 +264,7 @@ qhandle_t RE_GetSurfaceShader( int surfaceNum, int withlightmap ) {
 			}
 
 			if ( shd->stages[i]->rgbGen != CGEN_CONST && shd->stages[i]->rgbGen != CGEN_WAVEFORM ) {
-				shd->stages[i]->rgbGen = ( lightmapIndex == LIGHTMAP_NONE ) ? CGEN_LIGHTING_DIFFUSE : CGEN_IDENTITY;
+				shd->stages[i]->rgbGen = R_DiffuseColorGen( lightmapIndex );
 			}
 
 			if ( lightmapIndex == LIGHTMAP_2D && shd->stages[i]->alphaGen != AGEN_CONST && shd->stages[i]->alphaGen != AGEN_WAVEFORM ) {
@@ -1704,7 +1730,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 			else if ( !Q_stricmp( token, "lightingDiffuse" ) )
 			{
-				stage->rgbGen = CGEN_LIGHTING_DIFFUSE;
+				stage->rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
 			}
 			else if ( !Q_stricmp( token, "oneMinusVertex" ) )
 			{
@@ -1879,7 +1905,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		stage->bundle[0].image[0] == tr.whiteImage)
 	{
 		stage->bundle[0].isLightmap = qfalse;
-		stage->rgbGen = CGEN_EXACT_VERTEX;
+		stage->rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
 	}
 
 	//
@@ -3813,11 +3839,7 @@ static void VertexLightingCollapse( void ) {
 		stages[0].bundle[0] = bestStage->bundle[0];
 		stages[0].stateBits &= ~( GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS );
 		stages[0].stateBits |= GLS_DEPTHMASK_TRUE;
-		if ( shader.lightmapIndex == LIGHTMAP_NONE ) {
-			stages[0].rgbGen = CGEN_LIGHTING_DIFFUSE;
-		} else {
-			stages[0].rgbGen = CGEN_EXACT_VERTEX;
-		}
+		stages[0].rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
 		stages[0].alphaGen = AGEN_SKIP;		
 	} else {
 		// don't use a lightmap (tesla coils)
