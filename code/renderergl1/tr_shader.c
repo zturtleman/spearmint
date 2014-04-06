@@ -2127,6 +2127,26 @@ static qboolean ParseShader( char **text )
 		else if ( !Q_stricmpn( token, "q3map", 5 ) ) {
 			continue;
 		}
+		// fogOnly
+		// Some Q3 shaders have it, but not ones used by the final game.
+		// FAKK and Alice do use it though. FAKK shader manual say it must be used with surfaceParm fog.
+		else if ( !Q_stricmp( token, "fogOnly" ) ) {
+			continue;
+		}
+		// surfaceLight is an alias for q3map_surfacelight (for FAKK at least)
+		else if ( !Q_stricmp( token, "surfaceLight" ) ) {
+			continue;
+		}
+		// surfaceColor <red> <green> <blue>
+		// used by FAKK map compiler, an alternative to q3map_lightimage
+		// FAKK doesn't use parentheses, but it would have them in Q3-style syntax...
+		else if ( !Q_stricmp( token, "surfaceColor" ) ) {
+			continue;
+		}
+		// surfaceDensity <density> // used by FAKK mapcompiler for lightmap density
+		else if ( !Q_stricmp( token, "surfaceDensity" ) ) {
+			continue;
+		}
 		// skip stuff that only q3map or the server needs
 		else if ( !Q_stricmp( token, "surfaceParm" ) ) {
 			ParseSurfaceParm( text );
