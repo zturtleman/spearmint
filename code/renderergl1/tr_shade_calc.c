@@ -687,7 +687,7 @@ void RB_CalcAlphaFromOneMinusEntity( unsigned char *dstColors )
 /*
 ** RB_CalcWaveColor
 */
-void RB_CalcWaveColor( const waveForm_t *wf, unsigned char *dstColors )
+void RB_CalcWaveColor( const waveForm_t *wf, const byte *constantColor, unsigned char *dstColors )
 {
 	int i;
 	int v;
@@ -711,8 +711,14 @@ void RB_CalcWaveColor( const waveForm_t *wf, unsigned char *dstColors )
 		glow = 1;
 	}
 
-	v = ri.ftol(255 * glow);
-	color[0] = color[1] = color[2] = v;
+	if ( constantColor ) {
+		color[0] = ri.ftol(constantColor[0] * glow);
+		color[1] = ri.ftol(constantColor[1] * glow);
+		color[2] = ri.ftol(constantColor[2] * glow);
+	} else {
+		v = ri.ftol(255 * glow);
+		color[0] = color[1] = color[2] = v;
+	}
 	color[3] = 255;
 	v = *(int *)color;
 	

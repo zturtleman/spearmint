@@ -234,7 +234,8 @@ qhandle_t RE_GetSurfaceShader( int surfaceNum, int withlightmap ) {
 				break;
 			}
 
-			if ( shd->stages[i]->rgbGen != CGEN_CONST && shd->stages[i]->rgbGen != CGEN_WAVEFORM ) {
+			if ( shd->stages[i]->rgbGen != CGEN_CONST && shd->stages[i]->rgbGen != CGEN_WAVEFORM
+					&& shd->stages[i]->rgbGen != CGEN_COLOR_WAVEFORM ) {
 				shd->stages[i]->rgbGen = R_DiffuseColorGen( lightmapIndex );
 			}
 
@@ -1414,6 +1415,19 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				ParseWaveForm( text, &stage->rgbWave );
 				stage->rgbGen = CGEN_WAVEFORM;
+			}
+			else if ( !Q_stricmp( token, "colorwave" ) )
+			{
+				vec3_t	color;
+
+				ParseVector( text, 3, color );
+				stage->constantColor[0] = 255 * color[0];
+				stage->constantColor[1] = 255 * color[1];
+				stage->constantColor[2] = 255 * color[2];
+
+				ParseWaveForm( text, &stage->rgbWave );
+
+				stage->rgbGen = CGEN_COLOR_WAVEFORM;
 			}
 			else if ( !Q_stricmp( token, "const" ) || !Q_stricmp( token, "constant" ) )
 			{
@@ -2788,7 +2802,7 @@ static qboolean CollapseMultitexture( void ) {
 		return qfalse;
 	}
 
-	if ( stages[0].rgbGen == CGEN_WAVEFORM )
+	if ( stages[0].rgbGen == CGEN_WAVEFORM || stages[0].rgbGen == CGEN_COLOR_WAVEFORM )
 	{
 		if ( memcmp( &stages[0].rgbWave,
 					 &stages[1].rgbWave,
