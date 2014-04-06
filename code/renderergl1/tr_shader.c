@@ -2261,6 +2261,13 @@ static qboolean ParseShader( char **text )
 			shader.sort = SS_PORTAL;
 			continue;
 		}
+		// portalsky
+		else if ( !Q_stricmp(token, "portalsky") )
+		{
+			// ZTM: FIXME: Not entirely sure what portalsky is suppose to do.
+			shader.isSky = qtrue;
+			continue;
+		}
 		// skyparms <cloudheight> <outerbox> <innerbox>
 		else if ( !Q_stricmp( token, "skyparms" ) )
 		{
