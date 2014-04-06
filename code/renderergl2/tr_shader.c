@@ -1697,7 +1697,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				ParseWaveForm( text, &stage->rgbWave );
 				stage->rgbGen = CGEN_WAVEFORM;
 			}
-			else if ( !Q_stricmp( token, "const" ) )
+			else if ( !Q_stricmp( token, "const" ) || !Q_stricmp( token, "constant" ) )
 			{
 				vec3_t	color;
 
@@ -1716,7 +1716,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->rgbGen = CGEN_IDENTITY_LIGHTING;
 			}
-			else if ( !Q_stricmp( token, "entity" ) )
+			else if ( !Q_stricmp( token, "entity" ) || !Q_stricmp( token, "fromEntity" ) )
 			{
 				stage->rgbGen = CGEN_ENTITY;
 			}
@@ -1724,7 +1724,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->rgbGen = CGEN_ONE_MINUS_ENTITY;
 			}
-			else if ( !Q_stricmp( token, "vertex" ) )
+			else if ( !Q_stricmp( token, "vertex" ) || !Q_stricmp( token, "fromClient" ) )
 			{
 				stage->rgbGen = CGEN_VERTEX;
 				if ( stage->alphaGen == 0 ) {
@@ -1777,7 +1777,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				ParseWaveForm( text, &stage->alphaWave );
 				stage->alphaGen = AGEN_WAVEFORM;
 			}
-			else if ( !Q_stricmp( token, "const" ) )
+			else if ( !Q_stricmp( token, "const" ) || !Q_stricmp( token, "constant" ) )
 			{
 				token = COM_ParseExt( text, qfalse );
 				stage->constantColor[3] = 255 * atof( token );
@@ -1787,7 +1787,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->alphaGen = AGEN_IDENTITY;
 			}
-			else if ( !Q_stricmp( token, "entity" ) )
+			else if ( !Q_stricmp( token, "entity" ) || !Q_stricmp( token, "fromEntity" ) )
 			{
 				stage->alphaGen = AGEN_ENTITY;
 			}
@@ -1795,7 +1795,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->alphaGen = AGEN_ONE_MINUS_ENTITY;
 			}
-			else if ( !Q_stricmp( token, "vertex" ) )
+			else if ( !Q_stricmp( token, "vertex" ) || !Q_stricmp( token, "fromClient" ) )
 			{
 				stage->alphaGen = AGEN_VERTEX;
 			}
@@ -1890,7 +1890,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		//
 		// depthmask
 		//
-		else if ( !Q_stricmp( token, "depthwrite" ) )
+		else if ( !Q_stricmp( token, "depthwrite" ) || !Q_stricmp( token, "depthmask" ) )
 		{
 			depthMaskBits = GLS_DEPTHMASK_TRUE;
 			depthMaskExplicit = qtrue;
