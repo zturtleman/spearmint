@@ -1012,7 +1012,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 {
 	char keyword[64];
 	char *token;
-	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0;
+	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0, depthTestBits = 0;
 	qboolean depthMaskExplicit = qfalse;
 	qboolean skipRestOfLine = qfalse;
 
@@ -1604,6 +1604,14 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 
 			continue;
 		}
+		//
+		// noDepthTest
+		//
+		else if ( !Q_stricmp( token, "noDepthTest" ) )
+		{
+			depthTestBits = GLS_DEPTHTEST_DISABLE;
+			continue;
+		}
 		else
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: unknown parameter '%s' in shader '%s'\n", token, shader.name );
@@ -1657,7 +1665,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 	stage->stateBits = depthMaskBits | 
 		               blendSrcBits | blendDstBits | 
 					   atestBits | 
-					   depthFuncBits;
+					   depthFuncBits |
+					   depthTestBits;
 
 	return qtrue;
 }
