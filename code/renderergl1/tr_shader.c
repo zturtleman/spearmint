@@ -3044,6 +3044,7 @@ static void SetImplicitShaderStages( image_t *image ) {
 		stages[ 0 ].bundle[ 0 ].image[ 0 ] = image;
 		stages[ 0 ].active = qtrue;
 		stages[ 0 ].rgbGen = CGEN_LIGHTING_DIFFUSE;
+		stages[ 0 ].alphaGen = AGEN_SKIP;
 		stages[ 0 ].stateBits = implicitStateBits;
 		break;
 
