@@ -2637,7 +2637,7 @@ static qboolean ParseShader( char **text )
 
 			shader.fogParms.depthForOpaque = atof( token );
 
-			// note: there could not be a token, or token might be part of old gradient directions?
+			// note: there could not be a token, or token might be old gradient directions
 			token = COM_ParseExt( text, qfalse );
 			if ( !*token )
 				token = r_defaultFogParmsType->string;
@@ -2646,7 +2646,7 @@ static qboolean ParseShader( char **text )
 				shader.fogParms.fogType = FT_LINEAR;
 				shader.fogParms.density = DEFAULT_FOG_LINEAR_DENSITY;
 			} else {
-				if ( Q_stricmp( token, "exp" ) )
+				if ( Q_stricmp( token, "exp" ) && !Q_isanumber( token ) )
 					ri.Printf( PRINT_WARNING, "WARNING: unknown fog type '%s' for 'fogParms' keyword in shader '%s'\n", token, shader.name );
 
 				shader.fogParms.fogType = FT_EXP;
