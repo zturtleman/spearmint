@@ -1016,6 +1016,9 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0, depthTestBits = 0;
 	qboolean depthMaskExplicit = qfalse;
 	qboolean skipRestOfLine = qfalse;
+	qboolean stage_noMipMaps = shader.noMipMaps;
+	qboolean stage_noPicMip = shader.noPicMip;
+	int stage_picmipFlag = shader_picmipFlag;
 
 	stage->active = qtrue;
 
@@ -1137,11 +1140,11 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				imgType_t type = IMGTYPE_COLORALPHA;
 				imgFlags_t flags = IMGFLAG_NONE;
 
-				if (!shader.noMipMaps)
+				if (!stage_noMipMaps)
 					flags |= IMGFLAG_MIPMAP;
 
-				if (!shader.noPicMip)
-					flags |= shader_picmipFlag;
+				if (!stage_noPicMip)
+					flags |= stage_picmipFlag;
 
 				stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 
@@ -1167,11 +1170,11 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				return qfalse;
 			}
 
-			if (!shader.noMipMaps)
+			if (!stage_noMipMaps)
 				flags |= IMGFLAG_MIPMAP;
 
-			if (!shader.noPicMip)
-				flags |= shader_picmipFlag;
+			if (!stage_noPicMip)
+				flags |= stage_picmipFlag;
 
 			stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 			if ( !stage->bundle[0].image[0] )
@@ -1245,11 +1248,11 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 			stage->bundle[0].imageAnimationSpeed = atof( token );
 
-			if (!shader.noMipMaps)
+			if (!stage_noMipMaps)
 				flags |= IMGFLAG_MIPMAP;
 
-			if (!shader.noPicMip)
-				flags |= shader_picmipFlag;
+			if (!stage_noPicMip)
+				flags |= stage_picmipFlag;
 
 			// parse up to MAX_IMAGE_ANIMATIONS animations
 			while ( 1 ) {
@@ -1290,6 +1293,30 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				stage->bundle[0].isVideoMap = qtrue;
 				stage->bundle[0].image[0] = tr.scratchImage[stage->bundle[0].videoMapHandle];
 			}
+		}
+		//
+		// no mip maps
+		//
+		else if ( !Q_stricmp( token, "nomipmaps" ) || ( !Q_stricmp( token,"nomipmap" ) ) )
+		{
+			stage_noMipMaps = qtrue;
+			stage_noPicMip = qtrue;
+			continue;
+		}
+		//
+		// no picmip adjustment
+		//
+		else if ( !Q_stricmp( token, "nopicmip" ) )
+		{
+			stage_noPicMip = qtrue;
+			continue;
+		}
+		//
+		// character picmip adjustment
+		//
+		else if ( !Q_stricmp( token, "picmip2" ) ) {
+			stage_picmipFlag = IMGFLAG_PICMIP2;
+			continue;
 		}
 		//
 		// alphafunc <func>
