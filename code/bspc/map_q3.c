@@ -558,7 +558,7 @@ void AAS_CreateCurveBrushes(void)
 			points[j][2] = dv_p->xyz[2];
 		} //end for
 		// create the internal facet structure
-		pc = CM_GeneratePatchCollide(width, height, points);
+		pc = CM_GeneratePatchCollide(width, height, points, 16); // ZTM: FIXME: Get from bspFile_t
 		//
 		for (j = 0; j < pc->numFacets; j++)
 		{
