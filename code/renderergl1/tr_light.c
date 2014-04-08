@@ -175,7 +175,7 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent ) {
 	vec3_t	lightOrigin;
 	int		pos[3];
 	int		i, j;
-	byte	*gridData;
+	int		startGridPos;
 	float	frac[3];
 	int		gridStep[3];
 	vec3_t	direction;
@@ -214,11 +214,10 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent ) {
 	assert( tr.world->lightGridData ); // NULL with -nolight maps
 
 	// trilerp the light value
-	gridStep[0] = 8;
-	gridStep[1] = 8 * tr.world->lightGridBounds[0];
-	gridStep[2] = 8 * tr.world->lightGridBounds[0] * tr.world->lightGridBounds[1];
-	gridData = tr.world->lightGridData + pos[0] * gridStep[0]
-		+ pos[1] * gridStep[1] + pos[2] * gridStep[2];
+	gridStep[0] = 1;
+	gridStep[1] = tr.world->lightGridBounds[0];
+	gridStep[2] = tr.world->lightGridBounds[0] * tr.world->lightGridBounds[1];
+	startGridPos = pos[0] * gridStep[0] + pos[1] * gridStep[1] + pos[2] * gridStep[2];
 
 	totalFactor = 0;
 	for ( i = 0 ; i < 8 ; i++ ) {
@@ -226,18 +225,28 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent ) {
 		byte	*data;
 		int		lat, lng;
 		vec3_t	normal;
+		int		gridPos;
 		#if idppc
 		float d0, d1, d2, d3, d4, d5;
 		#endif
 		factor = 1.0;
-		data = gridData;
+		gridPos = startGridPos;
 		for ( j = 0 ; j < 3 ; j++ ) {
 			if ( i & (1<<j) ) {
 				factor *= frac[j];
-				data += gridStep[j];
+				gridPos += gridStep[j];
 			} else {
 				factor *= (1.0f - frac[j]);
 			}
+		}
+
+		if ( tr.world->lightGridArray ) {
+			if ( gridPos >= tr.world->numGridArrayPoints ) {
+				continue;
+			}
+			data = tr.world->lightGridData + tr.world->lightGridArray[gridPos] * 8;
+		} else {
+			data = tr.world->lightGridData + gridPos * 8;
 		}
 
 		if ( !(data[0]+data[1]+data[2]) ) {

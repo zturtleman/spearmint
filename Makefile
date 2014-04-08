@@ -1230,6 +1230,7 @@ Q3OBJ = \
   $(B)/client/bsp.o \
   $(B)/client/bsp_q3.o \
   $(B)/client/bsp_fakk.o \
+  $(B)/client/bsp_sof2.o \
   \
   $(B)/client/cm_load.o \
   $(B)/client/cm_patch.o \
@@ -1869,6 +1870,7 @@ Q3DOBJ = \
   $(B)/ded/bsp.o \
   $(B)/ded/bsp_q3.o \
   $(B)/ded/bsp_fakk.o \
+  $(B)/ded/bsp_sof2.o \
   \
   $(B)/ded/cm_load.o \
   $(B)/ded/cm_patch.o \

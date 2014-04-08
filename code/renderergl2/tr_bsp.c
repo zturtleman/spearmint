@@ -2907,16 +2907,25 @@ void R_LoadLightGrid( const bspFile_t *bsp ) {
 
 	numGridPoints = w->lightGridBounds[0] * w->lightGridBounds[1] * w->lightGridBounds[2];
 
-	if ( !bsp->lightGridData || numGridPoints != bsp->numGridPoints ) {
-		ri.Printf( PRINT_WARNING, "WARNING: light grid mismatch\n" );
+	if ( bsp->numGridArrayPoints ) {
+		if ( numGridPoints != bsp->numGridArrayPoints ) {
+			ri.Printf( PRINT_WARNING, "WARNING: light array mismatch: %d points found, expected %d\n", numGridPoints, bsp->numGridArrayPoints );
+			w->lightGridData = NULL;
+			return;
+		}
+	}
+	else if ( !bsp->lightGridData || numGridPoints != bsp->numGridPoints ) {
+		ri.Printf( PRINT_WARNING, "WARNING: light grid mismatch: %d points found, expected %d\n", numGridPoints, bsp->numGridPoints );
 		w->lightGridData = NULL;
 		return;
 	}
 
 	w->lightGridData = bsp->lightGridData;
+	w->lightGridArray = bsp->lightGridArray;
+	w->numGridArrayPoints = bsp->numGridArrayPoints;
 
 	// deal with overbright bits
-	for ( i = 0 ; i < numGridPoints ; i++ ) {
+	for ( i = 0 ; i < bsp->numGridPoints ; i++ ) {
 		R_ColorShiftLightingBytes( &w->lightGridData[i*8], &w->lightGridData[i*8] );
 		R_ColorShiftLightingBytes( &w->lightGridData[i*8+3], &w->lightGridData[i*8+3] );
 	}

@@ -829,6 +829,8 @@ typedef struct {
 	vec3_t		lightGridInverseSize;
 	int			lightGridBounds[3];
 	byte		*lightGridData;
+	unsigned short *lightGridArray;
+	int			numGridArrayPoints;
 
 
 	int			numClusters;

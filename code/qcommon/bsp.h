@@ -190,6 +190,9 @@ typedef struct {
 	byte			*lightGridData; // each point is 8 bytes
 	int				numGridPoints;
 
+	unsigned short	*lightGridArray;
+	int				numGridArrayPoints;
+
 	int				numClusters;
 	int				clusterBytes;
 	byte			*visibility;
@@ -224,6 +227,9 @@ extern bspFormat_t wolfBspFormat;
 // bsp_fakk.c
 extern bspFormat_t fakkBspFormat;
 extern bspFormat_t aliceBspFormat;
+
+// bsp_sof2.c
+extern bspFormat_t sof2BspFormat;
 
 #endif // __MINT_BSP__
 
