@@ -2921,6 +2921,7 @@ void R_LoadLightGrid( const bspFile_t *bsp ) {
 	}
 
 	w->lightGridData = bsp->lightGridData;
+	w->numGridPoints = bsp->numGridPoints;
 	w->lightGridArray = bsp->lightGridArray;
 	w->numGridArrayPoints = bsp->numGridArrayPoints;
 

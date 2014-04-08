@@ -1280,6 +1280,7 @@ typedef struct {
 	int			lightGridBounds[3];
 	byte		*lightGridData;
 	float		*hdrLightGrid;
+	int			numGridPoints;
 	unsigned short *lightGridArray;
 	int			numGridArrayPoints;
 

@@ -251,10 +251,14 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t *world ) {
 			if ( gridPos >= world->numGridArrayPoints ) {
 				continue;
 			}
-			data = world->lightGridData + world->lightGridArray[gridPos] * 8;
-		} else {
-			data = world->lightGridData + gridPos * 8;
+			gridPos = world->lightGridArray[gridPos];
 		}
+
+		if ( gridPos >= world->numGridPoints ) {
+			continue;
+		}
+
+		data = world->lightGridData + gridPos * 8;
 
 		if (world->hdrLightGrid)
 		{

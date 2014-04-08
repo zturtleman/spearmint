@@ -244,10 +244,14 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent ) {
 			if ( gridPos >= tr.world->numGridArrayPoints ) {
 				continue;
 			}
-			data = tr.world->lightGridData + tr.world->lightGridArray[gridPos] * 8;
-		} else {
-			data = tr.world->lightGridData + gridPos * 8;
+			gridPos = tr.world->lightGridArray[gridPos];
 		}
+
+		if ( gridPos >= tr.world->numGridPoints ) {
+			continue;
+		}
+
+		data = tr.world->lightGridData + gridPos * 8;
 
 		if ( !(data[0]+data[1]+data[2]) ) {
 			continue;	// ignore samples in walls
