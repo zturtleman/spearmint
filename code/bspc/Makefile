@@ -409,6 +409,8 @@ BSPC_OBJS = \
 	$(B)/botlib/be_aas_sample.o\
 	$(B)/bspc/brushbsp.o\
 	$(B)/bspc/bspc.o\
+	$(B)/qcommon/bsp.o\
+	$(B)/qcommon/bsp_q3.o\
 	$(B)/qcommon/cm_load.o\
 	$(B)/qcommon/cm_patch.o\
 	$(B)/qcommon/cm_test.o\

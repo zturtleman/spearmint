@@ -1103,6 +1103,21 @@ qboolean LAN_ServerIsInFavoriteList( int source, int n ) {
 	return qfalse;
 }
 
+/*
+=======================
+CL_LoadWorldMap
+=======================
+*/
+void CL_LoadWorldMap( const char *name ) {
+	if ( !cls.cgameBsp ) {
+		cls.cgameBsp = BSP_Load( name );
+		if ( !cls.cgameBsp ) {
+			Com_Error( ERR_DROP, "Couldn't load %s", name );
+		}
+	}
+	re.LoadWorld( cls.cgameBsp );
+}
+
 
 /*
 ====================
@@ -1123,6 +1138,9 @@ void CL_ShutdownCGame( void ) {
 	cgvm = NULL;
 
 	Cmd_RemoveCommandsByFunc( CL_GameCommand );
+
+	BSP_Free( cls.cgameBsp );
+	cls.cgameBsp = NULL;
 }
 
 /*
@@ -1299,8 +1317,8 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		S_StartBackgroundTrack( VMA(1), VMA(2), VMF(3), VMF(3) );
 		return 0;
 	case CG_R_LOADWORLDMAP:
-		re.LoadWorld( VMA(1) );
-		return 0; 
+		CL_LoadWorldMap( VMA(1) );
+		return 0;
 	case CG_R_REGISTERMODEL:
 		return re.RegisterModel( VMA(1) );
 	case CG_R_REGISTERSHADEREX:

@@ -1227,6 +1227,9 @@ Q3OBJ = \
   $(B)/client/cl_scrn.o \
   $(B)/client/cl_avi.o \
   \
+  $(B)/client/bsp.o \
+  $(B)/client/bsp_q3.o \
+  \
   $(B)/client/cm_load.o \
   $(B)/client/cm_patch.o \
   $(B)/client/cm_polylib.o \
@@ -1861,6 +1864,9 @@ Q3DOBJ = \
   $(B)/ded/sv_net_chan.o \
   $(B)/ded/sv_snapshot.o \
   $(B)/ded/sv_world.o \
+  \
+  $(B)/ded/bsp.o \
+  $(B)/ded/bsp_q3.o \
   \
   $(B)/ded/cm_load.o \
   $(B)/ded/cm_patch.o \

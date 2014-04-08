@@ -30,10 +30,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 // cmodel.c -- model loading
 
 #include "cm_local.h"
+#include "bsp.h"
 
 #ifdef BSPC
-
-#include "../bspc/l_qfiles.h"
 
 void SetPlaneSignbits (cplane_t *out) {
 	int	bits, j;
@@ -61,11 +60,9 @@ void SetPlaneSignbits (cplane_t *out) {
 
 
 clipMap_t	cm;
+bspFile_t	*cm_bsp = NULL;
 int			c_pointcontents;
 int			c_traces, c_brush_traces, c_patch_traces;
-
-
-byte		*cmod_base;
 
 #ifndef BSPC
 cvar_t		*cm_noAreas;
@@ -98,31 +95,12 @@ void	CM_FloodAreaConnections (void);
 CMod_LoadShaders
 =================
 */
-void CMod_LoadShaders( lump_t *l ) {
-	dshader_t	*in, *out;
-	int			i, count;
-
-	in = (void *)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in)) {
-		Com_Error (ERR_DROP, "CMod_LoadShaders: funny lump size");
-	}
-	count = l->filelen / sizeof(*in);
-
-	if (count < 1) {
+void CMod_LoadShaders( void ) {
+	if (cm_bsp->numShaders < 1) {
 		Com_Error (ERR_DROP, "Map with no shaders");
 	}
-	cm.shaders = Hunk_Alloc( count * sizeof( *cm.shaders ), h_high );
-	cm.numShaders = count;
-
-	Com_Memcpy( cm.shaders, in, count * sizeof( *cm.shaders ) );
-
-	if ( LittleLong( 1 ) != 1 ) {
-		out = cm.shaders;
-		for ( i=0 ; i<count ; i++, in++, out++ ) {
-			out->contentFlags = LittleLong( out->contentFlags );
-			out->surfaceFlags = LittleLong( out->surfaceFlags );
-		}
-	}
+	cm.shaders = cm_bsp->shaders;
+	cm.numShaders = cm_bsp->numShaders;
 }
 
 
@@ -131,16 +109,14 @@ void CMod_LoadShaders( lump_t *l ) {
 CMod_LoadSubmodels
 =================
 */
-void CMod_LoadSubmodels( lump_t *l ) {
+void CMod_LoadSubmodels( void ) {
 	dmodel_t	*in;
 	cmodel_t	*out;
 	int			i, j, count;
 	int			*indexes;
 
-	in = (void *)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "CMod_LoadSubmodels: funny lump size");
-	count = l->filelen / sizeof(*in);
+	in = cm_bsp->submodels;
+	count = cm_bsp->numSubmodels;
 
 	if (count < 1)
 		Com_Error (ERR_DROP, "Map with no models");
@@ -185,16 +161,14 @@ CMod_LoadNodes
 
 =================
 */
-void CMod_LoadNodes( lump_t *l ) {
+void CMod_LoadNodes( void ) {
 	dnode_t		*in;
 	int			child;
 	cNode_t		*out;
 	int			i, j, count;
 	
-	in = (void *)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
+	in = cm_bsp->nodes;
+	count = cm_bsp->numNodes;
 
 	if (count < 1)
 		Com_Error (ERR_DROP, "Map has no nodes");
@@ -239,16 +213,13 @@ CMod_LoadBrushes
 
 =================
 */
-void CMod_LoadBrushes( lump_t *l ) {
+void CMod_LoadBrushes( void ) {
 	dbrush_t	*in;
 	cbrush_t	*out;
 	int			i, count;
 
-	in = (void *)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in)) {
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	}
-	count = l->filelen / sizeof(*in);
+	in = cm_bsp->brushes;
+	count = cm_bsp->numBrushes;
 
 	cm.brushes = Hunk_Alloc( ( BOX_BRUSHES + count ) * sizeof( *cm.brushes ), h_high );
 	cm.numBrushes = count;
@@ -275,17 +246,15 @@ void CMod_LoadBrushes( lump_t *l ) {
 CMod_LoadLeafs
 =================
 */
-void CMod_LoadLeafs (lump_t *l)
+void CMod_LoadLeafs( void )
 {
 	int			i;
 	cLeaf_t		*out;
 	dleaf_t 	*in;
 	int			count;
 	
-	in = (void *)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
+	in = cm_bsp->leafs;
+	count = cm_bsp->numLeafs;
 
 	if (count < 1)
 		Com_Error (ERR_DROP, "Map with no leafs");
@@ -318,7 +287,7 @@ void CMod_LoadLeafs (lump_t *l)
 CMod_LoadPlanes
 =================
 */
-void CMod_LoadPlanes (lump_t *l)
+void CMod_LoadPlanes( void )
 {
 	int			i, j;
 	cplane_t	*out;
@@ -326,10 +295,8 @@ void CMod_LoadPlanes (lump_t *l)
 	int			count;
 	int			bits;
 	
-	in = (void *)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
+	in = cm_bsp->planes;
+	count = cm_bsp->numPlanes;
 
 	if (count < 1)
 		Com_Error (ERR_DROP, "Map with no planes");
@@ -359,17 +326,15 @@ void CMod_LoadPlanes (lump_t *l)
 CMod_LoadLeafBrushes
 =================
 */
-void CMod_LoadLeafBrushes (lump_t *l)
+void CMod_LoadLeafBrushes( void )
 {
 	int			i;
 	int			*out;
 	int		 	*in;
 	int			count;
 	
-	in = (void *)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
+	in = cm_bsp->leafBrushes;
+	count = cm_bsp->numLeafBrushes;
 
 	cm.leafbrushes = Hunk_Alloc( (BOX_LEAF_BRUSHES + count) * sizeof( *cm.leafbrushes ), h_high );
 	cm.numLeafBrushes = count;
@@ -386,17 +351,15 @@ void CMod_LoadLeafBrushes (lump_t *l)
 CMod_LoadLeafSurfaces
 =================
 */
-void CMod_LoadLeafSurfaces( lump_t *l )
+void CMod_LoadLeafSurfaces( void )
 {
 	int			i;
 	int			*out;
 	int		 	*in;
 	int			count;
 	
-	in = (void *)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	count = l->filelen / sizeof(*in);
+	in = cm_bsp->leafSurfaces;
+	count = cm_bsp->numLeafSurfaces;
 
 	cm.leafsurfaces = Hunk_Alloc( count * sizeof( *cm.leafsurfaces ), h_high );
 	cm.numLeafSurfaces = count;
@@ -413,7 +376,7 @@ void CMod_LoadLeafSurfaces( lump_t *l )
 CMod_LoadBrushSides
 =================
 */
-void CMod_LoadBrushSides (lump_t *l)
+void CMod_LoadBrushSides ( void )
 {
 	int				i;
 	cbrushside_t	*out;
@@ -421,11 +384,8 @@ void CMod_LoadBrushSides (lump_t *l)
 	int				count;
 	int				num;
 
-	in = (void *)(cmod_base + l->fileofs);
-	if ( l->filelen % sizeof(*in) ) {
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	}
-	count = l->filelen / sizeof(*in);
+	in = cm_bsp->brushSides;
+	count = cm_bsp->numBrushSides;
 
 	cm.brushsides = Hunk_Alloc( ( BOX_SIDES + count ) * sizeof( *cm.brushsides ), h_high );
 	cm.numBrushSides = count;
@@ -454,7 +414,7 @@ CMod_GetBestSurfaceNumForBrushSide
 Based on NetRadiant's GetBestSurfaceTriangleMatchForBrushside in tools/quake3/q3map2/convert_map.c
 =================
 */
-static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide, dsurface_t *bspDrawSurfaces, drawVert_t *bspDrawVerts, int *bspDrawIndexes ) {
+static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide ) {
 #ifdef BSPC
 	return -1;
 #else
@@ -474,6 +434,9 @@ static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide, ds
 	//int			matches = 0;
 	int				bestSurfaceNum = -1;
 	int				surfnum;
+	dsurface_t		*bspDrawSurfaces = cm_bsp->surfaces;
+	drawVert_t		*bspDrawVerts = cm_bsp->drawVerts;
+	int				*bspDrawIndexes = cm_bsp->drawIndexes;
 
 	// ZTM: NOTE: Unfortunately this takes longer than is acceptable on a lot of maps,
 	//      and it's only needed for trap_R_SetSurfaceShader/trap_R_GetSurfaceShader.
@@ -621,7 +584,7 @@ static qboolean CMod_AddEdgeToBrush( const vec3_t p0, const vec3_t p1,
 CMod_CreateBrushSideWindings
 =================
 */
-static void CMod_CreateBrushSideWindings( lump_t *surfLump, lump_t *vertsLump, lump_t *indexLump )
+static void CMod_CreateBrushSideWindings( void )
 {
 	int						i, j, k;
 	winding_t			*w;
@@ -633,26 +596,6 @@ static void CMod_CreateBrushSideWindings( lump_t *surfLump, lump_t *vertsLump, l
 	int						edgesAlloc;
 	int						totalEdgesAlloc = 0;
 	int						totalEdges = 0;
-	qboolean				isIBSP;
-	dsurface_t				*dsurfaces;
-	drawVert_t				*verts;
-	int						*indexes;
-
-	isIBSP = ( surfLump && vertsLump && indexLump );
-
-	if ( isIBSP ) {
-		dsurfaces = (void *)(cmod_base + surfLump->fileofs);
-		if (surfLump->filelen % sizeof(*dsurfaces))
-			Com_Error (ERR_DROP, "CMod_SetBrushSideSurfaceNums: funny lump size");
-
-		verts = (void *)(cmod_base + vertsLump->fileofs);
-		if (vertsLump->filelen % sizeof(*verts))
-			Com_Error (ERR_DROP, "CMod_SetBrushSideSurfaceNums: funny lump size");
-
-		indexes = (void *)(cmod_base + indexLump->fileofs);
-		if (indexLump->filelen % sizeof(*indexes))
-			Com_Error (ERR_DROP, "CMod_SetBrushSideSurfaceNums: funny lump size");
-	}
 
 	for( i = 0; i < cm.numBrushes; i++ )
 	{
@@ -689,8 +632,9 @@ static void CMod_CreateBrushSideWindings( lump_t *surfLump, lump_t *vertsLump, l
 			// set side winding
 			side->winding = w;
 
-			if ( side->winding && isIBSP ) {
-				side->surfaceNum = CMod_GetBestSurfaceNumForBrushSide( side, dsurfaces, verts, indexes );
+			// look for IBSP surface numbers
+			if ( side->winding ) {
+				side->surfaceNum = CMod_GetBestSurfaceNumForBrushSide( side );
 			}
 		}
 
@@ -743,10 +687,9 @@ static void CMod_CreateBrushSideWindings( lump_t *surfLump, lump_t *vertsLump, l
 CMod_LoadEntityString
 =================
 */
-void CMod_LoadEntityString( lump_t *l ) {
-	cm.entityString = Hunk_Alloc( l->filelen, h_high );
-	cm.numEntityChars = l->filelen;
-	Com_Memcpy (cm.entityString, cmod_base + l->fileofs, l->filelen);
+void CMod_LoadEntityString( void ) {
+	cm.entityString = cm_bsp->entityString;
+	cm.numEntityChars = cm_bsp->entityStringLength;
 }
 
 /*
@@ -754,25 +697,18 @@ void CMod_LoadEntityString( lump_t *l ) {
 CMod_LoadVisibility
 =================
 */
-#define	VIS_HEADER	8
-void CMod_LoadVisibility( lump_t *l ) {
-	int		len;
-	byte	*buf;
-
-    len = l->filelen;
-	if ( !len ) {
+void CMod_LoadVisibility( void ) {
+	if ( !cm_bsp->visibilityLength ) {
 		cm.clusterBytes = ( cm.numClusters + 31 ) & ~31;
 		cm.visibility = Hunk_Alloc( cm.clusterBytes, h_high );
 		Com_Memset( cm.visibility, 255, cm.clusterBytes );
 		return;
 	}
-	buf = cmod_base + l->fileofs;
 
 	cm.vised = qtrue;
-	cm.visibility = Hunk_Alloc( len, h_high );
-	cm.numClusters = LittleLong( ((int *)buf)[0] );
-	cm.clusterBytes = LittleLong( ((int *)buf)[1] );
-	Com_Memcpy (cm.visibility, buf + VIS_HEADER, len - VIS_HEADER );
+	cm.visibility = cm_bsp->visibility;
+	cm.numClusters = cm_bsp->numClusters;
+	cm.clusterBytes = cm_bsp->clusterBytes;
 }
 
 //==================================================================
@@ -784,7 +720,7 @@ CMod_LoadPatches
 =================
 */
 #define	MAX_PATCH_VERTS		1024
-void CMod_LoadPatches( lump_t *surfs, lump_t *verts ) {
+void CMod_LoadPatches( void ) {
 	drawVert_t	*dv, *dv_p;
 	dsurface_t	*in;
 	int			count;
@@ -795,15 +731,11 @@ void CMod_LoadPatches( lump_t *surfs, lump_t *verts ) {
 	int			width, height;
 	int			shaderNum;
 
-	in = (void *)(cmod_base + surfs->fileofs);
-	if (surfs->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
-	cm.numSurfaces = count = surfs->filelen / sizeof(*in);
+	in = cm_bsp->surfaces;
+	cm.numSurfaces = count = cm_bsp->numSurfaces;
 	cm.surfaces = Hunk_Alloc( cm.numSurfaces * sizeof( cm.surfaces[0] ), h_high );
 
-	dv = (void *)(cmod_base + verts->fileofs);
-	if (verts->filelen % sizeof(*dv))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
+	dv = cm_bsp->drawVerts;
 
 	// scan through all the surfaces, but only load patches,
 	// not planar faces
@@ -841,27 +773,6 @@ void CMod_LoadPatches( lump_t *surfs, lump_t *verts ) {
 
 //==================================================================
 
-unsigned CM_LumpChecksum(lump_t *lump) {
-	return LittleLong (Com_BlockChecksum (cmod_base + lump->fileofs, lump->filelen));
-}
-
-unsigned CM_Checksum(dheader_t *header) {
-	unsigned checksums[16];
-	checksums[0] = CM_LumpChecksum(&header->lumps[LUMP_SHADERS]);
-	checksums[1] = CM_LumpChecksum(&header->lumps[LUMP_LEAFS]);
-	checksums[2] = CM_LumpChecksum(&header->lumps[LUMP_LEAFBRUSHES]);
-	checksums[3] = CM_LumpChecksum(&header->lumps[LUMP_LEAFSURFACES]);
-	checksums[4] = CM_LumpChecksum(&header->lumps[LUMP_PLANES]);
-	checksums[5] = CM_LumpChecksum(&header->lumps[LUMP_BRUSHSIDES]);
-	checksums[6] = CM_LumpChecksum(&header->lumps[LUMP_BRUSHES]);
-	checksums[7] = CM_LumpChecksum(&header->lumps[LUMP_MODELS]);
-	checksums[8] = CM_LumpChecksum(&header->lumps[LUMP_NODES]);
-	checksums[9] = CM_LumpChecksum(&header->lumps[LUMP_SURFACES]);
-	checksums[10] = CM_LumpChecksum(&header->lumps[LUMP_DRAWVERTS]);
-
-	return LittleLong(Com_BlockChecksum(checksums, 11 * 4));
-}
-
 /*
 ==================
 CM_LoadMap
@@ -870,13 +781,6 @@ Loads in the map and all submodels
 ==================
 */
 void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
-	union {
-		int				*i;
-		void			*v;
-	} buf;
-	int				i;
-	dheader_t		header;
-	int				length;
 	static unsigned	last_checksum;
 
 	if ( !name || !name[0] ) {
@@ -897,8 +801,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	}
 
 	// free old stuff
-	Com_Memset( &cm, 0, sizeof( cm ) );
-	CM_ClearLevelPatches();
+	CM_ClearMap();
 
 	if ( !name[0] ) {
 		cm.numLeafs = 1;
@@ -909,52 +812,30 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		return;
 	}
 
-	//
-	// load the file
-	//
-#ifndef BSPC
-	length = FS_ReadFile( name, &buf.v );
-#else
-	length = LoadQuakeFile((quakefile_t *) name, &buf.v);
-#endif
+	cm_bsp = BSP_Load( name );
 
-	if ( !buf.i ) {
+	if ( !cm_bsp ) {
 		Com_Error (ERR_DROP, "Couldn't load %s", name);
 	}
 
-	last_checksum = LittleLong (Com_BlockChecksum (buf.i, length));
+	last_checksum = cm_bsp->checksum;
 	*checksum = last_checksum;
 
-	header = *(dheader_t *)buf.i;
-	for (i=0 ; i<sizeof(dheader_t)/4 ; i++) {
-		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
-	}
-
-	if ( header.version != Q3_BSP_VERSION && header.version != WOLF_BSP_VERSION ) {
-		Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number (%i should be %i or %i)",
-			name, header.version, Q3_BSP_VERSION, WOLF_BSP_VERSION );
-	}
-
-	cmod_base = (byte *)buf.i;
-
 	// load into heap
-	CMod_LoadShaders( &header.lumps[LUMP_SHADERS] );
-	CMod_LoadLeafs (&header.lumps[LUMP_LEAFS]);
-	CMod_LoadLeafBrushes (&header.lumps[LUMP_LEAFBRUSHES]);
-	CMod_LoadLeafSurfaces (&header.lumps[LUMP_LEAFSURFACES]);
-	CMod_LoadPlanes (&header.lumps[LUMP_PLANES]);
-	CMod_LoadBrushSides (&header.lumps[LUMP_BRUSHSIDES]);
-	CMod_LoadBrushes (&header.lumps[LUMP_BRUSHES]);
-	CMod_LoadSubmodels (&header.lumps[LUMP_MODELS]);
-	CMod_LoadNodes (&header.lumps[LUMP_NODES]);
-	CMod_LoadEntityString (&header.lumps[LUMP_ENTITIES]);
-	CMod_LoadVisibility( &header.lumps[LUMP_VISIBILITY] );
-	CMod_LoadPatches( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS] );
+	CMod_LoadShaders();
+	CMod_LoadLeafs();
+	CMod_LoadLeafBrushes();
+	CMod_LoadLeafSurfaces();
+	CMod_LoadPlanes();
+	CMod_LoadBrushSides();
+	CMod_LoadBrushes();
+	CMod_LoadSubmodels();
+	CMod_LoadNodes();
+	CMod_LoadEntityString();
+	CMod_LoadVisibility();
+	CMod_LoadPatches();
 
-	CMod_CreateBrushSideWindings( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS], &header.lumps[LUMP_DRAWINDEXES] );
-
-	// we are NOT freeing the file, because it is cached for the ref
-	FS_FreeFile (buf.v);
+	CMod_CreateBrushSideWindings();
 
 	CM_InitBoxHull ();
 
@@ -972,6 +853,8 @@ CM_ClearMap
 ==================
 */
 void CM_ClearMap( void ) {
+	BSP_Free( cm_bsp );
+	cm_bsp = NULL;
 	Com_Memset( &cm, 0, sizeof( cm ) );
 	CM_ClearLevelPatches();
 }
