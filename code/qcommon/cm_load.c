@@ -56,7 +56,17 @@ void SetPlaneSignbits (cplane_t *out) {
 #define	BOX_LEAFS		2
 #define	BOX_PLANES		12
 
+#if 1 // ZTM: FIXME: BSP is already swapped by BSP_Load, but removing these probably makes merging ioq3 changes harder...
+#undef LittleShort
+#define LittleShort
+#undef LittleLong
+#define LittleLong
+#undef LittleFloat
+#define LittleFloat
+#define LL(x) /* nothing */
+#else
 #define	LL(x) x=LittleLong(x)
+#endif
 
 
 clipMap_t	cm;
@@ -401,7 +411,7 @@ void CMod_LoadBrushSides ( void )
 			Com_Error( ERR_DROP, "CMod_LoadBrushSides: bad shaderNum: %i", out->shaderNum );
 		}
 		out->surfaceFlags = cm.shaders[out->shaderNum].surfaceFlags;
-		out->surfaceNum = in->surfaceNum;
+		out->surfaceNum = LittleLong( in->surfaceNum );
 	}
 }
 
@@ -774,7 +784,7 @@ void CMod_LoadPatches( void ) {
 		patch->surfaceFlags = cm.shaders[shaderNum].surfaceFlags;
 
 		// create the internal facet structure
-		patch->pc = CM_GeneratePatchCollide( width, height, points, in->subdivisions );
+		patch->pc = CM_GeneratePatchCollide( width, height, points, LittleFloat( in->subdivisions ) );
 	}
 }
 

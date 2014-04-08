@@ -41,6 +41,15 @@ void RE_LoadWorldMap( const bspFile_t *bsp );
 
 */
 
+#if 1 // ZTM: FIXME: BSP is already swapped by BSP_Load, but removing these probably makes merging ioq3 changes harder...
+#undef LittleShort
+#define LittleShort
+#undef LittleLong
+#define LittleLong
+#undef LittleFloat
+#define LittleFloat
+#endif
+
 static	world_t		s_worldData;
 
 int			c_subdivisions;
@@ -355,7 +364,6 @@ static int ConvertBSPFogNum( int fogNum ) {
 static byte *surfHunkPtr;
 static int surfHunkSize;
 #define SURF_HUNK_MAXSIZE 0x40000
-#define LL( x ) LittleLong( x )
 
 /*
 ==============

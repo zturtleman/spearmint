@@ -41,6 +41,19 @@ void RE_LoadWorldMap( const bspFile_t *bsp );
 
 */
 
+#if 1 // ZTM: FIXME: BSP is already swapped by BSP_Load, but removing these probably makes merging ioq3 changes harder...
+#undef LittleShort
+#define LittleShort
+#undef LittleLong
+#define LittleLong
+#undef LittleFloat
+#define LittleFloat
+
+#ifdef Q3_BIG_ENDIAN
+#warning "Loading external HDR lightmaps is broken on Big Endian"
+#endif
+#endif
+
 static	world_t		s_worldData;
 
 int			c_subdivisions;
