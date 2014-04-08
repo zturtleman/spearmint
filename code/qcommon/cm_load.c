@@ -68,7 +68,7 @@ int			c_traces, c_brush_traces, c_patch_traces;
 cvar_t		*cm_noAreas;
 cvar_t		*cm_noCurves;
 cvar_t		*cm_playerCurveClip;
-cvar_t		*cm_betterIbspSurfaceNums;
+cvar_t		*cm_betterSurfaceNums;
 #endif
 
 cmodel_t	box_model;
@@ -401,9 +401,7 @@ void CMod_LoadBrushSides ( void )
 			Com_Error( ERR_DROP, "CMod_LoadBrushSides: bad shaderNum: %i", out->shaderNum );
 		}
 		out->surfaceFlags = cm.shaders[out->shaderNum].surfaceFlags;
-
-		// this gets set to our best guess later using CMod_GetBestSurfaceNumForBrushSide
-		out->surfaceNum = -1;
+		out->surfaceNum = in->surfaceNum;
 	}
 }
 
@@ -438,9 +436,18 @@ static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide ) {
 	drawVert_t		*bspDrawVerts = cm_bsp->drawVerts;
 	int				*bspDrawIndexes = cm_bsp->drawIndexes;
 
+	if ( buildSide->shaderNum >= 0 && buildSide->shaderNum < cm_bsp->numShaders ) {
+		if ( buildSide->shaderNum == bspDrawSurfaces[buildSide->surfaceNum].shaderNum ) {
+			// ok, looks good
+			return buildSide->surfaceNum;
+		} else {
+			//Com_Printf("DEBUG: brushside surfacenum (%d) mismatch has shader %s, expected %s\n", buildSide->surfaceNum, shaderInfo->shader, cm.shaders[bspDrawSurfaces[buildSide->surfaceNum].shaderNum].shader );
+		}
+	}
+
 	// ZTM: NOTE: Unfortunately this takes longer than is acceptable on a lot of maps,
 	//      and it's only needed for trap_R_SetSurfaceShader/trap_R_GetSurfaceShader.
-	if ( !cm_betterIbspSurfaceNums->integer ) {
+	if ( !cm_betterSurfaceNums->integer ) {
 		return -1;
 	}
 
@@ -632,7 +639,7 @@ static void CMod_CreateBrushSideWindings( void )
 			// set side winding
 			side->winding = w;
 
-			// look for IBSP surface numbers
+			// look for surface numbers
 			if ( side->winding ) {
 				side->surfaceNum = CMod_GetBestSurfaceNumForBrushSide( side );
 			}
@@ -791,7 +798,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	cm_noAreas = Cvar_Get ("cm_noAreas", "0", CVAR_CHEAT);
 	cm_noCurves = Cvar_Get ("cm_noCurves", "0", CVAR_CHEAT);
 	cm_playerCurveClip = Cvar_Get ("cm_playerCurveClip", "1", CVAR_ARCHIVE|CVAR_CHEAT );
-	cm_betterIbspSurfaceNums = Cvar_Get ("cm_betterIbspSurfaceNums", "0", CVAR_LATCH );
+	cm_betterSurfaceNums = Cvar_Get ("cm_betterSurfaceNums", "0", CVAR_LATCH );
 #endif
 	Com_DPrintf( "CM_LoadMap( %s, %i )\n", name, clientload );
 

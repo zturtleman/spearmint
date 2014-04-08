@@ -80,6 +80,7 @@ typedef struct {
 typedef struct {
 	int			planeNum;			// positive plane side faces out of the leaf
 	int			shaderNum;
+	int			surfaceNum;
 } dbrushside_t;
 
 typedef struct {

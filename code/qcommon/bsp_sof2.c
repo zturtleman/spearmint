@@ -407,6 +407,7 @@ bspFile_t *BSP_LoadSoF2( const bspFormat_t *format, const char *name, const void
 		for ( i = 0; i < bsp->numBrushSides; i++, in++, out++ ) {
 			out->planeNum = LittleLong (in->planeNum);
 			out->shaderNum = LittleLong (in->shaderNum);
+			out->surfaceNum = LittleLong (in->drawSurfNum);
 		}
 	}
 

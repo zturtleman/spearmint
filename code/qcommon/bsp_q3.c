@@ -388,6 +388,7 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 		for ( i = 0; i < bsp->numBrushSides; i++, in++, out++ ) {
 			out->planeNum = LittleLong (in->planeNum);
 			out->shaderNum = LittleLong (in->shaderNum);
+			out->surfaceNum = -1;
 		}
 	}
 

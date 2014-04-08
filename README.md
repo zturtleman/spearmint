@@ -313,7 +313,7 @@ New in Spearmint
                                       notify area in miliseconds (default 3000)
   cg_drawShaderInfo                 - draw world shader name/image on HUD that
                                       that player's crosshair is pointing at
-                                      (must enable cm_betterIbspSurfaceNums!)
+                                      (must enable cm_betterSurfaceNums!)
   cg_fovAspectAdjust                - apply fov correction for non-4:3 viewports
                                       it's especially useful for splitscreen
   cg_fadeExplosions                 - fade out explosions instead of
@@ -332,7 +332,7 @@ New in Spearmint
                                       trap_Alloc. DLLs use shared memory pool
                                       and are limited by com_hunkMegs.
 
-  cm_betterIbspSurfaceNums          - try to reconnect collision and draw
+  cm_betterSurfaceNums              - try to reconnect collision and draw
                                       surface numbers. must be enabled for
                                       trap_R_GetSurfaceShader and
                                       trap_R_SetSurfaceShader to work correctly
