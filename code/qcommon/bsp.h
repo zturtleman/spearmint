@@ -133,6 +133,8 @@ typedef struct {
 
 	int			patchWidth; // ydnar: num foliage instances
 	int			patchHeight; // ydnar: num foliage mesh verts
+
+	float		subdivisions; // patch collision subdivisions
 } dsurface_t;
 
 typedef struct {
@@ -218,6 +220,10 @@ typedef struct bspFormat_s {
 // bsp_q3.c
 extern bspFormat_t quake3BspFormat;
 extern bspFormat_t wolfBspFormat;
+
+// bsp_fakk.c
+extern bspFormat_t fakkBspFormat;
+extern bspFormat_t aliceBspFormat;
 
 #endif // __MINT_BSP__
 

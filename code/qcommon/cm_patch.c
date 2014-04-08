@@ -80,10 +80,10 @@ typedef struct {
 	int			height;
 	qboolean	wrapWidth;
 	qboolean	wrapHeight;
+	float		subdivideDistance;
 	vec3_t	points[MAX_GRID_SIZE][MAX_GRID_SIZE];	// [width][height]
 } cGrid_t;
 
-#define	SUBDIVIDE_DISTANCE	16	//4	// never more than this units away from curve
 #define	PLANE_TRI_EPSILON	0.1
 #define	WRAP_POINT_EPSILON	0.1
 */
@@ -163,7 +163,7 @@ Returns true if the given quadratic curve is not flat enough for our
 collision detection purposes
 =================
 */
-static qboolean	CM_NeedsSubdivision( vec3_t a, vec3_t b, vec3_t c ) {
+static qboolean	CM_NeedsSubdivision( vec3_t a, vec3_t b, vec3_t c, float subdivideDistance ) {
 	vec3_t		cmid;
 	vec3_t		lmid;
 	vec3_t		delta;
@@ -184,7 +184,7 @@ static qboolean	CM_NeedsSubdivision( vec3_t a, vec3_t b, vec3_t c ) {
 	VectorSubtract( cmid, lmid, delta );
 	dist = VectorLength( delta );
 	
-	return dist >= SUBDIVIDE_DISTANCE;
+	return dist >= subdivideDistance;
 }
 
 /*
@@ -306,7 +306,7 @@ static void CM_SubdivideGridColumns( cGrid_t *grid ) {
 		// first see if we can collapse the aproximating collumn away
 		//
 		for ( j = 0 ; j < grid->height ; j++ ) {
-			if ( CM_NeedsSubdivision( grid->points[i][j], grid->points[i+1][j], grid->points[i+2][j] ) ) {
+			if ( CM_NeedsSubdivision( grid->points[i][j], grid->points[i+1][j], grid->points[i+2][j], grid->subdivideDistance ) ) {
 				break;
 			}
 		}
@@ -1163,7 +1163,7 @@ collision detection with a patch mesh.
 Points is packed as concatenated rows.
 ===================
 */
-struct patchCollide_s	*CM_GeneratePatchCollide( int width, int height, vec3_t *points ) {
+struct patchCollide_s	*CM_GeneratePatchCollide( int width, int height, vec3_t *points, float subdivisions ) {
 	patchCollide_t	*pf;
 	cGrid_t			grid;
 	int				i, j;
@@ -1191,6 +1191,8 @@ struct patchCollide_s	*CM_GeneratePatchCollide( int width, int height, vec3_t *p
 			VectorCopy( points[j*width + i], grid.points[i][j] );
 		}
 	}
+
+	grid.subdivideDistance = subdivisions;
 
 	// subdivide the grid
 	CM_SetGridWrapWidth( &grid );

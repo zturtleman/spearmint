@@ -27,44 +27,49 @@ terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
 Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
-// bsp_q3.c -- Q3/RTCW/ET/EF BSP Level Loading
+// bsp_fakk.c -- FAKK/Alice BSP Level Loading
 
 #include "q_shared.h"
 #include "qcommon.h"
 #include "bsp.h"
 
-#define BSP_IDENT	(('P'<<24)+('S'<<16)+('B'<<8)+'I')
-		// little-endian "IBSP"
+#define BSP_IDENT	(('K'<<24)+('K'<<16)+('A'<<8)+'F')
+		// little-endian "FAKK"
 
-#define Q3_BSP_VERSION			46 // Quake III / Team Arena
-#define WOLF_BSP_VERSION		47 // RTCW / WolfET
+#define FAKK_BSP_VERSION	12
+#define ALICE_BSP_VERSION	42
 
 typedef struct {
 	int		fileofs, filelen;
 } lump_t;
 
-#define	LUMP_ENTITIES		0
-#define	LUMP_SHADERS		1
-#define	LUMP_PLANES			2
-#define	LUMP_NODES			3
-#define	LUMP_LEAFS			4
-#define	LUMP_LEAFSURFACES	5
+#define	LUMP_SHADERS		0
+#define	LUMP_PLANES			1
+#define	LUMP_LIGHTMAPS		2
+#define	LUMP_SURFACES		3
+#define	LUMP_DRAWVERTS		4
+#define	LUMP_DRAWINDEXES	5
 #define	LUMP_LEAFBRUSHES	6
-#define	LUMP_MODELS			7
-#define	LUMP_BRUSHES		8
-#define	LUMP_BRUSHSIDES		9
-#define	LUMP_DRAWVERTS		10
-#define	LUMP_DRAWINDEXES	11
+#define	LUMP_LEAFSURFACES	7
+#define	LUMP_LEAFS			8
+#define	LUMP_NODES			9
+#define	LUMP_BRUSHSIDES		10
+#define	LUMP_BRUSHES		11
 #define	LUMP_FOGS			12
-#define	LUMP_SURFACES		13
-#define	LUMP_LIGHTMAPS		14
-#define	LUMP_LIGHTGRID		15
-#define	LUMP_VISIBILITY		16
-#define	HEADER_LUMPS		17
+#define	LUMP_MODELS			13
+#define	LUMP_ENTITIES		14
+#define	LUMP_VISIBILITY		15
+#define	LUMP_LIGHTGRID		16
+// FIXME: These aren't used yet
+//#define	LUMP_ENTLIGHTS		17
+//#define	LUMP_ENTLIGHTSVIS	18
+//#define	LUMP_LIGHTDEFS		19
+#define	HEADER_LUMPS		20
 
 typedef struct {
 	int			ident;
 	int			version;
+	int			checksum;
 
 	lump_t		lumps[HEADER_LUMPS];
 } dheader_t;
@@ -79,6 +84,7 @@ typedef struct {
 	char		shader[MAX_QPATH];
 	int			surfaceFlags;
 	int			contentFlags;
+	int			subdivisions;
 } realDshader_t;
 
 // planes x^1 is allways the opposite of plane x
@@ -166,11 +172,11 @@ typedef struct {
 
 	int			patchWidth; // ydnar: num foliage instances
 	int			patchHeight; // ydnar: num foliage mesh verts
+
+	float		subdivisions;
 } realDsurface_t;
 
 #define VIS_HEADER 8
-
-#define	SUBDIVIDE_DISTANCE	16	//4	// never more than this units away from curve
 
 /****************************************************
 */
@@ -207,7 +213,7 @@ static void *GetLump( dheader_t *header, const void *src, int lump ) {
 	return (void*)( (byte*) src + header->lumps[ lump ].fileofs );
 }
 
-bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *data, int length ) {
+bspFile_t *BSP_LoadFAKK( const bspFormat_t *format, const char *name, const void *data, int length ) {
 	int				i, j, k;
 	dheader_t		header;
 	bspFile_t		*bsp;
@@ -222,7 +228,7 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 	Com_Memset( bsp, 0, sizeof ( bspFile_t ) );
 
 	// ...
-	bsp->checksum = LittleLong (Com_BlockChecksum (data, length));
+	bsp->checksum = header.checksum;
 
 
 	//
@@ -453,7 +459,7 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 			out->patchWidth = LittleLong (in->patchWidth);
 			out->patchHeight = LittleLong (in->patchHeight);
 
-			out->subdivisions = SUBDIVIDE_DISTANCE;
+			out->subdivisions = LittleFloat( in->subdivisions );
 		}
 	}
 
@@ -477,20 +483,17 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 /****************************************************
 */
 
-// Q3, Elite Force, and other games
-bspFormat_t quake3BspFormat = {
-	"Quake3",
+bspFormat_t fakkBspFormat = {
+	"FAKK",
 	BSP_IDENT,
-	Q3_BSP_VERSION,
-	BSP_LoadQ3,
+	FAKK_BSP_VERSION,
+	BSP_LoadFAKK,
 };
 
-// RTCW, ET, QuakeLive
-bspFormat_t wolfBspFormat = {
-	"RTCW/ET",
+bspFormat_t aliceBspFormat = {
+	"Alice",
 	BSP_IDENT,
-	WOLF_BSP_VERSION,
-	BSP_LoadQ3,
+	ALICE_BSP_VERSION,
+	BSP_LoadFAKK,
 };
-
 

@@ -767,7 +767,7 @@ void CMod_LoadPatches( void ) {
 		patch->surfaceFlags = cm.shaders[shaderNum].surfaceFlags;
 
 		// create the internal facet structure
-		patch->pc = CM_GeneratePatchCollide( width, height, points );
+		patch->pc = CM_GeneratePatchCollide( width, height, points, in->subdivisions );
 	}
 }
 

@@ -39,6 +39,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 bspFormat_t *bspFormats[] = {
 	&quake3BspFormat,
 	&wolfBspFormat,
+	&fakkBspFormat,
+	&aliceBspFormat,
 };
 
 const int numBspFormats = ARRAY_LEN( bspFormats );
