@@ -167,6 +167,17 @@ void Q3_CreatePlanarSurfacePlanes(void)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
+void Q3_FreePlanarSurfacePlanes(void)
+{
+	if ( q3_surfaceplanes ) FreeMemory( q3_surfaceplanes );
+	q3_surfaceplanes = NULL;
+} //end of the function Q3_FreePlanarSurfacePlanes
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
 /*
 void Q3_SurfacePlane(dsurface_t *surface, vec3_t normal, float *dist)
 {
@@ -274,11 +285,9 @@ void Q3_FindVisibleBrushSides(void)
 	memset(q3_dbrushsidetextured, false, Q3_MAX_MAP_BRUSHSIDES);
 	//
 	numsides = 0;
-	//create planes for the planar surfaces
-	Q3_CreatePlanarSurfacePlanes();
-	Log_Print("searching visible brush sides...\n");
 	//go over all the brushes
 	if ( forcesidesvisible ) {
+		Log_Print("searching nodraw brush sides...\n");
 		for ( i = 0; i < q3bsp->numBrushSides; i++ ) {
 			if ( q3bsp->shaders[q3bsp->brushSides[i].shaderNum].surfaceFlags & SURF_NODRAW ) {
 				q3_dbrushsidetextured[i] = false;
@@ -289,6 +298,9 @@ void Q3_FindVisibleBrushSides(void)
 			} // end else
 		} //end for
 	} else {
+		//create planes for the planar surfaces
+		Q3_CreatePlanarSurfacePlanes();
+		Log_Print("searching visible brush sides...\n");
 		Log_Print("%6d brush sides", numsides);
 		for (i = 0; i < q3bsp->numBrushes; i++)
 		{
@@ -358,6 +370,7 @@ void Q3_FindVisibleBrushSides(void)
 			} //end for
 		} //end for
 		qprintf("\r%6d brush sides\n", numsides);
+		Q3_FreePlanarSurfacePlanes();
 	} //end if
 	numtextured = 0;
 	for (i = 0; i < q3bsp->numBrushSides; i++)
