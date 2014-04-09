@@ -60,9 +60,11 @@ bspFile_t *BSP_Load( const char *name ) {
 	bspFile_t		*bspFile = NULL;
 	int				freeSlot = -1;
 
+#ifndef BSPC
 	if ( !name || !name[0] ) {
 		Com_Error( ERR_DROP, "BSP_Load: NULL name" );
 	}
+#endif
 
 	// check if already loaded
 	for ( i = 0; i < MAX_BSP_FILES; i++ ) {

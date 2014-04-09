@@ -1039,14 +1039,12 @@ int LoadMapFromBSP(struct quakefile_s *qf)
 
 	idheader.ident = LittleLong(idheader.ident);
 	idheader.version = LittleLong(idheader.version);
+
 	//Quake3 BSP file
-	if (idheader.ident == Q3_BSP_IDENT && idheader.version == Q3_BSP_VERSION)
-	{
-		ResetMapLoading();
-		Q3_LoadMapFromBSP(qf);
-		Q3_FreeMaxBSP();
-	} //end if
-	else
+	ResetMapLoading();
+	Q3_LoadMapFromBSP(qf);
+
+	if ( !q3bsp )
 	{
 		Error("unknown BSP format %c%c%c%c, version %d\n",
 										(idheader.ident & 0xFF),
@@ -1055,6 +1053,8 @@ int LoadMapFromBSP(struct quakefile_s *qf)
 										((idheader.ident >> 24) & 0xFF), idheader.version);
 		return false;
 	} //end if
+
+	Q3_FreeMaxBSP();
 	//
 	return true;
 } //end of the function LoadMapFromBSP

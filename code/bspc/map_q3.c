@@ -200,9 +200,9 @@ void Q3_DPlanes2MapPlanes(void)
 {
 	int i;
 
-	for (i = 0; i < q3_numplanes; i++)
+	for (i = 0; i < q3bsp->numPlanes; i++)
 	{
-		dplanes2mapplanes[i] = FindFloatPlane(q3_dplanes[i].normal, q3_dplanes[i].dist);
+		dplanes2mapplanes[i] = FindFloatPlane(q3bsp->planes[i].normal, q3bsp->planes[i].dist);
 	} //end for
 } //end of the function Q3_DPlanes2MapPlanes
 //===========================================================================
@@ -211,14 +211,14 @@ void Q3_DPlanes2MapPlanes(void)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void Q3_BSPBrushToMapBrush(q3_dbrush_t *bspbrush, entity_t *mapent)
+void Q3_BSPBrushToMapBrush(dbrush_t *bspbrush, entity_t *mapent)
 {
 	mapbrush_t *b;
 	int i, k, n;
 	side_t *side, *s2;
 	int planenum;
-	q3_dbrushside_t *bspbrushside;
-	q3_dplane_t *bspplane;
+	dbrushside_t *bspbrushside;
+	dplane_t *bspplane;
 
 	if (nummapbrushes >= MAX_MAPFILE_BRUSHES)
 		Error ("nummapbrushes >= MAX_MAPFILE_BRUSHES");
@@ -227,12 +227,12 @@ void Q3_BSPBrushToMapBrush(q3_dbrush_t *bspbrush, entity_t *mapent)
 	b->original_sides = &brushsides[nummapbrushsides];
 	b->entitynum = mapent-entities;
 	b->brushnum = nummapbrushes - mapent->firstbrush;
-	b->leafnum = dbrushleafnums[bspbrush - q3_dbrushes];
+	b->leafnum = dbrushleafnums[bspbrush - q3bsp->brushes];
 
 	for (n = 0; n < bspbrush->numSides; n++)
 	{
 		//pointer to the bsp brush side
-		bspbrushside = &q3_dbrushsides[bspbrush->firstSide + n];
+		bspbrushside = &q3bsp->brushSides[bspbrush->firstSide + n];
 
 		if (nummapbrushsides >= MAX_MAPFILE_BRUSHSIDES)
 		{
@@ -253,9 +253,9 @@ void Q3_BSPBrushToMapBrush(q3_dbrush_t *bspbrush, entity_t *mapent)
 		} //end if
 		else
 		{
-			side->contents = q3_dshaders[bspbrushside->shaderNum].contentFlags;
-			side->surf = q3_dshaders[bspbrushside->shaderNum].surfaceFlags;
-			if (strstr(q3_dshaders[bspbrushside->shaderNum].shader, "common/hint"))
+			side->contents = q3bsp->shaders[bspbrushside->shaderNum].contentFlags;
+			side->surf = q3bsp->shaders[bspbrushside->shaderNum].surfaceFlags;
+			if (strstr(q3bsp->shaders[bspbrushside->shaderNum].shader, "common/hint"))
 			{
 				//Log_Print("found hint side\n");
 				side->surf |= SURF_HINT;
@@ -287,7 +287,7 @@ void Q3_BSPBrushToMapBrush(q3_dbrush_t *bspbrush, entity_t *mapent)
 		} //end if*/
 
 		//ME: get a plane for this side
-		bspplane = &q3_dplanes[bspbrushside->planeNum];
+		bspplane = &q3bsp->planes[bspbrushside->planeNum];
 		planenum = FindFloatPlane(bspplane->normal, bspplane->dist);
 		//
 		// see if the plane has been used already
@@ -341,7 +341,7 @@ void Q3_BSPBrushToMapBrush(q3_dbrush_t *bspbrush, entity_t *mapent)
 	} //end for
 
 	// get the content for the entire brush
-	b->contents = q3_dshaders[bspbrush->shaderNum].contentFlags;
+	b->contents = q3bsp->shaders[bspbrush->shaderNum].contentFlags;
 	b->contents &= ~(CONTENTS_FOG|CONTENTS_STRUCTURAL);
 //	b->contents = Q3_BrushContents(b);
 	//
@@ -443,9 +443,9 @@ void Q3_ParseBSPBrushes(entity_t *mapent)
 {
 	int i;
 
-	for (i = 0; i < q3_dmodels[mapent->modelnum].numBrushes; i++)
+	for (i = 0; i < q3bsp->submodels[mapent->modelnum].numBrushes; i++)
 	{
-		Q3_BSPBrushToMapBrush(&q3_dbrushes[q3_dmodels[mapent->modelnum].firstBrush + i], mapent);
+		Q3_BSPBrushToMapBrush(&q3bsp->brushes[q3bsp->submodels[mapent->modelnum].firstBrush + i], mapent);
 	} //end for
 } //end of the function Q3_ParseBSPBrushes
 //===========================================================================
@@ -514,8 +514,8 @@ qboolean Q3_ParseBSPEntity(int entnum)
 void AAS_CreateCurveBrushes(void)
 {
 	int i, j, n, planenum, numcurvebrushes = 0;
-	q3_dsurface_t *surface;
-	q3_drawVert_t *dv_p;
+	dsurface_t *surface;
+	drawVert_t *dv_p;
 	vec3_t points[MAX_PATCH_VERTS];
 	int width, height, c;
 	patchCollide_t *pc;
@@ -527,18 +527,18 @@ void AAS_CreateCurveBrushes(void)
 
 	qprintf("nummapbrushsides = %d\n", nummapbrushsides);
 	mapent = &entities[0];
-	for (i = 0; i < q3_numDrawSurfaces; i++)
+	for (i = 0; i < q3bsp->numSurfaces; i++)
 	{
-		surface = &q3_drawSurfaces[i];
+		surface = &q3bsp->surfaces[i];
 		if ( ! surface->patchWidth ) continue;
 		// if the curve is not solid
-		if (!(q3_dshaders[surface->shaderNum].contentFlags & (CONTENTS_SOLID|CONTENTS_PLAYERCLIP)))
+		if (!(q3bsp->shaders[surface->shaderNum].contentFlags & (CONTENTS_SOLID|CONTENTS_PLAYERCLIP)))
 		{
 			//Log_Print("skipped non-solid curve\n");
 			continue;
 		} //end if
 		// if this curve should not be used for AAS
-		if ( q3_dshaders[surface->shaderNum].contentFlags & CONTENTS_NOBOTCLIP ) {
+		if ( q3bsp->shaders[surface->shaderNum].contentFlags & CONTENTS_NOBOTCLIP ) {
 			continue;
 		}
 		//
@@ -550,7 +550,7 @@ void AAS_CreateCurveBrushes(void)
 			Error("ParseMesh: MAX_PATCH_VERTS");
 		} //end if
 
-		dv_p = q3_drawVerts + surface->firstVert;
+		dv_p = q3bsp->drawVerts + surface->firstVert;
 		for ( j = 0 ; j < c ; j++, dv_p++ )
 		{
 			points[j][0] = dv_p->xyz[0];
@@ -558,7 +558,7 @@ void AAS_CreateCurveBrushes(void)
 			points[j][2] = dv_p->xyz[2];
 		} //end for
 		// create the internal facet structure
-		pc = CM_GeneratePatchCollide(width, height, points, 16); // ZTM: FIXME: Get from bspFile_t
+		pc = CM_GeneratePatchCollide(width, height, points, surface->subdivisions);
 		//
 		for (j = 0; j < pc->numFacets; j++)
 		{
