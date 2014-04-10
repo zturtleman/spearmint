@@ -446,7 +446,7 @@ static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide ) {
 	drawVert_t		*bspDrawVerts = cm_bsp->drawVerts;
 	int				*bspDrawIndexes = cm_bsp->drawIndexes;
 
-	if ( buildSide->shaderNum >= 0 && buildSide->shaderNum < cm_bsp->numShaders ) {
+	if ( buildSide->surfaceNum >= 0 && buildSide->surfaceNum < cm_bsp->numSurfaces ) {
 		if ( buildSide->shaderNum == bspDrawSurfaces[buildSide->surfaceNum].shaderNum ) {
 			// ok, looks good
 			return buildSide->surfaceNum;
