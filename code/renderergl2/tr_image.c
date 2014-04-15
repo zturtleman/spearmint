@@ -2460,6 +2460,7 @@ static imageExtToLoaderMap_t imageLoaders[ ] =
 	{ "jpg",  R_LoadJPG },
 	{ "jpeg", R_LoadJPG },
 	{ "png",  R_LoadPNG },
+	{ "ftx",  R_LoadFTX },
 	{ "pcx",  R_LoadPCX },
 	{ "bmp",  R_LoadBMP }
 };
@@ -2598,7 +2599,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	if ( flags & IMGFLAG_LIGHTMAP ) {
 		byte *newPic;
 
-		if (r_hdr->integer && glRefConfig.textureFloat && glRefConfig.halfFloatPixel && r_floatLightmap->integer) {
+		if (glRefConfig.floatLightmap) {
 			textureInternalFormat = GL_RGBA16F_ARB;
 			newPic = ri.Malloc( width * height * 4 * 2 );
 		} else {
@@ -2612,7 +2613,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 			pic = newPic;
 		}
 	}
-	else if (r_normalMapping->integer && !(type == IMGTYPE_NORMAL) && (flags & IMGFLAG_PICMIP) && (flags & IMGFLAG_MIPMAP) && (flags & IMGFLAG_GENNORMALMAP))
+	else if (r_normalMapping->integer && !(type == IMGTYPE_NORMAL) && (flags & (IMGFLAG_PICMIP|IMGFLAG_PICMIP2)) && (flags & IMGFLAG_MIPMAP) && (flags & IMGFLAG_GENNORMALMAP))
 	{
 		char normalName[MAX_QPATH];
 		image_t *normalImage;

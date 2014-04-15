@@ -582,6 +582,15 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 			baseColor[1] = 
 			baseColor[2] = RB_CalcWaveColorSingle( &pStage->rgbWave );
 			break;
+		case CGEN_COLOR_WAVEFORM:
+			{
+				float glow = RB_CalcWaveColorSingle( &pStage->rgbWave );
+
+				baseColor[0] = glow * pStage->constantColor[0] / 255.0f;
+				baseColor[1] = glow * pStage->constantColor[1] / 255.0f;
+				baseColor[2] = glow * pStage->constantColor[2] / 255.0f;
+			}
+			break;
 		case CGEN_ENTITY:
 			if (backEnd.currentEntity)
 			{

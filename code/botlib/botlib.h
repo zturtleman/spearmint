@@ -255,16 +255,6 @@ typedef struct aas_export_s
 typedef struct ai_export_s
 {
 	//-----------------------------------
-	// be_ai_char.h
-	//-----------------------------------
-	int		(*BotLoadCharacter)(char *charfile, float skill);
-	void	(*BotFreeCharacter)(int character);
-	float	(*Characteristic_Float)(int character, int index);
-	float	(*Characteristic_BFloat)(int character, int index, float min, float max);
-	int		(*Characteristic_Integer)(int character, int index);
-	int		(*Characteristic_BInteger)(int character, int index, int min, int max);
-	void	(*Characteristic_String)(int character, int index, char *buf, int size);
-	//-----------------------------------
 	// be_ai_chat.h
 	//-----------------------------------
 	int		(*BotAllocChatState)(void);
@@ -287,10 +277,6 @@ typedef struct ai_export_s
 	int		(*BotLoadChatFile)(int chatstate, char *chatfile, char *chatname);
 	void	(*BotSetChatGender)(int chatstate, int gender);
 	void	(*BotSetChatName)(int chatstate, char *name, int client);
-	//-----------------------------------
-	// be_ai_gen.h
-	//-----------------------------------
-	int		(*GeneticParentsAndChildSelection)(int numranks, float *ranks, int *parent1, int *parent2, int *child);
 } ai_export_t;
 
 //bot AI library imported functions

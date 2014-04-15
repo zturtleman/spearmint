@@ -52,8 +52,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "be_interface.h"
 
 #include "be_ai_chat.h"
-#include "be_ai_char.h"
-#include "be_ai_gen.h"
 
 //library globals in a structure
 botlib_globals_t botlibglobals;
@@ -190,7 +188,6 @@ int Export_BotLibShutdown(void)
 #endif //DEMO
 	//
 	BotShutdownChatAI();		//be_ai_chat.c
-	BotShutdownCharacters();	//be_ai_char.c
 	//shud down aas
 	AAS_Shutdown();
 	//free all libvars
@@ -749,16 +746,6 @@ Init_AI_Export
 */
 static void Init_AI_Export( ai_export_t *ai ) {
 	//-----------------------------------
-	// be_ai_char.h
-	//-----------------------------------
-	ai->BotLoadCharacter = BotLoadCharacter;
-	ai->BotFreeCharacter = BotFreeCharacter;
-	ai->Characteristic_Float = Characteristic_Float;
-	ai->Characteristic_BFloat = Characteristic_BFloat;
-	ai->Characteristic_Integer = Characteristic_Integer;
-	ai->Characteristic_BInteger = Characteristic_BInteger;
-	ai->Characteristic_String = Characteristic_String;
-	//-----------------------------------
 	// be_ai_chat.h
 	//-----------------------------------
 	ai->BotAllocChatState = BotAllocChatState;
@@ -781,10 +768,6 @@ static void Init_AI_Export( ai_export_t *ai ) {
 	ai->BotLoadChatFile = BotLoadChatFile;
 	ai->BotSetChatGender = BotSetChatGender;
 	ai->BotSetChatName = BotSetChatName;
-	//-----------------------------------
-	// be_ai_gen.h
-	//-----------------------------------
-	ai->GeneticParentsAndChildSelection = GeneticParentsAndChildSelection;
 }
 
 

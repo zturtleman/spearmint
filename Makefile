@@ -1227,6 +1227,11 @@ Q3OBJ = \
   $(B)/client/cl_scrn.o \
   $(B)/client/cl_avi.o \
   \
+  $(B)/client/bsp.o \
+  $(B)/client/bsp_q3.o \
+  $(B)/client/bsp_fakk.o \
+  $(B)/client/bsp_sof2.o \
+  \
   $(B)/client/cm_load.o \
   $(B)/client/cm_patch.o \
   $(B)/client/cm_polylib.o \
@@ -1292,9 +1297,7 @@ Q3OBJ = \
   $(B)/client/be_aas_route.o \
   $(B)/client/be_aas_routealt.o \
   $(B)/client/be_aas_sample.o \
-  $(B)/client/be_ai_char.o \
   $(B)/client/be_ai_chat.o \
-  $(B)/client/be_ai_gen.o \
   $(B)/client/be_interface.o \
   $(B)/client/l_crc.o \
   $(B)/client/l_libvar.o \
@@ -1864,6 +1867,11 @@ Q3DOBJ = \
   $(B)/ded/sv_snapshot.o \
   $(B)/ded/sv_world.o \
   \
+  $(B)/ded/bsp.o \
+  $(B)/ded/bsp_q3.o \
+  $(B)/ded/bsp_fakk.o \
+  $(B)/ded/bsp_sof2.o \
+  \
   $(B)/ded/cm_load.o \
   $(B)/ded/cm_patch.o \
   $(B)/ded/cm_polylib.o \
@@ -1899,9 +1907,7 @@ Q3DOBJ = \
   $(B)/ded/be_aas_route.o \
   $(B)/ded/be_aas_routealt.o \
   $(B)/ded/be_aas_sample.o \
-  $(B)/ded/be_ai_char.o \
   $(B)/ded/be_ai_chat.o \
-  $(B)/ded/be_ai_gen.o \
   $(B)/ded/be_interface.o \
   $(B)/ded/l_crc.o \
   $(B)/ded/l_libvar.o \

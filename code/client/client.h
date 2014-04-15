@@ -338,6 +338,7 @@ typedef struct {
 	qboolean	cgameStarted;
 
 	qboolean	printToCgame;			// enabled after restoring console text to cgame
+	bspFile_t	*cgameBsp;
 
 	int			framecount;
 	int			frametime;			// msec since last frame

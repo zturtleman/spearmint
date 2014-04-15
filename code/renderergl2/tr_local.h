@@ -274,6 +274,7 @@ typedef enum {
 	CGEN_VERTEX_LIT,		// like CGEN_VERTEX but takes a light direction from the lightgrid
 	CGEN_ONE_MINUS_VERTEX,
 	CGEN_WAVEFORM,			// programmatically generated
+	CGEN_COLOR_WAVEFORM,	// constant RGB color multiplied times waveform
 	CGEN_LIGHTING_DIFFUSE,
 	CGEN_FOG,				// standard fog
 	CGEN_CONST				// fixed color
@@ -1279,6 +1280,9 @@ typedef struct {
 	int			lightGridBounds[3];
 	byte		*lightGridData;
 	float		*hdrLightGrid;
+	int			numGridPoints;
+	unsigned short *lightGridArray;
+	int			numGridArrayPoints;
 
 
 	int			numClusters;
@@ -2098,7 +2102,7 @@ void	RE_UploadCinematic (int w, int h, int cols, int rows, const byte *data, int
 
 void		RE_BeginFrame( stereoFrame_t stereoFrame );
 void		RE_BeginRegistration( glconfig_t *glconfig );
-void		RE_LoadWorldMap( const char *mapname );
+void		RE_LoadWorldMap( const bspFile_t *bsp );
 void		RE_SetWorldVisData( const byte *vis );
 qhandle_t	RE_RegisterModel( const char *name );
 qhandle_t	RE_RegisterSkin( const char *name );
@@ -2458,6 +2462,7 @@ IMAGE LOADERS
 */
 
 void R_LoadBMP( const char *name, byte **pic, int *width, int *height );
+void R_LoadFTX( const char *name, byte **pic, int *width, int *height );
 void R_LoadJPG( const char *name, byte **pic, int *width, int *height );
 void R_LoadPCX( const char *name, byte **pic, int *width, int *height );
 void R_LoadPNG( const char *name, byte **pic, int *width, int *height );

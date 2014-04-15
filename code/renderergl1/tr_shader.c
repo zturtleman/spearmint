@@ -128,6 +128,32 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 
 /*
 ==============
+R_DiffuseColorGen
+
+It's implied that AGEN_SKIP can be used with any returned color gen.
+
+Returns diffuse color gen for lightmap index.
+==============
+*/
+static ID_INLINE colorGen_t R_DiffuseColorGen( int lightmapIndex ) {
+	colorGen_t rgbGen;
+
+	// lighting diffuse only works on entities, not 2D or world
+	if ( lightmapIndex == LIGHTMAP_NONE ) {
+		rgbGen = CGEN_LIGHTING_DIFFUSE;
+	} else if ( lightmapIndex == LIGHTMAP_2D ) {
+		rgbGen = CGEN_VERTEX;
+	} else {
+		// world; LIGHTMAP_BY_VERTEX, LIGHTMAP_WHITEIMAGE, or a real lightmap
+		// vertexes are already overbright shifted, so use exact
+		rgbGen = CGEN_EXACT_VERTEX;
+	}
+
+	return rgbGen;
+}
+
+/*
+==============
 RE_SetSurfaceShader
 
 Set shader for given world surface
@@ -208,8 +234,9 @@ qhandle_t RE_GetSurfaceShader( int surfaceNum, int withlightmap ) {
 				break;
 			}
 
-			if ( shd->stages[i]->rgbGen != CGEN_CONST && shd->stages[i]->rgbGen != CGEN_WAVEFORM ) {
-				shd->stages[i]->rgbGen = ( lightmapIndex == LIGHTMAP_NONE ) ? CGEN_LIGHTING_DIFFUSE : CGEN_IDENTITY;
+			if ( shd->stages[i]->rgbGen != CGEN_CONST && shd->stages[i]->rgbGen != CGEN_WAVEFORM
+					&& shd->stages[i]->rgbGen != CGEN_COLOR_WAVEFORM ) {
+				shd->stages[i]->rgbGen = R_DiffuseColorGen( lightmapIndex );
 			}
 
 			if ( lightmapIndex == LIGHTMAP_2D && shd->stages[i]->alphaGen != AGEN_CONST && shd->stages[i]->alphaGen != AGEN_WAVEFORM ) {
@@ -482,19 +509,34 @@ static int ParseIfEndif( char **text, char *token, int *ifIndent, int braketLeve
 
 /*
 ===============
+ParseOptionalToken
+===============
+*/
+static qboolean ParseOptionalToken( char **text, const char *expected ) {
+	char *oldText = *text;
+	char *token;
+
+	token = COM_ParseExt( text, qfalse );
+	if ( strcmp( token, expected ) ) {
+		*text = oldText;
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+===============
 ParseVector
 ===============
 */
 static qboolean ParseVector( char **text, int count, float *v ) {
-	char	*token;
+	qboolean openParen, closeParen;
+	char	*token, *end;
 	int		i;
 
 	// FIXME: spaces are currently required after parens, should change parseext...
-	token = COM_ParseExt( text, qfalse );
-	if ( strcmp( token, "(" ) ) {
-		ri.Printf( PRINT_WARNING, "WARNING: missing parenthesis in shader '%s'\n", shader.name );
-		return qfalse;
-	}
+	openParen = ParseOptionalToken( text, "(" );
 
 	for ( i = 0 ; i < count ; i++ ) {
 		token = COM_ParseExt( text, qfalse );
@@ -502,11 +544,14 @@ static qboolean ParseVector( char **text, int count, float *v ) {
 			ri.Printf( PRINT_WARNING, "WARNING: missing vector element in shader '%s'\n", shader.name );
 			return qfalse;
 		}
-		v[i] = atof( token );
+		v[i] = strtod( token, &end );
+		if ( *end != '\0' ) {
+			ri.Printf( PRINT_WARNING, "WARNING: vector element '%s' in shader '%s' is not a number\n", token, shader.name );
+		}
 	}
 
-	token = COM_ParseExt( text, qfalse );
-	if ( strcmp( token, ")" ) ) {
+	closeParen = ParseOptionalToken( text, ")" );
+	if ( closeParen != openParen ) {
 		ri.Printf( PRINT_WARNING, "WARNING: missing parenthesis in shader '%s'\n", shader.name );
 		return qfalse;
 	}
@@ -968,9 +1013,12 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 {
 	char keyword[64];
 	char *token;
-	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0;
+	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0, depthTestBits = 0;
 	qboolean depthMaskExplicit = qfalse;
 	qboolean skipRestOfLine = qfalse;
+	qboolean stage_noMipMaps = shader.noMipMaps;
+	qboolean stage_noPicMip = shader.noPicMip;
+	int stage_picmipFlag = shader_picmipFlag;
 
 	stage->active = qtrue;
 
@@ -1092,11 +1140,11 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				imgType_t type = IMGTYPE_COLORALPHA;
 				imgFlags_t flags = IMGFLAG_NONE;
 
-				if (!shader.noMipMaps)
+				if (!stage_noMipMaps)
 					flags |= IMGFLAG_MIPMAP;
 
-				if (!shader.noPicMip)
-					flags |= shader_picmipFlag;
+				if (!stage_noPicMip)
+					flags |= stage_picmipFlag;
 
 				stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 
@@ -1122,11 +1170,11 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				return qfalse;
 			}
 
-			if (!shader.noMipMaps)
+			if (!stage_noMipMaps)
 				flags |= IMGFLAG_MIPMAP;
 
-			if (!shader.noPicMip)
-				flags |= shader_picmipFlag;
+			if (!stage_noPicMip)
+				flags |= stage_picmipFlag;
 
 			stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 			if ( !stage->bundle[0].image[0] )
@@ -1200,11 +1248,11 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 			stage->bundle[0].imageAnimationSpeed = atof( token );
 
-			if (!shader.noMipMaps)
+			if (!stage_noMipMaps)
 				flags |= IMGFLAG_MIPMAP;
 
-			if (!shader.noPicMip)
-				flags |= shader_picmipFlag;
+			if (!stage_noPicMip)
+				flags |= stage_picmipFlag;
 
 			// parse up to MAX_IMAGE_ANIMATIONS animations
 			while ( 1 ) {
@@ -1245,6 +1293,30 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				stage->bundle[0].isVideoMap = qtrue;
 				stage->bundle[0].image[0] = tr.scratchImage[stage->bundle[0].videoMapHandle];
 			}
+		}
+		//
+		// no mip maps
+		//
+		else if ( !Q_stricmp( token, "nomipmaps" ) || ( !Q_stricmp( token,"nomipmap" ) ) )
+		{
+			stage_noMipMaps = qtrue;
+			stage_noPicMip = qtrue;
+			continue;
+		}
+		//
+		// no picmip adjustment
+		//
+		else if ( !Q_stricmp( token, "nopicmip" ) )
+		{
+			stage_noPicMip = qtrue;
+			continue;
+		}
+		//
+		// character picmip adjustment
+		//
+		else if ( !Q_stricmp( token, "picmip2" ) ) {
+			stage_picmipFlag = IMGFLAG_PICMIP2;
+			continue;
 		}
 		//
 		// alphafunc <func>
@@ -1371,7 +1443,20 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				ParseWaveForm( text, &stage->rgbWave );
 				stage->rgbGen = CGEN_WAVEFORM;
 			}
-			else if ( !Q_stricmp( token, "const" ) )
+			else if ( !Q_stricmp( token, "colorwave" ) )
+			{
+				vec3_t	color;
+
+				ParseVector( text, 3, color );
+				stage->constantColor[0] = 255 * color[0];
+				stage->constantColor[1] = 255 * color[1];
+				stage->constantColor[2] = 255 * color[2];
+
+				ParseWaveForm( text, &stage->rgbWave );
+
+				stage->rgbGen = CGEN_COLOR_WAVEFORM;
+			}
+			else if ( !Q_stricmp( token, "const" ) || !Q_stricmp( token, "constant" ) )
 			{
 				vec3_t	color;
 
@@ -1390,7 +1475,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->rgbGen = CGEN_IDENTITY_LIGHTING;
 			}
-			else if ( !Q_stricmp( token, "entity" ) )
+			else if ( !Q_stricmp( token, "entity" ) || !Q_stricmp( token, "fromEntity" ) )
 			{
 				stage->rgbGen = CGEN_ENTITY;
 			}
@@ -1398,7 +1483,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->rgbGen = CGEN_ONE_MINUS_ENTITY;
 			}
-			else if ( !Q_stricmp( token, "vertex" ) )
+			else if ( !Q_stricmp( token, "vertex" ) || !Q_stricmp( token, "fromClient" ) )
 			{
 				stage->rgbGen = CGEN_VERTEX;
 				if ( stage->alphaGen == 0 ) {
@@ -1411,7 +1496,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 			else if ( !Q_stricmp( token, "lightingDiffuse" ) )
 			{
-				stage->rgbGen = CGEN_LIGHTING_DIFFUSE;
+				stage->rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
 			}
 			else if ( !Q_stricmp( token, "oneMinusVertex" ) )
 			{
@@ -1440,7 +1525,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				ParseWaveForm( text, &stage->alphaWave );
 				stage->alphaGen = AGEN_WAVEFORM;
 			}
-			else if ( !Q_stricmp( token, "const" ) )
+			else if ( !Q_stricmp( token, "const" ) || !Q_stricmp( token, "constant" ) )
 			{
 				token = COM_ParseExt( text, qfalse );
 				stage->constantColor[3] = 255 * atof( token );
@@ -1450,7 +1535,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->alphaGen = AGEN_IDENTITY;
 			}
-			else if ( !Q_stricmp( token, "entity" ) )
+			else if ( !Q_stricmp( token, "entity" ) || !Q_stricmp( token, "fromEntity" ) )
 			{
 				stage->alphaGen = AGEN_ENTITY;
 			}
@@ -1458,7 +1543,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->alphaGen = AGEN_ONE_MINUS_ENTITY;
 			}
-			else if ( !Q_stricmp( token, "vertex" ) )
+			else if ( !Q_stricmp( token, "vertex" ) || !Q_stricmp( token, "fromClient" ) )
 			{
 				stage->alphaGen = AGEN_VERTEX;
 			}
@@ -1553,11 +1638,19 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		//
 		// depthmask
 		//
-		else if ( !Q_stricmp( token, "depthwrite" ) )
+		else if ( !Q_stricmp( token, "depthwrite" ) || !Q_stricmp( token, "depthmask" ) )
 		{
 			depthMaskBits = GLS_DEPTHMASK_TRUE;
 			depthMaskExplicit = qtrue;
 
+			continue;
+		}
+		//
+		// noDepthTest
+		//
+		else if ( !Q_stricmp( token, "noDepthTest" ) )
+		{
+			depthTestBits = GLS_DEPTHTEST_DISABLE;
 			continue;
 		}
 		else
@@ -1586,7 +1679,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		stage->bundle[0].image[0] == tr.whiteImage)
 	{
 		stage->bundle[0].isLightmap = qfalse;
-		stage->rgbGen = CGEN_EXACT_VERTEX;
+		stage->rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
 	}
 
 	//
@@ -1613,7 +1706,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 	stage->stateBits = depthMaskBits | 
 		               blendSrcBits | blendDstBits | 
 					   atestBits | 
-					   depthFuncBits;
+					   depthFuncBits |
+					   depthTestBits;
 
 	return qtrue;
 }
@@ -2083,9 +2177,34 @@ static qboolean ParseShader( char **text )
 		else if ( !Q_stricmpn( token, "q3map", 5 ) ) {
 			continue;
 		}
+		// fogOnly
+		// Some Q3 shaders have it, but not ones used by the final game.
+		// FAKK and Alice do use it though. FAKK shader manual say it must be used with surfaceParm fog.
+		else if ( !Q_stricmp( token, "fogOnly" ) ) {
+			continue;
+		}
+		// surfaceLight is an alias for q3map_surfacelight (for FAKK at least)
+		else if ( !Q_stricmp( token, "surfaceLight" ) ) {
+			continue;
+		}
+		// surfaceColor <red> <green> <blue>
+		// used by FAKK map compiler, an alternative to q3map_lightimage
+		// FAKK doesn't use parentheses, but it would have them in Q3-style syntax...
+		else if ( !Q_stricmp( token, "surfaceColor" ) ) {
+			continue;
+		}
+		// surfaceDensity <density> // used by FAKK mapcompiler for lightmap density
+		else if ( !Q_stricmp( token, "surfaceDensity" ) ) {
+			continue;
+		}
 		// skip stuff that only q3map or the server needs
 		else if ( !Q_stricmp( token, "surfaceParm" ) ) {
 			ParseSurfaceParm( text );
+			continue;
+		}
+		// force 32 bit
+		else if ( !Q_stricmp( token, "force32bit" ) ) {
+			// ZTM: FIXME: Actually support force32bit
 			continue;
 		}
 		// no mip maps
@@ -2192,7 +2311,7 @@ static qboolean ParseShader( char **text )
 
 			shader.fogParms.depthForOpaque = atof( token );
 
-			// note: there could not be a token, or token might be part of old gradient directions?
+			// note: there could not be a token, or token might be old gradient directions
 			token = COM_ParseExt( text, qfalse );
 			if ( !*token )
 				token = r_defaultFogParmsType->string;
@@ -2201,7 +2320,7 @@ static qboolean ParseShader( char **text )
 				shader.fogParms.fogType = FT_LINEAR;
 				shader.fogParms.density = DEFAULT_FOG_LINEAR_DENSITY;
 			} else {
-				if ( Q_stricmp( token, "exp" ) )
+				if ( Q_stricmp( token, "exp" ) && !Q_isanumber( token ) )
 					ri.Printf( PRINT_WARNING, "WARNING: unknown fog type '%s' for 'fogParms' keyword in shader '%s'\n", token, shader.name );
 
 				shader.fogParms.fogType = FT_EXP;
@@ -2215,6 +2334,13 @@ static qboolean ParseShader( char **text )
 		else if ( !Q_stricmp(token, "portal") )
 		{
 			shader.sort = SS_PORTAL;
+			continue;
+		}
+		// portalsky
+		else if ( !Q_stricmp(token, "portalsky") )
+		{
+			// ZTM: FIXME: Not entirely sure what portalsky is suppose to do.
+			shader.isSky = qtrue;
 			continue;
 		}
 		// skyparms <cloudheight> <outerbox> <innerbox>
@@ -2703,7 +2829,7 @@ static qboolean CollapseMultitexture( void ) {
 		return qfalse;
 	}
 
-	if ( stages[0].rgbGen == CGEN_WAVEFORM )
+	if ( stages[0].rgbGen == CGEN_WAVEFORM || stages[0].rgbGen == CGEN_COLOR_WAVEFORM )
 	{
 		if ( memcmp( &stages[0].rgbWave,
 					 &stages[1].rgbWave,
@@ -2986,11 +3112,7 @@ static void VertexLightingCollapse( void ) {
 		stages[0].bundle[0] = bestStage->bundle[0];
 		stages[0].stateBits &= ~( GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS );
 		stages[0].stateBits |= GLS_DEPTHMASK_TRUE;
-		if ( shader.lightmapIndex == LIGHTMAP_NONE ) {
-			stages[0].rgbGen = CGEN_LIGHTING_DIFFUSE;
-		} else {
-			stages[0].rgbGen = CGEN_EXACT_VERTEX;
-		}
+		stages[0].rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
 		stages[0].alphaGen = AGEN_SKIP;		
 	} else {
 		// don't use a lightmap (tesla coils)
@@ -3044,6 +3166,7 @@ static void SetImplicitShaderStages( image_t *image ) {
 		stages[ 0 ].bundle[ 0 ].image[ 0 ] = image;
 		stages[ 0 ].active = qtrue;
 		stages[ 0 ].rgbGen = CGEN_LIGHTING_DIFFUSE;
+		stages[ 0 ].alphaGen = AGEN_SKIP;
 		stages[ 0 ].stateBits = implicitStateBits;
 		break;
 

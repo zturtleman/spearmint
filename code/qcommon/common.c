@@ -3504,6 +3504,7 @@ void Com_Shutdown (void) {
 		FS_HomeRemove( com_pipefile->string );
 	}
 
+	BSP_Shutdown();
 }
 
 /*

@@ -1099,7 +1099,10 @@ static void ComputeColors( shaderStage_t *pStage )
 			}
 			break;
 		case CGEN_WAVEFORM:
-			RB_CalcWaveColor( &pStage->rgbWave, ( unsigned char * ) tess.svars.colors );
+			RB_CalcWaveColor( &pStage->rgbWave, NULL, ( unsigned char * ) tess.svars.colors );
+			break;
+		case CGEN_COLOR_WAVEFORM:
+			RB_CalcWaveColor( &pStage->rgbWave, pStage->constantColor, ( unsigned char * ) tess.svars.colors );
 			break;
 		case CGEN_ENTITY:
 			RB_CalcColorFromEntity( ( unsigned char * ) tess.svars.colors );

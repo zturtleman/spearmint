@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define	GAME_API_MAJOR_VERSION	0
-#define	GAME_API_MINOR_VERSION	2
+#define	GAME_API_MINOR_VERSION	5
 
 
 // entity->svFlags
@@ -271,6 +271,9 @@ typedef enum {
 
 	G_CLIENT_COMMAND,	// ( int playerNum, const char *command );
 
+	G_CLIPTOENTITIES, // ( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+	G_CLIPTOENTITIESCAPSULE, // ( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+
 	BOTLIB_SETUP = 200,				// ( void );
 	BOTLIB_SHUTDOWN,				// ( void );
 	BOTLIB_LIBVAR_SET,
@@ -341,17 +344,8 @@ typedef enum {
 	// aas_altroute
 	BOTLIB_AAS_ALTERNATIVE_ROUTE_GOAL = 420,
 
-	// ai_char
-	BOTLIB_AI_LOAD_CHARACTER = 500,
-	BOTLIB_AI_FREE_CHARACTER,
-	BOTLIB_AI_CHARACTERISTIC_FLOAT,
-	BOTLIB_AI_CHARACTERISTIC_BFLOAT,
-	BOTLIB_AI_CHARACTERISTIC_INTEGER,
-	BOTLIB_AI_CHARACTERISTIC_BINTEGER,
-	BOTLIB_AI_CHARACTERISTIC_STRING,
-
 	// ai_chat
-	BOTLIB_AI_ALLOC_CHAT_STATE,
+	BOTLIB_AI_ALLOC_CHAT_STATE = 500,
 	BOTLIB_AI_FREE_CHAT_STATE,
 	BOTLIB_AI_QUEUE_CONSOLE_MESSAGE,
 	BOTLIB_AI_REMOVE_CONSOLE_MESSAGE,
@@ -371,9 +365,6 @@ typedef enum {
 	BOTLIB_AI_SET_CHAT_NAME,
 	BOTLIB_AI_NUM_INITIAL_CHATS,
 	BOTLIB_AI_GET_CHAT_MESSAGE,
-
-	// gen
-	BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION,
 
 	BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX,
 
