@@ -60,10 +60,9 @@ typedef struct {
 #define	LUMP_ENTITIES		14
 #define	LUMP_VISIBILITY		15
 #define	LUMP_LIGHTGRID		16
-// FIXME: These aren't used yet
-//#define	LUMP_ENTLIGHTS		17
-//#define	LUMP_ENTLIGHTSVIS	18
-//#define	LUMP_LIGHTDEFS		19
+#define	LUMP_ENTLIGHTS		17
+#define	LUMP_ENTLIGHTSVIS	18
+#define	LUMP_LIGHTDEFS		19
 #define	HEADER_LUMPS		20
 
 typedef struct {
