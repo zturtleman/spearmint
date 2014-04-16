@@ -1454,7 +1454,7 @@ static	void R_LoadSurfaces( const bspFile_t *bsp ) {
 	drawVert_t	*dv;
 	int			*indexes;
 	int			count;
-	int			numFaces, numMeshes, numTriSurfs, numFlares, numFoliage;
+	int			numFaces, numMeshes, numTriSurfs, numFlares, numFoliage, numTerrain;
 	int			i;
 
 	numFaces = 0;
@@ -1462,6 +1462,7 @@ static	void R_LoadSurfaces( const bspFile_t *bsp ) {
 	numTriSurfs = 0;
 	numFlares = 0;
 	numFoliage = 0;
+	numTerrain = 0;
 
 	in = bsp->surfaces;
 	count = bsp->numSurfaces;
@@ -1502,6 +1503,10 @@ static	void R_LoadSurfaces( const bspFile_t *bsp ) {
 			ParseFoliage( in, dv, out, indexes );
 			numFoliage++;
 			break;
+		case MST_TERRAIN:
+			ParseTriSurf( in, dv, out, indexes, qfalse );
+			numTerrain++;
+			break;
 		default:
 			ri.Error( ERR_DROP, "Bad surfaceType" );
 		}
@@ -1517,8 +1522,8 @@ static	void R_LoadSurfaces( const bspFile_t *bsp ) {
 	R_MovePatchSurfacesToHunk();
 #endif
 
-	ri.Printf(PRINT_DEVELOPER, "...loaded %d faces, %i meshes, %i trisurfs, %i flares, %i foliage\n", 
-		numFaces, numMeshes, numTriSurfs, numFlares, numFoliage );
+	ri.Printf(PRINT_DEVELOPER, "...loaded %d faces, %i meshes, %i trisurfs, %i flares, %i foliage, %i terrain\n", 
+		numFaces, numMeshes, numTriSurfs, numFlares, numFoliage, numTerrain );
 }
 
 
