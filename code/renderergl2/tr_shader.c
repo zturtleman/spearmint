@@ -2554,6 +2554,41 @@ static qboolean ParseShader( char **text )
 			shader.entityMergable = qtrue;
 			continue;
 		}
+		// spriteScale <float>
+		else if ( !Q_stricmp( token, "spriteScale" ) )
+		{
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'spriteScale' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			shader.spriteScale = atof( token );
+		}
+		// spriteGen <parallel|parallel_upright|parallel_oriented|oriented>
+		else if ( !Q_stricmp( token, "spriteGen" ) )
+		{
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'spriteGen' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			if ( !Q_stricmp( token, "parallel" ) ) {
+				shader.spriteGen = SG_PARALLEL;
+			} else if ( !Q_stricmp( token, "parallel_upright" ) ) {
+				shader.spriteGen = SG_PARALLEL_UPRIGHT;
+			} else if ( !Q_stricmp( token, "parallel_oriented" ) ) {
+				shader.spriteGen = SG_PARALLEL_ORIENTED;
+			} else if ( !Q_stricmp( token, "oriented" ) ) {
+				shader.spriteGen = SG_ORIENTED;
+			} else {
+				ri.Printf( PRINT_WARNING, "WARNING: invalid spriteGen parm '%s' in shader '%s'\n", token, shader.name );
+				continue;
+			}
+		}
 		// sunShader <shader> [scale]
 		else if ( !Q_stricmp( token, "sunShader" ) ) {
 			token = COM_ParseExt( text, qfalse );
@@ -4119,6 +4154,13 @@ static shader_t *FinishShader( void ) {
 	//
 	if ( shader.polygonOffset && !shader.sort ) {
 		shader.sort = SS_DECAL;
+	}
+
+	//
+	// set default sprite scale
+	//
+	if ( shader.spriteScale == 0 ) {
+		shader.spriteScale = 1.0f;
 	}
 
 	//

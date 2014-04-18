@@ -329,6 +329,13 @@ typedef enum {
 	FP_LE			// surface is trnaslucent, but still needs a fog pass (fog surface)
 } fogPass_t;
 
+typedef enum {
+	SG_PARALLEL,			// default, think autosprite
+	SG_PARALLEL_UPRIGHT,	// think autosprite2 that rotates around global up vector
+	SG_PARALLEL_ORIENTED,	// think autosprite2, with specified axis to rotate around
+	SG_ORIENTED				// use exact axis
+} spriteGen_t;
+
 typedef struct {
 	float		cloudHeight;
 	image_t		*outerbox[6], *innerbox[6];
@@ -363,6 +370,9 @@ typedef struct shader_s {
 	int			contentFlags;
 
 	qboolean	entityMergable;			// merge across entites optimizable (smoke, blood)
+
+	float		spriteScale;
+	spriteGen_t	spriteGen;
 
 	qboolean	isSky;
 	skyParms_t	sky;
