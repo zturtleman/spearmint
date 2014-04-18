@@ -190,6 +190,7 @@ typedef struct {
 	byte			*lightmapData;
 	int				numLightmaps;
 
+	float			defaultLightGridSize[3]; // might be overriden in entities string
 	byte			*lightGridData; // each point is 8 bytes
 	int				numGridPoints;
 

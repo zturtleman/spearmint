@@ -177,6 +177,10 @@ typedef struct {
 
 #define VIS_HEADER 8
 
+#define LIGHTING_GRIDSIZE_X 192
+#define LIGHTING_GRIDSIZE_Y 192
+#define LIGHTING_GRIDSIZE_Z 320
+
 /****************************************************
 */
 
@@ -228,6 +232,9 @@ bspFile_t *BSP_LoadFAKK( const bspFormat_t *format, const char *name, const void
 
 	// ...
 	bsp->checksum = header.checksum;
+	bsp->defaultLightGridSize[0] = LIGHTING_GRIDSIZE_X;
+	bsp->defaultLightGridSize[1] = LIGHTING_GRIDSIZE_Y;
+	bsp->defaultLightGridSize[2] = LIGHTING_GRIDSIZE_Z;
 
 
 	//

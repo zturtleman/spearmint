@@ -1979,9 +1979,9 @@ void R_LoadEntities( const bspFile_t *bsp ) {
 	world_t	*w;
 
 	w = &s_worldData;
-	w->lightGridSize[0] = 64;
-	w->lightGridSize[1] = 64;
-	w->lightGridSize[2] = 128;
+	w->lightGridSize[0] = bsp->defaultLightGridSize[0];
+	w->lightGridSize[1] = bsp->defaultLightGridSize[1];
+	w->lightGridSize[2] = bsp->defaultLightGridSize[2];
 
 	p = bsp->entityString;
 

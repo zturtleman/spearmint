@@ -170,6 +170,10 @@ typedef struct {
 
 #define VIS_HEADER 8
 
+#define LIGHTING_GRIDSIZE_X 64
+#define LIGHTING_GRIDSIZE_Y 64
+#define LIGHTING_GRIDSIZE_Z 128
+
 #define	SUBDIVIDE_DISTANCE	16	//4	// never more than this units away from curve
 
 /****************************************************
@@ -223,6 +227,9 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 
 	// ...
 	bsp->checksum = LittleLong (Com_BlockChecksum (data, length));
+	bsp->defaultLightGridSize[0] = LIGHTING_GRIDSIZE_X;
+	bsp->defaultLightGridSize[1] = LIGHTING_GRIDSIZE_Y;
+	bsp->defaultLightGridSize[2] = LIGHTING_GRIDSIZE_Z;
 
 
 	//
