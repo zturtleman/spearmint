@@ -175,7 +175,9 @@ typedef enum {
 	AGEN_LIGHTING_SPECULAR,
 	AGEN_WAVEFORM,
 	AGEN_PORTAL,
-	AGEN_CONST
+	AGEN_CONST,
+	AGEN_SKY_ALPHA,
+	AGEN_ONE_MINUS_SKY_ALPHA
 } alphaGen_t;
 
 typedef enum {
@@ -434,6 +436,9 @@ typedef struct {
 	qboolean	areamaskModified;	// qtrue if areamask changed since last scene
 
 	float		floatTime;			// tr.refdef.time / 1000.0
+
+	// for alphaGen skyAlpha and oneMinusSkyAlpha
+	float			skyAlpha;
 
 	// text messages for deform text shaders
 	char		text[MAX_RENDER_STRINGS][MAX_RENDER_STRING_LENGTH];

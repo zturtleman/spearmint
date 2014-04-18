@@ -207,6 +207,9 @@ typedef struct {
 	float           sunDir[3];
 	float           sunCol[3];
 	float           sunAmbCol[3];
+
+	// for alphaGen skyAlpha and oneMinusSkyAlpha
+	float			skyAlpha;
 } refdef_t;
 
 

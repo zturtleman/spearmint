@@ -1569,6 +1569,14 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 					shader.portalRange = atof( token );
 				}
 			}
+			else if ( !Q_stricmp( token, "skyAlpha" ) )
+			{
+				stage->alphaGen = AGEN_SKY_ALPHA;
+			}
+			else if ( !Q_stricmp( token, "oneMinusSkyAlpha" ) )
+			{
+				stage->alphaGen = AGEN_ONE_MINUS_SKY_ALPHA;
+			}
 			else
 			{
 				ri.Printf( PRINT_WARNING, "WARNING: unknown alphaGen parameter '%s' in shader '%s'\n", token, shader.name );
