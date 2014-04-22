@@ -66,10 +66,17 @@ int AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs)
 	vec3_t end;
 	bsp_trace_t trace;
 
+	// mappers like to put them exactly on the floor, but being coplanar
+	// will sometimes show up as starting in solid, so lif it up one pixel
+	origin[2] += 1;
+
 	VectorCopy(origin, end);
 	end[2] -= 100;
 	trace = AAS_Trace(origin, mins, maxs, end, 0, CONTENTS_SOLID);
-	if (trace.startsolid) return qfalse;
+	if (trace.startsolid) {
+		origin[2] -= 1;
+		return qfalse;
+	}
 	VectorCopy(trace.endpos, origin);
 	return qtrue;
 } //end of the function AAS_DropToFloor
