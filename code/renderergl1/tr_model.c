@@ -1338,6 +1338,11 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 		}
 
 	}
+	else
+	{
+		start = NULL;
+		end = NULL;
+	}
 
 	if ( !start || !end ) {
 		AxisClear( tag->axis );
