@@ -658,7 +658,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 				client->deltaMessage = -1;
 				client->lastSnapshotTime = 0;	// generate a snapshot immediately
 
-				VM_Call( gvm, GAME_CLIENT_BEGIN, i );
+				VM_Call( gvm, GAME_CLIENT_BEGIN, client->localPlayers[0] - svs.players );
 			}
 		}
 	}	
