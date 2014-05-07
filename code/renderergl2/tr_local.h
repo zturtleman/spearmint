@@ -260,6 +260,8 @@ typedef enum {
 	AGEN_WAVEFORM,
 	AGEN_PORTAL,
 	AGEN_CONST,
+	AGEN_SKY_ALPHA,
+	AGEN_ONE_MINUS_SKY_ALPHA
 } alphaGen_t;
 
 typedef enum {
@@ -448,6 +450,13 @@ typedef enum {
 	FP_LE			// surface is trnaslucent, but still needs a fog pass (fog surface)
 } fogPass_t;
 
+typedef enum {
+	SG_PARALLEL,			// default, think autosprite
+	SG_PARALLEL_UPRIGHT,	// think autosprite2 that rotates around global up vector
+	SG_PARALLEL_ORIENTED,	// think autosprite2, with specified axis to rotate around
+	SG_ORIENTED				// use exact axis
+} spriteGen_t;
+
 typedef struct {
 	float		cloudHeight;
 	image_t		*outerbox[6], *innerbox[6];
@@ -481,6 +490,9 @@ typedef struct shader_s {
 	int			contentFlags;
 
 	qboolean	entityMergable;			// merge across entites optimizable (smoke, blood)
+
+	float		spriteScale;
+	spriteGen_t	spriteGen;
 
 	qboolean	isSky;
 	skyParms_t	sky;
@@ -778,6 +790,9 @@ typedef struct {
 	float		floatTime;			// tr.refdef.time / 1000.0
 
 	float		blurFactor;
+
+	// for alphaGen skyAlpha and oneMinusSkyAlpha
+	float			skyAlpha;
 
 	// text messages for deform text shaders
 	char		text[MAX_RENDER_STRINGS][MAX_RENDER_STRING_LENGTH];
@@ -1537,10 +1552,6 @@ typedef struct {
 	qboolean framebufferMultisample;
 	qboolean framebufferBlit;
 
-	qboolean textureSrgb;
-	qboolean framebufferSrgb;
-	qboolean textureSrgbDecode;
-
 	qboolean depthClamp;
 	qboolean seamlessCubeMap;
 
@@ -1933,7 +1944,10 @@ extern  cvar_t  *r_forceAutoExposureMax;
 
 extern  cvar_t  *r_cameraExposure;
 
-extern  cvar_t  *r_srgb;
+extern  cvar_t  *r_materialGamma;
+extern  cvar_t  *r_lightGamma;
+extern  cvar_t  *r_framebufferGamma;
+extern  cvar_t  *r_tonemapGamma;
 
 extern  cvar_t  *r_depthPrepass;
 extern  cvar_t  *r_ssao;

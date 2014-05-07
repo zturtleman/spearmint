@@ -42,6 +42,7 @@ bspFormat_t *bspFormats[] = {
 	&fakkBspFormat,
 	&aliceBspFormat,
 	&sof2BspFormat,
+	&ef2BspFormat,
 };
 
 const int numBspFormats = ARRAY_LEN( bspFormats );

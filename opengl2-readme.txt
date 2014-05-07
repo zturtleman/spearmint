@@ -18,7 +18,6 @@ compatibility with existing Quake 3 mods.
   - Texture upsampling.
   - Advanced materials support.
   - Advanced shading and specular methods.
-  - sRGB support.
   - LATC and BPTC texture compression support.
   - Screen-space ambient occlusion.
 
@@ -162,13 +161,6 @@ Cvars for HDR and tonemapping:
                                      1.0 - Dimmer.
                                      2.0 - Normal. (default)
                                      3.0 - Brighter.
-
-  r_srgb                         - Treat all input textures as sRGB, and do
-                                   final rendering in a sRGB framebuffer.  Only
-                                   required if assets were created with it in
-                                   mind.
-                                     0 - No. (default)
-                                     1 - Yes.
 
 Cvars for advanced material usage:
   r_normalMapping                - Enable normal mapping for materials that
@@ -317,7 +309,7 @@ Cvars for the sunlight and cascaded shadow maps:
                                      2048 - 2048x2048, extreme.
                                      4096 - 4096x4096, indistinguishable from
                                             2048.
-  
+
 Cvars that you probably don't care about or shouldn't mess with:
   r_mergeMultidraws              - Optimize number of calls to 
                                    glMultiDrawElements().
@@ -365,7 +357,20 @@ Cvars that you probably don't care about or shouldn't mess with:
   r_shadowCascadeZBias           - Z-bias for shadow cascade frustums.
                                      -256 - Default.
 
-  
+  r_materialGamma                - Gamma level for material textures.
+                                   (diffuse, specular)
+                                     1.0 - Quake 3, fastest. (default)
+
+  r_lightGamma                   - Gamma level for light.
+                                   (lightmap, lightgrid, vertex lights)
+                                     1.0 - Quake 3, fastest. (default)
+
+  r_framebufferGamma             - Gamma level for framebuffers.
+                                     1.0 - Quake 3, fastest. (default)
+
+  r_tonemapGamma                 - Gamma applied after tonemapping.
+                                     1.0 - Quake 3, fastest. (default)
+
 Cvars that have broken bits:
   r_dlightMode                   - Change how dynamic lights look.
                                      0 - Quake 3 style dlights, fake

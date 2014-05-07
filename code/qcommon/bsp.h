@@ -111,7 +111,9 @@ typedef enum {
 	MST_PATCH,
 	MST_TRIANGLE_SOUP,
 	MST_FLARE,
-	MST_FOLIAGE
+	MST_FOLIAGE, // 5 in ET
+	MST_TERRAIN, // 5 in EF2
+	MST_MAX
 } mapSurfaceType_t;
 
 typedef struct {
@@ -188,6 +190,7 @@ typedef struct {
 	byte			*lightmapData;
 	int				numLightmaps;
 
+	float			defaultLightGridSize[3]; // might be overriden in entities string
 	byte			*lightGridData; // each point is 8 bytes
 	int				numGridPoints;
 
@@ -231,6 +234,9 @@ extern bspFormat_t aliceBspFormat;
 
 // bsp_sof2.c
 extern bspFormat_t sof2BspFormat;
+
+// bsp_ef2.c
+extern bspFormat_t ef2BspFormat;
 
 #endif // __MINT_BSP__
 

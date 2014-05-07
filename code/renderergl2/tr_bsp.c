@@ -2373,7 +2373,7 @@ static	void R_LoadSurfaces( const bspFile_t *bsp ) {
 	drawVert_t	*dv;
 	int			*indexes;
 	int			count;
-	int			numFaces, numMeshes, numTriSurfs, numFlares, numFoliage;
+	int			numFaces, numMeshes, numTriSurfs, numFlares, numFoliage, numTerrain;
 	int			i;
 	float *hdrVertColors = NULL;
 
@@ -2382,6 +2382,7 @@ static	void R_LoadSurfaces( const bspFile_t *bsp ) {
 	numTriSurfs = 0;
 	numFlares = 0;
 	numFoliage = 0;
+	numTerrain = 0;
 
 	count = bsp->numSurfaces;
 
@@ -2439,6 +2440,9 @@ static	void R_LoadSurfaces( const bspFile_t *bsp ) {
 			case MST_FOLIAGE:
 				out->data = ri.Hunk_Alloc( sizeof(srfFoliage_t), h_low);
 				break;
+			case MST_TERRAIN:
+				out->data = ri.Hunk_Alloc( sizeof(srfBspSurface_t), h_low);
+				break;
 			default:
 				break;
 		}
@@ -2480,6 +2484,10 @@ static	void R_LoadSurfaces( const bspFile_t *bsp ) {
 			ParseFoliage( in, dv, hdrVertColors, out, indexes );
 			numFoliage++;
 			break;
+		case MST_TERRAIN:
+			ParseTriSurf( in, dv, hdrVertColors, out, indexes );
+			numTerrain++;
+			break;
 		default:
 			ri.Error( ERR_DROP, "Bad surfaceType" );
 		}
@@ -2500,8 +2508,8 @@ static	void R_LoadSurfaces( const bspFile_t *bsp ) {
 	R_MovePatchSurfacesToHunk();
 #endif
 
-	ri.Printf(PRINT_DEVELOPER, "...loaded %d faces, %i meshes, %i trisurfs, %i flares, %i foliage\n", 
-		numFaces, numMeshes, numTriSurfs, numFlares, numFoliage );
+	ri.Printf(PRINT_DEVELOPER, "...loaded %d faces, %i meshes, %i trisurfs, %i flares, %i foliage, %i terrain\n", 
+		numFaces, numMeshes, numTriSurfs, numFlares, numFoliage, numTerrain );
 }
 
 
@@ -2997,9 +3005,9 @@ void R_LoadEntities( const bspFile_t *bsp ) {
 	world_t	*w;
 
 	w = &s_worldData;
-	w->lightGridSize[0] = 64;
-	w->lightGridSize[1] = 64;
-	w->lightGridSize[2] = 128;
+	w->lightGridSize[0] = bsp->defaultLightGridSize[0];
+	w->lightGridSize[1] = bsp->defaultLightGridSize[1];
+	w->lightGridSize[2] = bsp->defaultLightGridSize[2];
 
 	p = bsp->entityString;
 

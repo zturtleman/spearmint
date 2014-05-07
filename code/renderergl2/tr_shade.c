@@ -659,6 +659,14 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 			baseColor[3] = 1.0f;
 			vertColor[3] = 0.0f;
 			break;
+		case AGEN_SKY_ALPHA:
+			baseColor[3] = backEnd.refdef.skyAlpha;
+			vertColor[3] = 0.0f;
+			break;
+		case AGEN_ONE_MINUS_SKY_ALPHA:
+			baseColor[3] = 1.0f - backEnd.refdef.skyAlpha;
+			vertColor[3] = 0.0f;
+			break;
 	}
 
 	// multiply color by overbrightbits if this isn't a blend

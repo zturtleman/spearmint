@@ -175,7 +175,9 @@ typedef enum {
 	AGEN_LIGHTING_SPECULAR,
 	AGEN_WAVEFORM,
 	AGEN_PORTAL,
-	AGEN_CONST
+	AGEN_CONST,
+	AGEN_SKY_ALPHA,
+	AGEN_ONE_MINUS_SKY_ALPHA
 } alphaGen_t;
 
 typedef enum {
@@ -329,6 +331,13 @@ typedef enum {
 	FP_LE			// surface is trnaslucent, but still needs a fog pass (fog surface)
 } fogPass_t;
 
+typedef enum {
+	SG_PARALLEL,			// default, think autosprite
+	SG_PARALLEL_UPRIGHT,	// think autosprite2 that rotates around global up vector
+	SG_PARALLEL_ORIENTED,	// think autosprite2, with specified axis to rotate around
+	SG_ORIENTED				// use exact axis
+} spriteGen_t;
+
 typedef struct {
 	float		cloudHeight;
 	image_t		*outerbox[6], *innerbox[6];
@@ -363,6 +372,9 @@ typedef struct shader_s {
 	int			contentFlags;
 
 	qboolean	entityMergable;			// merge across entites optimizable (smoke, blood)
+
+	float		spriteScale;
+	spriteGen_t	spriteGen;
 
 	qboolean	isSky;
 	skyParms_t	sky;
@@ -424,6 +436,9 @@ typedef struct {
 	qboolean	areamaskModified;	// qtrue if areamask changed since last scene
 
 	float		floatTime;			// tr.refdef.time / 1000.0
+
+	// for alphaGen skyAlpha and oneMinusSkyAlpha
+	float			skyAlpha;
 
 	// text messages for deform text shaders
 	char		text[MAX_RENDER_STRINGS][MAX_RENDER_STRING_LENGTH];

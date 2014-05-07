@@ -27,44 +27,58 @@ terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
 Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
-// bsp_q3.c -- Q3/RTCW/ET/EF BSP Level Loading
+// bsp_ef2.c -- Elite Force 2 BSP Level Loading (extended from FAKK)
 
 #include "q_shared.h"
 #include "qcommon.h"
 #include "bsp.h"
 
-#define BSP_IDENT	(('P'<<24)+('S'<<16)+('B'<<8)+'I')
-		// little-endian "IBSP"
+#define BSP_IDENT	(('!'<<24)+('2'<<16)+('F'<<8)+'E')
+		// little-endian "EF2!"
 
-#define Q3_BSP_VERSION			46 // Quake III / Team Arena
-#define WOLF_BSP_VERSION		47 // RTCW / WolfET
+#define BSP_VERSION			20
 
 typedef struct {
 	int		fileofs, filelen;
 } lump_t;
 
-#define	LUMP_ENTITIES		0
-#define	LUMP_SHADERS		1
-#define	LUMP_PLANES			2
-#define	LUMP_NODES			3
-#define	LUMP_LEAFS			4
-#define	LUMP_LEAFSURFACES	5
-#define	LUMP_LEAFBRUSHES	6
-#define	LUMP_MODELS			7
-#define	LUMP_BRUSHES		8
-#define	LUMP_BRUSHSIDES		9
-#define	LUMP_DRAWVERTS		10
-#define	LUMP_DRAWINDEXES	11
-#define	LUMP_FOGS			12
-#define	LUMP_SURFACES		13
-#define	LUMP_LIGHTMAPS		14
-#define	LUMP_LIGHTGRID		15
-#define	LUMP_VISIBILITY		16
-#define	HEADER_LUMPS		17
+// ZTM: 3, 4, 22 to 28 are 0 length (most of the time?). 28 is non-zero on dm_borgurvish
+#define	LUMP_SHADERS			0
+#define	LUMP_PLANES				1
+#define	LUMP_LIGHTMAPS			2
+#define	LUMP_BASELIGHTMAPS		3
+#define	LUMP_CONTLIGHTMAPS		4
+#define	LUMP_SURFACES			5
+#define	LUMP_DRAWVERTS			6
+#define	LUMP_DRAWINDEXES		7
+#define	LUMP_LEAFBRUSHES		8
+#define	LUMP_LEAFSURFACES		9
+#define	LUMP_LEAFS				10
+#define	LUMP_NODES				11
+#define	LUMP_BRUSHSIDES			12
+#define	LUMP_BRUSHES			13
+#define	LUMP_FOGS				14
+#define	LUMP_MODELS				15
+#define	LUMP_ENTITIES			16
+#define	LUMP_VISIBILITY			17
+#define	LUMP_LIGHTGRID			18
+#define	LUMP_ENTLIGHTS			19
+#define	LUMP_ENTLIGHTSVIS		20
+#define	LUMP_LIGHTDEFS			21
+#define	LUMP_BASELIGHTINGVERTS	22
+#define	LUMP_CONTLIGHTINGVERTS	23
+#define	LUMP_BASELIGHTINGSURFS	24
+#define	LUMP_LIGHTINGSURFS		25
+#define	LUMP_LIGHTINGVERTSURFS	26
+#define	LUMP_LIGHTINGGROUPS		27
+#define	LUMP_STATIC_LOD_MODELS	28
+#define	LUMP_BSPINFO			29
+#define	HEADER_LUMPS			30
 
 typedef struct {
 	int			ident;
 	int			version;
+	int			checksum;
 
 	lump_t		lumps[HEADER_LUMPS];
 } dheader_t;
@@ -79,6 +93,7 @@ typedef struct {
 	char		shader[MAX_QPATH];
 	int			surfaceFlags;
 	int			contentFlags;
+	int			subdivisions;
 } realDshader_t;
 
 // planes x^1 is allways the opposite of plane x
@@ -110,13 +125,13 @@ typedef struct {
 } realDleaf_t;
 
 typedef struct {
-	int			planeNum;			// positive plane side faces out of the leaf
 	int			shaderNum;
+	int			planeNum;			// positive plane side faces out of the leaf
 } realDbrushside_t;
 
 typedef struct {
-	int			firstSide;
 	int			numSides;
+	int			firstSide;
 	int			shaderNum;		// the shader that determines the contents flags
 } realDbrush_t;
 
@@ -129,22 +144,85 @@ typedef struct {
 typedef struct {
 	vec3_t		xyz;
 	float		st[2];
-	float		lightmap[2];
 	vec3_t		normal;
 	byte		color[4];
+	float		lodExtra;
+	union
+	{
+		float	lightmap[2];
+		int		collapseMap;
+	};
 } realDrawVert_t;
 
-// When adding a new BSP format make sure the surfaceType variables mean the same thing as Q3 or remap them on load!
 #if 0
-typedef enum {
-	MST_BAD,
-	MST_PLANAR,
-	MST_PATCH,
-	MST_TRIANGLE_SOUP,
-	MST_FLARE,
-	MST_FOLIAGE
-} mapSurfaceType_t;
+typedef struct {
+	byte		   color[3];
+} lightingVert_t;
+
+typedef struct {
+	int			baseLightmapNum;
+	int			baseLightmapX, baseLightmapY;
+	int			baseLightmapWidth, baseLightmapHeight;
+
+	int			lastUpdatedFrame;
+
+	int			firstLightingSurface;
+	int			numLightingSurfaces;
+
+	int			baseLightingVerts;
+	int			firstLightingVertSurface;
+	int			numLightingVertSurfaces;
+} baseLightingSurf_t;
+
+typedef struct {
+	int			lightmapNum;
+
+	int			lightmapX, lightmapY;
+	int			lightGroupNum;
+
+	byte		color[3];
+} lightingSurf_t;
+
+typedef struct {
+	int			lightGroupNum;
+	int			firstLightingVert;
+	byte		   color[3];
+} lightingVertSurf_t;
+
+#define DYNAMIC_LIGHTMAP_BIT  ( 1 << 30 )
+
+#define MAX_LIGHT_GROUP_NAME_LENGTH  64
+
+typedef struct {
+	char			name[ MAX_LIGHT_GROUP_NAME_LENGTH ];
+} lightingGroup_t;
+
+typedef struct {
+	int	totalNumberOfVerts;
+	float origin[3];
+	float startDistance;
+	float startPerCentVerts;
+	float stopDistance;
+	float stopPerCentVerts;
+	float alphaFadeDistance;
+	int	lodNumberOfVerts;
+	int	frameCount;
+} staticLodModel_t;
 #endif
+
+typedef enum {
+	REAL_MST_BAD,
+	REAL_MST_PLANAR,
+	REAL_MST_PATCH,
+	REAL_MST_TRIANGLE_SOUP,
+	REAL_MST_FLARE,
+	REAL_MST_TERRAIN,
+	REAL_MST_FOLIAGE		// ZTM: NOTE: I made this up. EF2 doesn't have ET-style foliage. But you could with a custom map compiler.
+} realMapSurfaceType_t;
+
+#define LIGHTMAP_NONE		-1
+#define LIGHTMAP_NEEDED		-2
+#define NUMBER_TERRAIN_VERTS 9
 
 typedef struct {
 	int			shaderNum;
@@ -166,15 +244,20 @@ typedef struct {
 
 	int			patchWidth; // ydnar: num foliage instances
 	int			patchHeight; // ydnar: num foliage mesh verts
+
+	float		subdivisions;
+
+	int			baseLightingSurface;
+	// Terrain fields
+	int			inverted;
+	int			faceFlags[4];
 } realDsurface_t;
 
 #define VIS_HEADER 8
 
-#define LIGHTING_GRIDSIZE_X 64
-#define LIGHTING_GRIDSIZE_Y 64
-#define LIGHTING_GRIDSIZE_Z 128
-
-#define	SUBDIVIDE_DISTANCE	16	//4	// never more than this units away from curve
+#define LIGHTING_GRIDSIZE_X 192
+#define LIGHTING_GRIDSIZE_Y 192
+#define LIGHTING_GRIDSIZE_Z 320
 
 /****************************************************
 */
@@ -211,7 +294,7 @@ static void *GetLump( dheader_t *header, const void *src, int lump ) {
 	return (void*)( (byte*) src + header->lumps[ lump ].fileofs );
 }
 
-bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *data, int length ) {
+bspFile_t *BSP_LoadEF2( const bspFormat_t *format, const char *name, const void *data, int length ) {
 	int				i, j, k;
 	dheader_t		header;
 	bspFile_t		*bsp;
@@ -226,7 +309,7 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 	Com_Memset( bsp, 0, sizeof ( bspFile_t ) );
 
 	// ...
-	bsp->checksum = LittleLong (Com_BlockChecksum (data, length));
+	bsp->checksum = header.checksum;
 	bsp->defaultLightGridSize[0] = LIGHTING_GRIDSIZE_X;
 	bsp->defaultLightGridSize[1] = LIGHTING_GRIDSIZE_Y;
 	bsp->defaultLightGridSize[2] = LIGHTING_GRIDSIZE_Z;
@@ -441,6 +524,11 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 			out->shaderNum = LittleLong (in->shaderNum);
 			out->fogNum = LittleLong (in->fogNum);
 			out->surfaceType = LittleLong (in->surfaceType);
+			if ( out->surfaceType == REAL_MST_TERRAIN ) {
+				out->surfaceType = MST_TERRAIN;
+			} else if ( out->surfaceType == REAL_MST_FOLIAGE ) {
+				out->surfaceType = MST_FOLIAGE;
+			}
 			out->firstVert = LittleLong (in->firstVert);
 			out->numVerts = LittleLong (in->numVerts);
 			out->firstIndex = LittleLong (in->firstIndex);
@@ -461,7 +549,7 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 			out->patchWidth = LittleLong (in->patchWidth);
 			out->patchHeight = LittleLong (in->patchHeight);
 
-			out->subdivisions = SUBDIVIDE_DISTANCE;
+			out->subdivisions = LittleFloat( in->subdivisions );
 		}
 	}
 
@@ -485,20 +573,10 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 /****************************************************
 */
 
-// Q3, Elite Force, and other games
-bspFormat_t quake3BspFormat = {
-	"Quake3",
+bspFormat_t ef2BspFormat = {
+	"EF2",
 	BSP_IDENT,
-	Q3_BSP_VERSION,
-	BSP_LoadQ3,
+	BSP_VERSION,
+	BSP_LoadEF2,
 };
-
-// RTCW, ET, QuakeLive
-bspFormat_t wolfBspFormat = {
-	"RTCW/ET",
-	BSP_IDENT,
-	WOLF_BSP_VERSION,
-	BSP_LoadQ3,
-};
-
 

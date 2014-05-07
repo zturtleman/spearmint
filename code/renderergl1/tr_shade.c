@@ -1192,6 +1192,24 @@ static void ComputeColors( shaderStage_t *pStage )
 			}
 		}
 		break;
+	case AGEN_SKY_ALPHA:
+		{
+			unsigned char alpha = 0xff * backEnd.refdef.skyAlpha;
+
+			for ( i = 0; i < tess.numVertexes; i++ ) {
+				tess.svars.colors[i][3] = alpha;
+			}
+		}
+		break;
+	case AGEN_ONE_MINUS_SKY_ALPHA:
+		{
+			unsigned char alpha = 0xff * ( 1.0f - backEnd.refdef.skyAlpha );
+
+			for ( i = 0; i < tess.numVertexes; i++ ) {
+				tess.svars.colors[i][3] = alpha;
+			}
+		}
+		break;
 	}
 
 	//

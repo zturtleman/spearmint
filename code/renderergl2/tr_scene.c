@@ -495,6 +495,8 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.time = fd->time;
 	tr.refdef.rdflags = fd->rdflags;
 
+	tr.refdef.skyAlpha = fd->skyAlpha;
+
 	tr.refdef.fogType = fd->fogType;
 	if ( tr.refdef.fogType < FT_NONE || tr.refdef.fogType >= FT_MAX_FOG_TYPE ) {
 		tr.refdef.fogType = FT_NONE;

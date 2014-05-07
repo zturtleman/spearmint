@@ -311,6 +311,10 @@ void Q3_FindVisibleBrushSides(void)
 				qprintf("\r%6d", numsides++);
 				brushside = &q3bsp->brushSides[brush->firstSide + j];
 				//
+				if ( q3bsp->shaders[brushside->shaderNum].surfaceFlags & SURF_NODRAW ) {
+					continue;
+				} //end if
+				//
 				w = Q3_BrushSideWinding(brush, brushside);
 				if (!w)
 				{

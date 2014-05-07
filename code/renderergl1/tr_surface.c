@@ -162,14 +162,59 @@ RB_SurfaceSprite
 ==============
 */
 static void RB_SurfaceSprite( void ) {
+	vec3_t		axis[3];
 	vec3_t		left, up;
 	float		radius;
 
+	switch ( tess.shader->spriteGen ) {
+		case SG_PARALLEL:
+			// face screen
+			AxisCopy( backEnd.viewParms.or.axis, axis );
+			break;
+
+		case SG_PARALLEL_UPRIGHT:
+			// rotate around up
+			VectorSet( axis[2], 0, 0, 1 );
+
+			VectorCopy( backEnd.viewParms.or.axis[0], axis[0] );
+			CrossProduct( axis[2], axis[0], axis[1] );
+			VectorNormalize( axis[1] );
+			break;
+
+		case SG_PARALLEL_ORIENTED:
+			// rotating around up axis
+			VectorCopy( backEnd.currentEntity->e.axis[2], axis[2] );
+
+			if ( !VectorLength( axis[2] ) ) {
+				ri.Printf( PRINT_WARNING, "WARNING: Sprite using shader '%s' missing axis orientation for spriteGen\n", tess.shader->name );
+				VectorSet( axis[2], 0, 0, 1 );
+			}
+
+			VectorCopy( backEnd.viewParms.or.axis[0], axis[0] );
+			CrossProduct( axis[2], axis[0], axis[1] );
+			VectorNormalize( axis[1] );
+			break;
+
+		case SG_ORIENTED:
+			// face direction of normal
+			AxisCopy( backEnd.currentEntity->e.axis, axis );
+			if ( !VectorLength( axis[1] ) || !VectorLength( axis[2] ) ) {
+				ri.Printf( PRINT_WARNING, "WARNING: Sprite using shader '%s' missing axis orientation for spriteGen\n", tess.shader->name );
+				VectorSet( axis[1], 0, 1, 0 );
+				VectorSet( axis[2], 0, 0, 1 );
+			}
+			break;
+
+		default:
+			Com_Error( ERR_DROP, "Unhandled spriteGen %d", tess.shader->spriteGen );
+			break;
+	}
+
 	// calculate the xyz locations for the four corners
-	radius = backEnd.currentEntity->e.radius;
+	radius = backEnd.currentEntity->e.radius * tess.shader->spriteScale;
 	if ( backEnd.currentEntity->e.rotation == 0 ) {
-		VectorScale( backEnd.viewParms.or.axis[1], radius, left );
-		VectorScale( backEnd.viewParms.or.axis[2], radius, up );
+		VectorScale( axis[1], radius, left );
+		VectorScale( axis[2], radius, up );
 	} else {
 		float	s, c;
 		float	ang;
@@ -178,11 +223,11 @@ static void RB_SurfaceSprite( void ) {
 		s = sin( ang );
 		c = cos( ang );
 
-		VectorScale( backEnd.viewParms.or.axis[1], c * radius, left );
-		VectorMA( left, -s * radius, backEnd.viewParms.or.axis[2], left );
+		VectorScale( axis[1], c * radius, left );
+		VectorMA( left, -s * radius, axis[2], left );
 
-		VectorScale( backEnd.viewParms.or.axis[2], c * radius, up );
-		VectorMA( up, s * radius, backEnd.viewParms.or.axis[1], up );
+		VectorScale( axis[2], c * radius, up );
+		VectorMA( up, s * radius, axis[1], up );
 	}
 	if ( backEnd.viewParms.isMirror ) {
 		VectorSubtract( vec3_origin, left, left );
