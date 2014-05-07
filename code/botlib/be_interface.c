@@ -293,11 +293,11 @@ int Export_BotLibUpdateEntity(int ent, bot_entitystate_t *state)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void Export_AAS_TraceClientBBox(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent)
+void Export_AAS_TraceClientBBox(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask)
 {
 	aas_trace_t tr;
 	if ( !trace ) return;
-	tr = AAS_TraceClientBBox(start, end, presencetype, passent);
+	tr = AAS_TraceClientBBox(start, end, presencetype, passent, contentmask);
 	Com_Memcpy(trace, &tr, sizeof (aas_trace_t));
 } //end of the function Export_AAS_TraceClientBBox
 //===========================================================================
@@ -308,7 +308,7 @@ void Export_AAS_TraceClientBBox(struct aas_trace_s *trace, vec3_t start, vec3_t 
 //===========================================================================
 // ZTM: FIXME: Botlib's Test function is broken, move to game?
 #ifdef DEBUG
-void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir);
+void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir, int contentmask);
 void ElevatorBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter);
 int BotGetReachabilityToGoal(vec3_t origin, int areanum,
 									  int lastgoalareanum, int lastareanum,
@@ -442,7 +442,7 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 		VectorCopy(origin, end);
 		end[2] += 5;
 		numareas = AAS_TraceAreas(origin, end, areas, NULL, 10);
-		AAS_TraceClientBBox(origin, end, PRESENCE_CROUCH, -1);
+		AAS_TraceClientBBox(origin, end, PRESENCE_CROUCH, -1, MASK_PLAYERSOLID);
 		botimport.Print(PRT_MESSAGE, "num areas = %d, area = %d\n", numareas, areas[0]);
 		*/
 		/*
@@ -583,10 +583,10 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 	//get the end point for the line to be traced
 //	VectorMA(eye, 800, forward, end);
 
-//	AAS_TestMovementPrediction(1, parm2, forward);
+//	AAS_TestMovementPrediction(1, parm2, forward, MASK_PLAYERSOLID);
 /*
     //trace the line to find the hit point
-	trace = AAS_TraceClientBBox(eye, end, PRESENCE_NORMAL, 1);
+	trace = AAS_TraceClientBBox(eye, end, PRESENCE_NORMAL, 1, MASK_PLAYERSOLID);
 	if (!line[0]) line[0] = botimport.DebugLineCreate();
 	botimport.DebugLineShow(line[0], eye, trace.endpos, LINECOLOR_BLUE);
 	//
@@ -603,7 +603,7 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 	for (i = 0; i < 2000; i++)
 	{
 		AAS_Trace2(eye, mins, maxs, end, 1, MASK_PLAYERSOLID);
-//		AAS_TraceClientBBox(eye, end, PRESENCE_NORMAL, 1);
+//		AAS_TraceClientBBox(eye, end, PRESENCE_NORMAL, 1, MASK_PLAYERSOLID);
 	} //end for
 	end_time = clock();
 	botimport.Print(PRT_MESSAGE, "me %lu clocks, %lu CLOCKS_PER_SEC\n", end_time - start_time, CLOCKS_PER_SEC);

@@ -184,7 +184,7 @@ typedef struct aas_export_s
 	//--------------------------------------------
 	int			(*AAS_PointAreaNum)(vec3_t point);
 	int			(*AAS_PointReachabilityAreaIndex)( vec3_t point );
-	void		(*AAS_TraceClientBBox)(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent);
+	void		(*AAS_TraceClientBBox)(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask);
 	int			(*AAS_TraceAreas)(vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas);
 	int			(*AAS_BBoxAreas)(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas);
 	int			(*AAS_AreaInfo)( int areanum, struct aas_areainfo_s *info );
@@ -221,7 +221,7 @@ typedef struct aas_export_s
 	int			(*AAS_AreaContentsTravelFlags)(int areanum);
 	int			(*AAS_NextAreaReachability)(int areanum, int reachnum);
 	void		(*AAS_ReachabilityFromNum)(int num, struct aas_reachability_s *reach);
-	int			(*AAS_RandomGoalArea)(int areanum, int travelflags, int *goalareanum, vec3_t goalorigin);
+	int			(*AAS_RandomGoalArea)(int areanum, int travelflags, int contentmask, int *goalareanum, vec3_t goalorigin);
 	int			(*AAS_EnableRoutingArea)(int areanum, int enable);
 	unsigned short int (*AAS_AreaTravelTime)(int areanum, vec3_t start, vec3_t end);
 	int			(*AAS_AreaTravelTimeToGoalArea)(int areanum, vec3_t origin, int goalareanum, int travelflags);
@@ -243,13 +243,13 @@ typedef struct aas_export_s
 											vec3_t velocity, vec3_t cmdmove,
 											int cmdframes,
 											int maxframes, float frametime,
-											int stopevent, int stopareanum, int visualize);
-	int			(*AAS_OnGround)(vec3_t origin, int presencetype, int passent);
+											int stopevent, int stopareanum, int visualize, int contentmask);
+	int			(*AAS_OnGround)(vec3_t origin, int presencetype, int passent, int contentmask);
 	int			(*AAS_Swimming)(vec3_t origin);
-	void		(*AAS_JumpReachRunStart)(struct aas_reachability_s *reach, vec3_t runstart);
+	void		(*AAS_JumpReachRunStart)(struct aas_reachability_s *reach, vec3_t runstart, int contentmask);
 	int			(*AAS_AgainstLadder)(vec3_t origin);
 	int			(*AAS_HorizontalVelocityForJump)(float zvel, vec3_t start, vec3_t end, float *velocity);
-	int			(*AAS_DropToFloor)(vec3_t origin, vec3_t mins, vec3_t maxs);
+	int			(*AAS_DropToFloor)(vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask);
 } aas_export_t;
 
 typedef struct ai_export_s

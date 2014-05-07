@@ -411,7 +411,7 @@ vec_t AAS_BoxOriginDistanceFromPlane(vec3_t normal, vec3_t mins, vec3_t maxs, in
 // Changes Globals:		-
 //===========================================================================
 qboolean AAS_AreaEntityCollision(int areanum, vec3_t start, vec3_t end,
-										int presencetype, int passent, aas_trace_t *trace)
+										int presencetype, int passent, int contentmask, aas_trace_t *trace)
 {
 	int collision;
 	vec3_t boxmins, boxmaxs;
@@ -430,7 +430,7 @@ qboolean AAS_AreaEntityCollision(int areanum, vec3_t start, vec3_t end,
 		if (link->entnum == passent) continue;
 		//
 		if (AAS_EntityCollision(link->entnum, start, boxmins, boxmaxs, end,
-												CONTENTS_SOLID|CONTENTS_PLAYERCLIP, &bsptrace))
+												contentmask, &bsptrace))
 		{
 			collision = qtrue;
 		} //end if
@@ -453,8 +453,7 @@ qboolean AAS_AreaEntityCollision(int areanum, vec3_t start, vec3_t end,
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
-																				int passent)
+aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype, int passent, int contentmask)
 {
 	int side, nodenum, tmpplanenum;
 	float front, back, frac;
@@ -550,7 +549,7 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 				{
 					if (AAS_AreaEntityCollision(-nodenum, tstack_p->start,
 													tstack_p->end, presencetype, passent,
-													&trace))
+													contentmask, &trace))
 					{
 						if (!trace.startsolid)
 						{
