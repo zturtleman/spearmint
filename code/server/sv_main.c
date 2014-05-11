@@ -214,6 +214,7 @@ void QDECL SV_SendServerCommand(client_t *cl, int localPlayerNum, const char *fm
 	// and should maybe be addressed later, but this certainly
 	// fixes the problem for now
 	if ( strlen ((char *)message) > 1022 ) {
+		Com_DPrintf( S_COLOR_YELLOW "WARNING: Dropped long reliable command for client %d: %s\n", (int)( cl - svs.clients ), message );
 		return;
 	}
 
