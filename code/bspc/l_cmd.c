@@ -117,62 +117,6 @@ void ExpandWildcards (int *argc, char ***argv)
 }
 #endif
 
-#ifdef WINBSPC
-
-#include <windows.h>
-
-HWND program_hwnd;
-
-void SetProgramHandle(HWND hwnd)
-{
-	program_hwnd = hwnd;
-} //end of the function SetProgramHandle
-
-/*
-=================
-Error
-
-For abnormal program terminations in windowed apps
-=================
-*/
-void Error (char *error, ...)
-{
-	va_list argptr;
-	char text[1024];
-	char text2[1024];
-	int err;
-
-	err = GetLastError ();
-
-	va_start(argptr, error);
-	vsprintf(text, error, argptr);
-	va_end(argptr);
-
-	sprintf(text2, "%s\nGetLastError() = %i", text, err);
-   MessageBox(program_hwnd, text2, "Error", 0 /* MB_OK */ );
-
-	Log_Write(text);
-	Log_Close();
-
-	exit(1);
-} //end of the function Error
-
-void Warning(char *szFormat, ...)
-{
-	char szBuffer[256];
-	va_list argptr;
-
-	va_start (argptr, szFormat);
-	vsprintf(szBuffer, szFormat, argptr);
-	va_end (argptr);
-
-	MessageBox(program_hwnd, szBuffer, "Warning", MB_OK);
-
-	Log_Write(szBuffer);
-} //end of the function Warning
-
-
-#else
 /*
 =================
 Error
@@ -209,28 +153,18 @@ void Warning(char *warning, ...)
 	Log_Write("%s", text);
 } //end of the function Warning
 
-#endif
-
 //only printf if in verbose mode
 qboolean verbose = true;
 
 void qprintf(char *format, ...)
 {
 	va_list argptr;
-#ifdef WINBSPC
-	char buf[2048];
-#endif //WINBSPC
 
 	if (!verbose)
 		return;
 
 	va_start(argptr,format);
-#ifdef WINBSPC
-	vsprintf(buf, format, argptr);
-	WinBSPCPrint(buf);
-#else
 	vprintf(format, argptr);
-#endif //WINBSPC
 	va_end(argptr);
 } //end of the function qprintf
 
