@@ -48,7 +48,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include <libc.h>
 #endif
 
-#define	BASEDIRNAME	"quake2"
 #define PATHSEPERATOR   '/'
 
 // set these before calling CheckParm
@@ -256,98 +255,6 @@ __attribute__ ((format (printf, 1, 2))) void Com_Printf( const char *fmt, ... )
 	va_end(argptr);
 	Log_Print("%s", text);
 } //end of the funcion Com_Printf
-
-/*
-
-qdir will hold the path up to the quake directory, including the slash
-
-  f:\quake\
-  /raid/quake/
-
-gamedir will hold qdir + the game directory (id1, id2, etc)
-
-  */
-
-char		qdir[1024];
-char		gamedir[1024];
-
-void SetQdirFromPath (char *path)
-{
-	char	temp[1024];
-	char	*c;
-	int		len;
-
-	if (!(path[0] == '/' || path[0] == '\\' || path[1] == ':'))
-	{	// path is partial
-		Q_getwd (temp, sizeof(temp));
-		strcat (temp, path);
-		path = temp;
-	}
-
-	// search for "quake2" in path
-
-	len = strlen(BASEDIRNAME);
-	for (c=path+strlen(path)-1 ; c != path ; c--)
-		if (!Q_strncasecmp (c, BASEDIRNAME, len))
-		{
-			strncpy (qdir, path, c+len+1-path);
-			qprintf ("qdir: %s\n", qdir);
-			c += len+1;
-			while (*c)
-			{
-				if (*c == '/' || *c == '\\')
-				{
-					strncpy (gamedir, path, c+1-path);
-					qprintf ("gamedir: %s\n", gamedir);
-					return;
-				}
-				c++;
-			}
-			Error ("No gamedir in %s", path);
-			return;
-		}
-	Error ("SetQdirFromPath: no '%s' in %s", BASEDIRNAME, path);
-}
-
-char *ExpandArg (char *path)
-{
-	static char full[1024];
-
-	if (path[0] != '/' && path[0] != '\\' && path[1] != ':')
-	{
-		Q_getwd (full, sizeof(full));
-		strcat (full, path);
-	}
-	else
-		strcpy (full, path);
-	return full;
-}
-
-char *ExpandPath (char *path)
-{
-	static char full[1024];
-	if (!qdir[0])
-		Error ("ExpandPath called without qdir set");
-	if (path[0] == '/' || path[0] == '\\' || path[1] == ':')
-		return path;
-	sprintf (full, "%s%s", qdir, path);
-	return full;
-}
-
-char *ExpandPathAndArchive (char *path)
-{
-	char	*expanded;
-	char	archivename[1024];
-
-	expanded = ExpandPath (path);
-
-	if (archive)
-	{
-		sprintf (archivename, "%s/%s", archivedir, path);
-		QCopyFile (expanded, archivename);
-	}
-	return expanded;
-}
 
 
 char *copystring(char *s)
