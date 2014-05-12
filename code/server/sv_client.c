@@ -728,7 +728,9 @@ void SV_DropPlayer( player_t *drop, const char *reason ) {
 	SV_FreePlayer( drop );
 
 	// tell everyone why they got dropped
-	SV_SendServerCommand( NULL, -1, "print \"%s" S_COLOR_WHITE " %s\n\"", drop->name, reason );
+	if ( reason ) {
+		SV_SendServerCommand( NULL, -1, "print \"%s" S_COLOR_WHITE " %s\n\"", drop->name, reason );
+	}
 
 	// call the prog function for removing a client
 	// this will remove the body, among other things
@@ -743,7 +745,11 @@ void SV_DropPlayer( player_t *drop, const char *reason ) {
 		}
 	} else {
 		// add the disconnect command
-		SV_SendServerCommand( client, -1, "disconnect \"%s\"", reason);
+		if ( reason ) {
+			SV_SendServerCommand( client, -1, "disconnect \"%s\"", reason);
+		} else {
+			SV_SendServerCommand( client, -1, "disconnect");
+		}
 	}
 
 	//
