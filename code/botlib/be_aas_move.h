@@ -42,7 +42,7 @@ extern aas_settings_t aassettings;
 #endif //AASINTERN
 
 //movement prediction
-int AAS_PredictClientMovement(struct aas_clientmove_s *move,
+int AAS_PredictPlayerMovement(struct aas_clientmove_s *move,
 							int entnum, vec3_t origin,
 							int presencetype, int onground,
 							vec3_t velocity, vec3_t cmdmove,
@@ -50,7 +50,7 @@ int AAS_PredictClientMovement(struct aas_clientmove_s *move,
 							int maxframes, float frametime,
 							int stopevent, int stopareanum, int visualize, int contentmask);
 //predict movement until bounding box is hit
-int AAS_ClientMovementHitBBox(struct aas_clientmove_s *move,
+int AAS_PlayerMovementHitBBox(struct aas_clientmove_s *move,
 								int entnum, vec3_t origin,
 								int presencetype, int onground,
 								vec3_t velocity, vec3_t cmdmove,

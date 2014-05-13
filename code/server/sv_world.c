@@ -178,7 +178,7 @@ void SV_UnlinkEntity( sharedEntity_t *gEnt ) {
 
 	gEnt->r.linked = qfalse;
 	if (gEnt->s.number < MAX_CLIENTS) {
-		ps = SV_GameClientNum(gEnt->s.number);
+		ps = SV_GamePlayerNum(gEnt->s.number);
 		ps->linked = qfalse;
 	}
 
@@ -333,7 +333,7 @@ void SV_LinkEntity( sharedEntity_t *gEnt ) {
 
 	gEnt->r.linked = qtrue;
 	if (gEnt->s.number < MAX_CLIENTS) {
-		ps = SV_GameClientNum(gEnt->s.number);
+		ps = SV_GamePlayerNum(gEnt->s.number);
 		ps->linked = qtrue;
 	}
 }

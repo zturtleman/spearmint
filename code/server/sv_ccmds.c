@@ -316,7 +316,7 @@ static void SV_MapRestart_f( void ) {
 			SV_SetupPlayerEntity( player );
 
 			// connect the client again, without the firstTime flag
-			denied = VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_CLIENT_CONNECT, player - svs.players, qfalse, isBot, client - svs.clients, j ) );
+			denied = VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_PLAYER_CONNECT, player - svs.players, qfalse, isBot, client - svs.clients, j ) );
 			player = client->localPlayers[j]; // may be NULL if game dropped player
 			if ( denied ) {
 				// this generally shouldn't happen, because the player
@@ -704,7 +704,7 @@ static void SV_AddBanToList(qboolean isexception)
 	
 	if(argc < 2 || argc > 3)
 	{
-		Com_Printf ("Usage: %s (ip[/subnet] | clientnum [subnet])\n", Cmd_Argv(0));
+		Com_Printf ("Usage: %s (ip[/subnet] | playernum [subnet])\n", Cmd_Argv(0));
 		return;
 	}
 
@@ -1053,7 +1053,7 @@ static void SV_Status_f( void ) {
 		if (!cl->state)
 			continue;
 		Com_Printf ("%2i ", i);
-		ps = SV_GameClientNum( i );
+		ps = SV_GamePlayerNum( i );
 		Com_Printf ("%5i ", ps->persistant[PERS_SCORE]);
 
 		if (cl->state == CS_CONNECTED)

@@ -218,7 +218,7 @@ typedef struct {
 
 	// get extra info for png screenshots
 	void	(*CL_GetMapTitle)( char *buf, int bufLength );
-	qboolean (*CL_GetClientLocation)( char *buf, int bufLength, int localClientNum );
+	qboolean (*CL_GetLocalPlayerLocation)( char *buf, int bufLength, int localPlayerNum );
 } refimport_t;
 
 

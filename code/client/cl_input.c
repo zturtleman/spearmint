@@ -53,12 +53,12 @@ static int mouseFlags[CL_MAX_SPLITVIEW] = {0};	// MOUSE_CGAME, MOUSE_CLIENT, ...
 Mouse_GetState
 ====================
 */
-int Mouse_GetState( int localClientNum ) {
-	if ( localClientNum < 0 || localClientNum >= CL_MAX_SPLITVIEW) {
+int Mouse_GetState( int localPlayerNum ) {
+	if ( localPlayerNum < 0 || localPlayerNum >= CL_MAX_SPLITVIEW) {
 		return 0;
 	}
 
-	return mouseFlags[localClientNum];
+	return mouseFlags[localPlayerNum];
 }
 
 /*
@@ -66,12 +66,12 @@ int Mouse_GetState( int localClientNum ) {
 Mouse_SetState
 ====================
 */
-void Mouse_SetState( int localClientNum, int state ) {
-	if ( localClientNum < 0 || localClientNum >= CL_MAX_SPLITVIEW) {
+void Mouse_SetState( int localPlayerNum, int state ) {
+	if ( localPlayerNum < 0 || localPlayerNum >= CL_MAX_SPLITVIEW) {
 		return;
 	}
 
-	mouseFlags[localClientNum] = state;
+	mouseFlags[localPlayerNum] = state;
 }
 
 /*
@@ -92,22 +92,22 @@ void Mouse_ClearStates( void ) {
 CL_MouseEvent
 =================
 */
-void CL_MouseEvent( int localClientNum, int dx, int dy, int time ) {
-	calc_t *lc;
+void CL_MouseEvent( int localPlayerNum, int dx, int dy, int time ) {
+	clientActivePlayer_t *plr;
 
-	if ( localClientNum < 0 || localClientNum >= CL_MAX_SPLITVIEW) {
+	if ( localPlayerNum < 0 || localPlayerNum >= CL_MAX_SPLITVIEW) {
 		return;
 	}
 
-	lc = &cl.localClients[localClientNum];
+	plr = &cl.localPlayers[localPlayerNum];
 
-	if ( Mouse_GetState( localClientNum ) & MOUSE_CLIENT ) {
-		lc->mouseDx[lc->mouseIndex] += dx;
-		lc->mouseDy[lc->mouseIndex] += dy;
+	if ( Mouse_GetState( localPlayerNum ) & MOUSE_CLIENT ) {
+		plr->mouseDx[plr->mouseIndex] += dx;
+		plr->mouseDy[plr->mouseIndex] += dy;
 	}
 
-	if ( Mouse_GetState( localClientNum ) & MOUSE_CGAME ) {
-		VM_Call(cgvm, CG_MOUSE_EVENT, localClientNum, dx, dy);
+	if ( Mouse_GetState( localPlayerNum ) & MOUSE_CGAME ) {
+		VM_Call(cgvm, CG_MOUSE_EVENT, localPlayerNum, dx, dy);
 	}
 }
 
@@ -116,9 +116,9 @@ void CL_MouseEvent( int localClientNum, int dx, int dy, int time ) {
 CL_JoystickEvent
 =================
 */
-void CL_JoystickEvent( int localClientNum, int axis, int value, int time ) {
+void CL_JoystickEvent( int localPlayerNum, int axis, int value, int time ) {
 	if ( cgvm ) {
-		VM_Call( cgvm, CG_JOYSTICK_EVENT, localClientNum, axis, value );
+		VM_Call( cgvm, CG_JOYSTICK_EVENT, localPlayerNum, axis, value );
 	}
 }
 
@@ -128,25 +128,28 @@ CL_MouseMove
 =================
 */
 
-void CL_MouseMove(calc_t *lc, float *outmx, float *outmy)
+void CL_MouseMove(int localPlayerNum, float *outmx, float *outmy)
 {
+	clientActivePlayer_t *plr;
 	float mx, my;
+
+	plr = &cl.localPlayers[localPlayerNum];
 
 	// allow mouse smoothing
 	if (m_filter->integer)
 	{
-		mx = (lc->mouseDx[0] + lc->mouseDx[1]) * 0.5f;
-		my = (lc->mouseDy[0] + lc->mouseDy[1]) * 0.5f;
+		mx = (plr->mouseDx[0] + plr->mouseDx[1]) * 0.5f;
+		my = (plr->mouseDy[0] + plr->mouseDy[1]) * 0.5f;
 	}
 	else
 	{
-		mx = lc->mouseDx[lc->mouseIndex];
-		my = lc->mouseDy[lc->mouseIndex];
+		mx = plr->mouseDx[plr->mouseIndex];
+		my = plr->mouseDy[plr->mouseIndex];
 	}
 
-	lc->mouseIndex ^= 1;
-	lc->mouseDx[lc->mouseIndex] = 0;
-	lc->mouseDy[lc->mouseIndex] = 0;
+	plr->mouseIndex ^= 1;
+	plr->mouseDx[plr->mouseIndex] = 0;
+	plr->mouseDy[plr->mouseIndex] = 0;
 
 	if (mx == 0.0f && my == 0.0f) {
 		*outmx = mx;
@@ -219,21 +222,18 @@ void CL_FinishMove( usercmd_t *cmd ) {
 CL_CreateCmd
 =================
 */
-usercmd_t CL_CreateCmd( int localClientNum ) {
+usercmd_t CL_CreateCmd( int localPlayerNum ) {
 	usercmd_t	cmd;
-	calc_t		*lc;
 	usercmd_t	*vmCmd;
 	float		mx, my;
-
-	lc = &cl.localClients[localClientNum];
 
 	Com_Memset( &cmd, 0, sizeof( cmd ) );
 
 	if ( cgvm ) {
 		// get basic movement from mouse
-		CL_MouseMove( lc, &mx, &my );
+		CL_MouseMove( localPlayerNum, &mx, &my );
 
-		vmCmd = VM_ExplicitArgPtr( cgvm, VM_Call( cgvm, CG_CREATE_USER_CMD, localClientNum, com_frameTime, frame_msec, FloatAsInt( mx ), FloatAsInt( my ), anykeydown ) );
+		vmCmd = VM_ExplicitArgPtr( cgvm, VM_Call( cgvm, CG_CREATE_USER_CMD, localPlayerNum, com_frameTime, frame_msec, FloatAsInt( mx ), FloatAsInt( my ), anykeydown ) );
 
 		if ( vmCmd ) {
 			Com_Memcpy( &cmd, vmCmd, sizeof( cmd ) );
@@ -278,7 +278,7 @@ void CL_CreateNewCommands( void ) {
 	cmdNum = cl.cmdNumber & CMD_MASK;
 
 	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
-		if (cl.snap.valid && cl.snap.lcIndex[i] == -1) {
+		if (cl.snap.valid && cl.snap.playerNums[i] == -1) {
 			continue;
 		}
 		cl.cmdss[i][cmdNum] = CL_CreateCmd(i);
@@ -362,9 +362,9 @@ During normal gameplay, a client packet will contain something like:
 4	clc.serverCommandSequence
 <optional reliable commands>
 1	clc_move or clc_moveNoDelta
-1	local client bits
+1	local player bits
 1	command count
-<local clients * count * usercmds>
+<local players * count * usercmds>
 
 ===================
 */
@@ -377,7 +377,7 @@ void CL_WritePacket( void ) {
 	int			packetNum;
 	int			oldPacketNum;
 	int			count, key;
-	int			lc, localClientBits;
+	int			lc, localPlayerBits;
 
 	// don't send anything if playing back a demo
 	if ( clc.demoplaying || clc.state == CA_CINEMATIC ) {
@@ -428,12 +428,12 @@ void CL_WritePacket( void ) {
 	if (clc.voipOutgoingDataSize > 0)
 	{
 		// ZTM: TODO: Allow each local player to use voip, or at least allow using voip when player 1 isn't present.
-		const int voipLocalClientNum = 0;
+		const int voipLocalPlayerNum = 0;
 
-		if(clc.clientNums[voipLocalClientNum] != -1 && ((clc.voipFlags & VOIP_SPATIAL) || Com_IsVoipTarget(clc.voipTargets, sizeof(clc.voipTargets), -1)))
+		if(clc.playerNums[voipLocalPlayerNum] != -1 && ((clc.voipFlags & VOIP_SPATIAL) || Com_IsVoipTarget(clc.voipTargets, sizeof(clc.voipTargets), -1)))
 		{
 			MSG_WriteByte (&buf, clc_voip);
-			MSG_WriteByte (&buf, voipLocalClientNum);
+			MSG_WriteByte (&buf, voipLocalPlayerNum);
 			MSG_WriteByte (&buf, clc.voipOutgoingGeneration);
 			MSG_WriteLong (&buf, clc.voipOutgoingSequence);
 			MSG_WriteByte (&buf, clc.voipOutgoingDataFrames);
@@ -455,7 +455,7 @@ void CL_WritePacket( void ) {
 				MSG_Bitstream (&fakemsg);
 				MSG_WriteLong (&fakemsg, clc.reliableAcknowledge);
 				MSG_WriteByte (&fakemsg, svc_voip);
-				MSG_WriteShort (&fakemsg, clc.clientNums[voipLocalClientNum]);
+				MSG_WriteShort (&fakemsg, clc.playerNums[voipLocalPlayerNum]);
 				MSG_WriteByte (&fakemsg, clc.voipOutgoingGeneration);
 				MSG_WriteLong (&fakemsg, clc.voipOutgoingSequence);
 				MSG_WriteByte (&fakemsg, clc.voipOutgoingDataFrames);
@@ -484,7 +484,7 @@ void CL_WritePacket( void ) {
 			Com_Printf( "(%i)", count );
 		}
 
-		// begin a client move command
+		// begin a player move command
 		if ( cl_nodelta->integer || !cl.snap.valid || clc.demowaiting
 			|| clc.serverMessageSequence != cl.snap.messageNum ) {
 			MSG_WriteByte (&buf, clc_moveNoDelta);
@@ -493,16 +493,16 @@ void CL_WritePacket( void ) {
 		}
 
 		// set bits
-		localClientBits = 0;
+		localPlayerBits = 0;
 		for (lc = 0; lc < MAX_SPLITVIEW; lc++) {
-			if ( cl.snap.valid && cl.snap.lcIndex[lc] == -1 ) {
+			if ( cl.snap.valid && cl.snap.playerNums[lc] == -1 ) {
 				continue;
 			}
-			localClientBits |= (1<<lc);
+			localPlayerBits |= (1<<lc);
 		}
 
-		// write the local client bits
-		MSG_WriteByte( &buf, localClientBits );
+		// write the local player bits
+		MSG_WriteByte( &buf, localPlayerBits );
 
 		// write the command count
 		MSG_WriteByte( &buf, count );
@@ -513,7 +513,7 @@ void CL_WritePacket( void ) {
 		key ^= MSG_HashKey(clc.serverCommands[ clc.serverCommandSequence & (MAX_RELIABLE_COMMANDS-1) ], 32);
 
 		for (lc = 0; lc < MAX_SPLITVIEW; lc++) {
-			if (!(localClientBits & (1<<lc))) {
+			if (!(localPlayerBits & (1<<lc))) {
 				continue;
 			}
 

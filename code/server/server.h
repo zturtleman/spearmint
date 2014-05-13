@@ -96,8 +96,8 @@ typedef struct {
 	int				gentitySize;
 	int				num_entities;		// current number, <= MAX_GENTITIES
 
-	sharedPlayerState_t	*gameClients;
-	int				gameClientSize;		// will be > sizeof(sharedPlayerState_t) due to game private data
+	sharedPlayerState_t	*gamePlayers;
+	int				gamePlayerSize;		// will be > sizeof(sharedPlayerState_t) due to game private data
 
 	int				gameEntityStateSize;
 	int				gamePlayerStateSize;
@@ -115,8 +115,8 @@ typedef struct {
 	byte			areabits[MAX_SPLITVIEW][MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 	int				numPSs;
 	darray_t		playerStates;
-	int				lcIndex[MAX_SPLITVIEW];
-	int				clientNums[MAX_SPLITVIEW];
+	int				localPlayerIndex[MAX_SPLITVIEW];
+	int				playerNums[MAX_SPLITVIEW];
 	int				num_entities;
 	int				first_entity;		// into the circular sv_packet_entities[]
 										// the entities MUST be in increasing state number
@@ -207,7 +207,7 @@ typedef struct client_s {
 #ifdef USE_VOIP
 	qboolean hasVoip;
 	qboolean muteAllVoip;
-	qboolean ignoreVoipFromClient[MAX_CLIENTS];
+	qboolean ignoreVoipFromPlayer[MAX_CLIENTS];
 	voipServerPacket_t *voipPacket[VOIP_QUEUE_LENGTH];
 	int queuedVoipPackets;
 	int queuedVoipIndex;
@@ -427,7 +427,7 @@ void SV_SendClientSnapshot( client_t *client );
 int	SV_NumForGentity( sharedEntity_t *ent );
 sharedEntity_t *SV_GentityNum( int num );
 sharedEntityState_t *SV_GameEntityStateNum( int num );
-sharedPlayerState_t *SV_GameClientNum( int num );
+sharedPlayerState_t *SV_GamePlayerNum( int num );
 svEntity_t	*SV_SvEntityForGentity( sharedEntity_t *gEnt );
 sharedEntity_t *SV_GEntityForSvEntity( svEntity_t *svEnt );
 void		SV_InitGameProgs ( void );
@@ -441,18 +441,18 @@ qboolean	SV_inPVS (const vec3_t p1, const vec3_t p2);
 //
 void		SV_BotFrame( int time );
 int			SV_BotAllocateClient(void);
-void		SV_BotFreeClient( int clientNum );
+void		SV_BotFreeClient( int playerNum );
 
 void		SV_BotInitCvars(void);
 int			SV_BotLibSetup( void );
 int			SV_BotLibShutdown( void );
-int			SV_BotGetSnapshotEntity( int client, int ent );
-int			SV_BotGetConsoleMessage( int client, char *buf, int size );
+int			SV_BotGetSnapshotEntity( int playerNum, int ent );
+int			SV_BotGetConsoleMessage( int playerNum, char *buf, int size );
 
 int BotImport_DebugPolygonCreate(int color, int numPoints, vec3_t *points);
 void BotImport_DebugPolygonDelete(int id);
 
-void SV_ForcePlayerCommand( int playerNum, const char *command );
+void SV_ForceClientCommand( int playerNum, const char *command );
 
 void SV_BotInitBotLib(void);
 

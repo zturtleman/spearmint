@@ -207,7 +207,7 @@ int AAS_OnGround(vec3_t origin, int presencetype, int passent, int contentmask)
 	VectorCopy(origin, end);
 	end[2] -= 10;
 
-	trace = AAS_TraceClientBBox(origin, end, presencetype, passent, contentmask);
+	trace = AAS_TracePlayerBBox(origin, end, presencetype, passent, contentmask);
 
 	//if in solid
 	if (trace.startsolid) return qfalse;
@@ -285,7 +285,7 @@ void AAS_JumpReachRunStart(aas_reachability_t *reach, vec3_t runstart, int conte
 	//get command movement
 	VectorScale(hordir, 400, cmdmove);
 	//
-	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue,
+	AAS_PredictPlayerMovement(&move, -1, start, PRESENCE_NORMAL, qtrue,
 								vec3_origin, cmdmove, 1, 2, 0.1f,
 								SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|
 								SE_HITGROUNDDAMAGE|SE_GAP, 0, qfalse, contentmask);
@@ -526,7 +526,7 @@ int AAS_ClipToBBox(aas_trace_t *trace, vec3_t start, vec3_t end, int presencetyp
 // Returns:				aas_clientmove_t
 // Changes Globals:		-
 //===========================================================================
-int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
+int AAS_PlayerMovementPrediction(struct aas_clientmove_s *move,
 								int entnum, vec3_t origin,
 								int presencetype, int onground,
 								vec3_t velocity, vec3_t cmdmove,
@@ -677,7 +677,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 		{
 			VectorAdd(org, left_test_vel, end);
 			//trace a bounding box
-			trace = AAS_TraceClientBBox(org, end, presencetype, entnum, contentmask);
+			trace = AAS_TracePlayerBBox(org, end, presencetype, entnum, contentmask);
 			//
 //#ifdef AAS_MOVE_DEBUG
 			if (visualize)
@@ -814,7 +814,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 					VectorMA(org, -0.25, plane->normal, start);
 					VectorCopy(start, stepend);
 					start[2] += phys_maxstep;
-					steptrace = AAS_TraceClientBBox(start, stepend, presencetype, entnum, contentmask);
+					steptrace = AAS_TracePlayerBBox(start, stepend, presencetype, entnum, contentmask);
 					//
 					if (!steptrace.startsolid)
 					{
@@ -976,7 +976,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 			VectorCopy(org, start);
 			VectorCopy(start, end);
 			end[2] -= 48 + aassettings.phys_maxbarrier;
-			gaptrace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, -1, contentmask);
+			gaptrace = AAS_TracePlayerBBox(start, end, PRESENCE_CROUCH, -1, contentmask);
 			//if solid is found the bot cannot walk any further and will not fall into a gap
 			if (!gaptrace.startsolid)
 			{
@@ -1011,14 +1011,14 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 	move->frames = n;
 	//
 	return qtrue;
-} //end of the function AAS_ClientMovementPrediction
+} //end of the function AAS_PlayerMovementPrediction
 //===========================================================================
 //
 // Parameter:			-
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-int AAS_PredictClientMovement(struct aas_clientmove_s *move,
+int AAS_PredictPlayerMovement(struct aas_clientmove_s *move,
 								int entnum, vec3_t origin,
 								int presencetype, int onground,
 								vec3_t velocity, vec3_t cmdmove,
@@ -1027,18 +1027,18 @@ int AAS_PredictClientMovement(struct aas_clientmove_s *move,
 								int stopevent, int stopareanum, int visualize, int contentmask)
 {
 	vec3_t mins, maxs;
-	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground,
+	return AAS_PlayerMovementPrediction(move, entnum, origin, presencetype, onground,
 										velocity, cmdmove, cmdframes, maxframes,
 										frametime, stopevent, stopareanum,
 										mins, maxs, visualize, contentmask);
-} //end of the function AAS_PredictClientMovement
+} //end of the function AAS_PredictPlayerMovement
 //===========================================================================
 //
 // Parameter:			-
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-int AAS_ClientMovementHitBBox(struct aas_clientmove_s *move,
+int AAS_PlayerMovementHitBBox(struct aas_clientmove_s *move,
 								int entnum, vec3_t origin,
 								int presencetype, int onground,
 								vec3_t velocity, vec3_t cmdmove,
@@ -1046,11 +1046,11 @@ int AAS_ClientMovementHitBBox(struct aas_clientmove_s *move,
 								int maxframes, float frametime,
 								vec3_t mins, vec3_t maxs, int visualize, int contentmask)
 {
-	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground,
+	return AAS_PlayerMovementPrediction(move, entnum, origin, presencetype, onground,
 										velocity, cmdmove, cmdframes, maxframes,
 										frametime, SE_HITBOUNDINGBOX, 0,
 										mins, maxs, visualize, contentmask);
-} //end of the function AAS_ClientMovementHitBBox
+} //end of the function AAS_PlayerMovementHitBBox
 //===========================================================================
 //
 // Parameter:			-
@@ -1068,7 +1068,7 @@ void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir, int conte
 	VectorScale(dir, 400, cmdmove);
 	cmdmove[2] = 224;
 	AAS_ClearShownDebugLines();
-	AAS_PredictClientMovement(&move, entnum, origin, PRESENCE_NORMAL, qtrue,
+	AAS_PredictPlayerMovement(&move, entnum, origin, PRESENCE_NORMAL, qtrue,
 									velocity, cmdmove, 13, 13, 0.1f, SE_HITGROUND, 0, qtrue, contentmask);//SE_LEAVEGROUND);
 	if (move.stopevent & SE_LEAVEGROUND)
 	{

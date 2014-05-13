@@ -291,7 +291,7 @@ void CL_VoipNewGeneration(void)
 	clc.voipOutgoingGeneration++;
 	if (clc.voipOutgoingGeneration <= 0)
 		clc.voipOutgoingGeneration = 1;
-	clc.voipPower[clc.clientNums[0]] = 0.0f;
+	clc.voipPower[clc.playerNums[0]] = 0.0f;
 	clc.voipOutgoingSequence = 0;
 }
 
@@ -342,7 +342,7 @@ void CL_VoipParseTargets(void)
 			}
 			else
 			{
-				// ask cgame for clientNums based on this token
+				// ask cgame for playerNums based on this token
 				Cmd_TokenizeString( target );
 				vmStr = VM_ExplicitArgPtr( cgvm, VM_Call( cgvm, CG_VOIP_STRING, 0 ) );
 
@@ -373,7 +373,7 @@ void CL_VoipParseTargets(void)
 		if(val < 0 || val >= MAX_CLIENTS)
 		{
 			Com_Printf(S_COLOR_YELLOW "WARNING: VoIP "
-				   "target %d is not a valid client "
+				   "target %d is not a valid player "
 				   "number\n", val);
 
 			continue;
@@ -447,7 +447,7 @@ void CL_CaptureVoip(void)
 			dontCapture = qtrue;  // client has VoIP support disabled.
 		else if ( audioMult == 0.0f )
 			dontCapture = qtrue;  // basically silenced incoming audio.
-		else if ( clc.clientNums[0] == -1 )
+		else if ( clc.playerNums[0] == -1 )
 			dontCapture = qtrue;
 
 		cl_voipSend->modified = qfalse;
@@ -534,20 +534,20 @@ void CL_CaptureVoip(void)
 				speexFrames++;
 			}
 
-			clc.voipPower[clc.clientNums[0]] = (voipPower / (32768.0f * 32768.0f *
+			clc.voipPower[clc.playerNums[0]] = (voipPower / (32768.0f * 32768.0f *
 			                 ((float) (clc.speexFrameSize * speexFrames)))) *
 			                 100.0f;
 
-			if ((useVad) && (clc.voipPower[clc.clientNums[0]] < cl_voipVADThreshold->value)) {
+			if ((useVad) && (clc.voipPower[clc.playerNums[0]] < cl_voipVADThreshold->value)) {
 				CL_VoipNewGeneration();  // no "talk" for at least 1/4 second.
 			} else {
 				clc.voipOutgoingDataSize = wpos;
 				clc.voipOutgoingDataFrames = speexFrames;
 
 				Com_DPrintf("VoIP: Send %d frames, %d bytes, %f power\n",
-				            speexFrames, wpos, clc.voipPower[clc.clientNums[0]]);
+				            speexFrames, wpos, clc.voipPower[clc.playerNums[0]]);
 
-				clc.voipLastPacketTime[clc.clientNums[0]] = cl.serverTime;
+				clc.voipLastPacketTime[clc.playerNums[0]] = cl.serverTime;
 
 				#if 0
 				static FILE *encio = NULL;
@@ -566,13 +566,13 @@ void CL_CaptureVoip(void)
 	if (finalFrame) {
 		S_StopCapture();
 		S_MasterGain(1.0f);
-		clc.voipPower[clc.clientNums[0]] = 0.0f;  // force this value so it doesn't linger.
+		clc.voipPower[clc.playerNums[0]] = 0.0f;  // force this value so it doesn't linger.
 	}
 }
 
 // Cgame and UI access functions for VoIP information
-int CL_GetVoipTime( int clientNum ) {
-	if ( clientNum < 0  || clientNum >= ARRAY_LEN( clc.voipPower ) ) {
+int CL_GetVoipTime( int playerNum ) {
+	if ( playerNum < 0  || playerNum >= ARRAY_LEN( clc.voipPower ) ) {
 		return 0.0f;
 	}
 
@@ -581,11 +581,11 @@ int CL_GetVoipTime( int clientNum ) {
 		return 0;
 	}
 
-	return clc.voipLastPacketTime[clientNum];
+	return clc.voipLastPacketTime[playerNum];
 }
 
-float CL_GetVoipPower( int clientNum ) {
-	if ( clientNum < 0  || clientNum >= ARRAY_LEN( clc.voipPower ) ) {
+float CL_GetVoipPower( int playerNum ) {
+	if ( playerNum < 0  || playerNum >= ARRAY_LEN( clc.voipPower ) ) {
 		return 0.0f;
 	}
 
@@ -594,14 +594,14 @@ float CL_GetVoipPower( int clientNum ) {
 		return 0.0f;
 
 	// clc.voipPower is always the power of the last voip snapshot, never cleared.
-	if ( !clc.voipLastPacketTime[clientNum] || clc.voipLastPacketTime[clientNum] < cl.serverTime - 250 )
+	if ( !clc.voipLastPacketTime[playerNum] || clc.voipLastPacketTime[playerNum] < cl.serverTime - 250 )
 		return 0.0f;
 
-	return clc.voipPower[clientNum];
+	return clc.voipPower[playerNum];
 }
 
-float CL_GetVoipGain( int clientNum ) {
-	if ( clientNum < 0  || clientNum >= ARRAY_LEN( clc.voipGain ) ) {
+float CL_GetVoipGain( int playerNum ) {
+	if ( playerNum < 0  || playerNum >= ARRAY_LEN( clc.voipGain ) ) {
 		return 0.0f;
 	}
 
@@ -609,11 +609,11 @@ float CL_GetVoipGain( int clientNum ) {
 	if ( clc.state != CA_ACTIVE )
 		return 0.0f;
 
-	return clc.voipGain[clientNum];
+	return clc.voipGain[playerNum];
 }
 
-qboolean CL_GetVoipMuteClient( int clientNum ) {
-	if ( clientNum < 0  || clientNum >= ARRAY_LEN( clc.voipIgnore ) ) {
+qboolean CL_GetVoipMutePlayer( int playerNum ) {
+	if ( playerNum < 0  || playerNum >= ARRAY_LEN( clc.voipIgnore ) ) {
 		return qfalse;
 	}
 
@@ -621,7 +621,7 @@ qboolean CL_GetVoipMuteClient( int clientNum ) {
 	if ( clc.state != CA_ACTIVE )
 		return qfalse;
 
-	return clc.voipIgnore[clientNum];
+	return clc.voipIgnore[playerNum];
 }
 
 qboolean CL_GetVoipMuteAll( void ) {
@@ -895,9 +895,8 @@ void CL_Record_f( void ) {
 
 	MSG_WriteByte( &buf, svc_EOF );
 
-	// write the client nums
 	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
-		MSG_WriteLong(&buf, clc.clientNums[i]);
+		MSG_WriteLong(&buf, clc.playerNums[i]);
 	}
 
 	// finished writing the gamestate stuff
@@ -1556,7 +1555,7 @@ void CL_InitConnection (qboolean clear) {
 	clc.state = CA_DISCONNECTED;	// no longer CA_UNINITIALIZED
 
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		clc.clientNums[i] = -1;
+		clc.playerNums[i] = -1;
 	}
 }
 
@@ -1767,13 +1766,13 @@ void CL_ForwardToServer_f( void ) {
 CL_DropIn
 ==================
 */
-void CL_DropIn( int localClientNum ) {
+void CL_DropIn( int localPlayerNum ) {
 	if ( clc.state != CA_ACTIVE || clc.demoplaying ) {
 		Com_Printf ("Not connected to a server.\n");
 		return;
 	}
 
-	CL_AddReliableCommand(va("dropin%d \"%s\"", localClientNum+1, Cvar_InfoString( cl_userinfoFlags[localClientNum] )), qfalse);
+	CL_AddReliableCommand(va("dropin%d \"%s\"", localPlayerNum+1, Cvar_InfoString( cl_userinfoFlags[localPlayerNum] )), qfalse);
 }
 
 /*
@@ -1781,13 +1780,13 @@ void CL_DropIn( int localClientNum ) {
 CL_DropOut
 ==================
 */
-void CL_DropOut( int localClientNum ) {
+void CL_DropOut( int localPlayerNum ) {
 	if ( clc.state != CA_ACTIVE || clc.demoplaying ) {
 		Com_Printf ("Not connected to a server.\n");
 		return;
 	}
 
-	CL_AddReliableCommand(va("dropout%d", localClientNum+1), qfalse);
+	CL_AddReliableCommand(va("dropout%d", localPlayerNum+1), qfalse);
 }
 
 void CL_DropIn_f( void ) {
@@ -3307,7 +3306,7 @@ void CL_InitRef( void ) {
 	ri.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
 	ri.CL_MaxSplitView = CL_MaxSplitView;
 	ri.CL_GetMapTitle = CL_GetMapTitle;
-	ri.CL_GetClientLocation = CL_GetClientLocation;
+	ri.CL_GetLocalPlayerLocation = CL_GetLocalPlayerLocation;
 	ri.zlib_compress = compress;
 	ri.zlib_crc32 = crc32;
 
@@ -3653,8 +3652,8 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 	Cmd_RemoveCommand ("cmd");
 #if CL_MAX_SPLITVIEW > 1
 	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
-		Cmd_RemoveCommand (Com_LocalClientCvarName(i, "dropout"));
-		Cmd_RemoveCommand (Com_LocalClientCvarName(i, "dropin"));
+		Cmd_RemoveCommand (Com_LocalPlayerCvarName(i, "dropout"));
+		Cmd_RemoveCommand (Com_LocalPlayerCvarName(i, "dropin"));
 	}
 #endif
 	Cmd_RemoveCommand ("configstrings");
@@ -4541,18 +4540,18 @@ void CL_GetMapTitle( char *buf, int bufLength ) {
 
 /*
 =================
-CL_GetClientLocation
+CL_GetLocalPlayerLocation
 =================
 */
-qboolean CL_GetClientLocation(char *buf, int bufLength, int localClientNum) {
+qboolean CL_GetLocalPlayerLocation(char *buf, int bufLength, int localPlayerNum) {
 	sharedPlayerState_t *ps;
 
-	if (!cl.snap.valid || cl.snap.lcIndex[localClientNum] == -1) {
+	if (!cl.snap.valid || cl.snap.playerNums[localPlayerNum] == -1) {
 		Q_strncpyz(buf, "Unknown", bufLength);
 		return qfalse;
 	}
 
-	ps = DA_ElementPointer( cl.snap.playerStates, cl.snap.lcIndex[localClientNum] );
+	ps = DA_ElementPointer( cl.snap.playerStates, cl.snap.localPlayerIndex[localPlayerNum] );
 	Com_sprintf(buf, bufLength, "X:%d Y:%d Z:%d A:%d", (int)ps->origin[0],
 			(int)ps->origin[1], (int)ps->origin[2],
 			(int)(ps->viewangles[YAW]+360)%360);

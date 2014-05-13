@@ -45,15 +45,15 @@ Suite 120, Rockville, Maryland 20850 USA.
 // special server behaviors
 #define	SVF_NOCLIENT			0x00000001	// don't send entity to clients, even if it has effects
 
-#define SVF_CLIENTMASK			0x00000002 // send to limited list of clients
+#define SVF_PLAYERMASK			0x00000002 // send to limited list of players
 
 #define SVF_BOT					0x00000008	// set if the entity is a bot
-#define	SVF_BROADCAST			0x00000020	// send to all connected clients (r.cullDistance will still be checked)
+#define	SVF_BROADCAST			0x00000020	// send to all connected players (r.cullDistance will still be checked)
 #define	SVF_PORTAL				0x00000040	// merge a second pvs at origin2 into snapshots
 #define	SVF_USE_CURRENT_ORIGIN	0x00000080	// entity->r.currentOrigin instead of entity->s.origin
 											// for link position (missiles and movers)
 
-#define SVF_VISDUMMY            0x00000400  // this ent is a "visibility dummy" and needs it's master to be sent to clients that can see it even if they can't see the master ent
+#define SVF_VISDUMMY            0x00000400  // this ent is a "visibility dummy" and needs it's master to be sent to players that can see it even if they can't see the master ent
 #define SVF_VISDUMMY_MULTIPLE   0x00000800  // so that one vis dummy can add to snapshot multiple speakers
 
 
@@ -67,8 +67,8 @@ typedef struct {
 
 	int			svFlags;			// SVF_NOCLIENT, SVF_BROADCAST, etc
 
-	// if SVF_CLIENTMASK is set, use bitmask for clients to send to
-	clientList_t	sendClients;
+	// if SVF_PLAYERMASK is set, use bitmask for clients to send to
+	clientList_t	sendPlayers;
 
 	vec3_t		absmin, absmax;		// derived from mins/maxs and origin + rotation
 
@@ -184,10 +184,10 @@ typedef enum {
 	// the game needs to let the server system know where and how big the gentities
 	// are, so it can look at them directly without going through an interface
 
-	G_DROP_CLIENT,		// ( int clientNum, const char *reason );
-	// kick a client off the server with a message
+	G_DROP_PLAYER,		// ( int playerNum, const char *reason );
+	// kick a player off the server with a message
 
-	G_SEND_SERVER_COMMAND,	// ( int connectionNum, int localPlayerNum, const char *text );
+	G_SEND_SERVER_COMMAND,	// ( int clientNum, int localPlayerNum, const char *text );
 	// reliably sends a command string to be interpreted by the given
 	// client.  If clientNum is -1, it will be sent to all clients
 
@@ -247,9 +247,9 @@ typedef enum {
 	// access for bots to get and free a server client (FIXME?)
 	G_BOT_ALLOCATE_CLIENT,	// ( void );
 
-	G_BOT_FREE_CLIENT,	// ( int clientNum );
+	G_BOT_FREE_CLIENT,	// ( int playerNum );
 
-	G_GET_USERCMD,	// ( int clientNum, usercmd_t *cmd )
+	G_GET_USERCMD,	// ( int playerNum, usercmd_t *cmd )
 
 	G_GET_ENTITY_TOKEN,	// qboolean ( char *buffer, int bufferSize )
 	// Retrieves the next string token from the entity spawn text, returning
@@ -295,7 +295,7 @@ typedef enum {
 	BOTLIB_AAS_TIME,
 
 	BOTLIB_AAS_POINT_AREA_NUM,
-	BOTLIB_AAS_TRACE_CLIENT_BBOX,
+	BOTLIB_AAS_TRACE_PLAYER_BBOX,
 	BOTLIB_AAS_TRACE_AREAS,
 
 	BOTLIB_AAS_POINT_CONTENTS,
@@ -306,7 +306,7 @@ typedef enum {
 	BOTLIB_AAS_INT_FOR_BSP_EPAIR_KEY,
 
 	// aas_move
-	BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT = 325,
+	BOTLIB_AAS_PREDICT_PLAYER_MOVEMENT = 325,
 	BOTLIB_AAS_ON_GROUND,
 	BOTLIB_AAS_SWIMMING,
 	BOTLIB_AAS_JUMP_REACH_RUN_START,
@@ -385,19 +385,19 @@ typedef enum {
 
 	GAME_SHUTDOWN,	// (void);
 
-	GAME_CLIENT_CONNECT,	// ( int clientNum, qboolean firstTime, qboolean isBot, int connectionNum, int localPlayerNum );
+	GAME_PLAYER_CONNECT,	// ( int playerNum, qboolean firstTime, qboolean isBot, int clientNum, int localPlayerNum );
 	// return NULL if the client is allowed to connect, otherwise return
 	// a text string with the reason for denial
 
-	GAME_CLIENT_BEGIN,				// ( int clientNum );
+	GAME_PLAYER_BEGIN,				// ( int playerNum );
 
-	GAME_CLIENT_USERINFO_CHANGED,	// ( int clientNum );
+	GAME_PLAYER_USERINFO_CHANGED,	// ( int playerNum );
 
-	GAME_CLIENT_DISCONNECT,			// ( int clientNum );
+	GAME_PLAYER_DISCONNECT,			// ( int playerNum );
 
-	GAME_CLIENT_COMMAND,			// ( int connectionNum );
+	GAME_CLIENT_COMMAND,			// ( int clientNum );
 
-	GAME_CLIENT_THINK,				// ( int clientNum );
+	GAME_PLAYER_THINK,				// ( int playerNum );
 
 	GAME_RUN_FRAME,					// ( int levelTime );
 
@@ -409,7 +409,7 @@ typedef enum {
 
 	BOTAI_START_FRAME,				// ( int time );
 
-	GAME_SNAPSHOT_CALLBACK,         // ( int entityNum, int clientNum );
+	GAME_SNAPSHOT_CALLBACK,         // ( int entityNum, int playerNum );
 	// return qfalse if you don't want it to be added
 
 	GAME_VID_RESTART,				// ( void );

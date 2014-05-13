@@ -416,11 +416,11 @@ static void IN_GobbleMotionEvents( void )
 IN_GetUIMousePosition
 ===============
 */
-static void IN_GetUIMousePosition( int localClientNum, int *x, int *y )
+static void IN_GetUIMousePosition( int localPlayerNum, int *x, int *y )
 {
 	if( cgvm )
 	{
-		int pos = VM_Call( cgvm, CG_MOUSE_POSITION, localClientNum );
+		int pos = VM_Call( cgvm, CG_MOUSE_POSITION, localPlayerNum );
 		*x = Com_Clamp(0, cls.glconfig.vidWidth - 1, pos & 0xFFFF);
 		*y = Com_Clamp(0, cls.glconfig.vidHeight - 1, ( pos >> 16 ) & 0xFFFF);
 	}
@@ -436,11 +436,11 @@ static void IN_GetUIMousePosition( int localClientNum, int *x, int *y )
 IN_SetUIMousePosition
 ===============
 */
-static void IN_SetUIMousePosition( int localClientNum, int x, int y )
+static void IN_SetUIMousePosition( int localPlayerNum, int x, int y )
 {
 	if( cgvm )
 	{
-		VM_Call( cgvm, CG_SET_MOUSE_POSITION, localClientNum, x, y );
+		VM_Call( cgvm, CG_SET_MOUSE_POSITION, localPlayerNum, x, y );
 	}
 }
 
@@ -590,7 +590,7 @@ static int joyKeyStart[CL_MAX_SPLITVIEW] = {
 
 // We translate axes movement into keypresses
 static int joy_keys[CL_MAX_SPLITVIEW][16] = {
-	// Client 1
+	// Player 1
 	{
 		K_LEFTARROW, K_RIGHTARROW,
 		K_UPARROW, K_DOWNARROW,
@@ -602,7 +602,7 @@ static int joy_keys[CL_MAX_SPLITVIEW][16] = {
 		K_JOY27, K_JOY28
 	},
 #if CL_MAX_SPLITVIEW > 1
-	// Client 2
+	// Player 2
 	{
 		K_2JOY17, K_2JOY18,
 		K_2JOY19, K_2JOY20,
@@ -615,7 +615,7 @@ static int joy_keys[CL_MAX_SPLITVIEW][16] = {
 	},
 #endif
 #if CL_MAX_SPLITVIEW > 2
-	// Client 3
+	// Player 3
 	{
 		K_3JOY17, K_3JOY18,
 		K_3JOY19, K_3JOY20,
@@ -628,7 +628,7 @@ static int joy_keys[CL_MAX_SPLITVIEW][16] = {
 	},
 #endif
 #if CL_MAX_SPLITVIEW > 3
-	// Client 4
+	// Player 4
 	{
 		K_4JOY17, K_4JOY18,
 		K_4JOY19, K_4JOY20,
@@ -645,7 +645,7 @@ static int joy_keys[CL_MAX_SPLITVIEW][16] = {
 // translate hat events into keypresses
 // the 4 highest buttons are used for the first hat ...
 static int hat_keys[CL_MAX_SPLITVIEW][16] = {
-	// Client 1
+	// Player 1
 	{
 		K_JOY29, K_JOY30,
 		K_JOY31, K_JOY32,
@@ -657,7 +657,7 @@ static int hat_keys[CL_MAX_SPLITVIEW][16] = {
 		K_JOY19, K_JOY20
 	},
 #if CL_MAX_SPLITVIEW > 1
-	// Client 2
+	// Player 2
 	{
 		K_2JOY29, K_2JOY30,
 		K_2JOY31, K_2JOY32,
@@ -670,7 +670,7 @@ static int hat_keys[CL_MAX_SPLITVIEW][16] = {
 	},
 #endif
 #if CL_MAX_SPLITVIEW > 2
-	// Client 3
+	// Player 3
 	{
 		K_3JOY29, K_3JOY30,
 		K_3JOY31, K_3JOY32,
@@ -683,7 +683,7 @@ static int hat_keys[CL_MAX_SPLITVIEW][16] = {
 	},
 #endif
 #if CL_MAX_SPLITVIEW > 3
-	// Client 4
+	// Player 4
 	{
 		K_4JOY29, K_4JOY30,
 		K_4JOY31, K_4JOY32,
@@ -765,11 +765,11 @@ static void IN_InitJoystick( void )
 			continue;
 		}
 
-		in_joystickNo[i] = Cvar_Get( Com_LocalClientCvarName(i, "in_joystickNo"), "0", CVAR_ARCHIVE );
+		in_joystickNo[i] = Cvar_Get( Com_LocalPlayerCvarName(i, "in_joystickNo"), "0", CVAR_ARCHIVE );
 		if( in_joystickNo[i]->integer < 0 || in_joystickNo[i]->integer >= total )
-			Cvar_Set( Com_LocalClientCvarName(i, "in_joystickNo"), "0" );
+			Cvar_Set( Com_LocalPlayerCvarName(i, "in_joystickNo"), "0" );
 
-		in_joystickUseAnalog[i] = Cvar_Get( Com_LocalClientCvarName(i, "in_joystickUseAnalog"), "0", CVAR_ARCHIVE );
+		in_joystickUseAnalog[i] = Cvar_Get( Com_LocalPlayerCvarName(i, "in_joystickUseAnalog"), "0", CVAR_ARCHIVE );
 
 		stick[i] = SDL_JoystickOpen( in_joystickNo[i]->integer );
 
@@ -1228,9 +1228,9 @@ void IN_Init( void )
 	in_nograb = Cvar_Get( "in_nograb", "0", CVAR_ARCHIVE );
 
 	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
-		in_joystick[i] = Cvar_Get( Com_LocalClientCvarName(i, "in_joystick"), "0", CVAR_ARCHIVE|CVAR_LATCH );
-		in_joystickDebug[i] = Cvar_Get( Com_LocalClientCvarName(i, "in_joystickDebug"), "0", CVAR_TEMP );
-		in_joystickThreshold[i] = Cvar_Get( Com_LocalClientCvarName(i, "in_joystickThreshold"), "0.15", CVAR_ARCHIVE );
+		in_joystick[i] = Cvar_Get( Com_LocalPlayerCvarName(i, "in_joystick"), "0", CVAR_ARCHIVE|CVAR_LATCH );
+		in_joystickDebug[i] = Cvar_Get( Com_LocalPlayerCvarName(i, "in_joystickDebug"), "0", CVAR_TEMP );
+		in_joystickThreshold[i] = Cvar_Get( Com_LocalPlayerCvarName(i, "in_joystickThreshold"), "0.15", CVAR_ARCHIVE );
 	}
 
 #ifdef MACOS_X_ACCELERATION_HACK

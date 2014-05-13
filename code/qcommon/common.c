@@ -3802,14 +3802,14 @@ void Com_RandomBytes( byte *string, int len )
 ==================
 Com_IsVoipTarget
 
-Returns non-zero if given clientNum is enabled in voipTargets, zero otherwise.
-If clientNum is negative return if any bit is set.
+Returns non-zero if given playerNum is enabled in voipTargets, zero otherwise.
+If playerNum is negative return if any bit is set.
 ==================
 */
-qboolean Com_IsVoipTarget(uint8_t *voipTargets, int voipTargetsSize, int clientNum)
+qboolean Com_IsVoipTarget(uint8_t *voipTargets, int voipTargetsSize, int playerNum)
 {
 	int index;
-	if(clientNum < 0)
+	if(playerNum < 0)
 	{
 		for(index = 0; index < voipTargetsSize; index++)
 		{
@@ -3820,10 +3820,10 @@ qboolean Com_IsVoipTarget(uint8_t *voipTargets, int voipTargetsSize, int clientN
 		return qfalse;
 	}
 
-	index = clientNum >> 3;
+	index = playerNum >> 3;
 	
 	if(index < voipTargetsSize)
-		return (voipTargets[index] & (1 << (clientNum & 0x07)));
+		return (voipTargets[index] & (1 << (playerNum & 0x07)));
 
 	return qfalse;
 }

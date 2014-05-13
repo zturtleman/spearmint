@@ -471,10 +471,12 @@ client_t *SV_ClientForPlayerNum( int playerNum ) {
 
 /*
 ==================
-SV_BotClientCommand
+SV_ForceClientCommand
+
+Sends a client command for the specified playerNum
 ==================
 */
-void SV_ForcePlayerCommand( int playerNum, const char *command ) {
+void SV_ForceClientCommand( int playerNum, const char *command ) {
 	client_t *client = SV_ClientForPlayerNum( playerNum );
 
 	if ( !client )
@@ -573,7 +575,7 @@ void SV_BotInitBotLib(void) {
 	botlib_import.inPVS = BotImport_inPVS;
 	botlib_import.BSPEntityData = BotImport_BSPEntityData;
 	botlib_import.BSPModelMinsMaxsOrigin = BotImport_BSPModelMinsMaxsOrigin;
-	botlib_import.BotClientCommand = SV_ForcePlayerCommand;
+	botlib_import.BotClientCommand = SV_ForceClientCommand;
 
 	//memory management
 	botlib_import.GetMemory = BotImport_GetMemory;
@@ -611,12 +613,12 @@ void SV_BotInitBotLib(void) {
 SV_BotGetConsoleMessage
 ==================
 */
-int SV_BotGetConsoleMessage( int client, char *buf, int size )
+int SV_BotGetConsoleMessage( int playerNum, char *buf, int size )
 {
 	client_t	*cl;
 	int			index;
 
-	cl = SV_ClientForPlayerNum( client );
+	cl = SV_ClientForPlayerNum( playerNum );
 
 	if ( !cl )
 		return qfalse;

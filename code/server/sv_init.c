@@ -631,7 +631,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 				SV_SetupPlayerEntity( player );
 
 				// connect the client again
-				denied = VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_CLIENT_CONNECT, player - svs.players, qfalse, isBot, i, j ) );	// firstTime = qfalse
+				denied = VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_PLAYER_CONNECT, player - svs.players, qfalse, isBot, i, j ) );	// firstTime = qfalse
 				player = svs.clients[i].localPlayers[j]; // may be NULL if game dropped player
 				if ( denied && player != NULL ) {
 					// this generally shouldn't happen, because the client
@@ -658,7 +658,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 				client->deltaMessage = -1;
 				client->lastSnapshotTime = 0;	// generate a snapshot immediately
 
-				VM_Call( gvm, GAME_CLIENT_BEGIN, client->localPlayers[0] - svs.players );
+				VM_Call( gvm, GAME_PLAYER_BEGIN, client->localPlayers[0] - svs.players );
 			}
 		}
 	}	

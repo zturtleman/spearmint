@@ -61,26 +61,26 @@ MESSAGE PARSING
 
 /*
 ==================
-CL_LocalClientAdded
+CL_LocalPlayerAdded
 ==================
 */
-void CL_LocalClientAdded(int localClientNum, int clientNum) {
-	if (clientNum < 0 || clientNum >= MAX_CLIENTS)
+void CL_LocalPlayerAdded(int localPlayerNum, int playerNum) {
+	if (playerNum < 0 || playerNum >= MAX_CLIENTS)
 		return;
 
-	clc.clientNums[localClientNum] = clientNum;
+	clc.playerNums[localPlayerNum] = playerNum;
 }
 
 /*
 ==================
-CL_LocalClientRemoved
+CL_LocalPlayerRemoved
 ==================
 */
-void CL_LocalClientRemoved(int localClientNum) {
-	if (clc.clientNums[localClientNum] == -1)
+void CL_LocalPlayerRemoved(int localPlayerNum) {
+	if (clc.playerNums[localPlayerNum] == -1)
 		return;
 
-	clc.clientNums[localClientNum] = -1;
+	clc.playerNums[localPlayerNum] = -1;
 }
 
 /*
@@ -318,13 +318,13 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	}
 
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		newSnap.lcIndex[i] = MSG_ReadByte( msg );
-		newSnap.clientNums[i] = MSG_ReadByte( msg );
+		newSnap.localPlayerIndex[i] = MSG_ReadByte( msg );
+		newSnap.playerNums[i] = MSG_ReadByte( msg );
 
 		// -1 gets converted to 255 should be set to -1 (and so should all invalid values)
-		if ( newSnap.lcIndex[i] >= newSnap.numPSs || newSnap.clientNums[i] >= MAX_CLIENTS ) {
-			newSnap.lcIndex[i] = -1;
-			newSnap.clientNums[i] = -1;
+		if ( newSnap.localPlayerIndex[i] >= newSnap.numPSs || newSnap.playerNums[i] >= MAX_CLIENTS ) {
+			newSnap.localPlayerIndex[i] = -1;
+			newSnap.playerNums[i] = -1;
 		}
 
 		// read areamask
@@ -341,24 +341,24 @@ void CL_ParseSnapshot( msg_t *msg ) {
 
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
 		// Read player states
-		if (newSnap.lcIndex[i] != -1) {
-			newPS = (sharedPlayerState_t *) DA_ElementPointer( cl.tempSnapshotPS, newSnap.lcIndex[i] );
+		if (newSnap.localPlayerIndex[i] != -1) {
+			newPS = (sharedPlayerState_t *) DA_ElementPointer( cl.tempSnapshotPS, newSnap.localPlayerIndex[i] );
 
-			if ( old && old->valid && old->lcIndex[i] != -1 ) {
-				oldPS = (sharedPlayerState_t *) DA_ElementPointer( old->playerStates, old->lcIndex[i] );
+			if ( old && old->valid && old->localPlayerIndex[i] != -1 ) {
+				oldPS = (sharedPlayerState_t *) DA_ElementPointer( old->playerStates, old->localPlayerIndex[i] );
 
-				MSG_ReadDeltaPlayerstate( msg, oldPS, newPS, newSnap.clientNums[i] );
+				MSG_ReadDeltaPlayerstate( msg, oldPS, newPS, newSnap.playerNums[i] );
 			} else {
-				MSG_ReadDeltaPlayerstate( msg, NULL, newPS, newSnap.clientNums[i] );
+				MSG_ReadDeltaPlayerstate( msg, NULL, newPS, newSnap.playerNums[i] );
 			}
 		}
 
-		// Server added or removed local client
-		if ( old && old->clientNums[i] != newSnap.clientNums[i] ) {
-			CL_LocalClientRemoved( i );
+		// Server added or removed local player
+		if ( old && old->playerNums[i] != newSnap.playerNums[i] ) {
+			CL_LocalPlayerRemoved( i );
 
-			if ( newSnap.clientNums[i] != -1 ) {
-				CL_LocalClientAdded( i, newSnap.clientNums[i] );
+			if ( newSnap.playerNums[i] != -1 ) {
+				CL_LocalPlayerAdded( i, newSnap.playerNums[i] );
 			}
 		}
 	}
@@ -579,13 +579,13 @@ void CL_ParseGamestate( msg_t *msg ) {
 		}
 	}
 
-	// read clientNums
+	// read playerNums
 	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
 		newnum = MSG_ReadLong(msg);
 		if (newnum >= 0 && newnum < MAX_CLIENTS)
-			CL_LocalClientAdded(i, newnum);
+			CL_LocalPlayerAdded(i, newnum);
 		else
-			CL_LocalClientRemoved(i);
+			CL_LocalPlayerRemoved(i);
 	}
 
 	// save old gamedir
@@ -759,7 +759,7 @@ qboolean CL_ShouldIgnoreVoipSender(int sender)
 
 	if (!clc.demoplaying) {
 		for ( i = 0; i < CL_MAX_SPLITVIEW; i++ ) {
-			if (sender == clc.clientNums[i])
+			if (sender == clc.playerNums[i])
 				return qtrue;  // ignore own voice (unless playing back a demo).
 		}
 	}
@@ -813,7 +813,7 @@ void CL_ParseVoip ( msg_t *msg ) {
 	float voipPower = 0.0f;
 	int i, j;
 
-	Com_DPrintf("VoIP: %d-byte packet from client %d\n", packetsize, sender);
+	Com_DPrintf("VoIP: %d-byte packet from player %d\n", packetsize, sender);
 
 	if (sender < 0)
 		return;   // short/invalid packet, bail.
@@ -870,14 +870,14 @@ void CL_ParseVoip ( msg_t *msg ) {
 		seqdiff = 0;
 	} else if (seqdiff * clc.speexFrameSize * 2 >= sizeof (decoded)) { // dropped more than we can handle?
 		// just start over.
-		Com_DPrintf("VoIP: Dropped way too many (%d) frames from client #%d\n",
+		Com_DPrintf("VoIP: Dropped way too many (%d) frames from player #%d\n",
 		            seqdiff, sender);
 		speex_bits_reset(&clc.speexDecoderBits[sender]);
 		seqdiff = 0;
 	}
 
 	if (seqdiff != 0) {
-		Com_DPrintf("VoIP: Dropped %d frames from client #%d\n",
+		Com_DPrintf("VoIP: Dropped %d frames from player #%d\n",
 		            seqdiff, sender);
 		// tell speex that we're missing frames...
 		for (i = 0; i < seqdiff; i++) {

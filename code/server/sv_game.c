@@ -61,10 +61,10 @@ sharedEntityState_t *SV_GameEntityStateNum( int num ) {
 	return &ent->s;
 }
 
-sharedPlayerState_t *SV_GameClientNum( int num ) {
+sharedPlayerState_t *SV_GamePlayerNum( int num ) {
 	sharedPlayerState_t	*ps;
 
-	ps = (sharedPlayerState_t *)((byte *)sv.gameClients + sv.gameClientSize*(num));
+	ps = (sharedPlayerState_t *)((byte *)sv.gamePlayers + sv.gamePlayerSize*(num));
 
 	return ps;
 }
@@ -267,13 +267,13 @@ SV_LocateGameData
 ===============
 */
 void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int sizeofGEntity_t,
-					   sharedPlayerState_t *clients, int sizeofGameClient ) {
+					   sharedPlayerState_t *players, int sizeofGamePlayer ) {
 	sv.gentities = gEnts;
 	sv.gentitySize = sizeofGEntity_t;
 	sv.num_entities = numGEntities;
 
-	sv.gameClients = clients;
-	sv.gameClientSize = sizeofGameClient;
+	sv.gamePlayers = players;
+	sv.gamePlayerSize = sizeofGamePlayer;
 }
 
 /*
@@ -431,7 +431,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_SET_NET_FIELDS:
 		SV_SetNetFields( args[1], VMA(2), args[3], args[4], VMA(5), args[6] );
 		return 0;
-	case G_DROP_CLIENT:
+	case G_DROP_PLAYER:
 		SV_GameDropPlayer( args[1], VMA(2) );
 		return 0;
 	case G_SEND_SERVER_COMMAND:
@@ -524,7 +524,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 
 	case G_CLIENT_COMMAND:
-		SV_ForcePlayerCommand( args[1], VMA(2) );
+		SV_ForceClientCommand( args[1], VMA(2) );
 		return 0;
 
 	case G_R_REGISTERMODEL:
@@ -585,8 +585,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->aas.AAS_PointAreaNum( VMA(1) );
 	case BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX:
 		return botlib_export->aas.AAS_PointReachabilityAreaIndex( VMA(1) );
-	case BOTLIB_AAS_TRACE_CLIENT_BBOX:
-		botlib_export->aas.AAS_TraceClientBBox( VMA(1), VMA(2), VMA(3), args[4], args[5], args[6] );
+	case BOTLIB_AAS_TRACE_PLAYER_BBOX:
+		botlib_export->aas.AAS_TracePlayerBBox( VMA(1), VMA(2), VMA(3), args[4], args[5], args[6] );
 		return 0;
 	case BOTLIB_AAS_TRACE_AREAS:
 		return botlib_export->aas.AAS_TraceAreas( VMA(1), VMA(2), VMA(3), VMA(4), args[5] );
@@ -653,8 +653,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AAS_PREDICT_ROUTE:
 		return botlib_export->aas.AAS_PredictRoute( VMA(1), args[2], VMA(3), args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11] );
 
-	case BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT:
-		return botlib_export->aas.AAS_PredictClientMovement( VMA(1), args[2], VMA(3), args[4], args[5],
+	case BOTLIB_AAS_PREDICT_PLAYER_MOVEMENT:
+		return botlib_export->aas.AAS_PredictPlayerMovement( VMA(1), args[2], VMA(3), args[4], args[5],
 			VMA(6), VMA(7), args[8], args[9], VMF(10), args[11], args[12], args[13], args[14] );
 	case BOTLIB_AAS_ON_GROUND:
 		return botlib_export->aas.AAS_OnGround( VMA(1), args[2], args[3], args[4] );

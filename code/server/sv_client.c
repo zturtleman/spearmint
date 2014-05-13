@@ -272,7 +272,7 @@ void SV_AddPlayer( client_t *client, int localPlayerNum, const char *infoString 
 	SV_SetupPlayerEntity( newplayer );
 
 	// get the game a chance to reject this connection or modify the userinfo
-	denied = VM_Call( gvm, GAME_CLIENT_CONNECT, playerNum, qtrue, qfalse, client - svs.clients, localPlayerNum ); // firstTime = qtrue
+	denied = VM_Call( gvm, GAME_PLAYER_CONNECT, playerNum, qtrue, qfalse, client - svs.clients, localPlayerNum ); // firstTime = qtrue
 	if ( denied ) {
 		// we can't just use VM_ArgPtr, because that is only valid inside a VM_Call
 		char *str = VM_ExplicitArgPtr( gvm, denied );
@@ -734,7 +734,7 @@ void SV_DropPlayer( player_t *drop, const char *reason ) {
 
 	// call the prog function for removing a client
 	// this will remove the body, among other things
-	VM_Call( gvm, GAME_CLIENT_DISCONNECT, playerNum );
+	VM_Call( gvm, GAME_PLAYER_DISCONNECT, playerNum );
 
 	// Check if player is a extra local player
 	if ( numLocalPlayers > 1 ) {
@@ -871,7 +871,7 @@ static void SV_SendClientGameState( client_t *client ) {
 ==================
 SV_SetupPlayerEntity
 
-Call before GAME_CLIENT_CONNECT
+Call before GAME_PLAYER_CONNECT
 ==================
 */
 void SV_SetupPlayerEntity( player_t *player ) {
@@ -916,7 +916,7 @@ void SV_PlayerEnterWorld( player_t *player, usercmd_t *cmd ) {
 		memset(&player->lastUsercmd, '\0', sizeof(player->lastUsercmd));
 
 	// call the game begin function
-	VM_Call( gvm, GAME_CLIENT_BEGIN, player - svs.players );
+	VM_Call( gvm, GAME_PLAYER_BEGIN, player - svs.players );
 }
 
 /*
@@ -1418,7 +1418,7 @@ static void SV_UpdateUserinfo_f( client_t *client, int localPlayerNum ) {
 
 	SV_UserinfoChanged( player );
 	// call prog code to allow overrides
-	VM_Call( gvm, GAME_CLIENT_USERINFO_CHANGED, player - svs.players );
+	VM_Call( gvm, GAME_PLAYER_USERINFO_CHANGED, player - svs.players );
 }
 
 /*
@@ -1559,7 +1559,7 @@ void SV_UpdateVoipIgnore(client_t *cl, const char *idstr, qboolean ignore)
 	if ((*idstr >= '0') && (*idstr <= '9')) {
 		const int id = atoi(idstr);
 		if ((id >= 0) && (id < MAX_CLIENTS)) {
-			cl->ignoreVoipFromClient[id] = ignore;
+			cl->ignoreVoipFromPlayer[id] = ignore;
 		}
 	}
 }
@@ -1721,7 +1721,7 @@ void SV_PlayerThink (player_t *player, usercmd_t *cmd) {
 		return;		// may have been kicked during the last usercmd
 	}
 
-	VM_Call( gvm, GAME_CLIENT_THINK, player - svs.players );
+	VM_Call( gvm, GAME_PLAYER_THINK, player - svs.players );
 }
 
 /*
@@ -1739,7 +1739,7 @@ each of the backup packets.
 static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	int			i, key;
 	int			cmdCount;
-	int			lc, localClientBits;
+	int			lc, localPlayerBits;
 	usercmd_t	nullcmd;
 	usercmd_t	cmds[MAX_PACKET_USERCMDS];
 	usercmd_t	*cmd, *oldcmd;
@@ -1751,10 +1751,10 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		cl->deltaMessage = -1;
 	}
 
-	localClientBits = MSG_ReadByte( msg );
+	localPlayerBits = MSG_ReadByte( msg );
 	cmdCount = MSG_ReadByte( msg );
 
-	if ( localClientBits == 0 ) {
+	if ( localPlayerBits == 0 ) {
 		return;
 	}
 
@@ -1774,7 +1774,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	key ^= MSG_HashKey(cl->reliableCommands[ cl->reliableAcknowledge & (MAX_RELIABLE_COMMANDS-1) ], 32);
 
 	for (lc = 0; lc < MAX_SPLITVIEW; ++lc) {
-		if (!(localClientBits & (1<<lc))) {
+		if (!(localPlayerBits & (1<<lc))) {
 			continue;
 		}
 
@@ -1796,7 +1796,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		cl->frames[ cl->messageAcknowledge & PACKET_MASK ].messageAcked = svs.time;
 
 		// if this is the first usercmd we have received
-		// this gamestate, put the client into the world
+		// this gamestate, put the player into the world
 		if ( !player->inWorld ) {
 			SV_PlayerEnterWorld( player, &cmds[0] );
 			// the moves can be processed normaly
@@ -1858,9 +1858,9 @@ Blocking of voip packets based on target client's opinion of source player
 ==================
 */
 
-static qboolean SV_ClientIgnoreVoipTalker(const client_t *client, const player_t *player)
+static qboolean SV_ClientIgnoreVoipTalker(const client_t *client, int playerNum)
 {
-	if ( client->ignoreVoipFromClient[ player - svs.players ] )
+	if ( client->ignoreVoipFromPlayer[ playerNum ] )
 		return qtrue;
 
 	return qfalse;  // don't ignore.
@@ -1874,9 +1874,9 @@ void SV_UserVoip(client_t *cl, msg_t *msg)
 	int flags;
 	byte encoded[sizeof(cl->voipPacket[0]->data)];
 	client_t *client = NULL;
-	player_t *player = NULL;
+	int playerNum;
 	voipServerPacket_t *packet = NULL;
-	int i;
+	int i, j;
 
 	sender = cl - svs.clients;
 	localPlayerNum = MSG_ReadByte(msg);
@@ -1912,7 +1912,7 @@ void SV_UserVoip(client_t *cl, msg_t *msg)
 	// !!! FIXME: reject if not speex narrowband codec.
 	// !!! FIXME: decide if this is bogus data?
 
-	player = cl->localPlayers[localPlayerNum];
+	playerNum = cl->localPlayers[localPlayerNum] - svs.players;
 
 	// decide who needs this VoIP packet sent to them...
 	for (i = 0, client = svs.clients; i < sv_maxclients->integer ; i++, client++) {
@@ -1924,12 +1924,19 @@ void SV_UserVoip(client_t *cl, msg_t *msg)
 			continue;  // no VoIP support, or unsupported protocol
 		else if (client->muteAllVoip)
 			continue;  // client is ignoring everyone.
-		else if (SV_ClientIgnoreVoipTalker(client, player))
+		else if (SV_ClientIgnoreVoipTalker(client, playerNum))
 			continue;  // client is ignoring this talker.
 		else if (*cl->downloadName)   // !!! FIXME: possible to DoS?
 			continue;  // no VoIP allowed if downloading, to save bandwidth.
 
-		if(Com_IsVoipTarget(recips, sizeof(recips), i))
+		for (j = 0; j < MAX_SPLITVIEW; j++) {
+			if (!client->localPlayers[j])
+				continue;
+			if(Com_IsVoipTarget(recips, sizeof(recips), client->localPlayers[j] - svs.players))
+				break;
+		}
+
+		if ( j != MAX_SPLITVIEW )
 			flags |= VOIP_DIRECT;
 		else
 			flags &= ~VOIP_DIRECT;
@@ -1943,8 +1950,9 @@ void SV_UserVoip(client_t *cl, msg_t *msg)
 			continue;  // no room for another packet right now.
 		}
 
+		// ZTM: FIXME: include which local players this is VOIP_DIRECT for
 		packet = Z_Malloc(sizeof(*packet));
-		packet->sender = player - svs.players;
+		packet->sender = playerNum;
 		packet->frames = frames;
 		packet->len = packetsize;
 		packet->generation = generation;

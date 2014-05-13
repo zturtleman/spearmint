@@ -149,7 +149,7 @@ typedef struct botlib_import_s
 	//
 	void		(*BSPModelMinsMaxsOrigin)(int modelnum, vec3_t angles, vec3_t mins, vec3_t maxs, vec3_t origin);
 	//send a bot client command
-	void		(*BotClientCommand)(int client, const char *command);
+	void		(*BotClientCommand)(int playerNum, const char *command);
 	//memory allocation
 	void		*(*GetMemory)(int size);		// allocate from Zone
 	void		(*FreeMemory)(void *ptr);		// free memory from Zone
@@ -184,7 +184,7 @@ typedef struct aas_export_s
 	//--------------------------------------------
 	int			(*AAS_PointAreaNum)(vec3_t point);
 	int			(*AAS_PointReachabilityAreaIndex)( vec3_t point );
-	void		(*AAS_TraceClientBBox)(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask);
+	void		(*AAS_TracePlayerBBox)(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask);
 	int			(*AAS_TraceAreas)(vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas);
 	int			(*AAS_BBoxAreas)(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas);
 	int			(*AAS_AreaInfo)( int areanum, struct aas_areainfo_s *info );
@@ -237,7 +237,7 @@ typedef struct aas_export_s
 	//--------------------------------------------
 	// be_aas_move.c
 	//--------------------------------------------
-	int			(*AAS_PredictClientMovement)(struct aas_clientmove_s *move,
+	int			(*AAS_PredictPlayerMovement)(struct aas_clientmove_s *move,
 											int entnum, vec3_t origin,
 											int presencetype, int onground,
 											vec3_t velocity, vec3_t cmdmove,

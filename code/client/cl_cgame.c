@@ -176,7 +176,7 @@ static int CL_GetConfigString(int index, char *buf, int size)
 CL_GetUserCmd
 ====================
 */
-qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum ) {
+qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localPlayerNum ) {
 	// cmdss[#][cmdNumber] is the last properly generated command
 
 	// can't return anything that we haven't created yet
@@ -190,7 +190,7 @@ qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum ) {
 		return qfalse;
 	}
 
-	*ucmd = cl.cmdss[localClientNum][cmdNumber & CMD_MASK];
+	*ucmd = cl.cmdss[localPlayerNum][cmdNumber & CMD_MASK];
 
 	return qtrue;
 }
@@ -269,16 +269,16 @@ qboolean	CL_GetSnapshot( int snapshotNumber, vmSnapshot_t *vmSnapshot, int vmSiz
 	snapshot.ping = clSnap->ping;
 	snapshot.serverTime = clSnap->serverTime;
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		snapshot.clientNums[i] = clSnap->clientNums[i];
+		snapshot.playerNums[i] = clSnap->playerNums[i];
 
 		ps = (sharedPlayerState_t*)((byte*)playerStates + i * cl.cgamePlayerStateSize);
-		if ( clSnap->lcIndex[i] == -1 ) {
+		if ( clSnap->localPlayerIndex[i] == -1 ) {
 			Com_Memset( snapshot.areamask[i], 0, sizeof( snapshot.areamask[0] ) );
 			Com_Memset( ps, 0, cl.cgamePlayerStateSize );
-			ps->clientNum = -1;
+			ps->playerNum = -1;
 		} else {
-			Com_Memcpy( snapshot.areamask[i], clSnap->areamask[clSnap->lcIndex[i]], sizeof( snapshot.areamask[0] ) );
-			Com_Memcpy( ps, DA_ElementPointer( clSnap->playerStates, clSnap->lcIndex[i] ), cl.cgamePlayerStateSize );
+			Com_Memcpy( snapshot.areamask[i], clSnap->areamask[clSnap->localPlayerIndex[i]], sizeof( snapshot.areamask[0] ) );
+			Com_Memcpy( ps, DA_ElementPointer( clSnap->playerStates, clSnap->localPlayerIndex[i] ), cl.cgamePlayerStateSize );
 		}
 	}
 
@@ -1422,9 +1422,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 #else
 		return 0;
 #endif
-	case CG_GET_VOIP_MUTE_CLIENT:
+	case CG_GET_VOIP_MUTE_PLAYER:
 #ifdef USE_VOIP
-		return CL_GetVoipMuteClient( args[1] );
+		return CL_GetVoipMutePlayer( args[1] );
 #else
 		return 0;
 #endif
@@ -1755,7 +1755,7 @@ void CL_InitCGame( void ) {
 	// use the lastExecutedServerCommand instead of the serverCommandSequence
 	// otherwise server commands sent just before a gamestate are dropped
 	VM_Call( cgvm, CG_INGAME_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, CL_MAX_SPLITVIEW,
-			clc.clientNums[0], clc.clientNums[1], clc.clientNums[2], clc.clientNums[3] );
+			clc.playerNums[0], clc.playerNums[1], clc.playerNums[2], clc.playerNums[3] );
 
 	// entityBaselines, parseEntities, and snapshot player states are saved across vid_restart
 	if ( !cl.entityBaselines.pointer && !cl.parseEntities.pointer ) {
