@@ -193,6 +193,8 @@ typedef struct {
 
 	int			challenge;					// from the server to use for connecting
 
+	int			desiredPlayerBits;			// bits for desired local players when connecting
+
 	// these are our reliable messages that go to the server
 	int			reliableSequence;
 	int			reliableAcknowledge;		// the last one the server has executed

@@ -1450,6 +1450,25 @@ void CL_FlushMemory(void)
 }
 
 /*
+=================
+CL_SetChallenging
+
+Set state to challenging
+=================
+*/
+void CL_SetChallenging( void ) {
+	if ( clc.state == CA_CHALLENGING ) {
+		return;
+	}
+
+	clc.state = CA_CHALLENGING;
+	clc.desiredPlayerBits = Com_Clamp(1, (1<<CL_MAX_SPLITVIEW)-1, Cvar_VariableIntegerValue("cl_localClients"));
+
+	// Reset the desired local players bits (must set each time before joining)
+	Cvar_Set("cl_localClients", "1");
+}
+
+/*
 =====================
 CL_MapLoading
 
@@ -1485,7 +1504,7 @@ void CL_MapLoading( void ) {
 		Cvar_Set( "nextmap", "" );
 		CL_Disconnect( qtrue );
 		Q_strncpyz( clc.servername, "localhost", sizeof(clc.servername) );
-		clc.state = CA_CHALLENGING;		// so the connect screen is drawn
+		CL_SetChallenging();		// so the connect screen is drawn
 		Key_SetCatcher( 0 );
 		SCR_UpdateScreen();
 		clc.connectTime = -RETRANSMIT_TIMEOUT;
@@ -1912,7 +1931,7 @@ void CL_Connect_f( void ) {
 
 	// if we aren't playing on a lan, send challenge to prevent connection hijacking
 	if(NET_IsLocalAddress(clc.serverAddress))
-		clc.state = CA_CHALLENGING;
+		CL_SetChallenging();
 	else
 	{
 		clc.state = CA_CONNECTING;
@@ -2392,7 +2411,6 @@ Resend a connect message if the last one has timed out
 void CL_CheckForResend( void ) {
 	int		port, i;
 	int		size, j;
-	int		localClients;
 	int		protocol;
 	char	info[MAX_INFO_STRING];
 	char	data[MAX_INFO_STRING*CL_MAX_SPLITVIEW];
@@ -2442,14 +2460,8 @@ void CL_CheckForResend( void ) {
 		strcpy(data, "connect ");
 		size = 8;
 
-		// Check how many local client user wants
-		localClients = Com_Clamp(1, (1<<CL_MAX_SPLITVIEW)-1, Cvar_VariableIntegerValue("cl_localClients"));
-
-		// Reset cl_localClients (set before each join)
-		Cvar_Set("cl_localClients", "1");
-
 		for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
-			if (!(localClients & (1<<(i)))) {
+			if (!(clc.desiredPlayerBits & (1<<(i)))) {
 				// Dummy string.
 				data[size] = '"'; size++;
 				data[size] = '"'; size++;
@@ -2748,7 +2760,7 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 
 		// start sending challenge response instead of challenge request packets
 		clc.challenge = atoi(Cmd_Argv(1));
-		clc.state = CA_CHALLENGING;
+		CL_SetChallenging();
 		clc.connectPacketCount = 0;
 		clc.connectTime = -99999;
 
