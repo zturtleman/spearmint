@@ -1208,7 +1208,7 @@ intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag ) {
 		}
 	}
 
-	if ( vm->dllHandle && !Q_stricmp( vm->name, "mint-game" ) ) {
+	if ( vm->dllHandle && !Q_stricmp( vm->name, VM_PREFIX "game" ) ) {
 		// game DLL cannot allocate data on hunk due to hunk getting cleared at vid_restart
 		ptr = (intptr_t)Z_TagMalloc( size, TAG_GAME );
 		Com_Memset( (void*)ptr, 0, size );

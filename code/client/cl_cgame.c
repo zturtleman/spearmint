@@ -1688,7 +1688,7 @@ void CL_InitCGame( void ) {
 	t1 = Sys_Milliseconds();
 
 	// load the dll or bytecode
-	cgvm = VM_Create( "mint-cgame", CL_CgameSystemCalls, Cvar_VariableValue( "vm_cgame" ) );
+	cgvm = VM_Create( VM_PREFIX "cgame", CL_CgameSystemCalls, Cvar_VariableValue( "vm_cgame" ) );
 	if ( !cgvm ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}
