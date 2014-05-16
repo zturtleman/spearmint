@@ -1462,10 +1462,10 @@ void CL_SetChallenging( void ) {
 	}
 
 	clc.state = CA_CHALLENGING;
-	clc.desiredPlayerBits = Com_Clamp(1, (1<<CL_MAX_SPLITVIEW)-1, Cvar_VariableIntegerValue("cl_localClients"));
+	clc.desiredPlayerBits = Com_Clamp(1, (1<<CL_MAX_SPLITVIEW)-1, Cvar_VariableIntegerValue("cl_localPlayers"));
 
 	// Reset the desired local players bits (must set each time before joining)
-	Cvar_Set("cl_localClients", "1");
+	Cvar_Set("cl_localPlayers", "1");
 }
 
 /*
@@ -3536,8 +3536,8 @@ void CL_Init( void ) {
 
 	cl_loadingScreenIndex = Cvar_Get( "cl_loadingScreenIndex", "0", CVAR_ARCHIVE );
 
-	// select which local client (using bits) should join a server on connect
-	Cvar_Get ("cl_localClients", "1", 0 );
+	// select which local players (using bits) should join a server on connect
+	Cvar_Get ("cl_localPlayers", "1", 0 );
 
 	// userinfo
 	cl_rate = Cvar_Get ("rate", "25000", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
