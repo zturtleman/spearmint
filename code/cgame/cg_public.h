@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	19
+#define CG_API_MINOR_VERSION	20
 
 
 #define	CMD_BACKUP			64	
@@ -141,8 +141,9 @@ typedef enum {
 } demoState_t;
 
 // bit flags for trap_Mouse_GetState and trap_Mouse_SetState
-#define MOUSE_CLIENT			0x0001		// update mouse x and y for usercmd_t creation
+#define MOUSE_CLIENT			0x0001		// update mouse x and y for usercmd_t creation, don't allow mouse to leave window
 #define MOUSE_CGAME				0x0002		// call CG_MOUSE_EVENT when mouse moves
+#define MOUSE_SYSTEMCURSOR		0x0004		// show system cursor, ignored if MOUSE_CLIENT is set or fullscreen
 
 
 /*
@@ -322,9 +323,8 @@ typedef enum {
 	CG_KEY_GETOVERSTRIKEMODE,
 	CG_KEY_SETOVERSTRIKEMODE,
 	CG_KEY_CLEARSTATES,
-	CG_KEY_GETCATCHER,
-	CG_KEY_SETCATCHER,
 	CG_KEY_GETKEY,
+	CG_KEY_SETREPEAT,
 
 	CG_MOUSE_GETSTATE,
 	CG_MOUSE_SETSTATE,

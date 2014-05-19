@@ -1042,7 +1042,7 @@ static void IN_ProcessEvents( void )
 	if( !SDL_WasInit( SDL_INIT_VIDEO ) )
 			return;
 
-	if( Key_GetCatcher( ) == 0 && keyRepeatEnabled )
+	if( Key_GetRepeat( ) == qfalse && keyRepeatEnabled )
 	{
 		SDL_EnableKeyRepeat( 0, 0 );
 		keyRepeatEnabled = qfalse;
@@ -1140,7 +1140,8 @@ IN_Frame
 void IN_Frame( void )
 {
 	qboolean loading;
-	qboolean cursorShowing;
+	qboolean mouseGrab;
+	qboolean systemCursor;
 	int x, y;
 
 	IN_JoyMove( );
@@ -1148,11 +1149,12 @@ void IN_Frame( void )
 
 	// If not DISCONNECTED (main menu) or ACTIVE (in game), we're loading
 	loading = ( clc.state != CA_DISCONNECTED && clc.state != CA_ACTIVE );
-	cursorShowing = !( Mouse_GetState( 0 ) & MOUSE_CLIENT );
+	mouseGrab = ( Mouse_GetState( 0 ) & MOUSE_CLIENT );
+	systemCursor = ( Mouse_GetState( 0 ) & MOUSE_SYSTEMCURSOR );
 
-	if( !Cvar_VariableIntegerValue("r_fullscreen") && ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) )
+	if( !Cvar_VariableIntegerValue("r_fullscreen") && !mouseGrab && systemCursor )
 	{
-		// Console is down in windowed mode
+		// Loading in windowed mode
 		IN_DeactivateMouse( qtrue );
 	}
 	else if( !Cvar_VariableIntegerValue("r_fullscreen") && loading )
@@ -1160,7 +1162,7 @@ void IN_Frame( void )
 		// Loading in windowed mode
 		IN_DeactivateMouse( qtrue );
 	}
-	else if( !Cvar_VariableIntegerValue("r_fullscreen") && cursorShowing )
+	else if( !Cvar_VariableIntegerValue("r_fullscreen") && !mouseGrab )
 	{
 		// Showing cursor in windowed mode
 		IN_DeactivateMouse( qfalse );

@@ -1126,9 +1126,10 @@ CL_ShutdonwCGame
 ====================
 */
 void CL_ShutdownCGame( void ) {
-	Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_UI_CGAME );
+	Key_SetRepeat( qfalse );
 	cls.cgameStarted = qfalse;
 	cls.printToCgame = qfalse;
+	cls.enteredMenu = qfalse;
 	if ( !cgvm ) {
 		return;
 	}
@@ -1476,14 +1477,12 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return CL_GetConfigString( args[1], VMA(2), args[3] );
 	case CG_MEMORY_REMAINING:
 		return Hunk_MemoryRemaining();
-  case CG_KEY_ISDOWN:
+	case CG_KEY_ISDOWN:
 		return Key_IsDown( args[1] );
-  case CG_KEY_GETCATCHER:
-		return Key_GetCatcher();
-  case CG_KEY_SETCATCHER:
-		Key_SetCatcher( args[1] );
-    return 0;
-  case CG_KEY_GETKEY:
+	case CG_KEY_SETREPEAT:
+		Key_SetRepeat( args[1] );
+		return 0;
+	case CG_KEY_GETKEY:
 		return Key_GetKey( VMA(1), args[2] );
 
 	case CG_KEY_KEYNUMTOSTRINGBUF:
@@ -1841,6 +1840,20 @@ void CL_CGameRendering( stereoFrame_t stereo ) {
 
 	VM_Call( cgvm, CG_REFRESH, cl.serverTime, stereo, clc.demoplaying, clc.state, cls.realtime );
 	VM_Debug( 0 );
+}
+
+/*
+=====================
+CL_ShowMainMenu
+=====================
+*/
+void CL_ShowMainMenu( void ) {
+	if ( !cgvm ) {
+		return;
+	}
+
+	cls.enteredMenu = qtrue;
+	VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_NONE );
 }
 
 

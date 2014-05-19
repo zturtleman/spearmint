@@ -1283,7 +1283,6 @@ Closing the main menu will restart the demo loop
 void CL_StartDemoLoop( void ) {
 	// start the demo loop again
 	Cbuf_AddText ("d1\n");
-	Key_SetCatcher( 0 );
 }
 
 /*
@@ -1480,7 +1479,6 @@ memory on the hunk from cgame and renderer
 void CL_MapLoading( void ) {
 	if ( com_dedicated->integer ) {
 		clc.state = CA_DISCONNECTED;
-		Key_SetCatcher( KEYCATCH_CONSOLE );
 		return;
 	}
 
@@ -1489,7 +1487,6 @@ void CL_MapLoading( void ) {
 	}
 
 	Con_Close();
-	Key_SetCatcher( 0 );
 
 	// if we are already connected to the local host, stay connected
 	if ( clc.state >= CA_CONNECTED && !Q_stricmp( clc.servername, "localhost" ) ) {
@@ -1505,7 +1502,6 @@ void CL_MapLoading( void ) {
 		CL_Disconnect( qtrue );
 		Q_strncpyz( clc.servername, "localhost", sizeof(clc.servername) );
 		CL_SetChallenging();		// so the connect screen is drawn
-		Key_SetCatcher( 0 );
 		SCR_UpdateScreen();
 		clc.connectTime = -RETRANSMIT_TIMEOUT;
 		NET_StringToAdr( clc.servername, &clc.serverAddress, NA_UNSPEC);
@@ -1657,7 +1653,7 @@ void CL_Disconnect( qboolean showMainMenu ) {
 	}
 
 	if ( cgvm && showMainMenu ) {
-		VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_NONE );
+		CL_ShowMainMenu();
 	}
 
 	S_ClearSoundBuffer();
@@ -1940,7 +1936,6 @@ void CL_Connect_f( void ) {
 		clc.challenge = ((rand() << 16) ^ rand()) ^ Com_Milliseconds();
 	}
 
-	Key_SetCatcher( 0 );
 	clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
 	clc.connectPacketCount = 0;
 
@@ -3023,11 +3018,11 @@ void CL_Frame ( int msec ) {
 	}
 #endif
 
-	if ( clc.state == CA_DISCONNECTED && !( Key_GetCatcher( ) & KEYCATCH_UI_CGAME )
+	if ( clc.state == CA_DISCONNECTED && !cls.enteredMenu
 		&& !com_sv_running->integer && cgvm ) {
 		// if disconnected, bring up the menu
 		S_StopAllSounds();
-		VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_MAIN );
+		CL_ShowMainMenu();
 	}
 
 	// if recording an avi, lock to a fixed fps
@@ -3689,7 +3684,7 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 	recursive = qfalse;
 
 	Com_Memset( &cls, 0, sizeof( cls ) );
-	Key_SetCatcher( 0 );
+	Key_SetRepeat( qfalse );
 
 	Com_Printf( "-----------------------\n" );
 

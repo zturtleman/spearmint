@@ -823,7 +823,7 @@ void CL_CharEvent( int key ) {
 		return;
 	}
 
-	if ( Key_GetCatcher( ) & KEYCATCH_UI_CGAME )
+	if ( cgvm )
 	{
 		VM_Call( cgvm, CG_KEY_EVENT, key | K_CHAR_FLAG, qtrue );
 	}
@@ -880,27 +880,23 @@ void Key_GetBindingBuf( int keynum, char *buf, int buflen ) {
 	}
 }
 
-static int keyCatchers = 0;
+static qboolean keyRepeat = qfalse;
 
 /*
 ====================
-Key_GetCatcher
+Key_GetRepeat
 ====================
 */
-int Key_GetCatcher( void ) {
-	return keyCatchers;
+qboolean Key_GetRepeat( void ) {
+	return keyRepeat;
 }
 
 /*
 ====================
-Key_SetCatcher
+Key_SetRepeat
 ====================
 */
-void Key_SetCatcher( int catcher ) {
-	// If the catcher state is changing, clear all key states
-	if( catcher != keyCatchers )
-		Key_ClearStates( );
-
-	keyCatchers = catcher;
+void Key_SetRepeat( qboolean repeat ) {
+	keyRepeat = repeat;
 }
 

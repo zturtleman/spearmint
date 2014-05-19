@@ -339,6 +339,7 @@ typedef struct {
 	qboolean	soundRegistered;
 	qboolean	cgameStarted;
 
+	qboolean	enteredMenu;
 	qboolean	printToCgame;			// enabled after restoring console text to cgame
 	bspFile_t	*cgameBsp;
 
@@ -581,11 +582,12 @@ void CL_InitCGame( void );
 void CL_ShutdownCGame( void );
 void CL_GameCommand( void );
 void CL_CGameRendering( stereoFrame_t stereo );
+void CL_ShowMainMenu( void );
 void CL_SetCGameTime( void );
 void CL_FirstSnapshot( void );
 void CL_ShaderStateChanged(void);
-int Key_GetCatcher( void );
-void Key_SetCatcher( int catcher );
+qboolean Key_GetRepeat( void );
+void Key_SetRepeat( qboolean repeat );
 void LAN_LoadCachedServers( void );
 void LAN_SaveServersToCache( void );
 
