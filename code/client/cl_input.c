@@ -46,21 +46,19 @@ void IN_VoipRecordUp(void)
 }
 #endif
 
+static int mouseFlags[CL_MAX_SPLITVIEW] = {0};	// MOUSE_CGAME, MOUSE_CLIENT, ...
+
 /*
 ====================
 Mouse_GetState
 ====================
 */
 int Mouse_GetState( int localClientNum ) {
-	calc_t *lc;
-
 	if ( localClientNum < 0 || localClientNum >= CL_MAX_SPLITVIEW) {
 		return 0;
 	}
 
-	lc = &cl.localClients[localClientNum];
-
-	return lc->mouseFlags;
+	return mouseFlags[localClientNum];
 }
 
 /*
@@ -69,15 +67,24 @@ Mouse_SetState
 ====================
 */
 void Mouse_SetState( int localClientNum, int state ) {
-	calc_t *lc;
-
 	if ( localClientNum < 0 || localClientNum >= CL_MAX_SPLITVIEW) {
 		return;
 	}
 
-	lc = &cl.localClients[localClientNum];
+	mouseFlags[localClientNum] = state;
+}
 
-	lc->mouseFlags = state;
+/*
+====================
+Mouse_ClearStates
+====================
+*/
+void Mouse_ClearStates( void ) {
+	int i;
+
+	for ( i = 0; i < CL_MAX_SPLITVIEW; i++ ) {
+		mouseFlags[i] = 0;
+	}
 }
 
 /*
@@ -94,12 +101,12 @@ void CL_MouseEvent( int localClientNum, int dx, int dy, int time ) {
 
 	lc = &cl.localClients[localClientNum];
 
-	if ( lc->mouseFlags & MOUSE_CLIENT ) {
+	if ( Mouse_GetState( localClientNum ) & MOUSE_CLIENT ) {
 		lc->mouseDx[lc->mouseIndex] += dx;
 		lc->mouseDy[lc->mouseIndex] += dy;
 	}
 
-	if ( lc->mouseFlags & MOUSE_CGAME ) {
+	if ( Mouse_GetState( localClientNum ) & MOUSE_CGAME ) {
 		VM_Call(cgvm, CG_MOUSE_EVENT, localClientNum, dx, dy);
 	}
 }

@@ -105,7 +105,6 @@ typedef struct {
 typedef struct {
 	int			mouseDx[2], mouseDy[2];	// added to by mouse events
 	int			mouseIndex;
-	int			mouseFlags;				// MOUSE_CGAME, MOUSE_CLIENT, ...
 
 } calc_t;
 
@@ -515,6 +514,7 @@ char *Key_KeynumToString (int keynum);
 
 int Mouse_GetState( int localClientNum );
 void Mouse_SetState( int localClientNum, int state );
+void Mouse_ClearStates( void );
 
 //
 // cl_parse.c

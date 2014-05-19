@@ -1127,6 +1127,7 @@ CL_ShutdonwCGame
 */
 void CL_ShutdownCGame( void ) {
 	Key_SetRepeat( qfalse );
+	Mouse_ClearStates();
 	cls.cgameStarted = qfalse;
 	cls.printToCgame = qfalse;
 	cls.enteredMenu = qfalse;

@@ -3684,7 +3684,6 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 	recursive = qfalse;
 
 	Com_Memset( &cls, 0, sizeof( cls ) );
-	Key_SetRepeat( qfalse );
 
 	Com_Printf( "-----------------------\n" );
 
