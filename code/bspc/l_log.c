@@ -143,11 +143,7 @@ void Log_Print(char *fmt, ...)
 
 	if (verbose)
 	{
-#ifdef WINBSPC
-		WinBSPCPrint(buf);
-#else
 		printf("%s", buf);
-#endif //WINBSPS
 	} //end if
 
 	if (logfile.fp)

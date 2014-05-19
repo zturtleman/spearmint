@@ -67,6 +67,13 @@ Frustum culls dynamic lights
 ===============
 */
 void R_CullDlights( void ) {
+#if 1 // ZTM: FIXME: hack to fix flickering with r_dlightMap 3
+	if ( tr.refdef.num_dlights > MAX_DLIGHTS ) {
+		tr.refdef.num_dlights = MAX_DLIGHTS;
+	}
+
+	tr.refdef.dlightBits = ( 1 << tr.refdef.num_dlights ) - 1;
+#else
 	int i, numDlights, dlightBits;
 	dlight_t    *dl;
 
@@ -92,6 +99,7 @@ void R_CullDlights( void ) {
 
 	/* set bits */
 	tr.refdef.dlightBits = dlightBits;
+#endif
 }
 
 /*

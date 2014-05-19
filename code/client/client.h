@@ -105,7 +105,6 @@ typedef struct {
 typedef struct {
 	int			mouseDx[2], mouseDy[2];	// added to by mouse events
 	int			mouseIndex;
-	int			mouseFlags;				// MOUSE_CGAME, MOUSE_CLIENT, ...
 
 } calc_t;
 
@@ -192,6 +191,8 @@ typedef struct {
 	vec3_t		viewAngles[CL_MAX_SPLITVIEW];		// used so cgame can save view angles across vid_restart
 
 	int			challenge;					// from the server to use for connecting
+
+	int			desiredPlayerBits;			// bits for desired local players when connecting
 
 	// these are our reliable messages that go to the server
 	int			reliableSequence;
@@ -337,6 +338,7 @@ typedef struct {
 	qboolean	soundRegistered;
 	qboolean	cgameStarted;
 
+	qboolean	enteredMenu;
 	qboolean	printToCgame;			// enabled after restoring console text to cgame
 	bspFile_t	*cgameBsp;
 
@@ -512,6 +514,7 @@ char *Key_KeynumToString (int keynum);
 
 int Mouse_GetState( int localClientNum );
 void Mouse_SetState( int localClientNum, int state );
+void Mouse_ClearStates( void );
 
 //
 // cl_parse.c
@@ -579,11 +582,12 @@ void CL_InitCGame( void );
 void CL_ShutdownCGame( void );
 void CL_GameCommand( void );
 void CL_CGameRendering( stereoFrame_t stereo );
+void CL_ShowMainMenu( void );
 void CL_SetCGameTime( void );
 void CL_FirstSnapshot( void );
 void CL_ShaderStateChanged(void);
-int Key_GetCatcher( void );
-void Key_SetCatcher( int catcher );
+qboolean Key_GetRepeat( void );
+void Key_SetRepeat( qboolean repeat );
 void LAN_LoadCachedServers( void );
 void LAN_SaveServersToCache( void );
 

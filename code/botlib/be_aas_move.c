@@ -61,7 +61,7 @@ aas_settings_t aassettings;
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-int AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs)
+int AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask)
 {
 	vec3_t end;
 	bsp_trace_t trace;
@@ -72,7 +72,7 @@ int AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs)
 
 	VectorCopy(origin, end);
 	end[2] -= 4096;
-	trace = AAS_Trace(origin, mins, maxs, end, 0, CONTENTS_SOLID);
+	trace = AAS_Trace(origin, mins, maxs, end, passent, contentmask);
 	if (trace.startsolid) {
 		origin[2] -= 1;
 		return qfalse;
@@ -198,7 +198,7 @@ int AAS_AgainstLadder(vec3_t origin)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-int AAS_OnGround(vec3_t origin, int presencetype, int passent)
+int AAS_OnGround(vec3_t origin, int presencetype, int passent, int contentmask)
 {
 	aas_trace_t trace;
 	vec3_t end, up = {0, 0, 1};
@@ -207,7 +207,7 @@ int AAS_OnGround(vec3_t origin, int presencetype, int passent)
 	VectorCopy(origin, end);
 	end[2] -= 10;
 
-	trace = AAS_TraceClientBBox(origin, end, presencetype, passent);
+	trace = AAS_TraceClientBBox(origin, end, presencetype, passent, contentmask);
 
 	//if in solid
 	if (trace.startsolid) return qfalse;
@@ -269,7 +269,7 @@ void AAS_SetMovedir(vec3_t angles, vec3_t movedir)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void AAS_JumpReachRunStart(aas_reachability_t *reach, vec3_t runstart)
+void AAS_JumpReachRunStart(aas_reachability_t *reach, vec3_t runstart, int contentmask)
 {
 	vec3_t hordir, start, cmdmove;
 	aas_clientmove_t move;
@@ -288,7 +288,7 @@ void AAS_JumpReachRunStart(aas_reachability_t *reach, vec3_t runstart)
 	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue,
 								vec3_origin, cmdmove, 1, 2, 0.1f,
 								SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|
-								SE_HITGROUNDDAMAGE|SE_GAP, 0, qfalse);
+								SE_HITGROUNDDAMAGE|SE_GAP, 0, qfalse, contentmask);
 	VectorCopy(move.endpos, runstart);
 	//don't enter slime or lava and don't fall from too high
 	if (move.stopevent & (SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE))
@@ -303,7 +303,7 @@ void AAS_JumpReachRunStart(aas_reachability_t *reach, vec3_t runstart)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-float AAS_WeaponJumpZVelocity(vec3_t origin, float radiusdamage)
+float AAS_WeaponJumpZVelocity(vec3_t origin, float radiusdamage, int contentmask)
 {
 	vec3_t kvel, v, start, end, forward, right, viewangles, dir;
 	float	mass, knockback, points;
@@ -326,7 +326,7 @@ float AAS_WeaponJumpZVelocity(vec3_t origin, float radiusdamage)
 	//end point of the trace
 	VectorMA(start, 500, forward, end);
 	//trace a line to get the impact point
-	bsptrace = AAS_Trace(start, NULL, NULL, end, 1, CONTENTS_SOLID);
+	bsptrace = AAS_Trace(start, NULL, NULL, end, 1, contentmask);
 	//calculate the damage the bot will get from the rocket impact
 	VectorAdd(botmins, botmaxs, v);
 	VectorMA(origin, 0.5, v, v);
@@ -354,10 +354,10 @@ float AAS_WeaponJumpZVelocity(vec3_t origin, float radiusdamage)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-float AAS_RocketJumpZVelocity(vec3_t origin)
+float AAS_RocketJumpZVelocity(vec3_t origin, int contentmask)
 {
 	//rocket radius damage is 120 (p_weapon.c: Weapon_RocketLauncher_Fire)
-	return AAS_WeaponJumpZVelocity(origin, 120);
+	return AAS_WeaponJumpZVelocity(origin, 120, contentmask);
 } //end of the function AAS_RocketJumpZVelocity
 //===========================================================================
 //
@@ -365,10 +365,10 @@ float AAS_RocketJumpZVelocity(vec3_t origin)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-float AAS_BFGJumpZVelocity(vec3_t origin)
+float AAS_BFGJumpZVelocity(vec3_t origin, int contentmask)
 {
 	//bfg radius damage is 1000 (p_weapon.c: weapon_bfg_fire)
-	return AAS_WeaponJumpZVelocity(origin, 120);
+	return AAS_WeaponJumpZVelocity(origin, 120, contentmask);
 } //end of the function AAS_BFGJumpZVelocity
 //===========================================================================
 // applies ground friction to the given velocity
@@ -522,6 +522,7 @@ int AAS_ClipToBBox(aas_trace_t *trace, vec3_t start, vec3_t end, int presencetyp
 //						frametime		: duration of one predicted frame
 //						stopevent		: events that stop the prediction
 //						stopareanum		: stop as soon as entered this area
+//						contentmask		: trace movement using this contentmask
 // Returns:				aas_clientmove_t
 // Changes Globals:		-
 //===========================================================================
@@ -532,7 +533,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 								int cmdframes,
 								int maxframes, float frametime,
 								int stopevent, int stopareanum,
-								vec3_t mins, vec3_t maxs, int visualize)
+								vec3_t mins, vec3_t maxs, int visualize, int contentmask)
 {
 	float phys_friction, phys_stopspeed, phys_gravity, phys_waterfriction;
 	float phys_watergravity;
@@ -676,7 +677,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 		{
 			VectorAdd(org, left_test_vel, end);
 			//trace a bounding box
-			trace = AAS_TraceClientBBox(org, end, presencetype, entnum);
+			trace = AAS_TraceClientBBox(org, end, presencetype, entnum, contentmask);
 			//
 //#ifdef AAS_MOVE_DEBUG
 			if (visualize)
@@ -813,7 +814,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 					VectorMA(org, -0.25, plane->normal, start);
 					VectorCopy(start, stepend);
 					start[2] += phys_maxstep;
-					steptrace = AAS_TraceClientBBox(start, stepend, presencetype, entnum);
+					steptrace = AAS_TraceClientBBox(start, stepend, presencetype, entnum, contentmask);
 					//
 					if (!steptrace.startsolid)
 					{
@@ -937,7 +938,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 			} //end if
 		} //end if
 		//
-		onground = AAS_OnGround(org, presencetype, entnum);
+		onground = AAS_OnGround(org, presencetype, entnum, contentmask);
 		//if onground and on the ground for at least one whole frame
 		if (onground)
 		{
@@ -975,7 +976,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 			VectorCopy(org, start);
 			VectorCopy(start, end);
 			end[2] -= 48 + aassettings.phys_maxbarrier;
-			gaptrace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, -1);
+			gaptrace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, -1, contentmask);
 			//if solid is found the bot cannot walk any further and will not fall into a gap
 			if (!gaptrace.startsolid)
 			{
@@ -1023,13 +1024,13 @@ int AAS_PredictClientMovement(struct aas_clientmove_s *move,
 								vec3_t velocity, vec3_t cmdmove,
 								int cmdframes,
 								int maxframes, float frametime,
-								int stopevent, int stopareanum, int visualize)
+								int stopevent, int stopareanum, int visualize, int contentmask)
 {
 	vec3_t mins, maxs;
 	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground,
 										velocity, cmdmove, cmdframes, maxframes,
 										frametime, stopevent, stopareanum,
-										mins, maxs, visualize);
+										mins, maxs, visualize, contentmask);
 } //end of the function AAS_PredictClientMovement
 //===========================================================================
 //
@@ -1043,12 +1044,12 @@ int AAS_ClientMovementHitBBox(struct aas_clientmove_s *move,
 								vec3_t velocity, vec3_t cmdmove,
 								int cmdframes,
 								int maxframes, float frametime,
-								vec3_t mins, vec3_t maxs, int visualize)
+								vec3_t mins, vec3_t maxs, int visualize, int contentmask)
 {
 	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground,
 										velocity, cmdmove, cmdframes, maxframes,
 										frametime, SE_HITBOUNDINGBOX, 0,
-										mins, maxs, visualize);
+										mins, maxs, visualize, contentmask);
 } //end of the function AAS_ClientMovementHitBBox
 //===========================================================================
 //
@@ -1056,7 +1057,7 @@ int AAS_ClientMovementHitBBox(struct aas_clientmove_s *move,
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir)
+void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir, int contentmask)
 {
 	vec3_t velocity, cmdmove;
 	aas_clientmove_t move;
@@ -1068,7 +1069,7 @@ void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir)
 	cmdmove[2] = 224;
 	AAS_ClearShownDebugLines();
 	AAS_PredictClientMovement(&move, entnum, origin, PRESENCE_NORMAL, qtrue,
-									velocity, cmdmove, 13, 13, 0.1f, SE_HITGROUND, 0, qtrue);//SE_LEAVEGROUND);
+									velocity, cmdmove, 13, 13, 0.1f, SE_HITGROUND, 0, qtrue, contentmask);//SE_LEAVEGROUND);
 	if (move.stopevent & SE_LEAVEGROUND)
 	{
 		botimport.Print(PRT_MESSAGE, "leave ground\n");

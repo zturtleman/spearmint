@@ -966,6 +966,9 @@ void RB_CalcFogTexCoords( float *st ) {
 	}
 
 	if ( tess.shader->isSky ) {
+		fog = NULL;
+		bmodel = NULL;
+
 		fogType = tr.skyFogType;
 		tcScale = tr.skyFogTcScale;
 	} else {

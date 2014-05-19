@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define	GAME_API_MAJOR_VERSION	0
-#define	GAME_API_MINOR_VERSION	5
+#define	GAME_API_MINOR_VERSION	6
 
 
 // entity->svFlags

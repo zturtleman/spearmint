@@ -1236,7 +1236,7 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 						   !FS_IsExt(filename, ".bot", len) &&
 						   !FS_IsExt(filename, ".arena", len) &&
 						   !FS_IsExt(filename, ".menu", len) &&
-						   Q_stricmp(filename, "vm/game.qvm") != 0 &&
+						   Q_stricmp(filename, "vm/" VM_PREFIX "game.qvm") != 0 &&
 						   !strstr(filename, "levelshots"))
 						{
 							pak->referenced = qtrue;
@@ -3606,7 +3606,7 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config, const char *gameDir, qb
 	}
 #endif
 
-	Q_strncpyz( path, "mint-game.settings", sizeof (path) );
+	Q_strncpyz( path, GAMESETTINGS, sizeof (path) );
 	len = FS_ReadFileFromGameDir( path, &buffer.v, gameDir );
 
 	if ( len <= 0 ) {
@@ -4147,7 +4147,7 @@ static void FS_CheckPaks( qboolean quiet )
 		if ( !fs_foundPaksums ) {
 			// no PAKSUMS files found in search paths
 			Q_strncpyz( line1, "Missing file containing Pk3 checksums.", sizeof ( line1 ) );
-			Com_sprintf( line2, sizeof (line2), "You need a %s%cmint-game.settings file to enable pure mode.", fs_gamedir, PATH_SEP );
+			Com_sprintf( line2, sizeof (line2), "You need a %s%c%s file to enable pure mode.", fs_gamedir, PATH_SEP, GAMESETTINGS );
 		} else if ( !fs_numPaksums ) {
 			// only empty PAKSUMS files found, probably game under development or doesn't want pure mode
 			Com_Printf( "No Pk3 checksums found, disabling pure mode.\n");

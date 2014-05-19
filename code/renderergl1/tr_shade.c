@@ -1387,11 +1387,11 @@ void SetIteratorFog( void ) {
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
 	int stage;
-	qboolean overridealpha;
-	int oldAlphaGen;
-	int oldStateBits;
-	qboolean overridecolor;
-	int oldRgbGen;
+	qboolean overridealpha = qfalse;
+	int oldAlphaGen = AGEN_IDENTITY;
+	int oldStateBits = 0;
+	qboolean overridecolor = qfalse;
+	int oldRgbGen = CGEN_IDENTITY;
 
 	for ( stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{

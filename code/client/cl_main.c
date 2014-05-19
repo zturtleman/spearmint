@@ -1283,7 +1283,6 @@ Closing the main menu will restart the demo loop
 void CL_StartDemoLoop( void ) {
 	// start the demo loop again
 	Cbuf_AddText ("d1\n");
-	Key_SetCatcher( 0 );
 }
 
 /*
@@ -1450,6 +1449,25 @@ void CL_FlushMemory(void)
 }
 
 /*
+=================
+CL_SetChallenging
+
+Set state to challenging
+=================
+*/
+void CL_SetChallenging( void ) {
+	if ( clc.state == CA_CHALLENGING ) {
+		return;
+	}
+
+	clc.state = CA_CHALLENGING;
+	clc.desiredPlayerBits = Com_Clamp(1, (1<<CL_MAX_SPLITVIEW)-1, Cvar_VariableIntegerValue("cl_localPlayers"));
+
+	// Reset the desired local players bits (must set each time before joining)
+	Cvar_Set("cl_localPlayers", "1");
+}
+
+/*
 =====================
 CL_MapLoading
 
@@ -1461,7 +1479,6 @@ memory on the hunk from cgame and renderer
 void CL_MapLoading( void ) {
 	if ( com_dedicated->integer ) {
 		clc.state = CA_DISCONNECTED;
-		Key_SetCatcher( KEYCATCH_CONSOLE );
 		return;
 	}
 
@@ -1470,7 +1487,6 @@ void CL_MapLoading( void ) {
 	}
 
 	Con_Close();
-	Key_SetCatcher( 0 );
 
 	// if we are already connected to the local host, stay connected
 	if ( clc.state >= CA_CONNECTED && !Q_stricmp( clc.servername, "localhost" ) ) {
@@ -1485,8 +1501,7 @@ void CL_MapLoading( void ) {
 		Cvar_Set( "nextmap", "" );
 		CL_Disconnect( qtrue );
 		Q_strncpyz( clc.servername, "localhost", sizeof(clc.servername) );
-		clc.state = CA_CHALLENGING;		// so the connect screen is drawn
-		Key_SetCatcher( 0 );
+		CL_SetChallenging();		// so the connect screen is drawn
 		SCR_UpdateScreen();
 		clc.connectTime = -RETRANSMIT_TIMEOUT;
 		NET_StringToAdr( clc.servername, &clc.serverAddress, NA_UNSPEC);
@@ -1638,7 +1653,7 @@ void CL_Disconnect( qboolean showMainMenu ) {
 	}
 
 	if ( cgvm && showMainMenu ) {
-		VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_NONE );
+		CL_ShowMainMenu();
 	}
 
 	S_ClearSoundBuffer();
@@ -1912,7 +1927,7 @@ void CL_Connect_f( void ) {
 
 	// if we aren't playing on a lan, send challenge to prevent connection hijacking
 	if(NET_IsLocalAddress(clc.serverAddress))
-		clc.state = CA_CHALLENGING;
+		CL_SetChallenging();
 	else
 	{
 		clc.state = CA_CONNECTING;
@@ -1921,7 +1936,6 @@ void CL_Connect_f( void ) {
 		clc.challenge = ((rand() << 16) ^ rand()) ^ Com_Milliseconds();
 	}
 
-	Key_SetCatcher( 0 );
 	clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
 	clc.connectPacketCount = 0;
 
@@ -2392,7 +2406,6 @@ Resend a connect message if the last one has timed out
 void CL_CheckForResend( void ) {
 	int		port, i;
 	int		size, j;
-	int		localClients;
 	int		protocol;
 	char	info[MAX_INFO_STRING];
 	char	data[MAX_INFO_STRING*CL_MAX_SPLITVIEW];
@@ -2442,14 +2455,8 @@ void CL_CheckForResend( void ) {
 		strcpy(data, "connect ");
 		size = 8;
 
-		// Check how many local client user wants
-		localClients = Com_Clamp(1, (1<<CL_MAX_SPLITVIEW)-1, Cvar_VariableIntegerValue("cl_localClients"));
-
-		// Reset cl_localClients (set before each join)
-		Cvar_Set("cl_localClients", "1");
-
 		for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
-			if (!(localClients & (1<<(i)))) {
+			if (!(clc.desiredPlayerBits & (1<<(i)))) {
 				// Dummy string.
 				data[size] = '"'; size++;
 				data[size] = '"'; size++;
@@ -2748,7 +2755,7 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 
 		// start sending challenge response instead of challenge request packets
 		clc.challenge = atoi(Cmd_Argv(1));
-		clc.state = CA_CHALLENGING;
+		CL_SetChallenging();
 		clc.connectPacketCount = 0;
 		clc.connectTime = -99999;
 
@@ -3011,11 +3018,11 @@ void CL_Frame ( int msec ) {
 	}
 #endif
 
-	if ( clc.state == CA_DISCONNECTED && !( Key_GetCatcher( ) & KEYCATCH_UI_CGAME )
+	if ( clc.state == CA_DISCONNECTED && !cls.enteredMenu
 		&& !com_sv_running->integer && cgvm ) {
 		// if disconnected, bring up the menu
 		S_StopAllSounds();
-		VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_MAIN );
+		CL_ShowMainMenu();
 	}
 
 	// if recording an avi, lock to a fixed fps
@@ -3524,8 +3531,8 @@ void CL_Init( void ) {
 
 	cl_loadingScreenIndex = Cvar_Get( "cl_loadingScreenIndex", "0", CVAR_ARCHIVE );
 
-	// select which local client (using bits) should join a server on connect
-	Cvar_Get ("cl_localClients", "1", 0 );
+	// select which local players (using bits) should join a server on connect
+	Cvar_Get ("cl_localPlayers", "1", 0 );
 
 	// userinfo
 	cl_rate = Cvar_Get ("rate", "25000", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
@@ -3677,7 +3684,6 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 	recursive = qfalse;
 
 	Com_Memset( &cls, 0, sizeof( cls ) );
-	Key_SetCatcher( 0 );
 
 	Com_Printf( "-----------------------\n" );
 

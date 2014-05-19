@@ -770,7 +770,7 @@ qboolean FS_Which(const char *filename, void *searchPath);
 /*
 ==============================================================
 
-Game config, loaded from mint-game.settings
+Game config, loaded from mint-game.settings (see GAMESETTINGS define)
 
 ==============================================================
 */

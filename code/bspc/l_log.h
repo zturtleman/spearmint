@@ -44,7 +44,3 @@ void Log_WriteTimeStamped(char *fmt, ...) __attribute__ ((format (printf, 1, 2))
 FILE *Log_FileStruct(void);
 //flush log file
 void Log_Flush(void);
-
-#ifdef WINBSPC
-void WinBSPCPrint(char *str);
-#endif //WINBSPC

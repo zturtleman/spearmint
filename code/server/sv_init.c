@@ -453,7 +453,7 @@ static void SV_TouchCGame(void) {
 	fileHandle_t	f;
 	char filename[MAX_QPATH];
 
-	Com_sprintf( filename, sizeof(filename), "vm/%s.qvm", "mint-cgame" );
+	Com_sprintf( filename, sizeof(filename), "vm/%s.qvm", VM_PREFIX "cgame" );
 	FS_FOpenFileRead( filename, &f, qfalse );
 	if ( f ) {
 		FS_FCloseFile( f );
@@ -612,7 +612,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 
 			if ( svs.clients[i].netchan.remoteAddress.type == NA_BOT ) {
 				if ( killBots ) {
-					SV_DropClient( &svs.clients[i], "" );
+					SV_DropClient( &svs.clients[i], NULL );
 					continue;
 				}
 				isBot = qtrue;
@@ -658,7 +658,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 				client->deltaMessage = -1;
 				client->lastSnapshotTime = 0;	// generate a snapshot immediately
 
-				VM_Call( gvm, GAME_CLIENT_BEGIN, i );
+				VM_Call( gvm, GAME_CLIENT_BEGIN, client->localPlayers[0] - svs.players );
 			}
 		}
 	}	

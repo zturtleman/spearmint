@@ -720,6 +720,7 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 		}
 
 		fog = NULL;
+		bmodel = NULL;
 		tcScale = tr.skyFogTcScale;
 	} else {
 		fog = tr.world->fogs + tess.fogNum;
@@ -1197,11 +1198,11 @@ static unsigned int RB_CalcShaderVertexAttribs( shaderCommands_t *input )
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
 	int stage;
-	qboolean overridealpha;
-	int oldAlphaGen;
-	int	oldStateBits;
-	qboolean overridecolor;
-	int oldRgbGen;
+	qboolean overridealpha = qfalse;
+	int oldAlphaGen = AGEN_IDENTITY;
+	int oldStateBits = 0;
+	qboolean overridecolor = qfalse;
+	int oldRgbGen = CGEN_IDENTITY;
 	
 	vec4_t fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
 	float eyeT = 0;

@@ -130,12 +130,13 @@ fi
 AVAILABLE_ARCHS=""
 
 IOQ3_VERSION=`grep '^VERSION=' Makefile | sed -e 's/.*=\(.*\)/\1/'`
+IOQ3_RENDERER_PREFIX=`grep '^RENDERER_PREFIX=' Makefile | sed -e 's/.*=\(.*\)/\1/'`
 IOQ3_CLIENT_ARCHS=""
 IOQ3_SERVER_ARCHS=""
 IOQ3_RENDERER_GL1_ARCHS=""
 IOQ3_RENDERER_GL2_ARCHS=""
 
-RENDERER_OPENGL="mint-renderer-opengl"
+RENDERER_OPENGL="${IOQ3_RENDERER_PREFIX}opengl"
 
 EXECUTABLE_NAME="spearmint"
 DEDICATED_NAME="spearmint-server"

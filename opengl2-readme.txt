@@ -23,36 +23,12 @@ compatibility with existing Quake 3 mods.
 
 
 -------------------------------------------------------------------------------
-  INSTALLATION
--------------------------------------------------------------------------------
-
-For *nix:
-
-1. This should be identical to installing ioq3.  Check their README for more
-   details.
-
-   
-For Win32:
-
-1. Have a Quake 3 install, fully patched.
-
-2. Copy the following files into Quake 3's install directory: 
-     
-     ioquake3.x86.exe
-     renderer_opengl1_x86.dll
-     renderer_opengl2_x86.dll
-     
-   These can be found in build/release-mingw32-x86 after compiling, or bug
-   someone to release binaries.
-  
-
--------------------------------------------------------------------------------
   RUNNING
 -------------------------------------------------------------------------------
 
-1. Start ioquake3. (ioquake3.x86.exe on Win32)
+1. Start Spearmint. (spearmint_x86.exe on Win32)
  
-2. Open the console (default key ~) and type '/cl_renderer opengl2; vid_restart'
+2. Open the console (default key ~) and type 'com_renderer opengl2; vid_restart'
 
 3. Enjoy.
 

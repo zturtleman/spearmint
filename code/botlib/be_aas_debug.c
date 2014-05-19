@@ -581,6 +581,7 @@ void AAS_ShowReachability(aas_reachability_t *reach)
 	vec3_t dir, cmdmove, velocity;
 	float speed, zvel;
 	aas_clientmove_t move;
+	int contentmask = BOTMASK_SOLID; // ZTM: FIXME: Get contentmask from Game VM!
 
 	AAS_ShowAreaPolygons(reach->areanum, 5, qtrue);
 	//AAS_ShowArea(reach->areanum, qtrue);
@@ -603,17 +604,18 @@ void AAS_ShowReachability(aas_reachability_t *reach)
 		AAS_PredictClientMovement(&move, -1, reach->start, PRESENCE_NORMAL, qtrue,
 									velocity, cmdmove, 3, 30, 0.1f,
 									SE_HITGROUND|SE_ENTERWATER|SE_ENTERSLIME|
-									SE_ENTERLAVA|SE_HITGROUNDDAMAGE, 0, qtrue);
+									SE_ENTERLAVA|SE_HITGROUNDDAMAGE,
+									0, qtrue, contentmask);
 		//
 		if ((reach->traveltype & TRAVELTYPE_MASK) == TRAVEL_JUMP)
 		{
-			AAS_JumpReachRunStart(reach, dir);
+			AAS_JumpReachRunStart(reach, dir, contentmask);
 			AAS_DrawCross(dir, 4, LINECOLOR_BLUE);
 		} //end if
 	} //end if
 	else if ((reach->traveltype & TRAVELTYPE_MASK) == TRAVEL_ROCKETJUMP)
 	{
-		zvel = AAS_RocketJumpZVelocity(reach->start);
+		zvel = AAS_RocketJumpZVelocity(reach->start, contentmask);
 		AAS_HorizontalVelocityForJump(zvel, reach->start, reach->end, &speed);
 		//
 		VectorSubtract(reach->end, reach->start, dir);
@@ -627,7 +629,8 @@ void AAS_ShowReachability(aas_reachability_t *reach)
 									velocity, cmdmove, 30, 30, 0.1f,
 									SE_ENTERWATER|SE_ENTERSLIME|
 									SE_ENTERLAVA|SE_HITGROUNDDAMAGE|
-									SE_TOUCHJUMPPAD|SE_HITGROUNDAREA, reach->areanum, qtrue);
+									SE_TOUCHJUMPPAD|SE_HITGROUNDAREA,
+									reach->areanum, qtrue, contentmask);
 	} //end else if
 	else if ((reach->traveltype & TRAVELTYPE_MASK) == TRAVEL_JUMPPAD)
 	{
@@ -646,7 +649,8 @@ void AAS_ShowReachability(aas_reachability_t *reach)
 									velocity, cmdmove, 30, 30, 0.1f,
 									SE_ENTERWATER|SE_ENTERSLIME|
 									SE_ENTERLAVA|SE_HITGROUNDDAMAGE|
-									SE_TOUCHJUMPPAD|SE_HITGROUNDAREA, reach->areanum, qtrue);
+									SE_TOUCHJUMPPAD|SE_HITGROUNDAREA,
+									reach->areanum, qtrue, contentmask);
 	} //end else if
 } //end of the function AAS_ShowReachability
 //===========================================================================

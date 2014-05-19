@@ -2010,7 +2010,7 @@ int AAS_NextModelReachability(int num, int modelnum)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-int AAS_RandomGoalArea(int areanum, int travelflags, int *goalareanum, vec3_t goalorigin)
+int AAS_RandomGoalArea(int areanum, int travelflags, int contentmask, int *goalareanum, vec3_t goalorigin)
 {
 	int i, n, t;
 	vec3_t start, end;
@@ -2042,7 +2042,7 @@ int AAS_RandomGoalArea(int areanum, int travelflags, int *goalareanum, vec3_t go
 					Log_Write("area %d center %f %f %f in solid?", n, start[0], start[1], start[2]);
 				VectorCopy(start, end);
 				end[2] -= 300;
-				trace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, -1);
+				trace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, -1, contentmask);
 				if (!trace.startsolid && trace.fraction < 1 && AAS_PointAreaNum(trace.endpos) == n)
 				{
 					if (AAS_AreaGroundFaceArea(n) > 300)

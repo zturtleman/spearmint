@@ -3066,14 +3066,14 @@ void Com_InitRef( refimport_t *ri ) {
 		Cvar_ForceReset( "com_renderer" );
 	}
 
-	Com_sprintf(dllName, sizeof(dllName), "mint-renderer-%s_" ARCH_STRING DLL_EXT, com_renderer->string);
+	Com_sprintf(dllName, sizeof(dllName), RENDERER_PREFIX "%s_" ARCH_STRING DLL_EXT, com_renderer->string);
 
 	if(!(rendererLib = Sys_LoadDll(dllName, qfalse)) && strcmp(com_renderer->string, com_renderer->resetString))
 	{
 		Com_Printf("failed:\n\"%s\"\n", Sys_LibraryError());
 		Cvar_ForceReset("com_renderer");
 
-		Com_sprintf(dllName, sizeof(dllName), "mint-renderer-opengl1_" ARCH_STRING DLL_EXT);
+		Com_sprintf(dllName, sizeof(dllName), RENDERER_PREFIX "opengl1_" ARCH_STRING DLL_EXT);
 		rendererLib = Sys_LoadDll(dllName, qfalse);
 	}
 
