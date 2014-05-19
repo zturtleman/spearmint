@@ -1,9 +1,12 @@
 language: c
-compiler:
-  - gcc
-  - clang
-  - i686-w64-mingw32-gcc
-  - x86_64-w64-mingw32-gcc
+
+env:
+  # standard builds
+  - CC=gcc
+  - CC=clang
+  # cross-compile using mingw
+  - CC= PLATFORM="mingw32" ARCH="x86"
+  - CC= PLATFORM="mingw32" ARCH="x86_64"
 
 script: ./travis-ci-build.sh
 
