@@ -896,7 +896,7 @@ static void IN_ProcessEvents( void )
 		switch( e.type )
 		{
 			case SDL_KEYDOWN:
-				if ( e.key.repeat && Key_GetCatcher( ) == 0 )
+				if ( e.key.repeat && Key_GetRepeat( ) == qfalse )
 					break;
 
 				if( ( key = IN_TranslateSDLToQ3Key( &e.key.keysym, qtrue ) ) )
