@@ -1067,7 +1067,7 @@ void IN_Frame( void )
 		// Loading in windowed mode
 		IN_DeactivateMouse( qtrue );
 	}
-	else if( !Cvar_VariableIntegerValue("r_fullscreen") && !mouseGrab )
+	else if( !cls.glconfig.isFullscreen && !mouseGrab )
 	{
 		// Showing cursor in windowed mode
 		IN_DeactivateMouse( qfalse );
