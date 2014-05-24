@@ -1156,6 +1156,14 @@ typedef enum {
 	TT_NUM_TRACE_TYPES
 } traceType_t;
 
+typedef enum {
+	CT_AABB,
+	CT_CAPSULE,
+	CT_SUBMODEL,
+
+	CT_NUM_COLLISION_TYPES
+} collisionType_t;
+
 // a trace is returned when a box is swept through the world
 typedef struct {
 	qboolean	allsolid;	// if true, plane is not valid
@@ -1303,11 +1311,9 @@ typedef struct sharedEntityState_s {
 	int		contents;		// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
 							// a non-solid entity should set to 0
 
-	qboolean	capsule;	// if true, use capsule instead of bbox for clipping against this ent
-
-	qboolean	bmodel;		// if true, modelindex is an inline model number
-							// if false, assume an explicit mins / maxs bounding box
-							// only set by trap_SetBrushModel
+	collisionType_t	collisionType;	// if CT_SUBMODEL, modelindex is an inline model number. only set by trap_SetBrushModel
+									// if CT_CAPSULE, use capsule instead of bbox for clipping against this ent
+									// else (CT_AABB), assume an explicit mins / maxs bounding box
 
 	int		modelindex;
 

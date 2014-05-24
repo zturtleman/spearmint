@@ -41,13 +41,13 @@ be returned, otherwise a custom box tree or capsule will be constructed.
 ================
 */
 clipHandle_t SV_ClipHandleForEntity( const sharedEntity_t *ent ) {
-	if ( ent->s.bmodel ) {
+	if ( ent->s.collisionType == CT_SUBMODEL ) {
 		// explicit hulls in the BSP model
 		return CM_InlineModel( ent->s.modelindex );
 	}
 
 	// create a temp tree or capsule from bounding box sizes
-	return CM_TempBoxModel( ent->s.mins, ent->s.maxs, ent->s.capsule, ent->s.contents );
+	return CM_TempBoxModel( ent->s.mins, ent->s.maxs, ent->s.collisionType, ent->s.contents );
 }
 
 
@@ -234,7 +234,7 @@ void SV_LinkEntity( sharedEntity_t *gEnt ) {
 	angles = gEnt->r.currentAngles;
 
 	// set the abs box
-	if ( gEnt->s.bmodel && (angles[0] || angles[1] || angles[2]) ) {
+	if ( gEnt->s.collisionType == CT_SUBMODEL && (angles[0] || angles[1] || angles[2]) ) {
 		// expand for rotation
 		float		max;
 
@@ -439,7 +439,7 @@ typedef struct {
 	trace_t		trace;
 	int			passEntityNum;
 	int			contentmask;
-	traceType_t	collisionType;
+	traceType_t	traceType;
 } moveclip_t;
 
 
@@ -471,7 +471,7 @@ void SV_ClipToEntity( trace_t *trace, const vec3_t start, const vec3_t mins, con
 	origin = touch->r.currentOrigin;
 	angles = touch->r.currentAngles;
 
-	if ( !touch->s.bmodel ) {
+	if ( touch->s.collisionType != CT_SUBMODEL ) {
 		angles = vec3_origin;	// boxes don't rotate
 	}
 
@@ -548,13 +548,13 @@ static void SV_ClipMoveToEntities( moveclip_t *clip ) {
 		angles = touch->r.currentAngles;
 
 
-		if ( !touch->s.bmodel ) {
+		if ( touch->s.collisionType != CT_SUBMODEL ) {
 			angles = vec3_origin;	// boxes don't rotate
 		}
 
 		CM_TransformedBoxTrace ( &trace, (float *)clip->start, (float *)clip->end,
 			(float *)clip->mins, (float *)clip->maxs, clipHandle,  clip->contentmask,
-			origin, angles, clip->collisionType);
+			origin, angles, clip->traceType);
 
 		if ( trace.allsolid ) {
 			clip->trace.allsolid = qtrue;
@@ -614,7 +614,7 @@ void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const ve
 	clip.mins = mins;
 	clip.maxs = maxs;
 	clip.passEntityNum = passEntityNum;
-	clip.collisionType = type;
+	clip.traceType = type;
 
 	// create the bounding box of the entire move
 	// we can limit it to the part of the move not
@@ -669,7 +669,7 @@ void SV_ClipToEntities( trace_t *results, const vec3_t start, const vec3_t mins,
 	clip.mins = mins;
 	clip.maxs = maxs;
 	clip.passEntityNum = passEntityNum;
-	clip.collisionType = type;
+	clip.traceType = type;
 
 	// create the bounding box of the entire move
 	// we can limit it to the part of the move not
@@ -726,7 +726,7 @@ int SV_PointContents( const vec3_t p, int passEntityNum ) {
 		}
 
 		angles = hit->r.currentAngles;
-		if ( !hit->s.bmodel ) {
+		if ( hit->s.collisionType != CT_SUBMODEL ) {
 			angles = vec3_origin;	// boxes don't rotate
 		}
 

@@ -143,7 +143,7 @@ void SV_SetBrushModel( sharedEntity_t *ent, const char *name ) {
 	CM_ModelBounds( h, mins, maxs );
 	VectorCopy (mins, ent->s.mins);
 	VectorCopy (maxs, ent->s.maxs);
-	ent->s.bmodel = qtrue;
+	ent->s.collisionType = CT_SUBMODEL;
 
 	ent->s.contents = -1;		// we don't know exactly what is in the brushes
 
