@@ -130,6 +130,7 @@ typedef struct {
 #define AS_LOCAL			0
 #define AS_FAVORITES		1
 #define AS_GLOBAL			2
+#define AS_NUM_SOURCES		3
 
 typedef enum {
 	DS_NONE,

@@ -4364,7 +4364,7 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 	int			max;
 	qboolean status = qfalse;
 
-	if (source < 0 || source > AS_FAVORITES) {
+	if (source < 0 || source >= AS_NUM_SOURCES) {
 		return qfalse;
 	}
 
