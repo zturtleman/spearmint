@@ -1842,7 +1842,7 @@ static qboolean SV_ShouldIgnoreVoipSender(const client_t *cl, int localPlayerNum
 		return qtrue;  // VoIP disabled on this server.
 	else if (!cl->hasVoip)  // client doesn't have VoIP support?!
 		return qtrue;
-	else if (localPlayerNum >= MAX_SPLITVIEW || !cl->localPlayers[localPlayerNum])
+	else if (localPlayerNum < 0 || localPlayerNum >= MAX_SPLITVIEW || !cl->localPlayers[localPlayerNum])
 		return qtrue; // local player doesn't exist
 
 	// !!! FIXME: implement player blacklist.
