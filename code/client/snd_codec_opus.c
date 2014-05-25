@@ -126,7 +126,7 @@ int S_OggOpus_Callback_seek(void *datasource, opus_int64 offset, int whence)
 			retVal = FS_Seek(stream->file, (long) offset, FS_SEEK_SET);
 
 			// something has gone wrong, so we return here
-			if(retVal < 0)
+			if(retVal != 0)
 			{
 			 return retVal;
 			}
@@ -142,7 +142,7 @@ int S_OggOpus_Callback_seek(void *datasource, opus_int64 offset, int whence)
 			retVal = FS_Seek(stream->file, (long) offset, FS_SEEK_CUR);
 
 			// something has gone wrong, so we return here
-			if(retVal < 0)
+			if(retVal != 0)
 			{
 			 return retVal;
 			}
@@ -158,7 +158,7 @@ int S_OggOpus_Callback_seek(void *datasource, opus_int64 offset, int whence)
 			retVal = FS_Seek(stream->file, (long) offset, FS_SEEK_END);
 
 			// something has gone wrong, so we return here
-			if(retVal < 0)
+			if(retVal != 0)
 			{
 			 return retVal;
 			}
