@@ -419,7 +419,7 @@ static qboolean SkipIfBlock( char **text, int *ifIndent, int braketLevel ) {
 		}
 		else if ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "#if" ) ) {
 			*ifIndent = *ifIndent + 1;
-			if ( *ifIndent > MAX_IF_RECURSION ) {
+			if ( *ifIndent >= MAX_IF_RECURSION ) {
 				*ifIndent = 0;
 				ri.Printf( PRINT_WARNING, "WARNING: 'if' recursion level goes too high (max %d) shader %s\n", MAX_IF_RECURSION, shader.name );
 				return 0;
@@ -459,7 +459,7 @@ static int ParseIfEndif( char **text, char *token, int *ifIndent, int braketLeve
 	if ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "#if" ) )
 	{
 		*ifIndent = *ifIndent + 1;
-		if ( *ifIndent > MAX_IF_RECURSION ) {
+		if ( *ifIndent >= MAX_IF_RECURSION ) {
 			*ifIndent = 0;
 			ri.Printf( PRINT_WARNING, "WARNING: 'if' recursion level goes too high (max %d) shader %s\n", MAX_IF_RECURSION, shader.name );
 			return 0;
