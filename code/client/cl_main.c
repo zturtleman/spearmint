@@ -1179,7 +1179,10 @@ qboolean CL_ValidDemoFile( const char *demoName, int *pProtocol, int *pLength, f
 
 	if ( pHandle ) {
 		// skip to end of header so can start reading the demo packets
-		FS_Seek ( clc.demofile, headerSize, FS_SEEK_SET );
+		if ( FS_Seek ( clc.demofile, headerSize, FS_SEEK_SET ) != 0 ) {
+			FS_FCloseFile( f );
+			f = 0;
+		}
 
 		*pHandle = f;
 	} else {
@@ -1235,7 +1238,7 @@ void CL_PlayDemo_f( void ) {
 	COM_StripExtension( arg, demoName, sizeof (demoName));
 
 	if ( !CL_ValidDemoFile( demoName, &protocol, &clc.demoLength, &clc.demofile, startTime, endTime, &runTime ) ) {
-		if ( clc.demoLength == 0 ) {
+		if ( clc.demoLength == 0 || clc.demofile == 0 ) {
 			Com_Error( ERR_DROP, "Couldn't open demo %s", demoName );
 		}
 		else if ( protocol > 0 ) {
