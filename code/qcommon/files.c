@@ -1756,6 +1756,7 @@ void QDECL FS_Printf( fileHandle_t h, const char *fmt, ... ) {
 =================
 FS_Seek
 
+Returns 0 on success and non-zero on failure
 =================
 */
 int FS_Seek( fileHandle_t f, long offset, int origin ) {
@@ -1818,7 +1819,7 @@ int FS_Seek( fileHandle_t f, long offset, int origin ) {
 		switch( origin ) {
 			case FS_SEEK_SET:
 				if ( remainder == currentPosition ) {
-					return offset;
+					return 0;
 				}
 				unzSetOffset(fsh[f].handleFiles.file.z, fsh[f].zipFilePos);
 				unzOpenCurrentFile(fsh[f].handleFiles.file.z);
@@ -1831,7 +1832,7 @@ int FS_Seek( fileHandle_t f, long offset, int origin ) {
 					remainder -= PK3_SEEK_BUFFER_SIZE;
 				}
 				FS_Read( buffer, remainder, f );
-				return offset;
+				return 0;
 
 			default:
 				Com_Error( ERR_FATAL, "Bad origin in FS_Seek" );
