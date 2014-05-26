@@ -2693,7 +2693,7 @@ static qboolean ParseShader( char **text )
 				continue;
 			}
 
-			ri.Printf( PRINT_WARNING, "WARNING: hitLocation keyword is unsupported, '%s' in '%s'\n", token, shader.name );
+			ri.Printf( PRINT_WARNING, "WARNING: hitMaterial keyword is unsupported, '%s' in '%s'\n", token, shader.name );
 		}
 		// unknown directive
 		else
