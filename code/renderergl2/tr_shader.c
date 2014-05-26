@@ -1945,6 +1945,14 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			depthTestBits = GLS_DEPTHTEST_DISABLE;
 			continue;
 		}
+		//
+		// glow
+		//
+		else if ( !Q_stricmp( token, "glow" ) )
+		{
+			ri.Printf( PRINT_WARNING, "WARNING: glow keyword is unsupported, used by '%s'\n", shader.name );
+			continue;
+		}
 		else
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: unknown parameter '%s' in shader '%s'\n", token, shader.name );
@@ -2519,6 +2527,12 @@ static qboolean ParseShader( char **text )
 		else if ( !Q_stricmp( token, "surfaceDensity" ) ) {
 			continue;
 		}
+		// lightcolor ( <red> <green> <blue> )
+		// ZTM: I think it's used by SoF2 map compiler as an alternative to q3map_lightimage
+		// Might also be used by SoF2's RMG for ambient color (if shader is sky).
+		else if ( !Q_stricmp(token, "lightcolor") ) {
+			continue;
+		}
 		// skip stuff that only q3map or the server needs
 		else if ( !Q_stricmp( token, "surfaceParm" ) ) {
 			ParseSurfaceParm( text );
@@ -2972,7 +2986,29 @@ static qboolean ParseShader( char **text )
 				continue;
 			}
 
-			ri.Printf( PRINT_WARNING, "WARNING: unsupported damageShader '%s' in '%s'\n", token, shader.name );
+			ri.Printf( PRINT_WARNING, "WARNING: damageShader keyword is unsupported, '%s' in '%s'\n", token, shader.name );
+		}
+		// hitLocation <image>
+		else if ( !Q_stricmp( token, "hitLocation" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing image for 'hitLocation' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			ri.Printf( PRINT_WARNING, "WARNING: hitLocation keyword is unsupported, '%s' in '%s'\n", token, shader.name );
+		}
+		// hitMaterial <image>
+		else if ( !Q_stricmp( token, "hitMaterial" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing image for 'hitMaterial' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			ri.Printf( PRINT_WARNING, "WARNING: hitLocation keyword is unsupported, '%s' in '%s'\n", token, shader.name );
 		}
 		// unknown directive
 		else
