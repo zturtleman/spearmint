@@ -40,6 +40,7 @@ static	shader_t		shader;
 static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS];
 static	image_t			*imageAnimations[MAX_SHADER_STAGES][NUM_TEXTURE_BUNDLES][MAX_IMAGE_ANIMATIONS];
 static	imgFlags_t		shader_picmipFlag;
+static	qboolean		stage_ignore;
 
 // these are here because they are only referenced while parsing a shader
 static char implicitMap[ MAX_QPATH ];
@@ -1662,6 +1663,33 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			continue;
 		}
 		//
+		// surfaceSprites (and settings)
+		//
+		else if ( !Q_stricmp( token, "surfaceSprites" )
+				|| !Q_stricmp( token, "ssFadeMax" )
+				|| !Q_stricmp( token, "ssFadescale" )
+				|| !Q_stricmp( token, "ssVariance" )
+				|| !Q_stricmp( token, "ssWind" )
+				|| !Q_stricmp( token, "ssWindidle" )
+				|| !Q_stricmp( token, "ssFXWeather" )
+				|| !Q_stricmp( token, "ssFXAlphaRange" )
+				|| !Q_stricmp( token, "ssFXDuration" )
+				|| !Q_stricmp( token, "ssFXGrow" )
+				|| !Q_stricmp( token, "ssHangDown" )
+				|| !Q_stricmp( token, "ssFaceup" )
+				|| !Q_stricmp( token, "ssFaceflat" )
+				|| !Q_stricmp( token, "ssGore" )
+				|| !Q_stricmp( token, "ssGoreCentral" )
+				|| !Q_stricmp( token, "ssSpurtflat" )
+				|| !Q_stricmp( token, "ssSpurt" )
+				|| !Q_stricmp( token, "ssNoOffset" )
+				)
+		{
+			ri.Printf( PRINT_WARNING, "WARNING: %s keyword is unsupported, used by '%s'\n", token, shader.name );
+			stage_ignore = qtrue;
+			continue;
+		}
+		//
 		// glow
 		//
 		else if ( !Q_stricmp( token, "glow" ) )
@@ -2129,11 +2157,13 @@ static qboolean ParseShader( char **text )
 				return qfalse;
 			}
 
+			stage_ignore = qfalse;
+
 			if ( !ParseStage( &stages[s], text, &ifIndent ) )
 			{
 				return qfalse;
 			}
-			stages[s].active = qtrue;
+			stages[s].active = !stage_ignore;
 			s++;
 
 			// Don't skip data after the }
