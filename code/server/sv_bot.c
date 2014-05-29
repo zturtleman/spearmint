@@ -145,7 +145,7 @@ void BotDrawDebugPolygons(void (*drawPoly)(int color, int numPoints, float *poin
 		if (!bot_highlightarea) bot_highlightarea = Cvar_Get("bot_highlightarea", "0", 0);
 		//
 		parm0 = 0;
-		// ZTM: FIXME: Moved BUTTONS_GENERATED from engine to bg_misc.h, the Test function it self should move to game VM.
+		// ZTM: FIXME: Moved BUTTONS_GENERATED from engine to bg_public.h, the Test function it self should move to game VM.
 		//if (svs.players[0].lastUsercmd.buttons & ~BUTTONS_GENERATED) parm0 |= 1;
 		if (bot_reachability->integer) parm0 |= 2;
 		if (bot_groundonly->integer) parm0 |= 4;
