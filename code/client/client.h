@@ -35,7 +35,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "keys.h"
 #include "snd_public.h"
 #include "../cgame/cg_public.h"
-#include "../game/bg_public.h"
 
 #ifdef USE_CURL
 #include "cl_curl.h"
