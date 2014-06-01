@@ -183,7 +183,7 @@ typedef struct bot_stringlist_s
 typedef struct bot_chatstate_s
 {
 	int gender;											//0=it, 1=female, 2=male
-	int client;											//client number
+	int playernum;										//player number
 	char name[32];										//name of the bot
 	char chatmessage[MAX_MESSAGE_SIZE];
 	int handle;
@@ -2821,7 +2821,7 @@ int BotChatLength(int chatstate)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void BotEnterChat(int chatstate, int clientto, int sendto)
+void BotEnterChat(int chatstate, int playerto, int sendto)
 {
 	bot_chatstate_t *cs;
 
@@ -2837,13 +2837,13 @@ void BotEnterChat(int chatstate, int clientto, int sendto)
 		else {
 			switch(sendto) {
 				case CHAT_TEAM:
-					botimport.BotClientCommand(cs->client, va("say_team %s", cs->chatmessage));
+					botimport.BotClientCommand(cs->playernum, va("say_team %s", cs->chatmessage));
 					break;
 				case CHAT_TELL:
-					botimport.BotClientCommand(cs->client, va("tell %d %s", clientto, cs->chatmessage));
+					botimport.BotClientCommand(cs->playernum, va("tell %d %s", playerto, cs->chatmessage));
 					break;
 				default: //CHAT_ALL
-					botimport.BotClientCommand(cs->client, va("say %s", cs->chatmessage));
+					botimport.BotClientCommand(cs->playernum, va("say %s", cs->chatmessage));
 					break;
 			}
 		}
@@ -2895,13 +2895,13 @@ void BotSetChatGender(int chatstate, int gender)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void BotSetChatName(int chatstate, char *name, int client)
+void BotSetChatName(int chatstate, char *name, int playernum)
 {
 	bot_chatstate_t *cs;
 
 	cs = BotChatStateFromHandle(chatstate);
 	if (!cs) return;
-	cs->client = client;
+	cs->playernum = playernum;
 	Com_Memset(cs->name, 0, sizeof(cs->name));
 	strncpy(cs->name, name, sizeof(cs->name));
 	cs->name[sizeof(cs->name)-1] = '\0';

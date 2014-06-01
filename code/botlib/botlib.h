@@ -267,7 +267,7 @@ typedef struct ai_export_s
 	int		(*BotNumInitialChats)(int chatstate, char *type);
 	int		(*BotReplyChat)(int chatstate, char *message, int mcontext, int vcontext, char *var0, char *var1, char *var2, char *var3, char *var4, char *var5, char *var6, char *var7);
 	int		(*BotChatLength)(int chatstate);
-	void	(*BotEnterChat)(int chatstate, int client, int sendto);
+	void	(*BotEnterChat)(int chatstate, int playerto, int sendto);
 	void	(*BotGetChatMessage)(int chatstate, char *buf, int size);
 	int		(*StringContains)(char *str1, char *str2, int casesensitive);
 	int		(*BotFindMatch)(char *str, struct bot_match_s *match, unsigned long int context);
@@ -276,7 +276,7 @@ typedef struct ai_export_s
 	void	(*BotReplaceSynonyms)(char *string, unsigned long int context);
 	int		(*BotLoadChatFile)(int chatstate, char *chatfile, char *chatname);
 	void	(*BotSetChatGender)(int chatstate, int gender);
-	void	(*BotSetChatName)(int chatstate, char *name, int client);
+	void	(*BotSetChatName)(int chatstate, char *name, int playernum);
 } ai_export_t;
 
 //bot AI library imported functions
