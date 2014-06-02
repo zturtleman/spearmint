@@ -1178,9 +1178,9 @@ qboolean CL_ValidDemoFile( const char *demoName, int *pProtocol, int *pLength, f
 
 	if ( pHandle ) {
 		// skip to end of header so can start reading the demo packets
-		if ( FS_Seek ( clc.demofile, headerSize, FS_SEEK_SET ) != 0 ) {
+		if ( FS_Seek ( f, headerSize, FS_SEEK_SET ) != 0 ) {
 			FS_FCloseFile( f );
-			f = 0;
+			return qfalse;
 		}
 
 		*pHandle = f;
