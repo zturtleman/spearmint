@@ -119,35 +119,20 @@ void SV_GameDropPlayer( int playerNum, const char *reason ) {
 
 /*
 =================
-SV_SetBrushModel
+SV_GetBrushBounds
 
-sets mins and maxs for inline bmodels
+gets mins and maxs for inline bmodels
 =================
 */
-void SV_SetBrushModel( sharedEntity_t *ent, const char *name ) {
+void SV_GetBrushBounds( int modelindex, vec3_t mins, vec3_t maxs ) {
 	clipHandle_t	h;
-	vec3_t			mins, maxs;
 
-	if (!name) {
-		Com_Error( ERR_DROP, "SV_SetBrushModel: NULL" );
+	if (!mins || !maxs) {
+		Com_Error( ERR_DROP, "SV_GetBrushBounds: NULL" );
 	}
 
-	if (name[0] != '*') {
-		Com_Error( ERR_DROP, "SV_SetBrushModel: %s isn't a brush model", name );
-	}
-
-
-	ent->s.modelindex = atoi( name + 1 );
-
-	h = CM_InlineModel( ent->s.modelindex );
+	h = CM_InlineModel( modelindex );
 	CM_ModelBounds( h, mins, maxs );
-	VectorCopy (mins, ent->s.mins);
-	VectorCopy (maxs, ent->s.maxs);
-	ent->s.collisionType = CT_SUBMODEL;
-
-	ent->s.contents = -1;		// we don't know exactly what is in the brushes
-
-	SV_LinkEntity( ent );		// FIXME: remove
 }
 
 
@@ -463,8 +448,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_POINT_CONTENTS:
 		return SV_PointContents( VMA(1), args[2] );
-	case G_SET_BRUSH_MODEL:
-		SV_SetBrushModel( VMA(1), VMA(2) );
+	case G_GET_BRUSH_BOUNDS:
+		SV_GetBrushBounds( args[1], VMA(2), VMA(3) );
 		return 0;
 	case G_IN_PVS:
 		return SV_inPVS( VMA(1), VMA(2) );

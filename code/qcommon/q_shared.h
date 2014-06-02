@@ -1311,7 +1311,7 @@ typedef struct sharedEntityState_s {
 	int		contents;		// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
 							// a non-solid entity should set to 0
 
-	collisionType_t	collisionType;	// if CT_SUBMODEL, modelindex is an inline model number. only set by trap_SetBrushModel
+	collisionType_t	collisionType;	// if CT_SUBMODEL, modelindex is an inline model number
 									// if CT_CAPSULE, use capsule instead of bbox for clipping against this ent
 									// else (CT_AABB), assume an explicit mins / maxs bounding box
 

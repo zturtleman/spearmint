@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define	GAME_API_MAJOR_VERSION	0
-#define	GAME_API_MINOR_VERSION	8
+#define	GAME_API_MINOR_VERSION	9
 
 
 // entity->svFlags
@@ -212,8 +212,8 @@ typedef enum {
 	G_GET_SERVERINFO,	// ( char *buffer, int bufferSize );
 	// the serverinfo info string has all the cvars visible to server browsers
 
-	G_SET_BRUSH_MODEL,	// ( gentity_t *ent, const char *name );
-	// sets mins and maxs based on the brushmodel name
+	G_GET_BRUSH_BOUNDS,	// ( int modelindex, vec3_t mins, vec3_t maxs );
+	// gets mins and maxs for inline brush model
 
 	G_TRACE,	// ( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 	// collision detection against all linked entities
