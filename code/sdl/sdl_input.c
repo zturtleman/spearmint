@@ -77,6 +77,8 @@ static cvar_t *in_joystickNo[MAX_SPLITVIEW]			= {NULL, NULL, NULL, NULL};
 static cvar_t *in_joystickUseAnalog[MAX_SPLITVIEW]	= {NULL, NULL, NULL, NULL};
 
 static int vidRestartTime = 0;
+static int vidResizeWidth = 0;
+static int vidResizeHeight = 0;
 
 #define CTRL(a) ((a)-'a'+1)
 
@@ -1115,6 +1117,8 @@ static void IN_ProcessEvents( void )
 				   we aren't constantly recreating the GL context while
 				   he tries to drag...*/
 				vidRestartTime = Sys_Milliseconds() + 1000;
+				vidResizeWidth = e.resize.w;
+				vidResizeHeight = e.resize.h;
 			}
 			break;
 			case SDL_ACTIVEEVENT:
@@ -1185,7 +1189,10 @@ void IN_Frame( void )
 	if ( (vidRestartTime != 0) && (vidRestartTime < Sys_Milliseconds()) )
 	{
 		vidRestartTime = 0;
-		Cbuf_AddText( "vid_restart\n" );
+		if ( !re.ResizeWindow( vidResizeWidth, vidResizeHeight ) )
+		{
+			Cbuf_AddText( "vid_restart\n" );
+		}
 	}
 }
 

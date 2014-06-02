@@ -553,6 +553,50 @@ static qboolean GLimp_StartDriverAndSetMode(int mode, qboolean fullscreen, qbool
 	return qtrue;
 }
 
+/*
+===============
+GLimp_ResizeWindow
+===============
+*/
+qboolean GLimp_ResizeWindow( int width, int height )
+{
+	SDL_Surface *vidscreen;
+	int flags = SDL_OPENGL;
+
+	if ( r_allowResize->integer )
+		flags |= SDL_RESIZABLE;
+
+	if (r_fullscreen->integer)
+	{
+		flags |= SDL_FULLSCREEN;
+		glConfig.isFullscreen = qtrue;
+	}
+	else
+	{
+		if (r_noborder->integer)
+			flags |= SDL_NOFRAME;
+
+		glConfig.isFullscreen = qfalse;
+	}
+
+	if (!(vidscreen = SDL_SetVideoMode(width, height, glConfig.colorBits, flags)))
+	{
+		ri.Printf( PRINT_DEVELOPER, "SDL_SetVideoMode failed: %s\n", SDL_GetError( ) );
+		return qfalse;
+	}
+
+	SDL_FreeSurface( screen );
+	screen = vidscreen;
+
+	glConfig.vidWidth = width;
+	glConfig.vidHeight = height;
+	glConfig.windowAspect = (float)glConfig.vidWidth / (float)glConfig.vidHeight;
+
+	ri.CL_GlconfigChanged( &glConfig );
+
+	return qtrue;
+}
+
 static qboolean GLimp_HaveExtension(const char *ext)
 {
 	const char *ptr = Q_stristr( glConfig.extensions_string, ext );
@@ -865,7 +909,14 @@ void GLimp_EndFrame( void )
 		{
 			// SDL_WM_ToggleFullScreen didn't work, so do it the slow way
 			if( !sdlToggled )
+			{
 				ri.Cmd_ExecuteText(EXEC_APPEND, "vid_restart\n");
+			}
+			else
+			{
+				glConfig.isFullscreen = !!r_fullscreen->integer;
+				ri.CL_GlconfigChanged( &glConfig );
+			}
 
 			ri.IN_Restart( );
 		}

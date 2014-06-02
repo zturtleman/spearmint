@@ -3237,6 +3237,16 @@ void CL_InitRenderer( void ) {
 }
 
 /*
+============
+CL_GlconfigChanged
+============
+*/
+void CL_GlconfigChanged( const glconfig_t *glconfig ) {
+	cls.glconfig = *glconfig;
+	CL_UpdateGlconfig();
+}
+
+/*
 ============================
 CL_StartHunkUsers
 
@@ -3307,6 +3317,7 @@ void CL_InitRef( void ) {
 	ri.CL_MaxSplitView = CL_MaxSplitView;
 	ri.CL_GetMapTitle = CL_GetMapTitle;
 	ri.CL_GetLocalPlayerLocation = CL_GetLocalPlayerLocation;
+	ri.CL_GlconfigChanged = CL_GlconfigChanged;
 	ri.zlib_compress = compress;
 	ri.zlib_crc32 = crc32;
 

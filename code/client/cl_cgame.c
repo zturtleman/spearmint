@@ -1857,6 +1857,21 @@ void CL_ShowMainMenu( void ) {
 	VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_NONE );
 }
 
+/*
+=====================
+CL_UpdateGlconfig
+
+cls.glconfig has been modified and doesn't require a full vid_restart
+=====================
+*/
+void CL_UpdateGlconfig( void ) {
+	if ( !cgvm ) {
+		return;
+	}
+
+	VM_Call( cgvm, CG_UPDATE_GLCONFIG );
+}
+
 
 /*
 =================
