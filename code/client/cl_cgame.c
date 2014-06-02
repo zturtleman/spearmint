@@ -304,8 +304,8 @@ qboolean	CL_GetSnapshot( int snapshotNumber, vmSnapshot_t *vmSnapshot, int vmSiz
 CL_SetNetFields
 ===============
 */
-void CL_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
-					   int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
+void CL_SetNetFields( int entityStateSize, int entityNetworkSize, vmNetField_t *entityStateFields, int numEntityStateFields,
+					   int playerStateSize, int playerNetworkSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
 	cl.cgameEntityStateSize = entityStateSize;
 	cl.cgamePlayerStateSize = playerStateSize;
 
@@ -314,8 +314,8 @@ void CL_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int 
 		return;
 	}
 
-	MSG_SetNetFields( entityStateFields, numEntityStateFields, entityStateSize,
-					  playerStateFields, numPlayerStateFields, playerStateSize );
+	MSG_SetNetFields( entityStateFields, numEntityStateFields, entityStateSize, entityNetworkSize,
+					  playerStateFields, numPlayerStateFields, playerStateSize, playerNetworkSize );
 }
 
 
@@ -1449,7 +1449,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETUSERCMD:
 		return CL_GetUserCmd( args[1], VMA(2), args[3] );
 	case CG_SET_NET_FIELDS:
-		CL_SetNetFields( args[1], VMA(2), args[3], args[4], VMA(5), args[6] );
+		CL_SetNetFields( args[1], args[2], VMA(3), args[4], args[5], args[6], VMA(7), args[8] );
 		return 0;
 	case CG_GETDEMOSTATE:
 		return CL_DemoState();

@@ -107,8 +107,8 @@ int		MSG_LookaheadByte (msg_t *msg);
 void MSG_WriteDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *to );
 void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *to );
 
-void MSG_SetNetFields( vmNetField_t *vmEntityFields, int numEntityFields, int entityStateSize,
-					   vmNetField_t *vmPlayerFields, int numPlayerFields, int playerStateSize );
+void MSG_SetNetFields( vmNetField_t *vmEntityFields, int numEntityFields, int entityStateSize, int entityNetworkSize,
+					   vmNetField_t *vmPlayerFields, int numPlayerFields, int playerStateSize, int playerNetworkSize );
 void MSG_ShutdownNetFields( void );
 
 void MSG_WriteDeltaEntity( msg_t *msg, sharedEntityState_t *from, sharedEntityState_t *to,

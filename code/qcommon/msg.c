@@ -828,11 +828,11 @@ Validate net fields and setup each field's numElementArrays.
 Returns pointer to error message or NULL if no error.
 ==================
 */
-static const char *MSG_InitNetFields( netFields_t *stateFields, const vmNetField_t *vmFields, int numFields, int objectSize, int expectedNetworkData ) {
+static const char *MSG_InitNetFields( netFields_t *stateFields, const vmNetField_t *vmFields, int numFields, int objectSize, int expectedNetworkSize ) {
 	netField_t			*field;
 	const vmNetField_t	*vmField;
 	int					fieldLength;
-	int					networkData;
+	int					networkSize;
 	int					i, n;
 
 	if ( !vmFields || numFields < 1 ) {
@@ -845,7 +845,7 @@ static const char *MSG_InitNetFields( netFields_t *stateFields, const vmNetField
 	stateFields->numFields = numFields;
 	stateFields->fields = Z_Malloc( sizeof (netField_t) * numFields );
 
-	networkData = 0;
+	networkSize = 0;
 
 	for ( i = 0, field = stateFields->fields, vmField = vmFields ; i < numFields ; i++, field++, vmField++ ) {
 		field->offset = vmField->offset;
@@ -886,11 +886,11 @@ static const char *MSG_InitNetFields( netFields_t *stateFields, const vmNetField
 			field->numElementArrays++;
 		}
 
-		networkData += fieldLength;
+		networkSize += fieldLength;
 	}
 
-	if ( networkData > objectSize ) {
-		return "fields send more than size of state";
+	if ( networkSize > objectSize ) {
+		return "fields send more data than size of state";
 	}
 
 	// For entityState_t:
@@ -898,8 +898,12 @@ static const char *MSG_InitNetFields( netFields_t *stateFields, const vmNetField
 	// the "number" field is not part of the field list
 	// if this fails, someone added a field to the entityState_t
 	// struct without updating the message fields
-	if ( expectedNetworkData && networkData != expectedNetworkData ) {
-		return "contains less fields than expected";
+	if ( expectedNetworkSize > 0 ) {
+		if ( networkSize < expectedNetworkSize ) {
+			return "networks less data than expected";
+		} else if ( networkSize > expectedNetworkSize ) {
+			return "networks more data than expected";
+		}
 	}
 
 	return NULL;
@@ -910,17 +914,17 @@ static const char *MSG_InitNetFields( netFields_t *stateFields, const vmNetField
 MSG_SetNetFields
 ==================
 */
-void MSG_SetNetFields( vmNetField_t *vmEntityFields, int numEntityFields, int entityStateSize,
-					   vmNetField_t *vmPlayerFields, int numPlayerFields, int playerStateSize ) {
+void MSG_SetNetFields( vmNetField_t *vmEntityFields, int numEntityFields, int entityStateSize, int entityNetworkSize,
+					   vmNetField_t *vmPlayerFields, int numPlayerFields, int playerStateSize, int playerNetworkSize ) {
 	const char *error;
 
-	error = MSG_InitNetFields( &msg_entityStateFields, vmEntityFields, numEntityFields, entityStateSize, entityStateSize - 4 );
+	error = MSG_InitNetFields( &msg_entityStateFields, vmEntityFields, numEntityFields, entityStateSize, entityNetworkSize );
 
 	if ( error ) {
 		Com_Error( ERR_DROP, "entityState_t: %s", error );
 	}
 
-	error = MSG_InitNetFields( &msg_playerStateFields, vmPlayerFields, numPlayerFields, playerStateSize, 0 );
+	error = MSG_InitNetFields( &msg_playerStateFields, vmPlayerFields, numPlayerFields, playerStateSize, playerNetworkSize );
 
 	if ( error ) {
 		Com_Error( ERR_DROP, "playerState_t: %s", error );
