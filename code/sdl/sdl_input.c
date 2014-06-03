@@ -57,10 +57,6 @@ static cvar_t *in_joystickThreshold[MAX_SPLITVIEW]	= {NULL, NULL, NULL, NULL};
 static cvar_t *in_joystickNo[MAX_SPLITVIEW]			= {NULL, NULL, NULL, NULL};
 static cvar_t *in_joystickUseAnalog[MAX_SPLITVIEW]	= {NULL, NULL, NULL, NULL};
 
-static int vidRestartTime = 0;
-static int vidResizeWidth = 0;
-static int vidResizeHeight = 0;
-
 static SDL_Window *SDL_window = NULL;
 
 #define CTRL(a) ((a)-'a'+1)
@@ -1021,12 +1017,7 @@ static void IN_ProcessEvents( void )
 							Cvar_Set( "r_customheight", height );
 							Cvar_Set( "r_mode", "-1" );
 
-							// Wait until user stops dragging for 1 second, so
-							// we aren't constantly recreating the GL context while
-							// he tries to drag...
-							vidRestartTime = Sys_Milliseconds( ) + 1000;
-							vidResizeWidth = e.window.data1;
-							vidResizeHeight = e.window.data2;
+							re.ResizeWindow( e.window.data1, e.window.data2 );
 						}
 						break;
 
@@ -1091,16 +1082,6 @@ void IN_Frame( void )
 	{
 		SDL_GetMouseState( &x, &y );
 		IN_SetUIMousePosition( 0, x, y );
-	}
-
-	// In case we had to delay actual restart of video system
-	if( ( vidRestartTime != 0 ) && ( vidRestartTime < Sys_Milliseconds( ) ) )
-	{
-		vidRestartTime = 0;
-		if ( !re.ResizeWindow( vidResizeWidth, vidResizeHeight ) )
-		{
-			Cbuf_AddText( "vid_restart\n" );
-		}
 	}
 }
 
