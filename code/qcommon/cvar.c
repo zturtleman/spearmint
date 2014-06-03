@@ -1475,7 +1475,7 @@ void Cvar_Register(vmCvar_t *vmCvar, const char *varName, const char *defaultVal
 	// flags. Unfortunately some historical game code (including single player
 	// baseq3) sets both flags. We unset CVAR_ROM for such cvars.
 	if ((flags & (CVAR_ARCHIVE | CVAR_ROM)) == (CVAR_ARCHIVE | CVAR_ROM)) {
-		Com_DPrintf( S_COLOR_YELLOW "WARNING: Unsetting CVAR_ROM cvar '%s', "
+		Com_Printf( S_COLOR_YELLOW "WARNING: Unsetting CVAR_ROM cvar '%s', "
 			"since it is also CVAR_ARCHIVE\n", varName );
 		flags &= ~CVAR_ROM;
 	}

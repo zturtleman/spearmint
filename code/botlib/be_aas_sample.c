@@ -453,7 +453,7 @@ qboolean AAS_AreaEntityCollision(int areanum, vec3_t start, vec3_t end,
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype, int passent, int contentmask)
+aas_trace_t AAS_TracePlayerBBox(vec3_t start, vec3_t end, int presencetype, int passent, int contentmask)
 {
 	int side, nodenum, tmpplanenum;
 	float front, back, frac;
@@ -721,7 +721,7 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype, int 
 		} //end else
 	} //end while
 //	return trace;
-} //end of the function AAS_TraceClientBBox
+} //end of the function AAS_TracePlayerBBox
 //===========================================================================
 // recursive subdivision of the line by the BSP tree.
 //

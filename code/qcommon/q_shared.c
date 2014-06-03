@@ -1592,14 +1592,14 @@ void Com_ClientListParse( clientList_t *list, const char *s )
 
 /*
 =================
-Com_LocalClientCvarName
+Com_LocalPlayerCvarName
 =================
 */
-char *Com_LocalClientCvarName(int localClient, const char *in_cvarName) {
-	static char localClientCvarName[MAX_CVAR_VALUE_STRING];
+char *Com_LocalPlayerCvarName(int localPlayerNum, const char *in_cvarName) {
+	static char localPlayerCvarName[MAX_CVAR_VALUE_STRING];
 
-	if (localClient == 0) {
-		Q_strncpyz(localClientCvarName, in_cvarName, MAX_CVAR_VALUE_STRING);
+	if (localPlayerNum == 0) {
+		Q_strncpyz(localPlayerCvarName, in_cvarName, MAX_CVAR_VALUE_STRING);
 	} else {
 		char prefix[2];
 		const char *cvarName;
@@ -1615,18 +1615,18 @@ char *Com_LocalClientCvarName(int localClient, const char *in_cvarName) {
 			prefix[0] = '\0';
 		}
 
-		Com_sprintf(localClientCvarName, MAX_CVAR_VALUE_STRING, "%s%d%s", prefix, localClient+1, cvarName);
+		Com_sprintf(localPlayerCvarName, MAX_CVAR_VALUE_STRING, "%s%d%s", prefix, localPlayerNum+1, cvarName);
 	}
 
-	return localClientCvarName;
+	return localPlayerCvarName;
 }
 
 /*
 =================
-Com_LocalClientForCvarName
+Com_LocalPlayerForCvarName
 =================
 */
-int Com_LocalClientForCvarName(const char *in_cvarName) {
+int Com_LocalPlayerForCvarName(const char *in_cvarName) {
 	const char *p = in_cvarName;
 	
 	if (p && (*p == '-' || *p == '+')) {
@@ -1642,16 +1642,16 @@ int Com_LocalClientForCvarName(const char *in_cvarName) {
 
 /*
 =================
-Com_LocalClientBaseCvarName
+Com_LocalPlayerBaseCvarName
 =================
 */
-const char *Com_LocalClientBaseCvarName(const char *in_cvarName) {
+const char *Com_LocalPlayerBaseCvarName(const char *in_cvarName) {
 	static char baseName[MAX_CVAR_VALUE_STRING];
-	int localClientNum;
+	int localPlayerNum;
 
-	localClientNum = Com_LocalClientForCvarName( in_cvarName );
+	localPlayerNum = Com_LocalPlayerForCvarName( in_cvarName );
 
-	if ( localClientNum == 0 ) {
+	if ( localPlayerNum == 0 ) {
 		Q_strncpyz( baseName, in_cvarName, sizeof ( baseName ) );
 	} else if ( in_cvarName[0] == '+' || in_cvarName[0] == '-' ) {
 		baseName[0] = in_cvarName[0];

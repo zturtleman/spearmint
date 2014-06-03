@@ -293,13 +293,13 @@ int Export_BotLibUpdateEntity(int ent, bot_entitystate_t *state)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void Export_AAS_TraceClientBBox(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask)
+void Export_AAS_TracePlayerBBox(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask)
 {
 	aas_trace_t tr;
 	if ( !trace ) return;
-	tr = AAS_TraceClientBBox(start, end, presencetype, passent, contentmask);
+	tr = AAS_TracePlayerBBox(start, end, presencetype, passent, contentmask);
 	Com_Memcpy(trace, &tr, sizeof (aas_trace_t));
-} //end of the function Export_AAS_TraceClientBBox
+} //end of the function Export_AAS_TracePlayerBBox
 //===========================================================================
 //
 // Parameter:				-
@@ -442,7 +442,7 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 		VectorCopy(origin, end);
 		end[2] += 5;
 		numareas = AAS_TraceAreas(origin, end, areas, NULL, 10);
-		AAS_TraceClientBBox(origin, end, PRESENCE_CROUCH, -1, MASK_PLAYERSOLID);
+		AAS_TracePlayerBBox(origin, end, PRESENCE_CROUCH, -1, MASK_PLAYERSOLID);
 		botimport.Print(PRT_MESSAGE, "num areas = %d, area = %d\n", numareas, areas[0]);
 		*/
 		/*
@@ -586,7 +586,7 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 //	AAS_TestMovementPrediction(1, parm2, forward, MASK_PLAYERSOLID);
 /*
     //trace the line to find the hit point
-	trace = AAS_TraceClientBBox(eye, end, PRESENCE_NORMAL, 1, MASK_PLAYERSOLID);
+	trace = AAS_TracePlayerBBox(eye, end, PRESENCE_NORMAL, 1, MASK_PLAYERSOLID);
 	if (!line[0]) line[0] = botimport.DebugLineCreate();
 	botimport.DebugLineShow(line[0], eye, trace.endpos, LINECOLOR_BLUE);
 	//
@@ -603,7 +603,7 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 	for (i = 0; i < 2000; i++)
 	{
 		AAS_Trace2(eye, mins, maxs, end, 1, MASK_PLAYERSOLID);
-//		AAS_TraceClientBBox(eye, end, PRESENCE_NORMAL, 1, MASK_PLAYERSOLID);
+//		AAS_TracePlayerBBox(eye, end, PRESENCE_NORMAL, 1, MASK_PLAYERSOLID);
 	} //end for
 	end_time = clock();
 	botimport.Print(PRT_MESSAGE, "me %lu clocks, %lu CLOCKS_PER_SEC\n", end_time - start_time, CLOCKS_PER_SEC);
@@ -680,7 +680,7 @@ static void Init_AAS_Export( aas_export_t *aas ) {
 	//--------------------------------------------
 	aas->AAS_PointAreaNum = AAS_PointAreaNum;
 	aas->AAS_PointReachabilityAreaIndex = AAS_PointReachabilityAreaIndex;
-	aas->AAS_TraceClientBBox = Export_AAS_TraceClientBBox;
+	aas->AAS_TracePlayerBBox = Export_AAS_TracePlayerBBox;
 	aas->AAS_TraceAreas = AAS_TraceAreas;
 	aas->AAS_BBoxAreas = AAS_BBoxAreas;
 	aas->AAS_AreaInfo = AAS_AreaInfo;
@@ -729,7 +729,7 @@ static void Init_AAS_Export( aas_export_t *aas ) {
 	//--------------------------------------------
 	// be_aas_move.c
 	//--------------------------------------------
-	aas->AAS_PredictClientMovement = AAS_PredictClientMovement;
+	aas->AAS_PredictPlayerMovement = AAS_PredictPlayerMovement;
 	aas->AAS_OnGround = AAS_OnGround;
 	aas->AAS_Swimming = AAS_Swimming;
 	aas->AAS_JumpReachRunStart = AAS_JumpReachRunStart;

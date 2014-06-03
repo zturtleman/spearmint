@@ -1003,12 +1003,12 @@ BSP trees instead of being compared directly.
 Capsules are handled differently though.
 ===================
 */
-clipHandle_t CM_TempBoxModel( const vec3_t mins, const vec3_t maxs, int capsule, int contents ) {
+clipHandle_t CM_TempBoxModel( const vec3_t mins, const vec3_t maxs, collisionType_t collisionType, int contents ) {
 
 	VectorCopy( mins, box_model.mins );
 	VectorCopy( maxs, box_model.maxs );
 
-	if ( capsule ) {
+	if ( collisionType == CT_CAPSULE ) {
 		capsule_contents = contents;
 		return CAPSULE_MODEL_HANDLE;
 	}

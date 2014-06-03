@@ -107,8 +107,8 @@ int		MSG_LookaheadByte (msg_t *msg);
 void MSG_WriteDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *to );
 void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *to );
 
-void MSG_SetNetFields( vmNetField_t *vmEntityFields, int numEntityFields, int entityStateSize,
-					   vmNetField_t *vmPlayerFields, int numPlayerFields, int playerStateSize );
+void MSG_SetNetFields( vmNetField_t *vmEntityFields, int numEntityFields, int entityStateSize, int entityNetworkSize,
+					   vmNetField_t *vmPlayerFields, int numPlayerFields, int playerStateSize, int playerNetworkSize );
 void MSG_ShutdownNetFields( void );
 
 void MSG_WriteDeltaEntity( msg_t *msg, sharedEntityState_t *from, sharedEntityState_t *to,
@@ -892,7 +892,7 @@ int			Com_RealTime(qtime_t *qtime);
 qboolean	Com_SafeMode( void );
 void		Com_RunAndTimeServerPacket(netadr_t *evFrom, msg_t *buf);
 
-qboolean	Com_IsVoipTarget(uint8_t *voipTargets, int voipTargetsSize, int clientNum);
+qboolean	Com_IsVoipTarget(uint8_t *voipTargets, int voipTargetsSize, int playerNum);
 
 qboolean	Com_GameIsSinglePlayer(void);
 
@@ -1091,9 +1091,9 @@ void CL_KeyEvent (int key, qboolean down, unsigned time);
 void CL_CharEvent( int key );
 // char events are for field typing, not game control
 
-void CL_MouseEvent( int localClientNum, int dx, int dy, int time );
+void CL_MouseEvent( int localPlayerNum, int dx, int dy, int time );
 
-void CL_JoystickEvent( int localClientNum, int axis, int value, int time );
+void CL_JoystickEvent( int localPlayerNum, int axis, int value, int time );
 
 void CL_PacketEvent( netadr_t from, msg_t *msg );
 

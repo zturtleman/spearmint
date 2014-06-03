@@ -1409,6 +1409,7 @@ static void RB_SurfaceEntity( surfaceType_t *surfType ) {
 				RB_SurfacePolychain( &polySurf );
 			}
 		}
+		break;
 	default:
 		RB_SurfaceAxis();
 		break;

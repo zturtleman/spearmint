@@ -580,6 +580,23 @@ static qboolean GLimp_StartDriverAndSetMode(int mode, qboolean fullscreen, qbool
 	return qtrue;
 }
 
+/*
+===============
+GLimp_ResizeWindow
+
+Window has been resized, update glconfig
+===============
+*/
+qboolean GLimp_ResizeWindow( int width, int height )
+{
+	glConfig.vidWidth = width;
+	glConfig.vidHeight = height;
+	glConfig.windowAspect = (float)glConfig.vidWidth / (float)glConfig.vidHeight;
+
+	ri.CL_GlconfigChanged( &glConfig );
+	return qtrue;
+}
+
 static qboolean GLimp_HaveExtension(const char *ext)
 {
 	const char *ptr = Q_stristr( glConfig.extensions_string, ext );
@@ -877,7 +894,14 @@ void GLimp_EndFrame( void )
 
 			// SDL_WM_ToggleFullScreen didn't work, so do it the slow way
 			if( !sdlToggled )
+			{
 				ri.Cmd_ExecuteText(EXEC_APPEND, "vid_restart\n");
+			}
+			else
+			{
+				glConfig.isFullscreen = !!r_fullscreen->integer;
+				ri.CL_GlconfigChanged( &glConfig );
+			}
 
 			ri.IN_Restart( );
 		}

@@ -2257,7 +2257,7 @@ void S_AL_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int 
 
 	S_UpdateListener(entityNum, origin, (const vec3_t *)axis, inwater, firstPerson);
 
-	if (entityNum != clc.clientNums[0])
+	if (entityNum != clc.playerNums[0])
 	{
 		// ZTM: FIXME: Support playing sounds relative to all listeners!
 		// ZTM: NOTE: Sounds from all first person listeners will be full volume as they are suppose to.

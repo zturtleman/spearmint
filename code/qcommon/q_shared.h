@@ -268,7 +268,7 @@ typedef int		clipHandle_t;
 #define	MAX_OSPATH			256		// max length of a filesystem pathname
 #endif
 
-#define	MAX_NAME_LENGTH		32		// max length of a client name
+#define	MAX_NAME_LENGTH		32		// max length of a player name
 
 // paramters for command buffer stuffing
 typedef enum {
@@ -1156,6 +1156,14 @@ typedef enum {
 	TT_NUM_TRACE_TYPES
 } traceType_t;
 
+typedef enum {
+	CT_AABB,
+	CT_CAPSULE,
+	CT_SUBMODEL,
+
+	CT_NUM_COLLISION_TYPES
+} collisionType_t;
+
 // a trace is returned when a box is swept through the world
 typedef struct {
 	qboolean	allsolid;	// if true, plane is not valid
@@ -1263,7 +1271,7 @@ typedef struct sharedPlayerState_s {
 
 	qboolean	linked;			// set by server
 
-	int			clientNum;		// ranges from 0 to MAX_CLIENTS-1
+	int			playerNum;		// ranges from 0 to MAX_CLIENTS-1
 
 	vec3_t		viewangles;		// for fixed views
 	int			viewheight;
@@ -1303,11 +1311,9 @@ typedef struct sharedEntityState_s {
 	int		contents;		// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
 							// a non-solid entity should set to 0
 
-	qboolean	capsule;	// if true, use capsule instead of bbox for clipping against this ent
-
-	qboolean	bmodel;		// if true, modelindex is an inline model number
-							// if false, assume an explicit mins / maxs bounding box
-							// only set by trap_SetBrushModel
+	collisionType_t	collisionType;	// if CT_SUBMODEL, modelindex is an inline model number
+									// if CT_CAPSULE, use capsule instead of bbox for clipping against this ent
+									// else (CT_AABB), assume an explicit mins / maxs bounding box
 
 	int		modelindex;
 
@@ -1365,9 +1371,9 @@ typedef struct {
   char name[MAX_QPATH];
 } fontInfo_t;
 
-char *Com_LocalClientCvarName(int localClient, const char *in_cvarName);
-int Com_LocalClientForCvarName(const char *in_cvarName);
-const char *Com_LocalClientBaseCvarName(const char *in_cvarName);
+char *Com_LocalPlayerCvarName(int localPlayerNum, const char *in_cvarName);
+int Com_LocalPlayerForCvarName(const char *in_cvarName);
+const char *Com_LocalPlayerBaseCvarName(const char *in_cvarName);
 
 #define Square(x) ((x)*(x))
 

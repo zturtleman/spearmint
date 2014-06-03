@@ -61,10 +61,10 @@ sharedEntityState_t *SV_GameEntityStateNum( int num ) {
 	return &ent->s;
 }
 
-sharedPlayerState_t *SV_GameClientNum( int num ) {
+sharedPlayerState_t *SV_GamePlayerNum( int num ) {
 	sharedPlayerState_t	*ps;
 
-	ps = (sharedPlayerState_t *)((byte *)sv.gameClients + sv.gameClientSize*(num));
+	ps = (sharedPlayerState_t *)((byte *)sv.gamePlayers + sv.gamePlayerSize*(num));
 
 	return ps;
 }
@@ -119,35 +119,20 @@ void SV_GameDropPlayer( int playerNum, const char *reason ) {
 
 /*
 =================
-SV_SetBrushModel
+SV_GetBrushBounds
 
-sets mins and maxs for inline bmodels
+gets mins and maxs for inline bmodels
 =================
 */
-void SV_SetBrushModel( sharedEntity_t *ent, const char *name ) {
+void SV_GetBrushBounds( int modelindex, vec3_t mins, vec3_t maxs ) {
 	clipHandle_t	h;
-	vec3_t			mins, maxs;
 
-	if (!name) {
-		Com_Error( ERR_DROP, "SV_SetBrushModel: NULL" );
+	if (!mins || !maxs) {
+		Com_Error( ERR_DROP, "SV_GetBrushBounds: NULL" );
 	}
 
-	if (name[0] != '*') {
-		Com_Error( ERR_DROP, "SV_SetBrushModel: %s isn't a brush model", name );
-	}
-
-
-	ent->s.modelindex = atoi( name + 1 );
-
-	h = CM_InlineModel( ent->s.modelindex );
+	h = CM_InlineModel( modelindex );
 	CM_ModelBounds( h, mins, maxs );
-	VectorCopy (mins, ent->s.mins);
-	VectorCopy (maxs, ent->s.maxs);
-	ent->s.bmodel = qtrue;
-
-	ent->s.contents = -1;		// we don't know exactly what is in the brushes
-
-	SV_LinkEntity( ent );		// FIXME: remove
 }
 
 
@@ -267,13 +252,13 @@ SV_LocateGameData
 ===============
 */
 void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int sizeofGEntity_t,
-					   sharedPlayerState_t *clients, int sizeofGameClient ) {
+					   sharedPlayerState_t *players, int sizeofGamePlayer ) {
 	sv.gentities = gEnts;
 	sv.gentitySize = sizeofGEntity_t;
 	sv.num_entities = numGEntities;
 
-	sv.gameClients = clients;
-	sv.gameClientSize = sizeofGameClient;
+	sv.gamePlayers = players;
+	sv.gamePlayerSize = sizeofGamePlayer;
 }
 
 /*
@@ -282,13 +267,13 @@ SV_SetNetFields
 
 ===============
 */
-void SV_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
-					   int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
+void SV_SetNetFields( int entityStateSize, int entityNetworkSize, vmNetField_t *entityStateFields, int numEntityStateFields,
+					   int playerStateSize, int playerNetworkSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
 	sv.gameEntityStateSize = entityStateSize;
 	sv.gamePlayerStateSize = playerStateSize;
 
-	MSG_SetNetFields( entityStateFields, numEntityStateFields, entityStateSize,
-					  playerStateFields, numPlayerStateFields, playerStateSize );
+	MSG_SetNetFields( entityStateFields, numEntityStateFields, entityStateSize, entityNetworkSize,
+					  playerStateFields, numPlayerStateFields, playerStateSize, playerNetworkSize );
 }
 
 /*
@@ -429,9 +414,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		SV_LocateGameData( VMA(1), args[2], args[3], VMA(4), args[5] );
 		return 0;
 	case G_SET_NET_FIELDS:
-		SV_SetNetFields( args[1], VMA(2), args[3], args[4], VMA(5), args[6] );
+		SV_SetNetFields( args[1], args[2], VMA(3), args[4], args[5], args[6], VMA(7), args[8] );
 		return 0;
-	case G_DROP_CLIENT:
+	case G_DROP_PLAYER:
 		SV_GameDropPlayer( args[1], VMA(2) );
 		return 0;
 	case G_SEND_SERVER_COMMAND:
@@ -463,8 +448,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_POINT_CONTENTS:
 		return SV_PointContents( VMA(1), args[2] );
-	case G_SET_BRUSH_MODEL:
-		SV_SetBrushModel( VMA(1), VMA(2) );
+	case G_GET_BRUSH_BOUNDS:
+		SV_GetBrushBounds( args[1], VMA(2), VMA(3) );
 		return 0;
 	case G_IN_PVS:
 		return SV_inPVS( VMA(1), VMA(2) );
@@ -524,7 +509,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 
 	case G_CLIENT_COMMAND:
-		SV_ForcePlayerCommand( args[1], VMA(2) );
+		SV_ForceClientCommand( args[1], VMA(2) );
 		return 0;
 
 	case G_R_REGISTERMODEL:
@@ -585,8 +570,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->aas.AAS_PointAreaNum( VMA(1) );
 	case BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX:
 		return botlib_export->aas.AAS_PointReachabilityAreaIndex( VMA(1) );
-	case BOTLIB_AAS_TRACE_CLIENT_BBOX:
-		botlib_export->aas.AAS_TraceClientBBox( VMA(1), VMA(2), VMA(3), args[4], args[5], args[6] );
+	case BOTLIB_AAS_TRACE_PLAYER_BBOX:
+		botlib_export->aas.AAS_TracePlayerBBox( VMA(1), VMA(2), VMA(3), args[4], args[5], args[6] );
 		return 0;
 	case BOTLIB_AAS_TRACE_AREAS:
 		return botlib_export->aas.AAS_TraceAreas( VMA(1), VMA(2), VMA(3), VMA(4), args[5] );
@@ -653,8 +638,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AAS_PREDICT_ROUTE:
 		return botlib_export->aas.AAS_PredictRoute( VMA(1), args[2], VMA(3), args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11] );
 
-	case BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT:
-		return botlib_export->aas.AAS_PredictClientMovement( VMA(1), args[2], VMA(3), args[4], args[5],
+	case BOTLIB_AAS_PREDICT_PLAYER_MOVEMENT:
+		return botlib_export->aas.AAS_PredictPlayerMovement( VMA(1), args[2], VMA(3), args[4], args[5],
 			VMA(6), VMA(7), args[8], args[9], VMF(10), args[11], args[12], args[13], args[14] );
 	case BOTLIB_AAS_ON_GROUND:
 		return botlib_export->aas.AAS_OnGround( VMA(1), args[2], args[3], args[4] );

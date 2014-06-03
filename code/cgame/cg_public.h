@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	20
+#define CG_API_MINOR_VERSION	23
 
 
 #define	CMD_BACKUP			64	
@@ -59,7 +59,7 @@ typedef struct {
 
 	byte			areamask[MAX_SPLITVIEW][MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 
-	int				clientNums[MAX_SPLITVIEW];
+	int				playerNums[MAX_SPLITVIEW];
 
 	int				numServerCommands;		// text based server commands to execute when this
 	int				serverCommandSequence;	// snapshot becomes current
@@ -81,7 +81,7 @@ typedef struct {
 
 	byte			areamask[MAX_SPLITVIEW][MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 
-	int				clientNums[MAX_SPLITVIEW];
+	int				playerNums[MAX_SPLITVIEW];
 
 	int				numServerCommands;		// text based server commands to execute when this
 	int				serverCommandSequence;	// snapshot becomes current
@@ -130,6 +130,7 @@ typedef struct {
 #define AS_LOCAL			0
 #define AS_FAVORITES		1
 #define AS_GLOBAL			2
+#define AS_NUM_SOURCES		3
 
 typedef enum {
 	DS_NONE,
@@ -215,7 +216,7 @@ typedef enum {
 	CG_GET_VOIP_TIME,
 	CG_GET_VOIP_POWER,
 	CG_GET_VOIP_GAIN,
-	CG_GET_VOIP_MUTE_CLIENT,
+	CG_GET_VOIP_MUTE_PLAYER,
 	CG_GET_VOIP_MUTE_ALL,
 	CG_CMD_AUTOCOMPLETE,
 	CG_SV_SHUTDOWN,
@@ -386,7 +387,7 @@ typedef enum {
 	// playVideo = 2 means switched to a new game/mod and not connecting to a server
 
 	CG_INGAME_INIT,
-//	void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 )
+//	void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int playerNum0, int playerNum1, int playerNum2, int playerNum3 )
 	// called when the level loads or when the renderer is restarted
 	// all media should be registered at this time
 	// cgame will display loading status by calling SCR_Update, which
@@ -412,32 +413,32 @@ typedef enum {
 	// If demoPlayback is set, local movement prediction will not be enabled
 
 	CG_CROSSHAIR_PLAYER,
-//	int (*CG_CrosshairPlayer)( int localClientNum );
+//	int (*CG_CrosshairPlayer)( int localPlayerNum );
 
 	CG_LAST_ATTACKER,
-//	int (*CG_LastAttacker)( int localClientNum );
+//	int (*CG_LastAttacker)( int localPlayerNum );
 
 	CG_VOIP_STRING,
 //  char *(*CG_VoIPString)( void );
-	// pass voip target token unknown by client to cgame to convert into clientNums
+	// pass voip target token unknown by client to cgame to convert into playerNums
 	// use Cmd_Argc() / Cmd_Argv() to read the target token, return a
-	// string of comma-delimited clientnums based on target token or
+	// string of comma-delimited playerNums based on target token or
 	// NULL if unknown token.
 
 	CG_KEY_EVENT, 
 //	void	(*CG_KeyEvent)( int key, qboolean down );
 
 	CG_MOUSE_EVENT,
-//	void	(*CG_MouseEvent)( int localClientNum, int dx, int dy );
+//	void	(*CG_MouseEvent)( int localPlayerNum, int dx, int dy );
 
 	CG_JOYSTICK_EVENT,
-//	void	(*CG_JoystickEvent)( int localClientNum, int axis, int value );
+//	void	(*CG_JoystickEvent)( int localPlayerNum, int axis, int value );
 
 	CG_MOUSE_POSITION,
-//  int		(*CG_MousePosition)( int localClientNum );
+//  int		(*CG_MousePosition)( int localPlayerNum );
 
 	CG_SET_MOUSE_POSITION,
-//  void	(*CG_SetMousePosition)( int localClientNum, int x, int y );
+//  void	(*CG_SetMousePosition)( int localPlayerNum, int x, int y );
 
 	CG_SET_ACTIVE_MENU,
 //	void (*CG_SetActiveMenu)( uiMenuCommand_t menu );
@@ -452,8 +453,11 @@ typedef enum {
 //	void Con_Close( void );
 //	force console to close, used before loading screens
 
-	CG_CREATE_USER_CMD
-//	usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, int frameMsec, float mx, float my, qboolean anykeydown );
+	CG_CREATE_USER_CMD,
+//	usercmd_t *CG_CreateUserCmd( int localPlayerNum, int frameTime, int frameMsec, float mx, float my, qboolean anykeydown );
+
+	CG_UPDATE_GLCONFIG
+//	void	CG_UpdateGLConfig( void );
 
 } cgameExport_t;
 

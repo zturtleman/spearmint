@@ -391,9 +391,37 @@ int Q_stricmp (char *s1, char *s2)
 	return Q_strncasecmp (s1, s2, 99999);
 }
 
+/*
+=============
+Q_strncpyz
+ 
+Safe strncpy that ensures a trailing zero
+=============
+*/
 void Q_strncpyz( char *dest, const char *src, int destsize ) {
+	if ( !dest ) {
+		Error( "Q_strncpyz: NULL dest" );
+	}
+	if ( !src ) {
+		Error( "Q_strncpyz: NULL src" );
+	}
+	if ( destsize < 1 ) {
+		Error( "Q_strncpyz: destsize < 1" ); 
+	}
+
 	strncpy( dest, src, destsize-1 );
-    dest[destsize-1] = 0;
+	dest[destsize-1] = 0;
+}
+
+// never goes past bounds or leaves without a terminating 0
+void Q_strcat( char *dest, int size, const char *src ) {
+	int		l1;
+
+	l1 = strlen( dest );
+	if ( l1 >= size ) {
+		Error( "Q_strcat: already overflowed" );
+	}
+	Q_strncpyz( dest + l1, src, size - l1 );
 }
 
 char *strupr (char *start)

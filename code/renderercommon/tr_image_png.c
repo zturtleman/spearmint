@@ -2695,10 +2695,10 @@ void RE_SavePNG(const char *filename, int width, int height, byte *data, int pad
 	numtEXt++;
 	for (i = 0; i < ri.CL_MaxSplitView(); i++) {
 		Com_sprintf(tEXt[numtEXt].key, sizeof (tEXt[numtEXt].key), "Playername%d", i+1);
-		ri.Cvar_VariableStringBuffer(Com_LocalClientCvarName(i, "name"), tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
+		ri.Cvar_VariableStringBuffer(Com_LocalPlayerCvarName(i, "name"), tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
 		numtEXt++;
 
-		if (ri.CL_GetClientLocation(tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text), i)) {
+		if (ri.CL_GetLocalPlayerLocation(tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text), i)) {
 			Com_sprintf(tEXt[numtEXt].key, sizeof (tEXt[numtEXt].key), "Location%d", i+1);
 			numtEXt++;
 		}

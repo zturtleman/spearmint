@@ -35,7 +35,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "keys.h"
 #include "snd_public.h"
 #include "../cgame/cg_public.h"
-#include "../game/bg_public.h"
 
 #ifdef USE_CURL
 #include "cl_curl.h"
@@ -74,8 +73,8 @@ typedef struct {
 
 	int				numPSs;
 	darray_t		playerStates;	// complete information about the current players at this time
-	int				lcIndex[MAX_SPLITVIEW];
-	int				clientNums[MAX_SPLITVIEW];
+	int				localPlayerIndex[MAX_SPLITVIEW];
+	int				playerNums[MAX_SPLITVIEW];
 
 	int				numEntities;			// all of the entities that need to be presented
 	int				parseEntitiesNum;		// at the time of this snapshot
@@ -101,12 +100,11 @@ typedef struct {
 	int		p_realtime;			// cls.realtime when packet was sent
 } outPacket_t;
 
-// Client Active Local Client
 typedef struct {
 	int			mouseDx[2], mouseDy[2];	// added to by mouse events
 	int			mouseIndex;
 
-} calc_t;
+} clientActivePlayer_t;
 
 typedef struct {
 	int			timeoutcount;		// it requres several frames in a timeout condition
@@ -128,7 +126,7 @@ typedef struct {
 
 	int			parseEntitiesNum;	// index (not anded off) into cl_parse_entities[]
 
-	calc_t		localClients[CL_MAX_SPLITVIEW];
+	clientActivePlayer_t	localPlayers[CL_MAX_SPLITVIEW];
 
 	// cmds[cmdNumber] is the predicted command, [cmdNumber-1] is the last
 	// properly generated command
@@ -178,7 +176,7 @@ typedef struct {
 
 	connstate_t	state;				// connection status
 
-	int			clientNums[MAX_SPLITVIEW];
+	int			playerNums[MAX_SPLITVIEW];
 	int			lastPacketSentTime;			// for retransmits during connection
 	int			lastPacketTime;				// for timeouts
 
@@ -274,7 +272,7 @@ typedef struct {
 
 	// outgoing data...
 	// if voipTargets[i / 8] & (1 << (i % 8)),
-	// then we are sending to clientnum i.
+	// then we are sending to playerNum i.
 	uint8_t voipTargets[(MAX_CLIENTS + 7) / 8];
 	uint8_t voipFlags;
 	SpeexPreprocessState *speexPreprocessor;
@@ -512,8 +510,8 @@ void CL_VerifyCode( void );
 int Key_StringToKeynum( char *str );
 char *Key_KeynumToString (int keynum);
 
-int Mouse_GetState( int localClientNum );
-void Mouse_SetState( int localClientNum, int state );
+int Mouse_GetState( int localPlayerNum );
+void Mouse_SetState( int localPlayerNum, int state );
 void Mouse_ClearStates( void );
 
 //
@@ -523,10 +521,10 @@ extern int cl_connectedToCheatServer;
 
 #ifdef USE_VOIP
 void CL_Voip_f( void );
-int CL_GetVoipTime( int clientNum );
-float CL_GetVoipPower( int clientNum );
-float CL_GetVoipGain( int clientNum );
-qboolean CL_GetVoipMuteClient( int clientNum );
+int CL_GetVoipTime( int playerNum );
+float CL_GetVoipPower( int playerNum );
+float CL_GetVoipGain( int playerNum );
+qboolean CL_GetVoipMutePlayer( int playerNum );
 qboolean CL_GetVoipMuteAll( void );
 #endif
 
@@ -583,6 +581,7 @@ void CL_ShutdownCGame( void );
 void CL_GameCommand( void );
 void CL_CGameRendering( stereoFrame_t stereo );
 void CL_ShowMainMenu( void );
+void CL_UpdateGlconfig( void );
 void CL_SetCGameTime( void );
 void CL_FirstSnapshot( void );
 void CL_ShaderStateChanged(void);
@@ -613,5 +612,5 @@ qboolean CL_VideoRecording( void );
 //
 void CL_WriteDemoMessage ( msg_t *msg, int headerBytes );
 void CL_GetMapTitle( char *buf, int bufLength );
-qboolean CL_GetClientLocation( char *buf, int bufLength, int localClientNum );
+qboolean CL_GetLocalPlayerLocation( char *buf, int bufLength, int localPlayerNum );
 

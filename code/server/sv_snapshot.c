@@ -69,7 +69,7 @@ A normal server packet will look like:
 1	areaBytes
 <areabytes>
 1   number of player states
-8	lcIndex and playerNum for each of MAX_SPLITVIEW
+8	localPlayerIndex and playerNum for each of MAX_SPLITVIEW
 <playerstates>
 <packetentities>
 
@@ -230,8 +230,8 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	// send number of playerstates and local player indexes
 	MSG_WriteByte (msg, frame->numPSs);
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		MSG_WriteByte (msg, frame->lcIndex[i]);
-		MSG_WriteByte (msg, frame->clientNums[i]);
+		MSG_WriteByte (msg, frame->localPlayerIndex[i]);
+		MSG_WriteByte (msg, frame->playerNums[i]);
 
 		// send over the areabits
 		MSG_WriteByte (msg, frame->areabytes[i]);
@@ -239,15 +239,16 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	}
 
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		if (frame->lcIndex[i] == -1) {
+		if (frame->localPlayerIndex[i] == -1) {
 			continue;
 		}
 
 		// delta encode the playerstate
-		if ( oldframe && oldframe->lcIndex[i] != -1) {
-			MSG_WriteDeltaPlayerstate( msg, SV_SnapshotPlayer(oldframe, oldframe->lcIndex[i]), SV_SnapshotPlayer(frame, frame->lcIndex[i]) );
+		if ( oldframe && oldframe->localPlayerIndex[i] != -1) {
+			MSG_WriteDeltaPlayerstate( msg, SV_SnapshotPlayer(oldframe, oldframe->localPlayerIndex[i]),
+											SV_SnapshotPlayer(frame, frame->localPlayerIndex[i]) );
 		} else {
-			MSG_WriteDeltaPlayerstate( msg, NULL, SV_SnapshotPlayer(frame, frame->lcIndex[i]) );
+			MSG_WriteDeltaPlayerstate( msg, NULL, SV_SnapshotPlayer(frame, frame->localPlayerIndex[i]) );
 		}
 	}
 
@@ -366,7 +367,7 @@ static void SV_AddEntToSnapshot( clientSnapshot_t *frame, svEntity_t *svEnt, sha
 
 	// check if game wants to send entity to one of these clients
 	for (i = 0; i < frame->numPSs; i++) {
-		if ( (qboolean)VM_Call( gvm, GAME_SNAPSHOT_CALLBACK, gEnt->s.number, SV_SnapshotPlayer( frame, i )->clientNum ) ) {
+		if ( (qboolean)VM_Call( gvm, GAME_SNAPSHOT_CALLBACK, gEnt->s.number, SV_SnapshotPlayer( frame, i )->playerNum ) ) {
 			break;
 		}
 	}
@@ -384,7 +385,7 @@ static void SV_AddEntToSnapshot( clientSnapshot_t *frame, svEntity_t *svEnt, sha
 SV_AddEntitiesVisibleFromPoint
 ===============
 */
-static void SV_AddEntitiesVisibleFromPoint( int psIndex, int clientNum, vec3_t origin, clientSnapshot_t *frame, 
+static void SV_AddEntitiesVisibleFromPoint( int psIndex, int playerNum, vec3_t origin, clientSnapshot_t *frame, 
 									snapshotEntityNumbers_t *eNums, qboolean portal ) {
 	int		e, i;
 	sharedEntity_t *ent;
@@ -430,8 +431,8 @@ static void SV_AddEntitiesVisibleFromPoint( int psIndex, int clientNum, vec3_t o
 		}
 
 		// entities can be flagged to be sent to a given mask of clients
-		if ( ent->r.svFlags & SVF_CLIENTMASK ) {
-			if ( !Com_ClientListContains( &ent->r.sendClients, clientNum ) )
+		if ( ent->r.svFlags & SVF_PLAYERMASK ) {
+			if ( !Com_ClientListContains( &ent->r.sendPlayers, playerNum ) )
 				continue;
 		}
 
@@ -574,7 +575,7 @@ static void SV_AddEntitiesVisibleFromPoint( int psIndex, int clientNum, vec3_t o
 					continue;
 				}
 			}
-			SV_AddEntitiesVisibleFromPoint( psIndex, clientNum, ent->s.origin2, frame, eNums, qtrue );
+			SV_AddEntitiesVisibleFromPoint( psIndex, playerNum, ent->s.origin2, frame, eNums, qtrue );
 		}
 
 	}
@@ -599,7 +600,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	int							psIndex;
 	sharedEntityState_t			*state;
 	svEntity_t					*svEnt;
-	int							clientNum;
+	int							playerNum;
 	sharedPlayerState_t			*ps;
 
 	// bump the counter used to prevent double adding
@@ -629,14 +630,14 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	// grab the current player states
 	for (i = 0, frame->numPSs = 0; i < MAX_SPLITVIEW; i++) {
 		if ( !client->localPlayers[i] || !client->localPlayers[i]->gentity ) {
-			frame->lcIndex[i] = -1;
-			frame->clientNums[i] = -1;
+			frame->localPlayerIndex[i] = -1;
+			frame->playerNums[i] = -1;
 			continue;
 		}
-		frame->clientNums[i] = client->localPlayers[i] - svs.players;
-		ps = SV_GameClientNum( frame->clientNums[i] );
+		frame->playerNums[i] = client->localPlayers[i] - svs.players;
+		ps = SV_GamePlayerNum( frame->playerNums[i] );
 		DA_SetElement( &frame->playerStates, frame->numPSs, ps );
-		frame->lcIndex[i] = frame->numPSs;
+		frame->localPlayerIndex[i] = frame->numPSs;
 		frame->numPSs++;
 	}
 
@@ -644,21 +645,21 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		return;
 	}
 
-	// never send client's own entity, because it can
+	// never send player's own entity, because it can
 	// be regenerated from the playerstate
 	for (i = 0; i < frame->numPSs; i++) {
-		clientNum = SV_SnapshotPlayer(frame, i)->clientNum;
-		if ( clientNum < 0 || clientNum >= MAX_GENTITIES ) {
+		playerNum = SV_SnapshotPlayer(frame, i)->playerNum;
+		if ( playerNum < 0 || playerNum >= MAX_GENTITIES ) {
 			Com_Error( ERR_DROP, "SV_SvEntityForGentity: bad gEnt" );
 		}
-		svEnt = &sv.svEntities[ clientNum ];
+		svEnt = &sv.svEntities[ playerNum ];
 
 		svEnt->snapshotCounter = sv.snapshotCounter;
 	}
 
 	// Now that local players have been marked as no send, add visible entities.
 	for (i = 0; i < frame->numPSs; i++) {
-		// find the client's viewpoint
+		// find the player's viewpoint
 		VectorCopy( SV_SnapshotPlayer(frame, i)->origin, org );
 		org[2] += SV_SnapshotPlayer(frame, i)->viewheight;
 
@@ -667,7 +668,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 
 		// add all the entities directly visible to the eye, which
 		// may include portal entities that merge other viewpoints
-		SV_AddEntitiesVisibleFromPoint( i, SV_SnapshotPlayer(frame, i)->clientNum, org, frame, &entityNumbers, qfalse );
+		SV_AddEntitiesVisibleFromPoint( i, SV_SnapshotPlayer(frame, i)->playerNum, org, frame, &entityNumbers, qfalse );
 	}
 
 	// if there were portals visible, there may be out of order entities

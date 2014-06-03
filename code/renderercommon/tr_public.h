@@ -50,6 +50,9 @@ typedef struct {
 	// which will keep the screen from flashing to the desktop.
 	void	(*Shutdown)( qboolean destroyWindow );
 
+	//
+	qboolean	(*ResizeWindow)( int width, int height );
+
 	// All data that will be used in a level should be
 	// registered before rendering any frames to prevent disk hits,
 	// but they can still be registered at a later time
@@ -216,9 +219,11 @@ typedef struct {
 	int (*zlib_compress) (Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen);
 	uLong (*zlib_crc32) (uLong crc, const Bytef *buf, uInt len);
 
+	void (*CL_GlconfigChanged)( const glconfig_t *glconfig );
+
 	// get extra info for png screenshots
 	void	(*CL_GetMapTitle)( char *buf, int bufLength );
-	qboolean (*CL_GetClientLocation)( char *buf, int bufLength, int localClientNum );
+	qboolean (*CL_GetLocalPlayerLocation)( char *buf, int bufLength, int localPlayerNum );
 } refimport_t;
 
 

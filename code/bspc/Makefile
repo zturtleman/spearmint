@@ -159,7 +159,21 @@ else # ifeq Linux
 
 ifeq ($(PLATFORM),darwin)
 
-  $(error platform $(PLATFORM) is currently not supported)
+  CC=gcc
+
+  BINEXT=
+
+  BASE_CFLAGS+= -DBSPC -Wall -Dstricmp=strcasecmp
+  ifeq ($(ARCH),x86)
+    # build 32bit
+    BASE_CFLAGS += -m32
+  else
+    BASE_CFLAGS += -m64
+  endif
+
+  CFLAGS=$(BASE_CFLAGS)
+
+  LDFLAGS=-lm
 
 else # ifeq darwin
 

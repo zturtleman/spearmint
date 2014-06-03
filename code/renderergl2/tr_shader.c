@@ -40,6 +40,7 @@ static	shader_t		shader;
 static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS];
 static	image_t			*imageAnimations[MAX_SHADER_STAGES][NUM_TEXTURE_BUNDLES][MAX_IMAGE_ANIMATIONS];
 static	imgFlags_t		shader_picmipFlag;
+static	qboolean		stage_ignore;
 
 // these are here because they are only referenced while parsing a shader
 static char implicitMap[ MAX_QPATH ];
@@ -448,7 +449,7 @@ static qboolean SkipIfBlock( char **text, int *ifIndent, int braketLevel ) {
 		}
 		else if ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "#if" ) ) {
 			*ifIndent = *ifIndent + 1;
-			if ( *ifIndent > MAX_IF_RECURSION ) {
+			if ( *ifIndent >= MAX_IF_RECURSION ) {
 				*ifIndent = 0;
 				ri.Printf( PRINT_WARNING, "WARNING: 'if' recursion level goes too high (max %d) shader %s\n", MAX_IF_RECURSION, shader.name );
 				return 0;
@@ -488,7 +489,7 @@ static int ParseIfEndif( char **text, char *token, int *ifIndent, int braketLeve
 	if ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "#if" ) )
 	{
 		*ifIndent = *ifIndent + 1;
-		if ( *ifIndent > MAX_IF_RECURSION ) {
+		if ( *ifIndent >= MAX_IF_RECURSION ) {
 			*ifIndent = 0;
 			ri.Printf( PRINT_WARNING, "WARNING: 'if' recursion level goes too high (max %d) shader %s\n", MAX_IF_RECURSION, shader.name );
 			return 0;
@@ -1169,7 +1170,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			else if ( !Q_stricmp( token, "$lightmap" ) )
 			{
 				stage->bundle[0].isLightmap = qtrue;
-				if ( shader.lightmapIndex < 0 ) {
+				if ( shader.lightmapIndex < 0 || !tr.lightmaps ) {
 					stage->bundle[0].image[0] = tr.whiteImage;
 				} else {
 					stage->bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex];
@@ -1919,8 +1920,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				token = COM_ParseExt( text, qfalse );
 				if ( token[0] == 0 )
 					break;
-				strcat( buffer, token );
-				strcat( buffer, " " );
+				Q_strcat( buffer, sizeof (buffer), token );
+				Q_strcat( buffer, sizeof (buffer), " " );
 			}
 
 			ParseTexMod( buffer, stage );
@@ -1943,6 +1944,41 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		else if ( !Q_stricmp( token, "noDepthTest" ) )
 		{
 			depthTestBits = GLS_DEPTHTEST_DISABLE;
+			continue;
+		}
+		//
+		// surfaceSprites (and settings)
+		//
+		else if ( !Q_stricmp( token, "surfaceSprites" )
+				|| !Q_stricmp( token, "ssFadeMax" )
+				|| !Q_stricmp( token, "ssFadescale" )
+				|| !Q_stricmp( token, "ssVariance" )
+				|| !Q_stricmp( token, "ssWind" )
+				|| !Q_stricmp( token, "ssWindidle" )
+				|| !Q_stricmp( token, "ssFXWeather" )
+				|| !Q_stricmp( token, "ssFXAlphaRange" )
+				|| !Q_stricmp( token, "ssFXDuration" )
+				|| !Q_stricmp( token, "ssFXGrow" )
+				|| !Q_stricmp( token, "ssHangDown" )
+				|| !Q_stricmp( token, "ssFaceup" )
+				|| !Q_stricmp( token, "ssFaceflat" )
+				|| !Q_stricmp( token, "ssGore" )
+				|| !Q_stricmp( token, "ssGoreCentral" )
+				|| !Q_stricmp( token, "ssSpurtflat" )
+				|| !Q_stricmp( token, "ssSpurt" )
+				|| !Q_stricmp( token, "ssNoOffset" )
+				)
+		{
+			ri.Printf( PRINT_WARNING, "WARNING: %s keyword is unsupported, used by '%s'\n", token, shader.name );
+			stage_ignore = qtrue;
+			continue;
+		}
+		//
+		// glow
+		//
+		else if ( !Q_stricmp( token, "glow" ) )
+		{
+			ri.Printf( PRINT_WARNING, "WARNING: glow keyword is unsupported, used by '%s'\n", shader.name );
 			continue;
 		}
 		else
@@ -2405,11 +2441,13 @@ static qboolean ParseShader( char **text )
 				return qfalse;
 			}
 
+			stage_ignore = qfalse;
+
 			if ( !ParseStage( &stages[s], text, &ifIndent ) )
 			{
 				return qfalse;
 			}
-			stages[s].active = qtrue;
+			stages[s].active = !stage_ignore;
 			s++;
 
 			// Don't skip data after the }
@@ -2517,6 +2555,12 @@ static qboolean ParseShader( char **text )
 		}
 		// surfaceDensity <density> // used by FAKK mapcompiler for lightmap density
 		else if ( !Q_stricmp( token, "surfaceDensity" ) ) {
+			continue;
+		}
+		// lightcolor ( <red> <green> <blue> )
+		// ZTM: I think it's used by SoF2 map compiler as an alternative to q3map_lightimage
+		// Might also be used by SoF2's RMG for ambient color (if shader is sky).
+		else if ( !Q_stricmp(token, "lightcolor") ) {
 			continue;
 		}
 		// skip stuff that only q3map or the server needs
@@ -2972,7 +3016,29 @@ static qboolean ParseShader( char **text )
 				continue;
 			}
 
-			ri.Printf( PRINT_WARNING, "WARNING: unsupported damageShader '%s' in '%s'\n", token, shader.name );
+			ri.Printf( PRINT_WARNING, "WARNING: damageShader keyword is unsupported, '%s' in '%s'\n", token, shader.name );
+		}
+		// hitLocation <image>
+		else if ( !Q_stricmp( token, "hitLocation" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing image for 'hitLocation' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			ri.Printf( PRINT_WARNING, "WARNING: hitLocation keyword is unsupported, '%s' in '%s'\n", token, shader.name );
+		}
+		// hitMaterial <image>
+		else if ( !Q_stricmp( token, "hitMaterial" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing image for 'hitMaterial' keyword in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			ri.Printf( PRINT_WARNING, "WARNING: hitMaterial keyword is unsupported, '%s' in '%s'\n", token, shader.name );
 		}
 		// unknown directive
 		else

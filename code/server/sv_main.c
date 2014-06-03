@@ -660,7 +660,7 @@ static void SVC_Status( netadr_t from ) {
 			continue;
 		cl = pl->client;
 		if ( cl->state >= CS_CONNECTED ) {
-			ps = SV_GameClientNum( i );
+			ps = SV_GamePlayerNum( i );
 			Com_sprintf (player, sizeof(player), "%i %i \"%s\"\n", 
 				ps->persistant[PERS_SCORE], cl->ping, pl->name);
 			playerLength = strlen(player);
@@ -1037,7 +1037,7 @@ static void SV_CalcPings( void ) {
 				continue;
 			}
 
-			ps = SV_GameClientNum( cl->localPlayers[j] - svs.players );
+			ps = SV_GamePlayerNum( cl->localPlayers[j] - svs.players );
 			ps->ping = cl->ping;
 		}
 	}

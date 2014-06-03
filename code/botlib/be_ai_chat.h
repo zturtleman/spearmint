@@ -99,7 +99,7 @@ int BotReplyChat(int chatstate, char *message, int mcontext, int vcontext, char 
 //returns the length of the currently selected chat message
 int BotChatLength(int chatstate);
 //enters the selected chat message
-void BotEnterChat(int chatstate, int clientto, int sendto);
+void BotEnterChat(int chatstate, int playerto, int sendto);
 //get the chat message ready to be output
 void BotGetChatMessage(int chatstate, char *buf, int size);
 //checks if the first string contains the second one, returns index into first string or -1 if not found
@@ -117,5 +117,5 @@ int BotLoadChatFile(int chatstate, char *chatfile, char *chatname);
 //store the gender of the bot in the chat state
 void BotSetChatGender(int chatstate, int gender);
 //store the bot name in the chat state
-void BotSetChatName(int chatstate, char *name, int client);
+void BotSetChatName(int chatstate, char *name, int playernum);
 
