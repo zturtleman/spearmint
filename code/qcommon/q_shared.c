@@ -1587,7 +1587,7 @@ void Com_ClientListParse( clientList_t *list, const char *s )
 		return;
 	if( strlen( s ) != 16 )
 		return;
-	sscanf( s, "%x%x", &list->hi, &list->lo );
+	sscanf( s, "%08x%08x", &list->hi, &list->lo );
 }
 
 /*
