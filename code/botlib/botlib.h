@@ -252,40 +252,11 @@ typedef struct aas_export_s
 	int			(*AAS_DropToFloor)(vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask);
 } aas_export_t;
 
-typedef struct ai_export_s
-{
-	//-----------------------------------
-	// be_ai_chat.h
-	//-----------------------------------
-	int		(*BotAllocChatState)(void);
-	void	(*BotFreeChatState)(int handle);
-	void	(*BotQueueConsoleMessage)(int chatstate, int type, char *message);
-	void	(*BotRemoveConsoleMessage)(int chatstate, int handle);
-	int		(*BotNextConsoleMessage)(int chatstate, struct bot_consolemessage_s *cm);
-	int		(*BotNumConsoleMessages)(int chatstate);
-	void	(*BotInitialChat)(int chatstate, char *type, int mcontext, char *var0, char *var1, char *var2, char *var3, char *var4, char *var5, char *var6, char *var7);
-	int		(*BotNumInitialChats)(int chatstate, char *type);
-	int		(*BotReplyChat)(int chatstate, char *message, int mcontext, int vcontext, char *var0, char *var1, char *var2, char *var3, char *var4, char *var5, char *var6, char *var7);
-	int		(*BotChatLength)(int chatstate);
-	void	(*BotEnterChat)(int chatstate, int playerto, int sendto);
-	void	(*BotGetChatMessage)(int chatstate, char *buf, int size);
-	int		(*StringContains)(char *str1, char *str2, int casesensitive);
-	int		(*BotFindMatch)(char *str, struct bot_match_s *match, unsigned long int context);
-	void	(*BotMatchVariable)(struct bot_match_s *match, int variable, char *buf, int size);
-	void	(*UnifyWhiteSpaces)(char *string);
-	void	(*BotReplaceSynonyms)(char *string, unsigned long int context);
-	int		(*BotLoadChatFile)(int chatstate, char *chatfile, char *chatname);
-	void	(*BotSetChatGender)(int chatstate, int gender);
-	void	(*BotSetChatName)(int chatstate, char *name, int playernum);
-} ai_export_t;
-
 //bot AI library imported functions
 typedef struct botlib_export_s
 {
 	//Area Awareness System functions
 	aas_export_t aas;
-	//AI functions
-	ai_export_t ai;
 	//setup the bot library, returns BLERR_
 	int (*BotLibSetup)(void);
 	//shutdown the bot library, returns BLERR_
@@ -375,15 +346,6 @@ name:						default:			module(s):			description:
 "aasoptimize"				"0"					be_aas_main.c		enable aas optimization
 "sv_mapChecksum"			"0"					be_aas_main.c		BSP file checksum
 "bot_visualizejumppads"		"0"					be_aas_reach.c		visualize jump pads
-
-"bot_reloadcharacters"		"0"					-					reload bot character files
-"bot_testichat"				"0"					-					test ichat
-"bot_testrchat"				"0"					-					test rchat
-"synfile"					"syn.c"				be_ai_chat.c		file with synonyms
-"rndfile"					"rnd.c"				be_ai_chat.c		file with random strings
-"matchfile"					"match.c"			be_ai_chat.c		file with match strings
-"nochat"					"0"					be_ai_chat.c		disable chats
-"max_messages"				"1024"				be_ai_chat.c		console message heap size
 
 */
 

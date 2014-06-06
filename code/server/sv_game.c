@@ -655,58 +655,6 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AAS_DROP_TO_FLOOR:
 		return botlib_export->aas.AAS_DropToFloor( VMA(1), VMA(2), VMA(3), args[4], args[5] );
 
-	case BOTLIB_AI_ALLOC_CHAT_STATE:
-		return botlib_export->ai.BotAllocChatState();
-	case BOTLIB_AI_FREE_CHAT_STATE:
-		botlib_export->ai.BotFreeChatState( args[1] );
-		return 0;
-	case BOTLIB_AI_QUEUE_CONSOLE_MESSAGE:
-		botlib_export->ai.BotQueueConsoleMessage( args[1], args[2], VMA(3) );
-		return 0;
-	case BOTLIB_AI_REMOVE_CONSOLE_MESSAGE:
-		botlib_export->ai.BotRemoveConsoleMessage( args[1], args[2] );
-		return 0;
-	case BOTLIB_AI_NEXT_CONSOLE_MESSAGE:
-		return botlib_export->ai.BotNextConsoleMessage( args[1], VMA(2) );
-	case BOTLIB_AI_NUM_CONSOLE_MESSAGE:
-		return botlib_export->ai.BotNumConsoleMessages( args[1] );
-	case BOTLIB_AI_INITIAL_CHAT:
-		botlib_export->ai.BotInitialChat( args[1], VMA(2), args[3], VMA(4), VMA(5), VMA(6), VMA(7), VMA(8), VMA(9), VMA(10), VMA(11) );
-		return 0;
-	case BOTLIB_AI_NUM_INITIAL_CHATS:
-		return botlib_export->ai.BotNumInitialChats( args[1], VMA(2) );
-	case BOTLIB_AI_REPLY_CHAT:
-		return botlib_export->ai.BotReplyChat( args[1], VMA(2), args[3], args[4], VMA(5), VMA(6), VMA(7), VMA(8), VMA(9), VMA(10), VMA(11), VMA(12) );
-	case BOTLIB_AI_CHAT_LENGTH:
-		return botlib_export->ai.BotChatLength( args[1] );
-	case BOTLIB_AI_ENTER_CHAT:
-		botlib_export->ai.BotEnterChat( args[1], args[2], args[3] );
-		return 0;
-	case BOTLIB_AI_GET_CHAT_MESSAGE:
-		botlib_export->ai.BotGetChatMessage( args[1], VMA(2), args[3] );
-		return 0;
-	case BOTLIB_AI_STRING_CONTAINS:
-		return botlib_export->ai.StringContains( VMA(1), VMA(2), args[3] );
-	case BOTLIB_AI_FIND_MATCH:
-		return botlib_export->ai.BotFindMatch( VMA(1), VMA(2), args[3] );
-	case BOTLIB_AI_MATCH_VARIABLE:
-		botlib_export->ai.BotMatchVariable( VMA(1), args[2], VMA(3), args[4] );
-		return 0;
-	case BOTLIB_AI_UNIFY_WHITE_SPACES:
-		botlib_export->ai.UnifyWhiteSpaces( VMA(1) );
-		return 0;
-	case BOTLIB_AI_REPLACE_SYNONYMS:
-		botlib_export->ai.BotReplaceSynonyms( VMA(1), args[2] );
-		return 0;
-	case BOTLIB_AI_LOAD_CHAT_FILE:
-		return botlib_export->ai.BotLoadChatFile( args[1], VMA(2), VMA(3) );
-	case BOTLIB_AI_SET_CHAT_GENDER:
-		botlib_export->ai.BotSetChatGender( args[1], args[2] );
-		return 0;
-	case BOTLIB_AI_SET_CHAT_NAME:
-		botlib_export->ai.BotSetChatName( args[1], VMA(2), args[3] );
-		return 0;
-
 	default:
 		Com_Error( ERR_DROP, "Bad game system trap: %ld", (long int) args[0] );
 	}
