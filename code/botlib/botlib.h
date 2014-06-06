@@ -45,14 +45,7 @@ struct aas_trace_s;
 struct aas_altroutegoal_s;
 struct aas_reachability_s;
 struct aas_predictroute_s;
-struct bot_consolemessage_s;
-struct bot_match_s;
-struct bot_goal_s;
-struct bot_moveresult_s;
-struct bot_initmove_s;
-struct weaponinfo_s;
 
-#define BOTFILESBASEFOLDER		"botfiles"
 //debug line colors
 #define LINECOLOR_NONE			-1
 #define LINECOLOR_RED			1//0xf2f2f0f0L
@@ -68,10 +61,6 @@ struct weaponinfo_s;
 #define PRT_ERROR				3
 #define PRT_FATAL				4
 #define PRT_EXIT				5
-
-//console message types
-#define CMS_NORMAL				0
-#define CMS_CHAT				1
 
 //botlib error codes
 #define BLERR_NOERROR					0	//no error
