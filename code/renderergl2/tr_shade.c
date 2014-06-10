@@ -452,33 +452,58 @@ static void ProjectDlightTexture( void ) {
 		
 		GLSL_SetUniformFloat(sp, UNIFORM_INTENSITY, intensity);
 
-		if ( vertexLight )
-			GL_Bind( tr.whiteImage );
-		else
-			GL_Bind( tr.dlightImage );
+		if ( dl->dlshader ) {
+			shader_t *dls = dl->dlshader;
+			int i;
 
-		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
-		// where they aren't rendered
-		if ( dl->flags & REF_ADDITIVE_DLIGHT ) {
-			GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		}
-		else {
-			GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		}
+			for ( i = 0; i < dls->numUnfoggedPasses; i++ ) {
+				shaderStage_t *stage = dls->stages[i];
+				R_BindAnimatedImageToTMU( &dls->stages[i]->bundle[0], 0 );
+				GL_State( stage->stateBits | GLS_DEPTHFUNC_EQUAL );
 
-		if (tess.multiDrawPrimitives)
-		{
-			shaderCommands_t *input = &tess;
-			R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
-		}
-		else
-		{
-			R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
-		}
+				if (tess.multiDrawPrimitives)
+				{
+					shaderCommands_t *input = &tess;
+					R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
+				}
+				else
+				{
+					R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
+				}
 
-		backEnd.pc.c_totalIndexes += tess.numIndexes;
-		backEnd.pc.c_dlightIndexes += tess.numIndexes;
-		backEnd.pc.c_dlightVertexes += tess.numVertexes;
+				backEnd.pc.c_totalIndexes += tess.numIndexes;
+				backEnd.pc.c_dlightIndexes += tess.numIndexes;
+				backEnd.pc.c_dlightVertexes += tess.numVertexes;
+			}
+		} else {
+			if ( vertexLight )
+				GL_Bind( tr.whiteImage );
+			else
+				GL_Bind( tr.dlightImage );
+
+			// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
+			// where they aren't rendered
+			if ( dl->flags & REF_ADDITIVE_DLIGHT ) {
+				GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			}
+			else {
+				GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			}
+
+			if (tess.multiDrawPrimitives)
+			{
+				shaderCommands_t *input = &tess;
+				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
+			}
+			else
+			{
+				R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
+			}
+
+			backEnd.pc.c_totalIndexes += tess.numIndexes;
+			backEnd.pc.c_dlightIndexes += tess.numIndexes;
+			backEnd.pc.c_dlightVertexes += tess.numVertexes;
+		}
 	}
 }
 

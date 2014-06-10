@@ -663,24 +663,37 @@ static void ProjectDlightTexture_altivec( void ) {
 		qglEnableClientState( GL_COLOR_ARRAY );
 		qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, colorArray );
 
-		R_FogOff();
-		if ( !vertexLight ) {
-			GL_Bind( tr.dlightImage );
+		if ( dl->dlshader ) {
+			shader_t *dls = dl->dlshader;
+
+			for ( i = 0; i < dls->numUnfoggedPasses; i++ ) {
+				shaderStage_t *stage = dls->stages[i];
+				R_BindAnimatedImage( &dls->stages[i]->bundle[0] );
+				GL_State( stage->stateBits | GLS_DEPTHFUNC_EQUAL );
+				R_DrawElements( numIndexes, hitIndexes );
+				backEnd.pc.c_totalIndexes += numIndexes;
+				backEnd.pc.c_dlightIndexes += numIndexes;
+			}
 		} else {
-			GL_Bind( tr.whiteImage );
+			R_FogOff();
+			if ( !vertexLight ) {
+				GL_Bind( tr.dlightImage );
+			} else {
+				GL_Bind( tr.whiteImage );
+			}
+			// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
+			// where they aren't rendered
+			if ( dl->flags & REF_ADDITIVE_DLIGHT ) {
+				GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			}
+			else {
+				GL_State( GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			}
+			R_DrawElements( numIndexes, hitIndexes );
+			backEnd.pc.c_totalIndexes += numIndexes;
+			backEnd.pc.c_dlightIndexes += numIndexes;
+			RB_FogOn();
 		}
-		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
-		// where they aren't rendered
-		if ( dl->flags & REF_ADDITIVE_DLIGHT ) {
-			GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		}
-		else {
-			GL_State( GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		}
-		R_DrawElements( numIndexes, hitIndexes );
-		backEnd.pc.c_totalIndexes += numIndexes;
-		backEnd.pc.c_dlightIndexes += numIndexes;
-		RB_FogOn();
 	}
 }
 #endif
@@ -894,24 +907,37 @@ static void ProjectDlightTexture_scalar( void ) {
 		qglEnableClientState( GL_COLOR_ARRAY );
 		qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, colorArray );
 
-		R_FogOff();
-		if ( !vertexLight ) {
-			GL_Bind( tr.dlightImage );
+		if ( dl->dlshader ) {
+			shader_t *dls = dl->dlshader;
+
+			for ( i = 0; i < dls->numUnfoggedPasses; i++ ) {
+				shaderStage_t *stage = dls->stages[i];
+				R_BindAnimatedImage( &dls->stages[i]->bundle[0] );
+				GL_State( stage->stateBits | GLS_DEPTHFUNC_EQUAL );
+				R_DrawElements( numIndexes, hitIndexes );
+				backEnd.pc.c_totalIndexes += numIndexes;
+				backEnd.pc.c_dlightIndexes += numIndexes;
+			}
 		} else {
-			GL_Bind( tr.whiteImage );
+			R_FogOff();
+			if ( !vertexLight ) {
+				GL_Bind( tr.dlightImage );
+			} else {
+				GL_Bind( tr.whiteImage );
+			}
+			// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
+			// where they aren't rendered
+			if ( dl->flags & REF_ADDITIVE_DLIGHT ) {
+				GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			}
+			else {
+				GL_State( GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			}
+			R_DrawElements( numIndexes, hitIndexes );
+			backEnd.pc.c_totalIndexes += numIndexes;
+			backEnd.pc.c_dlightIndexes += numIndexes;
+			RB_FogOn();
 		}
-		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
-		// where they aren't rendered
-		if ( dl->flags & REF_ADDITIVE_DLIGHT ) {
-			GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		}
-		else {
-			GL_State( GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		}
-		R_DrawElements( numIndexes, hitIndexes );
-		backEnd.pc.c_totalIndexes += numIndexes;
-		backEnd.pc.c_dlightIndexes += numIndexes;
-		RB_FogOn();
 	}
 }
 

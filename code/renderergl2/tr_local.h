@@ -83,6 +83,7 @@ typedef struct dlight_s {
 	float		radiusInverseCubed;	// attenuation optimization
 	float		intensity;			// 1.0 = fullbright, > 1.0 = overbright
 	int			flags;
+	struct shader_s	*dlshader;
 
 	vec3_t		transformed;		// origin in local coordinate system
 } dlight_t;
