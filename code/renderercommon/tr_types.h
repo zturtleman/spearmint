@@ -77,7 +77,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define RDF_UNDERWATER		0x0002		// underwater
 #define RDF_HYPERSPACE		0x0004		// teleportation effect
 #define RDF_SUNLIGHT		0x0008		// render sunlight and shadows
-#define RDF_NOSKY			0x0010		// do not render sky. used when there is a separate skybox portal.
+#define RDF_NOSKY			0x0010		// do not render sky. used on world when there is a separate skybox portal.
+#define RDF_ONLYSKY			0x0020		// only render sky. used on skybox portal when want to disable ground.
 
 // any change in the LIGHTMAP_* defines here MUST be reflected in
 // R_FindShader() in tr_bsp.c
