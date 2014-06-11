@@ -378,7 +378,7 @@ static void R_AddWorldSurface( msurface_t *surf, shader_t *shader, int fogNum, i
 	surf->fogIndex = fogNum;
 
 	// check for dlighting
-	if ( dlightBits ) {
+	/*if ( dlightBits ) */{
 		dlightBits = R_DlightSurface( surf, dlightBits );
 		dlightBits = ( dlightBits != 0 );
 	}
