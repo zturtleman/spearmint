@@ -1783,6 +1783,16 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
 			}
+			else if ( !Q_stricmp( token, "lightingDiffuseEntity" ) )
+			{
+				// lighting diffuse only works on entities, not 2D or world
+				if ( shader.lightmapIndex == LIGHTMAP_NONE ) {
+					stage->rgbGen = CGEN_LIGHTING_DIFFUSE_ENTITY;
+				} else {
+					// use vertex color fallback
+					stage->rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
+				}
+			}
 			else if ( !Q_stricmp( token, "oneMinusVertex" ) )
 			{
 				stage->rgbGen = CGEN_ONE_MINUS_VERTEX;
@@ -3226,6 +3236,7 @@ static void ComputeVertexAttribs(void)
 				break;
 
 			case CGEN_LIGHTING_DIFFUSE:
+			case CGEN_LIGHTING_DIFFUSE_ENTITY:
 				shader.vertexAttribs |= ATTR_NORMAL;
 				break;
 
@@ -3583,6 +3594,15 @@ static qboolean CollapseStagesToGLSL(void)
 			{
 				case AGEN_LIGHTING_SPECULAR:
 				case AGEN_PORTAL:
+					skip = qtrue;
+					break;
+				default:
+					break;
+			}
+
+			switch(pStage->rgbGen)
+			{
+				case CGEN_LIGHTING_DIFFUSE_ENTITY:
 					skip = qtrue;
 					break;
 				default:

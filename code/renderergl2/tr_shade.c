@@ -636,6 +636,7 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 			break;
 		case CGEN_IDENTITY:
 		case CGEN_LIGHTING_DIFFUSE:
+		case CGEN_LIGHTING_DIFFUSE_ENTITY:
 		case CGEN_BAD:
 			break;
 	}
@@ -1392,7 +1393,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
 		}
 
-		if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE)
+		if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE || pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
 		{
 			vec4_t vec;
 
@@ -1408,6 +1409,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
 
 			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0.0f);
+
+			if ( pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY )
+			{
+				int i;
+
+				for ( i = 0; i < 3; ++i )
+				{
+					vec[i] = backEnd.currentEntity->e.shaderRGBA[i] / 255.0f;
+				}
+
+				GLSL_SetUniformVec3(sp, UNIFORM_DIFFUSECOLOR, vec);
+			}
 		}
 		else if (pStage->bundle[0].tcGen == TCGEN_ENVIRONMENT_CELSHADE_MAPPED)
 		{

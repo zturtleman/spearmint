@@ -1405,9 +1405,9 @@ static void RB_CalcDiffuseColor_altivec( unsigned char *colors )
 }
 #endif
 
-static void RB_CalcDiffuseColor_scalar( unsigned char *colors )
+static void RB_CalcDiffuseColor_scalar( unsigned char *colors, const byte *colorMult )
 {
-	int				i, j;
+	int				i, j, c;
 	float			*v, *normal;
 	float			incoming;
 	trRefEntity_t	*ent;
@@ -1416,11 +1416,23 @@ static void RB_CalcDiffuseColor_scalar( unsigned char *colors )
 	vec3_t			lightDir;
 	vec3_t			directedLight;
 	int				numVertexes;
+	vec3_t			scale;
 	ent = backEnd.currentEntity;
-	ambientLightInt = ent->ambientLightInt;
 	VectorCopy( ent->ambientLight, ambientLight );
 	VectorCopy( ent->directedLight, directedLight );
 	VectorCopy( ent->lightDir, lightDir );
+
+	if ( colorMult ) {
+		for ( i = 0 ; i < 3; ++i ) {
+			scale[i] = (float)colorMult[i] / 255.0f;
+			((byte *)&ambientLightInt)[i] = ri.ftol( ambientLight[i] * scale[i] );
+		}
+
+		((byte *)&ambientLightInt)[3] = 0xff;
+	} else {
+		VectorSet( scale, 1, 1, 1 );
+		ambientLightInt = ent->ambientLightInt;
+	}
 
 	v = tess.xyz[0];
 	normal = tess.normal[0];
@@ -1431,38 +1443,30 @@ static void RB_CalcDiffuseColor_scalar( unsigned char *colors )
 		if ( incoming <= 0 ) {
 			*(int *)&colors[i*4] = ambientLightInt;
 			continue;
-		} 
-		j = ri.ftol(ambientLight[0] + incoming * directedLight[0]);
-		if ( j > 255 ) {
-			j = 255;
 		}
-		colors[i*4+0] = j;
 
-		j = ri.ftol(ambientLight[1] + incoming * directedLight[1]);
-		if ( j > 255 ) {
-			j = 255;
+		for ( j = 0; j < 3; ++j ) {
+			c = ri.ftol(ambientLight[j] + incoming * directedLight[j]);
+			if ( c > 255 ) {
+				c = 255;
+			}
+			colors[i*4+j] = ri.ftol( c * scale[j] );
 		}
-		colors[i*4+1] = j;
-
-		j = ri.ftol(ambientLight[2] + incoming * directedLight[2]);
-		if ( j > 255 ) {
-			j = 255;
-		}
-		colors[i*4+2] = j;
 
 		colors[i*4+3] = 255;
 	}
 }
 
-void RB_CalcDiffuseColor( unsigned char *colors )
+void RB_CalcDiffuseColor( unsigned char *colors, const byte *colorMult )
 {
 #if idppc_altivec
 	if (com_altivec->integer) {
 		// must be in a seperate function or G3 systems will crash.
+		// ZTM: FIXME: lightingDiffuseEntity not supported on altivec
 		RB_CalcDiffuseColor_altivec( colors );
 		return;
 	}
 #endif
-	RB_CalcDiffuseColor_scalar( colors );
+	RB_CalcDiffuseColor_scalar( colors, colorMult );
 }
 

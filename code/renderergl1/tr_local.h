@@ -193,6 +193,7 @@ typedef enum {
 	CGEN_WAVEFORM,			// programmatically generated
 	CGEN_COLOR_WAVEFORM,	// constant RGB color multiplied times waveform
 	CGEN_LIGHTING_DIFFUSE,
+	CGEN_LIGHTING_DIFFUSE_ENTITY, // entity RGB color multiplied times lighting diffuse
 	CGEN_FOG,				// standard fog
 	CGEN_CONST				// fixed color
 } colorGen_t;
@@ -1627,7 +1628,7 @@ void	RB_CalcStretchTexCoords( const waveForm_t *wf, float *texCoords );
 void	RB_CalcColorFromEntity( unsigned char *dstColors );
 void	RB_CalcColorFromOneMinusEntity( unsigned char *dstColors );
 void	RB_CalcSpecularAlpha( unsigned char *alphas );
-void	RB_CalcDiffuseColor( unsigned char *colors );
+void	RB_CalcDiffuseColor( unsigned char *colors, const byte *colorMult );
 
 /*
 =============================================================

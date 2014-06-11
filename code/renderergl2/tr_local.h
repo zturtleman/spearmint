@@ -279,6 +279,7 @@ typedef enum {
 	CGEN_WAVEFORM,			// programmatically generated
 	CGEN_COLOR_WAVEFORM,	// constant RGB color multiplied times waveform
 	CGEN_LIGHTING_DIFFUSE,
+	CGEN_LIGHTING_DIFFUSE_ENTITY, // entity RGB color multiplied times lighting diffuse
 	CGEN_FOG,				// standard fog
 	CGEN_CONST				// fixed color
 } colorGen_t;
@@ -750,6 +751,7 @@ typedef enum
 
 	// new in spearmint
 	UNIFORM_INTENSITY,
+	UNIFORM_DIFFUSECOLOR,
 
 	UNIFORM_COUNT
 } uniform_t;
