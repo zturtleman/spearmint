@@ -93,8 +93,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 #endif
 
-//#define	PRE_RELEASE_DEMO
-
 //============================================================================
 
 //
