@@ -34,60 +34,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
-#define PRODUCT_NAME				"Spearmint"
-
-// Keep this in-sync with VERSION in Makefile.
-#ifndef PRODUCT_VERSION
-	#define PRODUCT_VERSION			"Alpha"
-#endif
-
-// Settings directory name
-#define HOMEPATH_NAME_UNIX			".spearmint"
-#define HOMEPATH_NAME_WIN			"Spearmint"
-#define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
-
-// Separates games in server browser. Must NOT contain whitespace (dpmaster will reject the game servers).
-// Change this if not compatible with Spearmint games aka cannot play them (such as if you break VM compatibility).
-#define GAMENAME_FOR_MASTER			"Spearmint"
-
-// Game's engine settings for compatibility and other information needed before loading CGame VM.
-// Probably don't need to change this, but if you break compatiblity feel free to give it a less stupid name.
-#define GAMESETTINGS				"mint-game.settings"
-
-// Prefix for game and cgame virtual machines. Example: vm/PREFIXcgame.qvm, PREFIXcgame_x86.dll
-// Change this if you break VM API compatibility with Spearmint.
-// You'll also need to change VM_PREFIX in game code Makefile.
-#define VM_PREFIX					"mint-"
-
-// Prefix for renderer native libraries. Example: PREFIXopengl1_x86.dll
-// Change this if you break renderer compatibility with Spearmint.
-// You'll also need to change RENDERER_PREFIX in Makefile.
-#define RENDERER_PREFIX				"mint-renderer-"
-
-// Default game to load (default fs_game value).
-// You can change this and it won't break network compatiblity.
-#ifndef BASEGAME
-	#define BASEGAME				"baseq3"
-#endif
-
-// In the future if the client-server protocol is modified, this may allow old and new engines to play together
-//#define LEGACY_PROTOCOL
-
-// Heartbeat for dpmaster protocol. You shouldn't change this unless you know what you're doing
-#define HEARTBEAT_FOR_MASTER		"DarkPlaces"
-#define FLATLINE_FOR_MASTER			HEARTBEAT_FOR_MASTER
-
-// id Software games to not auto download
-#define BASEQ3				"baseq3"
-#define BASETA				"missionpack"
-
-#define Q3_VERSION PRODUCT_NAME " " PRODUCT_VERSION
-
-#define MAX_TEAMNAME		32
-#define MAX_MASTER_SERVERS      5	// number of supported master servers
-
-#define DEMOEXT	"mintdemo"			// standard demo extension
-
 #ifdef _MSC_VER
 
 #pragma warning(disable : 4018)     // signed/unsigned mismatch
