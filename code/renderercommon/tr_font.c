@@ -402,6 +402,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 	char		imageName[MAX_QPATH];
 	char		datName[MAX_QPATH];
 	char		strippedName[MAX_QPATH];
+	float		screenScale;
 
 	if (ftLibrary == NULL) {
 		ri.Printf(PRINT_WARNING, "RE_RegisterFont: FreeType not initialized.\n");
@@ -425,8 +426,15 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 		return qfalse;
 	}
 
-	// scale dpi based on screen height
-	dpi = 72.0f * (glConfig.vidHeight / (float)SCREEN_HEIGHT);
+	// point sizes are for a virtual 640x480 screen
+	if ( glConfig.vidWidth * 480 > glConfig.vidHeight * 640 ) {
+		screenScale = (glConfig.vidHeight / 480.0f);
+	} else {
+		screenScale = (glConfig.vidWidth / 640.0f);
+	}
+
+	// scale dpi based on screen resolution
+	dpi = 72.0f * screenScale;
 
 	if (FT_Set_Char_Size( face, pointSize << 6, pointSize << 6, dpi, dpi)) {
 		ri.Printf(PRINT_WARNING, "RE_RegisterFont: FreeType, unable to set face char size.\n");
@@ -436,7 +444,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 	//*font = &registeredFonts[registeredFontCount++];
 
 	// scale image size based on screen height, use the next higher power of two
-	for (imageSize = 256; imageSize < 256.0f * (glConfig.vidHeight / (float)SCREEN_HEIGHT); imageSize<<=1);
+	for (imageSize = 256; imageSize < 256.0f * dpi / 72.0f; imageSize<<=1);
 
 	// do not exceed maxTextureSize
 	if (imageSize > glConfig.maxTextureSize) {

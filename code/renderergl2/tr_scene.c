@@ -401,7 +401,7 @@ RE_AddDynamicLightToScene
 
 =====================
 */
-void RE_AddDynamicLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b, int flags ) {
+void RE_AddDynamicLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b, int flags, qhandle_t hShader ) {
 	dlight_t	*dl;
 
 	// early out
@@ -428,6 +428,11 @@ void RE_AddDynamicLightToScene( const vec3_t org, float radius, float intensity,
 	dl->color[ 1 ] = g;
 	dl->color[ 2 ] = b;
 	dl->flags = flags;
+	if ( hShader ) {
+		dl->dlshader = R_GetShaderByHandle( hShader );
+	} else {
+		dl->dlshader = NULL;
+	}
 }
 
 /*
@@ -437,7 +442,7 @@ RE_AddLightToScene
 =====================
 */
 void RE_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b ) {
-	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT | REF_SURFACE_DLIGHT );
+	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT | REF_SURFACE_DLIGHT, 0 );
 }
 
 /*
@@ -447,7 +452,7 @@ RE_AddAdditiveLightToScene
 =====================
 */
 void RE_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b ) {
-	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT | REF_SURFACE_DLIGHT | REF_ADDITIVE_DLIGHT );
+	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT | REF_SURFACE_DLIGHT | REF_ADDITIVE_DLIGHT, 0 );
 }
 
 /*

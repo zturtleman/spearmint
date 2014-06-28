@@ -50,6 +50,7 @@ uniform int    u_AlphaGen;
 uniform vec3   u_AmbientLight;
 uniform vec3   u_DirectedLight;
 uniform float  u_PortalRange;
+uniform	vec3   u_DiffuseColor;
 #endif
 
 #if defined(USE_VERTEX_ANIMATION)
@@ -169,6 +170,12 @@ vec4 CalcColor(vec3 position, vec3 normal)
 		float incoming = clamp(dot(normal, u_ModelLightDir), 0.0, 1.0);
 
 		color.rgb = clamp(u_DirectedLight * incoming + u_AmbientLight, 0.0, 1.0);
+	}
+	else if (u_ColorGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
+	{
+		float incoming = clamp(dot(normal, u_ModelLightDir), 0.0, 1.0);
+
+		color.rgb = clamp(u_DirectedLight * incoming + u_AmbientLight, 0.0, 1.0) * u_DiffuseColor;
 	}
 	
 	vec3 viewer = u_LocalViewOrigin - position;

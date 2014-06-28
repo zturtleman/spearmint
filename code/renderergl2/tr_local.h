@@ -83,6 +83,7 @@ typedef struct dlight_s {
 	float		radiusInverseCubed;	// attenuation optimization
 	float		intensity;			// 1.0 = fullbright, > 1.0 = overbright
 	int			flags;
+	struct shader_s	*dlshader;
 
 	vec3_t		transformed;		// origin in local coordinate system
 } dlight_t;
@@ -278,6 +279,7 @@ typedef enum {
 	CGEN_WAVEFORM,			// programmatically generated
 	CGEN_COLOR_WAVEFORM,	// constant RGB color multiplied times waveform
 	CGEN_LIGHTING_DIFFUSE,
+	CGEN_LIGHTING_DIFFUSE_ENTITY, // entity RGB color multiplied times lighting diffuse
 	CGEN_FOG,				// standard fog
 	CGEN_CONST				// fixed color
 } colorGen_t;
@@ -749,6 +751,7 @@ typedef enum
 
 	// new in spearmint
 	UNIFORM_INTENSITY,
+	UNIFORM_DIFFUSECOLOR,
 
 	UNIFORM_COUNT
 } uniform_t;

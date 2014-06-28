@@ -113,17 +113,6 @@ void CL_MouseEvent( int localPlayerNum, int dx, int dy, int time ) {
 
 /*
 =================
-CL_JoystickEvent
-=================
-*/
-void CL_JoystickEvent( int localPlayerNum, int axis, int value, int time ) {
-	if ( cgvm ) {
-		VM_Call( cgvm, CG_JOYSTICK_EVENT, localPlayerNum, axis, value );
-	}
-}
-
-/*
-=================
 CL_MouseMove
 =================
 */

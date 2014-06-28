@@ -370,6 +370,14 @@ R_AddWorldSurface
 ======================
 */
 static void R_AddWorldSurface( msurface_t *surf, shader_t *shader, int fogNum, int dlightBits, int pshadowBits ) {
+	// no sky surfaces or only sky surfaces
+	if ( ( tr.refdef.rdflags & RDF_NOSKY ) && ( shader->isSky || ( shader->surfaceFlags & SURF_SKY ) ) ) {
+		return;
+	}
+	if ( ( tr.refdef.rdflags & RDF_ONLYSKY ) && !shader->isSky && !( shader->surfaceFlags & SURF_SKY ) ) {
+		return;
+	}
+
 	// try to cull before dlighting or adding
 	if ( R_CullSurface( surf ) ) {
 		return;
@@ -378,7 +386,7 @@ static void R_AddWorldSurface( msurface_t *surf, shader_t *shader, int fogNum, i
 	surf->fogIndex = fogNum;
 
 	// check for dlighting
-	if ( dlightBits ) {
+	/*if ( dlightBits ) */{
 		dlightBits = R_DlightSurface( surf, dlightBits );
 		dlightBits = ( dlightBits != 0 );
 	}

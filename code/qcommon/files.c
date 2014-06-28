@@ -192,6 +192,7 @@ typedef struct {
 	char pakname[MAX_QPATH];
 	unsigned checksum;
 	qboolean nodownload;
+	qboolean optional;
 } purePak_t;
 
 purePak_t com_purePaks[MAX_PAKSUMS];
@@ -3979,12 +3980,15 @@ void FS_ParsePakChecksums( char **text, const char *path, const char *gameDir ) 
 
 		// read optional keywords
 		com_purePaks[fs_numPaksums].nodownload = qfalse;
+		com_purePaks[fs_numPaksums].optional = qfalse;
 		while ( 1 ) {
 			token = COM_ParseExt( text, qfalse );
 			if ( !*token )
 				break;
 			if ( Q_stricmp( token, "nodownload" ) == 0 ) {
 				com_purePaks[fs_numPaksums].nodownload = qtrue;
+			} else if ( Q_stricmp( token, "optional" ) == 0 ) {
+				com_purePaks[fs_numPaksums].optional = qtrue;
 			} else {
 				Com_Printf( "Unknown pak keyword '%s' in %s\n", token, path );
 			}
@@ -4087,6 +4091,11 @@ static void FS_CheckPaks( qboolean quiet )
 		}
 
 		if ( !path ) {
+			if ( com_purePaks[pak].optional ) {
+				// ignore missing optional paks
+				continue;
+			}
+
 			if ( !quiet ) {
 				Com_Printf("\n\n"
 						"**********************************************************************\n"

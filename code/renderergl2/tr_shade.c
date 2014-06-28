@@ -452,33 +452,58 @@ static void ProjectDlightTexture( void ) {
 		
 		GLSL_SetUniformFloat(sp, UNIFORM_INTENSITY, intensity);
 
-		if ( vertexLight )
-			GL_Bind( tr.whiteImage );
-		else
-			GL_Bind( tr.dlightImage );
+		if ( dl->dlshader ) {
+			shader_t *dls = dl->dlshader;
+			int i;
 
-		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
-		// where they aren't rendered
-		if ( dl->flags & REF_ADDITIVE_DLIGHT ) {
-			GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		}
-		else {
-			GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		}
+			for ( i = 0; i < dls->numUnfoggedPasses; i++ ) {
+				shaderStage_t *stage = dls->stages[i];
+				R_BindAnimatedImageToTMU( &dls->stages[i]->bundle[0], 0 );
+				GL_State( stage->stateBits | GLS_DEPTHFUNC_EQUAL );
 
-		if (tess.multiDrawPrimitives)
-		{
-			shaderCommands_t *input = &tess;
-			R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
-		}
-		else
-		{
-			R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
-		}
+				if (tess.multiDrawPrimitives)
+				{
+					shaderCommands_t *input = &tess;
+					R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
+				}
+				else
+				{
+					R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
+				}
 
-		backEnd.pc.c_totalIndexes += tess.numIndexes;
-		backEnd.pc.c_dlightIndexes += tess.numIndexes;
-		backEnd.pc.c_dlightVertexes += tess.numVertexes;
+				backEnd.pc.c_totalIndexes += tess.numIndexes;
+				backEnd.pc.c_dlightIndexes += tess.numIndexes;
+				backEnd.pc.c_dlightVertexes += tess.numVertexes;
+			}
+		} else {
+			if ( vertexLight )
+				GL_Bind( tr.whiteImage );
+			else
+				GL_Bind( tr.dlightImage );
+
+			// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
+			// where they aren't rendered
+			if ( dl->flags & REF_ADDITIVE_DLIGHT ) {
+				GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			}
+			else {
+				GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			}
+
+			if (tess.multiDrawPrimitives)
+			{
+				shaderCommands_t *input = &tess;
+				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
+			}
+			else
+			{
+				R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
+			}
+
+			backEnd.pc.c_totalIndexes += tess.numIndexes;
+			backEnd.pc.c_dlightIndexes += tess.numIndexes;
+			backEnd.pc.c_dlightVertexes += tess.numVertexes;
+		}
 	}
 }
 
@@ -611,6 +636,7 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 			break;
 		case CGEN_IDENTITY:
 		case CGEN_LIGHTING_DIFFUSE:
+		case CGEN_LIGHTING_DIFFUSE_ENTITY:
 		case CGEN_BAD:
 			break;
 	}
@@ -1367,7 +1393,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
 		}
 
-		if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE)
+		if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE || pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
 		{
 			vec4_t vec;
 
@@ -1383,6 +1409,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
 
 			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0.0f);
+
+			if ( pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY )
+			{
+				int i;
+
+				for ( i = 0; i < 3; ++i )
+				{
+					vec[i] = backEnd.currentEntity->e.shaderRGBA[i] / 255.0f;
+				}
+
+				GLSL_SetUniformVec3(sp, UNIFORM_DIFFUSECOLOR, vec);
+			}
 		}
 		else if (pStage->bundle[0].tcGen == TCGEN_ENVIRONMENT_CELSHADE_MAPPED)
 		{

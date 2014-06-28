@@ -155,6 +155,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_CubeMapInfo", GLSL_VEC4 },
 
 	{ "u_Intensity", GLSL_FLOAT },
+	{ "u_DiffuseColor", GLSL_VEC3 },
 };
 
 
@@ -305,8 +306,10 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 					 va("#ifndef colorGen_t\n"
 						"#define colorGen_t\n"
 						"#define CGEN_LIGHTING_DIFFUSE %i\n"
+						"#define CGEN_LIGHTING_DIFFUSE_ENTITY %i\n"
 						"#endif\n",
-						CGEN_LIGHTING_DIFFUSE));
+						CGEN_LIGHTING_DIFFUSE,
+						CGEN_LIGHTING_DIFFUSE_ENTITY));
 
 	Q_strcat(dest, size,
 							 va("#ifndef alphaGen_t\n"
@@ -1792,6 +1795,7 @@ shaderProgram_t *GLSL_GetGenericShaderProgram(int stage)
 	switch (pStage->rgbGen)
 	{
 		case CGEN_LIGHTING_DIFFUSE:
+		case CGEN_LIGHTING_DIFFUSE_ENTITY:
 			shaderAttribs |= GENERICDEF_USE_RGBAGEN;
 			break;
 		default:

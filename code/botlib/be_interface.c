@@ -51,8 +51,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "be_aas_def.h"
 #include "be_interface.h"
 
-#include "be_ai_chat.h"
-
 //library globals in a structure
 botlib_globals_t botlibglobals;
 
@@ -166,8 +164,6 @@ int Export_BotLibSetup(void)
 
 	errnum = AAS_Setup();			//be_aas_main.c
 	if (errnum != BLERR_NOERROR) return errnum;
-	errnum = BotSetupChatAI();		//be_ai_chat.c
-	if (errnum != BLERR_NOERROR) return errnum;
 
 	botlibsetup = qtrue;
 	botlibglobals.botlibsetup = qtrue;
@@ -186,8 +182,6 @@ int Export_BotLibShutdown(void)
 #ifndef DEMO
 	//DumpFileCRCs();
 #endif //DEMO
-	//
-	BotShutdownChatAI();		//be_ai_chat.c
 	//shud down aas
 	AAS_Shutdown();
 	//free all libvars
@@ -738,38 +732,6 @@ static void Init_AAS_Export( aas_export_t *aas ) {
 	aas->AAS_DropToFloor = AAS_DropToFloor;
 }
 
-  
-/*
-============
-Init_AI_Export
-============
-*/
-static void Init_AI_Export( ai_export_t *ai ) {
-	//-----------------------------------
-	// be_ai_chat.h
-	//-----------------------------------
-	ai->BotAllocChatState = BotAllocChatState;
-	ai->BotFreeChatState = BotFreeChatState;
-	ai->BotQueueConsoleMessage = BotQueueConsoleMessage;
-	ai->BotRemoveConsoleMessage = BotRemoveConsoleMessage;
-	ai->BotNextConsoleMessage = BotNextConsoleMessage;
-	ai->BotNumConsoleMessages = BotNumConsoleMessages;
-	ai->BotInitialChat = BotInitialChat;
-	ai->BotNumInitialChats = BotNumInitialChats;
-	ai->BotReplyChat = BotReplyChat;
-	ai->BotChatLength = BotChatLength;
-	ai->BotEnterChat = BotEnterChat;
-	ai->BotGetChatMessage = BotGetChatMessage;
-	ai->StringContains = StringContains;
-	ai->BotFindMatch = BotFindMatch;
-	ai->BotMatchVariable = BotMatchVariable;
-	ai->UnifyWhiteSpaces = UnifyWhiteSpaces;
-	ai->BotReplaceSynonyms = BotReplaceSynonyms;
-	ai->BotLoadChatFile = BotLoadChatFile;
-	ai->BotSetChatGender = BotSetChatGender;
-	ai->BotSetChatName = BotSetChatName;
-}
-
 
 /*
 ============
@@ -789,7 +751,6 @@ botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
 	}
 
 	Init_AAS_Export(&be_botlib_export.aas);
-	Init_AI_Export(&be_botlib_export.ai);
 
 	be_botlib_export.BotLibSetup = Export_BotLibSetup;
 	be_botlib_export.BotLibShutdown = Export_BotLibShutdown;

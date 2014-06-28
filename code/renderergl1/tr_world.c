@@ -206,6 +206,14 @@ static void R_AddWorldSurface( msurface_t *surf, shader_t *shader, int fogNum, i
 	surf->viewCount = tr.viewCount;
 	surf->fogIndex = fogNum;
 
+	// no sky surfaces or only sky surfaces
+	if ( ( tr.refdef.rdflags & RDF_NOSKY ) && ( shader->isSky || ( shader->surfaceFlags & SURF_SKY ) ) ) {
+		return;
+	}
+	if ( ( tr.refdef.rdflags & RDF_ONLYSKY ) && !shader->isSky && !( shader->surfaceFlags & SURF_SKY ) ) {
+		return;
+	}
+
 	// try to cull before dlighting or adding
 	if ( R_CullSurface( surf->data, shader ) ) {
 		return;

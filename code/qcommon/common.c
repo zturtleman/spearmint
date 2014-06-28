@@ -50,8 +50,8 @@ int demo_protocols[] =
 
 #define MIN_DEDICATED_COMHUNKMEGS 1
 #define MIN_COMHUNKMEGS		56
-#define DEF_COMHUNKMEGS 	256
-#define DEF_COMZONEMEGS		48
+#define DEF_COMHUNKMEGS 	384
+#define DEF_COMZONEMEGS		64
 #define DEF_COMHUNKMEGS_S	XSTRING(DEF_COMHUNKMEGS)
 #define DEF_COMZONEMEGS_S	XSTRING(DEF_COMZONEMEGS)
 
@@ -2408,7 +2408,11 @@ int Com_EventLoop( void ) {
 		if (ev.evType >= SE_MOUSE && ev.evType <= SE_MOUSE_LAST)
 			CL_MouseEvent( ev.evType - SE_MOUSE, ev.evValue, ev.evValue2, ev.evTime );
 		else if (ev.evType >= SE_JOYSTICK_AXIS && ev.evType <= SE_JOYSTICK_AXIS_LAST)
-			CL_JoystickEvent( ev.evType - SE_JOYSTICK_AXIS, ev.evValue, ev.evValue2, ev.evTime );
+			CL_JoystickAxisEvent( ev.evType - SE_JOYSTICK_AXIS, ev.evValue, ev.evValue2, ev.evTime );
+		else if (ev.evType >= SE_JOYSTICK_BUTTON && ev.evType <= SE_JOYSTICK_BUTTON_LAST)
+			CL_JoystickButtonEvent( ev.evType - SE_JOYSTICK_BUTTON, ev.evValue, ev.evValue2, ev.evTime );
+		else if (ev.evType >= SE_JOYSTICK_HAT && ev.evType <= SE_JOYSTICK_HAT_LAST)
+			CL_JoystickHatEvent( ev.evType - SE_JOYSTICK_HAT, ev.evValue, ev.evValue2, ev.evTime );
 		else
 		{
 			switch(ev.evType)
@@ -2782,6 +2786,7 @@ void Com_Init( char *commandLine ) {
 
 	// done early so bind command exists
 	CL_InitKeyCommands();
+	CL_InitJoyRemapCommands();
 
 	com_fs_pure = Cvar_Get ("fs_pure", "", CVAR_ROM);
 

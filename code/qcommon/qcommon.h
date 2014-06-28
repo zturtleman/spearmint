@@ -34,14 +34,64 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/cm_public.h"
 #include "../renderercommon/tr_public.h"
 
+// Engine name
+#define PRODUCT_NAME				"Spearmint"
+
+// Keep this in-sync with VERSION in Makefile.
+#ifndef PRODUCT_VERSION
+	#define PRODUCT_VERSION			"Alpha"
+#endif
+
+#define Q3_VERSION PRODUCT_NAME " " PRODUCT_VERSION
+
+// Settings directory name
+#define HOMEPATH_NAME_UNIX			".spearmint"
+#define HOMEPATH_NAME_WIN			"Spearmint"
+#define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
+
+// Separates games in server browser. Must NOT contain whitespace (dpmaster will reject the game servers).
+// Change this if not compatible with Spearmint games aka cannot play them (such as if you break VM compatibility).
+#define GAMENAME_FOR_MASTER			"Spearmint"
+
+// Game's engine settings for compatibility and other information needed before loading CGame VM.
+// Probably don't need to change this, but if you break compatiblity feel free to give it a less stupid name.
+#define GAMESETTINGS				"mint-game.settings"
+
+// Prefix for game and cgame virtual machines. Example: vm/PREFIXcgame.qvm, PREFIXcgame_x86.dll
+// Change this if you break VM API compatibility with Spearmint.
+// You'll also need to change VM_PREFIX in game code Makefile.
+#define VM_PREFIX					"mint-"
+
+// Prefix for renderer native libraries. Example: PREFIXopengl1_x86.dll
+// Change this if you break renderer compatibility with Spearmint.
+// You'll also need to change RENDERER_PREFIX in Makefile.
+#define RENDERER_PREFIX				"mint-renderer-"
+
+// Default game to load (default fs_game value).
+// You can change this and it won't break network compatiblity.
+#ifndef BASEGAME
+	#define BASEGAME				"baseq3"
+#endif
+
+// In the future if the client-server protocol is modified, this may allow old and new engines to play together
+//#define LEGACY_PROTOCOL
+
+// Heartbeat for dpmaster protocol. You shouldn't change this unless you know what you're doing
+#define HEARTBEAT_FOR_MASTER		"DarkPlaces"
+#define FLATLINE_FOR_MASTER			HEARTBEAT_FOR_MASTER
+
+#define MAX_MASTER_SERVERS      5	// number of supported master servers
+
+#define DEMOEXT	"mintdemo"			// standard demo extension
+
+//============================================================================
+
 //Ignore __attribute__ on non-gcc platforms
 #ifndef __GNUC__
 #ifndef __attribute__
 #define __attribute__(x)
 #endif
 #endif
-
-//#define	PRE_RELEASE_DEMO
 
 //============================================================================
 
@@ -856,6 +906,10 @@ typedef enum {
 	SE_MOUSE_LAST = SE_MOUSE + MAX_SPLITVIEW - 1, // Reserve values for SE_MOUSE events for splitscreen players
 	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_JOYSTICK_AXIS_LAST = SE_JOYSTICK_AXIS + MAX_SPLITVIEW - 1, // Reserve values for SE_JOYSTICK_AXIS events for splitscreen players
+	SE_JOYSTICK_BUTTON,	// evValue is a button number and evValue2 is the down flag
+	SE_JOYSTICK_BUTTON_LAST = SE_JOYSTICK_BUTTON + MAX_SPLITVIEW - 1, // Reserve values for SE_JOYSTICK_BUTTON events for splitscreen players
+	SE_JOYSTICK_HAT,	// evValue is a hat number and evValue2 is the state
+	SE_JOYSTICK_HAT_LAST = SE_JOYSTICK_HAT + MAX_SPLITVIEW - 1, // Reserve values for SE_JOYSTICK_HAT events for splitscreen players
 	SE_CONSOLE		// evPtr is a char*
 } sysEventType_t;
 
@@ -1081,6 +1135,8 @@ void CL_InitKeyCommands( void );
 // the keyboard binding interface must be setup before execing
 // config files, but the rest of client startup will happen later
 
+void CL_InitJoyRemapCommands( void );
+
 void CL_Init( void );
 void CL_Disconnect( qboolean showMainMenu );
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit);
@@ -1093,7 +1149,9 @@ void CL_CharEvent( int key );
 
 void CL_MouseEvent( int localPlayerNum, int dx, int dy, int time );
 
-void CL_JoystickEvent( int localPlayerNum, int axis, int value, int time );
+void CL_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned time );
+void CL_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsigned time );
+void CL_JoystickHatEvent( int localPlayerNum, int hat, int state, unsigned time );
 
 void CL_PacketEvent( netadr_t from, msg_t *msg );
 

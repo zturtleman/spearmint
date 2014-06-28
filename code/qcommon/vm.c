@@ -43,7 +43,7 @@ and one exported function: Perform
 
 #include "vm_local.h"
 
-cvar_t	*vm_minQvmHunkKB;
+cvar_t	*vm_minQvmHunkMegs;
 
 vm_t	*currentVM = NULL;
 vm_t	*lastVM    = NULL;
@@ -82,8 +82,8 @@ void VM_Init( void ) {
 	Cvar_Get( "vm_cgame", "0", CVAR_ARCHIVE );
 	Cvar_Get( "vm_game", "0", CVAR_ARCHIVE );
 
-	vm_minQvmHunkKB = Cvar_Get( "vm_minQvmHunkKB", "48", CVAR_ARCHIVE );
-	Cvar_CheckRange( vm_minQvmHunkKB, 0, 24 * 1024, qtrue );
+	vm_minQvmHunkMegs = Cvar_Get( "vm_minQvmHunkMegs", "4", CVAR_ARCHIVE );
+	Cvar_CheckRange( vm_minQvmHunkMegs, 0, 64, qtrue );
 
 	Cmd_AddCommand ("vmprofile", VM_VmProfile_f );
 	Cmd_AddCommand ("vminfo", VM_VmInfo_f );
@@ -503,7 +503,7 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 	vm->dataAlloc = vm->dataLength = dataLength - PROGRAM_STACK_SIZE;
 
 	// reserve additional data for dynamic memory allocation via trap_Alloc
-	dataLength += vm_minQvmHunkKB->integer * 1024;
+	dataLength += vm_minQvmHunkMegs->integer * 1024 * 1024;
 
 	// round up to next power of 2 so all data operations can
 	// be mask protected, extra data is used for dynamic memory allocation
