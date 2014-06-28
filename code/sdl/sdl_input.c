@@ -592,7 +592,7 @@ IN_InitJoystick
 */
 static void IN_InitJoystick( void )
 {
-	int i = 0;
+	int i = 0, j;
 	int total = 0;
 	char buf[16384] = "";
 	qboolean joyEnabled = qfalse;
@@ -649,11 +649,23 @@ static void IN_InitJoystick( void )
 		if( in_joystickNo[i]->integer < 0 || in_joystickNo[i]->integer >= total )
 			Cvar_Set( Com_LocalPlayerCvarName(i, "in_joystickNo"), "0" );
 
+		// don't allow multiple players to use the same joystick
+		for (j = 0; j < i; j++) {
+			if ( in_joystick[j]->integer && in_joystickNo[j]->integer == in_joystickNo[i]->integer ) {
+				break;
+			}
+		}
+
+		if ( j != i ) {
+			Com_DPrintf( "Joystick for player %d already in use by player %d.\n", i+1, j+1 );
+			continue;
+		}
+
 		stick[i] = SDL_JoystickOpen( in_joystickNo[i]->integer );
 
 		if (stick[i] == NULL) {
-			Com_DPrintf( "No joystick opened.\n" );
-			return;
+			Com_DPrintf( "Opening joystick for player %d failed.\n", i+1 );
+			continue;
 		}
 
 		Com_DPrintf( "Joystick %d opened for player %d\n", in_joystickNo[i]->integer, i+1 );
