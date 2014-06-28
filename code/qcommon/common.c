@@ -2786,6 +2786,7 @@ void Com_Init( char *commandLine ) {
 
 	// done early so bind command exists
 	CL_InitKeyCommands();
+	CL_InitJoyRemapCommands();
 
 	com_fs_pure = Cvar_Get ("fs_pure", "", CVAR_ROM);
 

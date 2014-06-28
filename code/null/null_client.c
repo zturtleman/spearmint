@@ -89,6 +89,10 @@ void CL_InitKeyCommands( void ) {
 	Cmd_AddCommand ("unbindall",Key_Dummy_f);
 }
 
+void CL_InitJoyRemapCommands( void ) {
+
+}
+
 void CL_FlushMemory(void)
 {
 }

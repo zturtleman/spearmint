@@ -614,3 +614,9 @@ void CL_WriteDemoMessage ( msg_t *msg, int headerBytes );
 void CL_GetMapTitle( char *buf, int bufLength );
 qboolean CL_GetLocalPlayerLocation( char *buf, int bufLength, int localPlayerNum );
 
+//
+// cl_joystick.c
+//
+void CL_SaveJoystickRemap( int localPlayerNum );
+qboolean CL_LoadJoystickRemap( int localPlayerNum, const char *joystickIdent );
+

@@ -1135,6 +1135,8 @@ void CL_InitKeyCommands( void );
 // the keyboard binding interface must be setup before execing
 // config files, but the rest of client startup will happen later
 
+void CL_InitJoyRemapCommands( void );
+
 void CL_Init( void );
 void CL_Disconnect( qboolean showMainMenu );
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit);
