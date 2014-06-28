@@ -60,9 +60,16 @@ typedef struct {
 } joyeventkey_t;
 
 #define MAX_JOY_REMAPS	32 // 5 (LS) + 5 (RS) + 4 (DPAD) + 18 button/hat/trigger events
-joyeventkey_t	joyEventRemap[CL_MAX_SPLITVIEW][MAX_JOY_REMAPS];
+typedef struct {
+	char			ident[MAX_QPATH];
+	char			name[MAX_QPATH];
+	int				references;
+	joyeventkey_t	remap[MAX_JOY_REMAPS];
+	qboolean		modified;	// qtrue if remap has been modified and needs to be saved
+} joyDevice_t;
 
-char joystickRemapIdent[CL_MAX_SPLITVIEW][MAX_QPATH];
+joyDevice_t joyDevice[CL_MAX_SPLITVIEW];
+int playerJoyRemapIndex[CL_MAX_SPLITVIEW];
 
 // joystick remaps are not cross-platform
 #ifdef _WIN32
@@ -195,37 +202,59 @@ qboolean CL_JoyEventsMatch( const joyevent_t *e1, const joyevent_t *e2 ) {
 CL_SetKeyForJoyEvent
 
 If keynum is -1 removes remap for joyevent. Returns qtrue if there was an event.
-Else; Returns qfalse if cannot add joystick event remap due to all slots being full.
+Else; Returns qtrue if updated or added event/key.
 ===================
 */
 qboolean CL_SetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent, int keynum ) {
 	int i;
 	int freeSlot = -1;
+	joyDevice_t *device;
+
+	if ( playerJoyRemapIndex[ localPlayerNum ] == -1 )
+		return qfalse;
+
+	device = &joyDevice[ playerJoyRemapIndex[ localPlayerNum ] ];
+
+	// always remap to main joystick enum range
+	if ( keynum >= K_FIRST_2JOY && keynum <= K_LAST_2JOY ) {
+		keynum = K_FIRST_JOY + keynum - K_FIRST_2JOY;
+	}
+	else if ( keynum >= K_FIRST_3JOY && keynum <= K_LAST_3JOY ) {
+		keynum = K_FIRST_JOY + keynum - K_FIRST_3JOY;
+	}
+	else if ( keynum >= K_FIRST_4JOY && keynum <= K_LAST_4JOY ) {
+		keynum = K_FIRST_JOY + keynum - K_FIRST_4JOY;
+	}
 
 	for ( i = 0; i < MAX_JOY_REMAPS; i++ ) {
-		if ( joyEventRemap[localPlayerNum][i].event.type == JOYEVENT_NONE ) {
+		if ( device->remap[i].event.type == JOYEVENT_NONE ) {
 			if ( freeSlot == -1 ) {
 				freeSlot = i;
 			}
 			continue;
 		}
 
-		if ( !CL_JoyEventsMatch( &joyEventRemap[localPlayerNum][i].event, joyevent ) )
+		if ( !CL_JoyEventsMatch( &device->remap[i].event, joyevent ) )
 			continue;
 
 		if ( keynum == -1 ) {
-			joyEventRemap[localPlayerNum][i].event.type = JOYEVENT_NONE;
+			device->modified = qtrue;
+			device->remap[i].event.type = JOYEVENT_NONE;
 			return qtrue;
 		}
 
-		joyEventRemap[localPlayerNum][i].keynum = keynum;
+		if ( device->remap[i].keynum != keynum ) {
+			device->modified = qtrue;
+			device->remap[i].keynum = keynum;
+		}
 		return qtrue;
 	}
 
 	// didn't find existing remap to replace, create new
 	if ( freeSlot != -1 && keynum != -1 ) {
-		joyEventRemap[localPlayerNum][freeSlot].event = *joyevent;
-		joyEventRemap[localPlayerNum][freeSlot].keynum = keynum;
+		device->modified = qtrue;
+		device->remap[freeSlot].event = *joyevent;
+		device->remap[freeSlot].keynum = keynum;
 		return qtrue;
 	}
 
@@ -242,13 +271,30 @@ Returns keynum.
 int CL_GetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent ) {
 	int keynum = -1;
 	int i;
+	joyDevice_t *device;
+
+	if ( playerJoyRemapIndex[ localPlayerNum ] == -1 )
+		return -1;
+
+	device = &joyDevice[ playerJoyRemapIndex[ localPlayerNum ] ];
 
 	for ( i = 0; i < MAX_JOY_REMAPS; i++ ) {
-		if ( !CL_JoyEventsMatch( &joyEventRemap[localPlayerNum][i].event, joyevent ) )
+		if ( !CL_JoyEventsMatch( &device->remap[i].event, joyevent ) )
 			continue;
 
-		keynum = joyEventRemap[localPlayerNum][i].keynum;
+		keynum = device->remap[i].keynum;
 		break;
+	}
+
+	// use correct joystick keys for player
+	if ( keynum >= K_FIRST_JOY && keynum <= K_LAST_JOY ) {
+		if ( localPlayerNum == 1 ) {
+			keynum = K_FIRST_2JOY + keynum - K_FIRST_JOY;
+		} else if ( localPlayerNum == 2 ) {
+			keynum = K_FIRST_3JOY + keynum - K_FIRST_JOY;
+		} else if (  localPlayerNum == 3 ) {
+			keynum = K_FIRST_4JOY + keynum - K_FIRST_JOY;
+		}
 	}
 
 	return keynum;
@@ -272,6 +318,11 @@ void Cmd_JoyUnmap_f (void)
 
 	localPlayerNum = Com_LocalPlayerForCvarName( Cmd_Argv(0) );
 
+	if ( playerJoyRemapIndex[ localPlayerNum ] == -1 ) {
+		Com_Printf( "Joystick for player %d not initialized\n", localPlayerNum+1 );
+		return;
+	}
+
 	if (!CL_StringToJoyEvent(Cmd_Argv(1), &joyevent))
 	{
 		Com_Printf ("\"%s\" isn't a valid joystick event\n", Cmd_Argv(1));
@@ -291,10 +342,18 @@ Cmd_JoyUnmapAll_f
 void Cmd_JoyUnmapAll_f (void)
 {
 	int			localPlayerNum;
+	joyDevice_t *device;
 
 	localPlayerNum = Com_LocalPlayerForCvarName( Cmd_Argv(0) );
 
-	Com_Memset( &joyEventRemap[localPlayerNum], 0, sizeof ( joyEventRemap[0] ) );
+	if ( playerJoyRemapIndex[ localPlayerNum ] == -1 ) {
+		Com_Printf( "Joystick for player %d not initialized\n", localPlayerNum+1 );
+		return;
+	}
+
+	device = &joyDevice[ playerJoyRemapIndex[ localPlayerNum ] ];
+
+	Com_Memset( device->remap, 0, sizeof ( device->remap[0] ) );
 }
 
 /*
@@ -317,6 +376,11 @@ void Cmd_JoyRemap_f (void)
 	}
 
 	localPlayerNum = Com_LocalPlayerForCvarName( Cmd_Argv(0) );
+
+	if ( playerJoyRemapIndex[ localPlayerNum ] == -1 ) {
+		Com_Printf( "Joystick for player %d not initialized\n", localPlayerNum+1 );
+		return;
+	}
 
 	if (!CL_StringToJoyEvent(Cmd_Argv(1), &joyevent))
 	{
@@ -354,16 +418,24 @@ Cmd_JoyRemapList_f
 void Cmd_JoyRemapList_f( void ) {
 	int		i;
 	int		localPlayerNum;
+	joyDevice_t *device;
 
 	localPlayerNum = Com_LocalPlayerForCvarName( Cmd_Argv(0) );
 
+	if ( playerJoyRemapIndex[ localPlayerNum ] == -1 ) {
+		Com_Printf( "Joystick for player %d not initialized\n", localPlayerNum+1 );
+		return;
+	}
+
+	device = &joyDevice[ playerJoyRemapIndex[ localPlayerNum ] ];
+
 	for ( i = 0 ; i < MAX_JOY_REMAPS ; i++ ) {
-		if ( joyEventRemap[localPlayerNum][i].event.type == JOYEVENT_NONE ) {
+		if ( device->remap[i].event.type == JOYEVENT_NONE ) {
 			continue;
 		}
 
-		Com_Printf ("%s %s\n", CL_JoyEventToString( &joyEventRemap[localPlayerNum][i].event ),
-								Key_KeynumToString( joyEventRemap[localPlayerNum][i].keynum ) );
+		Com_Printf ("%s %s\n", CL_JoyEventToString( &device->remap[i].event ),
+								Key_KeynumToString( device->remap[i].keynum ) );
 	}
 }
 
@@ -419,11 +491,12 @@ CL_InitJoyRemapCommands
 void CL_InitJoyRemapCommands( void ) {
 	int i;
 
-	Com_Memset( &joyEventRemap, 0, sizeof ( joyEventRemap ) );
-	Com_Memset( &joystickRemapIdent, 0, sizeof ( joystickRemapIdent ) );
+	Com_Memset( &joyDevice, 0, sizeof ( joyDevice ) );
 
 	// register our functions
 	for ( i = 0; i < CL_MAX_SPLITVIEW; i++ ) {
+		playerJoyRemapIndex[i] = -1;
+
 		Cmd_AddCommand( Com_LocalPlayerCvarName( i, "joyremap" ),Cmd_JoyRemap_f );
 		Cmd_SetCommandCompletionFunc( Com_LocalPlayerCvarName( i, "joyremap" ), Cmd_CompleteJoyRemap );
 
@@ -439,21 +512,32 @@ void CL_InitJoyRemapCommands( void ) {
 
 /*
 =================
-CL_SaveJoystickRemap
+CL_CloseJoystickRemap
 
 Write out "<event> <key>" lines
 =================
 */
-void CL_SaveJoystickRemap( int localPlayerNum ) {
+void CL_CloseJoystickRemap( int localPlayerNum ) {
 	fileHandle_t	f;
 	char			filename[MAX_QPATH];
 	int				i;
+	joyDevice_t *device;
 
-	if ( !*joystickRemapIdent[localPlayerNum] ) {
+	if ( playerJoyRemapIndex[ localPlayerNum ] == -1 ) {
 		return;
 	}
 
-	Com_sprintf( filename, sizeof ( filename ), "joy-%s-p%d-%s.txt", JOY_PLATFORM, localPlayerNum+1, joystickRemapIdent[localPlayerNum] );
+	device = &joyDevice[ playerJoyRemapIndex[ localPlayerNum ] ];
+	device->references--;
+
+	playerJoyRemapIndex[ localPlayerNum ] = -1;
+
+	if ( !device->modified ) {
+		return;
+	}
+	device->modified = qfalse;
+
+	Com_sprintf( filename, sizeof ( filename ), "joy-%s-%s.txt", JOY_PLATFORM, device->ident );
 
 	f = FS_SV_FOpenFileWrite( filename );
 	if ( !f ) {
@@ -461,15 +545,15 @@ void CL_SaveJoystickRemap( int localPlayerNum ) {
 		return;
 	}
 
-	FS_Printf (f, "// Generated by " PRODUCT_NAME ", do not modify\n");
+	FS_Printf (f, "// Joystick remap created using " PRODUCT_NAME " on " JOY_PLATFORM " for %s\n", device->name);
 
 	for ( i = 0 ; i < MAX_JOY_REMAPS ; i++ ) {
-		if ( joyEventRemap[localPlayerNum][i].event.type == JOYEVENT_NONE ) {
+		if ( device->remap[i].event.type == JOYEVENT_NONE ) {
 			continue;
 		}
 
-		FS_Printf (f, "%s %s\n", CL_JoyEventToString( &joyEventRemap[localPlayerNum][i].event ),
-								Key_KeynumToString( joyEventRemap[localPlayerNum][i].keynum ) );
+		FS_Printf (f, "%s %s\n", CL_JoyEventToString( &device->remap[i].event ),
+								Key_KeynumToString( device->remap[i].keynum ) );
 	}
 
 	FS_FCloseFile( f );
@@ -477,28 +561,62 @@ void CL_SaveJoystickRemap( int localPlayerNum ) {
 
 /*
 =================
-CL_LoadJoystickRemap
+CL_OpenJoystickRemap
 
 joystickIdent could be a name or hash
 =================
 */
-qboolean CL_LoadJoystickRemap( int localPlayerNum, const char *joystickIdent ) {
+qboolean CL_OpenJoystickRemap( int localPlayerNum, const char *joystickName, const char *joystickIdent ) {
 	fileHandle_t	f;
 	char		filename[MAX_QPATH];
 	char		*buffer, *text, *token;
-	int			len;
+	int			len, i;
 	joyevent_t	joyevent;
 	int			key;
 
-	if ( !strcmp(joystickRemapIdent[localPlayerNum], joystickIdent ) ) {
+	if ( !joystickName ) {
+		return qfalse;
+	}
+
+	if ( !joystickIdent ) {
+		joystickIdent = joystickName;
+	}
+
+	// check if already loaded
+	for ( i = 0; i < CL_MAX_SPLITVIEW; i++ ) {
+		if ( !strcmp(joyDevice[i].ident, joystickIdent ) ) {
+			break;
+		}
+	}
+
+	if ( i != CL_MAX_SPLITVIEW ) {
+		playerJoyRemapIndex[localPlayerNum] = i;
+		joyDevice[i].references++;
 		return qtrue;
 	}
-	Q_strncpyz( joystickRemapIdent[localPlayerNum], joystickIdent, sizeof ( joystickRemapIdent[0] ) );
 
-	// clear existing remap
-	Com_Memset( &joyEventRemap[localPlayerNum], 0, sizeof ( joyEventRemap[0] ) );
+	// find free slot
+	for ( i = 0; i < CL_MAX_SPLITVIEW; i++ ) {
+		if ( !joyDevice[i].references ) {
+			break;
+		}
+	}
 
-	Com_sprintf( filename, sizeof ( filename ), "joy-%s-p%d-%s.txt", JOY_PLATFORM, localPlayerNum+1, joystickRemapIdent[localPlayerNum] );
+	if ( i == CL_MAX_SPLITVIEW ) {
+		Com_Printf("BUG: Tried to open joystick but no free slot\n");
+		playerJoyRemapIndex[localPlayerNum] = -1;
+		return qfalse;
+	}
+
+	playerJoyRemapIndex[localPlayerNum] = i;
+
+	// initialize remap
+	Com_Memset( &joyDevice[i], 0, sizeof ( joyDevice[0] ) );
+	Q_strncpyz( joyDevice[i].ident, joystickIdent, sizeof ( joyDevice[i].ident ) );
+	Q_strncpyz( joyDevice[i].name, joystickName, sizeof ( joyDevice[i].ident ) );
+	joyDevice[i].references = 1;
+
+	Com_sprintf( filename, sizeof ( filename ), "joy-%s-%s.txt", JOY_PLATFORM, joyDevice[i].ident );
 	len = FS_SV_FOpenFileRead( filename, &f );
 	if ( !f ) {
 		Com_Printf( S_COLOR_YELLOW "WARNING: Couldn't load %s\n", filename);

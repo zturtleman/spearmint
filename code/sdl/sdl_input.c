@@ -599,7 +599,7 @@ static void IN_InitJoystick( void )
 
 	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
 		if (stick[i] != NULL) {
-			CL_SaveJoystickRemap( i );
+			CL_CloseJoystickRemap( i );
 			SDL_JoystickClose(stick[i]);
 		}
 
@@ -663,7 +663,7 @@ static void IN_InitJoystick( void )
 		Com_DPrintf( "Buttons:    %d\n", SDL_JoystickNumButtons(stick[i]) );
 		Com_DPrintf( "Balls:      %d\n", SDL_JoystickNumBalls(stick[i]) );
 
-		CL_LoadJoystickRemap( i, SDL_JoystickName(in_joystickNo[i]->integer) );
+		CL_OpenJoystickRemap( i, SDL_JoystickName(in_joystickNo[i]->integer), NULL );
 	}
 
 	SDL_JoystickEventState(SDL_QUERY);
@@ -680,7 +680,7 @@ static void IN_ShutdownJoystick( void )
 
 	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
 		if (stick[i]) {
-			CL_SaveJoystickRemap( i );
+			CL_CloseJoystickRemap( i );
 			SDL_JoystickClose(stick[i]);
 			stick[i] = NULL;
 		}

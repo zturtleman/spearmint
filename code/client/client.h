@@ -617,6 +617,6 @@ qboolean CL_GetLocalPlayerLocation( char *buf, int bufLength, int localPlayerNum
 //
 // cl_joystick.c
 //
-void CL_SaveJoystickRemap( int localPlayerNum );
-qboolean CL_LoadJoystickRemap( int localPlayerNum, const char *joystickIdent );
+void CL_CloseJoystickRemap( int localPlayerNum );
+qboolean CL_OpenJoystickRemap( int localPlayerNum, const char *joystickName, const char *joystickIdent );
 
