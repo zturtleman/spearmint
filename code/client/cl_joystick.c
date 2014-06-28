@@ -29,31 +29,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 #include "client.h"
 
-enum {
-	JOYEVENT_NONE,
-	JOYEVENT_AXIS,
-	JOYEVENT_BUTTON,
-	JOYEVENT_HAT,
-
-	JOYEVENT_MAX
-};
-
-typedef struct {
-	int type; // JOYEVENT_*
-
-	union {
-		int button;
-		struct {
-			int num;
-			int sign; // 1 or -1
-		} axis;
-		struct {
-			int num;
-			int mask;
-		} hat;
-	};
-} joyevent_t;
-
 typedef struct {
 	joyevent_t	event;
 	int			keynum;
@@ -429,6 +404,12 @@ void Cmd_JoyRemapList_f( void ) {
 
 	device = &joyDevice[ playerJoyRemapIndex[ localPlayerNum ] ];
 
+	if ( strcmp( device->name, device->ident ) ) {
+		Com_Printf("Device: %s (%s)\n", device->name, device->ident );
+	} else {
+		Com_Printf("Device: %s\n", device->name );
+	}
+
 	for ( i = 0 ; i < MAX_JOY_REMAPS ; i++ ) {
 		if ( device->remap[i].event.type == JOYEVENT_NONE ) {
 			continue;
@@ -509,6 +490,24 @@ void CL_InitJoyRemapCommands( void ) {
 	}
 }
 
+
+/*
+=================
+CL_SetAutoJoyRemap
+
+The joy remap wasn't user created so don't archive it, unless user changes it
+=================
+*/
+void CL_SetAutoJoyRemap( int localPlayerNum ) {
+	joyDevice_t *device;
+
+	if ( playerJoyRemapIndex[ localPlayerNum ] == -1 ) {
+		return;
+	}
+
+	device = &joyDevice[ playerJoyRemapIndex[ localPlayerNum ] ];
+	device->modified = qfalse;
+}
 
 /*
 =================
@@ -619,7 +618,6 @@ qboolean CL_OpenJoystickRemap( int localPlayerNum, const char *joystickName, con
 	Com_sprintf( filename, sizeof ( filename ), "joy-%s-%s.txt", JOY_PLATFORM, joyDevice[i].ident );
 	len = FS_SV_FOpenFileRead( filename, &f );
 	if ( !f ) {
-		Com_Printf( S_COLOR_YELLOW "WARNING: Couldn't load %s\n", filename);
 		return qfalse;
 	}
 

@@ -617,6 +617,34 @@ qboolean CL_GetLocalPlayerLocation( char *buf, int bufLength, int localPlayerNum
 //
 // cl_joystick.c
 //
+enum {
+	JOYEVENT_NONE,
+	JOYEVENT_AXIS,
+	JOYEVENT_BUTTON,
+	JOYEVENT_HAT,
+
+	JOYEVENT_MAX
+};
+
+typedef struct {
+	int type; // JOYEVENT_*
+
+	union {
+		int button;
+		struct {
+			int num;
+			int sign; // 1 or -1
+		} axis;
+		struct {
+			int num;
+			int mask;
+		} hat;
+	};
+} joyevent_t;
+
+qboolean CL_SetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent, int keynum );
+void CL_SetAutoJoyRemap( int localPlayerNum );
+
 void CL_CloseJoystickRemap( int localPlayerNum );
 qboolean CL_OpenJoystickRemap( int localPlayerNum, const char *joystickName, const char *joystickIdent );
 
