@@ -419,6 +419,187 @@ static void IN_DeactivateMouse( qboolean showSystemCursor )
 }
 
 
+/*
+===============
+IN_SetGameControllerDefaults
+===============
+*/
+static qboolean IN_SetGameControllerDefaults( int localPlayerNum, int joystickNum ) {
+	struct {
+		int sdlAxis;
+		int negKey;
+		int posKey;
+	} axisRemap[] = {
+		{ SDL_CONTROLLER_AXIS_LEFTX, K_JOY_LEFTSTICK_LEFT, K_JOY_LEFTSTICK_RIGHT },
+		{ SDL_CONTROLLER_AXIS_LEFTY, K_JOY_LEFTSTICK_UP, K_JOY_LEFTSTICK_DOWN },
+		{ SDL_CONTROLLER_AXIS_RIGHTX, K_JOY_RIGHTSTICK_LEFT, K_JOY_RIGHTSTICK_RIGHT },
+		{ SDL_CONTROLLER_AXIS_RIGHTY, K_JOY_RIGHTSTICK_UP, K_JOY_RIGHTSTICK_DOWN },
+		{ SDL_CONTROLLER_AXIS_TRIGGERLEFT, -1, K_JOY_LEFTTRIGGER },
+		{ SDL_CONTROLLER_AXIS_TRIGGERRIGHT, -1, K_JOY_RIGHTTRIGGER }
+	};
+	struct {
+		int sdlButton;
+		int key;
+	} buttonRemap[] = {
+		{ SDL_CONTROLLER_BUTTON_A, K_JOY_A },
+		{ SDL_CONTROLLER_BUTTON_B, K_JOY_B },
+		{ SDL_CONTROLLER_BUTTON_X, K_JOY_X },
+		{ SDL_CONTROLLER_BUTTON_Y, K_JOY_Y },
+		{ SDL_CONTROLLER_BUTTON_BACK, K_JOY_BACK },
+		{ SDL_CONTROLLER_BUTTON_GUIDE, K_JOY_GUIDE },
+		{ SDL_CONTROLLER_BUTTON_START, K_JOY_START },
+		{ SDL_CONTROLLER_BUTTON_LEFTSTICK, K_JOY_LEFTSTICK },
+		{ SDL_CONTROLLER_BUTTON_RIGHTSTICK, K_JOY_RIGHTSTICK },
+		{ SDL_CONTROLLER_BUTTON_LEFTSHOULDER, K_JOY_LEFTSHOULDER },
+		{ SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, K_JOY_RIGHTSHOULDER },
+		{ SDL_CONTROLLER_BUTTON_DPAD_UP, K_JOY_DPAD_UP },
+		{ SDL_CONTROLLER_BUTTON_DPAD_DOWN, K_JOY_DPAD_DOWN },
+		{ SDL_CONTROLLER_BUTTON_DPAD_LEFT, K_JOY_DPAD_LEFT },
+		{ SDL_CONTROLLER_BUTTON_DPAD_RIGHT, K_JOY_DPAD_RIGHT }
+	};
+
+	SDL_GameControllerButtonBind bind;
+	int b;
+	joyevent_t event;
+	SDL_GameController *controller;
+
+	controller = SDL_GameControllerOpen( joystickNum );
+
+	if ( !controller ) {
+		return qfalse;
+	}
+
+	for ( b = 0; b < ARRAY_LEN( axisRemap ); b++ ) {
+		bind = SDL_GameControllerGetBindForAxis( controller, axisRemap[b].sdlAxis );
+
+		if ( bind.bindType == SDL_CONTROLLER_BINDTYPE_AXIS ) {
+			event.type = JOYEVENT_AXIS;
+			event.axis.num = bind.value.axis;
+			event.axis.sign = 1;
+			CL_SetKeyForJoyEvent( localPlayerNum, &event, axisRemap[b].posKey );
+
+			if ( axisRemap[b].negKey != -1 ) {
+				event.axis.sign = -1;
+				CL_SetKeyForJoyEvent( localPlayerNum, &event, axisRemap[b].negKey );
+			}
+			continue;
+		}
+
+		switch ( bind.bindType ) {
+			case SDL_CONTROLLER_BINDTYPE_BUTTON:
+				event.type = JOYEVENT_BUTTON;
+				event.button = bind.value.button;
+				break;
+			case SDL_CONTROLLER_BINDTYPE_HAT:
+				event.type = JOYEVENT_HAT;
+				event.hat.num = bind.value.hat.hat;
+
+				switch( bind.value.hat.hat_mask )
+				{
+					case SDL_HAT_UP:
+						event.hat.mask = HAT_UP;
+						break;
+					case SDL_HAT_RIGHT:
+						event.hat.mask = HAT_RIGHT;
+						break;
+					case SDL_HAT_DOWN:
+						event.hat.mask = HAT_DOWN;
+						break;
+					case SDL_HAT_LEFT:
+						event.hat.mask = HAT_LEFT;
+						break;
+					case SDL_HAT_RIGHTUP:
+						event.hat.mask = HAT_RIGHTUP;
+						break;
+					case SDL_HAT_RIGHTDOWN:
+						event.hat.mask = HAT_RIGHTDOWN;
+						break;
+					case SDL_HAT_LEFTUP:
+						event.hat.mask = HAT_LEFTUP;
+						break;
+					case SDL_HAT_LEFTDOWN:
+						event.hat.mask = HAT_LEFTDOWN;
+						break;
+					case SDL_HAT_CENTERED:
+					default:
+						event.hat.mask = HAT_CENTERED;
+						break;
+				}
+				break;
+			case SDL_CONTROLLER_BINDTYPE_NONE:
+			default:
+				continue;
+		}
+
+		// buttons and hats only handle positive axis key (works for triggers, but not left/right sticks)
+		CL_SetKeyForJoyEvent( localPlayerNum, &event, axisRemap[b].posKey );
+	}
+
+	for ( b = 0; b < ARRAY_LEN( buttonRemap ); b++ ) {
+		bind = SDL_GameControllerGetBindForButton( controller, buttonRemap[b].sdlButton );
+		switch ( bind.bindType ) {
+			case SDL_CONTROLLER_BINDTYPE_BUTTON:
+				event.type = JOYEVENT_BUTTON;
+				event.button = bind.value.button;
+				break;
+			case SDL_CONTROLLER_BINDTYPE_HAT:
+				event.type = JOYEVENT_HAT;
+				event.hat.num = bind.value.hat.hat;
+
+				switch( bind.value.hat.hat_mask )
+				{
+					case SDL_HAT_UP:
+						event.hat.mask = HAT_UP;
+						break;
+					case SDL_HAT_RIGHT:
+						event.hat.mask = HAT_RIGHT;
+						break;
+					case SDL_HAT_DOWN:
+						event.hat.mask = HAT_DOWN;
+						break;
+					case SDL_HAT_LEFT:
+						event.hat.mask = HAT_LEFT;
+						break;
+					case SDL_HAT_RIGHTUP:
+						event.hat.mask = HAT_RIGHTUP;
+						break;
+					case SDL_HAT_RIGHTDOWN:
+						event.hat.mask = HAT_RIGHTDOWN;
+						break;
+					case SDL_HAT_LEFTUP:
+						event.hat.mask = HAT_LEFTUP;
+						break;
+					case SDL_HAT_LEFTDOWN:
+						event.hat.mask = HAT_LEFTDOWN;
+						break;
+					case SDL_HAT_CENTERED:
+					default:
+						event.hat.mask = HAT_CENTERED;
+						break;
+				}
+				break;
+			case SDL_CONTROLLER_BINDTYPE_AXIS:
+				event.type = JOYEVENT_AXIS;
+				event.axis.num = bind.value.axis;
+				event.axis.sign = 1;
+				// no negative axis event.
+				break;
+			case SDL_CONTROLLER_BINDTYPE_NONE:
+			default:
+				continue;
+		}
+
+		CL_SetKeyForJoyEvent( localPlayerNum, &event, buttonRemap[b].key );
+	}
+
+	// don't archive these
+	CL_SetAutoJoyRemap( localPlayerNum );
+
+	SDL_GameControllerClose( controller );
+	return qtrue;
+}
+
+
 struct
 {
 	qboolean buttons[MAX_JOYSTICK_BUTTONS];
@@ -438,6 +619,7 @@ static void IN_InitJoystick( void )
 	int total = 0;
 	char buf[16384] = "";
 	qboolean joyEnabled = qfalse;
+	char guid[64];
 
 	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
 		if (stick[i] != NULL) {
@@ -482,6 +664,19 @@ static void IN_InitJoystick( void )
 		return;
 	}
 
+	if (!SDL_WasInit(SDL_INIT_GAMECONTROLLER))
+	{
+		Com_DPrintf("Calling SDL_Init(SDL_INIT_GAMECONTROLLER)...\n");
+		if (SDL_Init(SDL_INIT_GAMECONTROLLER) == -1)
+		{
+			Com_DPrintf("SDL_Init(SDL_INIT_GAMECONTROLLER) failed: %s\n", SDL_GetError());
+		}
+		else
+		{
+			Com_DPrintf("SDL_Init(SDL_INIT_JOYSTICK) passed.\n");
+		}
+	}
+
 	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
 		if( !in_joystick[i]->integer ) {
 			continue;
@@ -498,14 +693,27 @@ static void IN_InitJoystick( void )
 			return;
 		}
 
+		SDL_JoystickGetGUIDString( SDL_JoystickGetGUID(stick[i]), guid, sizeof ( guid ) );
+
 		Com_DPrintf( "Joystick %d opened for player %d\n", in_joystickNo[i]->integer, i+1 );
 		Com_DPrintf( "Name:       %s\n", SDL_JoystickNameForIndex(in_joystickNo[i]->integer) );
+		Com_DPrintf( "GUID:       %s\n", guid );
 		Com_DPrintf( "Axes:       %d\n", SDL_JoystickNumAxes(stick[i]) );
 		Com_DPrintf( "Hats:       %d\n", SDL_JoystickNumHats(stick[i]) );
 		Com_DPrintf( "Buttons:    %d\n", SDL_JoystickNumButtons(stick[i]) );
 		Com_DPrintf( "Balls:      %d\n", SDL_JoystickNumBalls(stick[i]) );
 
-		CL_OpenJoystickRemap( i, SDL_JoystickNameForIndex(in_joystickNo[i]->integer), NULL );
+		if ( !CL_OpenJoystickRemap( i, SDL_JoystickNameForIndex(in_joystickNo[i]->integer), guid ) ) {
+			if ( !IN_SetGameControllerDefaults( i, in_joystickNo[i]->integer ) ) {
+				Com_Printf( "No joystick remap found for %s (GUID: %s)\n",
+						SDL_JoystickNameForIndex(in_joystickNo[i]->integer), guid );
+			}
+		}
+	}
+
+	if ( SDL_WasInit( SDL_INIT_GAMECONTROLLER ) )
+	{
+		SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
 	}
 
 	SDL_JoystickEventState(SDL_QUERY);
@@ -519,6 +727,11 @@ IN_ShutdownJoystick
 static void IN_ShutdownJoystick( void )
 {
 	int		i;
+
+	if ( SDL_WasInit( SDL_INIT_GAMECONTROLLER ) )
+	{
+		SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
+	}
 
 	if ( !SDL_WasInit( SDL_INIT_JOYSTICK ) )
 		return;
