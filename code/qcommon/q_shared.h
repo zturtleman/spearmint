@@ -1307,6 +1307,18 @@ typedef enum {
 
 
 #define MAX_JOYSTICK_AXIS 16
+#define MAX_JOYSTICK_BUTTONS 16
+#define	MAX_JOYSTICK_HATS 4
+
+#define HAT_CENTERED    0x00
+#define	HAT_UP			0x01
+#define	HAT_RIGHT		0x02
+#define	HAT_DOWN		0x04
+#define	HAT_LEFT		0x08
+#define	HAT_RIGHTUP		(HAT_RIGHT|HAT_UP)
+#define	HAT_RIGHTDOWN	(HAT_RIGHT|HAT_DOWN)
+#define	HAT_LEFTUP		(HAT_LEFT|HAT_UP)
+#define	HAT_LEFTDOWN	(HAT_LEFT|HAT_DOWN)
 
 
 

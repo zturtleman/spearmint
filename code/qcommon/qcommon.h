@@ -906,6 +906,10 @@ typedef enum {
 	SE_MOUSE_LAST = SE_MOUSE + MAX_SPLITVIEW - 1, // Reserve values for SE_MOUSE events for splitscreen players
 	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_JOYSTICK_AXIS_LAST = SE_JOYSTICK_AXIS + MAX_SPLITVIEW - 1, // Reserve values for SE_JOYSTICK_AXIS events for splitscreen players
+	SE_JOYSTICK_BUTTON,	// evValue is a button number and evValue2 is the down flag
+	SE_JOYSTICK_BUTTON_LAST = SE_JOYSTICK_BUTTON + MAX_SPLITVIEW - 1, // Reserve values for SE_JOYSTICK_BUTTON events for splitscreen players
+	SE_JOYSTICK_HAT,	// evValue is a hat number and evValue2 is the state
+	SE_JOYSTICK_HAT_LAST = SE_JOYSTICK_HAT + MAX_SPLITVIEW - 1, // Reserve values for SE_JOYSTICK_HAT events for splitscreen players
 	SE_CONSOLE		// evPtr is a char*
 } sysEventType_t;
 
@@ -1143,7 +1147,9 @@ void CL_CharEvent( int key );
 
 void CL_MouseEvent( int localPlayerNum, int dx, int dy, int time );
 
-void CL_JoystickEvent( int localPlayerNum, int axis, int value, int time );
+void CL_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned time );
+void CL_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsigned time );
+void CL_JoystickHatEvent( int localPlayerNum, int hat, int state, unsigned time );
 
 void CL_PacketEvent( netadr_t from, msg_t *msg );
 

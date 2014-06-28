@@ -2408,7 +2408,11 @@ int Com_EventLoop( void ) {
 		if (ev.evType >= SE_MOUSE && ev.evType <= SE_MOUSE_LAST)
 			CL_MouseEvent( ev.evType - SE_MOUSE, ev.evValue, ev.evValue2, ev.evTime );
 		else if (ev.evType >= SE_JOYSTICK_AXIS && ev.evType <= SE_JOYSTICK_AXIS_LAST)
-			CL_JoystickEvent( ev.evType - SE_JOYSTICK_AXIS, ev.evValue, ev.evValue2, ev.evTime );
+			CL_JoystickAxisEvent( ev.evType - SE_JOYSTICK_AXIS, ev.evValue, ev.evValue2, ev.evTime );
+		else if (ev.evType >= SE_JOYSTICK_BUTTON && ev.evType <= SE_JOYSTICK_BUTTON_LAST)
+			CL_JoystickButtonEvent( ev.evType - SE_JOYSTICK_BUTTON, ev.evValue, ev.evValue2, ev.evTime );
+		else if (ev.evType >= SE_JOYSTICK_HAT && ev.evType <= SE_JOYSTICK_HAT_LAST)
+			CL_JoystickHatEvent( ev.evType - SE_JOYSTICK_HAT, ev.evValue, ev.evValue2, ev.evTime );
 		else
 		{
 			switch(ev.evType)

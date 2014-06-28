@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	23
+#define CG_API_MINOR_VERSION	24
 
 
 #define	CMD_BACKUP			64	
@@ -426,13 +426,19 @@ typedef enum {
 	// NULL if unknown token.
 
 	CG_KEY_EVENT, 
-//	void	(*CG_KeyEvent)( int key, qboolean down );
+//	void	(*CG_KeyEvent)( int key, qboolean down, unsigned time, connstate_t state );
 
 	CG_MOUSE_EVENT,
 //	void	(*CG_MouseEvent)( int localPlayerNum, int dx, int dy );
 
-	CG_JOYSTICK_EVENT,
-//	void	(*CG_JoystickEvent)( int localPlayerNum, int axis, int value );
+	CG_JOYSTICK_AXIS_EVENT,
+//	void	(*CG_JoystickAxisEvent)( int localPlayerNum, int axis, int value, unsigned time, connstate_t state, int negKey, int posKey );
+
+	CG_JOYSTICK_BUTTON_EVENT,
+//	void	(*CG_JoystickButtonEvent)( int localPlayerNum, int button, qboolean down, unsigned time, connstate_t state, int key );
+
+	CG_JOYSTICK_HAT_EVENT,
+//	void	(*CG_JoystickHatEvent)( int localPlayerNum, int hat, int state, unsigned time, connstate_t state, int upKey, int rightKey, int downKey, int leftKey );
 
 	CG_MOUSE_POSITION,
 //  int		(*CG_MousePosition)( int localPlayerNum );

@@ -68,7 +68,16 @@ void CL_KeyEvent (int key, qboolean down, unsigned time) {
 void CL_ConsolePrint( char *txt ) {
 }
 
-void CL_JoystickEvent( int localPlayerNum, int axis, int value, int time ) {
+void CL_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned time ) {
+
+}
+
+void CL_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsigned time ) {
+
+}
+
+void CL_JoystickHatEvent( int localPlayerNum, int hat, int state, unsigned time ) {
+
 }
 
 void Key_Dummy_f( void ) {
