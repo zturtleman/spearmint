@@ -168,7 +168,7 @@ typedef struct {
 			int num;
 			int mask;
 		} hat;
-	};
+	} value;
 } joyevent_t;
 
 /*

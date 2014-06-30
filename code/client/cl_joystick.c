@@ -72,42 +72,42 @@ qboolean CL_StringToJoyEvent( char *str, joyevent_t *event ) {
 	// button0
 	if ( !Q_stricmpn( str, "button", 6 ) ) {
 		event->type = JOYEVENT_BUTTON;
-		event->button = atoi( &str[6] );
+		event->value.button = atoi( &str[6] );
 		return qtrue;
 	}
 	// b0
 	else if ( str[0] == 'b' ) {
 		event->type = JOYEVENT_BUTTON;
-		event->button = atoi( &str[1] );
+		event->value.button = atoi( &str[1] );
 		return qtrue;
 	}
 	// hat0.8
 	else if ( !Q_stricmpn( str, "hat", 3 ) ) {
 		event->type = JOYEVENT_BUTTON;
-		event->hat.num = str[3] - '0';
-		event->hat.mask = str[5] - '0';
+		event->value.hat.num = str[3] - '0';
+		event->value.hat.mask = str[5] - '0';
 		return qtrue;
 	}
 	// h0.8
 	else if ( str[0] == 'h' && strlen( str ) == 4 ) {
 		event->type = JOYEVENT_HAT;
-		event->hat.num = str[1] - '0';
-		event->hat.mask = str[3] - '0';
+		event->value.hat.num = str[1] - '0';
+		event->value.hat.mask = str[3] - '0';
 		return qtrue;
 	}
 	else if ( str[0] == '+' || str[0] == '-' ) {
 		// +axis0
 		if ( !Q_stricmpn( str+1, "axis", 4 ) ) {
 			event->type = JOYEVENT_AXIS;
-			event->axis.num = atoi( &str[5] );
-			event->axis.sign = ( str[0] == '+' ) ? 1 : -1;
+			event->value.axis.num = atoi( &str[5] );
+			event->value.axis.sign = ( str[0] == '+' ) ? 1 : -1;
 			return qtrue;
 		}
 		// +a0
 		else if ( str[1] == 'a' ) {
 			event->type = JOYEVENT_AXIS;
-			event->axis.num = atoi( &str[2] );
-			event->axis.sign = ( str[0] == '+' ) ? 1 : -1;
+			event->value.axis.num = atoi( &str[2] );
+			event->value.axis.sign = ( str[0] == '+' ) ? 1 : -1;
 			return qtrue;
 		}
 	}
@@ -128,16 +128,16 @@ char *CL_JoyEventToString( const joyevent_t *event ) {
 	switch ( event->type ) {
 		case JOYEVENT_AXIS:
 			Com_sprintf( str, sizeof( str ), "%saxis%d",
-						( event->axis.sign == -1 ) ? "-" : "+",
-						event->axis.num );
+						( event->value.axis.sign == -1 ) ? "-" : "+",
+						event->value.axis.num );
 			break;
 		case JOYEVENT_BUTTON:
 			Com_sprintf( str, sizeof( str ), "button%d",
-						event->button );
+						event->value.button );
 			break;
 		case JOYEVENT_HAT:
 			Com_sprintf( str, sizeof( str ), "hat%d.%d",
-						event->hat.num, event->hat.mask );
+						event->value.hat.num, event->value.hat.mask );
 			break;
 		default:
 			Q_strncpyz( str, "<UNKNOWN-EVENT>", sizeof ( str ) );
@@ -159,13 +159,13 @@ qboolean CL_JoyEventsMatch( const joyevent_t *e1, const joyevent_t *e2 ) {
 
 	switch ( e1->type ) {
 		case JOYEVENT_AXIS:
-			return ( e1->axis.num == e2->axis.num && e1->axis.sign == e2->axis.sign );
+			return ( e1->value.axis.num == e2->value.axis.num && e1->value.axis.sign == e2->value.axis.sign );
 
 		case JOYEVENT_HAT:
-			return ( e1->hat.num == e2->hat.num && e1->hat.mask == e2->hat.mask );
+			return ( e1->value.hat.num == e2->value.hat.num && e1->value.hat.mask == e2->value.hat.mask );
 
 		case JOYEVENT_BUTTON:
-			return ( e1->button == e2->button );
+			return ( e1->value.button == e2->value.button );
 
 		default:
 			return qfalse;
@@ -725,12 +725,12 @@ void CL_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned tim
 	}
 
 	joyevent.type = JOYEVENT_AXIS;
-	joyevent.axis.num = axis;
+	joyevent.value.axis.num = axis;
 
-	joyevent.axis.sign = -1;
+	joyevent.value.axis.sign = -1;
 	negKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
 
-	joyevent.axis.sign = 1;
+	joyevent.value.axis.sign = 1;
 	posKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
 
 	VM_Call( cgvm, CG_JOYSTICK_AXIS_EVENT, localPlayerNum, axis, value, time, clc.state, negKey, posKey );
@@ -750,7 +750,7 @@ void CL_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsi
 	}
 
 	joyevent.type = JOYEVENT_BUTTON;
-	joyevent.button = button;
+	joyevent.value.button = button;
 	key = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
 
 	VM_Call( cgvm, CG_JOYSTICK_BUTTON_EVENT, localPlayerNum, button, down, time, clc.state, key );
@@ -770,18 +770,18 @@ void CL_JoystickHatEvent( int localPlayerNum, int hat, int state, unsigned time 
 	}
 
 	joyevent.type = JOYEVENT_HAT;
-	joyevent.hat.num = hat;
+	joyevent.value.hat.num = hat;
 
-	joyevent.hat.mask = HAT_UP;
+	joyevent.value.hat.mask = HAT_UP;
 	upKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
 
-	joyevent.hat.mask = HAT_RIGHT;
+	joyevent.value.hat.mask = HAT_RIGHT;
 	rightKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
 
-	joyevent.hat.mask = HAT_DOWN;
+	joyevent.value.hat.mask = HAT_DOWN;
 	downKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
 
-	joyevent.hat.mask = HAT_LEFT;
+	joyevent.value.hat.mask = HAT_LEFT;
 	leftKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
 
 	VM_Call( cgvm, CG_JOYSTICK_HAT_EVENT, localPlayerNum, hat, state, time, clc.state, upKey, rightKey, downKey, leftKey );
