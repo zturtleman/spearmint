@@ -277,6 +277,48 @@ int CL_GetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent ) {
 
 /*
 ===================
+CL_GetJoyEventForKey
+
+Sets joyevent and returns index (for using with startIndex to find multiple joyevents).
+===================
+*/
+int CL_GetJoyEventForKey( int localPlayerNum, int keynum, int startIndex, joyevent_t *joyevent ) {
+	int i;
+	joyDevice_t *device;
+
+	Com_Memset( joyevent, 0, sizeof ( *joyevent ) );
+
+	if ( playerJoyRemapIndex[ localPlayerNum ] == -1 )
+		return -1;
+
+	device = &joyDevice[ playerJoyRemapIndex[ localPlayerNum ] ];
+
+	// always look in main joystick enum range
+	if ( keynum >= K_FIRST_2JOY && keynum <= K_LAST_2JOY ) {
+		keynum = K_FIRST_JOY + keynum - K_FIRST_2JOY;
+	}
+	else if ( keynum >= K_FIRST_3JOY && keynum <= K_LAST_3JOY ) {
+		keynum = K_FIRST_JOY + keynum - K_FIRST_3JOY;
+	}
+	else if ( keynum >= K_FIRST_4JOY && keynum <= K_LAST_4JOY ) {
+		keynum = K_FIRST_JOY + keynum - K_FIRST_4JOY;
+	}
+
+	for ( i = startIndex; i < MAX_JOY_REMAPS; i++ ) {
+		if ( device->remap[i].event.type == JOYEVENT_NONE )
+			continue;
+
+		if ( keynum == device->remap[i].keynum ) {
+			*joyevent = device->remap[i].event;
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+/*
+===================
 Cmd_JoyUnmap_f
 ===================
 */

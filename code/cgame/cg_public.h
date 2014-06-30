@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	24
+#define CG_API_MINOR_VERSION	25
 
 
 #define	CMD_BACKUP			64	
@@ -146,6 +146,30 @@ typedef enum {
 #define MOUSE_CGAME				0x0002		// call CG_MOUSE_EVENT when mouse moves
 #define MOUSE_SYSTEMCURSOR		0x0004		// show system cursor, ignored if MOUSE_CLIENT is set or fullscreen
 
+enum {
+	JOYEVENT_NONE,
+	JOYEVENT_AXIS,
+	JOYEVENT_BUTTON,
+	JOYEVENT_HAT,
+
+	JOYEVENT_MAX
+};
+
+typedef struct {
+	int type; // JOYEVENT_*
+
+	union {
+		int button;
+		struct {
+			int num;
+			int sign; // 1 or -1
+		} axis;
+		struct {
+			int num;
+			int mask;
+		} hat;
+	};
+} joyevent_t;
 
 /*
 ==================================================================
@@ -329,6 +353,11 @@ typedef enum {
 
 	CG_MOUSE_GETSTATE,
 	CG_MOUSE_SETSTATE,
+
+	CG_SET_KEY_FOR_JOY_EVENT, // ( int localPlayerNum, const joyevent_t *joyevent, int keynum );
+	CG_GET_KEY_FOR_JOY_EVENT, // ( int localPlayerNum, const joyevent_t *joyevent );
+	CG_GET_JOY_EVENT_FOR_KEY, // ( int localPlayerNum, int keynum, int startIndex, joyevent_t *joyevent );
+	CG_JOY_EVENT_TO_STRING, // ( const joyevent_t *joyevent, char *buf, int size );
 
 
 	CG_LAN_GETPINGQUEUECOUNT = 550,
