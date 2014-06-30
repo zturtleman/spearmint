@@ -1514,6 +1514,17 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 
 
+	case CG_SET_KEY_FOR_JOY_EVENT:
+		return CL_SetKeyForJoyEvent( args[1], VMA(2), args[3] );
+	case CG_GET_KEY_FOR_JOY_EVENT:
+		return CL_GetKeyForJoyEvent( args[1], VMA(2) );
+	case CG_GET_JOY_EVENT_FOR_KEY:
+		return CL_GetJoyEventForKey( args[1], args[2], args[3], VMA(4) );
+	case CG_JOY_EVENT_TO_STRING:
+		Q_strncpyz( VMA(2), CL_JoyEventToString( VMA(1) ), args[3] );
+		return 0;
+
+
 	case CG_LAN_LOADCACHEDSERVERS:
 		LAN_LoadCachedServers();
 		return 0;

@@ -474,12 +474,12 @@ static qboolean IN_SetGameControllerDefaults( int localPlayerNum, int joystickNu
 
 		if ( bind.bindType == SDL_CONTROLLER_BINDTYPE_AXIS ) {
 			event.type = JOYEVENT_AXIS;
-			event.axis.num = bind.value.axis;
-			event.axis.sign = 1;
+			event.value.axis.num = bind.value.axis;
+			event.value.axis.sign = 1;
 			CL_SetKeyForJoyEvent( localPlayerNum, &event, axisRemap[b].posKey );
 
 			if ( axisRemap[b].negKey != -1 ) {
-				event.axis.sign = -1;
+				event.value.axis.sign = -1;
 				CL_SetKeyForJoyEvent( localPlayerNum, &event, axisRemap[b].negKey );
 			}
 			continue;
@@ -488,41 +488,41 @@ static qboolean IN_SetGameControllerDefaults( int localPlayerNum, int joystickNu
 		switch ( bind.bindType ) {
 			case SDL_CONTROLLER_BINDTYPE_BUTTON:
 				event.type = JOYEVENT_BUTTON;
-				event.button = bind.value.button;
+				event.value.button = bind.value.button;
 				break;
 			case SDL_CONTROLLER_BINDTYPE_HAT:
 				event.type = JOYEVENT_HAT;
-				event.hat.num = bind.value.hat.hat;
+				event.value.hat.num = bind.value.hat.hat;
 
 				switch( bind.value.hat.hat_mask )
 				{
 					case SDL_HAT_UP:
-						event.hat.mask = HAT_UP;
+						event.value.hat.mask = HAT_UP;
 						break;
 					case SDL_HAT_RIGHT:
-						event.hat.mask = HAT_RIGHT;
+						event.value.hat.mask = HAT_RIGHT;
 						break;
 					case SDL_HAT_DOWN:
-						event.hat.mask = HAT_DOWN;
+						event.value.hat.mask = HAT_DOWN;
 						break;
 					case SDL_HAT_LEFT:
-						event.hat.mask = HAT_LEFT;
+						event.value.hat.mask = HAT_LEFT;
 						break;
 					case SDL_HAT_RIGHTUP:
-						event.hat.mask = HAT_RIGHTUP;
+						event.value.hat.mask = HAT_RIGHTUP;
 						break;
 					case SDL_HAT_RIGHTDOWN:
-						event.hat.mask = HAT_RIGHTDOWN;
+						event.value.hat.mask = HAT_RIGHTDOWN;
 						break;
 					case SDL_HAT_LEFTUP:
-						event.hat.mask = HAT_LEFTUP;
+						event.value.hat.mask = HAT_LEFTUP;
 						break;
 					case SDL_HAT_LEFTDOWN:
-						event.hat.mask = HAT_LEFTDOWN;
+						event.value.hat.mask = HAT_LEFTDOWN;
 						break;
 					case SDL_HAT_CENTERED:
 					default:
-						event.hat.mask = HAT_CENTERED;
+						event.value.hat.mask = HAT_CENTERED;
 						break;
 				}
 				break;
@@ -540,48 +540,48 @@ static qboolean IN_SetGameControllerDefaults( int localPlayerNum, int joystickNu
 		switch ( bind.bindType ) {
 			case SDL_CONTROLLER_BINDTYPE_BUTTON:
 				event.type = JOYEVENT_BUTTON;
-				event.button = bind.value.button;
+				event.value.button = bind.value.button;
 				break;
 			case SDL_CONTROLLER_BINDTYPE_HAT:
 				event.type = JOYEVENT_HAT;
-				event.hat.num = bind.value.hat.hat;
+				event.value.hat.num = bind.value.hat.hat;
 
 				switch( bind.value.hat.hat_mask )
 				{
 					case SDL_HAT_UP:
-						event.hat.mask = HAT_UP;
+						event.value.hat.mask = HAT_UP;
 						break;
 					case SDL_HAT_RIGHT:
-						event.hat.mask = HAT_RIGHT;
+						event.value.hat.mask = HAT_RIGHT;
 						break;
 					case SDL_HAT_DOWN:
-						event.hat.mask = HAT_DOWN;
+						event.value.hat.mask = HAT_DOWN;
 						break;
 					case SDL_HAT_LEFT:
-						event.hat.mask = HAT_LEFT;
+						event.value.hat.mask = HAT_LEFT;
 						break;
 					case SDL_HAT_RIGHTUP:
-						event.hat.mask = HAT_RIGHTUP;
+						event.value.hat.mask = HAT_RIGHTUP;
 						break;
 					case SDL_HAT_RIGHTDOWN:
-						event.hat.mask = HAT_RIGHTDOWN;
+						event.value.hat.mask = HAT_RIGHTDOWN;
 						break;
 					case SDL_HAT_LEFTUP:
-						event.hat.mask = HAT_LEFTUP;
+						event.value.hat.mask = HAT_LEFTUP;
 						break;
 					case SDL_HAT_LEFTDOWN:
-						event.hat.mask = HAT_LEFTDOWN;
+						event.value.hat.mask = HAT_LEFTDOWN;
 						break;
 					case SDL_HAT_CENTERED:
 					default:
-						event.hat.mask = HAT_CENTERED;
+						event.value.hat.mask = HAT_CENTERED;
 						break;
 				}
 				break;
 			case SDL_CONTROLLER_BINDTYPE_AXIS:
 				event.type = JOYEVENT_AXIS;
-				event.axis.num = bind.value.axis;
-				event.axis.sign = 1;
+				event.value.axis.num = bind.value.axis;
+				event.value.axis.sign = 1;
 				// no negative axis event.
 				break;
 			case SDL_CONTROLLER_BINDTYPE_NONE:
