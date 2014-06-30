@@ -717,23 +717,11 @@ CL_JoystickAxisEvent
 =================
 */
 void CL_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned time ) {
-	joyevent_t joyevent;
-	int negKey, posKey;
-
 	if ( !cgvm ) {
 		return;
 	}
 
-	joyevent.type = JOYEVENT_AXIS;
-	joyevent.value.axis.num = axis;
-
-	joyevent.value.axis.sign = -1;
-	negKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
-
-	joyevent.value.axis.sign = 1;
-	posKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
-
-	VM_Call( cgvm, CG_JOYSTICK_AXIS_EVENT, localPlayerNum, axis, value, time, clc.state, negKey, posKey );
+	VM_Call( cgvm, CG_JOYSTICK_AXIS_EVENT, localPlayerNum, axis, value, time, clc.state );
 }
 
 /*
@@ -742,18 +730,11 @@ CL_JoystickButtonEvent
 =================
 */
 void CL_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsigned time ) {
-	joyevent_t joyevent;
-	int key;
-
 	if ( !cgvm ) {
 		return;
 	}
 
-	joyevent.type = JOYEVENT_BUTTON;
-	joyevent.value.button = button;
-	key = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
-
-	VM_Call( cgvm, CG_JOYSTICK_BUTTON_EVENT, localPlayerNum, button, down, time, clc.state, key );
+	VM_Call( cgvm, CG_JOYSTICK_BUTTON_EVENT, localPlayerNum, button, down, time, clc.state );
 }
 
 /*
@@ -762,28 +743,10 @@ CL_JoystickHatEvent
 =================
 */
 void CL_JoystickHatEvent( int localPlayerNum, int hat, int state, unsigned time ) {
-	joyevent_t joyevent;
-	int upKey, rightKey, downKey, leftKey;
-
 	if ( !cgvm ) {
 		return;
 	}
 
-	joyevent.type = JOYEVENT_HAT;
-	joyevent.value.hat.num = hat;
-
-	joyevent.value.hat.mask = HAT_UP;
-	upKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
-
-	joyevent.value.hat.mask = HAT_RIGHT;
-	rightKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
-
-	joyevent.value.hat.mask = HAT_DOWN;
-	downKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
-
-	joyevent.value.hat.mask = HAT_LEFT;
-	leftKey = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
-
-	VM_Call( cgvm, CG_JOYSTICK_HAT_EVENT, localPlayerNum, hat, state, time, clc.state, upKey, rightKey, downKey, leftKey );
+	VM_Call( cgvm, CG_JOYSTICK_HAT_EVENT, localPlayerNum, hat, state, time, clc.state );
 }
 
