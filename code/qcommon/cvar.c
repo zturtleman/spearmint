@@ -792,22 +792,25 @@ void Cvar_Server_Set( const char *var_name, const char *value )
 {
 	int flags = Cvar_Flags( var_name );
 
-	// If this cvar may not be modified by a server discard the value.
-	if((flags != CVAR_NONEXISTENT) && !(flags & (CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED)))
+	if ( flags != CVAR_NONEXISTENT )
 	{
-		Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", var_name, value);
-		return;
-	}
+		// If this cvar may not be modified by a server discard the value.
+		if ( !( flags & ( CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED ) ) )
+		{
+			Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", var_name, value);
+			return;
+		}
 
-	if((flags != CVAR_NONEXISTENT) && (flags & CVAR_PROTECTED))
-	{
-		if( value )
-			Com_Error( ERR_DROP, "Server tried to set "
-				"\"%s\" to \"%s\"", var_name, value );
-		else
-			Com_Error( ERR_DROP, "Server tried to "
-				"modify \"%s\"", var_name );
-		return;
+		if ( flags & CVAR_PROTECTED )
+		{
+			if ( value )
+				Com_Error( ERR_DROP, "Server tried to set "
+					"\"%s\" to \"%s\"", var_name, value );
+			else
+				Com_Error( ERR_DROP, "Server tried to "
+					"modify \"%s\"", var_name );
+			return;
+		}
 	}
 
 	Cvar_Set2( var_name, value, CVAR_SERVER_CREATED, qtrue );
