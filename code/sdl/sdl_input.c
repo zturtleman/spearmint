@@ -1149,6 +1149,7 @@ void IN_Init( void *windowData )
 	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
 		in_joystick[i] = Cvar_Get( Com_LocalPlayerCvarName(i, "in_joystick"), "0", CVAR_ARCHIVE|CVAR_LATCH );
 		in_joystickThreshold[i] = Cvar_Get( Com_LocalPlayerCvarName(i, "in_joystickThreshold"), "0.15", CVAR_ARCHIVE );
+		Cvar_CheckRange(in_joystickThreshold[i], 0, 0.9f, qfalse);
 	}
 
 	SDL_StartTextInput( );

@@ -478,6 +478,9 @@ void CL_SystemInfoChanged( void ) {
 		// ehw!
 		if (!Q_stricmp(key, "fs_game"))
 		{
+			char filename[MAX_QPATH];
+			char *title;
+
 			if ( gameSet )
 				continue;
 
@@ -488,10 +491,11 @@ void CL_SystemInfoChanged( void ) {
 			}
 
 			// create game title file if does not exist
-			s = Info_ValueForKey( systemInfo, "sv_gameTitle" );
-			if ( ( cl_allowDownload->integer & DLF_ENABLE ) && *s && !FS_SV_RW_FileExists( va("%s/description.txt", value ) ) ) {
-				fileHandle_t f = FS_SV_FOpenFileWrite( va("%s/description.txt", value ) );
-				FS_Write( s, strlen( s ), f );
+			title = Info_ValueForKey( systemInfo, "sv_gameTitle" );
+			Com_sprintf( filename, sizeof ( filename ), "%s/description.txt", value );
+			if ( ( cl_allowDownload->integer & DLF_ENABLE ) && *title && !FS_SV_RW_FileExists( filename ) ) {
+				fileHandle_t f = FS_SV_FOpenFileWrite( filename );
+				FS_Write( s, strlen( title ), f );
 				FS_FCloseFile( f );
 			}
 

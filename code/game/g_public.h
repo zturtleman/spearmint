@@ -67,7 +67,7 @@ typedef struct {
 
 	int			svFlags;			// SVF_NOCLIENT, SVF_BROADCAST, etc
 
-	// if SVF_PLAYERMASK is set, use bitmask for clients to send to
+	// if SVF_PLAYERMASK is set, use bitmask for players to send to
 	clientList_t	sendPlayers;
 
 	vec3_t		absmin, absmax;		// derived from mins/maxs and origin + rotation
@@ -89,7 +89,7 @@ typedef struct {
 	// if set, entity is only sent to client if distance between entity and client <= cullDistance (even if SVF_BROADCAST is set)
 	int			cullDistance;
 
-	// if set, portal entities are only sent to client if distance between portal and client <= portalCullDistance
+	// if set, portal entities are only sent to client if distance between portal and player <= portalCullDistance
 	int			portalCullDistance;
 
 	// if SVF_VISDUMMY, number of master, else if not 0, it's the number of a target_vis_dummy_multiple.
@@ -200,7 +200,7 @@ typedef enum {
 
 	G_GET_CONFIGSTRING,	// ( int num, char *buffer, int bufferSize );
 
-	G_SET_CONFIGSTRING_RESTRICTIONS, // ( int num, const clientList* clientList );
+	G_SET_CONFIGSTRING_RESTRICTIONS, // ( int num, const clientList_t *clientList );
 
 	G_GET_USERINFO,		// ( int num, char *buffer, int bufferSize );
 	// userinfo strings are maintained by the server system, so they

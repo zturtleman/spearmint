@@ -352,11 +352,11 @@ returns 0 otherwise
 ==============
 */
 int Sys_StatFile( char *ospath ) {
-	struct _stat stat;
-	if ( _stat( ospath, &stat ) == -1 ) {
+	struct _stat st;
+	if ( _stat( ospath, &st ) == -1 ) {
 		return -1;
 	}
-	if ( stat.st_mode & _S_IFDIR ) {
+	if ( st.st_mode & _S_IFDIR ) {
 		return 1;
 	}
 	return 0;

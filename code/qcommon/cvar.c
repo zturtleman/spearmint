@@ -792,22 +792,25 @@ void Cvar_Server_Set( const char *var_name, const char *value )
 {
 	int flags = Cvar_Flags( var_name );
 
-	// If this cvar may not be modified by a server discard the value.
-	if((flags != CVAR_NONEXISTENT) && !(flags & (CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED)))
+	if ( flags != CVAR_NONEXISTENT )
 	{
-		Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", var_name, value);
-		return;
-	}
+		// If this cvar may not be modified by a server discard the value.
+		if ( !( flags & ( CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED ) ) )
+		{
+			Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", var_name, value);
+			return;
+		}
 
-	if((flags != CVAR_NONEXISTENT) && (flags & CVAR_PROTECTED))
-	{
-		if( value )
-			Com_Error( ERR_DROP, "Server tried to set "
-				"\"%s\" to \"%s\"", var_name, value );
-		else
-			Com_Error( ERR_DROP, "Server tried to "
-				"modify \"%s\"", var_name );
-		return;
+		if ( flags & CVAR_PROTECTED )
+		{
+			if ( value )
+				Com_Error( ERR_DROP, "Server tried to set "
+					"\"%s\" to \"%s\"", var_name, value );
+			else
+				Com_Error( ERR_DROP, "Server tried to "
+					"modify \"%s\"", var_name );
+			return;
+		}
 	}
 
 	Cvar_Set2( var_name, value, CVAR_SERVER_CREATED, qtrue );
@@ -823,25 +826,33 @@ Set cvar for game or cgame vm.
 void Cvar_VM_Set( const char *var_name, const char *value, qboolean gamevm )
 {
 	int flags = Cvar_Flags( var_name );
+	qboolean force = qtrue;
 
-	if ( !gamevm && (flags & CVAR_SYSTEMINFO) && CL_ConnectedToRemoteServer() )
+	if ( flags != CVAR_NONEXISTENT )
 	{
-		Com_Printf ("%s can only be set by server.\n", var_name);
-		return;
+		if ( flags & CVAR_PROTECTED )
+		{
+			if ( value )
+				Com_Error( ERR_DROP, "%s tried to set "
+					"\"%s\" to \"%s\"", gamevm ? "GameVM" : "CGameVM", var_name, value );
+			else
+				Com_Error( ERR_DROP, "%s tried to "
+					"modify \"%s\"", gamevm ? "GameVM" : "CGameVM",  var_name );
+			return;
+		}
+
+		// don't let VMs change cheat cvars when cheats are disabled
+		// don't let VMs change engine latched cvars instantly
+		// don't let cgame change systeminfo cvars when connected to a server
+		if ( ( ( flags & CVAR_CHEAT ) && !cvar_cheats->integer )
+			|| ( ( flags & CVAR_LATCH ) && !( flags & CVAR_VM_CREATED ) )
+			|| ( ( flags & CVAR_SYSTEMINFO ) && CL_ConnectedToRemoteServer() ) )
+		{
+			force = qfalse;
+		}
 	}
 
-	if((flags != CVAR_NONEXISTENT) && (flags & CVAR_PROTECTED))
-	{
-		if( value )
-			Com_Error( ERR_DROP, "%s tried to set "
-				"\"%s\" to \"%s\"", gamevm ? "GameVM" : "CGameVM", var_name, value );
-		else
-			Com_Error( ERR_DROP, "%s tried to "
-				"modify \"%s\"", gamevm ? "GameVM" : "CGameVM",  var_name );
-		return;
-	}
-
-	Cvar_Set2( var_name, value, CVAR_VM_CREATED, qtrue );
+	Cvar_Set2( var_name, value, CVAR_VM_CREATED, force );
 }
 
 /*
