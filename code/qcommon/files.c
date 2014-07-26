@@ -4145,6 +4145,14 @@ static void FS_CheckPaks( qboolean quiet )
 				return;
 			}
 
+			if ( !quiet ) {
+				// print the current search paths
+				FS_Path_f();
+
+				Com_Printf( "----------------------\n" );
+				Com_Printf( "%d files in pk3 files\n", fs_packFiles );
+			}
+
 			// missing data files are more important than missing PAKSUMS
 			Q_strncpyz( line1, "Unable to locate data files.", sizeof (line1) );
 			Com_sprintf( line2, sizeof (line2), "You need to install %s in order to play", badGames );
