@@ -1,28 +1,30 @@
 /*
 ===========================================================================
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-Return to Castle Wolfenstein multiplayer GPL Source Code
-Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company. 
+This file is part of Spearmint Source Code.
 
-This file is part of the Return to Castle Wolfenstein multiplayer GPL Source Code (RTCW MP Source Code).  
+Spearmint Source Code is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 3 of the License,
+or (at your option) any later version.
 
-RTCW MP Source Code is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-RTCW MP Source Code is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
+Spearmint Source Code is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with RTCW MP Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the RTCW MP Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the RTCW MP Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
 
-If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
-
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
@@ -50,9 +52,7 @@ frame.
 static float frontlerp, backlerp;
 static float torsoFrontlerp, torsoBacklerp;
 static int *triangles, *pIndexes;
-#ifndef VCMODS_OPENGLES
 static int *boneRefs;
-#endif
 static int indexes;
 static int baseIndex, baseVertex, oldIndexes;
 static int numVerts;
@@ -88,15 +88,15 @@ static int totalrv, totalrt, totalv, totalt;    //----(SA)
 
 //-----------------------------------------------------------------------------
 
-static float ProjectRadius( float r, vec3_t location ) {
+static float RB_ProjectRadius( float r, vec3_t location ) {
 	float pr;
 	float dist;
 	float c;
 	vec3_t p;
 	float projected[4];
 
-	c = DotProduct( tr.viewParms.or.axis[0], tr.viewParms.or.origin );
-	dist = DotProduct( tr.viewParms.or.axis[0], location ) - c;
+	c = DotProduct( backEnd.viewParms.or.axis[0], backEnd.viewParms.or.origin );
+	dist = DotProduct( backEnd.viewParms.or.axis[0], location ) - c;
 
 	if ( dist <= 0 ) {
 		return 0;
@@ -106,25 +106,25 @@ static float ProjectRadius( float r, vec3_t location ) {
 	p[1] = fabs( r );
 	p[2] = -dist;
 
-	projected[0] = p[0] * tr.viewParms.projectionMatrix[0] +
-				   p[1] * tr.viewParms.projectionMatrix[4] +
-				   p[2] * tr.viewParms.projectionMatrix[8] +
-				   tr.viewParms.projectionMatrix[12];
+	projected[0] = p[0] * backEnd.viewParms.projectionMatrix[0] +
+				   p[1] * backEnd.viewParms.projectionMatrix[4] +
+				   p[2] * backEnd.viewParms.projectionMatrix[8] +
+				   backEnd.viewParms.projectionMatrix[12];
 
-	projected[1] = p[0] * tr.viewParms.projectionMatrix[1] +
-				   p[1] * tr.viewParms.projectionMatrix[5] +
-				   p[2] * tr.viewParms.projectionMatrix[9] +
-				   tr.viewParms.projectionMatrix[13];
+	projected[1] = p[0] * backEnd.viewParms.projectionMatrix[1] +
+				   p[1] * backEnd.viewParms.projectionMatrix[5] +
+				   p[2] * backEnd.viewParms.projectionMatrix[9] +
+				   backEnd.viewParms.projectionMatrix[13];
 
-	projected[2] = p[0] * tr.viewParms.projectionMatrix[2] +
-				   p[1] * tr.viewParms.projectionMatrix[6] +
-				   p[2] * tr.viewParms.projectionMatrix[10] +
-				   tr.viewParms.projectionMatrix[14];
+	projected[2] = p[0] * backEnd.viewParms.projectionMatrix[2] +
+				   p[1] * backEnd.viewParms.projectionMatrix[6] +
+				   p[2] * backEnd.viewParms.projectionMatrix[10] +
+				   backEnd.viewParms.projectionMatrix[14];
 
-	projected[3] = p[0] * tr.viewParms.projectionMatrix[3] +
-				   p[1] * tr.viewParms.projectionMatrix[7] +
-				   p[2] * tr.viewParms.projectionMatrix[11] +
-				   tr.viewParms.projectionMatrix[15];
+	projected[3] = p[0] * backEnd.viewParms.projectionMatrix[3] +
+				   p[1] * backEnd.viewParms.projectionMatrix[7] +
+				   p[2] * backEnd.viewParms.projectionMatrix[11] +
+				   backEnd.viewParms.projectionMatrix[15];
 
 
 	pr = projected[1] / projected[3];
@@ -218,17 +218,17 @@ static int R_CullModel( mdsHeader_t *header, trRefEntity_t *ent ) {
 
 /*
 =================
-R_CalcMDSLod
+RB_CalcMDSLod
 
 =================
 */
-float R_CalcMDSLod( refEntity_t *refent, vec3_t origin, float radius, float modelBias, float modelScale ) {
+float RB_CalcMDSLod( refEntity_t *refent, vec3_t origin, float radius, float modelBias, float modelScale ) {
 	float flod, lodScale;
 	float projectedRadius;
 
 	// compute projected bounding sphere and use that as a criteria for selecting LOD
 
-	projectedRadius = ProjectRadius( radius, origin );
+	projectedRadius = RB_ProjectRadius( radius, origin );
 	if ( projectedRadius != 0 ) {
 
 //		ri.Printf (PRINT_ALL, "projected radius: %f\n", projectedRadius);
@@ -241,6 +241,7 @@ float R_CalcMDSLod( refEntity_t *refent, vec3_t origin, float radius, float mode
 		flod = 1.0f;
 	}
 
+#if 0 // ZTM: FIXME?: Flags not supported yet
 	if ( refent->reFlags & REFLAG_FORCE_LOD ) {
 		flod *= 0.5;
 	}
@@ -248,6 +249,7 @@ float R_CalcMDSLod( refEntity_t *refent, vec3_t origin, float radius, float mode
 	if ( refent->reFlags & REFLAG_DEAD_LOD ) {
 		flod *= 0.8;
 	}
+#endif
 
 	flod -= 0.25 * ( r_lodbias->value ) + modelBias;
 
@@ -267,10 +269,8 @@ R_ComputeFogNum
 =================
 */
 static int R_ComputeFogNum( mdsHeader_t *header, trRefEntity_t *ent ) {
-	int i, j;
-	fog_t           *fog;
 	mdsFrame_t      *mdsFrame;
-	vec3_t localOrigin;
+	vec3_t			localOrigin;
 
 	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
 		return 0;
@@ -279,40 +279,28 @@ static int R_ComputeFogNum( mdsHeader_t *header, trRefEntity_t *ent ) {
 	// FIXME: non-normalized axis issues
 	mdsFrame = ( mdsFrame_t * )( ( byte * ) header + header->ofsFrames + ( sizeof( mdsFrame_t ) + sizeof( mdsBoneFrameCompressed_t ) * ( header->numBones - 1 ) ) * ent->e.frame );
 	VectorAdd( ent->e.origin, mdsFrame->localOrigin, localOrigin );
-	for ( i = 1 ; i < tr.world->numfogs ; i++ ) {
-		fog = &tr.world->fogs[i];
-		for ( j = 0 ; j < 3 ; j++ ) {
-			if ( localOrigin[j] - mdsFrame->radius >= fog->bounds[1][j] ) {
-				break;
-			}
-			if ( localOrigin[j] + mdsFrame->radius <= fog->bounds[0][j] ) {
-				break;
-			}
-		}
-		if ( j == 3 ) {
-			return i;
-		}
-	}
 
-	return 0;
+	return R_PointFogNum( &tr.refdef, localOrigin, mdsFrame->radius );
 }
 
 /*
 ==============
-R_AddAnimSurfaces
+R_MDSAddAnimSurfaces
 ==============
 */
-void R_AddAnimSurfaces( trRefEntity_t *ent ) {
+void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	mdsHeader_t     *header;
 	mdsSurface_t    *surface;
-	shader_t        *shader = 0;
-	int i, fogNum, cull;
+	shader_t        *shader;
+	skin_t		*skin;
+	skinSurface_t	*skinSurf;
+	int i, j, fogNum, cull;
 	qboolean personalModel;
 
-	// don't add third_person objects if not in a portal
-	personalModel = ( ent->e.renderfx & RF_THIRD_PERSON ) && !tr.viewParms.isPortal;
+	// don't add mirror only objects if not in a mirror/portal
+	personalModel = (ent->e.renderfx & RF_ONLY_MIRROR) && !tr.viewParms.isPortal;
 
-	header = tr.currentModel->mds;
+	header = (mdsHeader_t *)tr.currentModel->modelData;
 
 	//
 	// cull the entire model if merged bounding box of both frames
@@ -338,51 +326,57 @@ void R_AddAnimSurfaces( trRefEntity_t *ent ) {
 	surface = ( mdsSurface_t * )( (byte *)header + header->ofsSurfaces );
 	for ( i = 0 ; i < header->numSurfaces ; i++ ) {
 
-		if ( ent->e.customShader ) {
-			shader = R_GetShaderByHandle( ent->e.customShader );
-		} else if ( ent->e.customSkin > 0 && ent->e.customSkin < tr.numSkins ) {
-			skin_t *skin;
-			int j;
-
-			skin = R_GetSkinByHandle( ent->e.customSkin );
-
-			// match the surface name to something in the skin file
+		if(ent->e.customShader)
+			shader = R_GetShaderByHandle(ent->e.customShader);
+		else if(ent->e.customSkin > 0 && ent->e.customSkin <= tr.refdef.numSkins)
+		{
+			skin = &tr.refdef.skins[ent->e.customSkin - 1];
 			shader = tr.defaultShader;
 
-			if ( ent->e.renderfx & RF_BLINK ) {
-				const char *s = va( "%s_b", surface->name );   // append '_b' for 'blink'
-				for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
-					if ( !strcmp( skin->surfaces[j]->name, s ) ) {
-						shader = skin->surfaces[j]->shader;
-						break;
-					}
+			for(j = 0 ; j < skin->numSurfaces ; j++)
+			{
+				skinSurf = &tr.skinSurfaces[ skin->surfaces[ j ] ];
+
+				if (!strcmp(skinSurf->name, surface->name))
+				{
+					shader = skinSurf->shader;
+					break;
 				}
 			}
 
-			if ( shader == tr.defaultShader ) {    // blink reference in skin was not found
-				for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
-					// the names have both been lowercased
-
-					if ( !strcmp( skin->surfaces[j]->name, surface->name ) ) {
-						shader = skin->surfaces[j]->shader;
-						break;
-					}
-				}
+			if (shader == tr.nodrawShader) {
+				surface = ( mdsSurface_t * )( (byte *)surface + surface->ofsEnd );
+				continue;
 			}
-
-			if ( shader == tr.defaultShader ) {
-				ri.Printf( PRINT_DEVELOPER, "WARNING: no shader for surface %s in skin %s\n", surface->name, skin->name );
-			} else if ( shader->defaultShader )     {
-				ri.Printf( PRINT_DEVELOPER, "WARNING: shader %s in skin %s not found\n", shader->name, skin->name );
-			}
-		} else {
+		}
+		else if(surface->shaderIndex > 0)
 			shader = R_GetShaderByHandle( surface->shaderIndex );
+		else
+			shader = tr.defaultShader;
+
+		// we will add shadows even if the main object isn't visible in the view
+
+		// stencil shadows can't do personal models unless I polyhedron clip
+		if ( !personalModel
+		        && r_shadows->integer == 2
+			&& fogNum == 0
+			&& !(ent->e.renderfx & ( RF_NOSHADOW | RF_DEPTHHACK ) )
+			&& shader->sort == SS_OPAQUE )
+		{
+			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, qfalse );
 		}
 
-		// don't add third_person objects if not viewing through a portal
-		if ( !personalModel ) {
-			R_AddDrawSurf( (void *)surface, shader, fogNum, qfalse );
+		// projection shadows work fine with personal models
+		if ( r_shadows->integer == 3
+			&& fogNum == 0
+			&& (ent->e.renderfx & RF_SHADOW_PLANE )
+			&& shader->sort == SS_OPAQUE )
+		{
+			R_AddDrawSurf( (void *)surface, tr.projectionShadowShader, 0, qfalse );
 		}
+
+		if (!personalModel)
+			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, qfalse );
 
 		surface = ( mdsSurface_t * )( (byte *)surface + surface->ofsEnd );
 	}
@@ -652,7 +646,7 @@ static ID_INLINE void Matrix3Transpose( const vec3_t matrix[3], vec3_t transpose
 R_CalcBone
 ==============
 */
-void R_CalcBone( mdsHeader_t *header, const refEntity_t *refent, int boneNum ) {
+void R_CalcBone( mdsHeader_t *header, int boneNum ) {
 	int j;
 
 	thisBoneInfo = &boneInfo[boneNum];
@@ -804,10 +798,10 @@ void R_CalcBone( mdsHeader_t *header, const refEntity_t *refent, int boneNum ) {
 R_CalcBoneLerp
 ==============
 */
-void R_CalcBoneLerp( mdsHeader_t *header, const refEntity_t *refent, int boneNum ) {
+void R_CalcBoneLerp( mdsHeader_t *header, int boneNum ) {
 	int j;
 
-	if ( !refent || !header || boneNum < 0 || boneNum >= MDS_MAX_BONES ) {
+	if ( !header || boneNum < 0 || boneNum >= MDS_MAX_BONES ) {
 		return;
 	}
 
@@ -1022,6 +1016,10 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 		frontlerp = 1.0f - backlerp;
 	}
 
+#if 1 // ZTM: FIXME: torso isn't separate yet
+	torsoBacklerp = backlerp;
+	torsoFrontlerp = frontlerp;
+#else
 	if ( refent->oldTorsoFrame == refent->torsoFrame ) {
 		torsoBacklerp = 0;
 		torsoFrontlerp = 1;
@@ -1029,17 +1027,18 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 		torsoBacklerp = refent->torsoBacklerp;
 		torsoFrontlerp = 1.0f - torsoBacklerp;
 	}
+#endif
 
 	frameSize = (int) ( sizeof( mdsFrame_t ) + ( header->numBones - 1 ) * sizeof( mdsBoneFrameCompressed_t ) );
 
 	frame = ( mdsFrame_t * )( (byte *)header + header->ofsFrames +
 							  refent->frame * frameSize );
 	torsoFrame = ( mdsFrame_t * )( (byte *)header + header->ofsFrames +
-								   refent->torsoFrame * frameSize );
+								   refent->frame * frameSize ); // ZTM: FIXME: was torsoFrame
 	oldFrame = ( mdsFrame_t * )( (byte *)header + header->ofsFrames +
 								 refent->oldframe * frameSize );
 	oldTorsoFrame = ( mdsFrame_t * )( (byte *)header + header->ofsFrames +
-									  refent->oldTorsoFrame * frameSize );
+									  refent->oldframe * frameSize ); // ZTM: FIXME: was oldTorsoFrame
 
 	//
 	// lerp all the needed bones (torsoParent is always the first bone in the list)
@@ -1050,7 +1049,14 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 	boneInfo = ( mdsBoneInfo_t * )( (byte *)header + header->ofsBones );
 	boneRefs = boneList;
 	//
+#if 1 // ZTM: FIXME: torsoAxis not supported yet, use identity matrix
+	int j;
+	for ( i = 0; i < 3; i++ )
+		for ( j = 0; j < 3; j++ )
+			torsoAxis[i][j] = ( i == j ) ? 1 : 0;
+#else
 	Matrix3Transpose( refent->torsoAxis, torsoAxis );
+#endif
 
 #ifdef HIGH_PRECISION_BONES
 	if ( qtrue ) {
@@ -1068,10 +1074,10 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 
 			// find our parent, and make sure it has been calculated
 			if ( ( boneInfo[*boneRefs].parent >= 0 ) && ( !validBones[boneInfo[*boneRefs].parent] && !newBones[boneInfo[*boneRefs].parent] ) ) {
-				R_CalcBone( header, refent, boneInfo[*boneRefs].parent );
+				R_CalcBone( header, boneInfo[*boneRefs].parent );
 			}
 
-			R_CalcBone( header, refent, *boneRefs );
+			R_CalcBone( header, *boneRefs );
 
 		}
 
@@ -1090,10 +1096,10 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 
 			// find our parent, and make sure it has been calculated
 			if ( ( boneInfo[*boneRefs].parent >= 0 ) && ( !validBones[boneInfo[*boneRefs].parent] && !newBones[boneInfo[*boneRefs].parent] ) ) {
-				R_CalcBoneLerp( header, refent, boneInfo[*boneRefs].parent );
+				R_CalcBoneLerp( header, boneInfo[*boneRefs].parent );
 			}
 
-			R_CalcBoneLerp( header, refent, *boneRefs );
+			R_CalcBoneLerp( header, *boneRefs );
 
 		}
 
@@ -1115,7 +1121,7 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 				continue;
 			}
 
-			if ( !( thisBoneInfo->flags & BONEFLAG_TAG ) ) {
+			if ( !( thisBoneInfo->flags & MDS_BONEFLAG_TAG ) ) {
 
 				// 1st multiply with the bone->matrix
 				// 2nd translation for rotation relative to bone around torso parent offset
@@ -1160,13 +1166,11 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 
 /*
 ==============
-RB_SurfaceAnim
+RB_MDSSurfaceAnim
 ==============
 */
-void RB_SurfaceAnim( mdsSurface_t *surface ) {
-#ifndef VCMODS_OPENGLES
+void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 	int i;
-#endif
 	int j, k;
 	refEntity_t *refent;
 	int             *boneList;
@@ -1193,12 +1197,13 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 	// TODO: lerp the radius and origin
 	VectorAdd( refent->origin, frame->localOrigin, vec );
 	lodRadius = frame->radius;
-	lodScale = R_CalcMDSLod( refent, vec, lodRadius, header->lodBias, header->lodScale );
+	lodScale = RB_CalcMDSLod( refent, vec, lodRadius, header->lodBias, header->lodScale );
 
 
 //DBG_SHOWTIME
 
 //----(SA)	modification to allow dead skeletal bodies to go below minlod (experiment)
+#if 0 // ZTM: FIXME?: Flag not supported yet
 	if ( refent->reFlags & REFLAG_DEAD_LOD ) {
 		if ( lodScale < 0.35 ) {   // allow dead to lod down to 35% (even if below surf->minLod) (%35 is arbitrary and probably not good generally.  worked for the blackguard/infantry as a test though)
 			lodScale = 0.35;
@@ -1206,13 +1211,14 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 		render_count = (int)( (float) surface->numVerts * lodScale );
 
 	} else {
+#endif
 		render_count = (int)( (float) surface->numVerts * lodScale );
 		if ( render_count < surface->minLod ) {
-			if ( !( refent->reFlags & REFLAG_DEAD_LOD ) ) {
-				render_count = surface->minLod;
-			}
+			render_count = surface->minLod;
 		}
+#if 0
 	}
+#endif
 //----(SA)	end
 
 
@@ -1322,7 +1328,6 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 
 	DBG_SHOWTIME
 
-#ifndef VCMODS_OPENGLES
 	if ( r_bonesDebug->integer ) {
 		if ( r_bonesDebug->integer < 3 ) {
 			// DEBUG: show the bones as a stick figure with axis at each bone
@@ -1331,6 +1336,7 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 				bonePtr = &bones[*boneRefs];
 
 				GL_Bind( tr.whiteImage );
+				GL_State( GLS_DEFAULT );
 				qglLineWidth( 1 );
 				qglBegin( GL_LINES );
 				for ( j = 0; j < 3; j++ ) {
@@ -1365,6 +1371,7 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 			tempNormal = ( float * )( tess.normal + baseVertex );
 
 			GL_Bind( tr.whiteImage );
+			GL_State( GLS_DEFAULT );
 			qglLineWidth( 1 );
 			qglBegin( GL_LINES );
 			qglColor3f( .0,.0,.8 );
@@ -1405,7 +1412,6 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 		tess.numVertexes = baseVertex;
 		return;
 	}
-#endif
 
 #ifdef DBG_PROFILE_BONES
 	Com_Printf( "\n" );
@@ -1432,16 +1438,17 @@ void R_RecursiveBoneListAdd( int bi, int *boneList, int *numBones, mdsBoneInfo_t
 
 /*
 ===============
-R_GetBoneTag
+R_GetMDSBoneTag
 ===============
 */
-int R_GetBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIndex, const refEntity_t *refent, const char *tagName ) {
+int R_GetMDSBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIndex, int frame, int oldframe, float frac, const char *tagName ) {
 
 	int i;
 	mdsTag_t    *pTag;
 	mdsBoneInfo_t *boneInfoList;
 	int boneList[ MDS_MAX_BONES ];
 	int numBones;
+	refEntity_t refent;
 
 	if ( startTagIndex > mds->numTags ) {
 		memset( outTag, 0, sizeof( *outTag ) );
@@ -1465,6 +1472,13 @@ int R_GetBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIndex, co
 		return -1;
 	}
 
+	// now set up fake refent
+
+	Com_Memset( &refent, 0, sizeof ( refent ) );
+	refent.frame = frame;
+	refent.oldframe = oldframe;
+	refent.backlerp = frac;
+
 	// now build the list of bones we need to calc to get this tag's bone information
 
 	boneInfoList = ( mdsBoneInfo_t * )( (byte *)mds + mds->ofsBones );
@@ -1474,7 +1488,7 @@ int R_GetBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIndex, co
 
 	// calc the bones
 
-	R_CalcBones( (mdsHeader_t *)mds, refent, boneList, numBones );
+	R_CalcBones( (mdsHeader_t *)mds, &refent, boneList, numBones );
 
 	// now extract the orientation for the bone that represents our tag
 

@@ -409,6 +409,143 @@ typedef struct {
 /*
 ==============================================================================
 
+MDS file format (Return to Castle Wolfenstein Skeletal Format)
+
+==============================================================================
+*/
+
+#define MDS_IDENT           ( ( 'W' << 24 ) + ( 'S' << 16 ) + ( 'D' << 8 ) + 'M' )
+#define MDS_VERSION         4
+#define MDS_MAX_VERTS       6000
+#define MDS_MAX_TRIANGLES   8192
+#define MDS_MAX_BONES       128
+#define MDS_MAX_SURFACES    32
+#define MDS_MAX_TAGS        128
+
+#define MDS_TRANSLATION_SCALE   ( 1.0 / 64 )
+
+typedef struct {
+	int boneIndex;              // these are indexes into the boneReferences,
+	float boneWeight;           // not the global per-frame bone list
+	vec3_t offset;
+} mdsWeight_t;
+
+typedef struct {
+	vec3_t normal;
+	vec2_t texCoords;
+	int numWeights;
+	int fixedParent;            // stay equi-distant from this parent
+	float fixedDist;
+	mdsWeight_t weights[1];     // variable sized
+} mdsVertex_t;
+
+typedef struct {
+	int indexes[3];
+} mdsTriangle_t;
+
+typedef struct {
+	int ident;
+
+	char name[MAX_QPATH];           // polyset name
+	char shader[MAX_QPATH];
+	int shaderIndex;                // for in-game use
+
+	int minLod;
+
+	int ofsHeader;                  // this will be a negative number
+
+	int numVerts;
+	int ofsVerts;
+
+	int numTriangles;
+	int ofsTriangles;
+
+	int ofsCollapseMap;           // numVerts * int
+
+	// Bone references are a set of ints representing all the bones
+	// present in any vertex weights for this surface.  This is
+	// needed because a model may have surfaces that need to be
+	// drawn at different sort times, and we don't want to have
+	// to re-interpolate all the bones for each surface.
+	int numBoneReferences;
+	int ofsBoneReferences;
+
+	int ofsEnd;                     // next surface follows
+} mdsSurface_t;
+
+typedef struct {
+	//float		angles[3];
+	//float		ofsAngles[2];
+	short angles[4];            // to be converted to axis at run-time (this is also better for lerping)
+	short ofsAngles[2];         // PITCH/YAW, head in this direction from parent to go to the offset position
+} mdsBoneFrameCompressed_t;
+
+// NOTE: this only used at run-time
+typedef struct {
+	float matrix[3][3];             // 3x3 rotation
+	vec3_t translation;             // translation vector
+} mdsBoneFrame_t;
+
+typedef struct {
+	vec3_t bounds[2];               // bounds of all surfaces of all LOD's for this frame
+	vec3_t localOrigin;             // midpoint of bounds, used for sphere cull
+	float radius;                   // dist from localOrigin to corner
+	vec3_t parentOffset;            // one bone is an ascendant of all other bones, it starts the hierachy at this position
+	mdsBoneFrameCompressed_t bones[1];              // [numBones]
+} mdsFrame_t;
+
+typedef struct {
+	int numSurfaces;
+	int ofsSurfaces;                // first surface, others follow
+	int ofsEnd;                     // next lod follows
+} mdsLOD_t;
+
+typedef struct {
+	char name[MAX_QPATH];           // name of tag
+	float torsoWeight;
+	int boneIndex;                  // our index in the bones
+} mdsTag_t;
+
+#define MDS_BONEFLAG_TAG        1       // this bone is actually a tag
+
+typedef struct {
+	char name[MAX_QPATH];           // name of bone
+	int parent;                     // not sure if this is required, no harm throwing it in
+	float torsoWeight;              // scale torso rotation about torsoParent by this
+	float parentDist;
+	int flags;
+} mdsBoneInfo_t;
+
+typedef struct {
+	int ident;
+	int version;
+
+	char name[MAX_QPATH];           // model name
+
+	float lodScale;
+	float lodBias;
+
+	// frames and bones are shared by all levels of detail
+	int numFrames;
+	int numBones;
+	int ofsFrames;                  // mdsFrame_t[numFrames]
+	int ofsBones;                   // mdsBoneInfo_t[numBones]
+	int torsoParent;                // index of bone that is the parent of the torso
+
+	int numSurfaces;
+	int ofsSurfaces;
+
+	// tag data
+	int numTags;
+	int ofsTags;                    // mdsTag_t[numTags]
+
+	int ofsEnd;                     // end of file
+} mdsHeader_t;
+
+
+/*
+==============================================================================
+
   .BSP file format
 
 ==============================================================================
