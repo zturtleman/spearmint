@@ -1509,6 +1509,7 @@ int R_GetMDSBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIndex,
 		int j;
 		// DEBUG: show the tag position/axis
 		GL_Bind( tr.whiteImage );
+		GL_State( GLS_DEFAULT );
 		qglLineWidth( 2 );
 		qglBegin( GL_LINES );
 		for (j=0; j<3; j++) {
