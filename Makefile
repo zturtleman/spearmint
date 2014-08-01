@@ -1342,6 +1342,7 @@ endif
 
 Q3R2OBJ = \
   $(B)/renderergl2/tr_animation.o \
+  $(B)/renderergl2/tr_animation_mds.o \
   $(B)/renderergl2/tr_backend.o \
   $(B)/renderergl2/tr_bsp.o \
   $(B)/renderergl2/tr_cmds.o \

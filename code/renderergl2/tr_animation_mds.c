@@ -287,11 +287,13 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	shader_t        *shader;
 	skin_t		*skin;
 	skinSurface_t	*skinSurf;
+	int             cubemapIndex;
 	int i, j, fogNum, cull;
 	qboolean personalModel;
 
 	// don't add mirror only objects if not in a mirror/portal
-	personalModel = (ent->e.renderfx & RF_ONLY_MIRROR) && !tr.viewParms.isPortal;
+	personalModel = (ent->e.renderfx & RF_ONLY_MIRROR) && !(tr.viewParms.isPortal 
+	                 || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW)));
 
 	header = (mdsHeader_t *)tr.currentModel->modelData;
 
@@ -315,6 +317,8 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	// see if we are in a fog volume
 	//
 	fogNum = R_ComputeFogNum( header, ent );
+
+	cubemapIndex = R_CubemapForPoint(ent->e.origin);
 
 	surface = ( mdsSurface_t * )( (byte *)header + header->ofsSurfaces );
 	for ( i = 0 ; i < header->numSurfaces ; i++ ) {
@@ -356,7 +360,7 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 			&& !(ent->e.renderfx & ( RF_NOSHADOW | RF_DEPTHHACK ) )
 			&& shader->sort == SS_OPAQUE )
 		{
-			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, qfalse );
+			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, qfalse, qfalse, 0 );
 		}
 
 		// projection shadows work fine with personal models
@@ -365,11 +369,11 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 			&& (ent->e.renderfx & RF_SHADOW_PLANE )
 			&& shader->sort == SS_OPAQUE )
 		{
-			R_AddDrawSurf( (void *)surface, tr.projectionShadowShader, 0, qfalse );
+			R_AddDrawSurf( (void *)surface, tr.projectionShadowShader, 0, qfalse, qfalse, 0 );
 		}
 
 		if (!personalModel)
-			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, qfalse );
+			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, qfalse, qfalse, cubemapIndex );
 
 		surface = ( mdsSurface_t * )( (byte *)surface + surface->ofsEnd );
 	}
@@ -1179,7 +1183,8 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 	int indexes;
 	int baseIndex, baseVertex, oldIndexes;
 	mdsVertex_t *v;
-	float *tempVert, *tempNormal;
+	float *tempVert;
+	uint32_t *tempNormal;
 	int *collapse_map, *pCollapseMap;
 	int collapse[ MDS_MAX_VERTS ], *pCollapse;
 	int p0, p1, p2;
@@ -1313,9 +1318,10 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 	//
 	v = ( mdsVertex_t * )( (byte *)surface + surface->ofsVerts );
 	tempVert = ( float * )( tess.xyz + baseVertex );
-	tempNormal = ( float * )( tess.normal + baseVertex );
+	tempNormal = ( uint32_t * )( tess.normal + baseVertex );
 	for ( j = 0; j < render_count; j++, tempVert += 4, tempNormal += 4 ) {
 		mdsWeight_t *w;
+		vec3_t newNormal;
 
 		VectorClear( tempVert );
 
@@ -1325,7 +1331,9 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 			LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
 		}
 
-		LocalMatrixTransformVector( v->normal, bones[v->weights[0].boneIndex].matrix, tempNormal );
+		LocalMatrixTransformVector( v->normal, bones[v->weights[0].boneIndex].matrix, newNormal );
+
+		*tempNormal = R_VboPackNormal(newNormal);
 
 		tess.texCoords[baseVertex + j][0][0] = v->texCoords[0];
 		tess.texCoords[baseVertex + j][0][1] = v->texCoords[1];
@@ -1375,7 +1383,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 
 			// show mesh edges
 			tempVert = ( float * )( tess.xyz + baseVertex );
-			tempNormal = ( float * )( tess.normal + baseVertex );
+			tempNormal = ( uint32_t * )( tess.normal + baseVertex );
 
 			GL_Bind( tr.whiteImage );
 			GL_State( GLS_DEFAULT );
