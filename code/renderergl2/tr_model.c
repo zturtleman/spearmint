@@ -1858,10 +1858,14 @@ int R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, i
 	} else if (model->type == MOD_MDR) {
 		mdrHeader_t	*header;
 		mdrFrame_t	*start, *end;
+		int frameSize;
 
 		header = (mdrHeader_t *)model->modelData;
-		start = (mdrFrame_t *) ((byte *)header + header->ofsFrames) + startFrame % header->numFrames;
-		end = (mdrFrame_t *) ((byte *)header + header->ofsFrames) + endFrame % header->numFrames;
+
+		frameSize = (size_t)( &((mdrFrame_t *)0)->bones[ header->numBones ] );
+
+		start = (mdrFrame_t *)((byte *) header + header->ofsFrames + ( startFrame % header->numFrames ) * frameSize );
+		end = (mdrFrame_t *)((byte *) header + header->ofsFrames + ( endFrame % header->numFrames ) * frameSize );
 
 		if ( startFrame == endFrame ) {
 			VectorCopy( start->bounds[0], mins );
