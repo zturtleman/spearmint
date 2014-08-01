@@ -1705,6 +1705,32 @@ int R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, i
 		}
 		
 		return qtrue;
+	} else if (model->type == MOD_MDS) {
+		mdsHeader_t	*header;
+		mdsFrame_t	*start, *end;
+		int frameSize;
+
+		header = (mdsHeader_t *)model->modelData;
+
+		frameSize = (size_t)( &((mdsFrame_t *)0)->bones[ header->numBones ] );
+
+		start = ( mdsFrame_t * )( ( byte * ) header + header->ofsFrames + ( startFrame % header->numFrames ) * frameSize );
+		end = ( mdsFrame_t * )( ( byte * ) header + header->ofsFrames + ( endFrame % header->numFrames ) * frameSize );
+
+		if ( startFrame == endFrame ) {
+			VectorCopy( start->bounds[0], mins );
+			VectorCopy( start->bounds[1], maxs );
+		} else {
+			frontLerp = frac;
+			backLerp = 1.0f - frac;
+
+			for ( i = 0 ; i < 3 ; i++ ) {
+				mins[i] = start->bounds[0][i] * backLerp + end->bounds[0][i] * frontLerp;
+				maxs[i] = start->bounds[1][i] * backLerp + end->bounds[1][i] * frontLerp;
+			}
+		}
+
+		return qtrue;
 	} else if(model->type == MOD_IQM) {
 		iqmData_t *iqmData;
 		vec_t *startBounds, *endBounds;
