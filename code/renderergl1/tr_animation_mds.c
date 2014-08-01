@@ -59,7 +59,6 @@ static mdsBoneFrameCompressed_t    *cBonePtr, *cTBonePtr, *cOldBonePtr, *cOldTBo
 static mdsBoneInfo_t   *boneInfo, *thisBoneInfo, *parentBoneInfo;
 static mdsFrame_t      *frame, *torsoFrame;
 static mdsFrame_t      *oldFrame, *oldTorsoFrame;
-static int frameSize;
 static short           *sh, *sh2;
 static float           *pf;
 static vec3_t angles, tangles, torsoParentOffset, torsoAxis[3], tmpAxis[3];
@@ -140,7 +139,7 @@ static int R_CullModel( mdsHeader_t *header, trRefEntity_t *ent ) {
 	mdsFrame_t  *oldFrame, *newFrame;
 	int i, frameSize;
 
-	frameSize = (int) ( sizeof( mdsFrame_t ) - sizeof( mdsBoneFrameCompressed_t ) + header->numBones * sizeof( mdsBoneFrameCompressed_t ) );
+	frameSize = (size_t)( &((mdsFrame_t *)0)->bones[ header->numBones ] );
 
 	// compute frame pointers
 	newFrame = ( mdsFrame_t * )( ( byte * ) header + header->ofsFrames + ent->e.frame * frameSize );
@@ -977,6 +976,7 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 	int i;
 	int     *boneRefs;
 	float torsoWeight;
+	int frameSize;
 
 	//
 	// if the entity has changed since the last time the bones were built, reset them
@@ -1027,7 +1027,7 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 	}
 #endif
 
-	frameSize = (int) ( sizeof( mdsFrame_t ) + ( header->numBones - 1 ) * sizeof( mdsBoneFrameCompressed_t ) );
+	frameSize = (size_t)( &((mdsFrame_t *)0)->bones[ header->numBones ] );
 
 	frame = ( mdsFrame_t * )( (byte *)header + header->ofsFrames +
 							  refent->frame * frameSize );
