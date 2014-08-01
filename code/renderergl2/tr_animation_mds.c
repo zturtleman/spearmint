@@ -1319,7 +1319,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 	v = ( mdsVertex_t * )( (byte *)surface + surface->ofsVerts );
 	tempVert = ( float * )( tess.xyz + baseVertex );
 	tempNormal = ( uint32_t * )( tess.normal + baseVertex );
-	for ( j = 0; j < render_count; j++, tempVert += 4, tempNormal += 4 ) {
+	for ( j = 0; j < render_count; j++, tempVert += 4, tempNormal++ ) {
 		mdsWeight_t *w;
 		vec3_t newNormal;
 
