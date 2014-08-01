@@ -1538,7 +1538,6 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 			start = R_GetAnimTag((mdrHeader_t *) model->modelData, startFrame, tagName, &start_space);
 			end = R_GetAnimTag((mdrHeader_t *) model->modelData, endFrame, tagName, &end_space);
 		}
-#ifndef DEDICATED
 		else if(model->type == MOD_MDS)
 		{
 			int retval;
@@ -1552,7 +1551,6 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 			// failed
 			return qfalse;
 		}
-#endif
 		else if( model->type == MOD_IQM ) {
 			return R_IQMLerpTag( tag, model->modelData,
 					frameModel, startFrame,

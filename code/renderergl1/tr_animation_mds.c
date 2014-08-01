@@ -51,16 +51,10 @@ frame.
 
 static float frontlerp, backlerp;
 static float torsoFrontlerp, torsoBacklerp;
-static int *triangles, *pIndexes;
-static int *boneRefs;
-static int indexes;
-static int baseIndex, baseVertex, oldIndexes;
-static int numVerts;
-static mdsVertex_t     *v;
 static mdsBoneFrame_t bones[MDS_MAX_BONES], rawBones[MDS_MAX_BONES], oldBones[MDS_MAX_BONES];
 static char validBones[MDS_MAX_BONES];
 static char newBones[ MDS_MAX_BONES ];
-static mdsBoneFrame_t  *bonePtr, *bone, *parentBone;
+static mdsBoneFrame_t  *bonePtr, *parentBone;
 static mdsBoneFrameCompressed_t    *cBonePtr, *cTBonePtr, *cOldBonePtr, *cOldTBonePtr, *cBoneList, *cOldBoneList, *cBoneListTorso, *cOldBoneListTorso;
 static mdsBoneInfo_t   *boneInfo, *thisBoneInfo, *parentBoneInfo;
 static mdsFrame_t      *frame, *torsoFrame;
@@ -69,14 +63,12 @@ static int frameSize;
 static short           *sh, *sh2;
 static float           *pf;
 static vec3_t angles, tangles, torsoParentOffset, torsoAxis[3], tmpAxis[3];
-static float           *tempVert, *tempNormal;
 static vec3_t vec, v2, dir;
 static float diff, a1, a2;
+#ifndef DEDICATED
 static int render_count;
 static float lodRadius, lodScale;
-static int             *collapse_map, *pCollapseMap;
-static int collapse[ MDS_MAX_VERTS ], *pCollapse;
-static int p0, p1, p2;
+#endif
 static qboolean isTorso, fullTorso;
 static vec4_t m1[4], m2[4];
 // static  vec4_t m3[4], m4[4]; // TTimo unused
@@ -87,6 +79,8 @@ static refEntity_t lastBoneEntity;
 static int totalrv, totalrt, totalv, totalt;    //----(SA)
 
 //-----------------------------------------------------------------------------
+
+#ifndef DEDICATED
 
 static float RB_ProjectRadius( float r, vec3_t location ) {
 	float pr;
@@ -381,6 +375,8 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 		surface = ( mdsSurface_t * )( (byte *)surface + surface->ofsEnd );
 	}
 }
+
+#endif // !DEDICATED
 
 static ID_INLINE void LocalMatrixTransformVector( vec3_t in, vec3_t mat[ 3 ], vec3_t out ) {
 	out[ 0 ] = in[ 0 ] * mat[ 0 ][ 0 ] + in[ 1 ] * mat[ 0 ][ 1 ] + in[ 2 ] * mat[ 0 ][ 2 ];
@@ -990,6 +986,7 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 		memset( validBones, 0, header->numBones );
 		lastBoneEntity = *refent;
 
+#ifndef DEDICATED
 		// (SA) also reset these counter statics
 //----(SA)	print stats for the complete model (not per-surface)
 		if ( r_bonesDebug->integer == 4 && totalrt ) {
@@ -1002,6 +999,7 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 					   ( float )( 100.0 * totalrt ) / (float) totalt );
 		}
 //----(SA)	end
+#endif
 		totalrv = totalrt = totalv = totalt = 0;
 
 	}
@@ -1164,6 +1162,8 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 #define DBG_SHOWTIME    ;
 #endif
 
+#ifndef DEDICATED
+
 /*
 ==============
 RB_MDSSurfaceAnim
@@ -1173,8 +1173,16 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 	int i;
 	int j, k;
 	refEntity_t *refent;
-	int             *boneList;
-	mdsHeader_t     *header;
+	int *boneList;
+	mdsHeader_t *header;
+	int *triangles, *pIndexes;
+	int indexes;
+	int baseIndex, baseVertex, oldIndexes;
+	mdsVertex_t *v;
+	float *tempVert, *tempNormal;
+	int *collapse_map, *pCollapseMap;
+	int collapse[ MDS_MAX_VERTS ], *pCollapse;
+	int p0, p1, p2;
 
 #ifdef DBG_PROFILE_BONES
 	int di = 0, dt, ldt;
@@ -1303,7 +1311,6 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 	//
 	// deform the vertexes by the lerped bones
 	//
-	numVerts = surface->numVerts;
 	v = ( mdsVertex_t * )( (byte *)surface + surface->ofsVerts );
 	tempVert = ( float * )( tess.xyz + baseVertex );
 	tempNormal = ( float * )( tess.normal + baseVertex );
@@ -1314,7 +1321,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 
 		w = v->weights;
 		for ( k = 0 ; k < v->numWeights ; k++, w++ ) {
-			bone = &bones[w->boneIndex];
+			mdsBoneFrame_t  *bone = &bones[w->boneIndex];
 			LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
 		}
 
@@ -1331,7 +1338,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 	if ( r_bonesDebug->integer ) {
 		if ( r_bonesDebug->integer < 3 ) {
 			// DEBUG: show the bones as a stick figure with axis at each bone
-			boneRefs = ( int * )( (byte *)surface + surface->ofsBoneReferences );
+			int *boneRefs = ( int * )( (byte *)surface + surface->ofsBoneReferences );
 			for ( i = 0; i < surface->numBoneReferences; i++, boneRefs++ ) {
 				bonePtr = &bones[*boneRefs];
 
@@ -1418,6 +1425,8 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 #endif
 
 }
+
+#endif // !DEDICATED
 
 /*
 ===============
