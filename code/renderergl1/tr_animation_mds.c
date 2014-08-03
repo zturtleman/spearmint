@@ -61,7 +61,7 @@ static mdsFrame_t      *frame, *torsoFrame;
 static mdsFrame_t      *oldFrame, *oldTorsoFrame;
 static short           *sh, *sh2;
 static float           *pf;
-static vec3_t angles, tangles, torsoParentOffset, torsoAxis[3], tmpAxis[3];
+static vec3_t angles, tangles, torsoParentOffset, torsoAxis[3];
 static vec3_t vec, v2, dir;
 static float diff, a1, a2;
 #ifndef DEDICATED
@@ -78,6 +78,25 @@ static refEntity_t lastBoneEntity;
 static int totalrv, totalrt, totalv, totalt;    //----(SA)
 
 //-----------------------------------------------------------------------------
+
+#define MDS_FRAME( _header, _frame ) \
+	( mdsFrame_t * )( (byte *)_header + _header->ofsFrames + _frame * (size_t)( &((mdsFrame_t *)0)->bones[ _header->numBones ] ) )
+
+static mdsHeader_t *R_GetFrameModelDataByHandle( const refEntity_t *ent, qhandle_t hModel ) {
+	model_t *mod;
+
+	if ( !hModel ) {
+		hModel = ent->hModel;
+	}
+
+	mod = R_GetModelByHandle( hModel );
+
+	if ( mod->type != MOD_MDS ) {
+		return NULL;
+	}
+
+	return mod->modelData;
+}
 
 #ifndef DEDICATED
 
@@ -134,20 +153,26 @@ static float RB_ProjectRadius( float r, vec3_t location ) {
 R_CullModel
 =============
 */
-static int R_CullModel( mdsHeader_t *header, trRefEntity_t *ent ) {
+static int R_CullModel( trRefEntity_t *ent ) {
 	vec3_t bounds[2];
+	mdsHeader_t *oldHeader, *newHeader;
 	mdsFrame_t  *oldFrame, *newFrame;
-	int i, frameSize;
+	int i;
 
-	frameSize = (size_t)( &((mdsFrame_t *)0)->bones[ header->numBones ] );
+	newHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.frameModel );
+	oldHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.oldframeModel );
+
+	if ( !newHeader || !oldHeader ) {
+		return CULL_OUT;
+	}
 
 	// compute frame pointers
-	newFrame = ( mdsFrame_t * )( ( byte * ) header + header->ofsFrames + ent->e.frame * frameSize );
-	oldFrame = ( mdsFrame_t * )( ( byte * ) header + header->ofsFrames + ent->e.oldframe * frameSize );
+	newFrame = MDS_FRAME( newHeader, ent->e.frame );
+	oldFrame = MDS_FRAME( oldHeader, ent->e.oldframe );
 
 	// cull bounding sphere ONLY if this is not an upscaled entity
 	if ( !ent->e.nonNormalizedAxes ) {
-		if ( ent->e.frame == ent->e.oldframe ) {
+		if ( ent->e.frame == ent->e.oldframe && ent->e.frameModel == ent->e.oldframeModel ) {
 			switch ( R_CullLocalPointAndRadius( newFrame->localOrigin, newFrame->radius ) )
 			{
 			case CULL_OUT:
@@ -215,7 +240,7 @@ RB_CalcMDSLod
 
 =================
 */
-float RB_CalcMDSLod( refEntity_t *refent, vec3_t origin, float radius, float modelBias, float modelScale ) {
+static float RB_CalcMDSLod( refEntity_t *refent, vec3_t origin, float radius, float modelBias, float modelScale ) {
 	float flod, lodScale;
 	float projectedRadius;
 
@@ -261,19 +286,25 @@ R_ComputeFogNum
 
 =================
 */
-static int R_ComputeFogNum( mdsHeader_t *header, trRefEntity_t *ent ) {
-	mdsFrame_t      *mdsFrame;
+static int R_ComputeFogNum( trRefEntity_t *ent ) {
+	mdsHeader_t		*header;
+	mdsFrame_t		*frame;
 	vec3_t			localOrigin;
 
 	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
 		return 0;
 	}
 
-	// FIXME: non-normalized axis issues
-	mdsFrame = ( mdsFrame_t * )( ( byte * ) header + header->ofsFrames + ( sizeof( mdsFrame_t ) + sizeof( mdsBoneFrameCompressed_t ) * ( header->numBones - 1 ) ) * ent->e.frame );
-	VectorAdd( ent->e.origin, mdsFrame->localOrigin, localOrigin );
+	header = R_GetFrameModelDataByHandle( &ent->e, ent->e.frameModel );
 
-	return R_PointFogNum( &tr.refdef, localOrigin, mdsFrame->radius );
+	if ( !header )
+		return 0;
+
+	// FIXME: non-normalized axis issues
+	frame = MDS_FRAME( header, ent->e.frame );
+	VectorAdd( ent->e.origin, frame->localOrigin, localOrigin );
+
+	return R_PointFogNum( &tr.refdef, localOrigin, frame->radius );
 }
 
 /*
@@ -299,7 +330,7 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	// cull the entire model if merged bounding box of both frames
 	// is outside the view frustum.
 	//
-	cull = R_CullModel( header, ent );
+	cull = R_CullModel( ent );
 	if ( cull == CULL_OUT ) {
 		return;
 	}
@@ -314,7 +345,7 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	//
 	// see if we are in a fog volume
 	//
-	fogNum = R_ComputeFogNum( header, ent );
+	fogNum = R_ComputeFogNum( ent );
 
 	surface = ( mdsSurface_t * )( (byte *)header + header->ofsSurfaces );
 	for ( i = 0 ; i < header->numSurfaces ; i++ ) {
@@ -641,7 +672,7 @@ static ID_INLINE void Matrix3Transpose( const vec3_t matrix[3], vec3_t transpose
 R_CalcBone
 ==============
 */
-void R_CalcBone( mdsHeader_t *header, int boneNum ) {
+static void R_CalcBone( int torsoParent, int boneNum ) {
 	int j;
 
 	thisBoneInfo = &boneInfo[boneNum];
@@ -777,7 +808,7 @@ void R_CalcBone( mdsHeader_t *header, int boneNum ) {
 		bonePtr->translation[2] = frame->parentOffset[2];
 	}
 	//
-	if ( boneNum == header->torsoParent ) { // this is the torsoParent
+	if ( boneNum == torsoParent ) { // this is the torsoParent
 		VectorCopy( bonePtr->translation, torsoParentOffset );
 	}
 	//
@@ -793,10 +824,10 @@ void R_CalcBone( mdsHeader_t *header, int boneNum ) {
 R_CalcBoneLerp
 ==============
 */
-void R_CalcBoneLerp( mdsHeader_t *header, int boneNum ) {
+static void R_CalcBoneLerp( int torsoParent, int boneNum ) {
 	int j;
 
-	if ( !header || boneNum < 0 || boneNum >= MDS_MAX_BONES ) {
+	if ( boneNum < 0 || boneNum >= MDS_MAX_BONES ) {
 		return;
 	}
 
@@ -953,7 +984,7 @@ void R_CalcBoneLerp( mdsHeader_t *header, int boneNum ) {
 
 	}
 	//
-	if ( boneNum == header->torsoParent ) { // this is the torsoParent
+	if ( boneNum == torsoParent ) { // this is the torsoParent
 		VectorCopy( bonePtr->translation, torsoParentOffset );
 	}
 	validBones[boneNum] = 1;
@@ -966,24 +997,81 @@ void R_CalcBoneLerp( mdsHeader_t *header, int boneNum ) {
 
 /*
 ==============
+R_BonesStillValid
+
+	FIXME: optimization opportunity here, profile which values change most often and check for those first to get early outs
+
+	Other way we could do this is doing a random memory probe, which in worst case scenario ends up being the memcmp? - BAD as only a few values are used
+
+	Another solution: bones cache on an entity basis?
+==============
+*/
+static qboolean R_BonesStillValid( const refEntity_t *refent ) {
+	if ( lastBoneEntity.hModel != refent->hModel ) {
+		return qfalse;
+	} else if ( lastBoneEntity.frame != refent->frame ) {
+		return qfalse;
+	} else if ( lastBoneEntity.oldframe != refent->oldframe ) {
+		return qfalse;
+	} else if ( lastBoneEntity.frameModel != refent->frameModel ) {
+		return qfalse;
+	} else if ( lastBoneEntity.oldframeModel != refent->oldframeModel ) {
+		return qfalse;
+	} else if ( lastBoneEntity.backlerp != refent->backlerp ) {
+		return qfalse;
+/*
+	} else if ( lastBoneEntity.torsoFrame != refent->torsoFrame ) {
+		return qfalse;
+	} else if ( lastBoneEntity.oldTorsoFrame != refent->oldTorsoFrame ) {
+		return qfalse;
+	} else if ( lastBoneEntity.torsoFrameModel != refent->torsoFrameModel ) {
+		return qfalse;
+	} else if ( lastBoneEntity.oldTorsoFrameModel != refent->oldTorsoFrameModel ) {
+		return qfalse;
+	} else if ( lastBoneEntity.torsoBacklerp != refent->torsoBacklerp ) {
+		return qfalse;
+	} else if ( lastBoneEntity.reFlags != refent->reFlags ) {
+		return qfalse;
+	} else if ( !VectorCompare( lastBoneEntity.torsoAxis[0], refent->torsoAxis[0] ) ||
+				!VectorCompare( lastBoneEntity.torsoAxis[1], refent->torsoAxis[1] ) ||
+				!VectorCompare( lastBoneEntity.torsoAxis[2], refent->torsoAxis[2] ) ) {
+		return qfalse;
+*/
+	}
+
+	return qtrue;
+}
+
+
+/*
+==============
 R_CalcBones
 
 	The list of bones[] should only be built and modified from within here
 ==============
 */
-void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList, int numBones ) {
+static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones ) {
 
 	int i;
 	int     *boneRefs;
 	float torsoWeight;
-	int frameSize;
+	mdsHeader_t	*frameHeader, *oldFrameHeader, *torsoFrameHeader, *oldTorsoFrameHeader;
+
+	frameHeader = R_GetFrameModelDataByHandle( refent, refent->frameModel );
+	oldFrameHeader = R_GetFrameModelDataByHandle( refent, refent->oldframeModel );
+	torsoFrameHeader = R_GetFrameModelDataByHandle( refent, refent->frameModel );
+	oldTorsoFrameHeader = R_GetFrameModelDataByHandle( refent, refent->oldframeModel );
+
+	if ( !frameHeader || !oldFrameHeader || !torsoFrameHeader || !oldTorsoFrameHeader ) {
+		return;
+	}
 
 	//
 	// if the entity has changed since the last time the bones were built, reset them
 	//
-	if ( memcmp( &lastBoneEntity, refent, sizeof( refEntity_t ) ) ) {
+	if ( !R_BonesStillValid( refent ) ) {
 		// different, cached bones are not valid
-		memset( validBones, 0, header->numBones );
+		memset( validBones, 0, frameHeader->numBones );
 		lastBoneEntity = *refent;
 
 #ifndef DEDICATED
@@ -1004,7 +1092,7 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 
 	}
 
-	memset( newBones, 0, header->numBones );
+	memset( newBones, 0, frameHeader->numBones );
 
 	if ( refent->oldframe == refent->frame ) {
 		backlerp = 0;
@@ -1027,16 +1115,10 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 	}
 #endif
 
-	frameSize = (size_t)( &((mdsFrame_t *)0)->bones[ header->numBones ] );
-
-	frame = ( mdsFrame_t * )( (byte *)header + header->ofsFrames +
-							  refent->frame * frameSize );
-	torsoFrame = ( mdsFrame_t * )( (byte *)header + header->ofsFrames +
-								   refent->frame * frameSize ); // ZTM: FIXME: was torsoFrame
-	oldFrame = ( mdsFrame_t * )( (byte *)header + header->ofsFrames +
-								 refent->oldframe * frameSize );
-	oldTorsoFrame = ( mdsFrame_t * )( (byte *)header + header->ofsFrames +
-									  refent->oldframe * frameSize ); // ZTM: FIXME: was oldTorsoFrame
+	frame = MDS_FRAME( frameHeader, refent->frame );
+	torsoFrame = MDS_FRAME( torsoFrameHeader, refent->frame ); // ZTM: FIXME: was torsoFrame
+	oldFrame = MDS_FRAME( oldFrameHeader, refent->oldframe );
+	oldTorsoFrame = MDS_FRAME( oldTorsoFrameHeader, refent->oldframe ); // ZTM: FIXME: was oldTorsoFrame
 
 	//
 	// lerp all the needed bones (torsoParent is always the first bone in the list)
@@ -1044,7 +1126,7 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 	cBoneList = frame->bones;
 	cBoneListTorso = torsoFrame->bones;
 
-	boneInfo = ( mdsBoneInfo_t * )( (byte *)header + header->ofsBones );
+	boneInfo = ( mdsBoneInfo_t * )( (byte *)frameHeader + frameHeader->ofsBones );
 	boneRefs = boneList;
 	//
 #if 1 // ZTM: FIXME: torsoAxis not supported yet, use identity matrix
@@ -1072,10 +1154,10 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 
 			// find our parent, and make sure it has been calculated
 			if ( ( boneInfo[*boneRefs].parent >= 0 ) && ( !validBones[boneInfo[*boneRefs].parent] && !newBones[boneInfo[*boneRefs].parent] ) ) {
-				R_CalcBone( header, boneInfo[*boneRefs].parent );
+				R_CalcBone( frameHeader->torsoParent, boneInfo[*boneRefs].parent );
 			}
 
-			R_CalcBone( header, *boneRefs );
+			R_CalcBone( frameHeader->torsoParent, *boneRefs );
 
 		}
 
@@ -1094,10 +1176,10 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 
 			// find our parent, and make sure it has been calculated
 			if ( ( boneInfo[*boneRefs].parent >= 0 ) && ( !validBones[boneInfo[*boneRefs].parent] && !newBones[boneInfo[*boneRefs].parent] ) ) {
-				R_CalcBoneLerp( header, boneInfo[*boneRefs].parent );
+				R_CalcBoneLerp( frameHeader->torsoParent, boneInfo[*boneRefs].parent );
 			}
 
-			R_CalcBoneLerp( header, *boneRefs );
+			R_CalcBoneLerp( frameHeader->torsoParent, *boneRefs );
 
 		}
 
@@ -1136,6 +1218,7 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 				Matrix4MultiplyInto3x3AndTranslation( m2, m1, bonePtr->matrix, bonePtr->translation );
 
 			} else {    // tag's require special handling
+				vec3_t tmpAxis[3];
 
 				// rotate each of the axis by the torsoAngles
 				LocalScaledMatrixTransformVector( bonePtr->matrix[0], thisBoneInfo->torsoWeight, torsoAxis, tmpAxis[0] );
@@ -1153,7 +1236,7 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 	}
 
 	// backup the final bones
-	memcpy( oldBones, bones, sizeof( bones[0] ) * header->numBones );
+	memcpy( oldBones, bones, sizeof( bones[0] ) * frameHeader->numBones );
 }
 
 #ifdef DBG_PROFILE_BONES
@@ -1195,7 +1278,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 	boneList = ( int * )( (byte *)surface + surface->ofsBoneReferences );
 	header = ( mdsHeader_t * )( (byte *)surface + surface->ofsHeader );
 
-	R_CalcBones( header, (const refEntity_t *)refent, boneList, surface->numBoneReferences );
+	R_CalcBones( (const refEntity_t *)refent, boneList, surface->numBoneReferences );
 
 	DBG_SHOWTIME
 
@@ -1433,7 +1516,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 R_RecursiveBoneListAdd
 ===============
 */
-void R_RecursiveBoneListAdd( int bi, int *boneList, int *numBones, mdsBoneInfo_t *boneInfoList ) {
+static void R_RecursiveBoneListAdd( int bi, int *boneList, int *numBones, mdsBoneInfo_t *boneInfoList ) {
 
 	if ( boneInfoList[ bi ].parent >= 0 ) {
 
@@ -1450,33 +1533,35 @@ void R_RecursiveBoneListAdd( int bi, int *boneList, int *numBones, mdsBoneInfo_t
 R_GetMDSBoneTag
 ===============
 */
-int R_GetMDSBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIndex, int frame, int oldframe, float frac, const char *tagName ) {
+int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName ) {
 
 	int i;
+	mdsHeader_t *header;
 	mdsTag_t    *pTag;
 	mdsBoneInfo_t *boneInfoList;
 	int boneList[ MDS_MAX_BONES ];
 	int numBones;
 	refEntity_t refent;
 
-	if ( startTagIndex > mds->numTags ) {
+	header = (mdsHeader_t *)mod->modelData;
+
+	if ( startTagIndex >= header->numTags ) {
 		memset( outTag, 0, sizeof( *outTag ) );
 		return -1;
 	}
 
 	// find the correct tag
 
-	pTag = ( mdsTag_t * )( (byte *)mds + mds->ofsTags );
+	pTag = ( mdsTag_t * )( (byte *)header + header->ofsTags );
 
-	pTag += startTagIndex;
-
-	for ( i = startTagIndex; i < mds->numTags; i++, pTag++ ) {
-		if ( !strcmp( pTag->name, tagName ) ) {
+	for ( i = 0; i < header->numTags; i++ ) {
+		if ( i >= startTagIndex && !strcmp( pTag->name, tagName ) ) {
 			break;
 		}
+		pTag++;
 	}
 
-	if ( i >= mds->numTags ) {
+	if ( i >= header->numTags ) {
 		memset( outTag, 0, sizeof( *outTag ) );
 		return -1;
 	}
@@ -1484,47 +1569,28 @@ int R_GetMDSBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIndex,
 	// now set up fake refent
 
 	Com_Memset( &refent, 0, sizeof ( refent ) );
+	refent.hModel = mod->index;
+	refent.frameModel = frameModel;
+	refent.oldframeModel = oldFrameModel;
 	refent.frame = frame;
 	refent.oldframe = oldframe;
 	refent.backlerp = frac;
 
 	// now build the list of bones we need to calc to get this tag's bone information
 
-	boneInfoList = ( mdsBoneInfo_t * )( (byte *)mds + mds->ofsBones );
+	boneInfoList = ( mdsBoneInfo_t * )( (byte *)header + header->ofsBones );
 	numBones = 0;
 
 	R_RecursiveBoneListAdd( pTag->boneIndex, boneList, &numBones, boneInfoList );
 
 	// calc the bones
 
-	R_CalcBones( (mdsHeader_t *)mds, &refent, boneList, numBones );
+	R_CalcBones( &refent, boneList, numBones );
 
 	// now extract the orientation for the bone that represents our tag
 
 	memcpy( outTag->axis, bones[ pTag->boneIndex ].matrix, sizeof( outTag->axis ) );
 	VectorCopy( bones[ pTag->boneIndex ].translation, outTag->origin );
-
-/* code not functional, not in backend
-	if (r_bonesDebug->integer == 4) {
-		int j;
-		// DEBUG: show the tag position/axis
-		GL_Bind( tr.whiteImage );
-		GL_State( GLS_DEFAULT );
-		qglLineWidth( 2 );
-		qglBegin( GL_LINES );
-		for (j=0; j<3; j++) {
-			VectorClear(vec);
-			vec[j] = 1;
-			qglColor3fv( vec );
-			qglVertex3fv( outTag->origin );
-			VectorMA( outTag->origin, 8, outTag->axis[j], vec );
-			qglVertex3fv( vec );
-		}
-		qglEnd();
-
-		qglLineWidth( 1 );
-	}
-*/
 
 	return i;
 }

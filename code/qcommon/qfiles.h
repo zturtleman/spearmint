@@ -528,7 +528,7 @@ typedef struct {
 	// frames and bones are shared by all levels of detail
 	int numFrames;
 	int numBones;
-	int ofsFrames;                  // mdsFrame_t[numFrames]
+	int ofsFrames;                  // (mdsFrame_t + mdsBoneFrameCompressed_t[numBones-1]) * numframes
 	int ofsBones;                   // mdsBoneInfo_t[numBones]
 	int torsoParent;                // index of bone that is the parent of the torso
 

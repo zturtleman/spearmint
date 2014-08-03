@@ -2474,7 +2474,7 @@ void MC_UnCompress(float mat[3][4],const unsigned char * comp);
 
 void R_MDSAddAnimSurfaces( trRefEntity_t *ent );
 void RB_MDSSurfaceAnim( mdsSurface_t *surface );
-int R_GetMDSBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIndex, int oldframe, int frame, float frac, const char *tagName );
+int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName );
 
 qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name );
 void R_AddIQMSurfaces( trRefEntity_t *ent );

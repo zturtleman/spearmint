@@ -2019,7 +2019,7 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 		{
 			int retval;
 
-			retval = R_GetMDSBoneTag( tag, (mdsHeader_t *)model->modelData, 0, startFrame, endFrame, frac, tagName );
+			retval = R_GetMDSBoneTag( tag, model, 0, frameModel, startFrame, endFrameModel, endFrame, frac, tagName );
 
 			if ( retval >= 0 ) {
 				return qtrue;
