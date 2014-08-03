@@ -1338,14 +1338,12 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 		render_count = surface->numVerts;
 	}
 
-	RB_CheckOverflow( render_count, surface->numTriangles );
-
 //DBG_SHOWTIME
 
 	//
 	// setup triangle list
 	//
-	RB_CheckOverflow( surface->numVerts, surface->numTriangles * 3 );
+	RB_CheckOverflow( render_count, surface->numTriangles * 3 );
 
 //DBG_SHOWTIME
 
