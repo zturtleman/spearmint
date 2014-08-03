@@ -1203,7 +1203,7 @@ static qboolean R_LoadMDS( model_t *mod, void *buffer, const char *mod_name ) {
 		// swap all the frames
 		//frameSize = (int)( &((mdsFrame_t *)0)->bones[ mds->numBones ] );
 		frameSize = (int) ( sizeof( mdsFrame_t ) - sizeof( mdsBoneFrameCompressed_t ) + mds->numBones * sizeof( mdsBoneFrameCompressed_t ) );
-		for ( i = 0 ; i < mds->numFrames ; i++, frame++ ) {
+		for ( i = 0 ; i < mds->numFrames ; i++ ) {
 			frame = ( mdsFrame_t * )( (byte *)mds + mds->ofsFrames + i * frameSize );
 			frame->radius = LittleFloat( frame->radius );
 			for ( j = 0 ; j < 3 ; j++ ) {
@@ -1404,7 +1404,7 @@ static qboolean R_LoadMDM( model_t *mod, void *buffer, const char *mod_name ) {
 	if ( LittleLong( 1 ) != 1 ) {
 		// swap all the frames
 		/*frameSize = (int) ( sizeof( mdmFrame_t ) );
-		for ( i = 0 ; i < mdm->numFrames ; i++, frame++) {
+		for ( i = 0 ; i < mdm->numFrames ; i++ ) {
 			frame = (mdmFrame_t *) ( (byte *)mdm + mdm->ofsFrames + i * frameSize );
 			frame->radius = LittleFloat( frame->radius );
 			for ( j = 0 ; j < 3 ; j++ ) {
@@ -1588,7 +1588,7 @@ static qboolean R_LoadMDX( model_t *mod, void *buffer, const char *mod_name ) {
 		// swap all the frames
 		//frameSize = (int)( &((mdxFrame_t *)0)->bones[ mdx->numBones ] );
 		frameSize = (int) ( sizeof( mdxFrame_t ) - sizeof( mdxBoneFrameCompressed_t ) + mdx->numBones * sizeof( mdxBoneFrameCompressed_t ) );
-		for ( i = 0 ; i < mdx->numFrames ; i++, frame++ ) {
+		for ( i = 0 ; i < mdx->numFrames ; i++ ) {
 			frame = ( mdxFrame_t * )( (byte *)mdx + mdx->ofsFrames + i * frameSize );
 			frame->radius = LittleFloat( frame->radius );
 			for ( j = 0 ; j < 3 ; j++ ) {
