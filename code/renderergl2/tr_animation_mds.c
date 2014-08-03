@@ -42,6 +42,9 @@ frame.
 
 */
 
+// undef to use floating-point lerping with explicit trig funcs
+//#define YD_INGLES
+
 //#define HIGH_PRECISION_BONES	// enable this for 32bit precision bones
 //#define DBG_PROFILE_BONES
 
@@ -61,9 +64,14 @@ static mdsFrame_t      *frame, *torsoFrame;
 static mdsFrame_t      *oldFrame, *oldTorsoFrame;
 static short           *sh, *sh2;
 static float           *pf;
+#ifdef YD_INGLES
+static int ingles[ 3 ], tingles[ 3 ];
+#else
+static float a1, a2;
+#endif
 static vec3_t angles, tangles, torsoParentOffset, torsoAxis[3];
 static vec3_t vec, v2, dir;
-static float diff, a1, a2;
+static float diff;
 #ifndef DEDICATED
 static int render_count;
 static float lodRadius, lodScale;
@@ -462,7 +470,9 @@ static ID_INLINE void LocalAddScaledMatrixTransformVector( vec3_t in, float s, v
 
 static float LAVangle;
 static float sp, sy, cp, cy;
-//static float    sr, cr;// TTimo: unused
+#ifdef YD_INGLES
+static float sr, cr;
+#endif
 
 static ID_INLINE void LocalAngleVector( vec3_t angles, vec3_t forward ) {
 	LAVangle = angles[YAW] * ( M_PI * 2 / 360 );
@@ -494,6 +504,54 @@ static ID_INLINE void SLerp_Normal( vec3_t from, vec3_t to, float tt, vec3_t out
 
 	VectorNormalize( out );
 }
+
+#ifdef YD_INGLES
+
+#define FUNCTABLE_SHIFT     ( 16 - FUNCTABLE_SIZE2 )
+#define SIN_TABLE( i )      tr.sinTable[ ( i ) >> FUNCTABLE_SHIFT ];
+#define COS_TABLE( i )      tr.sinTable[ ( ( ( i ) >> FUNCTABLE_SHIFT ) + ( FUNCTABLE_SIZE / 4 ) ) & FUNCTABLE_MASK ];
+
+static ID_INLINE void LocalIngleVector( int ingles[ 3 ], vec3_t forward ) {
+	sy = SIN_TABLE( ingles[ YAW ] & 65535 );
+	cy = COS_TABLE( ingles[ YAW ] & 65535 );
+	sp = SIN_TABLE( ingles[ PITCH ] & 65535 );
+	cp = COS_TABLE( ingles[ PITCH ] & 65535 );
+
+	//%	sy = sin( SHORT2ANGLE( ingles[ YAW ] ) * (M_PI*2 / 360) );
+	//%	cy = cos( SHORT2ANGLE( ingles[ YAW ] ) * (M_PI*2 / 360) );
+	//%	sp = sin( SHORT2ANGLE( ingles[ PITCH ] ) * (M_PI*2 / 360) );
+	//%	cp = cos( SHORT2ANGLE( ingles[ PITCH ] ) *  (M_PI*2 / 360) );
+
+	forward[ 0 ] = cp * cy;
+	forward[ 1 ] = cp * sy;
+	forward[ 2 ] = -sp;
+}
+
+static void InglesToAxis( int ingles[ 3 ], vec3_t axis[ 3 ] ) {
+	// get sine/cosines for angles
+	sy = SIN_TABLE( ingles[ YAW ] & 65535 );
+	cy = COS_TABLE( ingles[ YAW ] & 65535 );
+	sp = SIN_TABLE( ingles[ PITCH ] & 65535 );
+	cp = COS_TABLE( ingles[ PITCH ] & 65535 );
+	sr = SIN_TABLE( ingles[ ROLL ] & 65535 );
+	cr = COS_TABLE( ingles[ ROLL ] & 65535 );
+
+	// calculate axis vecs
+	axis[ 0 ][ 0 ] = cp * cy;
+	axis[ 0 ][ 1 ] = cp * sy;
+	axis[ 0 ][ 2 ] = -sp;
+
+	axis[ 1 ][ 0 ] = sr * sp * cy + cr * -sy;
+	axis[ 1 ][ 1 ] = sr * sp * sy + cr * cy;
+	axis[ 1 ][ 2 ] = sr * cp;
+
+	axis[ 2 ][ 0 ] = cr * sp * cy + - sr * -sy;
+	axis[ 2 ][ 1 ] = cr * sp * sy + - sr * cy;
+	axis[ 2 ][ 2 ] = cr * cp;
+}
+
+#endif // YD_INGLES
+
 
 /*
 ===============================================================================
@@ -781,21 +839,45 @@ static void R_CalcBone( int torsoParent, int boneNum ) {
 		}
 #else
 		if ( fullTorso ) {
+			#ifndef YD_INGLES
 			sh = (short *)cTBonePtr->ofsAngles; pf = angles;
 			*( pf++ ) = SHORT2ANGLE( *( sh++ ) ); *( pf++ ) = SHORT2ANGLE( *( sh++ ) ); *( pf++ ) = 0;
 			LocalAngleVector( angles, vec );
+			#else
+			sh = (short*) cTBonePtr->ofsAngles;
+			ingles[ 0 ] = sh[ 0 ];
+			ingles[ 1 ] = sh[ 1 ];
+			ingles[ 2 ] = 0;
+			LocalIngleVector( ingles, vec );
+			#endif
 			LocalVectorMA( parentBone->translation, thisBoneInfo->parentDist, vec, bonePtr->translation );
 		} else {
 
+			#ifndef YD_INGLES
 			sh = (short *)cBonePtr->ofsAngles; pf = angles;
 			*( pf++ ) = SHORT2ANGLE( *( sh++ ) ); *( pf++ ) = SHORT2ANGLE( *( sh++ ) ); *( pf++ ) = 0;
 			LocalAngleVector( angles, vec );
+			#else
+			sh = (short*) cBonePtr->ofsAngles;
+			ingles[ 0 ] = sh[ 0 ];
+			ingles[ 1 ] = sh[ 1 ];
+			ingles[ 2 ] = 0;
+			LocalIngleVector( ingles, vec );
+			#endif
 
 			if ( isTorso ) {
+				#ifndef YD_INGLES
 				sh = (short *)cTBonePtr->ofsAngles;
 				pf = tangles;
 				*( pf++ ) = SHORT2ANGLE( *( sh++ ) ); *( pf++ ) = SHORT2ANGLE( *( sh++ ) ); *( pf++ ) = 0;
 				LocalAngleVector( tangles, v2 );
+				#else
+				sh = (short*) cTBonePtr->ofsAngles;
+				tingles[ 0 ] = sh[ 0 ];
+				tingles[ 1 ] = sh[ 1 ];
+				tingles[ 2 ] = 0;
+				LocalIngleVector( tingles, v2 );
+				#endif
 
 				// blend the angles together
 				SLerp_Normal( vec, v2, thisBoneInfo->torsoWeight, vec );
@@ -869,6 +951,8 @@ static void R_CalcBoneLerp( int torsoParent, int boneNum ) {
 	newBones[ boneNum ] = 1;
 
 	// rotation (take into account 170 to -170 lerps, which need to take the shortest route)
+	#ifndef YD_INGLES
+
 	if ( fullTorso ) {
 
 		sh = (short *)cTBonePtr->angles;
@@ -922,6 +1006,59 @@ static void R_CalcBoneLerp( int torsoParent, int boneNum ) {
 	}
 	AnglesToAxis( angles, bonePtr->matrix );
 
+	#else
+
+	// ydnar: ingles-based bone code
+	if ( fullTorso ) {
+		sh = (short*) cTBonePtr->angles;
+		sh2 = (short*) cOldTBonePtr->angles;
+		for ( j = 0; j < 3; j++ )
+		{
+			ingles[ j ] = ( sh[ j ] - sh2[ j ] ) & 65535;
+			if ( ingles[ j ] > 32767 ) {
+				ingles[ j ] -= 65536;
+			}
+			ingles[ j ] = sh[ j ] - torsoBacklerp * ingles[ j ];
+		}
+	} else
+	{
+		sh = (short*) cBonePtr->angles;
+		sh2 = (short*) cOldBonePtr->angles;
+		for ( j = 0; j < 3; j++ )
+		{
+			ingles[ j ] = ( sh[ j ] - sh2[ j ] ) & 65535;
+			if ( ingles[ j ] > 32767 ) {
+				ingles[ j ] -= 65536;
+			}
+			ingles[ j ] = sh[ j ] - backlerp * ingles[ j ];
+		}
+
+		if ( isTorso ) {
+			sh = (short*) cTBonePtr->angles;
+			sh2 = (short*) cOldTBonePtr->angles;
+			for ( j = 0; j < 3; j++ )
+			{
+				tingles[ j ] = ( sh[ j ] - sh2[ j ] ) & 65535;
+				if ( tingles[ j ] > 32767 ) {
+					tingles[ j ] -= 65536;
+				}
+				tingles[ j ] = sh[ j ] - torsoBacklerp * tingles[ j ];
+
+				// blend torso and angles
+				tingles[ j ] = ( tingles[ j ] - ingles[ j ] ) & 65535;
+				if ( tingles[ j ] > 32767 ) {
+					tingles[ j ] -= 65536;
+				}
+				ingles[ j ] += thisBoneInfo->torsoWeight * tingles[ j ];
+			}
+		}
+
+	}
+
+	InglesToAxis( ingles, bonePtr->matrix );
+
+	#endif
+
 	if ( parentBone ) {
 
 		if ( fullTorso ) {
@@ -932,6 +1069,7 @@ static void R_CalcBoneLerp( int torsoParent, int boneNum ) {
 			sh2 = (short *)cOldBonePtr->ofsAngles;
 		}
 
+		#ifndef YD_INGLES
 		pf = angles;
 		*( pf++ ) = SHORT2ANGLE( *( sh++ ) );
 		*( pf++ ) = SHORT2ANGLE( *( sh++ ) );
@@ -943,6 +1081,17 @@ static void R_CalcBoneLerp( int torsoParent, int boneNum ) {
 		*( pf++ ) = SHORT2ANGLE( *( sh2++ ) );
 		*( pf++ ) = 0;
 		LocalAngleVector( angles, vec );    // old
+		#else
+		ingles[ 0 ] = sh[ 0 ];
+		ingles[ 1 ] = sh[ 1 ];
+		ingles[ 2 ] = 0;
+		LocalIngleVector( ingles, v2 );     // new
+
+		ingles[ 0 ] = sh2[ 0 ];
+		ingles[ 1 ] = sh2[ 1 ];
+		ingles[ 2 ] = 0;
+		LocalIngleVector( ingles, vec );    // old
+		#endif
 
 		// blend the angles together
 		if ( fullTorso ) {
@@ -958,6 +1107,7 @@ static void R_CalcBoneLerp( int torsoParent, int boneNum ) {
 			sh = (short *)cTBonePtr->ofsAngles;
 			sh2 = (short *)cOldTBonePtr->ofsAngles;
 
+			#ifndef YD_INGLES
 			pf = angles;
 			*( pf++ ) = SHORT2ANGLE( *( sh++ ) );
 			*( pf++ ) = SHORT2ANGLE( *( sh++ ) );
@@ -969,6 +1119,17 @@ static void R_CalcBoneLerp( int torsoParent, int boneNum ) {
 			*( pf++ ) = SHORT2ANGLE( *( sh2++ ) );
 			*( pf++ ) = 0;
 			LocalAngleVector( angles, vec );    // old
+			#else
+			ingles[ 0 ] = sh[ 0 ];
+			ingles[ 1 ] = sh[ 1 ];
+			ingles[ 2 ] = 0;
+			LocalIngleVector( ingles, v2 );     // new
+
+			ingles[ 0 ] = sh[ 0 ];
+			ingles[ 1 ] = sh[ 1 ];
+			ingles[ 2 ] = 0;
+			LocalIngleVector( ingles, vec );    // old
+			#endif
 
 			// blend the angles together
 			SLerp_Normal( vec, v2, torsoFrontlerp, v2 );
