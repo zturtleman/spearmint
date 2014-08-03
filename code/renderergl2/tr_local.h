@@ -934,6 +934,7 @@ typedef enum {
 	SF_MDV,
 	SF_MDR,
 	SF_MDS,
+	SF_MDM,
 	SF_IQM,
 	SF_FLARE,
 	SF_ENTITY,				// beams, rails, lightning, etc that can be determined by entity
@@ -1400,6 +1401,8 @@ typedef enum {
 	MOD_MESH,
 	MOD_MDR,
 	MOD_MDS,
+	MOD_MDM,
+	MOD_MDX,
 	MOD_IQM
 } modtype_t;
 
@@ -1411,7 +1414,7 @@ typedef struct model_s {
 	int			dataSize;	// just for listing purposes
 	bmodel_t	*bmodel;		// only if type == MOD_BRUSH
 	mdvModel_t	*mdv[MD3_MAX_LODS];	// only if type == MOD_MESH
-	void	*modelData;			// only if type == (MOD_MDR | MOD_MDS | MOD_IQM)
+	void	*modelData;			// only if type == (MOD_MDR | MOD_MDS | MOD_MDM | MOD_MDX | MOD_IQM)
 
 	int			 numLods;
 } model_t;
@@ -2475,6 +2478,10 @@ void MC_UnCompress(float mat[3][4],const unsigned char * comp);
 void R_MDSAddAnimSurfaces( trRefEntity_t *ent );
 void RB_MDSSurfaceAnim( mdsSurface_t *surface );
 int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName );
+
+void R_MDMAddAnimSurfaces( trRefEntity_t *ent );
+void RB_MDMSurfaceAnim( mdmSurface_t *surface );
+int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName );
 
 qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name );
 void R_AddIQMSurfaces( trRefEntity_t *ent );

@@ -1601,6 +1601,13 @@ void R_AddEntitySurfaces (void) {
 				case MOD_MDS:
 					R_MDSAddAnimSurfaces( ent );
 					break;
+				case MOD_MDM:
+					R_MDMAddAnimSurfaces( ent );
+					break;
+				case MOD_MDX:
+					ri.Printf( PRINT_WARNING, "WARNING: Cannot draw MDX '%s', needs MDM for meshes\n",
+							tr.currentModel->name );
+					break;
 				case MOD_IQM:
 					R_AddIQMSurfaces( ent );
 					break;

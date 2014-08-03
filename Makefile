@@ -1343,6 +1343,7 @@ endif
 Q3R2OBJ = \
   $(B)/renderergl2/tr_animation.o \
   $(B)/renderergl2/tr_animation_mds.o \
+  $(B)/renderergl2/tr_animation_mdm.o \
   $(B)/renderergl2/tr_backend.o \
   $(B)/renderergl2/tr_bsp.o \
   $(B)/renderergl2/tr_cmds.o \
@@ -1415,6 +1416,7 @@ Q3R2STRINGOBJ = \
 Q3ROBJ = \
   $(B)/renderergl1/tr_animation.o \
   $(B)/renderergl1/tr_animation_mds.o \
+  $(B)/renderergl1/tr_animation_mdm.o \
   $(B)/renderergl1/tr_backend.o \
   $(B)/renderergl1/tr_bsp.o \
   $(B)/renderergl1/tr_cmds.o \
@@ -1949,6 +1951,7 @@ ifneq ($(SERVER_USE_RENDERER_DLOPEN),1)
   Q3DOBJ += \
     $(B)/ded/sv_ref.o \
     $(B)/ded/tr_animation_mds.o \
+    $(B)/ded/tr_animation_mdm.o \
     $(B)/ded/tr_model.o \
     $(B)/ded/tr_model_iqm.o
 endif

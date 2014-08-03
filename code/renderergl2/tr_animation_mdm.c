@@ -54,14 +54,14 @@ frame.
 
 static float frontlerp, backlerp;
 static float torsoFrontlerp, torsoBacklerp;
-static mdsBoneFrame_t bones[MDS_MAX_BONES], rawBones[MDS_MAX_BONES], oldBones[MDS_MAX_BONES];
-static char validBones[MDS_MAX_BONES];
-static char newBones[ MDS_MAX_BONES ];
-static mdsBoneFrame_t  *bonePtr, *parentBone;
-static mdsBoneFrameCompressed_t    *cBonePtr, *cTBonePtr, *cOldBonePtr, *cOldTBonePtr, *cBoneList, *cOldBoneList, *cBoneListTorso, *cOldBoneListTorso;
-static mdsBoneInfo_t   *boneInfo, *thisBoneInfo, *parentBoneInfo;
-static mdsFrame_t      *frame, *torsoFrame;
-static mdsFrame_t      *oldFrame, *oldTorsoFrame;
+static mdxBoneFrame_t bones[MDX_MAX_BONES], rawBones[MDX_MAX_BONES], oldBones[MDX_MAX_BONES];
+static char validBones[MDX_MAX_BONES];
+static char newBones[ MDX_MAX_BONES ];
+static mdxBoneFrame_t  *bonePtr, *parentBone;
+static mdxBoneFrameCompressed_t    *cBonePtr, *cTBonePtr, *cOldBonePtr, *cOldTBonePtr, *cBoneList, *cOldBoneList, *cBoneListTorso, *cOldBoneListTorso;
+static mdxBoneInfo_t   *boneInfo, *thisBoneInfo, *parentBoneInfo;
+static mdxFrame_t      *frame, *torsoFrame;
+static mdxFrame_t      *oldFrame, *oldTorsoFrame;
 static short           *sh, *sh2;
 static float           *pf;
 #ifdef YD_INGLES
@@ -88,9 +88,9 @@ static int totalrv, totalrt, totalv, totalt;    //----(SA)
 //-----------------------------------------------------------------------------
 
 #define MDS_FRAME( _header, _frame ) \
-	( mdsFrame_t * )( (byte *)_header + _header->ofsFrames + _frame * (size_t)( &((mdsFrame_t *)0)->bones[ _header->numBones ] ) )
+	( mdxFrame_t * )( (byte *)_header + _header->ofsFrames + _frame * (size_t)( &((mdxFrame_t *)0)->bones[ _header->numBones ] ) )
 
-static mdsHeader_t *R_GetFrameModelDataByHandle( const refEntity_t *ent, qhandle_t hModel ) {
+static mdxHeader_t *R_GetFrameModelDataByHandle( const refEntity_t *ent, qhandle_t hModel ) {
 	model_t *mod;
 
 	if ( !hModel ) {
@@ -99,7 +99,7 @@ static mdsHeader_t *R_GetFrameModelDataByHandle( const refEntity_t *ent, qhandle
 
 	mod = R_GetModelByHandle( hModel );
 
-	if ( mod->type != MOD_MDS ) {
+	if ( mod->type != MOD_MDX ) {
 		return NULL;
 	}
 
@@ -163,8 +163,8 @@ R_CullModel
 */
 static int R_CullModel( trRefEntity_t *ent ) {
 	vec3_t bounds[2];
-	mdsHeader_t *oldHeader, *newHeader;
-	mdsFrame_t  *oldFrame, *newFrame;
+	mdxHeader_t *oldHeader, *newHeader;
+	mdxFrame_t  *oldFrame, *newFrame;
 	int i;
 
 	newHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.frameModel );
@@ -295,8 +295,8 @@ R_ComputeFogNum
 =================
 */
 static int R_ComputeFogNum( trRefEntity_t *ent ) {
-	mdsHeader_t		*header;
-	mdsFrame_t		*frame;
+	mdxHeader_t		*header;
+	mdxFrame_t		*frame;
 	vec3_t			localOrigin;
 
 	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
@@ -317,12 +317,12 @@ static int R_ComputeFogNum( trRefEntity_t *ent ) {
 
 /*
 ==============
-R_MDSAddAnimSurfaces
+R_MDMAddAnimSurfaces
 ==============
 */
-void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
-	mdsHeader_t     *header;
-	mdsSurface_t    *surface;
+void R_MDMAddAnimSurfaces( trRefEntity_t *ent ) {
+	mdmHeader_t     *header;
+	mdmSurface_t    *surface;
 	shader_t        *shader;
 	skin_t		*skin;
 	skinSurface_t	*skinSurf;
@@ -334,7 +334,7 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	personalModel = (ent->e.renderfx & RF_ONLY_MIRROR) && !(tr.viewParms.isPortal 
 	                 || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW)));
 
-	header = (mdsHeader_t *)tr.currentModel->modelData;
+	header = (mdmHeader_t *)tr.currentModel->modelData;
 
 	//
 	// cull the entire model if merged bounding box of both frames
@@ -359,7 +359,7 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 
 	cubemapIndex = R_CubemapForPoint(ent->e.origin);
 
-	surface = ( mdsSurface_t * )( (byte *)header + header->ofsSurfaces );
+	surface = ( mdmSurface_t * )( (byte *)header + header->ofsSurfaces );
 	for ( i = 0 ; i < header->numSurfaces ; i++ ) {
 
 		if(ent->e.customShader)
@@ -381,7 +381,7 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 			}
 
 			if (shader == tr.nodrawShader) {
-				surface = ( mdsSurface_t * )( (byte *)surface + surface->ofsEnd );
+				surface = ( mdmSurface_t * )( (byte *)surface + surface->ofsEnd );
 				continue;
 			}
 		}
@@ -414,7 +414,7 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 		if (!personalModel)
 			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, qfalse, qfalse, cubemapIndex );
 
-		surface = ( mdsSurface_t * )( (byte *)surface + surface->ofsEnd );
+		surface = ( mdmSurface_t * )( (byte *)surface + surface->ofsEnd );
 	}
 }
 
@@ -913,7 +913,7 @@ R_CalcBoneLerp
 static void R_CalcBoneLerp( int torsoParent, int boneNum ) {
 	int j;
 
-	if ( boneNum < 0 || boneNum >= MDS_MAX_BONES ) {
+	if ( boneNum < 0 || boneNum >= MDX_MAX_BONES ) {
 		return;
 	}
 
@@ -1220,7 +1220,7 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 	int i;
 	int     *boneRefs;
 	float torsoWeight;
-	mdsHeader_t	*frameHeader, *oldFrameHeader, *torsoFrameHeader, *oldTorsoFrameHeader;
+	mdxHeader_t	*frameHeader, *oldFrameHeader, *torsoFrameHeader, *oldTorsoFrameHeader;
 
 	frameHeader = R_GetFrameModelDataByHandle( refent, refent->frameModel );
 	oldFrameHeader = R_GetFrameModelDataByHandle( refent, refent->oldframeModel );
@@ -1291,7 +1291,7 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 	cBoneList = frame->bones;
 	cBoneListTorso = torsoFrame->bones;
 
-	boneInfo = ( mdsBoneInfo_t * )( (byte *)frameHeader + frameHeader->ofsBones );
+	boneInfo = ( mdxBoneInfo_t * )( (byte *)frameHeader + frameHeader->ofsBones );
 	boneRefs = boneList;
 	//
 #if 1 // ZTM: FIXME: torsoAxis not supported yet, use identity matrix
@@ -1366,7 +1366,9 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 				continue;
 			}
 
-			if ( !( thisBoneInfo->flags & MDS_BONEFLAG_TAG ) ) {
+#if 0
+			if ( !( thisBoneInfo->flags & MDX_BONEFLAG_TAG ) ) {
+#endif
 
 				// 1st multiply with the bone->matrix
 				// 2nd translation for rotation relative to bone around torso parent offset
@@ -1382,6 +1384,7 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 				// multiply matrices to create one matrix to do all calculations
 				Matrix4MultiplyInto3x3AndTranslation( m2, m1, bonePtr->matrix, bonePtr->translation );
 
+#if 0
 			} else {    // tag's require special handling
 				vec3_t tmpAxis[3];
 
@@ -1397,6 +1400,7 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 				VectorAdd( bonePtr->translation, torsoParentOffset, bonePtr->translation );
 
 			}
+#endif
 		}
 	}
 
@@ -1414,23 +1418,23 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 
 /*
 ==============
-RB_MDSSurfaceAnim
+RB_MDMSurfaceAnim
 ==============
 */
-void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
+void RB_MDMSurfaceAnim( mdmSurface_t *surface ) {
 	int i;
 	int j, k;
 	refEntity_t *refent;
 	int *boneList;
-	mdsHeader_t *header;
+	mdmHeader_t *header;
 	int *triangles, *pIndexes;
 	int indexes;
 	int baseIndex, baseVertex, oldIndexes;
-	mdsVertex_t *v;
+	mdmVertex_t *v;
 	float *tempVert;
 	uint32_t *tempNormal;
 	int *collapse_map, *pCollapseMap;
-	int collapse[ MDS_MAX_VERTS ], *pCollapse;
+	int collapse[ MDM_MAX_VERTS ], *pCollapse;
 	int p0, p1, p2;
 
 #ifdef DBG_PROFILE_BONES
@@ -1442,8 +1446,9 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 
 	refent = &backEnd.currentEntity->e;
 	boneList = ( int * )( (byte *)surface + surface->ofsBoneReferences );
-	header = ( mdsHeader_t * )( (byte *)surface + surface->ofsHeader );
+	header = ( mdmHeader_t * )( (byte *)surface + surface->ofsHeader );
 
+#if 0
 	if ( r_bonesDebug->integer == 9 ) {
 		if ( surface == ( mdsSurface_t * )( (byte *)header + header->ofsSurfaces ) ) {
 			int boneListAll[ MDS_MAX_BONES ];
@@ -1454,7 +1459,9 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 
 			R_CalcBones( (const refEntity_t *)refent, boneListAll, header->numBones );;
 		}
-	} else {
+	} else
+#endif
+	{
 		R_CalcBones( (const refEntity_t *)refent, boneList, surface->numBoneReferences );
 	}
 
@@ -1574,18 +1581,18 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 	//
 	// deform the vertexes by the lerped bones
 	//
-	v = ( mdsVertex_t * )( (byte *)surface + surface->ofsVerts );
+	v = ( mdmVertex_t * )( (byte *)surface + surface->ofsVerts );
 	tempVert = ( float * )( tess.xyz + baseVertex );
 	tempNormal = ( uint32_t * )( tess.normal + baseVertex );
 	for ( j = 0; j < render_count; j++, tempVert += 4, tempNormal++ ) {
-		mdsWeight_t *w;
+		mdmWeight_t *w;
 		vec3_t newNormal;
 
 		VectorClear( tempVert );
 
 		w = v->weights;
 		for ( k = 0 ; k < v->numWeights ; k++, w++ ) {
-			mdsBoneFrame_t  *bone = &bones[w->boneIndex];
+			mdxBoneFrame_t  *bone = &bones[w->boneIndex];
 			LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
 		}
 
@@ -1596,7 +1603,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 		tess.texCoords[baseVertex + j][0][0] = v->texCoords[0];
 		tess.texCoords[baseVertex + j][0][1] = v->texCoords[1];
 
-		v = (mdsVertex_t *)&v->weights[v->numWeights];
+		v = (mdmVertex_t *)&v->weights[v->numWeights];
 	}
 
 	DBG_SHOWTIME
@@ -1639,8 +1646,8 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 
 			if ( r_bonesDebug->integer == 8 ) {
 				// FIXME: Actually draw the whole skeleton
-				//% if( surface == (mdsSurface_t *)((byte *)header + header->ofsSurfaces) ) {
-				//mdsHeader_t *frameHeader = R_GetFrameModelDataByHandle( refent, refent->frameModel );
+				//% if( surface == (mdmSurface_t *)((byte *)header + header->ofsSurfaces) ) {
+				//mdxHeader_t *frameHeader = R_GetFrameModelDataByHandle( refent, refent->frameModel );
 				boneRefs = ( int * )( (byte *)surface + surface->ofsBoneReferences );
 
 				qglDepthRange( 0, 0 );      // never occluded
@@ -1648,7 +1655,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 
 				for ( i = 0; i < surface->numBoneReferences; i++, boneRefs++ ) {
 					vec3_t diff;
-					//mdsBoneInfo_t *mdsBoneInfo = ( mdsBoneInfo_t * )( (byte *)mdxHeader + mdxHeader->ofsBones + *boneRefs * sizeof( mdxBoneInfo_t ) );
+					//mdxBoneInfo_t *mdxBoneInfo = ( mdxBoneInfo_t * )( (byte *)frameHeader + frameHeader->ofsBones + *boneRefs * sizeof( mdxBoneInfo_t ) );
 					bonePtr = &bones[*boneRefs];
 
 					VectorSet( vec, 0.f, 0.f, 32.f );
@@ -1665,27 +1672,30 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 					qglEnd();
 					qglDisable( GL_BLEND );
 
-					//R_DebugText( vec, 1.f, 1.f, 1.f, mdsBoneInfo->name, qfalse );       // qfalse, as there is no reason to set depthrange again
+					//R_DebugText( vec, 1.f, 1.f, 1.f, mdxBoneInfo->name, qfalse );       // qfalse, as there is no reason to set depthrange again
 				}
 
 				qglDepthRange( 0, 1 );
 				//% }
 			} else if ( r_bonesDebug->integer == 9 ) {
-				if ( surface == ( mdsSurface_t * )( (byte *)header + header->ofsSurfaces ) ) {
-					mdsTag_t *pTag = ( mdsTag_t * )( (byte *)header + header->ofsTags );
+				if ( surface == ( mdmSurface_t * )( (byte *)header + header->ofsSurfaces ) ) {
+					mdmTag_t *pTag = ( mdmTag_t * )( (byte *)header + header->ofsTags );
 
 					qglDepthRange( 0, 0 );  // never occluded
 					qglBlendFunc( GL_SRC_ALPHA, GL_ONE );
 
 					for ( i = 0; i < header->numTags; i++ ) {
-						mdsBoneFrame_t  *tagBone;
+						mdxBoneFrame_t  *tagBone;
 						orientation_t outTag;
 						vec3_t diff;
 
 						// now extract the orientation for the bone that represents our tag
 						tagBone = &bones[pTag->boneIndex];
-						memcpy( outTag.axis, tagBone->matrix, sizeof( outTag.axis ) );
-						VectorCopy( tagBone->translation, outTag.origin );
+						VectorClear( outTag.origin );
+						LocalAddScaledMatrixTransformVectorTranslate( pTag->offset, 1.f, tagBone->matrix, tagBone->translation, outTag.origin );
+						for ( j = 0; j < 3; j++ ) {
+							LocalMatrixTransformVector( pTag->axis[j], tagBone->matrix, outTag.axis[j] );
+						}
 
 						GL_Bind( tr.whiteImage );
 						qglLineWidth( 2 );
@@ -1717,7 +1727,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 
 						//R_DebugText( vec, 1.f, 1.f, 1.f, pTag->name, qfalse );  // qfalse, as there is no reason to set depthrange again
 
-						pTag++;
+						pTag = ( mdmTag_t * )( (byte *)pTag + pTag->ofsEnd );
 					}
 					qglDepthRange( 0, 1 );
 				}
@@ -1766,7 +1776,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 		}
 
 		if ( r_bonesDebug->integer == 6 || r_bonesDebug->integer == 7 ) {
-			v = ( mdsVertex_t * )( (byte *)surface + surface->ofsVerts );
+			v = ( mdmVertex_t * )( (byte *)surface + surface->ofsVerts );
 			tempVert = ( float * )( tess.xyz + baseVertex );
 			GL_Bind( tr.whiteImage );
 			qglPointSize( 5 );
@@ -1782,7 +1792,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 					}
 					qglVertex3fv( tempVert );
 				}
-				v = (mdsVertex_t *)&v->weights[v->numWeights];
+				v = (mdmVertex_t *)&v->weights[v->numWeights];
 			}
 			qglEnd();
 		}
@@ -1805,52 +1815,40 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 
 /*
 ===============
-R_RecursiveBoneListAdd
+R_GetMDMBoneTag
 ===============
 */
-static void R_RecursiveBoneListAdd( int bi, int *boneList, int *numBones, mdsBoneInfo_t *boneInfoList ) {
-
-	if ( boneInfoList[ bi ].parent >= 0 ) {
-
-		R_RecursiveBoneListAdd( boneInfoList[ bi ].parent, boneList, numBones, boneInfoList );
-
-	}
-
-	boneList[ ( *numBones )++ ] = bi;
-
-}
-
-/*
-===============
-R_GetMDSBoneTag
-===============
-*/
-int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName ) {
+int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName ) {
 
 	int i;
-	mdsHeader_t *header;
-	mdsTag_t    *pTag;
-	mdsBoneInfo_t *boneInfoList;
-	int boneList[ MDS_MAX_BONES ];
-	int numBones;
+	mdmHeader_t *header;
+	mdmTag_t    *pTag;
+	mdxBoneFrame_t *bone;
+	int *boneList;
 	refEntity_t refent;
 
-	header = (mdsHeader_t *)mod->modelData;
+	header = (mdmHeader_t *)mod->modelData;
 
 	if ( startTagIndex >= header->numTags ) {
 		memset( outTag, 0, sizeof( *outTag ) );
 		return -1;
 	}
 
+	if ( !frameModel || !oldFrameModel ) {
+		ri.Printf( PRINT_WARNING, "WARNING: Cannot get MDM tag '%s' from '%s' without frameModel\n", tagName, mod->name );
+		memset( outTag, 0, sizeof( *outTag ) );
+		return -1;
+	}
+
 	// find the correct tag
 
-	pTag = ( mdsTag_t * )( (byte *)header + header->ofsTags );
+	pTag = ( mdmTag_t * )( (byte *)header + header->ofsTags );
 
 	for ( i = 0; i < header->numTags; i++ ) {
 		if ( i >= startTagIndex && !strcmp( pTag->name, tagName ) ) {
 			break;
 		}
-		pTag++;
+		pTag = ( mdmTag_t * )( (byte *)pTag + pTag->ofsEnd );
 	}
 
 	if ( i >= header->numTags ) {
@@ -1868,21 +1866,19 @@ int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagInde
 	refent.oldframe = oldframe;
 	refent.backlerp = frac;
 
-	// now build the list of bones we need to calc to get this tag's bone information
-
-	boneInfoList = ( mdsBoneInfo_t * )( (byte *)header + header->ofsBones );
-	numBones = 0;
-
-	R_RecursiveBoneListAdd( pTag->boneIndex, boneList, &numBones, boneInfoList );
-
 	// calc the bones
 
-	R_CalcBones( &refent, boneList, numBones );
+	boneList = ( int * )( (byte *)pTag + pTag->ofsBoneReferences );
+	R_CalcBones( &refent, boneList, pTag->numBoneReferences );
 
 	// now extract the orientation for the bone that represents our tag
 
-	memcpy( outTag->axis, bones[ pTag->boneIndex ].matrix, sizeof( outTag->axis ) );
-	VectorCopy( bones[ pTag->boneIndex ].translation, outTag->origin );
+	bone = &bones[pTag->boneIndex];
+	VectorClear( outTag->origin );
+	LocalAddScaledMatrixTransformVectorTranslate( pTag->offset, 1.f, bone->matrix, bone->translation, outTag->origin );
+	for ( i = 0; i < 3; i++ ) {
+		LocalMatrixTransformVector( pTag->axis[i], bone->matrix, outTag->axis[i] );
+	}
 
 	return i;
 }
