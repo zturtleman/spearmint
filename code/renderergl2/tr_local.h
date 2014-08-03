@@ -395,6 +395,7 @@ enum
 	TB_SPECULARMAP = 4,
 	TB_SHADOWMAP   = 5,
 	TB_CUBEMAP     = 6,
+	TB_SHADOWMAP4  = 6,
 	NUM_TEXTURE_BUNDLES = 7
 };
 
@@ -682,10 +683,12 @@ typedef enum
 	UNIFORM_SHADOWMAP,
 	UNIFORM_SHADOWMAP2,
 	UNIFORM_SHADOWMAP3,
+	UNIFORM_SHADOWMAP4,
 
 	UNIFORM_SHADOWMVP,
 	UNIFORM_SHADOWMVP2,
 	UNIFORM_SHADOWMVP3,
+	UNIFORM_SHADOWMVP4,
 
 	UNIFORM_ENABLETEXTURES,
 
@@ -834,7 +837,7 @@ typedef struct {
 	int         num_pshadows;
 	struct pshadow_s *pshadows;
 
-	float       sunShadowMvp[3][16];
+	float       sunShadowMvp[4][16];
 	float       sunDir[4];
 	float       sunCol[4];
 	float       sunAmbCol[4];
@@ -930,6 +933,8 @@ typedef enum {
 	SF_POLYBUFFER,
 	SF_MDV,
 	SF_MDR,
+	SF_MDS,
+	SF_MDM,
 	SF_IQM,
 	SF_FLARE,
 	SF_ENTITY,				// beams, rails, lightning, etc that can be determined by entity
@@ -1395,6 +1400,9 @@ typedef enum {
 	MOD_BRUSH,
 	MOD_MESH,
 	MOD_MDR,
+	MOD_MDS,
+	MOD_MDM,
+	MOD_MDX,
 	MOD_IQM
 } modtype_t;
 
@@ -1406,7 +1414,7 @@ typedef struct model_s {
 	int			dataSize;	// just for listing purposes
 	bmodel_t	*bmodel;		// only if type == MOD_BRUSH
 	mdvModel_t	*mdv[MD3_MAX_LODS];	// only if type == MOD_MESH
-	void	*modelData;			// only if type == (MOD_MDR | MOD_IQM)
+	void	*modelData;			// only if type == (MOD_MDR | MOD_MDS | MOD_MDM | MOD_MDX | MOD_IQM)
 
 	int			 numLods;
 } model_t;
@@ -1670,7 +1678,7 @@ typedef struct {
 	image_t					*calcLevelsImage;
 	image_t					*targetLevelsImage;
 	image_t					*fixedLevelsImage;
-	image_t					*sunShadowDepthImage[3];
+	image_t					*sunShadowDepthImage[4];
 	image_t                 *screenShadowImage;
 	image_t                 *screenSsaoImage;
 	image_t					*hdrDepthImage;
@@ -1687,7 +1695,7 @@ typedef struct {
 	FBO_t                   *quarterFbo[2];
 	FBO_t					*calcLevelsFbo;
 	FBO_t					*targetLevelsFbo;
-	FBO_t					*sunShadowFbo[3];
+	FBO_t					*sunShadowFbo[4];
 	FBO_t					*screenShadowFbo;
 	FBO_t					*screenSsaoFbo;
 	FBO_t					*hdrDepthFbo;
@@ -1764,6 +1772,8 @@ typedef struct {
 	qboolean                sunShadows;
 	vec3_t					sunLight;			// from the sky shader for this level
 	vec3_t					sunDirection;
+	vec3_t                  lastCascadeSunDirection;
+	float                   lastCascadeSunMvp[16];
 
 	float					lightGridMulAmbient;	// lightgrid multipliers specified in sky shader
 	float					lightGridMulDirected;	//
@@ -1910,6 +1920,7 @@ extern	cvar_t	*r_logFile;						// number of frames to emit GL logs
 extern	cvar_t	*r_showtris;					// enables wireframe rendering of the world
 extern	cvar_t	*r_showsky;						// forces sky in front of all surfaces
 extern	cvar_t	*r_shownormals;					// draws wireframe normals
+extern  cvar_t	*r_bonesDebug;					// draws MDS bones
 extern	cvar_t	*r_clear;						// force screen clear every frame
 
 extern	cvar_t	*r_shadows;						// controls shadows: 0 = none, 1 = blur, 2 = stencil, 3 = black planar projection
@@ -2464,6 +2475,15 @@ ANIMATED MODELS
 void R_MDRAddAnimSurfaces( trRefEntity_t *ent );
 void RB_MDRSurfaceAnim( mdrSurface_t *surface );
 void MC_UnCompress(float mat[3][4],const unsigned char * comp);
+
+void R_MDSAddAnimSurfaces( trRefEntity_t *ent );
+void RB_MDSSurfaceAnim( mdsSurface_t *surface );
+int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName );
+
+void R_MDMAddAnimSurfaces( trRefEntity_t *ent );
+void RB_MDMSurfaceAnim( mdmSurface_t *surface );
+int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName );
+
 qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name );
 void R_AddIQMSurfaces( trRefEntity_t *ent );
 void RB_IQMSurfaceAnim( surfaceType_t *surface );

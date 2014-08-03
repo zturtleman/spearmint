@@ -545,6 +545,8 @@ typedef enum {
 	SF_MD3,
 	SF_MDC,
 	SF_MDR,
+	SF_MDS,
+	SF_MDM,
 	SF_IQM,
 	SF_FLARE,
 	SF_ENTITY,				// beams, rails, lightning, etc that can be determined by entity
@@ -869,6 +871,9 @@ typedef enum {
 	MOD_MESH,
 	MOD_MDC,
 	MOD_MDR,
+	MOD_MDS,
+	MOD_MDM,
+	MOD_MDX,
 	MOD_IQM
 } modtype_t;
 
@@ -881,7 +886,7 @@ typedef struct model_s {
 	bmodel_t	*bmodel;		// only if type == MOD_BRUSH
 	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_MESH
 	mdcHeader_t	*mdc[MD3_MAX_LODS]; // only if type == MOD_MDC
-	void	*modelData;			// only if type == (MOD_MDR | MOD_IQM)
+	void	*modelData;			// only if type == (MOD_MDR | MOD_MDS | MOD_MDM | MOD_MDX | MOD_IQM)
 
 	int			 numLods;
 } model_t;
@@ -1200,6 +1205,7 @@ extern	cvar_t	*r_logFile;						// number of frames to emit GL logs
 extern	cvar_t	*r_showtris;					// enables wireframe rendering of the world
 extern	cvar_t	*r_showsky;						// forces sky in front of all surfaces
 extern	cvar_t	*r_shownormals;					// draws wireframe normals
+extern  cvar_t	*r_bonesDebug;					// draws MDS bones
 extern	cvar_t	*r_clear;						// force screen clear every frame
 
 extern	cvar_t	*r_shadows;						// controls shadows: 0 = none, 1 = blur, 2 = stencil, 3 = black planar projection
@@ -1577,6 +1583,15 @@ ANIMATED MODELS
 void R_MDRAddAnimSurfaces( trRefEntity_t *ent );
 void RB_MDRSurfaceAnim( mdrSurface_t *surface );
 void MC_UnCompress(float mat[3][4],const unsigned char * comp);
+
+void R_MDSAddAnimSurfaces( trRefEntity_t *ent );
+void RB_MDSSurfaceAnim( mdsSurface_t *surface );
+int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName );
+
+void R_MDMAddAnimSurfaces( trRefEntity_t *ent );
+void RB_MDMSurfaceAnim( mdmSurface_t *surface );
+int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName );
+
 qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name );
 void R_AddIQMSurfaces( trRefEntity_t *ent );
 void RB_IQMSurfaceAnim( surfaceType_t *surface );

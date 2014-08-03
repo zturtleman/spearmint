@@ -3690,6 +3690,9 @@ void RE_LoadWorldMap( const bspFile_t *bsp ) {
 	tr.toneMinAvgMaxLevel[1] = -2.0f;
 	tr.toneMinAvgMaxLevel[2] = 0.0f;
 
+	// reset last cascade sun direction so last shadow cascade is rerendered
+	VectorClear(tr.lastCascadeSunDirection);
+
 	tr.worldMapLoaded = qtrue;
 	tr.worldDir = ri.Hunk_Alloc( strlen(name)+1, h_low );
 	COM_StripExtension(name, tr.worldDir, strlen(name)+1);
