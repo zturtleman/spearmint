@@ -1554,7 +1554,6 @@ static qboolean R_LoadMDX( model_t *mod, void *buffer, const char *mod_name ) {
 	int i, j;
 	mdxHeader_t                 *pinmodel, *mdx;
 	mdxFrame_t                  *frame;
-	short                       *bframe;
 	mdxBoneInfo_t               *bi;
 	int version;
 	int size;
@@ -1587,9 +1586,10 @@ static qboolean R_LoadMDX( model_t *mod, void *buffer, const char *mod_name ) {
 
 	if ( LittleLong( 1 ) != 1 ) {
 		// swap all the frames
-		frameSize = (int) ( sizeof( mdxBoneFrameCompressed_t ) ) * mdx->numBones;
-		for ( i = 0 ; i < mdx->numFrames ; i++ ) {
-			frame = ( mdxFrame_t * )( (byte *)mdx + mdx->ofsFrames + i * frameSize + i * sizeof( mdxFrame_t ) );
+		//frameSize = (int)( &((mdxFrame_t *)0)->bones[ mdx->numBones ] );
+		frameSize = (int) ( sizeof( mdxFrame_t ) - sizeof( mdxBoneFrameCompressed_t ) + mdx->numBones * sizeof( mdxBoneFrameCompressed_t ) );
+		for ( i = 0 ; i < mdx->numFrames ; i++, frame++ ) {
+			frame = ( mdxFrame_t * )( (byte *)mdx + mdx->ofsFrames + i * frameSize );
 			frame->radius = LittleFloat( frame->radius );
 			for ( j = 0 ; j < 3 ; j++ ) {
 				frame->bounds[0][j] = LittleFloat( frame->bounds[0][j] );
@@ -1597,10 +1597,8 @@ static qboolean R_LoadMDX( model_t *mod, void *buffer, const char *mod_name ) {
 				frame->localOrigin[j] = LittleFloat( frame->localOrigin[j] );
 				frame->parentOffset[j] = LittleFloat( frame->parentOffset[j] );
 			}
-
-			bframe = ( short * )( (byte *)mdx + mdx->ofsFrames + i * frameSize + ( ( i + 1 ) * sizeof( mdxFrame_t ) ) );
 			for ( j = 0 ; j < mdx->numBones * sizeof( mdxBoneFrameCompressed_t ) / sizeof( short ) ; j++ ) {
-				( (short *)bframe )[j] = LittleShort( ( (short *)bframe )[j] );
+				( (short *)frame->bones )[j] = LittleShort( ( (short *)frame->bones )[j] );
 			}
 		}
 
