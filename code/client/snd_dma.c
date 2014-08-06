@@ -89,6 +89,7 @@ cvar_t		*s_mixahead;
 cvar_t		*s_mixPreStep;
 
 static loopSound_t		loopSounds[MAX_GENTITIES];
+static loopSound_t		*activeLoopSounds = NULL;
 static	channel_t		*freelist = NULL;
 
 int						s_rawend[MAX_RAW_STREAMS];
@@ -706,6 +707,7 @@ void S_Base_ClearSoundBuffer( void ) {
 		return;
 
 	// stop looping sounds
+	activeLoopSounds = NULL;
 	Com_Memset(loopSounds, 0, MAX_GENTITIES*sizeof(loopSound_t));
 	Com_Memset(loop_channels, 0, MAX_CHANNELS*sizeof(channel_t));
 	numLoopChannels = 0;
@@ -750,9 +752,23 @@ continuous looping sounds are added each frame
 */
 
 void S_Base_StopLoopingSound(int entityNum) {
-	loopSounds[entityNum].active = qfalse;
 //	loopSounds[entityNum].sfx = 0;
 	loopSounds[entityNum].kill = qfalse;
+
+	// update list head
+	if ( activeLoopSounds == &loopSounds[entityNum] ) {
+		activeLoopSounds = loopSounds[entityNum].next;
+	}
+
+	// unlink from active list
+	if ( loopSounds[entityNum].prev ) {
+		loopSounds[entityNum].prev->next = loopSounds[entityNum].next;
+		loopSounds[entityNum].prev = NULL;
+	}
+	if ( loopSounds[entityNum].next ) {
+		loopSounds[entityNum].next->prev = loopSounds[entityNum].prev;
+		loopSounds[entityNum].next = NULL;
+	}
 }
 
 /*
@@ -762,10 +778,11 @@ S_ClearLoopingSounds
 ==================
 */
 void S_Base_ClearLoopingSounds( qboolean killall ) {
-	int i;
-	for ( i = 0 ; i < MAX_GENTITIES ; i++) {
-		if (killall || loopSounds[i].kill == qtrue || (loopSounds[i].sfx && loopSounds[i].sfx->soundLength == 0)) {
-			S_Base_StopLoopingSound(i);
+	loopSound_t *loop, *next;
+	for ( loop = activeLoopSounds ; loop != NULL ; loop = next ) {
+		next = loop->next;
+		if (killall || loop->kill == qtrue || (loop->sfx && loop->sfx->soundLength == 0)) {
+			S_Base_StopLoopingSound( (int)(loop - loopSounds) );
 		}
 	}
 	numLoopChannels = 0;
@@ -804,7 +821,6 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 
 	VectorCopy( origin, loopSounds[entityNum].origin );
 	VectorCopy( velocity, loopSounds[entityNum].velocity );
-	loopSounds[entityNum].active = qtrue;
 	loopSounds[entityNum].kill = qtrue;
 	loopSounds[entityNum].doppler = qfalse;
 	loopSounds[entityNum].oldDopplerScale = 1.0;
@@ -835,6 +851,19 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 	}
 
 	loopSounds[entityNum].framenum = cls.framecount;
+
+	// already in active list
+	if ( activeLoopSounds == &loopSounds[entityNum] || loopSounds[entityNum].next || loopSounds[entityNum].prev ) {
+		return;
+	}
+
+	// add to active list
+	if ( activeLoopSounds ) {
+		activeLoopSounds->prev = &loopSounds[entityNum];
+	}
+	loopSounds[entityNum].next = activeLoopSounds;
+	loopSounds[entityNum].prev = NULL;
+	activeLoopSounds = &loopSounds[entityNum];
 }
 
 /*
@@ -869,9 +898,21 @@ void S_Base_AddRealLoopingSound( int entityNum, const vec3_t origin, const vec3_
 	VectorCopy( origin, loopSounds[entityNum].origin );
 	VectorCopy( velocity, loopSounds[entityNum].velocity );
 	loopSounds[entityNum].sfx = sfx;
-	loopSounds[entityNum].active = qtrue;
 	loopSounds[entityNum].kill = qfalse;
 	loopSounds[entityNum].doppler = qfalse;
+
+	// already in active list
+	if ( activeLoopSounds == &loopSounds[entityNum] || loopSounds[entityNum].next || loopSounds[entityNum].prev ) {
+		return;
+	}
+
+	// add to active list
+	if ( activeLoopSounds ) {
+		activeLoopSounds->prev = &loopSounds[entityNum];
+	}
+	loopSounds[entityNum].next = activeLoopSounds;
+	loopSounds[entityNum].prev = NULL;
+	activeLoopSounds = &loopSounds[entityNum];
 }
 
 
@@ -886,7 +927,7 @@ sum up the channel multipliers.
 ==================
 */
 void S_AddLoopSounds (void) {
-	int			i, j, time;
+	int			time;
 	int			left_total, right_total, left, right;
 	channel_t	*ch;
 	loopSound_t	*loop, *loop2;
@@ -898,9 +939,8 @@ void S_AddLoopSounds (void) {
 	time = Com_Milliseconds();
 
 	loopFrame++;
-	for ( i = 0 ; i < MAX_GENTITIES ; i++) {
-		loop = &loopSounds[i];
-		if ( !loop->active || loop->mergeFrame == loopFrame ) {
+	for ( loop = activeLoopSounds ; loop != NULL ; loop = loop->next ) {
+		if ( loop->mergeFrame == loopFrame ) {
 			continue;	// already merged into an earlier sound
 		}
 
@@ -912,9 +952,8 @@ void S_AddLoopSounds (void) {
 
 		loop->sfx->lastTimeUsed = time;
 
-		for (j=(i+1); j< MAX_GENTITIES ; j++) {
-			loop2 = &loopSounds[j];
-			if ( !loop2->active || loop2->doppler || loop2->sfx != loop->sfx) {
+		for ( loop2 = loop->next; loop2 != NULL; loop2 = loop2->next ) {
+			if ( loop2->doppler || loop2->sfx != loop->sfx) {
 				continue;
 			}
 			loop2->mergeFrame = loopFrame;
