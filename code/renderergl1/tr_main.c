@@ -1371,11 +1371,11 @@ static void R_RadixSort( drawSurf_t *source, int size )
   R_Radix( 3, size, scratch, source );
   R_Radix( 4, size, source, scratch );
   R_Radix( 5, size, scratch, source );
-  R_Radix( 6, size, source, scratch );
-  R_Radix( 7, size, scratch, source );
+  //R_Radix( 6, size, source, scratch );
+  //R_Radix( 7, size, scratch, source );
 #else
-  R_Radix( 7, size, source, scratch );
-  R_Radix( 6, size, scratch, source );
+  //R_Radix( 7, size, source, scratch );
+  //R_Radix( 6, size, scratch, source );
   R_Radix( 5, size, source, scratch );
   R_Radix( 4, size, scratch, source );
   R_Radix( 3, size, source, scratch );
