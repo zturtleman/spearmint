@@ -763,12 +763,13 @@ void S_Base_StopLoopingSound(int entityNum) {
 	// unlink from active list
 	if ( loopSounds[entityNum].prev ) {
 		loopSounds[entityNum].prev->next = loopSounds[entityNum].next;
-		loopSounds[entityNum].prev = NULL;
 	}
 	if ( loopSounds[entityNum].next ) {
 		loopSounds[entityNum].next->prev = loopSounds[entityNum].prev;
-		loopSounds[entityNum].next = NULL;
 	}
+
+	loopSounds[entityNum].prev = NULL;
+	loopSounds[entityNum].next = NULL;
 }
 
 /*
