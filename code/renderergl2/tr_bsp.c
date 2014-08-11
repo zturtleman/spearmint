@@ -789,6 +789,13 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	numVerts = LittleLong(ds->numVerts);
 	numIndexes = LittleLong(ds->numIndexes);
 
+	if ( numVerts >= SHADER_MAX_VERTEXES ) {
+		ri.Error(ERR_DROP, "ParseFace: verts > MAX (%d > %d)", numVerts, SHADER_MAX_VERTEXES );
+	}
+	if ( numIndexes >= SHADER_MAX_INDEXES ) {
+		ri.Error(ERR_DROP, "ParseFace: indices > MAX (%d > %d)", numIndexes, SHADER_MAX_INDEXES );
+	}
+
 	//cv = ri.Hunk_Alloc(sizeof(*cv), h_low);
 	cv = (void *)surf->data;
 	cv->surfaceType = SF_FACE;
@@ -1041,6 +1048,13 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	numVerts = LittleLong(ds->numVerts);
 	numIndexes = LittleLong(ds->numIndexes);
 
+	if ( numVerts >= SHADER_MAX_VERTEXES ) {
+		ri.Error(ERR_DROP, "ParseTriSurf: verts > MAX (%d > %d)", numVerts, SHADER_MAX_VERTEXES );
+	}
+	if ( numIndexes >= SHADER_MAX_INDEXES ) {
+		ri.Error(ERR_DROP, "ParseTriSurf: indices > MAX (%d > %d)", numIndexes, SHADER_MAX_INDEXES );
+	}
+
 	//cv = ri.Hunk_Alloc(sizeof(*cv), h_low);
 	cv = (void *)surf->data;
 	cv->surfaceType = SF_TRIANGLES;
@@ -1179,6 +1193,13 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	numVerts = LittleLong(ds->patchHeight);
 	numIndexes = LittleLong(ds->numIndexes);
 	numInstances = LittleLong(ds->patchWidth);
+
+	if ( numVerts >= SHADER_MAX_VERTEXES ) {
+		ri.Error(ERR_DROP, "ParseFoliage: verts > MAX (%d > %d)", numVerts, SHADER_MAX_VERTEXES );
+	}
+	if ( numIndexes >= SHADER_MAX_INDEXES ) {
+		ri.Error(ERR_DROP, "ParseFoliage: indices > MAX (%d > %d)", numIndexes, SHADER_MAX_INDEXES );
+	}
 
 	//cv = ri.Hunk_Alloc(sizeof(*cv), h_low);
 	cv = (void *)surf->data;
