@@ -2189,6 +2189,7 @@ void CL_DownloadsComplete( void ) {
 				clc.missingDefaultCfg = qfalse;
 
 				FS_Restart( qfalse ); // We possibly downloaded a pak, restart the file system to load it
+				clc.fsRestarted = qtrue;
 
 				// still missing default.cfg after downloading files
 				if ( clc.missingDefaultCfg ) {
@@ -2208,6 +2209,7 @@ void CL_DownloadsComplete( void ) {
 		clc.missingDefaultCfg = qfalse;
 
 		FS_Restart( qfalse ); // We possibly downloaded a pak, restart the file system to load it
+		clc.fsRestarted = qtrue;
 
 		// still missing default.cfg after downloading files
 		if ( clc.missingDefaultCfg ) {
@@ -2220,6 +2222,12 @@ void CL_DownloadsComplete( void ) {
 		// by sending the donedl command we request a new gamestate
 		// so we don't want to load stuff yet
 		return;
+	}
+
+	// must restart filesystem at connect to reload mint-game.settings
+	if ( !clc.fsRestarted ) {
+		FS_Restart( qfalse );
+		clc.fsRestarted = qtrue;
 	}
 
 	if ( clc.missingDefaultCfg ) {

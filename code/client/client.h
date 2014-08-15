@@ -194,6 +194,8 @@ typedef struct {
 
 	int			desiredPlayerBits;			// bits for desired local players when connecting
 
+	qboolean	fsRestarted;				// if true, file system has been restarted after connect to reload mint-game.settings
+
 	// these are our reliable messages that go to the server
 	int			reliableSequence;
 	int			reliableAcknowledge;		// the last one the server has executed
