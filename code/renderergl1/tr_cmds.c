@@ -494,13 +494,14 @@ void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *d
 		fogDensity = 0;
 	}
 
-	if ( tr.world ) {
+	if ( tr.world && tr.world->numBModels > 1 ) {
 		int					bmodelNum;
 		int					surfaceNum;
 		const bmodel_t		*bmodel;
 		const msurface_t	*surface;
 
-		for ( bmodelNum = 0, bmodel = tr.world->bmodels; bmodelNum < tr.world->numBModels; bmodelNum++, bmodel++ ) {
+		// skip world (bmodel 0)
+		for ( bmodelNum = 1, bmodel = &tr.world->bmodels[1]; bmodelNum < tr.world->numBModels; bmodelNum++, bmodel++ ) {
 
 			if ( !R_PointInBrush( origin, bmodel ) )
 				continue;

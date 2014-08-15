@@ -478,6 +478,9 @@ static void ParseMesh( dsurface_t *ds, drawVert_t *verts, msurface_t *surf ) {
 	width = LittleLong( ds->patchWidth );
 	height = LittleLong( ds->patchHeight );
 
+	if(width < 0 || width > MAX_PATCH_SIZE || height < 0 || height > MAX_PATCH_SIZE)
+		ri.Error(ERR_DROP, "ParseMesh: bad size");
+
 	verts += LittleLong( ds->firstVert );
 	numPoints = width * height;
 	for ( i = 0 ; i < numPoints ; i++ ) {
@@ -544,6 +547,13 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, i
 
 	numVerts = LittleLong( ds->numVerts );
 	numIndexes = LittleLong( ds->numIndexes );
+
+	if ( numVerts >= SHADER_MAX_VERTEXES ) {
+		ri.Error(ERR_DROP, "ParseTriSurf: verts > MAX (%d > %d)", numVerts, SHADER_MAX_VERTEXES );
+	}
+	if ( numIndexes >= SHADER_MAX_INDEXES ) {
+		ri.Error(ERR_DROP, "ParseTriSurf: indices > MAX (%d > %d)", numIndexes, SHADER_MAX_INDEXES );
+	}
 
 	//tri = ri.Hunk_Alloc( sizeof( *tri ) + numVerts * sizeof( tri->verts[0] ) 
 	//	+ numIndexes * sizeof( tri->indexes[0] ), h_low );
@@ -623,6 +633,13 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, i
 	numVerts = LittleLong( ds->patchHeight );
 	numIndexes = LittleLong( ds->numIndexes );
 	numInstances = LittleLong( ds->patchWidth );
+
+	if ( numVerts >= SHADER_MAX_VERTEXES ) {
+		ri.Error(ERR_DROP, "ParseFoliage: verts > MAX (%d > %d)", numVerts, SHADER_MAX_VERTEXES );
+	}
+	if ( numIndexes >= SHADER_MAX_INDEXES ) {
+		ri.Error(ERR_DROP, "ParseFoliage: indices > MAX (%d > %d)", numIndexes, SHADER_MAX_INDEXES );
+	}
 
 	// calculate size
 	size = sizeof( *foliage ) +

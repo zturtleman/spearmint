@@ -3288,12 +3288,41 @@ void FS_AddGameDirectory( const char *path, const char *dir ) {
 FS_ReferencedPakType
 ================
 */
-pakType_t FS_ReferencedPakType( int checksum ) {
+pakType_t FS_ReferencedPakType( const char *name, int checksum ) {
 	searchpath_t *sp;
 
 	for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
 		if ( sp->pack && sp->pack->checksum == checksum ) {
 			return sp->pack->pakType;
+		}
+	}
+
+	// used by client when downloading pk3s for a gamedir not in the current search path
+	for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
+		if ( sp->dir && !FS_IsExt(sp->dir->fullpath, ".pk3dir", strlen(sp->dir->fullpath))) {
+			pack_t *thepak;
+			int zipchecksum;
+			char *zippath;
+
+			zippath = FS_BuildOSPath( sp->dir->path, va( "%s.%08x.pk3", name, checksum ), "" );
+			zippath[strlen(zippath)-1] = '\0';
+			thepak = FS_LoadZipFile( zippath, "");
+
+			if ( !thepak ) {
+				zippath = FS_BuildOSPath( sp->dir->path, va( "%s.pk3", name ), "" );
+				zippath[strlen(zippath)-1] = '\0';
+				thepak = FS_LoadZipFile( zippath, "");
+			}
+
+			if ( thepak ) {
+				zipchecksum = thepak->checksum;
+				FS_FreePak(thepak);
+
+				if ( zipchecksum == checksum ) {
+					return PAK_NO_DOWNLOAD;
+				}
+			}
+
 		}
 	}
 
@@ -3356,7 +3385,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 	for ( i = 0 ; i < fs_numServerReferencedPaks ; i++ )
 	{
 		// Ok, see if we have this pak file
-		pakType = FS_ReferencedPakType( fs_serverReferencedPaks[ i ] );
+		pakType = FS_ReferencedPakType( fs_serverReferencedPakNames[i], fs_serverReferencedPaks[ i ] );
 
 		// never autodownload any of the id or paks which don't allow it
 		if ( pakType == PAK_COMMERCIAL || pakType == PAK_NO_DOWNLOAD )
@@ -4513,8 +4542,11 @@ void FS_Restart( qboolean gameDirChanged ) {
 		// (for instance a Team Arena demo server)
 		if (FS_TryLastValidGame()) {
 			// if connected to a remote server, try to download the files
-			if ( !CL_ConnectedToRemoteServer() ) {
-				Com_Error( ERR_DROP, "Invalid game folder" );
+			if ( CL_ConnectedToRemoteServer() ) {
+				Com_Printf( S_COLOR_YELLOW "WARNING: Couldn't load default.cfg, switched to last game to try to download missing files.\n" );
+				CL_MissingDefaultCfg();
+			} else {
+				Com_Error( ERR_DROP, "Couldn't load default.cfg" );
 			}
 			return;
 		}

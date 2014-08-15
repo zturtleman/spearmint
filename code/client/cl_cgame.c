@@ -106,9 +106,9 @@ void CL_SetViewAngles( int localPlayerNum, const vec3_t angles ) {
 	}
 
 	if ( angles ) {
-		VectorCopy( angles, clc.viewAngles[ localPlayerNum ] );
+		VectorCopy( angles, cl.localPlayers[ localPlayerNum ].viewAngles );
 	} else {
-		VectorClear( clc.viewAngles[ localPlayerNum ] );
+		VectorClear( cl.localPlayers[ localPlayerNum ].viewAngles );
 	}
 }
 
@@ -126,7 +126,7 @@ void CL_GetViewAngles( int localPlayerNum, vec3_t angles ) {
 		return;
 	}
 
-	VectorCopy( clc.viewAngles[ localPlayerNum ], angles );
+	VectorCopy( cl.localPlayers[ localPlayerNum ].viewAngles, angles );
 }
 
 /*

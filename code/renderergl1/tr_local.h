@@ -809,8 +809,6 @@ typedef struct {
 	int firstBrush;
 	int numBrushes;
 	orientation_t orientation;
-	qboolean visible;
-	int entityNum;
 } bmodel_t;
 
 typedef struct {

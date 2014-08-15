@@ -803,7 +803,7 @@ void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames );
 // sole exception of .cfg files.
 
 qboolean FS_CheckDirTraversal(const char *checkdir);
-pakType_t FS_ReferencedPakType( int refpak );
+pakType_t FS_ReferencedPakType( const char *name, int checksum );
 qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring );
 
 qboolean FS_Rename( const char *from, const char *to );
@@ -1174,6 +1174,9 @@ void CL_StartHunkUsers( qboolean rendererOnly );
 
 qboolean CL_ConnectedToRemoteServer( void );
 // returns qtrue if connected to a remote server
+
+void CL_MissingDefaultCfg( void );
+// connected to a remote server and is missing default.cfg for new fs_game
 
 void Key_KeynameCompletion( void(*callback)(const char *s) );
 // for keyname autocompletion

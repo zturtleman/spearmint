@@ -104,6 +104,9 @@ typedef struct {
 	int			mouseDx[2], mouseDy[2];	// added to by mouse events
 	int			mouseIndex;
 
+	vec3_t		viewAngles;		// used so cgame can save view angles across vid_restart.
+								// It is cleared to 0 upon entering each level.
+
 } clientActivePlayer_t;
 
 typedef struct {
@@ -186,11 +189,12 @@ typedef struct {
 	int			connectPacketCount;			// for display on connection dialog
 	char		serverMessage[MAX_STRING_TOKENS];	// for display on connection dialog
 	char		mapTitle[MAX_STRING_TOKENS];		// for saving in PNG screenshots
-	vec3_t		viewAngles[CL_MAX_SPLITVIEW];		// used so cgame can save view angles across vid_restart
 
 	int			challenge;					// from the server to use for connecting
 
 	int			desiredPlayerBits;			// bits for desired local players when connecting
+
+	qboolean	fsRestarted;				// if true, file system has been restarted after connect to reload mint-game.settings
 
 	// these are our reliable messages that go to the server
 	int			reliableSequence;
@@ -230,6 +234,7 @@ typedef struct {
 	int			downloadSize;	// how many bytes we got
 	char		downloadList[MAX_INFO_STRING]; // list of paks we need to download
 	qboolean	downloadRestart;	// if true, we need to do another FS_Restart because we downloaded a pak
+	qboolean	missingDefaultCfg;	// if true, fellback to last fs_game to attempt download because default.cfg was missing
 
 	// demo information
 	char		demoName[MAX_QPATH];

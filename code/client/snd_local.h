@@ -89,12 +89,14 @@ typedef struct loopSound_s {
 	vec3_t		velocity;
 	sfx_t		*sfx;
 	int			mergeFrame;
-	qboolean	active;
 	qboolean	kill;
 	qboolean	doppler;
 	float		dopplerScale;
 	float		oldDopplerScale;
 	int			framenum;
+
+	struct loopSound_s *prev;	// previous active loop sound
+	struct loopSound_s *next;	// next active loop sound
 } loopSound_t;
 
 typedef struct
