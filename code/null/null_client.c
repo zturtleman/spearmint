@@ -108,3 +108,7 @@ qboolean CL_ConnectedToRemoteServer( void ) {
 	return qfalse;
 }
 
+void CL_MissingDefaultCfg( void ) {
+
+}
+

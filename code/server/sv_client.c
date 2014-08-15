@@ -1081,7 +1081,7 @@ int SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 						// now that we know the file is referenced,
 						// check whether it's legal to download it
 						// or if it is a default pak.
-						pakType = FS_ReferencedPakType( FS_ReferencedPakChecksum( curindex ) );
+						pakType = FS_ReferencedPakType( Cmd_Argv(curindex), FS_ReferencedPakChecksum( curindex ) );
 						break;
 					}
 				}
