@@ -1727,13 +1727,22 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		}
 	}
 
-	// if shader stage references a lightmap, but no lightmap is present
-	// (vertex-approximated surfaces), then set cgen to vertex
+	//
+	// if shader stage references a lightmap but no lightmap is present
+	// and shader doesn't specify nolightmap (or also has pointlight),
+	// use diffuse cgen
+	//
 	if (stage->bundle[0].isLightmap && shader.lightmapIndex < 0 &&
 		stage->bundle[0].image[0] == tr.whiteImage)
 	{
-		stage->bundle[0].isLightmap = qfalse;
-		stage->rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
+		if ( !( shader.surfaceFlags & SURF_NOLIGHTMAP ) || ( shader.surfaceFlags & SURF_POINTLIGHT ) ) {
+			// surfaceParm pointlight, vertex-approximated surfaces, non-lightmapped misc_models, or not a world surface
+			ri.Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap stage but no lightmap, using diffuse lighting.\n", shader.name );
+			stage->bundle[0].isLightmap = qfalse;
+			stage->rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
+		} else {
+			ri.Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap stage but specifies no lightmap, using white image.\n", shader.name );
+		}
 	}
 
 	//

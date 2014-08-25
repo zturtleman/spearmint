@@ -38,6 +38,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define Q3_BSP_VERSION			46 // Quake III / Team Arena
 #define WOLF_BSP_VERSION		47 // RTCW / WolfET
+#define DARKS_BSP_VERSION		666 // Dark Salvation
 
 typedef struct {
 	int		fileofs, filelen;
@@ -501,4 +502,11 @@ bspFormat_t wolfBspFormat = {
 	BSP_LoadQ3,
 };
 
+// Dark Salvation
+bspFormat_t darksBspFormat = {
+	"DarkSalvation",
+	BSP_IDENT,
+	DARKS_BSP_VERSION,
+	BSP_LoadQ3,
+};
 

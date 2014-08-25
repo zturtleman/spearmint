@@ -2949,14 +2949,20 @@ void R_LoadLightGrid( const bspFile_t *bsp ) {
 
 	numGridPoints = w->lightGridBounds[0] * w->lightGridBounds[1] * w->lightGridBounds[2];
 
+	if ( !bsp->lightGridData || !bsp->numGridPoints ) {
+		ri.Printf( PRINT_WARNING, "WARNING: no light grid data\n" );
+		w->lightGridData = NULL;
+		return;
+	}
+
 	if ( bsp->numGridArrayPoints ) {
 		if ( numGridPoints != bsp->numGridArrayPoints ) {
-			ri.Printf( PRINT_WARNING, "WARNING: light array mismatch: %d points found, expected %d\n", numGridPoints, bsp->numGridArrayPoints );
+			ri.Printf( PRINT_WARNING, "WARNING: light grid array mismatch: %d points found, expected %d\n", numGridPoints, bsp->numGridArrayPoints );
 			w->lightGridData = NULL;
 			return;
 		}
 	}
-	else if ( !bsp->lightGridData || numGridPoints != bsp->numGridPoints ) {
+	else if ( numGridPoints != bsp->numGridPoints ) {
 		ri.Printf( PRINT_WARNING, "WARNING: light grid mismatch: %d points found, expected %d\n", numGridPoints, bsp->numGridPoints );
 		w->lightGridData = NULL;
 		return;
