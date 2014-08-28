@@ -156,16 +156,6 @@ char *Sys_GetCurrentUser( void )
 	return p->pw_name;
 }
 
-/*
-==================
-Sys_GetClipboardData
-==================
-*/
-char *Sys_GetClipboardData(void)
-{
-	return NULL;
-}
-
 #define MEM_THRESHOLD 96*1024*1024
 
 /*
