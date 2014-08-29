@@ -4044,6 +4044,13 @@ int FS_PaksumsSortValue( const searchpath_t *s ) {
 		}
 	}
 
+	// real-game directories are immovable, .pk3dir sort last like pk3s
+	if ( s->dir ) {
+		if ( !COM_CompareExtension(s->dir->gamedir, ".pk3dir") ) {
+			return -1;
+		}
+	}
+
 	return fs_numPaksums;
 }
 
@@ -4067,7 +4074,7 @@ static void FS_ReorderPaksumsPaks( void )
 		swapped = qfalse;
 		for ( s = fs_searchpaths; s && s->next; s = s->next ) {
 			// check if s should be after s->next
-			if ( s->pack && s->next->pack && ( FS_PaksumsSortValue(s) < FS_PaksumsSortValue(s->next) ) ) {
+			if ( s->pack && FS_PaksumsSortValue(s) < FS_PaksumsSortValue(s->next) ) {
 				// swap order of s and s->next
 				tmp = s->next->next;
 				s->next->next = s;
