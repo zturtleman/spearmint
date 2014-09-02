@@ -652,7 +652,7 @@ float RB_CalcWaveAlphaSingle( const waveForm_t *wf )
 */
 void RB_CalcModulateColorsByFog( unsigned char *colors ) {
 	int			i;
-	float		f, texCoords[SHADER_MAX_VERTEXES][2];
+	float		f, texCoords[SHADER_MAX_VERTEXES][2] = {{0.0f}};
 	fog_t		*fog;
 	fogType_t	fogType;
 

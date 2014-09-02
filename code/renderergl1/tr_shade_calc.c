@@ -871,7 +871,7 @@ void RB_CalcModulateAlphasByFog( unsigned char *colors ) {
 */
 void RB_CalcModulateRGBAsByFog( unsigned char *colors ) {
 	int			i;
-	float		f, texCoords[SHADER_MAX_VERTEXES][2];
+	float		f, texCoords[SHADER_MAX_VERTEXES][2] = {{0.0f}};
 	fog_t		*fog;
 	fogType_t	fogType;
 

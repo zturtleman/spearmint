@@ -20,3 +20,17 @@ notifications:
   irc: "irc.freenode.org#spearmint"
   on_success: change
   on_failure: always
+
+env:
+  global:
+    - secure: "dx0HqrtHdpgkV+v3jQiWuCPKZIc1pEBmMyhfhq5ah6+1AK/gzop5vVHzzBdLezGnsloutDN4Q/jiCWZORn3ZexxwFMnHCPQwkzkqo8s8UnAW4pXaAzqR/9tyYoyjpXXxjKBobS6aiLiWx7WFx9msO6a3arq/El8k21AnC05Dr2c="
+
+addons:
+  coverity_scan:
+    project:
+      name: "zturtleman/spearmint"
+      description: "Build submitted via Travis CI"
+    notification_email: zturtleman@gmail.com
+    build_command_prepend: "make clean"
+    build_command: "make release"
+    branch_pattern: master

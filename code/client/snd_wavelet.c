@@ -127,7 +127,7 @@ void NXPutc(NXStream *stream, char out) {
 
 
 void encodeWavelet( sfx_t *sfx, short *packets) {
-	float	wksp[4097], temp;
+	float	wksp[4097] = {0}, temp;
 	int		i, samples, size;
 	sndBuffer		*newchunk, *chunk;
 	byte			*out;
@@ -177,7 +177,7 @@ void encodeWavelet( sfx_t *sfx, short *packets) {
 }
 
 void decodeWavelet(sndBuffer *chunk, short *to) {
-	float			wksp[4097];
+	float			wksp[4097] = {0};
 	int				i;
 	byte			*out;
 
