@@ -158,6 +158,7 @@ static uniformInfo_t uniformsInfo[] =
 
 	{ "u_Intensity", GLSL_FLOAT },
 	{ "u_DiffuseColor", GLSL_VEC3 },
+	{ "u_FogType", GLSL_INT },
 };
 
 
@@ -332,6 +333,17 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 								GL_MODULATE,
 								GL_ADD,
 								GL_REPLACE));
+
+	Q_strcat(dest, size,
+							 va("#ifndef fogType_t\n"
+								"#define fogType_t\n"
+								"#define FT_NONE %i\n"
+								"#define FT_EXP %i\n"
+								"#define FT_LINEAR %i\n"
+								"#endif\n",
+								FT_NONE,
+								FT_EXP,
+								FT_LINEAR));
 
 	fbufWidthScale = 1.0f / ((float)glConfig.vidWidth);
 	fbufHeightScale = 1.0f / ((float)glConfig.vidHeight);
@@ -989,9 +1001,6 @@ void GLSL_InitGPUShaders(void)
 
 		if (i & FOGDEF_USE_VERTEX_ANIMATION)
 			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
-
-		if (i & FOGDEF_USE_LINEAR_FOG)
-			Q_strcat(extradefines, 1024, "#define USE_LINEAR_FOG\n");
 
 		if (!GLSL_InitGPUShader(&tr.fogShader[i], "fogpass", attribs, qtrue, extradefines, qtrue, fallbackShader_fogpass_vp, fallbackShader_fogpass_fp))
 		{
@@ -1787,12 +1796,12 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 }
 
 
-shaderProgram_t *GLSL_GetGenericShaderProgram(int stage)
+shaderProgram_t *GLSL_GetGenericShaderProgram(int stage, fogType_t fogType)
 {
 	shaderStage_t *pStage = tess.xstages[stage];
 	int shaderAttribs = 0;
 
-	if (tess.fogNum && (!R_IsGlobalFog(tess.fogNum) || backEnd.refdef.fogType != FT_NONE) && pStage->adjustColorsForFog)
+	if (tess.fogNum && fogType != FT_NONE && pStage->adjustColorsForFog)
 	{
 		shaderAttribs |= GENERICDEF_USE_FOG;
 	}

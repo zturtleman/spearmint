@@ -628,9 +628,8 @@ enum
 {
 	FOGDEF_USE_DEFORM_VERTEXES  = 0x0001,
 	FOGDEF_USE_VERTEX_ANIMATION = 0x0002,
-	FOGDEF_USE_LINEAR_FOG       = 0x0004,
-	FOGDEF_ALL                  = 0x0007,
-	FOGDEF_COUNT                = 0x0008,
+	FOGDEF_ALL                  = 0x0003,
+	FOGDEF_COUNT                = 0x0004,
 };
 
 enum
@@ -755,6 +754,7 @@ typedef enum
 	// new in spearmint
 	UNIFORM_INTENSITY,
 	UNIFORM_DIFFUSECOLOR,
+	UNIFORM_FOGTYPE,
 
 	UNIFORM_COUNT
 } uniform_t;
@@ -2440,7 +2440,7 @@ void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t 
 void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v);
 void GLSL_SetUniformMat4(shaderProgram_t *program, int uniformNum, const mat4_t matrix);
 
-shaderProgram_t *GLSL_GetGenericShaderProgram(int stage);
+shaderProgram_t *GLSL_GetGenericShaderProgram(int stage, fogType_t fogType);
 
 /*
 ============================================================

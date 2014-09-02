@@ -8,6 +8,7 @@ attribute vec3  attr_Position2;
 attribute vec3  attr_Normal2;
 #endif
 
+uniform int     u_FogType;
 uniform vec4    u_FogDistance;
 uniform vec4    u_FogDepth;
 uniform float   u_FogEyeT;
@@ -85,28 +86,27 @@ vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 
 float CalcFog(vec3 position)
 {
-#if defined(USE_LINEAR_FOG)
 	float s = dot(vec4(position, 1.0), u_FogDistance);
 	float t = dot(vec4(position, 1.0), u_FogDepth);
 
 	float eyeOutside = float(u_FogEyeT < 0.0);
 
-	if ( eyeOutside == 0 )
-		t += u_FogEyeT;
+	if ( u_FogType == FT_LINEAR ) {
+		if ( eyeOutside == 0 )
+			t += u_FogEyeT;
 
-	return s * t;
-#else // EXP FOG
-	float s = dot(vec4(position, 1.0), u_FogDistance) * 8.0;
-	float t = dot(vec4(position, 1.0), u_FogDepth);
+		return s * t;
+	} else {
+		// FT_EXP
+		s *= 8.0;
 
-	float eyeOutside = float(u_FogEyeT < 0.0);
-	float fogged = float(t >= eyeOutside);
+		float fogged = float(t >= eyeOutside);
 
-	t += 1e-6;
-	t *= fogged / (t - u_FogEyeT * eyeOutside);
+		t += 1e-6;
+		t *= fogged / (t - u_FogEyeT * eyeOutside);
 
-	return s * t;
-#endif
+		return s * t;
+	}
 }
 
 void main()

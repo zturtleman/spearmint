@@ -28,6 +28,7 @@ uniform vec3   u_TCGen0Vector1;
 #endif
 
 #if defined(USE_FOG)
+uniform int    u_FogType;
 uniform vec4   u_FogDistance;
 uniform vec4   u_FogDepth;
 uniform float  u_FogEyeT;
@@ -201,16 +202,27 @@ vec4 CalcColor(vec3 position, vec3 normal)
 #if defined(USE_FOG)
 float CalcFog(vec3 position)
 {
-	float s = dot(vec4(position, 1.0), u_FogDistance) * 8.0;
+	float s = dot(vec4(position, 1.0), u_FogDistance);
 	float t = dot(vec4(position, 1.0), u_FogDepth);
 
 	float eyeOutside = float(u_FogEyeT < 0.0);
-	float fogged = float(t >= eyeOutside);
 
-	t += 1e-6;
-	t *= fogged / (t - u_FogEyeT * eyeOutside);
+	if ( u_FogType == FT_LINEAR ) {
+		if ( eyeOutside == 0 )
+			t += u_FogEyeT;
 
-	return s * t;
+		return s * t;
+	} else {
+		// FT_EXP
+		s *= 8.0;
+
+		float fogged = float(t >= eyeOutside);
+
+		t += 1e-6;
+		t *= fogged / (t - u_FogEyeT * eyeOutside);
+
+		return s * t;
+	}
 }
 #endif
 

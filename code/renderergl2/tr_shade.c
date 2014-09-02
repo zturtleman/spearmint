@@ -729,25 +729,27 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 }
 
 
-static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, float *eyeT)
+static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, float *eyeT, fogType_t *outFogType)
 {
 	// from RB_CalcFogTexCoords()
 	fog_t  *fog;
 	bmodel_t *bmodel;
 	vec3_t  local;
 	float tcScale;
+	fogType_t fogType;
 
-	if (!tess.fogNum)
+	if (!tess.fogNum) {
+		if ( outFogType ) {
+			*outFogType = FT_NONE;
+		}
 		return;
+	}
 
 	if ( tess.shader->isSky ) {
-		if ( tr.skyFogType == FT_NONE ) {
-			return;
-		}
-
 		fog = NULL;
 		bmodel = NULL;
 		tcScale = tr.skyFogTcScale;
+		fogType = tr.skyFogType;
 	} else {
 		fog = tr.world->fogs + tess.fogNum;
 		bmodel = tr.world->bmodels + fog->modelNum;
@@ -759,9 +761,19 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 			}
 
 			tcScale = backEnd.refdef.fogTcScale;
+			fogType = backEnd.refdef.fogType;
 		} else {
 			tcScale = fog->tcScale;
+			fogType = fog->shader->fogParms.fogType;
 		}
+	}
+
+	if ( outFogType ) {
+		*outFogType = fogType;
+	}
+
+	if ( fogType == FT_NONE ) {
+		return;
 	}
 
 	VectorSubtract( backEnd.or.origin, backEnd.viewParms.or.origin, local );
@@ -853,7 +865,7 @@ static void ForwardDlight( void ) {
 	
 	ComputeDeformValues(&deformGen, deformParams);
 
-	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT);
+	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT, NULL);
 
 	for ( l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
 		dlight_t	*dl;
@@ -1150,9 +1162,6 @@ static void RB_FogPass( void ) {
 
 		if (glState.vertexAnimation)
 			index |= FOGDEF_USE_VERTEX_ANIMATION;
-
-		if ( fogType == FT_LINEAR )
-			index |= FOGDEF_USE_LINEAR_FOG;
 		
 		sp = &tr.fogShader[index];
 	}
@@ -1178,8 +1187,9 @@ static void RB_FogPass( void ) {
 	color[3] = ((unsigned char *)(&colorInt))[3] / 255.0f;
 	GLSL_SetUniformVec4(sp, UNIFORM_COLOR, color);
 
-	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT);
+	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT, NULL);
 
+	GLSL_SetUniformInt(sp, UNIFORM_FOGTYPE, fogType);
 	GLSL_SetUniformVec4(sp, UNIFORM_FOGDISTANCE, fogDistanceVector);
 	GLSL_SetUniformVec4(sp, UNIFORM_FOGDEPTH, fogDepthVector);
 	GLSL_SetUniformFloat(sp, UNIFORM_FOGEYET, eyeT);
@@ -1232,13 +1242,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	
 	vec4_t fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
 	float eyeT = 0;
+	fogType_t fogType = FT_NONE, stageFogType;
 
 	int deformGen;
 	vec5_t deformParams;
 
 	ComputeDeformValues(&deformGen, deformParams);
 
-	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT);
+	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT, &fogType);
 
 	for ( stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
@@ -1282,6 +1293,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			overridecolor = qfalse;
 		}
+
+		stageFogType = FT_NONE;
 
 		if (backEnd.depthFill)
 		{
@@ -1348,7 +1361,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{
-			sp = GLSL_GetGenericShaderProgram(stage);
+			stageFogType = ( !input->shader->noFog || pStage->isFogged ) ? fogType : FT_NONE;
+
+			sp = GLSL_GetGenericShaderProgram(stage, stageFogType);
 
 			backEnd.pc.c_genericDraws++;
 		}
@@ -1368,7 +1383,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 		}
 
-		if ( input->fogNum && ( !input->shader->noFog || pStage->isFogged )  ) {
+		GLSL_SetUniformInt(sp, UNIFORM_FOGTYPE, stageFogType);
+		if (stageFogType != FT_NONE)
+		{
 			GLSL_SetUniformVec4(sp, UNIFORM_FOGDISTANCE, fogDistanceVector);
 			GLSL_SetUniformVec4(sp, UNIFORM_FOGDEPTH, fogDepthVector);
 			GLSL_SetUniformFloat(sp, UNIFORM_FOGEYET, eyeT);
@@ -1435,7 +1452,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, pStage->rgbGen);
 		GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, pStage->alphaGen);
 
-		if ( input->fogNum && ( !input->shader->noFog || pStage->isFogged ) )
+		if (stageFogType != FT_NONE)
 		{
 			vec4_t fogColorMask;
 
