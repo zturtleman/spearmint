@@ -112,7 +112,7 @@ typedef enum {
 	MST_TRIANGLE_SOUP,
 	MST_FLARE,
 	MST_FOLIAGE, // 5 in ET
-	MST_TERRAIN, // 5 in EF2
+	MST_TERRAIN, // 5 in EF2 // triangle soup that is solid
 	MST_MAX
 } mapSurfaceType_t;
 

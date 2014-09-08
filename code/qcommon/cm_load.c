@@ -747,16 +747,61 @@ void CMod_LoadPatches( void ) {
 	vec3_t		points[MAX_PATCH_VERTS];
 	int			width, height;
 	int			shaderNum;
+	int			numVertexes;
+	vec3_t		vertexes[SHADER_MAX_VERTEXES];
+	int			numIndexes, *drawIndexes, *index_p;
+	int			indexes[SHADER_MAX_INDEXES];
 
 	in = cm_bsp->surfaces;
 	cm.numSurfaces = count = cm_bsp->numSurfaces;
 	cm.surfaces = Hunk_Alloc( cm.numSurfaces * sizeof( cm.surfaces[0] ), h_high );
 
 	dv = cm_bsp->drawVerts;
+	drawIndexes = cm_bsp->drawIndexes;
 
 	// scan through all the surfaces, but only load patches,
 	// not planar faces
 	for ( i = 0 ; i < count ; i++, in++ ) {
+
+		if ( LittleLong( in->surfaceType ) == MST_TERRAIN ) {
+			cm.surfaces[ i ] = patch = Hunk_Alloc( sizeof( *patch ), h_high );
+
+			// load the full drawverts onto the stack
+			numVertexes = LittleLong( in->numVerts );
+			if ( numVertexes > SHADER_MAX_VERTEXES ) {
+				Com_Error(ERR_DROP, "CMod_LoadPatches: SHADER_MAX_VERTEXES");
+			}
+
+			dv_p = dv + LittleLong( in->firstVert );
+			for ( j = 0; j < numVertexes ; j++, dv_p++ ) {
+				vertexes[j][0] = LittleFloat( dv_p->xyz[0] );
+				vertexes[j][1] = LittleFloat( dv_p->xyz[1] );
+				vertexes[j][2] = LittleFloat( dv_p->xyz[2] );
+			}
+
+			numIndexes = LittleLong( in->numIndexes );
+			if ( numIndexes > SHADER_MAX_INDEXES ) {
+				Com_Error(ERR_DROP, "CMod_LoadPatches: SHADER_MAX_INDEXES");
+			}
+
+			index_p = drawIndexes + LittleLong( in->firstIndex );
+			for ( j = 0; j < numIndexes ; j++, index_p++ ) {
+				indexes[j] = LittleLong( *index_p );
+
+				if ( indexes[j] < 0 || indexes[j] >= numVertexes ) {
+					Com_Error(ERR_DROP, "CMod_LoadPatches: Bad index in trisoup surface");
+				}
+			}
+
+			shaderNum = LittleLong( in->shaderNum );
+			patch->contents = cm.shaders[shaderNum].contentFlags;
+			patch->surfaceFlags = cm.shaders[shaderNum].surfaceFlags;
+
+			// create the internal facet structure
+			patch->pc = CM_GenerateTriangleSoupCollide( numVertexes, vertexes, numIndexes, indexes );
+			continue;
+		}
+
 		if ( LittleLong( in->surfaceType ) != MST_PATCH ) {
 			continue;		// ignore other surfaces
 		}

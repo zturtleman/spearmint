@@ -1251,6 +1251,201 @@ struct patchCollide_s	*CM_GeneratePatchCollide( int width, int height, vec3_t *p
 	return pf;
 }
 
+
+
+/*
+================================================================================
+
+Triangle Soup to patchCollide_s
+
+================================================================================
+*/
+
+/*
+===================
+CM_SetTriangleSoupBorderInward
+===================
+*/
+static void CM_SetTriangleSoupBorderInward( facet_t *facet, float *p1, float *p2, float *p3 )
+{
+	int				k, l;
+	int				numPoints;
+	float			*points[4];
+
+	points[0] = p1;
+	points[1] = p2;
+	points[2] = p3;
+	numPoints = 3;
+
+	for ( k = 0 ; k < facet->numBorders ; k++ ) {
+		int		front, back;
+
+		front = 0;
+		back = 0;
+
+		for ( l = 0 ; l < numPoints ; l++ ) {
+			int		side;
+
+			side = CM_PointOnPlaneSide( points[l], facet->borderPlanes[k] );
+			if ( side == SIDE_FRONT ) {
+				front++;
+			} if ( side == SIDE_BACK ) {
+				back++;
+			}
+		}
+
+		if ( front && !back ) {
+			facet->borderInward[k] = qtrue;
+		} else if ( back && !front ) {
+			facet->borderInward[k] = qfalse;
+		} else if ( !front && !back ) {
+			// flat side border
+			facet->borderPlanes[k] = -1;
+		} else {
+			// bisecting side border
+			Com_DPrintf( "WARNING: CM_SetTriangleSoupBorderInward: mixed plane sides\n" );
+			facet->borderInward[k] = qfalse;
+		}
+	}
+}
+
+/*
+==================
+CM_GenerateBoundaryForPoints
+==================
+*/
+static int CM_GenerateBoundaryForPoints( int surfacePlane, float *p1, float *p2 )
+{
+	vec3_t          up;
+
+	VectorMA( p1, 4, planes[surfacePlane].plane, up );
+
+	return CM_FindPlane( p1, p2, up );
+}
+
+/*
+==================
+CM_PatchCollideFromTriangleSoup
+==================
+*/
+static void CM_PatchCollideFromTriangleSoup( cTriangleSoup_t *triSoup, patchCollide_t *pf ) {
+	int				i;
+	float			*p1, *p2, *p3;
+	int				trianglePlanes[SHADER_MAX_TRIANGLES];
+	facet_t			*facet;
+
+	numPlanes = 0;
+	numFacets = 0;
+
+	// find the planes for each triangle of the grid
+	for( i = 0; i < triSoup->numTriangles ; i++ ) {
+		p1 = triSoup->points[i][0];
+		p2 = triSoup->points[i][1];
+		p3 = triSoup->points[i][2];
+
+		trianglePlanes[i] = CM_FindPlane(p1, p2, p3);
+	}
+
+	// create the borders for each triangle
+	for ( i = 0; i < triSoup->numTriangles ; i++ ) {
+		if ( numFacets == MAX_FACETS ) {
+			Com_Error( ERR_DROP, "MAX_FACETS" );
+		}
+		facet = &facets[numFacets];
+		Com_Memset( facet, 0, sizeof( *facet ) );
+
+		p1 = triSoup->points[i][0];
+		p2 = triSoup->points[i][1];
+		p3 = triSoup->points[i][2];
+
+		facet->surfacePlane = trianglePlanes[i];
+
+		if ( facet->surfacePlane == -1 ) {
+			continue;
+		}
+
+		facet->numBorders = 3;
+
+		facet->borderNoAdjust[0] = qfalse;
+		facet->borderNoAdjust[1] = qfalse;
+		facet->borderNoAdjust[2] = qfalse;
+
+		facet->borderPlanes[0] = CM_GenerateBoundaryForPoints( facet->surfacePlane, p1, p2);
+		facet->borderPlanes[1] = CM_GenerateBoundaryForPoints( facet->surfacePlane, p2, p3);
+		facet->borderPlanes[2] = CM_GenerateBoundaryForPoints( facet->surfacePlane, p3, p1);
+
+		CM_SetTriangleSoupBorderInward( facet, p1, p2, p3 );
+
+		if ( CM_ValidateFacet( facet ) ) {
+			CM_AddFacetBevels( facet );
+			numFacets++;
+		}
+	}
+
+	// copy the results out
+	pf->numPlanes = numPlanes;
+	pf->numFacets = numFacets;
+	pf->facets = Hunk_Alloc( numFacets * sizeof( *pf->facets ), h_high );
+	Com_Memcpy( pf->facets, facets, numFacets * sizeof( *pf->facets ) );
+	pf->planes = Hunk_Alloc( numPlanes * sizeof( *pf->planes ), h_high );
+	Com_Memcpy( pf->planes, planes, numPlanes * sizeof( *pf->planes ) );
+}
+
+/*
+===================
+CM_GenerateTriangleSoupCollide
+
+Creates an internal structure that will be used to perform
+collision detection with a triangle mesh.
+===================
+*/
+struct patchCollide_s	*CM_GenerateTriangleSoupCollide( int numVertexes, vec3_t *vertexes, int numIndexes, int *indexes ) {
+	patchCollide_t	*pf;
+	cTriangleSoup_t	triSoup;
+	int				i, j;
+
+	if ( numVertexes <= 2 || !vertexes || numIndexes <= 2 || !indexes ) {
+		Com_Error(ERR_DROP, "CM_GenerateTriangleSoupCollide: bad parameters: (%i, %p, %i, %p)", numVertexes, vertexes, numIndexes,
+				  indexes);
+	}
+
+	if ( numIndexes > SHADER_MAX_INDEXES ) {
+		Com_Error(ERR_DROP, "CM_GenerateTriangleSoupCollide: source is > SHADER_MAX_TRIANGLES");
+	}
+
+	// build a triangle soup
+	triSoup.numTriangles = numIndexes / 3;
+	for ( i = 0; i < triSoup.numTriangles ; i++ ) {
+		for ( j = 0; j < 3 ; j++ ) {
+			VectorCopy( vertexes[indexes[i * 3 + j]], triSoup.points[i][j] );
+		}
+	}
+
+	pf = Hunk_Alloc( sizeof( *pf ), h_high );
+	ClearBounds( pf->bounds[0], pf->bounds[1] );
+	for ( i = 0; i < triSoup.numTriangles ; i++ ) {
+		for ( j = 0; j < 3 ; j++ ) {
+			AddPointToBounds( triSoup.points[i][j], pf->bounds[0], pf->bounds[1] );
+		}
+	}
+
+	// generate a bsp tree for the surface
+	CM_PatchCollideFromTriangleSoup( &triSoup, pf );
+
+	// expand by one unit for epsilon purposes
+	pf->bounds[0][0] -= 1;
+	pf->bounds[0][1] -= 1;
+	pf->bounds[0][2] -= 1;
+
+	pf->bounds[1][0] += 1;
+	pf->bounds[1][1] += 1;
+	pf->bounds[1][2] += 1;
+
+	return pf;
+}
+
+
+
 /*
 ================================================================================
 

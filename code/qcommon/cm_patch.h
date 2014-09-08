@@ -109,3 +109,11 @@ typedef struct {
 
 
 struct patchCollide_s	*CM_GeneratePatchCollide( int width, int height, vec3_t *points, float subdivisions );
+
+
+typedef struct {
+	int			numTriangles;
+	vec3_t		points[SHADER_MAX_TRIANGLES][3];
+} cTriangleSoup_t;
+
+struct patchCollide_s	*CM_GenerateTriangleSoupCollide( int numVertexes, vec3_t *vertexes, int numIndexes, int *indexes );
