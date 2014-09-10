@@ -94,38 +94,39 @@ The following variables may be set, either on the command line or in
 Makefile.local:
 
 ```
-  CFLAGS             - use this for custom CFLAGS
-  V                  - set to show cc command line when building
-  DEFAULT_BASEDIR    - extra path to search for baseq3 and such
-  BUILD_SERVER       - build the 'spearmint-server' server binary
-  BUILD_CLIENT       - build the 'spearmint' client binary
-  SERVERBIN          - rename 'spearmint-server' server binary
-  CLIENTBIN          - rename 'spearmint' client binary
-  USE_OPENAL         - use OpenAL where available
-  USE_OPENAL_DLOPEN  - link with OpenAL at runtime
-  USE_CURL           - use libcurl for http/ftp download support
-  USE_CURL_DLOPEN    - link with libcurl at runtime
-  USE_CODEC_VORBIS   - enable Ogg Vorbis support
-  USE_CODEC_OPUS     - enable Ogg Opus support
-  USE_MUMBLE         - enable Mumble support
-  USE_VOIP           - enable built-in VoIP support
-  USE_FREETYPE       - enable FreeType support for rendering fonts
-  USE_INTERNAL_LIBS  - build internal libraries instead of dynamically
-                       linking against system libraries; this just sets
-		       the default for USE_INTERNAL_SPEEX etc.
-		       and USE_LOCAL_HEADERS
-  USE_INTERNAL_SPEEX - build internal speex library instead of dynamically
-                       linking against system libspeex
+  CFLAGS               - use this for custom CFLAGS
+  V                    - set to show cc command line when building
+  DEFAULT_BASEDIR      - extra path to search for baseq3 and such
+  BUILD_SERVER         - build the 'spearmint-server' server binary
+  BUILD_CLIENT         - build the 'spearmint' client binary
+  SERVERBIN            - rename 'spearmint-server' server binary
+  CLIENTBIN            - rename 'spearmint' client binary
+  USE_RENDERER_DLOPEN  - build and use the renderer in a library
+  USE_OPENAL           - use OpenAL where available
+  USE_OPENAL_DLOPEN    - link with OpenAL at runtime
+  USE_CURL             - use libcurl for http/ftp download support
+  USE_CURL_DLOPEN      - link with libcurl at runtime
+  USE_CODEC_VORBIS     - enable Ogg Vorbis support
+  USE_CODEC_OPUS       - enable Ogg Opus support
+  USE_MUMBLE           - enable Mumble support
+  USE_VOIP             - enable built-in VoIP support
+  USE_FREETYPE         - enable FreeType support for rendering fonts
+  USE_INTERNAL_LIBS    - build internal libraries instead of dynamically
+                         linking against system libraries; this just sets
+                         the default for USE_INTERNAL_SPEEX etc.
+                         and USE_LOCAL_HEADERS
+  USE_INTERNAL_SPEEX   - build internal speex library instead of dynamically
+                         linking against system libspeex
   USE_INTERNAL_FREETYPE - build and link against internal FreeType library
-  USE_INTERNAL_ZLIB  - build and link against internal zlib
-  USE_INTERNAL_JPEG  - build and link against internal JPEG library
-  USE_INTERNAL_OGG   - build and link against internal ogg library
-  USE_INTERNAL_OPUS  - build and link against internal opus/opusfile libraries
-  USE_INTERNAL_VORBIS - build and link against internal Vorbis library
-  USE_LOCAL_HEADERS  - use headers local to ioq3 instead of system ones
-  DEBUG_CFLAGS       - C compiler flags to use for building debug version
-  COPYDIR            - the target installation directory
-  TEMPDIR            - specify user defined directory for temp files
+  USE_INTERNAL_ZLIB    - build and link against internal zlib
+  USE_INTERNAL_JPEG    - build and link against internal JPEG library
+  USE_INTERNAL_OGG     - build and link against internal ogg library
+  USE_INTERNAL_OPUS    - build and link against internal opus/opusfile libraries
+  USE_INTERNAL_VORBIS  - build and link against internal Vorbis library
+  USE_LOCAL_HEADERS    - use headers local to ioq3 instead of system ones
+  DEBUG_CFLAGS         - C compiler flags to use for building debug version
+  COPYDIR              - the target installation directory
+  TEMPDIR              - specify user defined directory for temp files
 ```
 
 The defaults for these variables differ depending on the target platform.
@@ -191,9 +192,9 @@ The defaults for these variables differ depending on the target platform.
   com_maxfpsMinimized               - Maximum frames per second when minimized
   com_busyWait                      - Will use a busy loop to wait for rendering
                                       next frame when set to non-zero value
-  com_pipefile                      - Specify filename to create a named pipe 
+  com_pipefile                      - Specify filename to create a named pipe
                                       through which other processes can control
-                                      the server while it is running. 
+                                      the server while it is running.
                                       Nonfunctional on Windows.
   com_gamename                      - Gamename sent to master server in
                                       getservers[Ext] query and infoResponse
