@@ -2681,9 +2681,10 @@ typedef enum {
 // these are sort of arbitrary limits.
 // the limits apply to the sum of all scenes in a frame --
 // the main view, all the 3D icons, etc
-#define	MAX_POLYS		600
-#define	MAX_POLYVERTS	6000 // used for raw polys and RT_POLY entities
-#define	MAX_POLYBUFFERS	128
+// note: these are later multipled by max local players, so that each player can have this amount at once
+#define	MAX_POLYS		4096
+#define	MAX_POLYVERTS	8192 // used for raw polys and RT_POLY entities
+#define	MAX_POLYBUFFERS	1024
 
 // all of the information needed by the back end must be
 // contained in a backEndData_t
