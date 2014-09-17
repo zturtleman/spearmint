@@ -302,7 +302,7 @@ void R_AddPolygonBufferSurfaces( void ) {
 	shader_t        *sh;
 	srfPolyBuffer_t *polybuffer;
 
-	tr.currentEntityNum = ENTITYNUM_WORLD;
+	tr.currentEntityNum = REFENTITYNUM_WORLD;
 	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
 
 	for ( i = 0, polybuffer = tr.refdef.polybuffers; i < tr.refdef.numPolyBuffers ; i++, polybuffer++ ) {
@@ -322,6 +322,7 @@ void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
 	srfPolyBuffer_t*    pPolySurf;
 
 	if ( r_numpolybuffers >= max_polybuffers ) {
+		ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyBufferToScene: r_maxpolybuffers reached\n");
 		return;
 	}
 

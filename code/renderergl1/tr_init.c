@@ -1317,8 +1317,8 @@ void R_Init( void ) {
 		max_polyverts = MAX_POLYVERTS;
 
 	max_polybuffers = r_maxpolybuffers->integer;
-	if (max_polybuffers < MAX_POLYS)
-		max_polybuffers = MAX_POLYS;
+	if (max_polybuffers < MAX_POLYBUFFERS)
+		max_polybuffers = MAX_POLYBUFFERS;
 
 	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) + sizeof(srfPoly_t) * max_polys + sizeof(polyVert_t) * max_polyverts
 			+ sizeof(srfPolyBuffer_t) * max_polybuffers, h_low);

@@ -1307,32 +1307,27 @@ static void RB_SurfaceDisplayList( srfDisplayList_t *surf ) {
 	qglCallList( surf->listNum );
 }
 
-void RB_SurfacePolyBuffer( srfPolyBuffer_t *surf ) {
-	int i;
+static void RB_SurfacePolyBuffer( srfPolyBuffer_t *surf ) {
+	int		i;
+	int		numv;
 
-	tess.numIndexes =   surf->pPolyBuffer->numIndicies;
-	tess.numVertexes =  surf->pPolyBuffer->numVerts;
+	RB_CHECKOVERFLOW( surf->pPolyBuffer->numVerts, surf->pPolyBuffer->numIndicies );
 
-	for (i = 0; i < tess.numVertexes; i++)
-	{
-		tess.xyz[i][0] = surf->pPolyBuffer->xyz[i][0];
-		tess.xyz[i][1] = surf->pPolyBuffer->xyz[i][1];
-		tess.xyz[i][2] = surf->pPolyBuffer->xyz[i][2];
-		tess.xyz[i][3] = surf->pPolyBuffer->xyz[i][3];
+	numv = tess.numVertexes;
+	for (i = 0; i < surf->pPolyBuffer->numVerts; i++) {
+		VectorCopy( surf->pPolyBuffer->xyz[i], tess.xyz[numv] );
+		tess.texCoords[numv][0][0] = surf->pPolyBuffer->st[i][0];
+		tess.texCoords[numv][0][1] = surf->pPolyBuffer->st[i][1];
+		*(int *)&tess.vertexColors[numv] = *(int *)surf->pPolyBuffer->color[i];
 
-		tess.texCoords[i][0][0] = surf->pPolyBuffer->st[i][0];
-		tess.texCoords[i][0][1] = surf->pPolyBuffer->st[i][1];
-		
-		tess.vertexColors[i][0] = surf->pPolyBuffer->color[i][0];
-		tess.vertexColors[i][1] = surf->pPolyBuffer->color[i][1];
-		tess.vertexColors[i][2] = surf->pPolyBuffer->color[i][2];
-		tess.vertexColors[i][3] = surf->pPolyBuffer->color[i][3];
+		numv++;
 	}
 
-	for (i = 0; i < tess.numIndexes; i++)
-	{
-		tess.indexes[i] = (glIndex_t)surf->pPolyBuffer->indicies[i];
+	for (i = 0; i < surf->pPolyBuffer->numIndicies; i++) {
+		tess.indexes[tess.numIndexes++] = tess.numVertexes + surf->pPolyBuffer->indicies[i];
 	}
+
+	tess.numVertexes = numv;
 }
 
 static void RB_SurfaceSkip( void *surf ) {
