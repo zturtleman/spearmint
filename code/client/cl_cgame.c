@@ -1502,6 +1502,12 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_KEY_GETOVERSTRIKEMODE:
 		return Key_GetOverstrikeMode( );
 
+	case CG_KEY_GETCAPSLOCKMODE:
+		return Sys_GetCapsLockMode();
+
+	case CG_KEY_GETNUMLOCKMODE:
+		return Sys_GetNumLockMode();
+
 	case CG_KEY_CLEARSTATES:
 		Key_ClearStates();
 		return 0;

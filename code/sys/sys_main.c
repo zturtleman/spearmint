@@ -135,6 +135,26 @@ char *Sys_ConsoleInput(void)
 	return CON_Input( );
 }
 
+#ifndef DEDICATED
+/*
+===============
+Sys_GetCapsLockMode
+===============
+*/
+qboolean Sys_GetCapsLockMode( void ) {
+	return ( SDL_GetModState() & KMOD_CAPS ) ? qtrue : qfalse;
+}
+
+/*
+===============
+Sys_GetNumLockMode
+===============
+*/
+qboolean Sys_GetNumLockMode( void ) {
+	return ( SDL_GetModState() & KMOD_NUM ) ? qtrue : qfalse;
+}
+#endif
+
 #ifdef DEDICATED
 #	define PID_FILENAME "server.pid"
 #else

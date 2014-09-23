@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	27
+#define CG_API_MINOR_VERSION	28
 
 
 #define	CMD_BACKUP			64	
@@ -267,7 +267,7 @@ typedef enum {
 	CG_GETCLIENTSTATE = 190,
 	CG_GETCONFIGSTRING,
 
-	// these are not available in ui
+	// note: these were not originally available in ui
 	CG_CM_LOADMAP = 200,
 	CG_CM_NUMINLINEMODELS,
 	CG_CM_INLINEMODEL,
@@ -345,6 +345,8 @@ typedef enum {
 	CG_KEY_GETBINDINGBUF,
 	CG_KEY_SETBINDING,
 	CG_KEY_ISDOWN,
+	CG_KEY_GETCAPSLOCKMODE,
+	CG_KEY_GETNUMLOCKMODE,
 	CG_KEY_GETOVERSTRIKEMODE,
 	CG_KEY_SETOVERSTRIKEMODE,
 	CG_KEY_CLEARSTATES,
@@ -360,7 +362,7 @@ typedef enum {
 	CG_JOY_EVENT_TO_STRING, // ( const joyevent_t *joyevent, char *buf, int size );
 
 
-	CG_LAN_GETPINGQUEUECOUNT = 550,
+	CG_LAN_GETPINGQUEUECOUNT = 600,
 	CG_LAN_CLEARPING,
 	CG_LAN_GETPING,
 	CG_LAN_GETPINGINFO,
@@ -384,14 +386,14 @@ typedef enum {
 	CG_LAN_SERVERISINFAVORITELIST,
 
 
- 	CG_CIN_PLAYCINEMATIC = 600,
+	CG_CIN_PLAYCINEMATIC = 700,
 	CG_CIN_STOPCINEMATIC,
 	CG_CIN_RUNCINEMATIC,
 	CG_CIN_DRAWCINEMATIC,
 	CG_CIN_SETEXTENTS,
 
 /*
-	CG_LOADCAMERA = 700,
+	CG_LOADCAMERA = 800,
 	CG_STARTCAMERA,
 	CG_GETCAMERAINFO
 */
