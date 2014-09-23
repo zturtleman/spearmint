@@ -702,6 +702,7 @@ char	**FS_ListFiles( const char *directory, const char *extension, int *numfiles
 void	FS_FreeFileList( char **list );
 
 qboolean FS_FileExists( const char *file );
+qboolean FS_FileInPathExists(const char *testpath);
 
 qboolean FS_CreatePath (char *OSPath);
 
