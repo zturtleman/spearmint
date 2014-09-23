@@ -739,6 +739,20 @@ int main( int argc, char **argv )
 	signal( SIGTERM, Sys_SigHandler );
 	signal( SIGINT, Sys_SigHandler );
 
+#if !defined DEDICATED && defined __linux__
+	// SDL doesn't initially set KMOD_NUM on X11.. so let's always assume it's on
+	// because I don't want to deal with including X11 code outside SDL. >.>
+	// Hopefully this gets fixed by SDL 2.1.0...
+	if( SDL_VERSIONNUM( ver.major, ver.minor, ver.patch ) < SDL_VERSIONNUM( 2, 1, 0 ) ) {
+		if ( !( SDL_GetModState() & KMOD_NUM ) ) {
+			Com_Printf("INFO: Forcing NUMLOCK state to enabled (actual state unknown)!\n");
+			SDL_SetModState( SDL_GetModState() | KMOD_NUM );
+		} else {
+			Com_Printf("INFO: SDL has NUMLOCK state set to enabled!\n");
+		}
+	}
+#endif
+
 	while( 1 )
 	{
 		IN_Frame( );
