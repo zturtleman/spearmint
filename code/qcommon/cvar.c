@@ -472,6 +472,7 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 	var->integer = atoi(var->string);
 	var->resetString = CopyString( var_value );
 	var->validate = qfalse;
+	var->description = NULL;
 
 	// link the variable in
 	var->next = cvar_vars;
@@ -607,6 +608,10 @@ void Cvar_Print( cvar_t *v ) {
 
 	if ( v->latchedString ) {
 		Com_Printf( "latched: \"%s\"\n", v->latchedString );
+	}
+
+	if ( v->description ) {
+		Com_Printf( "%s\n", v->description );
 	}
 }
 
@@ -1254,6 +1259,8 @@ cvar_t *Cvar_Unset(cvar_t *cv)
 		Z_Free(cv->resetString);
 	if(cv->overriddenResetString)
 		Z_Free(cv->overriddenResetString);
+	if(cv->description)
+		Z_Free(cv->description);
 
 	if(cv->prev)
 		cv->prev->next = cv->next;
@@ -1468,6 +1475,23 @@ void Cvar_CheckRangeSafe( const char *varName, float min, float max, qboolean in
 	}
 
 	Cvar_CheckRange( var, min, max, integral );
+}
+
+/*
+=====================
+Cvar_SetDescription
+=====================
+*/
+void Cvar_SetDescription( cvar_t *var, const char *var_description )
+{
+	if( var_description && var_description[0] != '\0' )
+	{
+		if( var->description != NULL )
+		{
+			Z_Free( var->description );
+		}
+		var->description = CopyString( var_description );
+	}
 }
 
 /*

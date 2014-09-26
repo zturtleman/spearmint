@@ -1597,6 +1597,7 @@ void Com_InitHunkMemory( void ) {
 
 	// allocate the stack based hunk allocator
 	cv = Cvar_Get( "com_hunkMegs", DEF_COMHUNKMEGS_S, CVAR_LATCH | CVAR_ARCHIVE );
+	Cvar_SetDescription(cv, "The size of the hunk memory segment");
 
 	// if we are not dedicated min allocation is 56, otherwise min is 1
 	if (com_dedicated && com_dedicated->integer) {
@@ -3126,6 +3127,7 @@ void Com_InitRef( refimport_t *ri ) {
 	ri->Cvar_Set = Cvar_Set;
 	ri->Cvar_SetValue = Cvar_SetValue;
 	ri->Cvar_CheckRange = Cvar_CheckRange;
+	ri->Cvar_SetDescription = Cvar_SetDescription;
 	ri->Cvar_VariableIntegerValue = Cvar_VariableIntegerValue;
 	ri->Cvar_VariableStringBuffer = Cvar_VariableStringBuffer;
 
