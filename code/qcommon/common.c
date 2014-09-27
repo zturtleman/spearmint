@@ -1486,6 +1486,7 @@ void Com_InitZoneMemory( void ) {
 	cv = Cvar_Get( "com_zoneMegs", DEF_COMZONEMEGS_S, CVAR_LATCH | CVAR_ARCHIVE );
 
 	if ( cv->integer < DEF_COMZONEMEGS ) {
+		Cvar_Set( "com_zoneMegs", DEF_COMZONEMEGS_S );
 		s_zoneTotal = 1024 * 1024 * DEF_COMZONEMEGS;
 	} else {
 		s_zoneTotal = cv->integer * 1024 * 1024;
@@ -1610,6 +1611,7 @@ void Com_InitHunkMemory( void ) {
 	}
 
 	if ( cv->integer < nMinAlloc ) {
+		Cvar_SetValue( "com_hunkMegs", nMinAlloc );
 		s_hunkTotal = 1024 * 1024 * nMinAlloc;
 	    Com_Printf(pMsg, nMinAlloc, s_hunkTotal / (1024 * 1024));
 	} else {
