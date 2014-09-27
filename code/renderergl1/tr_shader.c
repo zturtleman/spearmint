@@ -3406,6 +3406,31 @@ static void SetImplicitShaderStages( image_t *image ) {
 
 
 /*
+===============
+InitShader
+===============
+*/
+static void InitShader( const char *name, int lightmapIndex ) {
+	int i, b;
+
+	// clear the global shader
+	Com_Memset( &shader, 0, sizeof( shader ) );
+	Com_Memset( &stages, 0, sizeof( stages ) );
+
+	Q_strncpyz( shader.name, name, sizeof( shader.name ) );
+	shader.lightmapIndex = lightmapIndex;
+
+	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
+		stages[i].bundle[0].texMods = texMods[i];
+
+		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
+			stages[i].bundle[b].image = imageAnimations[i][b];
+			stages[i].bundle[b].image[0] = NULL;
+		}
+	}
+}
+
+/*
 =========================
 FinishShader
 
@@ -3786,7 +3811,7 @@ most world construction surfaces.
 shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImage ) {
 	char		strippedName[MAX_QPATH];
 	char		fileName[MAX_QPATH];
-	int			i, b, hash;
+	int			hash;
 	char		*shaderText;
 	image_t		*image;
 	shader_t	*sh;
@@ -3821,18 +3846,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		}
 	}
 
-	// clear the global shader
-	Com_Memset( &shader, 0, sizeof( shader ) );
-	Com_Memset( &stages, 0, sizeof( stages ) );
-	Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
-	shader.lightmapIndex = lightmapIndex;
-	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
-		stages[i].bundle[0].texMods = texMods[i];
-		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
-			stages[i].bundle[b].image = imageAnimations[i][b];
-			stages[i].bundle[b].image[0] = NULL;
-		}
-	}
+	InitShader( strippedName, lightmapIndex );
 
 	shader_picmipFlag = IMGFLAG_PICMIP;
 
@@ -3929,7 +3943,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 
 qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_t *image, qboolean mipRawImage) {
-	int			i, b, hash;
+	int			hash;
 	shader_t	*sh;
 
 	hash = generateHashValue(name, FILE_HASH_SIZE);
@@ -3957,18 +3971,7 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 		}
 	}
 
-	// clear the global shader
-	Com_Memset( &shader, 0, sizeof( shader ) );
-	Com_Memset( &stages, 0, sizeof( stages ) );
-	Q_strncpyz(shader.name, name, sizeof(shader.name));
-	shader.lightmapIndex = lightmapIndex;
-	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
-		stages[i].bundle[0].texMods = texMods[i];
-		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
-			stages[i].bundle[b].image = imageAnimations[i][b];
-			stages[i].bundle[b].image[0] = NULL;
-		}
-	}
+	InitShader( name, lightmapIndex );
 
 	// FIXME: set these "need" values apropriately
 	shader.needsNormal = qtrue;
@@ -4296,24 +4299,10 @@ CreateInternalShaders
 ====================
 */
 static void CreateInternalShaders( void ) {
-	int i, b;
-
 	tr.numShaders = 0;
 
 	// init the default shader
-	Com_Memset( &shader, 0, sizeof( shader ) );
-	Com_Memset( &stages, 0, sizeof( stages ) );
-	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
-		stages[i].bundle[0].texMods = texMods[i];
-		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
-			stages[i].bundle[b].image = imageAnimations[i][b];
-			stages[i].bundle[b].image[0] = NULL;
-		}
-	}
-
-	Q_strncpyz( shader.name, "<default>", sizeof( shader.name ) );
-
-	shader.lightmapIndex = LIGHTMAP_NONE;
+	InitShader( "<default>", LIGHTMAP_NONE );
 	stages[0].bundle[0].image[0] = tr.defaultImage;
 	stages[0].active = qtrue;
 	stages[0].stateBits = GLS_DEFAULT;
