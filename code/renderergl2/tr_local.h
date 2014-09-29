@@ -387,12 +387,14 @@ enum
 	TB_COLORMAP    = 0,
 	TB_DIFFUSEMAP  = 0,
 	TB_LIGHTMAP    = 1,
-	TB_LEVELSMAP   = 1,
-	TB_SHADOWMAP3  = 1,
 	TB_NORMALMAP   = 2,
 	TB_DELUXEMAP   = 3,
-	TB_SHADOWMAP2  = 3,
 	TB_SPECULARMAP = 4,
+
+	// virtual bundles for TMU indexes, not actual texture bundles in shaders
+	TB_LEVELSMAP   = 1,
+	TB_SHADOWMAP3  = 1,
+	TB_SHADOWMAP2  = 3,
 	TB_SHADOWMAP   = 5,
 	TB_CUBEMAP     = 6,
 	TB_SHADOWMAP4  = 6,
@@ -414,6 +416,8 @@ typedef struct {
 	qboolean		active;
 	
 	textureBundle_t	bundle[NUM_TEXTURE_BUNDLES];
+
+	int				multitextureEnv;			// 0, GL_MODULATE, GL_ADD
 
 	waveForm_t		rgbWave;
 	colorGen_t		rgbGen;
@@ -506,8 +510,6 @@ typedef struct shader_s {
 	qboolean	isPortal;
 
 	vec4_t distanceCull;				// opaque alpha range for foliage (inner, outer, alpha threshold, 1/(outer-inner))
-
-	int			multitextureEnv;		// 0, GL_MODULATE, GL_ADD (FIXME: put in stage)
 
 	cullType_t	cullType;				// CT_FRONT_SIDED, CT_BACK_SIDED, or CT_TWO_SIDED
 	qboolean	polygonOffset;			// set for decals and other items that must be offset 

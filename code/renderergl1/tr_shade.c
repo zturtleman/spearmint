@@ -395,10 +395,10 @@ static void DrawMultitextured( shaderCommands_t *input, int stage ) {
 	qglEnable( GL_TEXTURE_2D );
 	qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 
-	if ( r_lightmap->integer ) {
+	if ( r_lightmap->integer && pStage->bundle[1].isLightmap ) {
 		GL_TexEnv( GL_REPLACE );
 	} else {
-		GL_TexEnv( tess.shader->multitextureEnv );
+		GL_TexEnv( pStage->multitextureEnv );
 	}
 
 	qglTexCoordPointer( 2, GL_FLOAT, 0, input->svars.texcoords[1] );
@@ -1575,7 +1575,7 @@ void RB_StageIteratorGeneric( void )
 	// to avoid compiling those arrays since they will change
 	// during multipass rendering
 	//
-	if ( tess.numPasses > 1 || shader->multitextureEnv )
+	if ( tess.numPasses > 1 || ( tess.xstages[0] && tess.xstages[0]->multitextureEnv ) )
 	{
 		setArraysOnce = qfalse;
 		qglDisableClientState (GL_COLOR_ARRAY);

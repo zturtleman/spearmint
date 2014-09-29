@@ -1805,7 +1805,7 @@ shaderProgram_t *GLSL_GetGenericShaderProgram(int stage, fogType_t fogType)
 		shaderAttribs |= GENERICDEF_USE_FOG;
 	}
 
-	if (pStage->bundle[1].image[0] && tess.shader->multitextureEnv)
+	if (pStage->bundle[1].image[0] && pStage->multitextureEnv)
 	{
 		shaderAttribs |= GENERICDEF_USE_LIGHTMAP;
 	}

@@ -37,7 +37,7 @@ static char *s_shaderText;
 // dynamically allocated memory if it is valid.
 static	shaderStage_t	stages[MAX_SHADER_STAGES];		
 static	shader_t		shader;
-static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS];
+static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS][NUM_TEXTURE_BUNDLES];
 static	image_t			*imageAnimations[MAX_SHADER_STAGES][NUM_TEXTURE_BUNDLES][MAX_IMAGE_ANIMATIONS];
 static	imgFlags_t		shader_picmipFlag;
 static	qboolean		stage_ignore;
@@ -821,19 +821,19 @@ static void ParseWaveForm( char **text, waveForm_t *wave )
 ParseTexMod
 ===================
 */
-static void ParseTexMod( char *_text, shaderStage_t *stage )
+static void ParseTexMod( char *_text, textureBundle_t *bundle )
 {
 	const char *token;
 	char **text = &_text;
 	texModInfo_t *tmi;
 
-	if ( stage->bundle[0].numTexMods == TR_MAX_TEXMODS ) {
+	if ( bundle->numTexMods == TR_MAX_TEXMODS ) {
 		ri.Error( ERR_DROP, "ERROR: too many tcMod stages in shader '%s'", shader.name );
 		return;
 	}
 
-	tmi = &stage->bundle[0].texMods[stage->bundle[0].numTexMods];
-	stage->bundle[0].numTexMods++;
+	tmi = &bundle->texMods[bundle->numTexMods];
+	bundle->numTexMods++;
 
 	token = COM_ParseExt( text, qfalse );
 
@@ -1061,6 +1061,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 	qboolean stage_noMipMaps = shader.noMipMaps;
 	qboolean stage_noPicMip = shader.noPicMip;
 	int stage_picmipFlag = shader_picmipFlag;
+	int currentBundle = 0;
+	textureBundle_t *bundle = &stage->bundle[0];
 
 	stage->active = qtrue;
 
@@ -1160,20 +1162,20 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 
 			if ( !Q_stricmp( token, "$whiteimage" ) || !Q_stricmp( token, "*white" ) ) {
-				stage->bundle[0].image[0] = tr.whiteImage;
+				bundle->image[0] = tr.whiteImage;
 				continue;
 			}
 			else if ( !Q_stricmp( token, "$dlight" ) ) {
-				stage->bundle[0].image[0] = tr.dlightImage;
+				bundle->image[0] = tr.dlightImage;
 				continue;
 			}
 			else if ( !Q_stricmp( token, "$lightmap" ) )
 			{
-				stage->bundle[0].isLightmap = qtrue;
+				bundle->isLightmap = qtrue;
 				if ( shader.lightmapIndex < 0 || !tr.lightmaps ) {
-					stage->bundle[0].image[0] = tr.whiteImage;
+					bundle->image[0] = tr.whiteImage;
 				} else {
-					stage->bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex];
+					bundle->image[0] = tr.lightmaps[shader.lightmapIndex];
 				}
 				continue;
 			}
@@ -1185,11 +1187,11 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 					return qfalse;
 				}
 
-				stage->bundle[0].isLightmap = qtrue;
+				bundle->isLightmap = qtrue;
 				if ( shader.lightmapIndex < 0 ) {
-					stage->bundle[0].image[0] = tr.whiteImage;
+					bundle->image[0] = tr.whiteImage;
 				} else {
-					stage->bundle[0].image[0] = tr.deluxemaps[shader.lightmapIndex];
+					bundle->image[0] = tr.deluxemaps[shader.lightmapIndex];
 				}
 				continue;
 			}
@@ -1218,9 +1220,9 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 						flags |= IMGFLAG_GENNORMALMAP;
 				}
 
-				stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
+				bundle->image[0] = R_FindImageFile( token, type, flags );
 
-				if ( !stage->bundle[0].image[0] )
+				if ( !bundle->image[0] )
 				{
 					ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 					return qfalse;
@@ -1263,8 +1265,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 
 
-			stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
-			if ( !stage->bundle[0].image[0] )
+			bundle->image[0] = R_FindImageFile( token, type, flags );
+			if ( !bundle->image[0] )
 			{
 				ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 				return qfalse;
@@ -1281,29 +1283,29 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 
 			if ( !Q_stricmp( token, "$whiteimage" ) || !Q_stricmp( token, "*white" ) ) {
-				stage->bundle[0].image[0] = tr.whiteImage;
+				bundle->image[0] = tr.whiteImage;
 				continue;
 			}
 			else if ( !Q_stricmp( token, "$dlight" ) ) {
-				stage->bundle[0].image[0] = tr.dlightImage;
+				bundle->image[0] = tr.dlightImage;
 				continue;
 			}
 			else if ( !Q_stricmp( token, "$lightmap" ) ) {
-				stage->bundle[0].isLightmap = qtrue;
+				bundle->isLightmap = qtrue;
 				if ( shader.lightmapIndex < 0 || !tr.lightmaps ) {
-					stage->bundle[0].image[0] = tr.whiteImage;
+					bundle->image[0] = tr.whiteImage;
 				} else {
-					stage->bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex];
+					bundle->image[0] = tr.lightmaps[shader.lightmapIndex];
 				}
 				continue;
 			} else {
-				stage->bundle[0].image[0] = R_FindImageFile( token, IMGTYPE_COLORALPHA,
+				bundle->image[0] = R_FindImageFile( token, IMGTYPE_COLORALPHA,
 						IMGFLAG_LIGHTMAP | IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE );
-				if ( !stage->bundle[0].image[0] ) {
+				if ( !bundle->image[0] ) {
 					ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 					return qfalse;
 				}
-				stage->bundle[0].isLightmap = qtrue;
+				bundle->isLightmap = qtrue;
 			}
 		}
 		//
@@ -1314,17 +1316,17 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			int	totalImages = 0;
 			imgFlags_t flags = IMGFLAG_NONE;
 
-			stage->bundle[0].loopingImageAnim = qtrue;
+			bundle->loopingImageAnim = qtrue;
 
 			if (!Q_stricmp( token, "clampAnimMap" )) {
 				flags |= IMGFLAG_CLAMPTOEDGE;
 			}
 			else if (!Q_stricmp( token, "oneshotAnimMap" )) {
-				stage->bundle[0].loopingImageAnim = qfalse;
+				bundle->loopingImageAnim = qfalse;
 			}
 			else if (!Q_stricmp( token, "oneshotClampAnimMap" )) {
 				flags |= IMGFLAG_CLAMPTOEDGE;
-				stage->bundle[0].loopingImageAnim = qfalse;
+				bundle->loopingImageAnim = qfalse;
 			}
 
 			token = COM_ParseExt( text, qfalse );
@@ -1333,7 +1335,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for '%s' keyword in shader '%s'\n", keyword, shader.name );
 				return qfalse;
 			}
-			stage->bundle[0].imageAnimationSpeed = atof( token );
+			bundle->imageAnimationSpeed = atof( token );
 
 			if (!stage_noMipMaps)
 				flags |= IMGFLAG_MIPMAP;
@@ -1349,15 +1351,15 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				if ( !token[0] ) {
 					break;
 				}
-				num = stage->bundle[0].numImageAnimations;
+				num = bundle->numImageAnimations;
 				if ( num < MAX_IMAGE_ANIMATIONS ) {
-					stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
-					if ( !stage->bundle[0].image[num] )
+					bundle->image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
+					if ( !bundle->image[num] )
 					{
 						ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 						return qfalse;
 					}
-					stage->bundle[0].numImageAnimations++;
+					bundle->numImageAnimations++;
 				}
 				totalImages++;
 			}
@@ -1375,10 +1377,10 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for 'videoMap' keyword in shader '%s'\n", shader.name );
 				return qfalse;
 			}
-			stage->bundle[0].videoMapHandle = ri.CIN_PlayCinematic( token, 0, 0, 256, 256, (CIN_loop | CIN_silent | CIN_shader));
-			if (stage->bundle[0].videoMapHandle != -1) {
-				stage->bundle[0].isVideoMap = qtrue;
-				stage->bundle[0].image[0] = tr.scratchImage[stage->bundle[0].videoMapHandle];
+			bundle->videoMapHandle = ri.CIN_PlayCinematic( token, 0, 0, 256, 256, (CIN_loop | CIN_silent | CIN_shader));
+			if (bundle->videoMapHandle != -1) {
+				bundle->isVideoMap = qtrue;
+				bundle->image[0] = tr.scratchImage[bundle->videoMapHandle];
 			}
 		}
 		//
@@ -1894,26 +1896,26 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 
 			if ( !Q_stricmp( token, "environment" ) )
 			{
-				stage->bundle[0].tcGen = TCGEN_ENVIRONMENT_MAPPED;
+				bundle->tcGen = TCGEN_ENVIRONMENT_MAPPED;
 			}
 			else if ( !Q_stricmp( token, "cel" ) )
 			{
-				stage->bundle[0].tcGen = TCGEN_ENVIRONMENT_CELSHADE_MAPPED;
+				bundle->tcGen = TCGEN_ENVIRONMENT_CELSHADE_MAPPED;
 			}
 			else if ( !Q_stricmp( token, "lightmap" ) )
 			{
-				stage->bundle[0].tcGen = TCGEN_LIGHTMAP;
+				bundle->tcGen = TCGEN_LIGHTMAP;
 			}
 			else if ( !Q_stricmp( token, "texture" ) || !Q_stricmp( token, "base" ) )
 			{
-				stage->bundle[0].tcGen = TCGEN_TEXTURE;
+				bundle->tcGen = TCGEN_TEXTURE;
 			}
 			else if ( !Q_stricmp( token, "vector" ) )
 			{
-				ParseVector( text, 3, stage->bundle[0].tcGenVectors[0] );
-				ParseVector( text, 3, stage->bundle[0].tcGenVectors[1] );
+				ParseVector( text, 3, bundle->tcGenVectors[0] );
+				ParseVector( text, 3, bundle->tcGenVectors[1] );
 
-				stage->bundle[0].tcGen = TCGEN_VECTOR;
+				bundle->tcGen = TCGEN_VECTOR;
 			}
 			else 
 			{
@@ -1936,7 +1938,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				Q_strcat( buffer, sizeof (buffer), " " );
 			}
 
-			ParseTexMod( buffer, stage );
+			ParseTexMod( buffer, bundle );
 
 			continue;
 		}
@@ -1956,6 +1958,24 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		else if ( !Q_stricmp( token, "noDepthTest" ) )
 		{
 			depthTestBits = GLS_DEPTHTEST_DISABLE;
+			continue;
+		}
+		//
+		// nextbundle
+		//
+		else if ( !Q_stricmp( token, "nextbundle" ) )
+		{
+			if ( !qglActiveTextureARB ) {
+				ri.Printf( PRINT_WARNING, "WARNING: nextbundle keyword in shader '%s' but multitexture is not available\n", shader.name );
+				return qfalse;
+			}
+			// ZTM: Note: Rend2 has more magic bundles so hard code to 2.
+			if ( currentBundle+1 >= 2/*NUM_TEXTURE_BUNDLES*/ ) {
+				ri.Printf( PRINT_WARNING, "WARNING: too many 'nextbundle' keywords in shader '%s' (max %d bundles)\n", shader.name, 2/*NUM_TEXTURE_BUNDLES*/ );
+				return qfalse;
+			}
+			currentBundle++;
+			bundle = &stage->bundle[currentBundle];
 			continue;
 		}
 		//
@@ -2001,6 +2021,31 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 	}
 
 	//
+	// handle multiple bundles
+	//
+	if ( stage->bundle[1].image[0] ) {
+		// ZTM: Note: In FAKK stages with nextbundle don't use lightmap if r_lightmap 1, suggesting this swap isn't done.
+		//				though I'm not sure what it effects besides r_lightmap. I don't think it matter.
+		// make sure that lightmaps are in bundle 1 for 3dfx
+		if ( stage->bundle[0].isLightmap )
+		{
+			textureBundle_t tmpBundle;
+
+			tmpBundle = stage->bundle[0];
+			stage->bundle[0] = stage->bundle[1];
+			stage->bundle[1] = tmpBundle;
+		}
+
+		// ZTM: My guess based on multitexture collapse. I saw a shader with nextbundle and blendfunc GL_ONE GL_ONE so probably uses GL_ADD. Should try to check if GL_DECAL is used? 
+		// GL_ADD is a separate extension
+		if ( blendSrcBits == GLS_SRCBLEND_ONE && blendDstBits == GLS_DSTBLEND_ONE && glConfig.textureEnvAddAvailable ) {
+			stage->multitextureEnv = GL_ADD;
+		} else {
+			stage->multitextureEnv = GL_MODULATE;
+		}
+	}
+
+	//
 	// if cgen isn't explicitly specified, use either identity or identitylighting
 	//
 	if ( stage->rgbGen == CGEN_BAD ) {
@@ -2018,13 +2063,15 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 	// and shader doesn't specify nolightmap (or also has pointlight),
 	// use diffuse cgen
 	//
-	if (stage->bundle[0].isLightmap && shader.lightmapIndex < 0 &&
-		stage->bundle[0].image[0] == tr.whiteImage)
+	if (((stage->bundle[0].isLightmap && stage->bundle[0].image[0] == tr.whiteImage ) ||
+		( stage->bundle[1].isLightmap && stage->bundle[1].image[0] == tr.whiteImage ) )
+		&& shader.lightmapIndex < 0 )
 	{
 		if ( !( shader.surfaceFlags & SURF_NOLIGHTMAP ) || ( shader.surfaceFlags & SURF_POINTLIGHT ) ) {
 			// surfaceParm pointlight, vertex-approximated surfaces, non-lightmapped misc_models, or not a world surface
 			ri.Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap stage but no lightmap, using diffuse lighting.\n", shader.name );
 			stage->bundle[0].isLightmap = qfalse;
+			stage->bundle[1].isLightmap = qfalse;
 			stage->rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
 		} else {
 			ri.Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap stage but specifies no lightmap, using white image.\n", shader.name );
@@ -3333,6 +3380,11 @@ static qboolean CollapseMultitexture( void ) {
 		return qfalse;
 	}
 
+	// make sure not already using multitexture
+	if ( stages[0].multitextureEnv || stages[1].multitextureEnv ) {
+		return qfalse;
+	}
+
 	abits = stages[0].stateBits;
 	bbits = stages[1].stateBits;
 
@@ -3407,7 +3459,7 @@ static qboolean CollapseMultitexture( void ) {
 	}
 
 	// set the new blend state bits
-	shader.multitextureEnv = collapse[i].multitextureEnv;
+	stages[0].multitextureEnv = collapse[i].multitextureEnv;
 	stages[0].stateBits &= ~( GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS );
 	stages[0].stateBits |= collapse[i].multitextureBlend;
 
@@ -3443,11 +3495,18 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	// reuse diffuse, mark others inactive
 	diffuse->type = ST_GLSL;
+	diffuse->multitextureEnv = 0;
 
 	if (lightmap)
 	{
 		//ri.Printf(PRINT_ALL, ", lightmap");
 		CopyBundle( &lightmap->bundle[0], &diffuse->bundle[TB_LIGHTMAP] );
+		defs |= LIGHTDEF_USE_LIGHTMAP;
+	}
+	else if (diffuse->bundle[1].isLightmap)
+	{
+		// shader using nextbundle, lightmap already setup
+		//ri.Printf(PRINT_ALL, ", lightmap");
 		defs |= LIGHTDEF_USE_LIGHTMAP;
 	}
 	else if (useLightVector)
@@ -3465,6 +3524,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		CopyBundle( &lightmap->bundle[0], &diffuse->bundle[TB_DELUXEMAP] );
 		diffuse->bundle[TB_DELUXEMAP].image[0] = tr.deluxemaps[shader.lightmapIndex];
 	}
+	// ZTM: FIXME: handle shader using nextbundle with deluxmapping?
 
 	if (r_normalMapping->integer)
 	{
@@ -3574,6 +3634,17 @@ static int CollapseStagesToGLSL(void)
 			{
 				skip = qtrue;
 				break;
+			}
+
+			if (pStage->multitextureEnv)
+			{
+				// ZTM: TODO: add more checks here? tcmod, tcgen, etc?
+				if ( pStage->multitextureEnv != GL_MODULATE
+					|| !pStage->bundle[1].isLightmap )
+				{
+					skip = qtrue;
+					break;
+				}
 			}
 
 			if (pStage->bundle[0].tcGen == TCGEN_LIGHTMAP)
@@ -3789,6 +3860,10 @@ static int CollapseStagesToGLSL(void)
 			if (pStage->adjustColorsForFog)
 				continue;
 
+			// ZTM: FIXME? probably need special handling for 'nextbundle' multitexture here
+			if (pStage->multitextureEnv)
+				continue;
+
 			if (pStage->bundle[TB_DIFFUSEMAP].tcGen == TCGEN_LIGHTMAP)
 			{
 				pStage->glslShaderGroup = tr.lightallShader;
@@ -3812,6 +3887,9 @@ static int CollapseStagesToGLSL(void)
 				continue;
 
 			if (pStage->adjustColorsForFog)
+				continue;
+
+			if (pStage->multitextureEnv)
 				continue;
 
 			if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE)
@@ -4246,9 +4324,8 @@ static void InitShader( const char *name, int lightmapIndex ) {
 	shader.lightmapIndex = lightmapIndex;
 
 	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
-		stages[i].bundle[0].texMods = texMods[i];
-
 		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
+			stages[i].bundle[b].texMods = texMods[i][b];
 			stages[i].bundle[b].image = imageAnimations[i][b];
 			stages[i].bundle[b].image[0] = NULL;
 		}
@@ -4272,6 +4349,7 @@ from the current global working shader
 */
 static shader_t *FinishShader( void ) {
 	int stage;
+	int bundle;
 	qboolean		hasLightmapStage;
 	qboolean		vertexLightmap;
 
@@ -4346,14 +4424,24 @@ static shader_t *FinishShader( void ) {
 		//
 		// default texture coordinate generation
 		//
-		if ( pStage->bundle[0].isLightmap ) {
-			if ( pStage->bundle[0].tcGen == TCGEN_BAD ) {
-				pStage->bundle[0].tcGen = TCGEN_LIGHTMAP;
-			}
-			hasLightmapStage = qtrue;
-		} else {
-			if ( pStage->bundle[0].tcGen == TCGEN_BAD ) {
-				pStage->bundle[0].tcGen = TCGEN_TEXTURE;
+		for ( bundle = 0; bundle < NUM_TEXTURE_BUNDLES; bundle++ ) {
+			textureBundle_t *pBundle = &pStage->bundle[bundle];
+
+			if ( !pBundle->image[0] )
+				break;
+
+			if ( bundle != TB_COLORMAP && bundle != TB_LIGHTMAP )
+				continue;
+
+			if ( pBundle->isLightmap ) {
+				if ( pBundle->tcGen == TCGEN_BAD ) {
+					pBundle->tcGen = TCGEN_LIGHTMAP;
+				}
+				hasLightmapStage = qtrue;
+			} else {
+				if ( pBundle->tcGen == TCGEN_BAD ) {
+					pBundle->tcGen = TCGEN_TEXTURE;
+				}
 			}
 		}
 
@@ -4921,11 +5009,12 @@ void	R_ShaderList_f (void) {
 		} else {
 			ri.Printf (PRINT_ALL, "  ");
 		}
-		if ( shader->multitextureEnv == GL_ADD ) {
+		// ZTM: TODO? Report MT if any state uses multitexture?
+		if ( shader->numUnfoggedPasses > 0 && shader->stages[0]->multitextureEnv == GL_ADD ) {
 			ri.Printf( PRINT_ALL, "MT(a) " );
-		} else if ( shader->multitextureEnv == GL_MODULATE ) {
+		} else if ( shader->numUnfoggedPasses > 0 && shader->stages[0]->multitextureEnv == GL_MODULATE ) {
 			ri.Printf( PRINT_ALL, "MT(m) " );
-		} else if ( shader->multitextureEnv == GL_DECAL ) {
+		} else if ( shader->numUnfoggedPasses > 0 && shader->stages[0]->multitextureEnv == GL_DECAL ) {
 			ri.Printf( PRINT_ALL, "MT(d) " );
 		} else {
 			ri.Printf( PRINT_ALL, "      " );
