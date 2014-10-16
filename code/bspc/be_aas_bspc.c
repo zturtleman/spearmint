@@ -218,15 +218,6 @@ void Com_DPrintf(const char *fmt, ...)
 } //end of the function Com_DPrintf
 //===========================================================================
 //
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-int COM_Compress( char *data_p ) {
-	return strlen(data_p);
-}
-//===========================================================================
-//
 // Parameter:				-
 // Returns:					-
 // Changes Globals:		-

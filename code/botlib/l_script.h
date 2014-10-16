@@ -47,10 +47,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 //maximum token length
 #define MAX_TOKEN					1024
 
-#if defined(BSPC) && !defined(QDECL)
-#define QDECL
-#endif
-
 
 //script flags
 #define SCFL_NOERRORS				0x0001

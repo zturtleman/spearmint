@@ -32,22 +32,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "cm_local.h"
 #include "bsp.h"
 
-#ifdef BSPC
-
-void SetPlaneSignbits (cplane_t *out) {
-	int	bits, j;
-
-	// for fast box on planeside test
-	bits = 0;
-	for (j=0 ; j<3 ; j++) {
-		if (out->normal[j] < 0) {
-			bits |= 1<<j;
-		}
-	}
-	out->signbits = bits;
-}
-#endif //BSPC
-
 // to allow boxes to be treated as brush models, we allocate
 // some extra indexes along with those needed by the map
 #define BOX_LEAF_BRUSHES	1

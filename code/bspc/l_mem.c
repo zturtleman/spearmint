@@ -418,7 +418,7 @@ void Hunk_ClearHigh(void)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void *Hunk_Alloc( int size )
+void *Hunk_Alloc( int size, ha_pref preference )
 {
 	memhunk_t *h;
 

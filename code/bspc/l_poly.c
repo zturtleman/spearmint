@@ -30,12 +30,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include <stdlib.h>
 #include "l_cmd.h"
-#include "l_math.h"
+//#include "l_math.h"
 #include "l_poly.h"
 #include "l_log.h"
 #include "l_mem.h"
 
 #define	BOGUS_RANGE		65535
+//#define EQUAL_EPSILON   0.001
 
 extern int numthreads;
 

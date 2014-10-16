@@ -486,7 +486,7 @@ node_t *PointInLeaf (node_t *node, vec3_t point)
 // Changes Globals:		-
 //===========================================================================
 #if 0
-int BoxOnPlaneSide (vec3_t mins, vec3_t maxs, plane_t *plane)
+int BSPC_BoxOnPlaneSide (vec3_t mins, vec3_t maxs, plane_t *plane)
 {
 	int		side;
 	int		i;
@@ -531,7 +531,7 @@ int BoxOnPlaneSide (vec3_t mins, vec3_t maxs, plane_t *plane)
 	return side;
 }
 #else
-int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, plane_t *p)
+int BSPC_BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, plane_t *p)
 {
 	float	dist1, dist2;
 	int sides;
@@ -635,7 +635,7 @@ int QuickTestBrushToPlanenum (bspbrush_t *brush, int planenum, int *numsplits)
 	}
 
 	// box on plane side
-	s = BoxOnPlaneSide (brush->mins, brush->maxs, plane);
+	s = BSPC_BoxOnPlaneSide (brush->mins, brush->maxs, plane);
 
 	// if both sides, count the visible faces split
 	if (s == PSIDE_BOTH)
@@ -702,7 +702,7 @@ int TestBrushToPlanenum (bspbrush_t *brush, int planenum,
 		} //end for
 
 		// box on plane side
-		s = BoxOnPlaneSide (brush->mins, brush->maxs, plane);
+		s = BSPC_BoxOnPlaneSide (brush->mins, brush->maxs, plane);
 
 		if (s != PSIDE_BOTH) return s;
 	} //end if

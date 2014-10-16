@@ -30,6 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 
 #include <stdlib.h>
+#include "../qcommon/q_shared.h"
 #include "l_cmd.h"
 #include "l_math.h"
 #include "l_poly.h"
@@ -284,9 +285,7 @@ extern	int c_squattbrushes;
 //finds a float plane for the given normal and distance
 int FindFloatPlane(vec3_t normal, vec_t dist);
 //returns the plane type for the given normal
-int PlaneTypeForNormal(vec3_t normal);
-//returns the plane defined by the three given points
-int PlaneFromPoints(int *p0, int *p1, int *p2);
+int BSPC_PlaneTypeForNormal(vec3_t normal);
 //add bevels to the map brush
 void AddBrushBevels(mapbrush_t *b);
 //makes brush side windings for the brush

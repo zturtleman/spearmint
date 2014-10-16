@@ -129,7 +129,7 @@ qboolean FindFileInPak(char *pakfile, char *filename, foundfile_t *file)
 		//convert the dir entry name
 		ConvertPath(packfiles[i].name);
 		//compare the dir entry name with the filename
-		if (Q_strcasecmp(packfiles[i].name, path) == 0)
+		if (Q_stricmp(packfiles[i].name, path) == 0)
 		{
 			strcpy(file->filename, pakfile);
 			file->offset = LittleLong(packfiles[i].filepos);

@@ -49,6 +49,11 @@ typedef struct
 #define WE_POINTOFFPLANE			4
 #define WE_DEGENERATEEDGE			5
 #define WE_NONCONVEX					6
+//
+#define	SIDE_FRONT		0
+#define	SIDE_ON			2
+#define	SIDE_BACK		1
+#define	SIDE_CROSS		-2
 
 //allocates a winding
 winding_t *AllocWinding (int points);

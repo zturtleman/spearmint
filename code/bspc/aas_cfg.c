@@ -155,28 +155,6 @@ void DefaultCfg(void)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-__attribute__ ((format (printf, 1, 2))) char	* QDECL va( char *format, ... )
-{
-	va_list		argptr;
-	static char string[2][32000]; // in case va is called by nested functions
-	static int	index = 0;
-	char		*buf;
-
-	buf = string[index & 1];
-	index++;
-
-	va_start (argptr, format);
-	Q_vsnprintf (buf, sizeof(*string), format, argptr);
-	va_end (argptr);
-
-	return buf;
-} //end of the function va
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
 void SetCfgLibVars(void)
 {
 	int i;

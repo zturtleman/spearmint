@@ -541,24 +541,6 @@ int AAS_ValidEntity(entity_t *mapent)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int AAS_TransformPlane(int planenum, vec3_t origin, vec3_t angles)
-{
-	float newdist, matrix[3][3];
-	vec3_t normal;
-
-	//rotate the node plane
-	VectorCopy(mapplanes[planenum].normal, normal);
-	CreateRotationMatrix(angles, matrix);
-	RotatePoint(normal, matrix);
-	newdist = mapplanes[planenum].dist + DotProduct(normal, origin);
-	return FindFloatPlane(normal, newdist);
-} //end of the function AAS_TransformPlane
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
 void AAS_PositionBrush(entity_t *mapent, mapbrush_t *brush)
 {
 	side_t *s;

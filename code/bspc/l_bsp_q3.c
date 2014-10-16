@@ -29,7 +29,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 
 #include "l_cmd.h"
-#include "l_math.h"
 #include "l_mem.h"
 #include "l_log.h"
 #include "l_poly.h"

@@ -54,10 +54,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../bspc/l_mem.h"
 #include "l_precomp.h"
 #include "l_struct.h"
-
-#define qtrue	true
-#define qfalse	false
-#define Com_sprintf snprintf
 #endif //BSPC
 
 //===========================================================================

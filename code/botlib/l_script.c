@@ -70,10 +70,6 @@ typedef enum {qfalse, qtrue}	qboolean;
 #include "../bspc/qbsp.h"
 #include "../bspc/l_log.h"
 #include "../bspc/l_mem.h"
-
-#define qtrue	true
-#define qfalse	false
-#define Com_sprintf snprintf
 #endif //BSPC
 
 

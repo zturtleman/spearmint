@@ -73,11 +73,6 @@ typedef enum {qfalse, qtrue}	qboolean;
 #include "../bspc/l_log.h"
 #include "../bspc/l_mem.h"
 #include "l_precomp.h"
-
-#define qtrue	true
-#define qfalse	false
-#define Q_stricmp	stricmp
-
 #endif //BSPC
 
 //#define DEBUG_EVAL

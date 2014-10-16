@@ -52,7 +52,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #ifndef __BYTEBOOL__
 #define __BYTEBOOL__
-typedef enum {false, true} qboolean;
+#include "../qcommon/q_shared.h"
+#define false qfalse
+#define true qtrue
 typedef unsigned char byte;
 #endif
 
@@ -64,10 +66,6 @@ typedef unsigned char byte;
 extern int myargc;
 extern char **myargv;
 
-char *strupr (char *in);
-char *strlower (char *in);
-int Q_strncasecmp (char *s1, char *s2, int n);
-int Q_strcasecmp (char *s1, char *s2);
 void Q_getwd (char *out, size_t size);
 
 // buffer size safe library replacements
@@ -107,15 +105,6 @@ void 	ExtractFileBase (char *path, char *dest);
 void	ExtractFileExtension (char *path, char *dest);
 
 int 	ParseNum (char *str);
-
-short	BigShort (short l);
-short	LittleShort (short l);
-int		BigLong (int l);
-int		LittleLong (int l);
-float	BigFloat (float l);
-float	LittleFloat (float l);
-
-char *COM_Parse (char *data);
 
 extern	char		com_token[1024];
 extern	qboolean	com_eof;

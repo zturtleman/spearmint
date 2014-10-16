@@ -94,7 +94,7 @@ int PlaneSignBits(vec3_t normal)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int PlaneTypeForNormal(vec3_t normal)
+int BSPC_PlaneTypeForNormal(vec3_t normal)
 {
 	vec_t	ax, ay, az;
 
@@ -115,7 +115,7 @@ int PlaneTypeForNormal(vec3_t normal)
 	if (ay >= ax && ay >= az)
 		return PLANE_ANYY;
 	return PLANE_ANYZ;
-} //end of the function PlaneTypeForNormal
+} //end of the function BSPC_PlaneTypeForNormal
 //===========================================================================
 //
 // Parameter:				-
@@ -179,7 +179,7 @@ int CreateNewFloatPlane (vec3_t normal, vec_t dist)
 	p = &mapplanes[nummapplanes];
 	VectorCopy (normal, p->normal);
 	p->dist = dist;
-	p->type = (p+1)->type = PlaneTypeForNormal (p->normal);
+	p->type = (p+1)->type = BSPC_PlaneTypeForNormal (p->normal);
 	p->signbits = PlaneSignBits(p->normal);
 
 	VectorSubtract (vec3_origin, normal, (p+1)->normal);
@@ -214,7 +214,8 @@ int CreateNewFloatPlane (vec3_t normal, vec_t dist)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void SnapVector(vec3_t normal)
+// ZTM: this is the same as CM_SnapVector
+void BSPC_SnapVector(vec3_t normal)
 {
 	int		i;
 
@@ -233,7 +234,7 @@ void SnapVector(vec3_t normal)
 			break;
 		}
 	}
-} //end of the function SnapVector
+} //end of the function BSPC_SnapVector
 //===========================================================================
 //
 // Parameter:				-
@@ -242,7 +243,7 @@ void SnapVector(vec3_t normal)
 //===========================================================================
 void SnapPlane(vec3_t normal, vec_t *dist)
 {
-	SnapVector(normal);
+	BSPC_SnapVector(normal);
 
 	if (fabs(*dist-Q_rint(*dist)) < DIST_EPSILON)
 		*dist = Q_rint(*dist);
@@ -301,26 +302,6 @@ int FindFloatPlane (vec3_t normal, vec_t dist)
 	return i;
 } //end of the function FindFloatPlane
 #endif
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-int PlaneFromPoints (int *p0, int *p1, int *p2)
-{
-	vec3_t	t1, t2, normal;
-	vec_t	dist;
-
-	VectorSubtract (p0, p1, t1);
-	VectorSubtract (p2, p1, t2);
-	CrossProduct (t1, t2, normal);
-	VectorNormalize (normal);
-
-	dist = DotProduct (p0, normal);
-
-	return FindFloatPlane (normal, dist);
-} //end of the function PlaneFromPoints
 //===========================================================================
 // Adds any additional planes necessary to allow the brush to be expanded
 // against axial bounding boxes
@@ -410,7 +391,7 @@ void AddBrushBevels (mapbrush_t *b)
 			VectorSubtract (w->p[j], w->p[k], vec);
 			if (VectorNormalize (vec) < 0.5)
 				continue;
-			SnapVector (vec);
+			BSPC_SnapVector (vec);
 			for (k=0 ; k<3 ; k++)
 				if ( vec[k] == -1 || vec[k] == 1)
 					break;	// axial

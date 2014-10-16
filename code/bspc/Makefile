@@ -432,6 +432,8 @@ BSPC_OBJS = \
 	$(B)/qcommon/cm_patch.o\
 	$(B)/qcommon/cm_test.o\
 	$(B)/qcommon/cm_trace.o\
+	$(B)/qcommon/q_math.o\
+	$(B)/qcommon/q_shared.o\
 	$(B)/bspc/csg.o\
 	$(B)/bspc/l_bsp_ent.o\
 	$(B)/bspc/l_bsp_q3.o\
