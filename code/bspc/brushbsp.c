@@ -377,7 +377,7 @@ node_t *AllocNode (void)
 bspbrush_t *AllocBrush (int numsides)
 {
 	bspbrush_t	*bb;
-	int			c;
+	size_t		c;
 
 	c = (size_t)&(((bspbrush_t *)0)->sides[numsides]);
 	bb = GetMemory(c);
@@ -439,7 +439,7 @@ void FreeBrushList (bspbrush_t *brushes)
 bspbrush_t *CopyBrush (bspbrush_t *brush)
 {
 	bspbrush_t *newbrush;
-	int			size;
+	size_t		size;
 	int			i;
 
 	size = (size_t)&(((bspbrush_t *)0)->sides[brush->numsides]);
