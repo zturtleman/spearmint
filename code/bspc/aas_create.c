@@ -1033,7 +1033,7 @@ void AAS_Create(char *aasfile)
 
 	//for a possible leak file
 	strcpy(source, aasfile);
-	StripExtension(source);
+	COM_StripExtension(source, source, sizeof(source));
 	//the time started
 	start_time = I_FloatTime();
 	//set the default number of threads (depends on number of processors)

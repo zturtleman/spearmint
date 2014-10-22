@@ -50,13 +50,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include <stdarg.h>
 #include <stdint.h>
 
-#ifndef __BYTEBOOL__
-#define __BYTEBOOL__
 #include "../qcommon/q_shared.h"
+
 #define false qfalse
 #define true qtrue
-typedef unsigned char byte;
-#endif
 
 // the dec offsetof macro doesnt work very well...
 #define myoffsetof(type,identifier) ((size_t)&((type *)0)->identifier)
@@ -66,14 +63,7 @@ typedef unsigned char byte;
 extern int myargc;
 extern char **myargv;
 
-void Q_getwd (char *out, size_t size);
-
-// buffer size safe library replacements
-void	Q_strncpyz( char *dest, const char *src, int destsize );
-void	Q_strcat( char *dest, int size, const char *src );
-
 int Q_filelength (FILE *f);
-int	FileTime (char *path);
 
 void	Q_mkdir (char *path);
 
@@ -93,21 +83,10 @@ void	SafeWrite (FILE *f, void *buffer, int count);
 int LoadFile (char *filename, void **bufferptr, int offset, int length);
 int TryLoadFile (char *filename, void **bufferptr);
 void SaveFile (char *filename, void *buffer, int count);
-qboolean	FileExists (char *filename);
-
-void 	DefaultExtension (char *path, char *extension);
-void 	DefaultPath (char *path, char *basepath);
-void 	StripFilename (char *path);
-void 	StripExtension (char *path);
 
 void 	ExtractFilePath (char *path, char *dest);
 void 	ExtractFileBase (char *path, char *dest);
 void	ExtractFileExtension (char *path, char *dest);
-
-int 	ParseNum (char *str);
-
-extern	char		com_token[1024];
-extern	qboolean	com_eof;
 
 char *copystring(char *s);
 
@@ -117,24 +96,12 @@ void CRC_ProcessByte(unsigned short *crcvalue, byte data);
 unsigned short CRC_Value(unsigned short crcvalue);
 
 void	CreatePath (char *path);
-void	QCopyFile (char *from, char *to);
-
-extern	qboolean		archive;
-extern	char			archivedir[1024];
 
 
 extern	qboolean verbose;
 void qprintf (char *format, ...) __attribute__ ((format (printf, 1, 2)));
 
 void ExpandWildcards (int *argc, char ***argv);
-
-
-// for compression routines
-typedef struct
-{
-	byte	*data;
-	int		count;
-} cblock_t;
 
 #endif
 

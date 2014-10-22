@@ -54,12 +54,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 int myargc;
 char **myargv;
 
-char		com_token[1024];
-qboolean	com_eof;
-
-qboolean		archive;
-char			archivedir[1024];
-
 
 /*
 ===================
@@ -231,16 +225,6 @@ double I_FloatTime (void)
 #endif
 }
 
-void Q_getwd (char *out, size_t size)
-{
-	assert(size >= 2);
-	if (NULL == getcwd(out, size - 2)) {
-		perror("getcwd");
-		exit(1);
-	}
-	strncat(out, PATHSEPERATOR_STR, size);
-}
-
 
 void Q_mkdir (char *path)
 {
@@ -253,23 +237,6 @@ void Q_mkdir (char *path)
 #endif
 	if (errno != EEXIST)
 		Error ("mkdir %s: %s",path, strerror(errno));
-}
-
-/*
-============
-FileTime
-
-returns -1 if not present
-============
-*/
-int	FileTime (char *path)
-{
-	struct	stat	buf;
-
-	if (stat (path,&buf) == -1)
-		return -1;
-
-	return buf.st_mtime;
 }
 
 
@@ -362,23 +329,6 @@ void SafeWrite (FILE *f, void *buffer, int count)
 		Error ("File write failure");
 }
 
-
-/*
-==============
-FileExists
-==============
-*/
-qboolean	FileExists (char *filename)
-{
-	FILE	*f;
-
-	f = fopen (filename, "r");
-	if (!f)
-		return false;
-	fclose (f);
-	return true;
-}
-
 /*
 ==============
 LoadFile
@@ -446,65 +396,6 @@ void    SaveFile (char *filename, void *buffer, int count)
 }
 
 
-
-void DefaultExtension (char *path, char *extension)
-{
-	char    *src;
-//
-// if path doesnt have a .EXT, append extension
-// (extension should include the .)
-//
-	src = path + strlen(path) - 1;
-
-	while (*src != PATHSEPERATOR && src != path)
-	{
-		if (*src == '.')
-			return;                 // it has an extension
-		src--;
-	}
-
-	strcat (path, extension);
-}
-
-
-void DefaultPath (char *path, char *basepath)
-{
-	char    temp[128];
-
-	if (path[0] == PATHSEPERATOR)
-		return;                   // absolute path location
-	strcpy (temp,path);
-	strcpy (path,basepath);
-	strcat (path,temp);
-}
-
-
-void    StripFilename (char *path)
-{
-	int             length;
-
-	length = strlen(path)-1;
-	while (length > 0 && path[length] != PATHSEPERATOR)
-		length--;
-	path[length] = 0;
-}
-
-void    StripExtension (char *path)
-{
-	int             length;
-
-	length = strlen(path)-1;
-	while (length > 0 && path[length] != '.')
-	{
-		length--;
-		if (path[length] == '/')
-			return;		// no extension
-	}
-	if (length)
-		path[length] = 0;
-}
-
-
 /*
 ====================
 Extract file parts
@@ -565,47 +456,6 @@ void ExtractFileExtension (char *path, char *dest)
 	}
 
 	strcpy (dest,src);
-}
-
-
-/*
-==============
-ParseNum / ParseHex
-==============
-*/
-int ParseHex (char *hex)
-{
-	char    *str;
-	int    num;
-
-	num = 0;
-	str = hex;
-
-	while (*str)
-	{
-		num <<= 4;
-		if (*str >= '0' && *str <= '9')
-			num += *str-'0';
-		else if (*str >= 'a' && *str <= 'f')
-			num += 10 + *str-'a';
-		else if (*str >= 'A' && *str <= 'F')
-			num += 10 + *str-'A';
-		else
-			Error ("Bad hex number: %s",hex);
-		str++;
-	}
-
-	return num;
-}
-
-
-int ParseNum (char *str)
-{
-	if (str[0] == '$')
-		return ParseHex (str+1);
-	if (str[0] == '0' && str[1] == 'x')
-		return ParseHex (str+2);
-	return atol (str);
 }
 
 
@@ -698,37 +548,8 @@ void	CreatePath (char *path)
 	}
 }
 
-
-/*
-============
-QCopyFile
-
-  Used to archive source files
-============
-*/
-void QCopyFile (char *from, char *to)
-{
-	void	*buffer;
-	int		length;
-
-	length = LoadFile (from, &buffer, 0, 0);
-	CreatePath (to);
-	SaveFile (to, buffer, length);
-	FreeMemory(buffer);
-}
-
 void FS_FreeFile(void *buf)
 {
 	FreeMemory(buf);
 } //end of the function FS_FreeFile
 
-int FS_ReadFileAndCache(const char *qpath, void **buffer)
-{
-	return LoadFile((char *) qpath, buffer, 0, 0);
-} //end of the function FS_ReadFileAndCache
-
-int FS_FOpenFileRead( const char *filename, FILE **file, qboolean uniqueFILE )
-{
-	*file = fopen(filename, "rb");
-	return (*file != NULL);
-} //end of the function FS_FOpenFileRead
