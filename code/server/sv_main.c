@@ -45,6 +45,7 @@ cvar_t	*sv_rconPassword;		// password for remote server commands
 cvar_t	*sv_privatePassword;		// password for the privateClient slots
 cvar_t	*sv_allowDownload;
 cvar_t	*sv_maxclients;
+cvar_t	*sv_cheats;
 
 cvar_t	*sv_privateClients;		// number of clients reserved for password
 cvar_t	*sv_hostname;
@@ -772,6 +773,10 @@ void SVC_Info( netadr_t from ) {
 	Info_SetValueForKey( infostring, "gametype", sv_gametypeNetName->string );
 	Info_SetValueForKey( infostring, "pure", va("%i", sv_pure->integer ) );
 	Info_SetValueForKey(infostring, "g_needpass", va("%d", Cvar_VariableIntegerValue("g_needpass")));
+
+	if (sv_cheats->integer) {
+		Info_SetValueForKey( infostring, "cheats", va("%i", sv_cheats->integer ) );
+	}
 
 #ifdef USE_VOIP
 	if (sv_voip->integer) {
