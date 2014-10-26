@@ -699,6 +699,20 @@ void SVC_Info( netadr_t from ) {
 		return;
 	}
 
+	// Prevent using getinfo as an amplifier
+	if ( SVC_RateLimitAddress( from, 10, 1000 ) ) {
+		Com_DPrintf( "SVC_Info: rate limit from %s exceeded, dropping request\n",
+			NET_AdrToString( from ) );
+		return;
+	}
+
+	// Allow getinfo to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) ) {
+		Com_DPrintf( "SVC_Info: rate limit exceeded, dropping request\n" );
+		return;
+	}
+
 	// If not a public server and request is from a master server, don't reply.
 	if ( sv_public->integer != 1 ) {
 		// NOTE: the addresses will only have been resolved if sent a heartbeat
@@ -713,20 +727,6 @@ void SVC_Info( netadr_t from ) {
 				}
 			}
 		}
-	}
-
-	// Prevent using getinfo as an amplifier
-	if ( SVC_RateLimitAddress( from, 10, 1000 ) ) {
-		Com_DPrintf( "SVC_Info: rate limit from %s exceeded, dropping request\n",
-			NET_AdrToString( from ) );
-		return;
-	}
-
-	// Allow getinfo to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) ) {
-		Com_DPrintf( "SVC_Info: rate limit exceeded, dropping request\n" );
-		return;
 	}
 
 	/*
