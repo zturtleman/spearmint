@@ -145,7 +145,7 @@ RENDERER_OPENGL1_NAME="${RENDERER_OPENGL}1.dylib"
 RENDERER_OPENGL2_NAME="${RENDERER_OPENGL}2.dylib"
 
 ICNSDIR="misc"
-ICNS="quake3.icns"
+ICNS="spearmint.icns"
 PKGINFO="APPLIOQ3"
 
 OBJROOT="build"
@@ -249,7 +249,7 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
     <key>CFBundleExecutable</key>
     <string>${EXECUTABLE_NAME}</string>
     <key>CFBundleIconFile</key>
-    <string>quake3</string>
+    <string>spearmint</string>
     <key>CFBundleIdentifier</key>
     <string>org.ioquake.${PRODUCT_NAME}</string>
     <key>CFBundleInfoDictionaryVersion</key>
