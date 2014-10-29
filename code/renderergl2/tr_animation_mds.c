@@ -1591,7 +1591,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 
 		LocalMatrixTransformVector( v->normal, bones[v->weights[0].boneIndex].matrix, newNormal );
 
-		*tempNormal = R_VboPackNormal(newNormal);
+		*tempNormal = R_VaoPackNormal(newNormal);
 
 		tess.texCoords[baseVertex + j][0][0] = v->texCoords[0];
 		tess.texCoords[baseVertex + j][0][1] = v->texCoords[1];

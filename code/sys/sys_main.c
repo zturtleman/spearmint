@@ -197,12 +197,7 @@ Sys_PIDFileName
 */
 static char *Sys_PIDFileName( const char *gamedir )
 {
-	const char *homePath = Sys_DefaultHomePath( );
-
-	if( *homePath != '\0' )
-		return va( "%s/%s/%s", homePath, gamedir, PID_FILENAME );
-
-	return NULL;
+	return FS_BuildOSPath(Cvar_VariableString("fs_homepath"), gamedir, PID_FILENAME);
 }
 
 /*

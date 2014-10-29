@@ -380,9 +380,9 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 		// don't add third_person objects if not viewing through a portal
 		if(!personalModel)
 		{
-			srfVBOMDVMesh_t *vboSurface = &model->vboSurfaces[i];
+			srfVaoMdvMesh_t *vaoSurface = &model->vaoSurfaces[i];
 
-			R_AddEntDrawSurf( ent, (void *)vboSurface, shader, fogNum, qfalse, qfalse, cubemapIndex );
+			R_AddEntDrawSurf( ent, (void *)vaoSurface, shader, fogNum, qfalse, qfalse, cubemapIndex );
 		}
 
 		surface++;
