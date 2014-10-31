@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Spearmint - A Video Game Engine</title>
 <meta name="description" content="Spearmint, a video game engine based on ioquake3." />
 <meta property="og:image" content="http://zturtleman.github.io/spearmint/images/icon_256_text.png" />
@@ -31,10 +32,10 @@
 <div id="outer">
 
 	<!-- header -->
-	<img src="images/spearmint_miku.jpg" style="float: right" width="600px" height="600px" title="Hatsune Miku illustration with Spearmint accessory" alt="Hatsune Miku" />
+	<img class="illustration" src="images/spearmint_miku.jpg" style="float: right" width="600px" height="600px" title="Hatsune Miku illustration with Spearmint accessory" alt="Hatsune Miku" />
 
-	<div style="padding-top:15%; padding-left:10%">
-		<img src="images/icon_256_text.png" width="256" height="256" alt="Spearmint" />
+	<div class="logoarea">
+		<img class="logoarea" src="images/icon_256_text.png" width="256" height="256" alt="Spearmint" />
 		<!-- NOTE: Had padding-top:20% when using <h1 style="font-size:4em">Spearmint</h1> instead of logo image -->
 		<p>A video game engine based on ioquake3.</p>
 		<!--<span>Skip to: <a href="#download">Download</a> &bull; <a href="#source">Source Code</a> &bull; <a href="#doc">Documentation</a></span>-->
@@ -43,15 +44,15 @@
 
 	<!-- begin section -->
 	<div>
-		<div style="clear: both; text-align: center; padding:10px; background: #555; color: #FFF">
+		<div class="sectionHeader">
 			<h2 style="font-size:2em">What is Spearmint?</h2>
 		</div>
 
-		<div style="float: right">
-			<a href="images/q3a-screenshot.png"><img src="images/q3a-screenshot-small.png" width="460px" height="259px" title="Spearmint Quake 3 screenshot" alt="spearmint/mint-arena (16:9)"/></a>
+		<div class="screenshot">
+			<a href="images/q3a-screenshot.png"><img class="screenshot" src="images/q3a-screenshot-small.png" width="460px" height="259px" title="Spearmint Quake 3 screenshot" alt="spearmint/mint-arena (16:9)"/></a>
 		</div>
 
-		<div style="padding-left: 2em; padding-right: 470px">
+		<div class="whatisContent">
 			<p><span class="title">Spearmint</span> is a heavily modified version of the <a href="https://en.wikipedia.org/wiki/id_Tech_3">Quake III Arena engine</a>. Spearmint is directly based on <a href="http://ioquake3.org">ioquake3</a>.</p>
 
 			<!-- TODO: should probably talk about it's force on standalone games and extending the hell out of it -->
@@ -95,11 +96,11 @@
 	<!-- begin source code section -->
 <!-- TODO
 	<div id="download">
-		<div style="clear: both; text-align: center; padding:10px; background: #555; color: #FFF">
+		<div class="sectionHeader">
 			<h2 style="font-size:2em">Download</h2>
 		</div>
 
-		<div style="padding-left: 2em; padding-right: 2em; padding-bottom:2em">
+		<div class="sectionContent">
 			<p>Spearmint with Quake 3 support files. To play Quake 3, after extracting the zip you need to copy your Quake 3 pak[0-8].pk3 files into spearmint/baseq3.</p>
 
 			<ul>
@@ -114,11 +115,11 @@
 
 	<!-- begin source code section -->
 	<div id="source">
-		<div style="clear: both; text-align: center; padding:10px; background: #555; color: #FFF">
+		<div class="sectionHeader">
 			<h2 style="font-size:2em">Source Code</h2>
 		</div>
 
-		<div style="padding-left: 2em; padding-right: 2em; padding-bottom:2em">
+		<div class="sectionContent">
 			<p>The source code for Spearmint and the compatible Quake 3 game code is available under the <a href="https://github.com/zturtleman/spearmint/blob/master/COPYING.txt">GPLv3+</a> (with <a href="https://github.com/zturtleman/spearmint/blob/master/COPYING.txt#L625">additional terms</a>) on Github.</p>
 			<ul>
 				<li>Spearmint engine: <a href="https://github.com/zturtleman/spearmint">zturtleman/spearmint</a></li>
@@ -130,12 +131,12 @@
 
 	<!-- begin doc section -->
 	<div id="doc">
-		<div style="clear: both; text-align: center; padding:10px; background: #555; color: #FFF">
+		<div class="sectionHeader">
 			<h2 style="font-size:2em">Documentation</h2>
 		</div>
 
 		<!-- TODO: give better overview and link to NewGame directly? -->
-		<div style="padding-left: 2em; padding-right: 2em; padding-bottom:2em">
+		<div class="sectionContent">
 			<p>See the <a href="https://github.com/zturtleman/spearmint/wiki">Spearmint wiki on Github</a>.</p>
 		</div>
 	</div>
@@ -143,11 +144,11 @@
 
 	<!-- begin misc section -->
 	<div id="misc">
-		<div style="clear: both; text-align: center; padding:10px; background: #555; color: #FFF">
+		<div class="sectionHeader">
 			<h2 style="font-size:2em">Misc</h2>
 		</div>
 
-		<div style="padding-left: 2em; padding-right: 2em; padding-bottom:2em">
+		<div class="sectionContent">
 			<h3>Spearmint Logo</h4>
 			<p>Copyright 2014 Zack Middleton, uses "M+ 1mn Medium" font from <a href="http://mplus-fonts.sourceforge.jp/mplus-outline-fonts/index-en.html">M<sup>+</sup> Outline Fonts</a>.</p>
 
