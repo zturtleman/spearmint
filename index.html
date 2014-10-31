@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Spearmint - A Video Game Engine</title>
+<meta name="description" content="Spearmint, a video game engine based on ioquake3." />
+<meta property="og:image" content="http://zturtleman.github.io/spearmint/images/icon_256_text.png" />
+
+<link rel="apple-touch-icon" sizes="57x57" href="favicons/apple-touch-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="114x114" href="favicons/apple-touch-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="72x72" href="favicons/apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="144x144" href="favicons/apple-touch-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="60x60" href="favicons/apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="120x120" href="favicons/apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="76x76" href="favicons/apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="152x152" href="favicons/apple-touch-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="favicons/apple-touch-icon-180x180.png">
+<link rel="icon" type="image/png" href="favicons/favicon-192x192.png" sizes="192x192">
+<link rel="icon" type="image/png" href="favicons/favicon-160x160.png" sizes="160x160">
+<link rel="icon" type="image/png" href="favicons/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="favicons/favicon-32x32.png" sizes="32x32">
+<meta name="msapplication-TileColor" content="#00a300">
+<meta name="msapplication-TileImage" content="favicons/mstile-144x144.png">
+<meta name="msapplication-config" content="favicons/browserconfig.xml">
+
+<link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" />
+<link rel="stylesheet" type="text/css" href="stylesheets/spearmint.css">
+</head>
+<body>
+<div id="outer">
+
+	<!-- header -->
+	<img src="images/spearmint_miku.jpg" style="float: right" width="600px" height="600px" />
+
+	<div style="padding-top:15%; padding-left:10%">
+		<img src="images/icon_256_text.png" width="256" height="256" alt="Spearmint" />
+		<!-- NOTE: Had padding-top:20% when using <h1 style="font-size:4em">Spearmint</h1> instead of logo image -->
+		<p>A video game engine based on ioquake3.</p>
+		<!--<span>Skip to: <a href="#download">Download</a> &bull; <a href="#source">Source Code</a> &bull; <a href="#doc">Documentation</a></span>-->
+	</div>
+	<!-- end of header -->
+
+	<!-- begin section -->
+	<div>
+		<div style="clear: both; text-align: center; padding:10px; background: #555; color: #FFF">
+			<h2 style="font-size:2em">What is Spearmint?</h2>
+		</div>
+
+		<div style="float: right">
+			<a href="images/q3a-screenshot.png"><img src="images/q3a-screenshot-small.png" width="460px" height="259px" title="Spearmint Quake 3 screenshot" alt="spearmint/mint-arena (16:9)"/></a>
+		</div>
+
+		<div style="padding-left: 2em; padding-right: 470px">
+			<p><span class="title">Spearmint</span> is a heavily modified version of the <a href="https://en.wikipedia.org/wiki/id_Tech_3">Quake III Arena engine</a>. Spearmint is directly based on <a href="http://ioquake3.org">ioquake3</a>.</p>
+
+			<!-- TODO: should probably talk about it's force on standalone games and extending the hell out of it -->
+
+			<!-- FIXME: this isn't explained or backed up as to how it's different than ioq3
+			<p>It's possible to create new cross-platform games without modifying the engine or having multiple operating systems.</p>
+			 -->
+
+			<span>How Spearmint is different from the original Quake 3 / ioquake3 engine;</span>
+			<ul>
+				<li>It is possible to do a hell of a lot more without modifying the engine.</li>
+				<li>New features for the modding APIs and shader files.</li>
+				<li>Split engine and game code into separate projects.</li>
+				<li>More Quake 3 game code improvements.</li>
+				<li>4-Player Splitscreen support.</li>
+				<li>Not compatible with Quake 3 mods or replay demos.</il>
+			</ul>
+
+			<span>For people familiar with modding Quake 3 based games;</span>
+			<ul>
+				<li>It's possible to extend the entityState_t and playerState_t data structures without changing the engine.</li>
+				<li>Merged UI VM into CGame VM so the CGame&lt;-&gt;UI communication is more flexable.</li>
+				<li>Moved a lot of code from server and client to Game and CGame VMs;</li>
+				<ul>
+					<li>including the console, chat input overlay, usercmd_t creation, and a lot of bot AI code.</li>
+				</ul>
+			</ul>
+
+			<!-- FIXME: not sure this is really front page news -->
+			<span>Spearmint has support for some data formats used by other Quake 3 based games:</span>
+			<ul>
+				<li>Support for map and model formats from RTCW and ET (missing player model torso frame/axis control).</li>
+				<li>Support for FAKK / Alice FTX images.</li>
+				<li>Partial support for FAKK / Alice BSP map format (missing dynamic entity lights).</li>
+				<li>Partial support for SoF2 / JK2 / JA BSP map format (missing light styles and per-flare shaders).</li>
+			</ul>
+		</div>
+	</div>
+	<!-- end section -->
+
+	<!-- begin source code section -->
+<!-- TODO
+	<div id="download">
+		<div style="clear: both; text-align: center; padding:10px; background: #555; color: #FFF">
+			<h2 style="font-size:2em">Download</h2>
+		</div>
+
+		<div style="padding-left: 2em; padding-right: 2em; padding-bottom:2em">
+			<p>Spearmint with Quake 3 support files. To play Quake 3, after extracting the zip you need to copy your Quake 3 pak[0-8].pk3 files into spearmint/baseq3.</p>
+
+			<ul>
+				<li>Windows: </li>
+				<li>OS X: </li>
+				<li>GNU/Linux: </li>
+			</ul>
+		</div>
+	</div>
+-->
+	<!-- end source code section -->
+
+	<!-- begin source code section -->
+	<div id="source">
+		<div style="clear: both; text-align: center; padding:10px; background: #555; color: #FFF">
+			<h2 style="font-size:2em">Source Code</h2>
+		</div>
+
+		<div style="padding-left: 2em; padding-right: 2em; padding-bottom:2em">
+			<p>The source code for Spearmint and the compatible Quake 3 game code is available under the <a href="https://github.com/zturtleman/spearmint/blob/master/COPYING.txt">GPLv3+</a> (with <a href="https://github.com/zturtleman/spearmint/blob/master/COPYING.txt#L625">additional terms</a>) on Github.</p>
+			<ul>
+				<li>Spearmint engine: <a href="https://github.com/zturtleman/spearmint">zturtleman/spearmint</a></li>
+				<li>Quake 3 game code: <a href="https://github.com/zturtleman/mint-arena">zturtleman/mint-arena</a></li>
+			</ul>
+		</div>
+	</div>
+	<!-- end source code section -->
+
+	<!-- begin doc section -->
+	<div id="doc">
+		<div style="clear: both; text-align: center; padding:10px; background: #555; color: #FFF">
+			<h2 style="font-size:2em">Documentation</h2>
+		</div>
+
+		<!-- TODO: give better overview and link to NewGame directly? -->
+		<div style="padding-left: 2em; padding-right: 2em; padding-bottom:2em">
+			<p>See the <a href="https://github.com/zturtleman/spearmint/wiki">Spearmint wiki on Github</a>.</p>
+		</div>
+	</div>
+	<!-- end doc section -->
+
+	<!-- begin misc section -->
+	<div id="misc">
+		<div style="clear: both; text-align: center; padding:10px; background: #555; color: #FFF">
+			<h2 style="font-size:2em">Misc</h2>
+		</div>
+
+		<div style="padding-left: 2em; padding-right: 2em; padding-bottom:2em">
+			<h3>Spearmint Logo</h4>
+			<p>Copyright 2014 Zack Middleton, uses "M+ 1mn Medium" font from <a href="http://mplus-fonts.sourceforge.jp/mplus-outline-fonts/index-en.html">M<sup>+</sup> Outline Fonts</a>.</p>
+
+			<h3>Hatsune Miku illustration with Spearmint accessory</h3>
+			<div class="ccbox"><a rel="license" href="http://creativecommons.org/licenses/by-nc/3.0/deed.en_US"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></div>
+			<div class="ccbox_txt">
+			<span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/StillImage" property="dct:title" rel="dct:type">Hatsune Miku</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://piapro.net/" property="cc:attributionName" rel="cc:attributionURL">Crypton Future Media, INC. 2007</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/3.0/deed.en_US">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.
+			<br />Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="http://piapro.net/license" rel="dct:source">http://piapro.net/license</a>.
+			</div>
+			<br />
+
+			<h3>Quake 3 Screenshot</h3>
+			<p>Graphics copyright 1999-2000 id Software.</p>
+		</div>
+	</div>
+	<!-- end misc section -->
+
+</div>
+<!-- end outer -->
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-45942785-2");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+
+</body>
+</html>

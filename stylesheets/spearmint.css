@@ -1,0 +1,39 @@
+/*
+	Spearmint main style sheet
+*/
+
+/* Body; background. GNU FreeSans is available on Linux systems.
+     Helvetica for Windows... */
+body {margin: 0; padding: 10px; background-color: #8A9; color: #000; /*font-family: FreeSans, Helvetica, sans-serif;*/}
+
+/* Float the page in the center of the browser. */
+#outer {margin: 0 auto; width: 70%; margin-top: 10px; margin-bottom: 10px; /*min-width: 760px;*/
+background-color: #FFF/*;border: 1px solid #000*/ }
+
+/* Header sizes */
+h1 {font-size: 1.6em; padding: 0; margin: 0}
+h2 {font-size: 1.4em; padding: 0; margin: 0}
+h3 {font-size: 1.2em; padding: 0; margin: 0}
+h4 {font-size: 1.2em; padding: 0; margin: 0; text-decoration: underline}
+
+a:link {color:#898;} /* unvisited link */
+a:visited {color:#676;} /* visited link */
+a:hover {color:#080;} /* mouse over link */
+a:active {color:#080;} /* selected link */
+
+@font-face
+{
+font-family: mplus-1mn-regular;
+/* http://mplus-fonts.sourceforge.jp/webfonts/mplus-1mn-regular.ttf */
+src: url('../fonts/mplus-1mn-regular.ttf')
+     format("truetype");
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: mplus-1mn-regular;
+}
+
+.title {
+  font-family: mplus-1mn-regular;
+}
+
