@@ -136,6 +136,8 @@ static void R_ChopPolyBehindPlane( int numInPoints, vec3_t inPoints[MAX_VERTS_ON
 /*
 =================
 R_AddSurfaceToList
+
+mins and maxs needs to be in bmodel local space
 =================
 */
 void R_AddSurfaceToList( int bmodelNum, msurface_t *surf, vec3_t mins, vec3_t maxs, surfaceType_t **list, int *listbmodel, int listsize, int *listlength, vec3_t dir ) {
@@ -176,22 +178,23 @@ void R_AddSurfaceToList( int bmodelNum, msurface_t *surf, vec3_t mins, vec3_t ma
 /*
 =================
 R_BmodelSurfaces
+
+mins and maxs needs to be in local space for R_AddSurfaceToList
 =================
 */
 void R_BmodelSurfaces(int bmodelNum, vec3_t mins, vec3_t maxs, surfaceType_t **list, int *listbmodel, int listsize, int *listlength, vec3_t dir) {
 	int i, j;
 	msurface_t	*surf;
 	bmodel_t *bmodel = &tr.world->bmodels[bmodelNum];
-	const float	*origin = bmodel->orientation.origin;
 	const float	*bmins = bmodel->bounds[ 0 ];
 	const float	*bmaxs = bmodel->bounds[ 1 ];
 
 	for ( j = 0; j < 3; j++ )
 	{
-		if ( origin[ j ] + bmins[ j ] > maxs[ j ] ) {
+		if ( bmins[ j ] > maxs[ j ] ) {
 			break;
 		}
-		if ( origin[ j ] + bmaxs[ j ] < mins[ j ] ) {
+		if ( bmaxs[ j ] < mins[ j ] ) {
 			break;
 		}
 	}
@@ -217,6 +220,8 @@ int R_RefEntityForBmodelNum( int bmodelNum );
 /*
 =================
 R_TransformMarkProjection
+
+transform world space data to bmodel local space
 =================
 */
 void R_TransformMarkProjection( int bmodelNum, const vec3_t inProjection, vec3_t outProjection, int numPlanes, vec3_t *inNormals, float *inDists, vec3_t *outNormals, float *outDists ) {
@@ -455,18 +460,25 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 
 		R_TransformMarkProjection( j, projection, localProjection, 0, NULL, NULL, NULL, NULL );
 
-		// ZTM: FIXME: Is this needed?
 		VectorNormalize2( localProjection, localProjectionDir );
 		// find all the brushes that are to be considered
 		ClearBounds( mins, maxs );
 		for ( i = 0 ; i < numPoints ; i++ ) {
 			vec3_t	temp;
+			vec3_t	delta;
+			vec3_t	localPoint;
 
-			AddPointToBounds( points[i], mins, maxs );
-			VectorAdd( points[i], localProjection, temp );
+			// convert point to bmodel local space
+			VectorSubtract( points[i], tr.world->bmodels[j].orientation.origin, delta );
+			localPoint[0] = DotProduct( delta, tr.world->bmodels[j].orientation.axis[0] );
+			localPoint[1] = DotProduct( delta, tr.world->bmodels[j].orientation.axis[1] );
+			localPoint[2] = DotProduct( delta, tr.world->bmodels[j].orientation.axis[2] );
+
+			AddPointToBounds( localPoint, mins, maxs );
+			VectorAdd( localPoint, localProjection, temp );
 			AddPointToBounds( temp, mins, maxs );
 			// make sure we get all the leafs (also the one(s) in front of the hit surface)
-			VectorMA( points[i], -20, localProjectionDir, temp );
+			VectorMA( localPoint, -20, localProjectionDir, temp );
 			AddPointToBounds( temp, mins, maxs );
 		}
 
@@ -483,6 +495,7 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 			lastBmodel = surfacesBmodel[i];
 
 			// don't use projectionDir, normals, or dists beyond this point !!!
+			// mins and maxs are not setup, so they are not valid !!!
 		}
 
 		if (*surfaces[i] == SF_GRID) {
