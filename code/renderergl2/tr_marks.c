@@ -135,14 +135,56 @@ static void R_ChopPolyBehindPlane( int numInPoints, vec3_t inPoints[MAX_VERTS_ON
 
 /*
 =================
-R_BmodelSurfaces
+R_AddSurfaceToList
+=================
+*/
+void R_AddSurfaceToList( int bmodelNum, int surfNum, vec3_t mins, vec3_t maxs, surfaceType_t **list, int *listbmodel, int listsize, int *listlength, vec3_t dir ) {
+	int *surfViewCount;
+	msurface_t	*surf;
+	int s;
 
+	if (*listlength >= listsize)
+		return;
+
+	surfViewCount = &tr.world->surfacesViewCount[surfNum];
+	surf = ( msurface_t * )( tr.world->surfaces + surfNum );
+
+	// check if the surface has NOIMPACT or NOMARKS set
+	if ( ( surf->shader->surfaceFlags & ( SURF_NOIMPACT | SURF_NOMARKS ) )
+		|| ( surf->shader->contentFlags & CONTENTS_FOG ) ) {
+		*surfViewCount = tr.viewCount;
+	}
+	// extra check for surfaces to avoid list overflows
+	else if (*(surf->data) == SF_FACE) {
+		// the face plane should go through the box
+		s = BoxOnPlaneSide( mins, maxs, &surf->cullinfo.plane );
+		if (s == 1 || s == 2) {
+			*surfViewCount = tr.viewCount;
+		} else if (DotProduct(surf->cullinfo.plane.normal, dir) > -0.5) {
+		// don't add faces that make sharp angles with the projection direction
+			*surfViewCount = tr.viewCount;
+		}
+	}
+	else if (*(surf->data) != SF_GRID &&
+		 *(surf->data) != SF_TRIANGLES)
+		*surfViewCount = tr.viewCount;
+	// check the viewCount because the surface may have
+	// already been added if it spans multiple leafs
+	if (*surfViewCount != tr.viewCount) {
+		*surfViewCount = tr.viewCount;
+		list[*listlength] = surf->data;
+		listbmodel[*listlength] = bmodelNum;
+		(*listlength)++;
+	}
+}
+
+/*
+=================
+R_BmodelSurfaces
 =================
 */
 void R_BmodelSurfaces(int bmodelNum, vec3_t mins, vec3_t maxs, surfaceType_t **list, int *listbmodel, int listsize, int *listlength, vec3_t dir) {
-	int i, j, s;
-	msurface_t	*surf;
-	int *surfViewCount;
+	int i, j;
 	bmodel_t *bmodel = &tr.world->bmodels[bmodelNum];
 	const float	*origin = bmodel->orientation.origin;
 	const float	*bmins = bmodel->bounds[ 0 ];
@@ -165,51 +207,24 @@ void R_BmodelSurfaces(int bmodelNum, vec3_t mins, vec3_t maxs, surfaceType_t **l
 
 	// add model surfaces
 	for ( i = 0; i < bmodel->numSurfaces; i++ ) {
-		int surfNum = bmodel->firstSurface + i;
-
 		if (*listlength >= listsize) break;
 
-		surfViewCount = &tr.world->surfacesViewCount[surfNum];
-		surf = ( msurface_t * )( tr.world->surfaces + surfNum );
-
-		// check if the surface has NOIMPACT or NOMARKS set
-		if ( ( surf->shader->surfaceFlags & ( SURF_NOIMPACT | SURF_NOMARKS ) )
-			|| ( surf->shader->contentFlags & CONTENTS_FOG ) ) {
-			*surfViewCount = tr.viewCount;
-		}
-		// extra check for surfaces to avoid list overflows
-		else if (*(surf->data) == SF_FACE) {
-			// the face plane should go through the box
-			s = BoxOnPlaneSide( mins, maxs, &surf->cullinfo.plane );
-			if (s == 1 || s == 2) {
-				*surfViewCount = tr.viewCount;
-			} else if (DotProduct(surf->cullinfo.plane.normal, dir) > -0.5) {
-			// don't add faces that make sharp angles with the projection direction
-				*surfViewCount = tr.viewCount;
-			}
-		}
-		else if (*(surf->data) != SF_GRID &&
-			 *(surf->data) != SF_TRIANGLES)
-			*surfViewCount = tr.viewCount;
-		// check the viewCount because the surface may have
-		// already been added if it spans multiple leafs
-		if (*surfViewCount != tr.viewCount) {
-			*surfViewCount = tr.viewCount;
-			list[*listlength] = surf->data;
-			listbmodel[*listlength] = bmodelNum;
-			(*listlength)++;
-		}
+		R_AddSurfaceToList( bmodelNum, bmodel->firstSurface + i, mins, maxs, list, listbmodel, listsize, listlength, dir );
 	}
 }
 
 // XXX tr_scene.c
 int R_RefEntityForBmodelNum( int bmodelNum );
 
+/*
+=================
+R_TransformMarkProjection
+=================
+*/
 void R_TransformMarkProjection( int bmodelNum, const vec3_t inProjection, vec3_t outProjection, int numPlanes, vec3_t *inNormals, float *inDists, vec3_t *outNormals, float *outDists ) {
 	int i;
 	int entityNum;
 	vec3_t axis[3], origin;
-	//vec3_t delta;
 
 	entityNum = R_RefEntityForBmodelNum( bmodelNum );
 
@@ -247,20 +262,7 @@ void R_TransformMarkProjection( int bmodelNum, const vec3_t inProjection, vec3_t
 		VectorCopy( ent->e.axis[2], axis[2] );
 	}
 
-/*
-	for ( i = 0; i < numPoints; i++ ) {
-		// ZTM: TODO?: compensate for scale in the axes if necessary? see R_RotateForEntity
-		VectorSubtract( inPoints[i], ent->e.origin, delta );
-		outPoints[i][0] = DotProduct( delta, ent->e.axis[0] );
-		outPoints[i][1] = DotProduct( delta, ent->e.axis[1] );
-		outPoints[i][2] = DotProduct( delta, ent->e.axis[2] );
-	}
-*/
-
-	// ZTM: NOTE: This code is based on ET's R_TransformDecalProjector
-	/* translate planes */
 	for ( i = 0; i < numPlanes; i++ ) {
-		/* transform by transposed inner 3x3 matrix */
 		outNormals[i][0] = DotProduct( inNormals[i], axis[0] );
 		outNormals[i][1] = DotProduct( inNormals[i], axis[1] );
 		outNormals[i][2] = DotProduct( inNormals[i], axis[2] );
@@ -278,10 +280,9 @@ R_BoxSurfaces_r
 
 =================
 */
-void R_BoxSurfaces_r(mnode_t *node, vec3_t mins, vec3_t maxs, surfaceType_t **list, int listsize, int *listlength, vec3_t dir) {
+void R_BoxSurfaces_r(mnode_t *node, vec3_t mins, vec3_t maxs, surfaceType_t **list, int *listbmodel, int listsize, int *listlength, vec3_t dir) {
 
 	int			s, c;
-	msurface_t	*surf;
 	int *mark;
 
 	// do the tail recursion in a loop
@@ -292,7 +293,7 @@ void R_BoxSurfaces_r(mnode_t *node, vec3_t mins, vec3_t maxs, surfaceType_t **li
 		} else if (s == 2) {
 			node = node->children[1];
 		} else {
-			R_BoxSurfaces_r(node->children[0], mins, maxs, list, listsize, listlength, dir);
+			R_BoxSurfaces_r(node->children[0], mins, maxs, list, listbmodel, listsize, listlength, dir);
 			node = node->children[1];
 		}
 	}
@@ -301,38 +302,11 @@ void R_BoxSurfaces_r(mnode_t *node, vec3_t mins, vec3_t maxs, surfaceType_t **li
 	mark = tr.world->marksurfaces + node->firstmarksurface;
 	c = node->nummarksurfaces;
 	while (c--) {
-		int *surfViewCount;
 		//
 		if (*listlength >= listsize) break;
 		//
-		surfViewCount = &tr.world->surfacesViewCount[*mark];
-		surf = tr.world->surfaces + *mark;
-		// check if the surface has NOIMPACT or NOMARKS set
-		if ( ( surf->shader->surfaceFlags & ( SURF_NOIMPACT | SURF_NOMARKS ) )
-			|| ( surf->shader->contentFlags & CONTENTS_FOG ) ) {
-			*surfViewCount = tr.viewCount;
-		}
-		// extra check for surfaces to avoid list overflows
-		else if (*(surf->data) == SF_FACE) {
-			// the face plane should go through the box
-			s = BoxOnPlaneSide( mins, maxs, &surf->cullinfo.plane );
-			if (s == 1 || s == 2) {
-				*surfViewCount = tr.viewCount;
-			} else if (DotProduct(surf->cullinfo.plane.normal, dir) > -0.5) {
-			// don't add faces that make sharp angles with the projection direction
-				*surfViewCount = tr.viewCount;
-			}
-		}
-		else if (*(surf->data) != SF_GRID &&
-			 *(surf->data) != SF_TRIANGLES)
-			*surfViewCount = tr.viewCount;
-		// check the viewCount because the surface may have
-		// already been added if it spans multiple leafs
-		if (*surfViewCount != tr.viewCount) {
-			*surfViewCount = tr.viewCount;
-			list[*listlength] = surf->data;
-			(*listlength)++;
-		}
+		R_AddSurfaceToList( 0, *mark, mins, maxs, list, listbmodel, listsize, listlength, dir );
+
 		mark++;
 	}
 }
@@ -472,14 +446,9 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 	numPlanes = numPoints + 2;
 
 	numsurfaces = 0;
-	R_BoxSurfaces_r(tr.world->nodes, mins, maxs, surfaces, 64, &numsurfaces, projectionDir);
+	R_BoxSurfaces_r(tr.world->nodes, mins, maxs, surfaces, surfacesBmodel, 64, &numsurfaces, projectionDir);
 	//assert(numsurfaces <= 64);
 	//assert(numsurfaces != 64);
-
-	// ZTM: TODO: add this into R_BoxSurfaces_r ?
-	for ( i = 0 ; i < numsurfaces; i++ ) {
-		surfacesBmodel[i] = 0;
-	}
 
 	// add bmodel surfaces
 	for ( j = 1; j < tr.world->numBModels; j++ ) {
