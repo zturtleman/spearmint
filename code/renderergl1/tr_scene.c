@@ -93,6 +93,14 @@ RE_ClearScene
 ====================
 */
 void RE_ClearScene( void ) {
+	int i;
+
+	if ( tr.world ) {
+		for ( i = 0; i < tr.world->numBModels; i++ ) {
+			tr.world->bmodels[ i ].entityNum = -1;
+		}
+	}
+
 	r_firstSceneDlight = r_numdlights;
 	r_firstSceneCorona = r_numcoronas;
 	r_firstSceneEntity = r_numentities;
@@ -197,6 +205,19 @@ int R_PolyFogNum( srfPoly_t *poly ) {
 
 /*
 =====================
+R_RefEntityForBmodelNum
+=====================
+*/
+int R_RefEntityForBmodelNum( int bmodelNum ) {
+	if ( tr.world && bmodelNum > 0 && bmodelNum < tr.world->numBModels ) {
+		return tr.world->bmodels[ bmodelNum ].entityNum;
+	}
+
+	return REFENTITYNUM_WORLD;
+}
+
+/*
+=====================
 R_AddPolygonSurfaces
 
 Adds all the scene's polys into this view's drawsurf list
@@ -207,10 +228,13 @@ void R_AddPolygonSurfaces( void ) {
 	shader_t	*sh;
 	srfPoly_t	*poly;
 
-	tr.currentEntityNum = REFENTITYNUM_WORLD;
-	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
-
 	for ( i = 0, poly = tr.refdef.polys; i < tr.refdef.numPolys ; i++, poly++ ) {
+		tr.currentEntityNum = R_RefEntityForBmodelNum( poly->bmodelNum );
+
+		if ( tr.currentEntityNum == -1 )
+			continue;
+
+		tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
 		sh = R_GetShaderByHandle( poly->hShader );
 		R_AddDrawSurf( ( void * )poly, sh, R_PolyFogNum( poly ), qfalse );
 	}
@@ -222,7 +246,7 @@ RE_AddPolyToScene
 
 =====================
 */
-void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys ) {
+void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum ) {
 	srfPoly_t	*poly;
 	int			j;
 
@@ -251,6 +275,7 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 
 		poly = &backEndData->polys[r_numpolys];
 		poly->surfaceType = SF_POLY;
+		poly->bmodelNum = bmodelNum;
 		poly->hShader = hShader;
 		poly->numVerts = numVerts;
 		poly->verts = &backEndData->polyVerts[r_numpolyverts];
@@ -386,6 +411,15 @@ void RE_AddRefEntityToScene( const refEntity_t *ent, int entBufSize, int numVert
 
 	Com_Memcpy2( &backEndData->entities[r_numentities].e, sizeof ( refEntity_t ), ent, entBufSize );
 	backEndData->entities[r_numentities].lightingCalculated = qfalse;
+
+	// store bmodel refEntityNums
+	if ( tr.world && ent->reType == RT_MODEL ) {
+		model_t *model = R_GetModelByHandle( ent->hModel );
+
+		if ( model && model->type == MOD_BRUSH ) {
+			model->bmodel->entityNum = r_numentities;
+		}
+	}
 
 	r_numentities++;
 }

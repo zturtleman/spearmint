@@ -1117,6 +1117,10 @@ typedef struct {
 typedef struct {
 	int		firstPoint;
 	int		numPoints;
+	int		bmodelNum;
+	vec3_t	bmodelOrigin;
+	vec3_t	bmodelAxis[3];
+	vec3_t	projectionDir;
 } markFragment_t;
 
 

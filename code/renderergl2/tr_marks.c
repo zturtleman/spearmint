@@ -135,6 +135,145 @@ static void R_ChopPolyBehindPlane( int numInPoints, vec3_t inPoints[MAX_VERTS_ON
 
 /*
 =================
+R_BmodelSurfaces
+
+=================
+*/
+void R_BmodelSurfaces(int bmodelNum, vec3_t mins, vec3_t maxs, surfaceType_t **list, int *listbmodel, int listsize, int *listlength, vec3_t dir) {
+	int i, j, s;
+	msurface_t	*surf;
+	int *surfViewCount;
+	bmodel_t *bmodel = &tr.world->bmodels[bmodelNum];
+	const float	*origin = bmodel->orientation.origin;
+	const float	*bmins = bmodel->bounds[ 0 ];
+	const float	*bmaxs = bmodel->bounds[ 1 ];
+
+	for ( j = 0; j < 3; j++ )
+	{
+		if ( origin[ j ] + bmins[ j ] > maxs[ j ] ) {
+			break;
+		}
+		if ( origin[ j ] + bmaxs[ j ] < mins[ j ] ) {
+			break;
+		}
+	}
+
+	if ( j != 3 ) {
+		// not touching
+		return;
+	}
+
+	// add model surfaces
+	for ( i = 0; i < bmodel->numSurfaces; i++ ) {
+		int surfNum = bmodel->firstSurface + i;
+
+		if (*listlength >= listsize) break;
+
+		surfViewCount = &tr.world->surfacesViewCount[surfNum];
+		surf = ( msurface_t * )( tr.world->surfaces + surfNum );
+
+		// check if the surface has NOIMPACT or NOMARKS set
+		if ( ( surf->shader->surfaceFlags & ( SURF_NOIMPACT | SURF_NOMARKS ) )
+			|| ( surf->shader->contentFlags & CONTENTS_FOG ) ) {
+			*surfViewCount = tr.viewCount;
+		}
+		// extra check for surfaces to avoid list overflows
+		else if (*(surf->data) == SF_FACE) {
+			// the face plane should go through the box
+			s = BoxOnPlaneSide( mins, maxs, &surf->cullinfo.plane );
+			if (s == 1 || s == 2) {
+				*surfViewCount = tr.viewCount;
+			} else if (DotProduct(surf->cullinfo.plane.normal, dir) > -0.5) {
+			// don't add faces that make sharp angles with the projection direction
+				*surfViewCount = tr.viewCount;
+			}
+		}
+		else if (*(surf->data) != SF_GRID &&
+			 *(surf->data) != SF_TRIANGLES)
+			*surfViewCount = tr.viewCount;
+		// check the viewCount because the surface may have
+		// already been added if it spans multiple leafs
+		if (*surfViewCount != tr.viewCount) {
+			*surfViewCount = tr.viewCount;
+			list[*listlength] = surf->data;
+			listbmodel[*listlength] = bmodelNum;
+			(*listlength)++;
+		}
+	}
+}
+
+// XXX tr_scene.c
+int R_RefEntityForBmodelNum( int bmodelNum );
+
+void R_TransformMarkProjection( int bmodelNum, const vec3_t inProjection, vec3_t outProjection, int numPlanes, vec3_t *inNormals, float *inDists, vec3_t *outNormals, float *outDists ) {
+	int i;
+	int entityNum;
+	vec3_t axis[3], origin;
+	//vec3_t delta;
+
+	entityNum = R_RefEntityForBmodelNum( bmodelNum );
+
+	if ( entityNum == REFENTITYNUM_WORLD ) {
+		for ( i = 0; i < numPlanes; i++ ) {
+			VectorCopy( inNormals[i], outNormals[i] );
+			outDists[i] = inDists[i];
+		}
+
+		VectorCopy( inProjection, outProjection );
+		return;
+	}
+
+	if ( entityNum == -1 ) {
+		bmodel_t *bmodel;
+
+		bmodel = &tr.world->bmodels[bmodelNum];
+
+		// not added this scene, use last valid data
+		// this is bad, mark might not be on brush
+		//Com_Printf( "DEBUG: bmodel %d not added this scene\n", bmodelNum );
+
+		VectorCopy( bmodel->orientation.origin, origin );
+		VectorCopy( bmodel->orientation.axis[0], axis[0] );
+		VectorCopy( bmodel->orientation.axis[1], axis[1] );
+		VectorCopy( bmodel->orientation.axis[2], axis[2] );
+	} else {
+		trRefEntity_t *ent;
+
+		ent = &backEndData->entities[entityNum];
+
+		VectorCopy( ent->e.origin, origin );
+		VectorCopy( ent->e.axis[0], axis[0] );
+		VectorCopy( ent->e.axis[1], axis[1] );
+		VectorCopy( ent->e.axis[2], axis[2] );
+	}
+
+/*
+	for ( i = 0; i < numPoints; i++ ) {
+		// ZTM: TODO?: compensate for scale in the axes if necessary? see R_RotateForEntity
+		VectorSubtract( inPoints[i], ent->e.origin, delta );
+		outPoints[i][0] = DotProduct( delta, ent->e.axis[0] );
+		outPoints[i][1] = DotProduct( delta, ent->e.axis[1] );
+		outPoints[i][2] = DotProduct( delta, ent->e.axis[2] );
+	}
+*/
+
+	// ZTM: NOTE: This code is based on ET's R_TransformDecalProjector
+	/* translate planes */
+	for ( i = 0; i < numPlanes; i++ ) {
+		/* transform by transposed inner 3x3 matrix */
+		outNormals[i][0] = DotProduct( inNormals[i], axis[0] );
+		outNormals[i][1] = DotProduct( inNormals[i], axis[1] );
+		outNormals[i][2] = DotProduct( inNormals[i], axis[2] );
+		outDists[i] = inDists[i] - DotProduct( inNormals[i], origin );
+	}
+
+	outProjection[0] = DotProduct( inProjection, axis[0] );
+	outProjection[1] = DotProduct( inProjection, axis[1] );
+	outProjection[2] = DotProduct( inProjection, axis[2] );
+}
+
+/*
+=================
 R_BoxSurfaces_r
 
 =================
@@ -209,7 +348,7 @@ void R_AddMarkFragments(int numClipPoints, vec3_t clipPoints[2][MAX_VERTS_ON_POL
 				   int maxPoints, vec3_t pointBuffer,
 				   int maxFragments, markFragment_t *fragmentBuffer,
 				   int *returnedPoints, int *returnedFragments,
-				   vec3_t mins, vec3_t maxs) {
+				   vec3_t mins, vec3_t maxs, int bmodelNum, vec3_t projectionDir) {
 	int pingPong, i;
 	markFragment_t	*mf;
 
@@ -251,6 +390,13 @@ void R_AddMarkFragments(int numClipPoints, vec3_t clipPoints[2][MAX_VERTS_ON_POL
 	mf = fragmentBuffer + (*returnedFragments);
 	mf->firstPoint = (*returnedPoints);
 	mf->numPoints = numClipPoints;
+	mf->bmodelNum = bmodelNum;
+	VectorCopy( tr.world->bmodels[bmodelNum].orientation.origin, mf->bmodelOrigin );
+	VectorCopy( tr.world->bmodels[bmodelNum].orientation.axis[0], mf->bmodelAxis[0] );
+	VectorCopy( tr.world->bmodels[bmodelNum].orientation.axis[1], mf->bmodelAxis[1] );
+	VectorCopy( tr.world->bmodels[bmodelNum].orientation.axis[2], mf->bmodelAxis[2] );
+	VectorCopy( projectionDir, mf->projectionDir );
+
 	Com_Memcpy( pointBuffer + (*returnedPoints) * 3, clipPoints[pingPong], numClipPoints * sizeof(vec3_t) );
 
 	(*returnedPoints) += numClipPoints;
@@ -268,11 +414,13 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 	int				numsurfaces, numPlanes;
 	int				i, j, k, m, n;
 	surfaceType_t	*surfaces[64];
+	int				surfacesBmodel[64];
+	int				lastBmodel;
 	vec3_t			mins, maxs;
 	int				returnedFragments;
 	int				returnedPoints;
-	vec3_t			normals[MAX_VERTS_ON_POLY+2];
-	float			dists[MAX_VERTS_ON_POLY+2];
+	vec3_t			normals[MAX_VERTS_ON_POLY+2], localNormals[MAX_VERTS_ON_POLY+2];
+	float			dists[MAX_VERTS_ON_POLY+2], localDists[MAX_VERTS_ON_POLY+2];
 	vec3_t			clipPoints[2][MAX_VERTS_ON_POLY];
 	int				numClipPoints;
 	float			*v;
@@ -280,7 +428,7 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 	glIndex_t		*tri;
 	srfVert_t		*dv;
 	vec3_t			normal;
-	vec3_t			projectionDir;
+	vec3_t			projectionDir, localProjectionDir;
 	vec3_t			v1, v2;
 
 	if (numPoints <= 0) {
@@ -328,10 +476,46 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 	//assert(numsurfaces <= 64);
 	//assert(numsurfaces != 64);
 
+	// ZTM: TODO: add this into R_BoxSurfaces_r ?
+	for ( i = 0 ; i < numsurfaces; i++ ) {
+		surfacesBmodel[i] = 0;
+	}
+
+	// add bmodel surfaces
+	for ( j = 1; j < tr.world->numBModels; j++ ) {
+		vec3_t localProjection;
+
+		R_TransformMarkProjection( j, projection, localProjection, 0, NULL, NULL, NULL, NULL );
+
+		// ZTM: FIXME: Is this needed?
+		VectorNormalize2( localProjection, localProjectionDir );
+		// find all the brushes that are to be considered
+		ClearBounds( mins, maxs );
+		for ( i = 0 ; i < numPoints ; i++ ) {
+			vec3_t	temp;
+
+			AddPointToBounds( points[i], mins, maxs );
+			VectorAdd( points[i], localProjection, temp );
+			AddPointToBounds( temp, mins, maxs );
+			// make sure we get all the leafs (also the one(s) in front of the hit surface)
+			VectorMA( points[i], -20, localProjectionDir, temp );
+			AddPointToBounds( temp, mins, maxs );
+		}
+
+		R_BmodelSurfaces( j, mins, maxs, surfaces, surfacesBmodel, 64, &numsurfaces, localProjectionDir);
+	}
+
 	returnedPoints = 0;
 	returnedFragments = 0;
+	lastBmodel = -1;
 
 	for ( i = 0 ; i < numsurfaces ; i++ ) {
+		if (surfacesBmodel[i] != lastBmodel) {
+			R_TransformMarkProjection( surfacesBmodel[i], projectionDir, localProjectionDir, numPlanes, normals, dists, localNormals, localDists );
+			lastBmodel = surfacesBmodel[i];
+
+			// don't use projectionDir, normals, or dists beyond this point !!!
+		}
 
 		if (*surfaces[i] == SF_GRID) {
 
@@ -374,13 +558,13 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 					VectorSubtract(clipPoints[0][2], clipPoints[0][1], v2);
 					CrossProduct(v1, v2, normal);
 					VectorNormalizeFast(normal);
-					if (DotProduct(normal, projectionDir) < -0.1) {
+					if (DotProduct(normal, localProjectionDir) < -0.1) {
 						// add the fragments of this triangle
 						R_AddMarkFragments(numClipPoints, clipPoints,
-										   numPlanes, normals, dists,
+										   numPlanes, localNormals, localDists,
 										   maxPoints, pointBuffer,
 										   maxFragments, fragmentBuffer,
-										   &returnedPoints, &returnedFragments, mins, maxs);
+										   &returnedPoints, &returnedFragments, mins, maxs, lastBmodel, localProjectionDir);
 
 						if ( returnedFragments == maxFragments ) {
 							return returnedFragments;	// not enough space for more fragments
@@ -398,13 +582,13 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 					VectorSubtract(clipPoints[0][2], clipPoints[0][1], v2);
 					CrossProduct(v1, v2, normal);
 					VectorNormalizeFast(normal);
-					if (DotProduct(normal, projectionDir) < -0.05) {
+					if (DotProduct(normal, localProjectionDir) < -0.05) {
 						// add the fragments of this triangle
 						R_AddMarkFragments(numClipPoints, clipPoints,
-										   numPlanes, normals, dists,
+										   numPlanes, localNormals, localDists,
 										   maxPoints, pointBuffer,
 										   maxFragments, fragmentBuffer,
-										   &returnedPoints, &returnedFragments, mins, maxs);
+										   &returnedPoints, &returnedFragments, mins, maxs, lastBmodel, localProjectionDir);
 
 						if ( returnedFragments == maxFragments ) {
 							return returnedFragments;	// not enough space for more fragments
@@ -418,7 +602,7 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 			srfBspSurface_t *surf = ( srfBspSurface_t * ) surfaces[i];
 
 			// check the normal of this face
-			if (DotProduct(surf->cullPlane.normal, projectionDir) > -0.5) {
+			if (DotProduct(surf->cullPlane.normal, localProjectionDir) > -0.5) {
 				continue;
 			}
 
@@ -432,10 +616,10 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 
 				// add the fragments of this face
 				R_AddMarkFragments( 3 , clipPoints,
-								   numPlanes, normals, dists,
+								   numPlanes, localNormals, localDists,
 								   maxPoints, pointBuffer,
 								   maxFragments, fragmentBuffer,
-								   &returnedPoints, &returnedFragments, mins, maxs);
+								   &returnedPoints, &returnedFragments, mins, maxs, lastBmodel, localProjectionDir);
 				if ( returnedFragments == maxFragments ) {
 					return returnedFragments;	// not enough space for more fragments
 				}
@@ -455,9 +639,9 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 
 				// add the fragments of this face
 				R_AddMarkFragments(3, clipPoints,
-								   numPlanes, normals, dists,
+								   numPlanes, localNormals, localDists,
 								   maxPoints, pointBuffer,
-								   maxFragments, fragmentBuffer, &returnedPoints, &returnedFragments, mins, maxs);
+								   maxFragments, fragmentBuffer, &returnedPoints, &returnedFragments, mins, maxs, lastBmodel, localProjectionDir);
 				if(returnedFragments == maxFragments)
 				{
 					return returnedFragments;	// not enough space for more fragments
