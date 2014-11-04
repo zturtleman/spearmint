@@ -491,7 +491,7 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 	lastBmodel = -1;
 
 	for ( i = 0 ; i < numsurfaces ; i++ ) {
-		if (surfacesBmodel[i] != lastBmodel) {
+		if (i == 0 || surfacesBmodel[i] != lastBmodel) {
 			R_TransformMarkProjection( surfacesBmodel[i], projectionDir, localProjectionDir, numPlanes, normals, dists, localNormals, localDists );
 			lastBmodel = surfacesBmodel[i];
 
