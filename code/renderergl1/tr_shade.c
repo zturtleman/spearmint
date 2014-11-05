@@ -363,16 +363,6 @@ static void DrawMultitextured( shaderCommands_t *input, int stage ) {
 
 	pStage = tess.xstages[stage];
 
-	if ( tess.shader->noFog && pStage->isFogged ) {
-		RB_FogOn();
-	} else if ( tess.shader->noFog && !pStage->isFogged ) {
-		// turn fog back off
-		R_FogOff();
-	} else {
-		// make sure fog is on
-		RB_FogOn();
-	}
-
 	GL_State( pStage->stateBits );
 
 	// this is an ugly hack to work around a GeForce driver
@@ -1471,6 +1461,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, input->svars.colors );
 		}
 
+		// per stage fogging (detail textures)
+		if ( !tess.shader->noFog || pStage->isFogged ) {
+			RB_FogOn();
+		} else {
+			R_FogOff();
+		}
+
 		//
 		// do multitexture
 		//
@@ -1489,17 +1486,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			// set state
 			//
 			R_BindAnimatedImage( &pStage->bundle[0] );
-
-			// per stage fogging (detail textures)
-			if ( tess.shader->noFog && pStage->isFogged ) {
-				RB_FogOn();
-			} else if ( tess.shader->noFog && !pStage->isFogged ) {
-				// turn fog back off
-				R_FogOff();
-			} else {
-				// make sure fog is on
-				RB_FogOn();
-			}
 
 			GL_State( pStage->stateBits );
 
