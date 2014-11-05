@@ -219,26 +219,16 @@ int R_RefEntityForBmodelNum( int bmodelNum );
 
 /*
 =================
-R_TransformMarkProjection
-
-transform world space data to bmodel local space
+R_GetBmodelInfo
 =================
 */
-void R_TransformMarkProjection( int bmodelNum, const vec3_t inProjection, vec3_t outProjection, int numPlanes, vec3_t *inNormals, float *inDists, vec3_t *outNormals, float *outDists ) {
-	int i;
+void R_GetBmodelInfo( int bmodelNum, int *pEntityNum, vec3_t origin, vec3_t axis[3] ) {
 	int entityNum;
-	vec3_t axis[3], origin;
 
 	entityNum = R_RefEntityForBmodelNum( bmodelNum );
 
-	if ( entityNum == REFENTITYNUM_WORLD ) {
-		for ( i = 0; i < numPlanes; i++ ) {
-			VectorCopy( inNormals[i], outNormals[i] );
-			outDists[i] = inDists[i];
-		}
-
-		VectorCopy( inProjection, outProjection );
-		return;
+	if ( pEntityNum ) {
+		*pEntityNum = entityNum;
 	}
 
 	if ( entityNum == -1 ) {
@@ -255,6 +245,7 @@ void R_TransformMarkProjection( int bmodelNum, const vec3_t inProjection, vec3_t
 		VectorCopy( bmodel->orientation.axis[1], axis[1] );
 		VectorCopy( bmodel->orientation.axis[2], axis[2] );
 	} else {
+		// ZTM: TODO: remove this code or fix stuff so it's actually used? player shadow and bullet marks don't use it.
 		trRefEntity_t *ent;
 
 		ent = &backEndData->entities[entityNum];
@@ -263,6 +254,31 @@ void R_TransformMarkProjection( int bmodelNum, const vec3_t inProjection, vec3_t
 		VectorCopy( ent->e.axis[0], axis[0] );
 		VectorCopy( ent->e.axis[1], axis[1] );
 		VectorCopy( ent->e.axis[2], axis[2] );
+	}
+}
+
+/*
+=================
+R_TransformMarkProjection
+
+transform world space data to bmodel local space
+=================
+*/
+void R_TransformMarkProjection( int bmodelNum, const vec3_t inProjection, vec3_t outProjection, int numPlanes, vec3_t *inNormals, float *inDists, vec3_t *outNormals, float *outDists ) {
+	int i;
+	int entityNum;
+	vec3_t origin, axis[3];
+
+	R_GetBmodelInfo( bmodelNum, &entityNum, origin, axis );
+
+	if ( entityNum == REFENTITYNUM_WORLD ) {
+		for ( i = 0; i < numPlanes; i++ ) {
+			VectorCopy( inNormals[i], outNormals[i] );
+			outDists[i] = inDists[i];
+		}
+
+		VectorCopy( inProjection, outProjection );
+		return;
 	}
 
 	for ( i = 0; i < numPlanes; i++ ) {
@@ -370,10 +386,7 @@ void R_AddMarkFragments(int numClipPoints, vec3_t clipPoints[2][MAX_VERTS_ON_POL
 	mf->firstPoint = (*returnedPoints);
 	mf->numPoints = numClipPoints;
 	mf->bmodelNum = bmodelNum;
-	VectorCopy( tr.world->bmodels[bmodelNum].orientation.origin, mf->bmodelOrigin );
-	VectorCopy( tr.world->bmodels[bmodelNum].orientation.axis[0], mf->bmodelAxis[0] );
-	VectorCopy( tr.world->bmodels[bmodelNum].orientation.axis[1], mf->bmodelAxis[1] );
-	VectorCopy( tr.world->bmodels[bmodelNum].orientation.axis[2], mf->bmodelAxis[2] );
+	R_GetBmodelInfo( bmodelNum, NULL, mf->bmodelOrigin, mf->bmodelAxis );
 	VectorCopy( projectionDir, mf->projectionDir );
 
 	Com_Memcpy( pointBuffer + (*returnedPoints) * 3, clipPoints[pingPong], numClipPoints * sizeof(vec3_t) );
@@ -456,9 +469,10 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 
 	// add bmodel surfaces
 	for ( j = 1; j < tr.world->numBModels; j++ ) {
-		vec3_t localProjection;
+		vec3_t localProjection, bmodelOrigin, bmodelAxis[3];
 
 		R_TransformMarkProjection( j, projection, localProjection, 0, NULL, NULL, NULL, NULL );
+		R_GetBmodelInfo( j, NULL, bmodelOrigin, bmodelAxis );
 
 		VectorNormalize2( localProjection, localProjectionDir );
 		// find all the brushes that are to be considered
@@ -469,10 +483,10 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 			vec3_t	localPoint;
 
 			// convert point to bmodel local space
-			VectorSubtract( points[i], tr.world->bmodels[j].orientation.origin, delta );
-			localPoint[0] = DotProduct( delta, tr.world->bmodels[j].orientation.axis[0] );
-			localPoint[1] = DotProduct( delta, tr.world->bmodels[j].orientation.axis[1] );
-			localPoint[2] = DotProduct( delta, tr.world->bmodels[j].orientation.axis[2] );
+			VectorSubtract( points[i], bmodelOrigin, delta );
+			localPoint[0] = DotProduct( delta, bmodelAxis[0] );
+			localPoint[1] = DotProduct( delta, bmodelAxis[1] );
+			localPoint[2] = DotProduct( delta, bmodelAxis[2] );
 
 			AddPointToBounds( localPoint, mins, maxs );
 			VectorAdd( localPoint, localProjection, temp );
