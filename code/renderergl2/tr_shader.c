@@ -216,16 +216,17 @@ RE_GetSurfaceShader
 
 return a shader index for a given world surface
 
-withlightmap 0 will create a new shader that is a copy of the one found
+lightmapIndex=LIGHTMAP_NONE will create a new shader that is a copy of the one found
 on the model, without the lighmap stage, if the shader has a lightmap stage
 
-withlightmap -1 will create shader for 2D UI/HUD usage.
+lightmapIndex=LIGHTMAP_2D will create shader for 2D UI/HUD usage.
+
+lightmapIndex >= 0 will use the default lightmap for the surface.
 ==============
 */
-qhandle_t RE_GetSurfaceShader( int surfaceNum, int withlightmap ) {
+qhandle_t RE_GetSurfaceShader( int surfaceNum, int lightmapIndex ) {
 	msurface_t	*surf;
 	shader_t	*shd;
-	int			lightmapIndex;
 	int			i;
 
 	// remove the plus one offset
@@ -240,18 +241,6 @@ qhandle_t RE_GetSurfaceShader( int surfaceNum, int withlightmap ) {
 	// RF, check for null shader (can happen on func_explosive's with botclips attached)
 	if ( !surf->shader ) {
 		return 0;
-	}
-
-	switch ( withlightmap ) {
-		case 0:
-			lightmapIndex = LIGHTMAP_NONE;
-			break;
-		case -1:
-			lightmapIndex = LIGHTMAP_2D;
-			break;
-		default:
-			lightmapIndex = 0;
-			break;
 	}
 
 	if ( lightmapIndex < 0 && surf->shader->lightmapIndex != lightmapIndex ) {
@@ -285,13 +274,13 @@ qhandle_t RE_GetSurfaceShader( int surfaceNum, int withlightmap ) {
 RE_GetShaderFromModel
 
 return a shader index for a given model's surface
-'withlightmap' set to '0' will create a new shader that is a copy of the one found
+'lightmapIndex' set to LIGHTMAP_NONE will create a new shader that is a copy of the one found
 on the model, without the lighmap stage, if the shader has a lightmap stage
 
 NOTE: only works for bmodels right now.  Could modify for other models (md3's etc.)
 ==============
 */
-qhandle_t RE_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap ) {
+qhandle_t RE_GetShaderFromModel( qhandle_t hModel, int surfnum, int lightmapIndex ) {
 	model_t		*model;
 	bmodel_t	*bmodel;
 
@@ -304,7 +293,7 @@ qhandle_t RE_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap
 				surfnum = 0;
 			}
 
-			return RE_GetSurfaceShader( bmodel->firstSurface + surfnum + 1, withlightmap );
+			return RE_GetSurfaceShader( bmodel->firstSurface + surfnum + 1, lightmapIndex );
 		}
 	}
 
