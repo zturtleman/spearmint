@@ -2025,7 +2025,6 @@ S_AL_StartStreamingSound
 static
 void S_AL_StartStreamingSound( int stream, int entityNum, const char *filename, float volume )
 {
-	ALuint musicBuffers[NUM_MUSIC_BUFFERS];
 	int i;
 
 	if ((stream < 0) || (stream >= MAX_STREAMING_SOUNDS))
@@ -2053,17 +2052,22 @@ void S_AL_StartStreamingSound( int stream, int entityNum, const char *filename, 
 		return;
 	}
 
-	// Generate the musicBuffers
-	if (!S_AL_GenBuffers(NUM_MUSIC_BUFFERS, musicBuffers, "music"))
-		return;
-
-	// Queue the musicBuffers up
-	for(i = 0; i < NUM_MUSIC_BUFFERS; i++)
+	// Generate the buffers
+	if (!S_AL_GenBuffers(NUM_MUSIC_BUFFERS, streamBuffers[stream], "steaming sound"))
 	{
-		S_AL_StreamingSoundProcess(stream, musicBuffers[i]);
+		S_AL_FreeStreamChannel( stream );
+		return;
 	}
 
-	qalSourceQueueBuffers(streamSources[stream], NUM_MUSIC_BUFFERS, musicBuffers);
+	streamNumBuffers[stream] = NUM_MUSIC_BUFFERS;
+
+	// Queue the buffers up
+	for(i = 0; i < NUM_MUSIC_BUFFERS; i++)
+	{
+		S_AL_StreamingSoundProcess(stream, streamBuffers[stream][i]);
+	}
+
+	qalSourceQueueBuffers(streamSources[stream], NUM_MUSIC_BUFFERS, streamBuffers[stream]);
 
 	// Set the initial gain property
 	if(entityNum < 0)
