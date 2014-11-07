@@ -1318,6 +1318,20 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_S_STARTBACKGROUNDTRACK:
 		S_StartBackgroundTrack( VMA(1), VMA(2), VMF(3), VMF(3) );
 		return 0;
+	case CG_S_STARTSTREAMINGSOUND:
+		S_StartStreamingSound( args[1], args[2], VMA(3), VMF(4) );
+		return 0;
+	case CG_S_STOPSTREAMINGSOUND:
+		S_StopStreamingSound( args[1] );
+		return 0;
+	case CG_S_QUEUESTREAMINGSOUND:
+		S_QueueStreamingSound( args[1], VMA(2), VMF(3) );
+		return 0;
+	case CG_S_GETSTREAMPLAYCOUNT:
+		return S_GetStreamPlayCount( args[1] );
+	case CG_S_SETSTREAMVOLUME:
+		S_SetStreamVolume( args[1], VMF(2) );
+		return 0;
 	case CG_R_LOADWORLDMAP:
 		CL_LoadWorldMap( VMA(1) );
 		return 0;

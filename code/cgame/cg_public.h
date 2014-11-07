@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	30
+#define CG_API_MINOR_VERSION	31
 
 
 #define	CMD_BACKUP			64	
@@ -330,6 +330,11 @@ typedef enum {
 	CG_S_STARTLOCALSOUND,
 	CG_S_STARTBACKGROUNDTRACK,
 	CG_S_STOPBACKGROUNDTRACK,
+	CG_S_STARTSTREAMINGSOUND,
+	CG_S_STOPSTREAMINGSOUND,
+	CG_S_QUEUESTREAMINGSOUND,
+	CG_S_GETSTREAMPLAYCOUNT,
+	CG_S_SETSTREAMVOLUME,
 
 	// note: these were not originally available in ui
 	CG_S_STARTSOUND = 450,
