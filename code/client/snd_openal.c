@@ -1904,6 +1904,8 @@ qboolean S_AL_StreamingSoundProcess( int stream, ALuint b )
 
 		if (!curstream)
 			return qfalse;
+
+		l = S_CodecReadStream(curstream, MUSIC_BUFFER_SIZE, decode_buffer);
 	}
 
 	format = S_AL_Format(curstream->info.width, curstream->info.channels);
