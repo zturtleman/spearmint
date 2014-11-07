@@ -1995,7 +1995,14 @@ void S_AL_StreamUpdate( int stream )
 	if ( stream < MAX_STREAMING_SOUNDS )
 	{
 		// Set the gain property
-		S_AL_Gain(streamSources[stream], s_alGain->value * s_musicVolume->value * streamVolume[stream]);
+		srcHandle_t cursrc = streamSourceHandles[stream];
+		float gain = s_alGain->value * s_musicVolume->value * streamVolume[stream];
+
+		if ( srcList[cursrc].isTracking ) {
+			srcList[cursrc].curGain = gain;
+		} else {
+			S_AL_Gain( streamSources[stream], gain );
+		}
 	}
 }
 
