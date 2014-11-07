@@ -2025,6 +2025,17 @@ S_AL_StartStreamingSound
 =================
 */
 static
+void S_AL_StopStreamingSound( int stream )
+{
+	S_AL_StreamDie( stream );
+}
+
+/*
+=================
+S_AL_StartStreamingSound
+=================
+*/
+static
 void S_AL_StartStreamingSound( int stream, int entityNum, const char *filename, float volume )
 {
 	int i;
@@ -2033,7 +2044,7 @@ void S_AL_StartStreamingSound( int stream, int entityNum, const char *filename, 
 		return;
 
 	// Stop any existing music that might be playing
-	S_AL_StreamDie( stream );
+	S_AL_StopStreamingSound( stream );
 
 	if(!filename || !*filename)
 		return;
@@ -2146,7 +2157,7 @@ S_AL_StopBackgroundTrack
 static
 void S_AL_StopBackgroundTrack( void )
 {
-	S_AL_FreeStreamChannel( 0 );
+	S_AL_StopStreamingSound( 0 );
 }
 
 /*
