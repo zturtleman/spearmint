@@ -1316,7 +1316,10 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_S_SOUNDDURATION:
 		return S_SoundDuration( args[1] );
 	case CG_S_STARTBACKGROUNDTRACK:
-		S_StartBackgroundTrack( VMA(1), VMA(2), VMF(3), VMF(3) );
+		S_StartBackgroundTrack( VMA(1), VMA(2), VMF(3), VMF(4) );
+		return 0;
+	case CG_S_STOPBACKGROUNDTRACK:
+		S_StopBackgroundTrack();
 		return 0;
 	case CG_S_STARTSTREAMINGSOUND:
 		S_StartStreamingSound( args[1], args[2], VMA(3), VMF(4) );
@@ -1632,10 +1635,6 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 
 	case CG_ALLOC:
 		return VM_Alloc( args[1], VMA(2) );
-
-	case CG_S_STOPBACKGROUNDTRACK:
-		S_StopBackgroundTrack();
-		return 0;
 
 	case CG_REAL_TIME:
 		return Com_RealTime( VMA(1) );
