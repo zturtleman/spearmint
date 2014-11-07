@@ -2028,7 +2028,7 @@ void S_AL_StreamDie( int stream )
 
 /*
 =================
-S_AL_StartStreamingSound
+S_AL_StopStreamingSound
 =================
 */
 static
@@ -2174,7 +2174,7 @@ static
 void S_AL_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume )
 {
 	S_AL_StartStreamingSound( 0, -1, intro, volume );
-	S_AL_QueueStreamingSound( 0, loop, loopVolume );
+	S_AL_QueueStreamingSound( 0, (loop && *loop) ? loop : intro, loopVolume );
 }
 
 

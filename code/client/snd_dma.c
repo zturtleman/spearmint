@@ -1552,7 +1552,7 @@ S_StartBackgroundTrack
 */
 void S_Base_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume ) {
 	S_Base_StartStreamingSound( 0, -1, intro, volume );
-	S_Base_QueueStreamingSound( 0, loop, loopVolume );
+	S_Base_QueueStreamingSound( 0, (loop && *loop) ? loop : intro, loopVolume );
 }
 
 /*
