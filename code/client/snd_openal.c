@@ -1888,15 +1888,15 @@ qboolean S_AL_StreamingSoundProcess( int stream, ALuint b )
 	{
 		S_CodecCloseStream(curstream);
 
+		streamPlayCount[stream]++;
+
 		if (streamQueued[stream][0])
 		{
-			streamPlayCount[stream]++;
 			streamVolume[stream] = streamQueuedVolume[stream];
 			curstream = S_CodecOpenStream(streamQueued[stream]);
 		}
 		else
 		{
-			streamPlayCount[stream] = 1;
 			curstream = NULL;
 		}
 

@@ -1617,11 +1617,12 @@ void S_UpdateStreamingSounds( void ) {
 			}
 			else
 			{
+				s_backgroundPlayCount[stream]++;
+
 				// loop
 				if(s_backgroundLoop[stream][0])
 				{
 					s_backgroundVolume[stream] = s_backgroundLoopVolume[stream];
-					s_backgroundPlayCount[stream]++;
 					S_Base_OpenStream( stream, s_backgroundLoop[stream] );
 					if(!s_backgroundStream[stream])
 						break;
