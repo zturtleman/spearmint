@@ -138,6 +138,11 @@ typedef struct
 	void (*StartLocalSound)( sfxHandle_t sfx, int channelNum );
 	void (*StartBackgroundTrack)( const char *intro, const char *loop, float volume, float loopVolume );
 	void (*StopBackgroundTrack)( void );
+	void (*StartStreamingSound)( int stream, int entityNum, const char *filename, float volume );
+	void (*StopStreamingSound)( int stream );
+	void (*QueueStreamingSound)( int stream, const char *filename, float volume );
+	int  (*GetStreamPlayCount)( int stream );
+	void (*SetStreamVolume)( int stream, float volume );
 	void (*RawSamples)(int stream, int samples, int rate, int width, int channels, const byte *data, float volume, int entityNum);
 	void (*StopAllSounds)( void );
 	void (*ClearLoopingSounds)( qboolean killall );

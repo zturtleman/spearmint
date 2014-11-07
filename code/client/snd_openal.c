@@ -2112,7 +2112,6 @@ void S_AL_QueueStreamingSound( int stream, const char *filename, float volume ) 
 	streamQueuedVolume[stream] = Com_Clamp(0, 10, volume);
 }
 
-#if 0
 /*
 =================
 S_AL_GetStreamPlayCount
@@ -2144,7 +2143,6 @@ void S_AL_SetStreamVolume( int stream, float volume ) {
 
 	streamVolume[stream] = Com_Clamp(0, 10, volume);
 }
-#endif
 
 //===========================================================================
 
@@ -2685,6 +2683,11 @@ qboolean S_AL_Init( soundInterface_t *si )
 	si->StartLocalSound = S_AL_StartLocalSound;
 	si->StartBackgroundTrack = S_AL_StartBackgroundTrack;
 	si->StopBackgroundTrack = S_AL_StopBackgroundTrack;
+	si->StartStreamingSound = S_AL_StartStreamingSound;
+	si->StopStreamingSound = S_AL_StopStreamingSound;
+	si->QueueStreamingSound = S_AL_QueueStreamingSound;
+	si->GetStreamPlayCount = S_AL_GetStreamPlayCount;
+	si->SetStreamVolume = S_AL_SetStreamVolume;
 	si->RawSamples = S_AL_RawSamples;
 	si->StopAllSounds = S_AL_StopAllSounds;
 	si->ClearLoopingSounds = S_AL_ClearLoopingSounds;

@@ -279,6 +279,11 @@ static qboolean S_ValidSoundInterface( soundInterface_t *si )
 	if( !si->StartLocalSound ) return qfalse;
 	if( !si->StartBackgroundTrack ) return qfalse;
 	if( !si->StopBackgroundTrack ) return qfalse;
+	if( !si->StartStreamingSound ) return qfalse;
+	if( !si->StopStreamingSound ) return qfalse;
+	if( !si->QueueStreamingSound ) return qfalse;
+	if( !si->GetStreamPlayCount ) return qfalse;
+	if( !si->SetStreamVolume ) return qfalse;
 	if( !si->RawSamples ) return qfalse;
 	if( !si->StopAllSounds ) return qfalse;
 	if( !si->ClearLoopingSounds ) return qfalse;
@@ -353,6 +358,62 @@ void S_StopBackgroundTrack( void )
 	if( si.StopBackgroundTrack ) {
 		si.StopBackgroundTrack( );
 	}
+}
+
+/*
+=================
+S_StartStreamingSound
+=================
+*/
+void S_StartStreamingSound( int stream, int entityNum, const char *filename, float volume )
+{
+	if(si.StartStreamingSound)
+		si.StartStreamingSound(stream, entityNum, filename, volume);
+}
+
+/*
+=================
+S_StopStreamingSound
+=================
+*/
+void S_StopStreamingSound( int stream )
+{
+	if(si.StopStreamingSound)
+		si.StopStreamingSound(stream);
+}
+
+/*
+=================
+S_QueueStreamingSound
+=================
+*/
+void S_QueueStreamingSound( int stream, const char *filename, float volume )
+{
+	if(si.QueueStreamingSound)
+		si.QueueStreamingSound(stream, filename, volume);
+}
+
+/*
+=================
+S_GetStreamPlayCount
+=================
+*/
+int  S_GetStreamPlayCount( int stream )
+{
+	if(si.GetStreamPlayCount)
+		return si.GetStreamPlayCount(stream);
+	return 0;
+}
+
+/*
+=================
+S_SetStreamVolume
+=================
+*/
+void S_SetStreamVolume( int stream, float volume )
+{
+	if(si.SetStreamVolume)
+		si.SetStreamVolume(stream, volume);
 }
 
 /*

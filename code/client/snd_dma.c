@@ -1528,7 +1528,6 @@ int S_Base_GetStreamPlayCount( int stream ) {
 	return s_backgroundPlayCount[stream];
 }
 
-#if 0
 /*
 =================
 S_SetStreamVolume
@@ -1545,7 +1544,6 @@ void S_Base_SetStreamVolume( int stream, float volume ) {
 
 	s_backgroundVolume[stream] = Com_Clamp(0, 10, volume);
 }
-#endif
 
 /*
 ======================
@@ -1734,6 +1732,11 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	si->StartLocalSound = S_Base_StartLocalSound;
 	si->StartBackgroundTrack = S_Base_StartBackgroundTrack;
 	si->StopBackgroundTrack = S_Base_StopBackgroundTrack;
+	si->StartStreamingSound = S_Base_StartStreamingSound;
+	si->StopStreamingSound = S_Base_StopStreamingSound;
+	si->QueueStreamingSound = S_Base_QueueStreamingSound;
+	si->GetStreamPlayCount = S_Base_GetStreamPlayCount;
+	si->SetStreamVolume = S_Base_SetStreamVolume;
 	si->RawSamples = S_Base_RawSamples;
 	si->StopAllSounds = S_Base_StopAllSounds;
 	si->ClearLoopingSounds = S_Base_ClearLoopingSounds;

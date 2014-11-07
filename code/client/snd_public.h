@@ -40,6 +40,12 @@ void S_StartLocalSound( sfxHandle_t sfx, int channelNum );
 void S_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume );
 void S_StopBackgroundTrack( void );
 
+void S_StartStreamingSound( int stream, int entityNum, const char *filename, float volume );
+void S_StopStreamingSound( int stream );
+void S_QueueStreamingSound( int stream, const char *filename, float volume );
+int  S_GetStreamPlayCount( int stream );
+void S_SetStreamVolume( int stream, float volume );
+
 // cinematics and voice-over-network will send raw samples
 // 1.0 volume will be direct output of source samples
 void S_RawSamples(int stream, int samples, int rate, int width, int channels,
