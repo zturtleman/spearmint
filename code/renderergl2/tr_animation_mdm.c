@@ -1432,7 +1432,6 @@ void RB_MDMSurfaceAnim( mdmSurface_t *surface ) {
 	int baseIndex, baseVertex, oldIndexes;
 	mdmVertex_t *v;
 	float *tempVert;
-	uint32_t *tempNormal;
 	int *collapse_map, *pCollapseMap;
 	int collapse[ MDM_MAX_VERTS ], *pCollapse;
 	int p0, p1, p2;
@@ -1583,8 +1582,7 @@ void RB_MDMSurfaceAnim( mdmSurface_t *surface ) {
 	//
 	v = ( mdmVertex_t * )( (byte *)surface + surface->ofsVerts );
 	tempVert = ( float * )( tess.xyz + baseVertex );
-	tempNormal = ( uint32_t * )( tess.normal + baseVertex );
-	for ( j = 0; j < render_count; j++, tempVert += 4, tempNormal++ ) {
+	for ( j = 0; j < render_count; j++, tempVert += 4 ) {
 		mdmWeight_t *w;
 		vec3_t newNormal;
 
@@ -1598,7 +1596,7 @@ void RB_MDMSurfaceAnim( mdmSurface_t *surface ) {
 
 		LocalMatrixTransformVector( v->normal, bones[v->weights[0].boneIndex].matrix, newNormal );
 
-		*tempNormal = R_VaoPackNormal(newNormal);
+		R_VaoPackNormal((byte *)&tess.normal[baseVertex + j], newNormal);
 
 		tess.texCoords[baseVertex + j][0][0] = v->texCoords[0];
 		tess.texCoords[baseVertex + j][0][1] = v->texCoords[1];
@@ -1739,7 +1737,6 @@ void RB_MDMSurfaceAnim( mdmSurface_t *surface ) {
 
 			// show mesh edges
 			tempVert = ( float * )( tess.xyz + baseVertex );
-			tempNormal = ( uint32_t * )( tess.normal + baseVertex );
 
 			GL_Bind( tr.whiteImage );
 			qglLineWidth( 1 );
