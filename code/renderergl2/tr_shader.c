@@ -5236,18 +5236,6 @@ static void CreateExternalShaders( void ) {
 	tr.projectionShadowShader = R_FindShader( "projectionShadow", LIGHTMAP_NONE, qtrue );
 	tr.flareShader = R_FindShader( "flareShader", LIGHTMAP_NONE, qtrue );
 
-	// Hack to make fogging work correctly on flares. Fog colors are calculated
-	// in tr_flare.c already.
-	if(!tr.flareShader->defaultShader)
-	{
-		int index;
-		
-		for(index = 0; index < tr.flareShader->numUnfoggedPasses; index++)
-		{
-			tr.flareShader->stages[index]->stateBits |= GLS_DEPTHTEST_DISABLE;
-		}
-	}
-
 	if ( !tr.sunShaderName[0] ) {
 		Q_strncpyz( tr.sunShaderName, "sun", sizeof ( tr.sunShaderName ) );
 	}
