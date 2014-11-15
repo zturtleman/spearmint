@@ -4379,7 +4379,6 @@ static void CreateExternalShaders( void ) {
 		
 		for(index = 0; index < tr.flareShader->numUnfoggedPasses; index++)
 		{
-			tr.flareShader->stages[index]->adjustColorsForFog = ACFF_NONE;
 			tr.flareShader->stages[index]->stateBits |= GLS_DEPTHTEST_DISABLE;
 		}
 	}

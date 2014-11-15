@@ -343,6 +343,7 @@ void RB_RenderFlare( flare_t *f ) {
 	float			size;
 	vec3_t			color;
 	int				iColor[3];
+	int				iAlpha, srcBlend;
 	float distance, intensity, factor;
 	byte fogFactors[3] = {255, 255, 255};
 
@@ -382,15 +383,21 @@ void RB_RenderFlare( flare_t *f ) {
 	
 	intensity = flareCoeff * size * size / (factor * factor);
 
-#define FLARE_ALPHA // ZTM: NOTE: ET uses alpha blend because flares don't overwise blend in global fog. Says to switch back when it's fixed.
-#ifdef FLARE_ALPHA
-	VectorScale(f->color, intensity, color);
-#else
-	VectorScale(f->color, f->drawIntensity * intensity, color);
-#endif
+	// Calculations for RGBA
+	srcBlend = tr.flareShader->stages[0] ? ( tr.flareShader->stages[0]->stateBits & GLS_SRCBLEND_BITS ) : 0;
+	if ( srcBlend == GLS_SRCBLEND_ONE ) {
+		// Q3 flare, fade color. blendfunc GL_ONE GL_ONE
+		VectorScale(f->color, f->drawIntensity * intensity, color);
+		iAlpha = 255;
+	} else {
+		// RTCW/ET flare, fade alpha. blendfunc GL_SRC_ALPHA GL_ONE
+		// Note: RTCW source says it uses alpha blend/fade because overwise it doesn't blend in global fog and to switch back when it's fixed.
+		VectorScale(f->color, intensity, color);
+		iAlpha = f->drawIntensity * 255;
+	}
 
 	// Calculations for fogging
-	if(tr.world && f->fogNum > 0 && f->fogNum < tr.world->numfogs)
+	if(tr.world && f->fogNum > 0 && f->fogNum < tr.world->numfogs && !tr.flareShader->noFog)
 	{
 		tess.numVertexes = 1;
 		VectorCopy(f->origin, tess.xyz[0]);
@@ -407,7 +414,8 @@ void RB_RenderFlare( flare_t *f ) {
 	iColor[1] = color[1] * fogFactors[1];
 	iColor[2] = color[2] * fogFactors[2];
 	
-	RB_BeginSurface( tr.flareShader, f->fogNum );
+	// fog calculation already done, use fogNum 0
+	RB_BeginSurface( tr.flareShader, 0 );
 
 	// FIXME: use quadstamp?
 	tess.xyz[tess.numVertexes][0] = f->windowX - size;
@@ -417,11 +425,7 @@ void RB_RenderFlare( flare_t *f ) {
 	tess.vertexColors[tess.numVertexes][0] = iColor[0];
 	tess.vertexColors[tess.numVertexes][1] = iColor[1];
 	tess.vertexColors[tess.numVertexes][2] = iColor[2];
-	#ifdef FLARE_ALPHA
-	tess.vertexColors[tess.numVertexes][3] = f->drawIntensity * 255;
-	#else
-	tess.vertexColors[tess.numVertexes][3] = 255;
-	#endif
+	tess.vertexColors[tess.numVertexes][3] = iAlpha;
 	tess.numVertexes++;
 
 	tess.xyz[tess.numVertexes][0] = f->windowX - size;
@@ -431,11 +435,7 @@ void RB_RenderFlare( flare_t *f ) {
 	tess.vertexColors[tess.numVertexes][0] = iColor[0];
 	tess.vertexColors[tess.numVertexes][1] = iColor[1];
 	tess.vertexColors[tess.numVertexes][2] = iColor[2];
-	#ifdef FLARE_ALPHA
-	tess.vertexColors[tess.numVertexes][3] = f->drawIntensity * 255;
-	#else
-	tess.vertexColors[tess.numVertexes][3] = 255;
-	#endif
+	tess.vertexColors[tess.numVertexes][3] = iAlpha;
 	tess.numVertexes++;
 
 	tess.xyz[tess.numVertexes][0] = f->windowX + size;
@@ -445,11 +445,7 @@ void RB_RenderFlare( flare_t *f ) {
 	tess.vertexColors[tess.numVertexes][0] = iColor[0];
 	tess.vertexColors[tess.numVertexes][1] = iColor[1];
 	tess.vertexColors[tess.numVertexes][2] = iColor[2];
-	#ifdef FLARE_ALPHA
-	tess.vertexColors[tess.numVertexes][3] = f->drawIntensity * 255;
-	#else
-	tess.vertexColors[tess.numVertexes][3] = 255;
-	#endif
+	tess.vertexColors[tess.numVertexes][3] = iAlpha;
 	tess.numVertexes++;
 
 	tess.xyz[tess.numVertexes][0] = f->windowX + size;
@@ -459,11 +455,7 @@ void RB_RenderFlare( flare_t *f ) {
 	tess.vertexColors[tess.numVertexes][0] = iColor[0];
 	tess.vertexColors[tess.numVertexes][1] = iColor[1];
 	tess.vertexColors[tess.numVertexes][2] = iColor[2];
-	#ifdef FLARE_ALPHA
-	tess.vertexColors[tess.numVertexes][3] = f->drawIntensity * 255;
-	#else
-	tess.vertexColors[tess.numVertexes][3] = 255;
-	#endif
+	tess.vertexColors[tess.numVertexes][3] = iAlpha;
 	tess.numVertexes++;
 
 	tess.indexes[tess.numIndexes++] = 0;
