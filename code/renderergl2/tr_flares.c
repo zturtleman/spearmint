@@ -89,6 +89,8 @@ typedef struct flare_s {
 	float scale;
 
 	int id;
+
+	shader_t	*shader;
 } flare_t;
 
 #define		MAX_FLARES		128
@@ -139,7 +141,7 @@ RB_AddFlare
 This is called at surface tesselation time
 ==================
 */
-void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, float scale, vec3_t normal, int id, qboolean cgvisible ) {
+void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, float scale, vec3_t normal, int id, qboolean cgvisible, shader_t *shader ) {
 	int				i;
 	flare_t			*f;
 	vec3_t			local;
@@ -213,6 +215,7 @@ void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, float s
 
 	f->addedFrame = backEnd.viewParms.frameCount;
 	f->fogNum = fogNum;
+	f->shader = shader;
 
 	VectorCopy(point, f->origin);
 	VectorCopy( color, f->color );
@@ -247,7 +250,7 @@ void RB_AddDlightFlares( void ) {
 	l = backEnd.refdef.dlights;
 
 	for (i=0 ; i<backEnd.refdef.num_dlights ; i++, l++) {
-		RB_AddFlare( (void *)l, R_PointFogNum( &backEnd.refdef, l->origin, 0 ), l->origin, l->color, 1.0f, NULL, id++, qtrue );
+		RB_AddFlare( (void *)l, R_PointFogNum( &backEnd.refdef, l->origin, 0 ), l->origin, l->color, 1.0f, NULL, id++, qtrue, tr.flareShader );
 	}
 }
 
@@ -266,7 +269,7 @@ void RB_AddCoronaFlares( void ) {
 
 	cor = backEnd.refdef.coronas;
 	for ( i = 0 ; i < backEnd.refdef.num_coronas ; i++, cor++ ) {
-		RB_AddFlare( (void *)cor, R_PointFogNum( &backEnd.refdef, cor->origin, 0 ), cor->origin, cor->color, cor->scale, NULL, cor->id, cor->visible );
+		RB_AddFlare( (void *)cor, R_PointFogNum( &backEnd.refdef, cor->origin, 0 ), cor->origin, cor->color, cor->scale, NULL, cor->id, cor->visible, cor->shader );
 	}
 }
 
@@ -398,7 +401,7 @@ void RB_RenderFlare( flare_t *f ) {
 	intensity = flareCoeff * size * size / (factor * factor);
 
 	// Calculations for RGBA
-	srcBlend = tr.flareShader->stages[0] ? ( tr.flareShader->stages[0]->stateBits & GLS_SRCBLEND_BITS ) : 0;
+	srcBlend = f->shader->stages[0] ? ( f->shader->stages[0]->stateBits & GLS_SRCBLEND_BITS ) : 0;
 	if ( srcBlend == GLS_SRCBLEND_ONE ) {
 		// Q3 flare, fade color. blendfunc GL_ONE GL_ONE
 		VectorScale(f->color, f->drawIntensity * intensity, color);
@@ -411,7 +414,7 @@ void RB_RenderFlare( flare_t *f ) {
 	}
 
 	// Calculations for fogging
-	if(tr.world && f->fogNum > 0 && f->fogNum < tr.world->numfogs && !tr.flareShader->noFog)
+	if(tr.world && f->fogNum > 0 && f->fogNum < tr.world->numfogs && !f->shader->noFog)
 	{
 		tess.numVertexes = 1;
 		VectorCopy(f->origin, tess.xyz[0]);
@@ -429,7 +432,7 @@ void RB_RenderFlare( flare_t *f ) {
 	iColor[2] = color[2] * fogFactors[2];
 	
 	// fog calculation already done, use fogNum 0
-	RB_BeginSurface( tr.flareShader, 0, 0 );
+	RB_BeginSurface( f->shader, 0, 0 );
 
 	// FIXME: use quadstamp?
 	tess.xyz[tess.numVertexes][0] = f->windowX - size;

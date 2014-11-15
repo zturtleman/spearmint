@@ -73,6 +73,7 @@ typedef struct corona_s {
 	float		scale;			// uses r_flaresize as the baseline (1.0)
 	int			id;
 	qboolean	visible;		// still send the corona request, even if not visible, for proper fading
+	struct	shader_s *shader;
 } corona_t;
 
 typedef struct dlight_s {
@@ -2304,7 +2305,7 @@ FLARES
 
 void R_ClearFlares( void );
 
-void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, float scale, vec3_t normal, int id, qboolean cgvisible );
+void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, float scale, vec3_t normal, int id, qboolean cgvisible, shader_t *shader );
 void RB_AddDlightFlares( void );
 void RB_RenderFlares (void);
 
@@ -2450,7 +2451,7 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void RE_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
 void RE_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
-void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible );
+void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible, qhandle_t hShader );
 void RE_BeginScene( const refdef_t *fd );
 void RE_RenderScene( const refdef_t *fd, int fdSize );
 void RE_EndScene( void );

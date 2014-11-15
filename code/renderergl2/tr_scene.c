@@ -495,7 +495,7 @@ void RE_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity
 RE_AddCoronaToScene
 ==============
 */
-void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible ) {
+void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible, qhandle_t hShader ) {
 	corona_t    *cor;
 
 	if ( !tr.registered ) {
@@ -513,6 +513,7 @@ void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float sca
 	cor->scale = scale;
 	cor->id = id;
 	cor->visible = visible;
+	cor->shader = R_GetShaderByHandle( hShader );
 }
 
 
