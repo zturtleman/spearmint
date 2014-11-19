@@ -1422,8 +1422,17 @@ static void RB_SurfaceBad( surfaceType_t *surfType ) {
 
 static void RB_SurfaceFlare(srfFlare_t *surf)
 {
+	shader_t *shader;
+
+	shader = tess.shader;
+
+	// q3map2 doesn't add default flare shader I guess
+	if ( shader == tr.defaultShader ) {
+		shader = tr.flareShader;
+	}
+
 	if (r_flares->integer)
-		RB_AddFlare(surf, tess.fogNum, surf->origin, surf->color, 1.0f, surf->normal, -1, qtrue, tess.shader);
+		RB_AddFlare(surf, tess.fogNum, surf->origin, surf->color, 1.0f, surf->normal, -1, qtrue, shader);
 }
 
 static void RB_SurfacePolyBuffer( srfPolyBuffer_t *surf ) {
