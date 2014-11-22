@@ -188,7 +188,7 @@ static void WriteTGA (char *filename, byte *data, int width, int height) {
 	ri.Free (buffer);
 }
 
-static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut, int *xOut, int *yOut, int *maxHeight, FT_Face face, const unsigned char c, qboolean calcHeight) {
+static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut, int *xOut, int *yOut, int *maxHeight, FT_Face face, unsigned long c, qboolean calcHeight) {
 	int i;
 	static glyphInfo_t glyph;
 	unsigned char *src, *dst;
@@ -379,6 +379,22 @@ qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 }
 
 #ifdef BUILD_FREETYPE
+// Q3A uses some additional symbols, by default these glyphs would just be default missing glyph anyway
+unsigned long R_RemapGlyphCharacter( int charIndex ) {
+	switch ( charIndex ) {
+		case 10:
+			return 0xFF3F; // full width low line
+		case 11:
+			return 0x2588; // full block
+		case 13:
+			return 0x25B6; // right pointing triangle
+		default:
+			break;
+	}
+
+	return charIndex;
+}
+
 /*
 ===============
 R_LoadScalableFont
@@ -416,7 +432,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 
 	len = ri.FS_ReadFile(fontName, &faceData);
 	if (len <= 0) {
-		ri.Printf(PRINT_WARNING, "RE_RegisterFont: Unable to read font file '%s'\n", fontName);
+		ri.Printf(PRINT_DEVELOPER, "RE_RegisterFont: Unable to read font file '%s'\n", fontName);
 		return qfalse;
 	}
 
@@ -425,6 +441,8 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 		ri.Printf(PRINT_WARNING, "RE_RegisterFont: FreeType, unable to allocate new face.\n");
 		return qfalse;
 	}
+
+	FT_Select_Charmap( face, ft_encoding_unicode );
 
 	// point sizes are for a virtual 640x480 screen
 	if ( glConfig.vidWidth * 480 > glConfig.vidHeight * 640 ) {
@@ -464,7 +482,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 	maxHeight = 0;
 
 	for (i = GLYPH_START; i < GLYPH_END; i++) {
-		RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &maxHeight, face, (unsigned char)i, qtrue);
+		RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &maxHeight, face, R_RemapGlyphCharacter(i), qtrue);
 	}
 
 	xOut = 0;
@@ -475,7 +493,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 
 	while ( i <= GLYPH_END ) {
 
-		glyph = RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &maxHeight, face, (unsigned char)i, qfalse);
+		glyph = RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &maxHeight, face, R_RemapGlyphCharacter(i), qfalse);
 
 		if (xOut == -1 || yOut == -1 || i == GLYPH_END)  {
 			// ran out of room
