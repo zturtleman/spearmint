@@ -39,6 +39,7 @@ static qboolean R_LoadMDR(model_t *mod, void *buffer, int filesize, const char *
 static qboolean R_LoadMDS( model_t *mod, void *buffer, const char *mod_name );
 static qboolean R_LoadMDM( model_t *mod, void *buffer, const char *mod_name );
 static qboolean R_LoadMDX( model_t *mod, void *buffer, const char *mod_name );
+static qboolean R_LoadTAN( model_t *mod, void *buffer, const char *mod_name );
 
 /*
 ====================
@@ -237,6 +238,40 @@ qhandle_t R_RegisterIQM(const char *name, model_t *mod)
 	return mod->index;
 }
 
+/*
+====================
+R_RegisterTAN
+====================
+*/
+qhandle_t R_RegisterTAN(const char *name, model_t *mod)
+{
+	union {
+		unsigned *u;
+		void *v;
+	} buf;
+	qboolean loaded = qfalse;
+
+	ri.FS_ReadFile(name, (void **) &buf.v);
+	if(!buf.u)
+	{
+		mod->type = MOD_BAD;
+		return 0;
+	}
+	
+	loaded = R_LoadTAN(mod, buf.u, name);
+
+	ri.FS_FreeFile (buf.v);
+	
+	if(!loaded)
+	{
+		ri.Printf(PRINT_WARNING,"R_RegisterIQM: couldn't load iqm file %s\n", name);
+		mod->type = MOD_BAD;
+		return 0;
+	}
+	
+	return mod->index;
+}
+
 
 typedef struct
 {
@@ -255,6 +290,7 @@ static modelExtToLoaderMap_t modelLoaders[ ] =
 	{ "mds", R_RegisterMDS },
 	{ "mdm", R_RegisterMDS },
 	{ "mdx", R_RegisterMDS },
+	{ "tan", R_RegisterTAN },
 };
 
 static int numModelLoaders = ARRAY_LEN(modelLoaders);
@@ -1259,6 +1295,463 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 
 		// find the next surface
 		md3Surf = (md3Surface_t *) ((byte *) md3Surf + md3Surf->ofsEnd);
+		surf++;
+	}
+
+	{
+		srfVaoMdvMesh_t *vaoSurf;
+
+		mdvModel->numVaoSurfaces = mdvModel->numSurfaces;
+		mdvModel->vaoSurfaces = ri.Hunk_Alloc(sizeof(*mdvModel->vaoSurfaces) * mdvModel->numSurfaces, h_low);
+
+		vaoSurf = mdvModel->vaoSurfaces;
+		surf = mdvModel->surfaces;
+		for (i = 0; i < mdvModel->numSurfaces; i++, vaoSurf++, surf++)
+		{
+			uint32_t offset_xyz, offset_st, offset_normal, offset_tangent;
+			uint32_t stride_xyz, stride_st, stride_normal, stride_tangent;
+			uint32_t dataSize, dataOfs;
+			uint8_t *data;
+
+			if (mdvModel->numFrames > 1)
+			{
+				// vertex animation, store texcoords first, then position/normal/tangents
+				offset_st      = 0;
+				offset_xyz     = surf->numVerts * glRefConfig.packedTexcoordDataSize;
+				offset_normal  = offset_xyz + sizeof(vec3_t);
+				offset_tangent = offset_normal + sizeof(uint32_t);
+				stride_st  = glRefConfig.packedTexcoordDataSize;
+				stride_xyz = sizeof(vec3_t) + sizeof(uint32_t);
+#ifdef USE_VERT_TANGENT_SPACE
+				stride_xyz += sizeof(uint32_t);
+#endif
+				stride_normal = stride_tangent = stride_xyz;
+
+				dataSize = offset_xyz + surf->numVerts * mdvModel->numFrames * stride_xyz;
+			}
+			else
+			{
+				// no animation, interleave everything
+				offset_xyz     = 0;
+				offset_st      = offset_xyz + sizeof(vec3_t);
+				offset_normal  = offset_st + glRefConfig.packedTexcoordDataSize;
+				offset_tangent = offset_normal + sizeof(uint32_t);
+#ifdef USE_VERT_TANGENT_SPACE
+				stride_xyz = offset_tangent + sizeof(uint32_t);
+#else
+				stride_xyz = offset_normal + sizeof(uint32_t);
+#endif
+				stride_st = stride_normal = stride_tangent = stride_xyz;
+
+				dataSize = surf->numVerts * stride_xyz;
+			}
+
+
+			data = ri.Malloc(dataSize);
+			dataOfs = 0;
+
+			if (mdvModel->numFrames > 1)
+			{
+				st = surf->st;
+				for ( j = 0 ; j < surf->numVerts ; j++, st++ ) {
+					dataOfs += R_VaoPackTexCoord(data + dataOfs, st->st);
+				}
+
+				v = surf->verts;
+				for ( j = 0; j < surf->numVerts * mdvModel->numFrames ; j++, v++ )
+				{
+#ifdef USE_VERT_TANGENT_SPACE
+					vec3_t nxt;
+					vec4_t tangent;
+#endif
+					// xyz
+					memcpy(data + dataOfs, &v->xyz, sizeof(vec3_t));
+					dataOfs += sizeof(vec3_t);
+
+					// normal
+					dataOfs += R_VaoPackNormal(data + dataOfs, v->normal);
+
+#ifdef USE_VERT_TANGENT_SPACE
+					CrossProduct(v->normal, v->tangent, nxt);
+					VectorCopy(v->tangent, tangent);
+					tangent[3] = (DotProduct(nxt, v->bitangent) < 0.0f) ? -1.0f : 1.0f;
+
+					// tangent
+					dataOfs += R_VaoPackTangent(data + dataOfs, tangent);
+#endif
+				}
+			}
+			else
+			{
+				v = surf->verts;
+				st = surf->st;
+				for ( j = 0; j < surf->numVerts; j++, v++, st++ )
+				{
+#ifdef USE_VERT_TANGENT_SPACE
+					vec3_t nxt;
+					vec4_t tangent;
+#endif
+					// xyz
+					memcpy(data + dataOfs, &v->xyz, sizeof(vec3_t));
+					dataOfs += sizeof(v->xyz);
+
+					// st
+					dataOfs += R_VaoPackTexCoord(data + dataOfs, st->st);
+
+					// normal
+					dataOfs += R_VaoPackNormal(data + dataOfs, v->normal);
+
+#ifdef USE_VERT_TANGENT_SPACE
+					CrossProduct(v->normal, v->tangent, nxt);
+					VectorCopy(v->tangent, tangent);
+					tangent[3] = (DotProduct(nxt, v->bitangent) < 0.0f) ? -1.0f : 1.0f;
+
+					// tangent
+					dataOfs += R_VaoPackTangent(data + dataOfs, tangent);
+#endif
+				}
+			}
+
+			vaoSurf->surfaceType = SF_VAO_MDVMESH;
+			vaoSurf->mdvModel = mdvModel;
+			vaoSurf->mdvSurface = surf;
+			vaoSurf->numIndexes = surf->numIndexes;
+			vaoSurf->numVerts = surf->numVerts;
+			
+			vaoSurf->minIndex = 0;
+			vaoSurf->maxIndex = surf->numVerts - 1;
+
+			vaoSurf->vao = R_CreateVao(va("staticMD3Mesh_VAO '%s'", surf->name), data, dataSize, (byte *)surf->indexes, surf->numIndexes * sizeof(*surf->indexes), VAO_USAGE_STATIC);
+
+			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].enabled = 1;
+			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].enabled = 1;
+			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].enabled = 1;
+#ifdef USE_VERT_TANGENT_SPACE
+			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].enabled = 1;
+#endif
+
+			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].count = 3;
+			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].count = 2;
+			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].count = 4;
+			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].count = 4;
+
+			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].type = GL_FLOAT;
+			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].type = glRefConfig.packedTexcoordDataType;
+			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].type = glRefConfig.packedNormalDataType;
+			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].type = glRefConfig.packedNormalDataType;
+
+			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].normalized = GL_FALSE;
+			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].normalized = GL_FALSE;
+			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].normalized = GL_TRUE;
+			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].normalized = GL_TRUE;
+
+			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].offset = offset_xyz;
+			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].offset = offset_st;
+			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].offset = offset_normal;
+			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].offset = offset_tangent;
+
+			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].stride = stride_xyz;
+			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].stride = stride_st;
+			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].stride = stride_normal;
+			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].stride = stride_tangent;
+
+			if (mdvModel->numFrames > 1)
+			{
+				vaoSurf->vao->attribs[ATTR_INDEX_POSITION2] = vaoSurf->vao->attribs[ATTR_INDEX_POSITION];
+				vaoSurf->vao->attribs[ATTR_INDEX_NORMAL2  ] = vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ];
+				vaoSurf->vao->attribs[ATTR_INDEX_TANGENT2 ] = vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ];
+
+				vaoSurf->vao->frameSize = stride_xyz    * surf->numVerts;
+			}
+
+			Vao_SetVertexPointers(vaoSurf->vao);
+
+			ri.Free(data);
+		}
+	}
+
+	return qtrue;
+}
+
+
+
+/*
+=================
+R_LoadTAN
+=================
+*/
+static qboolean R_LoadTAN(model_t * mod, void *buffer, const char *modName)
+{
+	int             f, i, j, k;
+
+	tanHeader_t    *tanModel;
+	tanFrame_t     *tanFrame;
+	tanSurface_t   *tanSurf;
+	md3Triangle_t  *md3Tri;
+	md3St_t        *md3st;
+	tanXyzNormal_t *tanXyz;
+	tanTag_t       *tanTag;
+	tanTagData_t   *tanTagData;
+
+	mdvModel_t     *mdvModel;
+	mdvFrame_t     *frame;
+	mdvSurface_t   *surf;//, *surface;
+	int            *shaderIndex;
+	glIndex_t	   *tri;
+	mdvVertex_t    *v;
+	mdvSt_t        *st;
+	mdvTag_t       *tag;
+	mdvTagName_t   *tagName;
+
+	int             version;
+	int             size;
+
+	tanModel = (tanHeader_t *) buffer;
+
+	version = LittleLong(tanModel->version);
+	if(version != TIKI_ANIM_VERSION)
+	{
+		ri.Printf(PRINT_WARNING, "R_LoadTAN: %s has wrong version (%i should be %i)\n", modName, version, TIKI_ANIM_VERSION);
+		return qfalse;
+	}
+
+	mod->type = MOD_MESH;
+	size = LittleLong(tanModel->ofsEnd);
+	mod->dataSize += size;
+	mdvModel = mod->mdv[0] = ri.Hunk_Alloc(sizeof(mdvModel_t), h_low);
+
+//  Com_Memcpy(mod->md3[lod], buffer, LittleLong(md3Model->ofsEnd));
+
+	LL(tanModel->ident);
+	LL(tanModel->version);
+	LL(tanModel->numFrames);
+	LL(tanModel->numTags);
+	LL(tanModel->numSurfaces);
+	LL(tanModel->ofsFrames);
+	for ( i = 0 ; i < tanModel->numTags ; i++ ) {
+		LL(tanModel->ofsTags[i]);
+	}
+	LL(tanModel->ofsSurfaces);
+	LL(tanModel->ofsEnd);
+	tanModel->totaltime = LittleFloat( tanModel->totaltime );
+	for ( i = 0 ; i < 3 ; i++ ) {
+		tanModel->totaldelta[i] = LittleFloat( tanModel->totaldelta[i] );
+	}
+
+	if(tanModel->numFrames < 1)
+	{
+		ri.Printf(PRINT_WARNING, "R_LoadTAN: %s has no frames\n", modName);
+		return qfalse;
+	}
+
+	// swap all the frames
+	mdvModel->numFrames = tanModel->numFrames;
+	mdvModel->frames = frame = ri.Hunk_Alloc(sizeof(*frame) * tanModel->numFrames, h_low);
+
+	tanFrame = (tanFrame_t *) ((byte *) tanModel + tanModel->ofsFrames);
+	for(i = 0; i < tanModel->numFrames; i++, frame++, tanFrame++)
+	{
+		frame->radius = LittleFloat(tanFrame->radius);
+		for(j = 0; j < 3; j++)
+		{
+			frame->bounds[0][j] = LittleFloat(tanFrame->bounds[0][j]);
+			frame->bounds[1][j] = LittleFloat(tanFrame->bounds[1][j]);
+			frame->localOrigin[j] = LittleFloat(tanFrame->offset[j]);
+		}
+	}
+
+	// swap all the tags
+	mdvModel->numTags = tanModel->numTags;
+	mdvModel->tags = tag = ri.Hunk_Alloc(sizeof(*tag) * (tanModel->numTags * tanModel->numFrames), h_low);
+	mdvModel->tagNames = tagName = ri.Hunk_Alloc(sizeof(*tagName) * (tanModel->numTags), h_low);
+
+	for ( i = 0; i < tanModel->numTags; i++, tagName++, tanTag++ ) {
+		tanTag = (tanTag_t *) ( (byte *)tanModel + tanModel->ofsTags[i] );
+		Q_strncpyz(tagName->name, tanTag->name, sizeof(tagName->name));
+
+		tanTagData = (tanTagData_t *) ( (byte *)tanModel + tanModel->ofsTags[i] + sizeof ( tanTag_t ) );
+		for ( j = 0 ; j < tanModel->numFrames ; j++, tag++, tanTagData++) {
+			for ( k = 0 ; k < 3 ; k++ ) {
+				tag->origin[k] = LittleFloat( tanTagData->origin[k] );
+				tag->axis[0][k] = LittleFloat( tanTagData->axis[0][k] );
+				tag->axis[1][k] = LittleFloat( tanTagData->axis[1][k] );
+				tag->axis[2][k] = LittleFloat( tanTagData->axis[2][k] );
+			}
+		}
+	}
+
+	// swap all the surfaces
+	mdvModel->numSurfaces = tanModel->numSurfaces;
+	mdvModel->surfaces = surf = ri.Hunk_Alloc(sizeof(*surf) * tanModel->numSurfaces, h_low);
+
+	tanSurf = (tanSurface_t *) ((byte *) tanModel + tanModel->ofsSurfaces);
+	for(i = 0; i < tanModel->numSurfaces; i++)
+	{
+		LL(tanSurf->ident);
+		LL(tanSurf->numFrames);
+		LL(tanSurf->numTriangles);
+		LL(tanSurf->ofsTriangles);
+		LL(tanSurf->numVerts);
+		LL(tanSurf->minLod);
+		LL(tanSurf->ofsCollapseMap);
+		LL(tanSurf->ofsSt);
+		LL(tanSurf->ofsXyzNormals);
+		LL(tanSurf->ofsEnd);
+
+		if(tanSurf->numVerts >= SHADER_MAX_VERTEXES)
+		{
+			ri.Printf(PRINT_WARNING, "R_LoadTAN: %s has more than %i verts on %s (%i).\n",
+				modName, SHADER_MAX_VERTEXES - 1, tanSurf->name[0] ? tanSurf->name : "a surface",
+				tanSurf->numVerts );
+			return qfalse;
+		}
+		if(tanSurf->numTriangles * 3 >= SHADER_MAX_INDEXES)
+		{
+			ri.Printf(PRINT_WARNING, "R_LoadTAN: %s has more than %i triangles on %s (%i).\n",
+				modName, ( SHADER_MAX_INDEXES / 3 ) - 1, tanSurf->name[0] ? tanSurf->name : "a surface",
+				tanSurf->numTriangles );
+			return qfalse;
+		}
+
+		// change to surface identifier
+		surf->surfaceType = SF_MDV;
+
+		// give pointer to model for Tess_SurfaceMDX
+		surf->model = mdvModel;
+
+		// copy surface name
+		Q_strncpyz(surf->name, tanSurf->name, sizeof(surf->name));
+
+		// lowercase the surface name so skin compares are faster
+		Q_strlwr(surf->name);
+
+		// strip off a trailing _1 or _2
+		// this is a crutch for q3data being a mess
+		j = strlen(surf->name);
+		if(j > 2 && surf->name[j - 2] == '_')
+		{
+			surf->name[j - 2] = 0;
+		}
+
+		// register the shaders
+		surf->numShaderIndexes = 1;
+		surf->shaderIndexes = shaderIndex = ri.Hunk_Alloc(sizeof(*shaderIndex) * surf->numShaderIndexes, h_low);
+		*shaderIndex = 0; // default shader
+
+		// swap all the triangles
+		surf->numIndexes = tanSurf->numTriangles * 3;
+		surf->indexes = tri = ri.Hunk_Alloc(sizeof(*tri) * 3 * tanSurf->numTriangles, h_low);
+
+		md3Tri = (md3Triangle_t *) ((byte *) tanSurf + tanSurf->ofsTriangles);
+		for(j = 0; j < tanSurf->numTriangles; j++, tri += 3, md3Tri++)
+		{
+			tri[0] = LittleLong(md3Tri->indexes[0]);
+			tri[1] = LittleLong(md3Tri->indexes[1]);
+			tri[2] = LittleLong(md3Tri->indexes[2]);
+		}
+
+		// swap all the XyzNormals
+		surf->numVerts = tanSurf->numVerts;
+		surf->verts = v = ri.Hunk_Alloc(sizeof(*v) * (tanSurf->numVerts * tanSurf->numFrames), h_low);
+
+		tanFrame = (tanFrame_t *) ((byte *) tanModel + tanModel->ofsFrames);
+		tanXyz = (tanXyzNormal_t *) ((byte *) tanSurf + tanSurf->ofsXyzNormals);
+		for (f = 0; f < tanModel->numFrames; f++, tanFrame++ )
+		{
+			for(j = 0; j < tanSurf->numVerts; j++, tanXyz++, v++)
+			{
+				unsigned lat, lng;
+				unsigned short normal;
+
+				// ZTM: FIXME: tan changed to unsigned short, can LittleShort still be used?
+				v->xyz[0] = LittleShort(tanXyz->xyz[0]) * tanFrame->scale[0] + tanFrame->offset[0];
+				v->xyz[1] = LittleShort(tanXyz->xyz[1]) * tanFrame->scale[1] + tanFrame->offset[1];
+				v->xyz[2] = LittleShort(tanXyz->xyz[2]) * tanFrame->scale[2] + tanFrame->offset[2];
+
+				normal = LittleShort(tanXyz->normal);
+
+				lat = ( normal >> 8 ) & 0xff;
+				lng = ( normal & 0xff );
+				lat *= (FUNCTABLE_SIZE/256);
+				lng *= (FUNCTABLE_SIZE/256);
+
+				// decode X as cos( lat ) * sin( long )
+				// decode Y as sin( lat ) * sin( long )
+				// decode Z as cos( long )
+
+				v->normal[0] = tr.sinTable[(lat+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK] * tr.sinTable[lng];
+				v->normal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+				v->normal[2] = tr.sinTable[(lng+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK];
+			}
+		}
+
+		// swap all the ST
+		surf->st = st = ri.Hunk_Alloc(sizeof(*st) * tanSurf->numVerts, h_low);
+
+		md3st = (md3St_t *) ((byte *) tanSurf + tanSurf->ofsSt);
+		for(j = 0; j < tanSurf->numVerts; j++, md3st++, st++)
+		{
+			st->st[0] = LittleFloat(md3st->st[0]);
+			st->st[1] = LittleFloat(md3st->st[1]);
+		}
+
+#ifdef USE_VERT_TANGENT_SPACE
+		// calc tangent spaces
+		{
+			for(j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
+			{
+				VectorClear(v->tangent);
+				VectorClear(v->bitangent);
+			}
+
+			for(f = 0; f < mdvModel->numFrames; f++)
+			{
+				for(j = 0, tri = surf->indexes; j < surf->numIndexes; j += 3, tri += 3)
+				{
+					vec3_t sdir, tdir;
+					const float *v0, *v1, *v2, *t0, *t1, *t2;
+					glIndex_t index0, index1, index2;
+
+					index0 = surf->numVerts * f + tri[0];
+					index1 = surf->numVerts * f + tri[1];
+					index2 = surf->numVerts * f + tri[2];
+
+					v0 = surf->verts[index0].xyz;
+					v1 = surf->verts[index1].xyz;
+					v2 = surf->verts[index2].xyz;
+
+					t0 = surf->st[tri[0]].st;
+					t1 = surf->st[tri[1]].st;
+					t2 = surf->st[tri[2]].st;
+
+					R_CalcTexDirs(sdir, tdir, v0, v1, v2, t0, t1, t2);
+
+					VectorAdd(sdir, surf->verts[index0].tangent,   surf->verts[index0].tangent);
+					VectorAdd(sdir, surf->verts[index1].tangent,   surf->verts[index1].tangent);
+					VectorAdd(sdir, surf->verts[index2].tangent,   surf->verts[index2].tangent);
+					VectorAdd(tdir, surf->verts[index0].bitangent, surf->verts[index0].bitangent);
+					VectorAdd(tdir, surf->verts[index1].bitangent, surf->verts[index1].bitangent);
+					VectorAdd(tdir, surf->verts[index2].bitangent, surf->verts[index2].bitangent);
+				}
+			}
+
+			for(j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
+			{
+				vec3_t sdir, tdir;
+
+				VectorCopy(v->tangent,   sdir);
+				VectorCopy(v->bitangent, tdir);
+
+				VectorNormalize(sdir);
+				VectorNormalize(tdir);
+
+				R_CalcTbnFromNormalAndTexDirs(v->tangent, v->bitangent, v->normal, sdir, tdir);
+			}
+		}
+#endif
+
+		// find the next surface
+		tanSurf = (tanSurface_t *) ((byte *) tanSurf + tanSurf->ofsEnd);
 		surf++;
 	}
 

@@ -39,6 +39,7 @@ static qboolean R_LoadMDR(model_t *mod, void *buffer, int filesize, const char *
 static qboolean R_LoadMDS( model_t *mod, void *buffer, const char *name );
 static qboolean R_LoadMDM( model_t *mod, void *buffer, const char *mod_name );
 static qboolean R_LoadMDX( model_t *mod, void *buffer, const char *mod_name );
+static qboolean R_LoadTAN( model_t *mod, void *buffer, const char *mod_name );
 
 /*
 ====================
@@ -239,6 +240,40 @@ qhandle_t R_RegisterIQM(const char *name, model_t *mod)
 	return mod->index;
 }
 
+/*
+====================
+R_RegisterTAN
+====================
+*/
+qhandle_t R_RegisterTAN(const char *name, model_t *mod)
+{
+	union {
+		unsigned *u;
+		void *v;
+	} buf;
+	qboolean loaded = qfalse;
+
+	ri.FS_ReadFile(name, (void **) &buf.v);
+	if(!buf.u)
+	{
+		mod->type = MOD_BAD;
+		return 0;
+	}
+	
+	loaded = R_LoadTAN(mod, buf.u, name);
+
+	ri.FS_FreeFile (buf.v);
+	
+	if(!loaded)
+	{
+		ri.Printf(PRINT_WARNING,"R_RegisterTAN: couldn't load tan file %s\n", name);
+		mod->type = MOD_BAD;
+		return 0;
+	}
+	
+	return mod->index;
+}
+
 
 typedef struct
 {
@@ -257,6 +292,7 @@ static modelExtToLoaderMap_t modelLoaders[ ] =
 	{ "mds", R_RegisterMDS },
 	{ "mdm", R_RegisterMDS },
 	{ "mdx", R_RegisterMDS },
+	{ "tan", R_RegisterTAN },
 };
 
 static int numModelLoaders = ARRAY_LEN(modelLoaders);
@@ -799,6 +835,164 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *mod_
 
 // done.
 //-------------------------------------------------------------------------------
+
+/*
+=================
+R_LoadTAN
+=================
+*/
+static qboolean R_LoadTAN (model_t *mod, void *buffer, const char *mod_name ) {
+	int					i, j, k;
+	tanHeader_t			*pinmodel, *model;
+	tanFrame_t			*frame;
+	tanSurface_t		*surf;
+	md3Triangle_t		*tri;
+	md3St_t				*st;
+	tanXyzNormal_t		*xyz;
+	tanTagData_t		*tag;
+	int					version;
+	int					size;
+
+	pinmodel = (tanHeader_t *)buffer;
+
+	version = LittleLong (pinmodel->version);
+	if (version != TIKI_ANIM_VERSION) {
+		ri.Printf( PRINT_WARNING, "R_LoadTAN: %s has wrong version (%i should be %i)\n",
+				 mod_name, version, TIKI_ANIM_VERSION);
+		return qfalse;
+	}
+
+	mod->type = MOD_TAN;
+	size = LittleLong(pinmodel->ofsEnd);
+	mod->dataSize += size;
+	mod->modelData = model = ri.Hunk_Alloc( size, h_low );
+
+	Com_Memcpy (model, buffer, LittleLong(pinmodel->ofsEnd) );
+
+    LL(model->ident);
+    LL(model->version);
+    LL(model->numFrames);
+    LL(model->numTags);
+    LL(model->numSurfaces);
+    LL(model->ofsFrames);
+	for ( i = 0 ; i < model->numTags ; i++ ) {
+		LL(model->ofsTags[i]);
+	}
+    LL(model->ofsSurfaces);
+    LL(model->ofsEnd);
+	model->totaltime = LittleFloat( model->totaltime );
+	for ( i = 0 ; i < 3 ; i++ ) {
+		model->totaldelta[i] = LittleFloat( model->totaldelta[i] );
+	}
+
+	if ( model->numFrames < 1 ) {
+		ri.Printf( PRINT_WARNING, "R_LoadTAN: %s has no frames\n", mod_name );
+		return qfalse;
+	}
+    
+	// swap all the frames
+    frame = (tanFrame_t *) ( (byte *)model + model->ofsFrames );
+    for ( i = 0 ; i < model->numFrames ; i++, frame++) {
+    	frame->radius = LittleFloat( frame->radius );
+    	frame->frametime = LittleFloat( frame->frametime );
+        for ( j = 0 ; j < 3 ; j++ ) {
+            frame->bounds[0][j] = LittleFloat( frame->bounds[0][j] );
+            frame->bounds[1][j] = LittleFloat( frame->bounds[1][j] );
+			frame->scale[j] = LittleFloat( frame->scale[j] );
+			frame->offset[j] = LittleFloat( frame->offset[j] );
+			frame->delta[j] = LittleFloat( frame->delta[j] );
+        }
+	}
+
+	// swap all the tags
+	for ( i = 0; i < model->numTags; i++ ) {
+		tag = (tanTagData_t *) ( (byte *)model + model->ofsTags[i] + sizeof ( tanTag_t ) );
+		for ( j = 0 ; j < model->numFrames ; j++, tag++) {
+			for ( k = 0 ; k < 3 ; k++ ) {
+				tag->origin[k] = LittleFloat( tag->origin[k] );
+				tag->axis[0][k] = LittleFloat( tag->axis[0][k] );
+				tag->axis[1][k] = LittleFloat( tag->axis[1][k] );
+				tag->axis[2][k] = LittleFloat( tag->axis[2][k] );
+			}
+		}
+	}
+
+	// swap all the surfaces
+	surf = (tanSurface_t *) ( (byte *)model + model->ofsSurfaces );
+	for ( i = 0 ; i < model->numSurfaces ; i++) {
+
+        LL(surf->ident);
+        LL(surf->numFrames);
+        LL(surf->numTriangles);
+        LL(surf->ofsTriangles);
+        LL(surf->numVerts);
+        LL(surf->minLod);
+        LL(surf->ofsCollapseMap);
+        LL(surf->ofsSt);
+        LL(surf->ofsXyzNormals);
+        LL(surf->ofsEnd);
+
+		if ( surf->numVerts >= SHADER_MAX_VERTEXES ) {
+			ri.Printf(PRINT_WARNING, "R_LoadTAN: %s has more than %i verts on %s (%i).\n",
+				mod_name, SHADER_MAX_VERTEXES - 1, surf->name[0] ? surf->name : "a surface",
+				surf->numVerts );
+			return qfalse;
+		}
+		if ( surf->numTriangles*3 >= SHADER_MAX_INDEXES ) {
+			ri.Printf(PRINT_WARNING, "R_LoadTAN: %s has more than %i triangles on %s (%i).\n",
+				mod_name, ( SHADER_MAX_INDEXES / 3 ) - 1, surf->name[0] ? surf->name : "a surface",
+				surf->numTriangles );
+			return qfalse;
+		}
+	
+		// change to surface identifier
+		surf->ident = SF_TAN;
+
+		// lowercase the surface name so skin compares are faster
+		Q_strlwr( surf->name );
+
+		// strip off a trailing _1 or _2
+		// this is a crutch for q3data being a mess
+		j = strlen( surf->name );
+		if ( j > 2 && surf->name[j-2] == '_' ) {
+			surf->name[j-2] = 0;
+		}
+
+		// swap all the triangles
+		tri = (md3Triangle_t *) ( (byte *)surf + surf->ofsTriangles );
+		for ( j = 0 ; j < surf->numTriangles ; j++, tri++ ) {
+			LL(tri->indexes[0]);
+			LL(tri->indexes[1]);
+			LL(tri->indexes[2]);
+		}
+
+		// swap all the ST
+        st = (md3St_t *) ( (byte *)surf + surf->ofsSt );
+        for ( j = 0 ; j < surf->numVerts ; j++, st++ ) {
+            st->st[0] = LittleFloat( st->st[0] );
+            st->st[1] = LittleFloat( st->st[1] );
+        }
+
+		// swap all the XyzNormals
+        xyz = (tanXyzNormal_t *) ( (byte *)surf + surf->ofsXyzNormals );
+        for ( j = 0 ; j < surf->numVerts * surf->numFrames ; j++, xyz++ ) 
+		{
+			// ZTM: FIXME: TAN changed xyz to unsigned. can these still use LittleShort?
+            xyz->xyz[0] = LittleShort( xyz->xyz[0] );
+            xyz->xyz[1] = LittleShort( xyz->xyz[1] );
+            xyz->xyz[2] = LittleShort( xyz->xyz[2] );
+
+            xyz->normal = LittleShort( xyz->normal );
+        }
+
+
+		// find the next surface
+		surf = (tanSurface_t *)( (byte *)surf + surf->ofsEnd );
+	}
+    
+	return qtrue;
+}
+
 
 /*
 =================
@@ -1752,6 +1946,42 @@ static int R_GetMDCTag( byte *mod, int frame, const char *tagName, mdcTag_t **ou
 	return i;
 }
 
+/*
+================
+R_GetTANTag
+================
+*/
+static int R_GetTANTag( byte *mod, int frame, const char *tagName, tanTagData_t **outTag ) {
+	tanTagData_t    *tag;
+	tanTag_t        *pTagName;
+	int i;
+	tanHeader_t     *tan;
+
+	tan = (tanHeader_t *) mod;
+
+	if ( frame >= tan->numFrames ) {
+		// it is possible to have a bad frame while changing models, so don't error
+		frame = tan->numFrames - 1;
+	}
+
+	
+	for ( i = 0 ; i < tan->numTags ; i++, pTagName++ ) {
+		pTagName = ( tanTag_t * )( (byte *)mod + tan->ofsTags[i] );
+		if ( !strcmp( pTagName->name, tagName ) ) {
+			break;  // found it
+		}
+	}
+
+	if ( i >= tan->numTags ) {
+		*outTag = NULL;
+		return -1;
+	}
+
+	tag = ( tanTagData_t * )( (byte *)mod + tan->ofsTags[i] + sizeof ( tanTag_t ) ) + frame;
+	*outTag = tag;
+	return i;
+}
+
 md3Tag_t *R_GetAnimTag( mdrHeader_t *mod, int framenum, const char *tagName, md3Tag_t * dest) 
 {
 	int				i, j, k;
@@ -1886,6 +2116,29 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 		}
 
 	}
+	else if ( model->type == MOD_TAN )
+	{
+		tanTagData_t    *cstart, *cend;
+
+		R_GetTANTag( (byte *)model->modelData, startFrame, tagName, &cstart );
+		R_GetTANTag( (byte *)model->modelData, endFrame, tagName, &cend );
+
+		// copy TAN tags into MD3 tag structs
+		if ( cstart && cend ) {
+			VectorCopy( cstart->origin, start_space.origin );
+			VectorCopy( cend->origin, end_space.origin );
+			for ( i = 0; i < 3; i++ ) {
+				VectorCopy( cstart->axis[i], start_space.axis[i] );
+				VectorCopy( cend->axis[i], end_space.axis[i] );
+			}
+
+			start = &start_space;
+			end = &end_space;
+		} else {
+			start = NULL;
+			end = NULL;
+		}
+	}
 	else
 	{
 		start = NULL;
@@ -1960,6 +2213,28 @@ int R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, i
 		header = model->mdc[0];
 		start = (md3Frame_t *) ((byte *)header + header->ofsFrames) + startFrame % header->numFrames;
 		end = (md3Frame_t *) ((byte *)header + header->ofsFrames) + endFrame % header->numFrames;
+
+		if ( startFrame == endFrame ) {
+			VectorCopy( start->bounds[0], mins );
+			VectorCopy( start->bounds[1], maxs );
+		} else {
+			frontLerp = frac;
+			backLerp = 1.0f - frac;
+
+			for ( i = 0 ; i < 3 ; i++ ) {
+				mins[i] = start->bounds[0][i] * backLerp + end->bounds[0][i] * frontLerp;
+				maxs[i] = start->bounds[1][i] * backLerp + end->bounds[1][i] * frontLerp;
+			}
+		}
+		
+		return qfalse;
+	} else if (model->type == MOD_TAN) {
+		tanHeader_t *header;
+		tanFrame_t	*start, *end;
+
+		header = (tanHeader_t *)model->modelData;
+		start = (tanFrame_t *) ((byte *)header + header->ofsFrames) + startFrame % header->numFrames;
+		end = (tanFrame_t *) ((byte *)header + header->ofsFrames) + endFrame % header->numFrames;
 
 		if ( startFrame == endFrame ) {
 			VectorCopy( start->bounds[0], mins );

@@ -749,6 +749,101 @@ typedef struct {
 /*
 ==============================================================================
 
+.TAN model format (Tiki ANimated model?)
+
+Ritual's modified version of MD3
+
+ZTM: TODO: use header totaltime and totaldelta and frame delta and frametime for something?
+
+==============================================================================
+*/
+
+#define TIKI_ANIM_IDENT		((' '<<24)+('N'<<16)+('A'<<8)+'T')
+#define TIKI_ANIM_VERSION	2
+
+// limits
+#define TIKI_MAX_LODS		4
+#define TIKI_MAX_TRIANGLES	4096	// per surface
+#define TIKI_MAX_VERTS		1200	// per surface
+#define TIKI_MAX_SHADERS	256		// per surface
+#define TIKI_MAX_FRAMES		2048	// per model
+#define TIKI_MAX_SURFACES	32		// per model
+#define TIKI_MAX_TAGS		16		// per frame
+
+typedef struct {
+	unsigned short	xyz[3];
+	short			normal;
+} tanXyzNormal_t;
+
+typedef struct tikiFrame_s {
+	vec3_t	bounds[2];
+	vec3_t	scale; // multiply by this
+	vec3_t	offset; // and add by this
+	vec3_t	delta;
+	float	radius;
+	float	frametime;
+} tanFrame_t;
+
+/*
+** tanSurface_t
+**
+** CHUNK			SIZE
+** header			sizeof( md3Surface_t )
+** triangles[0]		sizeof( md3Triangle_t ) * numTriangles
+** st				sizeof( md3St_t ) * numVerts
+** XyzNormals		sizeof( md3XyzNormal_t ) * numVerts * numFrames
+*/
+typedef struct {
+	int		ident;				// 
+
+	char	name[MAX_QPATH];	// polyset name
+
+	int		numFrames;			// all surfaces in a model should have the same
+	int		numVerts;
+	int		minLod;
+
+	int		numTriangles;
+	int		ofsTriangles;
+
+	int		ofsCollapseMap;		// numVerts * int
+
+	int		ofsSt;				// texture coords are common for all frames
+	int		ofsXyzNormals;		// numVerts * numFrames
+
+	int		ofsEnd;				// next surface follows
+} tanSurface_t;
+
+typedef struct {
+	vec3_t	origin;
+	vec3_t	axis[3];
+} tanTagData_t;
+
+typedef struct {
+	char	name[MAX_QPATH];	// tag name
+} tanTag_t;
+
+typedef struct {
+	int		ident;
+	int		version;
+
+	char	name[MAX_QPATH];	// model name
+
+	int		numFrames;
+	int		numTags;
+	int		numSurfaces;
+	float	totaltime;
+	vec3_t	totaldelta;
+
+	int		ofsFrames;			// offset for first frame
+	int		ofsSurfaces;		// first surface, others follow
+	int		ofsTags[ TIKI_MAX_TAGS ]; // tikiTag_t + numFrames * tikiTagData_t
+
+	int		ofsEnd;				// end of file
+} tanHeader_t;
+
+/*
+==============================================================================
+
   .BSP file format
 
 ==============================================================================

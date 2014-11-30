@@ -1595,6 +1595,9 @@ void R_AddEntitySurfaces (void) {
 				case MOD_MDC:
 					R_AddMDCSurfaces( ent );
 					break;
+				case MOD_TAN:
+					R_AddTANSurfaces( ent );
+					break;
 				case MOD_MDR:
 					R_MDRAddAnimSurfaces( ent );
 					break;

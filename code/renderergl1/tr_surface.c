@@ -1030,6 +1030,168 @@ void RB_SurfaceCMesh( mdcSurface_t *surface ) {
 }
 
 
+// feel bored and have a altivec powerpc? maybe you want to add code path
+// based on LerpMeshVertexes_altivec
+static void LerpTANVertexes(tanSurface_t *surf, float backlerp, vec3_t newScale, vec3_t oldScale, vec3_t newXyzOffset, vec3_t oldXyzOffset)
+{
+	unsigned short	*oldXyz, *newXyz;
+	short	*oldNormals, *newNormals;
+	float	*outXyz, *outNormal;
+	vec3_t	oldXyzScale, newXyzScale;
+	float	oldNormalScale, newNormalScale;
+	int		vertNum;
+	unsigned lat, lng;
+	int		numVerts;
+
+	outXyz = tess.xyz[tess.numVertexes];
+	outNormal = tess.normal[tess.numVertexes];
+
+	newXyz = (unsigned short *)((byte *)surf + surf->ofsXyzNormals)
+		+ (backEnd.currentEntity->e.frame * surf->numVerts * 4);
+	newNormals = (short *)newXyz + 3;
+
+	// no MD3_XYZ_SCALE
+	newXyzScale[0] = newScale[0] * (1.0 - backlerp);
+	newXyzScale[1] = newScale[1] * (1.0 - backlerp);
+	newXyzScale[2] = newScale[2] * (1.0 - backlerp);
+	newNormalScale = 1.0 - backlerp;
+
+	numVerts = surf->numVerts;
+
+	if ( backlerp == 0 ) {
+		//
+		// just copy the vertexes
+		//
+		for (vertNum=0 ; vertNum < numVerts ; vertNum++,
+			newXyz += 4, newNormals += 4,
+			outXyz += 4, outNormal += 4) 
+		{
+
+			outXyz[0] = newXyz[0] * newXyzScale[0] + newXyzOffset[0];
+			outXyz[1] = newXyz[1] * newXyzScale[1] + newXyzOffset[1];
+			outXyz[2] = newXyz[2] * newXyzScale[2] + newXyzOffset[2];
+
+			lat = ( newNormals[0] >> 8 ) & 0xff;
+			lng = ( newNormals[0] & 0xff );
+			lat *= (FUNCTABLE_SIZE/256);
+			lng *= (FUNCTABLE_SIZE/256);
+
+			// decode X as cos( lat ) * sin( long )
+			// decode Y as sin( lat ) * sin( long )
+			// decode Z as cos( long )
+
+			outNormal[0] = tr.sinTable[(lat+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK] * tr.sinTable[lng];
+			outNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+			outNormal[2] = tr.sinTable[(lng+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK];
+		}
+	} else {
+		//
+		// interpolate and copy the vertex and normal
+		//
+		oldXyz = (unsigned short *)((byte *)surf + surf->ofsXyzNormals)
+			+ (backEnd.currentEntity->e.oldframe * surf->numVerts * 4);
+		oldNormals = (short *)oldXyz + 3;
+
+		// no MD3_XYZ_SCALE
+		oldXyzScale[0] = oldScale[0] * backlerp;
+		oldXyzScale[1] = oldScale[1] * backlerp;
+		oldXyzScale[2] = oldScale[2] * backlerp;
+		oldNormalScale = backlerp;
+
+		for (vertNum=0 ; vertNum < numVerts ; vertNum++,
+			oldXyz += 4, newXyz += 4, oldNormals += 4, newNormals += 4,
+			outXyz += 4, outNormal += 4) 
+		{
+			vec3_t uncompressedOldNormal, uncompressedNewNormal;
+
+			// interpolate the xyz
+			outXyz[0] = oldXyz[0] * oldXyzScale[0] + oldXyzOffset[0] * backlerp + newXyz[0] * newXyzScale[0] + newXyzOffset[0] * (1.0 - backlerp);
+			outXyz[1] = oldXyz[1] * oldXyzScale[1] + oldXyzOffset[0] * backlerp + newXyz[1] * newXyzScale[1] + newXyzOffset[1] * (1.0 - backlerp);
+			outXyz[2] = oldXyz[2] * oldXyzScale[2] + oldXyzOffset[0] * backlerp + newXyz[2] * newXyzScale[2] + newXyzOffset[2] * (1.0 - backlerp);
+
+			// FIXME: interpolate lat/long instead?
+			lat = ( newNormals[0] >> 8 ) & 0xff;
+			lng = ( newNormals[0] & 0xff );
+			lat *= 4;
+			lng *= 4;
+			uncompressedNewNormal[0] = tr.sinTable[(lat+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK] * tr.sinTable[lng];
+			uncompressedNewNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+			uncompressedNewNormal[2] = tr.sinTable[(lng+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK];
+
+			lat = ( oldNormals[0] >> 8 ) & 0xff;
+			lng = ( oldNormals[0] & 0xff );
+			lat *= 4;
+			lng *= 4;
+
+			uncompressedOldNormal[0] = tr.sinTable[(lat+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK] * tr.sinTable[lng];
+			uncompressedOldNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+			uncompressedOldNormal[2] = tr.sinTable[(lng+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK];
+
+			outNormal[0] = uncompressedOldNormal[0] * oldNormalScale + uncompressedNewNormal[0] * newNormalScale;
+			outNormal[1] = uncompressedOldNormal[1] * oldNormalScale + uncompressedNewNormal[1] * newNormalScale;
+			outNormal[2] = uncompressedOldNormal[2] * oldNormalScale + uncompressedNewNormal[2] * newNormalScale;
+
+//			VectorNormalize (outNormal);
+		}
+    	VectorArrayNormalize((vec4_t *)tess.normal[tess.numVertexes], numVerts);
+   	}
+}
+
+
+/*
+=============
+RB_SurfaceTAN
+=============
+*/
+static void RB_SurfaceTAN(tanSurface_t *surface) {
+	int				j;
+	float			backlerp;
+	int				*triangles;
+	float			*texCoords;
+	int				indexes;
+	int				Bob, Doug;
+	int				numVerts;
+	tanHeader_t		*header;
+	tanFrame_t		*oldFrame, *newFrame;
+
+	if (  backEnd.currentEntity->e.oldframe == backEnd.currentEntity->e.frame ) {
+		backlerp = 0;
+	} else  {
+		backlerp = backEnd.currentEntity->e.backlerp;
+	}
+
+	RB_CHECKOVERFLOW( surface->numVerts, surface->numTriangles*3 );
+
+	model_t *mod = R_GetModelByHandle( backEnd.currentEntity->e.hModel );
+	header = (tanHeader_t *)mod->modelData;
+	newFrame = ( tanFrame_t * ) ( ( byte * ) header + header->ofsFrames ) + backEnd.currentEntity->e.frame;
+	oldFrame = ( tanFrame_t * ) ( ( byte * ) header + header->ofsFrames ) + backEnd.currentEntity->e.oldframe;
+
+	LerpTANVertexes (surface, backlerp, newFrame->scale, oldFrame->scale, newFrame->offset, oldFrame->offset);
+
+	triangles = (int *) ((byte *)surface + surface->ofsTriangles);
+	indexes = surface->numTriangles * 3;
+	Bob = tess.numIndexes;
+	Doug = tess.numVertexes;
+	for (j = 0 ; j < indexes ; j++) {
+		tess.indexes[Bob + j] = Doug + triangles[j];
+	}
+	tess.numIndexes += indexes;
+
+	texCoords = (float *) ((byte *)surface + surface->ofsSt);
+
+	numVerts = surface->numVerts;
+	for ( j = 0; j < numVerts; j++ ) {
+		tess.texCoords[Doug + j][0][0] = texCoords[j*2+0];
+		tess.texCoords[Doug + j][0][1] = texCoords[j*2+1];
+		// FIXME: fill in lightmapST for completeness?
+	}
+
+	tess.numVertexes += surface->numVerts;
+
+}
+
+
 static float	LodErrorForVolume( vec3_t local, float radius ) {
 	vec3_t		world;
 	float		d;
@@ -1353,6 +1515,7 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_SurfacePolyBuffer,		// SF_POLYBUFFER,
 	(void(*)(void*))RB_SurfaceMesh,			// SF_MD3,
 	(void(*)(void*))RB_SurfaceCMesh,		// SF_MDC,
+	(void(*)(void*))RB_SurfaceTAN,			// SF_TAN,
 	(void(*)(void*))RB_MDRSurfaceAnim,		// SF_MDR,
 	(void(*)(void*))RB_MDSSurfaceAnim,		// SF_MDS,
 	(void(*)(void*))RB_MDMSurfaceAnim,		// SF_MDM,

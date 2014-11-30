@@ -545,6 +545,7 @@ typedef enum {
 	SF_POLYBUFFER,
 	SF_MD3,
 	SF_MDC,
+	SF_TAN,
 	SF_MDR,
 	SF_MDS,
 	SF_MDM,
@@ -873,6 +874,7 @@ typedef enum {
 	MOD_BRUSH,
 	MOD_MESH,
 	MOD_MDC,
+	MOD_TAN,
 	MOD_MDR,
 	MOD_MDS,
 	MOD_MDM,
@@ -889,7 +891,7 @@ typedef struct model_s {
 	bmodel_t	*bmodel;		// only if type == MOD_BRUSH
 	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_MESH
 	mdcHeader_t	*mdc[MD3_MAX_LODS]; // only if type == MOD_MDC
-	void	*modelData;			// only if type == (MOD_MDR | MOD_MDS | MOD_MDM | MOD_MDX | MOD_IQM)
+	void	*modelData;			// only if type == (MOD_TAN | MOD_MDR | MOD_MDS | MOD_MDM | MOD_MDX | MOD_IQM)
 
 	int			 numLods;
 } model_t;
@@ -1602,6 +1604,8 @@ int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
                   qhandle_t frameMode, int startFrame,
                   qhandle_t endFrameModel, int endFrame,
                   float frac, const char *tagName );
+
+void R_AddTANSurfaces( trRefEntity_t *ent );
 
 /*
 =============================================================
