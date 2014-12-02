@@ -553,9 +553,6 @@ void RB_BeginDrawingView (void) {
 		backEnd.isHyperspace = qfalse;
 	}
 
-	glState.faceCulling = -1;		// force face culling to set next time
-	glState.faceCullFront = -1;     // same as above
-
 	// we will only draw a sun if there was sky rendered in this view
 	backEnd.skyRenderedThisView = qfalse;
 
@@ -563,7 +560,7 @@ void RB_BeginDrawingView (void) {
 	if ( backEnd.viewParms.isPortal ) {
 #if 0
 		float	plane[4];
-		double	plane2[4];
+		GLdouble	plane2[4];
 
 		plane[0] = backEnd.viewParms.portalPlane.normal[0];
 		plane[1] = backEnd.viewParms.portalPlane.normal[1];

@@ -99,6 +99,8 @@ void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, float color[4], 
 	uint32_t    pNormal;
 	int			ndx;
 
+	RB_CheckVao(tess.vao);
+
 	RB_CHECKOVERFLOW( 4, 6 );
 
 	ndx = tess.numVertexes;
@@ -335,6 +337,8 @@ RB_SurfacePolychain
 static void RB_SurfacePolychain( srfPoly_t *p ) {
 	int		i;
 	int		numv;
+
+	RB_CheckVao(tess.vao);
 
 	RB_CHECKOVERFLOW( p->numVerts, 3*(p->numVerts - 2) );
 
@@ -1070,6 +1074,8 @@ static void RB_SurfaceMesh(mdvSurface_t *surface) {
 		backlerp = backEnd.currentEntity->e.backlerp;
 	}
 
+	RB_CheckVao(tess.vao);
+
 	RB_CHECKOVERFLOW( surface->numVerts, surface->numIndexes );
 
 	LerpMeshVertexes (surface, backlerp);
@@ -1176,6 +1182,8 @@ static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
 	{
 		return;
 	}
+
+	RB_CheckVao(tess.vao);
 
 	dlightBits = srf->dlightBits;
 	tess.dlightBits |= dlightBits;
@@ -1553,12 +1561,6 @@ void RB_SurfaceVaoMdvMesh(srfVaoMdvMesh_t * surface)
 	glState.vertexAnimation = qfalse;
 }
 
-static void RB_SurfaceDisplayList( srfDisplayList_t *surf ) {
-	// all apropriate state must be set in RB_BeginSurface
-	// this isn't implemented yet...
-	qglCallList( surf->listNum );
-}
-
 static void RB_SurfaceSkip( void *surf ) {
 }
 
@@ -1579,7 +1581,6 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_IQMSurfaceAnim,		// SF_IQM,
 	(void(*)(void*))RB_SurfaceFlare,		// SF_FLARE,
 	(void(*)(void*))RB_SurfaceEntity,		// SF_ENTITY
-	(void(*)(void*))RB_SurfaceDisplayList,		// SF_DISPLAY_LIST
 	(void(*)(void*))RB_SurfaceVaoMesh,	    // SF_VAO_MESH,
 	(void(*)(void*))RB_SurfaceVaoMdvMesh,   // SF_VAO_MDVMESH
 };

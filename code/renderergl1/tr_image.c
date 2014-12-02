@@ -907,7 +907,6 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height,
 	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
 	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
 
-	// FIXME: this stops fog from setting border color?
 	glState.currenttextures[glState.currenttmu] = 0;
 	qglBindTexture( GL_TEXTURE_2D, 0 );
 
@@ -1208,7 +1207,6 @@ static void R_CreateFogImages( void ) {
 	int		x, y, alpha;
 	byte	*data;
 	float	d;
-	float	borderColor[4];
 	int		fog_s, fog_t;
 
 	// Create exponential fog image
@@ -1228,18 +1226,8 @@ static void R_CreateFogImages( void ) {
 		}
 	}
 
-	// standard openGL clamping doesn't really do what we want -- it includes
-	// the border color at the edges.  OpenGL 1.2 has clamp-to-edge, which does
-	// what we want.
 	tr.fogImage = R_CreateImage("*fog", (byte *)data, fog_s, fog_t, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0 );
 	ri.Hunk_FreeTempMemory( data );
-
-	borderColor[0] = 1.0;
-	borderColor[1] = 1.0;
-	borderColor[2] = 1.0;
-	borderColor[3] = 1;
-
-	qglTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
 
 
 	// Create linear fog image
@@ -1273,19 +1261,8 @@ static void R_CreateFogImages( void ) {
 		}
 	}
 
-	// standard openGL clamping doesn't really do what we want -- it includes
-	// the border color at the edges.  OpenGL 1.2 has clamp-to-edge, which does
-	// what we want.
 	tr.linearFogImage = R_CreateImage("*linearfog", (byte *)data, fog_s, fog_t, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0 );
 	ri.Hunk_FreeTempMemory( data );
-
-	// ydnar: the following lines are unecessary for new GL_CLAMP_TO_EDGE fog
-	borderColor[0] = 1.0;
-	borderColor[1] = 1.0;
-	borderColor[2] = 1.0;
-	borderColor[3] = 1;
-
-	qglTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
 }
 
 /*

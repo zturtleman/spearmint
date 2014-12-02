@@ -1472,12 +1472,6 @@ static void RB_SurfaceFlare(srfFlare_t *surf)
 		RB_AddFlare(surf, tess.fogNum, surf->origin, surf->color, 1.0f, surf->normal, -1, qtrue, shader);
 }
 
-static void RB_SurfaceDisplayList( srfDisplayList_t *surf ) {
-	// all apropriate state must be set in RB_BeginSurface
-	// this isn't implemented yet...
-	qglCallList( surf->listNum );
-}
-
 static void RB_SurfacePolyBuffer( srfPolyBuffer_t *surf ) {
 	int		i;
 	int		numv;
@@ -1521,6 +1515,5 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_MDMSurfaceAnim,		// SF_MDM,
 	(void(*)(void*))RB_IQMSurfaceAnim,		// SF_IQM,
 	(void(*)(void*))RB_SurfaceFlare,		// SF_FLARE,
-	(void(*)(void*))RB_SurfaceEntity,		// SF_ENTITY
-	(void(*)(void*))RB_SurfaceDisplayList		// SF_DISPLAY_LIST
+	(void(*)(void*))RB_SurfaceEntity		// SF_ENTITY
 };
