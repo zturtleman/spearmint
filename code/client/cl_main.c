@@ -2225,7 +2225,7 @@ void CL_DownloadsComplete( void ) {
 	}
 
 	// must restart filesystem at connect to reload mint-game.settings
-	if ( !clc.fsRestarted ) {
+	if ( !clc.fsRestarted && !com_sv_running->integer ) {
 		FS_Restart( qfalse );
 		clc.fsRestarted = qtrue;
 	}
