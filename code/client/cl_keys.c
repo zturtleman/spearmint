@@ -815,16 +815,16 @@ CL_CharEvent
 Normal keyboard characters, already shifted / capslocked / etc
 ===================
 */
-void CL_CharEvent( int key ) {
+void CL_CharEvent( int character ) {
 	// delete is not a printable character and is
 	// otherwise handled by Field_KeyDownEvent
-	if ( key == 127 ) {
+	if ( character == 127 ) {
 		return;
 	}
 
 	if ( cgvm )
 	{
-		VM_Call( cgvm, CG_KEY_EVENT, key | K_CHAR_FLAG, qtrue );
+		VM_Call( cgvm, CG_CHAR_EVENT, character, clc.state );
 	}
 }
 

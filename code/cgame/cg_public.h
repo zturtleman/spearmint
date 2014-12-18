@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	32
+#define CG_API_MINOR_VERSION	33
 
 
 #define	CMD_BACKUP			64	
@@ -463,6 +463,9 @@ typedef enum {
 
 	CG_KEY_EVENT, 
 //	void	(*CG_KeyEvent)( int key, qboolean down, unsigned time, connstate_t state );
+
+	CG_CHAR_EVENT,
+//	void	(*CG_CharEvent)( int character, connstate_t state );
 
 	CG_MOUSE_EVENT,
 //	void	(*CG_MouseEvent)( int localPlayerNum, int dx, int dy );
