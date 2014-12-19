@@ -587,7 +587,7 @@ static void Cmd_TokenizeString2( const char *text_in, qboolean ignoreQuotes ) {
 
 		while ( 1 ) {
 			// skip whitespace
-			while ( *text && *text <= ' ' ) {
+			while ( *text > 0 && *text <= ' ' ) {
 				text++;
 			}
 			if ( !*text ) {
@@ -635,7 +635,7 @@ static void Cmd_TokenizeString2( const char *text_in, qboolean ignoreQuotes ) {
 		cmd.argc++;
 
 		// skip until whitespace, quote, or command
-		while ( *text > ' ' ) {
+		while ( *text < 0 || *text > ' ' ) {
 			if ( !ignoreQuotes && text[0] == '"' ) {
 				break;
 			}
