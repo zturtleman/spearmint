@@ -314,7 +314,7 @@ PROTOCOL
 ==============================================================
 */
 
-#define	PROTOCOL_VERSION	2
+#define	PROTOCOL_VERSION	3
 #define PROTOCOL_LEGACY_VERSION	0
 
 // maintain a list of compatible protocols for demo playing
