@@ -1026,8 +1026,9 @@ void CL_DemoCompleted( void )
 		}
 	}
 
-	CL_Disconnect( qtrue );
+	Cbuf_AddText( "disconnect\n" );
 	CL_NextDemo();
+	Cbuf_Execute();
 }
 
 /*
