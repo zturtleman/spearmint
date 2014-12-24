@@ -1241,6 +1241,8 @@ void CL_PlayDemo( const char *demoName, qboolean isOsPath ) {
 		}
 	}
 
+	CL_DrawLoadingScreen();
+
 	Com_Printf( "Loading demo '%s' recorded from %s to %s (%d seconds)\n", demoName, startTime, endTime, runTime / 1000 );
 
 	Q_strncpyz( clc.demoName, demoName, sizeof( clc.demoName ) );
