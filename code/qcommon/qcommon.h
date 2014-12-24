@@ -738,6 +738,8 @@ long		FS_FOpenFileRead( const char *qpath, fileHandle_t *file, qboolean uniqueFI
 // It is generally safe to always set uniqueFILE to true, because the majority of
 // file IO goes through FS_ReadFile, which Does The Right Thing already.
 
+long FS_System_FOpenFileRead(const char *ospath, fileHandle_t *fp);
+
 int     FS_Delete( char *filename );    // only works inside the 'save' directory (for deleting savegames/images)
 
 int		FS_Write( const void *buffer, int len, fileHandle_t f );

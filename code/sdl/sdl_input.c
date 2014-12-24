@@ -1080,6 +1080,20 @@ static void IN_ProcessEvents( void )
 				}
 				break;
 
+			case SDL_DROPFILE:
+				{
+					char *filename = e.drop.file;
+
+					if ( COM_CompareExtension( filename, "." DEMOEXT ) ) {
+						CL_PlayDemo( filename, qtrue );
+					} else {
+						Com_Printf( "Ignoring unknown file: %s\n", filename );
+					}
+
+					SDL_free( filename );
+				}
+				break;
+
 			default:
 				break;
 		}

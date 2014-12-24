@@ -1093,7 +1093,7 @@ if returns false and length == 0, either file not found or it's size is 0...
 if returns false and protocol > 0, it's a unsupported protocol.
 ====================
 */
-qboolean CL_ValidDemoFile( const char *demoName, int *pProtocol, int *pLength, fileHandle_t *pHandle, char *pStartTime, char *pEndTime, int *pRunTime ) {
+qboolean CL_ValidDemoFile( const char *demoName, qboolean isOsPath, int *pProtocol, int *pLength, fileHandle_t *pHandle, char *pStartTime, char *pEndTime, int *pRunTime ) {
 	demoHeader_t	header;
 	char			name[MAX_OSPATH];
 	int				r, i;
@@ -1115,8 +1115,12 @@ qboolean CL_ValidDemoFile( const char *demoName, int *pProtocol, int *pLength, f
 	if ( pRunTime )
 		*pRunTime = 0;
 
-	Com_sprintf(name, sizeof(name), "demos/%s." DEMOEXT, demoName);
-	length = FS_FOpenFileRead(name, &f, qtrue);
+	if ( isOsPath ) {
+		length = FS_System_FOpenFileRead( demoName, &f );
+	} else {
+		Com_sprintf( name, sizeof(name), "demos/%s." DEMOEXT, demoName );
+		length = FS_FOpenFileRead( name, &f, qtrue );
+	}
 
 	if ( !f ) {
 		return qfalse;
@@ -1206,39 +1210,28 @@ static void CL_CompleteDemoName( char *args, int argNum )
 
 /*
 ====================
-CL_PlayDemo_f
+CL_PlayDemo
 
-demo <demoname>
-
+play a demo, fullpath
 ====================
 */
-void CL_PlayDemo_f( void ) {
-	char		*arg;
+void CL_PlayDemo( const char *demoName, qboolean isOsPath ) {
 	int			protocol;
-	char		demoName[MAX_OSPATH];
 	char		startTime[20];
 	char		endTime[20];
 	int			runTime;
-
-	if (Cmd_Argc() != 2) {
-		Com_Printf ("demo <demoname>\n");
-		return;
-	}
 
 	// make sure a local server is killed
 	// 2 means don't force disconnect of local client
 	Cvar_Set( "sv_killserver", "2" );
 
-	// open the demo file
-	arg = Cmd_Argv(1);
-	
 	CL_Disconnect( qtrue );
 
-	COM_StripExtension( arg, demoName, sizeof (demoName));
-
-	if ( !CL_ValidDemoFile( demoName, &protocol, &clc.demoLength, &clc.demofile, startTime, endTime, &runTime ) ) {
-		if ( clc.demoLength == 0 || clc.demofile == 0 ) {
-			Com_Error( ERR_DROP, "Couldn't open demo %s", demoName );
+	// open the demo file
+	if ( !CL_ValidDemoFile( demoName, isOsPath, &protocol, &clc.demoLength, &clc.demofile, startTime, endTime, &runTime ) ) {
+		if ( clc.demoLength <= 0 || clc.demofile == 0 ) {
+			Com_Printf( S_COLOR_YELLOW "WARNING: Couldn't open demo %s", demoName );
+			return;
 		}
 		else if ( protocol > 0 ) {
 			Com_Error( ERR_DROP, "Demo %s uses unsupported protocol %d", demoName, protocol );
@@ -1272,6 +1265,31 @@ void CL_PlayDemo_f( void ) {
 	// don't get the first snapshot this frame, to prevent the long
 	// time from the gamestate load from messing causing a time skip
 	clc.firstDemoFrameSkipped = qfalse;
+}
+
+
+/*
+====================
+CL_PlayDemo_f
+
+demo <demoname>
+
+====================
+*/
+void CL_PlayDemo_f( void ) {
+	char	*arg;
+	char	demoName[MAX_OSPATH];
+
+	if (Cmd_Argc() != 2) {
+		Com_Printf ("demo <demoname>\n");
+		return;
+	}
+
+	arg = Cmd_Argv(1);
+
+	COM_StripExtension( arg, demoName, sizeof (demoName));
+
+	CL_PlayDemo( demoName, qfalse );
 }
 
 

@@ -691,6 +691,8 @@ int main( int argc, char **argv )
 
 		Sys_Exit( 1 );
 	}
+
+	SDL_EventState( SDL_DROPFILE, SDL_ENABLE );
 #endif
 
 	Sys_PlatformInit( );
