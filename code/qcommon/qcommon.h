@@ -586,12 +586,12 @@ cvar_t	*Cvar_SetSafe( const char *var_name, const char *value);
 cvar_t	*Cvar_User_Set( const char *var_name, const char *value );
 // same as Cvar_SetSafe, but defaults to CVAR_USER_CREATED
 
-void	Cvar_VM_Set( const char *var_name, const char *value, qboolean gamevm );
+void	Cvar_VM_Set( const char *var_name, const char *value, const char *vmName );
 void	Cvar_Server_Set( const char *var_name, const char *value );
 // sometimes we set variables from an untrusted source: fail if flags & CVAR_PROTECTED
 
 cvar_t	*Cvar_SetValue( const char *var_name, float value );
-void	Cvar_VM_SetValue( const char *var_name, float value, qboolean gamevm );
+void	Cvar_VM_SetValue( const char *var_name, float value, const char *vmName );
 // expands value to a string and calls Cvar_Set/Cvar_VM_Set
 
 cvar_t *Cvar_Unset(cvar_t *cv);

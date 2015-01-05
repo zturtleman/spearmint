@@ -828,7 +828,7 @@ Cvar_VM_Set
 Set cvar for game or cgame vm.
 ============
 */
-void Cvar_VM_Set( const char *var_name, const char *value, qboolean gamevm )
+void Cvar_VM_Set( const char *var_name, const char *value, const char *vmName )
 {
 	int flags = Cvar_Flags( var_name );
 	qboolean force = qtrue;
@@ -838,11 +838,11 @@ void Cvar_VM_Set( const char *var_name, const char *value, qboolean gamevm )
 		if ( flags & CVAR_PROTECTED )
 		{
 			if ( value )
-				Com_Error( ERR_DROP, "%s tried to set "
-					"\"%s\" to \"%s\"", gamevm ? "GameVM" : "CGameVM", var_name, value );
+				Com_Error( ERR_DROP, "%s VM tried to set "
+					"\"%s\" to \"%s\"", vmName, var_name, value );
 			else
-				Com_Error( ERR_DROP, "%s tried to "
-					"modify \"%s\"", gamevm ? "GameVM" : "CGameVM",  var_name );
+				Com_Error( ERR_DROP, "%s VM tried to "
+					"modify \"%s\"", vmName,  var_name );
 			return;
 		}
 
@@ -881,7 +881,7 @@ cvar_t *Cvar_SetValue( const char *var_name, float value) {
 Cvar_VM_SetValue
 ============
 */
-void Cvar_VM_SetValue( const char *var_name, float value, qboolean gamevm )
+void Cvar_VM_SetValue( const char *var_name, float value, const char *vmName )
 {
 	char val[32];
 
@@ -889,7 +889,7 @@ void Cvar_VM_SetValue( const char *var_name, float value, qboolean gamevm )
 		Com_sprintf( val, sizeof(val), "%i", (int)value );
 	else
 		Com_sprintf( val, sizeof(val), "%f", value );
-	Cvar_VM_Set( var_name, val, gamevm );
+	Cvar_VM_Set( var_name, val, vmName );
 }
 
 /*
