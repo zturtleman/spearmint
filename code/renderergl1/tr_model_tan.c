@@ -31,6 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "tr_local.h"
 
+#if 0
 static float ProjectRadius( float r, vec3_t location )
 {
 	float pr;
@@ -77,6 +78,7 @@ static float ProjectRadius( float r, vec3_t location )
 
 	return pr;
 }
+#endif
 
 /*
 =============
