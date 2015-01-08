@@ -239,5 +239,8 @@ extern bspFormat_t sof2BspFormat;
 // bsp_ef2.c
 extern bspFormat_t ef2BspFormat;
 
+// bsp_mohaa.c
+extern bspFormat_t mohaaBspFormat;
+
 #endif // __MINT_BSP__
 
