@@ -33,6 +33,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "qcommon.h"
 #include "bsp.h"
 
+// Implementation notes
+// - Missing entity lighting system support
+// - Missing dynamic LOD for MST_TRIANGLE_SOUP
+
 #define BSP_IDENT	(('K'<<24)+('K'<<16)+('A'<<8)+'F')
 		// little-endian "FAKK"
 

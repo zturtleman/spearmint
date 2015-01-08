@@ -33,6 +33,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "qcommon.h"
 #include "bsp.h"
 
+// Implementation notes
+// - Missing light styles support
+
 #define BSP_IDENT	(('P'<<24)+('S'<<16)+('B'<<8)+'R')
 		// little-endian "RBSP"
 

@@ -33,6 +33,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "qcommon.h"
 #include "bsp.h"
 
+// Implementation notes
+// - Missing new EF2 lighting system support
+// - Missing static LOD models lump support
+// - Missing dynamic LOD for MST_TRIANGLE_SOUP? (it's used by FAKK maps, I don't know if EF2 maps do though)
+
 #define BSP_IDENT	(('!'<<24)+('2'<<16)+('F'<<8)+'E')
 		// little-endian "EF2!"
 
