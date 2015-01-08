@@ -1,12 +1,16 @@
 language: c
 
 env:
-  # standard builds
-  - CC=gcc
-  - CC=clang
-  # cross-compile using mingw
-  - CC= PLATFORM="mingw32" ARCH="x86"
-  - CC= PLATFORM="mingw32" ARCH="x86_64"
+  global:
+    # coverity token
+    - secure: "dx0HqrtHdpgkV+v3jQiWuCPKZIc1pEBmMyhfhq5ah6+1AK/gzop5vVHzzBdLezGnsloutDN4Q/jiCWZORn3ZexxwFMnHCPQwkzkqo8s8UnAW4pXaAzqR/9tyYoyjpXXxjKBobS6aiLiWx7WFx9msO6a3arq/El8k21AnC05Dr2c="
+  matrix:
+    # standard builds
+    - CC=gcc
+    - CC=clang
+    # cross-compile using mingw
+    - CC= PLATFORM="mingw32" ARCH="x86"
+    - CC= PLATFORM="mingw32" ARCH="x86_64"
 
 script: ./travis-ci-build.sh
 
@@ -20,10 +24,6 @@ notifications:
   irc: "irc.freenode.org#spearmint"
   on_success: change
   on_failure: always
-
-env:
-  global:
-    - secure: "dx0HqrtHdpgkV+v3jQiWuCPKZIc1pEBmMyhfhq5ah6+1AK/gzop5vVHzzBdLezGnsloutDN4Q/jiCWZORn3ZexxwFMnHCPQwkzkqo8s8UnAW4pXaAzqR/9tyYoyjpXXxjKBobS6aiLiWx7WFx9msO6a3arq/El8k21AnC05Dr2c="
 
 addons:
   coverity_scan:
