@@ -68,7 +68,7 @@ typedef struct {
 //#define LUMP_SPHERELIGHTS		19
 //#define LUMP_SPHERELIGHTVIS		20
 #define LUMP_LIGHTDEFS			21
-//#define LUMP_TERRAIN			22
+#define LUMP_TERRAIN			22
 //#define LUMP_TERRAININDEXES		23
 //#define LUMP_STATICMODELDATA	24
 //#define LUMP_STATICMODELDEF		25
@@ -198,7 +198,6 @@ typedef struct {
 	float		subdivisions;
 } realDsurface_t;
 
-#if 0
 // IneQuation was here
 typedef struct dterPatch_s {
 	byte			flags;
@@ -213,8 +212,9 @@ typedef struct dterPatch_s {
 	short			dummy[4];
 	short			vertFlags[2][63];
 	byte			heightmap[9][9];
-} dterPatch_t;
+} realDterPatch_t;
 
+#if 0
 // su44 was here
 typedef struct dstaticModel_s {
 	char model[128];
@@ -302,6 +302,7 @@ bspFile_t *BSP_LoadMOHAA( const bspFormat_t *format, const char *name, const voi
 	int				i, j, k;
 	dheader_t		header;
 	bspFile_t		*bsp;
+	int				numTerSurfaces, numTerVerts, numTerIndexes;
 
 	BSP_SwapBlock( (int *) &header, (int *)data, sizeof ( dheader_t ) );
 
@@ -352,17 +353,21 @@ bspFile_t *BSP_LoadMOHAA( const bspFormat_t *format, const char *name, const voi
 	bsp->numBrushSides = GetLumpElements( &header, LUMP_BRUSHSIDES, sizeof ( realDbrushside_t ) );
 	bsp->brushSides = malloc( bsp->numBrushSides * sizeof ( *bsp->brushSides ) );
 
+	numTerSurfaces = GetLumpElements( &header, LUMP_TERRAIN, sizeof ( realDterPatch_t ) );
+	numTerVerts = numTerSurfaces * 9 * 9;
+	numTerIndexes = numTerSurfaces * 8 * 8 * 6;
+
 	bsp->numDrawVerts = GetLumpElements( &header, LUMP_DRAWVERTS, sizeof ( realDrawVert_t ) );
-	bsp->drawVerts = malloc( bsp->numDrawVerts * sizeof ( *bsp->drawVerts ) );
+	bsp->drawVerts = malloc( ( bsp->numDrawVerts + numTerVerts ) * sizeof ( *bsp->drawVerts ) );
 
 	bsp->numDrawIndexes = GetLumpElements( &header, LUMP_DRAWINDEXES, sizeof ( int ) );
-	bsp->drawIndexes = malloc( bsp->numDrawIndexes * sizeof ( *bsp->drawIndexes ) );
+	bsp->drawIndexes = malloc( ( bsp->numDrawIndexes + numTerIndexes ) * sizeof ( *bsp->drawIndexes ) );
 
 	bsp->numFogs = 0; //GetLumpElements( &header, LUMP_FOGS, sizeof ( realDfog_t ) );
 	bsp->fogs = NULL; //malloc( bsp->numFogs * sizeof ( *bsp->fogs ) );
 
 	bsp->numSurfaces = GetLumpElements( &header, LUMP_SURFACES, sizeof ( realDsurface_t ) );
-	bsp->surfaces = malloc( bsp->numSurfaces * sizeof ( *bsp->surfaces ) );
+	bsp->surfaces = malloc( ( bsp->numSurfaces + numTerSurfaces ) * sizeof ( *bsp->surfaces ) );
 
 	bsp->numLightmaps = GetLumpElements( &header, LUMP_LIGHTMAPS, 128 * 128 * 3 );
 	bsp->lightmapData = malloc( bsp->numLightmaps * 128 * 128 * 3 );
@@ -554,6 +559,146 @@ bspFile_t *BSP_LoadMOHAA( const bspFormat_t *format, const char *name, const voi
 
 			out->subdivisions = LittleFloat( in->subdivisions );
 		}
+	}
+
+	// convert MOHAA terrain into a draw surface
+	// ZTM: FIXME: Add to nodes(?) so that they will actually draw/collide
+#define LIGHTMAP_SIZE 128
+#define TERRAIN_LM_LENGTH		(16.f / LIGHTMAP_SIZE)
+	{
+		realDterPatch_t *in = GetLump( &header, data, LUMP_TERRAIN );
+		dsurface_t *out = &bsp->surfaces[ bsp->numSurfaces ];
+		drawVert_t *vert;
+		int x, y, ndx;
+		float f, distU, distV, texCoords[8];
+
+		for ( i = 0; i < numTerSurfaces; i++, in++, out++ ) {
+			out->shaderNum = LittleShort (in->shader); // ZTM: FIXME: will this mess up unsigned short on big endian?
+			out->fogNum = -1;
+			out->surfaceType = MST_TERRAIN;	// solid triangle mesh
+			out->firstVert = bsp->numDrawVerts + i * 9 * 9;
+			out->numVerts = 9 * 9;
+			out->firstIndex = bsp->numDrawIndexes + i * 8 * 8 * 6;
+			out->numIndexes = 8 * 8 * 6;
+			out->lightmapNum = LittleShort (in->lightmap);
+
+			// lightmap x,y,width,height aren't used for anything
+			out->lightmapX = 0;
+			out->lightmapY = 0;
+			out->lightmapWidth = 0;
+			out->lightmapHeight = 0;
+
+			out->lightmapOrigin[0] = in->x * 64.f;
+			out->lightmapOrigin[1] = in->y * 64.f;
+			out->lightmapOrigin[2] = LittleShort(in->baseZ);
+
+			// ZTM: I don't think [0] and [1] will be used.
+			VectorSet( out->lightmapVecs[0], 0, 0, 0 );
+			VectorSet( out->lightmapVecs[1], 0, 0, 0 );
+			VectorSet( out->lightmapVecs[2], 0, 0, 1 ); // normal direction, up
+
+			// not used
+			out->patchWidth = 9;
+			out->patchHeight = 9;
+			out->subdivisions = 16;
+
+			// fill the even indices (texture coords) only, odd ones (lightmap coords) are filled below
+			for (x = 0; x < 8; x += 2) {
+				texCoords[x] = LittleFloat(in->texCoords[x]);
+			}
+			// the person who invented the following should be hanged!
+			texCoords[1] = ((float)in->lmCoords[0] + 0.5) / LIGHTMAP_SIZE;
+			texCoords[3] = ((float)in->lmCoords[1] + 0.5) / LIGHTMAP_SIZE;
+			texCoords[5] = ((float)in->lmCoords[0] + 16.5) / LIGHTMAP_SIZE;
+			texCoords[7] = ((float)in->lmCoords[1] + 16.5) / LIGHTMAP_SIZE;
+
+			distU = texCoords[4] - texCoords[0];
+			distV = texCoords[2] - texCoords[6];
+
+			// setup vertexes
+			vert = &bsp->drawVerts[ out->firstVert ];
+			for (y = 0; y < 9; y++) {
+				for (x = 0; x < 9; x++, vert++) {
+					VectorSet(vert->normal, 0, 0, 1); // ZTM: FIXME
+					VectorCopy(out->lightmapOrigin, vert->xyz);
+					vert->xyz[0] += x * 64;
+					vert->xyz[1] += y * 64;
+					/*if (x == 0)
+						vert->xyz[0] += 16;
+					else if (x == 8)
+						vert->xyz[0] -= 16;
+					if (y == 0)
+						vert->xyz[1] += 16;
+					else if (y == 8)
+						vert->xyz[1] -= 16;*/
+					vert->xyz[2] += in->heightmap[y][x] * 2.f;
+
+					f = x / 8.f;
+					vert->st[0] = texCoords[0] + f * distU;
+					vert->lightmap[0] = texCoords[1] + f * TERRAIN_LM_LENGTH;
+					f = y / 8.f;
+					vert->st[1] = texCoords[6] + f * distV;
+					vert->lightmap[1] = texCoords[3] + f * TERRAIN_LM_LENGTH;
+
+					for ( j = 0; j < 4; j++ ) {
+						vert->color[j] = 0;
+					}
+				}
+			}
+
+			ndx = out->firstIndex;
+			int verts = 9, quads = 8;
+			// setup triangles - actually iterate the quads and make appropriate triangles
+			for (y = 0; y < quads; y++) {
+				for (x = 0; x < quads; x++, ndx += 6) {
+					// The XOR below requires some explanation. Basically, it's done to reflect MoHAA's behaviour.
+					// This can be well observed by making a LOD terrain consisting of a single patch in Radiant,
+					// but in case you don't have it at hand, here's how it looks (at the highest level of detail):
+					//  _______________________________
+					// | \ | / | \ | / | \ | / | \ | / |
+					// |-------------------------------|
+					// | / | \ | / | \ | / | \ | / | \ |
+					// |-------------------------------|
+					// | \ | / | \ | / | \ | / | \ | / |
+					// |-------------------------------|
+					// | / | \ | / | \ | / | \ | / | \ |
+					// |-------------------------------|
+					// | \ | / | \ | / | \ | / | \ | / |
+					// |-------------------------------|
+					// | / | \ | / | \ | / | \ | / | \ |
+					// |-------------------------------|
+					// | \ | / | \ | / | \ | / | \ | / |
+					// |-------------------------------|
+					// | / | \ | / | \ | / | \ | / | \ |
+					//  -------------------------------
+					// One segment with a slash inside is one quad divided into 2 triangles.
+					// Now if you pay attention, you'll notice that considering the diagonals' directions, the
+					// quads make a pattern similar to a chessboard. So this is exactly what the XOR is for
+					// - to create this pattern quickly. :)
+					if ((x % 2) ^ (y % 2)) {
+						bsp->drawIndexes[ndx + 0] = y * verts + x;
+						bsp->drawIndexes[ndx + 1] = (y + 1) * verts + x;
+						bsp->drawIndexes[ndx + 2] = y * verts + x + 1;
+
+						bsp->drawIndexes[ndx + 3] = bsp->drawIndexes[ndx + 2];
+						bsp->drawIndexes[ndx + 4] = bsp->drawIndexes[ndx + 1];
+						bsp->drawIndexes[ndx + 5] = bsp->drawIndexes[ndx + 1] + 1;
+					} else {
+						bsp->drawIndexes[ndx + 0] = y * verts + x;
+						bsp->drawIndexes[ndx + 1] = (y + 1) * verts + x + 1;
+						bsp->drawIndexes[ndx + 2] = y * verts + x + 1;
+
+						bsp->drawIndexes[ndx + 3] = bsp->drawIndexes[ndx + 0];
+						bsp->drawIndexes[ndx + 4] = bsp->drawIndexes[ndx + 1] - 1;
+						bsp->drawIndexes[ndx + 5] = bsp->drawIndexes[ndx + 1];
+					}
+				}
+			}
+		}
+
+		bsp->numSurfaces += numTerSurfaces;
+		bsp->numDrawVerts += numTerSurfaces * 9 * 9;
+		bsp->numDrawIndexes += numTerSurfaces * 8 * 8 * 6;
 	}
 
 	CopyLump( &header, LUMP_LIGHTMAPS, data, (void *) bsp->lightmapData, sizeof ( *bsp->lightmapData ), qfalse ); /* NO SWAP */
