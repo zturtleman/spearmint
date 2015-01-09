@@ -548,9 +548,9 @@ int AAS_PlayerMovementPrediction(struct aas_clientmove_s *move,
 	int areas[20], numareas;
 	vec3_t points[20];
 	vec3_t org, end, feet, start, stepend, lastorg, wishdir;
-	vec3_t frame_test_vel, old_frame_test_vel, left_test_vel;
+	vec3_t frame_test_vel, old_frame_test_vel, left_test_vel, savevel;
 	vec3_t up = {0, 0, 1};
-	aas_plane_t *plane, *plane2;
+	aas_plane_t *plane, *plane2, *lplane;
 	aas_trace_t trace, steptrace;
 	
 	if (frametime <= 0) frametime = 0.1f;
@@ -580,6 +580,7 @@ int AAS_PlayerMovementPrediction(struct aas_clientmove_s *move,
 	VectorScale(velocity, frametime, frame_test_vel);
 	//
 	jump_frame = -1;
+	lplane = NULL;
 	//predict a maximum of 'maxframes' ahead
 	for (n = 0; n < maxframes; n++)
 	{
@@ -599,8 +600,18 @@ int AAS_PlayerMovementPrediction(struct aas_clientmove_s *move,
 		} //end if
 		crouch = qfalse;
 		//apply command movement
-		if (n < cmdframes)
-		{
+		if (cmdframes < 0) {
+			// cmdmove is the destination, we should keep moving towards it
+			VectorSubtract(cmdmove, org, wishdir);
+			VectorNormalize(wishdir);
+			VectorScale(wishdir, phys_maxwalkvelocity, wishdir);
+			VectorCopy(frame_test_vel, savevel);
+			VectorScale(wishdir, frametime, frame_test_vel);
+
+			if (!swimming) {
+				frame_test_vel[2] = savevel[2];
+			}
+		} else if (n < cmdframes) {
 			//ax = 0;
 			maxvel = phys_maxwalkvelocity;
 			accelerate = phys_airaccelerate;
@@ -847,6 +858,12 @@ int AAS_PlayerMovementPrediction(struct aas_clientmove_s *move,
 					//of the current test velocity into the hit plane 
 					VectorMA(left_test_vel, -DotProduct(left_test_vel, plane->normal),
 										plane->normal, left_test_vel);
+					// if this is the same plane we hit before, nudge velocity out along it, which fixes some epsilon issues with non-axial planes
+					if (lplane && DotProduct(lplane->normal, plane->normal) > 0.99) {
+						VectorAdd(plane->normal, left_test_vel, left_test_vel);
+					}
+
+					lplane = plane;
 					//store the old velocity for landing check
 					VectorCopy(frame_test_vel, old_frame_test_vel);
 					//test velocity for the next frame is the projection
