@@ -106,6 +106,8 @@ void	RemoveColinearPoints (winding_t *w)
 		VectorNormalize2(v2,v2);
 		if (DotProduct(v1, v2) < 0.999)
 		{
+			if (nump >= MAX_POINTS_ON_WINDING)
+				Com_Error (ERR_DROP, "RemoveColinearPoints: MAX_POINTS_ON_WINDING");
 			VectorCopy (w->p[i], p[nump]);
 			nump++;
 		}
@@ -573,7 +575,7 @@ void CheckWinding (winding_t *w)
 
 		for (j=0 ; j<3 ; j++)
 			if (p1[j] > MAX_MAP_BOUNDS || p1[j] < -MAX_MAP_BOUNDS)
-				Com_Error (ERR_DROP, "CheckFace: BUGUS_RANGE: %f",p1[j]);
+				Com_Error (ERR_DROP, "CheckWinding: BUGUS_RANGE: %f",p1[j]);
 
 		j = i+1 == w->numpoints ? 0 : i+1;
 		

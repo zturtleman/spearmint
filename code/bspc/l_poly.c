@@ -35,13 +35,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "l_log.h"
 #include "l_mem.h"
 
-#define	BOGUS_RANGE		65535
+#define	MAX_MAP_BOUNDS	65535
 //#define EQUAL_EPSILON   0.001
 
 extern int numthreads;
 
 // counters are only bumped when running single threaded,
-// because they are an awefull coherence problem
+// because they are an awful coherence problem
 int c_active_windings;
 int c_peak_windings;
 int c_winding_allocs;
@@ -128,6 +128,7 @@ int ActiveWindings(void)
 {
 	return c_active_windings;
 } //end of the function ActiveWindings
+
 /*
 ============
 RemoveColinearPoints
@@ -213,13 +214,18 @@ vec_t	WindingArea (winding_t *w)
 	return total;
 }
 
+/*
+=============
+WindingBounds
+=============
+*/
 void WindingBounds (winding_t *w, vec3_t mins, vec3_t maxs)
 {
 	vec_t	v;
 	int		i,j;
 
-	mins[0] = mins[1] = mins[2] = 99999;
-	maxs[0] = maxs[1] = maxs[2] = -99999;
+	mins[0] = mins[1] = mins[2] = MAX_MAP_BOUNDS;
+	maxs[0] = maxs[1] = maxs[2] = -MAX_MAP_BOUNDS;
 
 	for (i=0 ; i<w->numpoints ; i++)
 	{
@@ -266,7 +272,7 @@ winding_t *BaseWindingForPlane (vec3_t normal, vec_t dist)
 
 // find the major axis
 
-	max = -BOGUS_RANGE;
+	max = -MAX_MAP_BOUNDS;
 	x = -1;
 	for (i=0 ; i<3; i++)
 	{
@@ -300,8 +306,8 @@ winding_t *BaseWindingForPlane (vec3_t normal, vec_t dist)
 
 	CrossProduct (vup, normal, vright);
 
-	VectorScale (vup, BOGUS_RANGE, vup);
-	VectorScale (vright, BOGUS_RANGE, vright);
+	VectorScale (vup, MAX_MAP_BOUNDS, vup);
+	VectorScale (vright, MAX_MAP_BOUNDS, vright);
 
 // project a really big	axis aligned box onto the plane
 	w = AllocWinding (4);
@@ -330,12 +336,12 @@ CopyWinding
 */
 winding_t *CopyWinding (winding_t *w)
 {
-	size_t		size;
+	intptr_t	size;
 	winding_t	*c;
 
 	c = AllocWinding (w->numpoints);
-	size = (size_t)((winding_t *)0)->p[w->numpoints];
-	memcpy (c, w, size);
+	size = (intptr_t) ((winding_t *)0)->p[w->numpoints];
+	Com_Memcpy (c, w, size);
 	return c;
 }
 
@@ -367,8 +373,8 @@ ClipWindingEpsilon
 void ClipWindingEpsilon (winding_t *in, vec3_t normal, vec_t dist,
 				vec_t epsilon, winding_t **front, winding_t **back)
 {
-	vec_t	dists[MAX_POINTS_ON_WINDING+4];
-	int		sides[MAX_POINTS_ON_WINDING+4];
+	vec_t	dists[MAX_POINTS_ON_WINDING+4] = { 0 };
+	int		sides[MAX_POINTS_ON_WINDING+4] = { 0 };
 	int		counts[3];
 	//MrElusive: DOH can't use statics when unsing multithreading!!!
 	vec_t dot;		// VC 4.2 optimizer bug if not static
@@ -480,8 +486,8 @@ ChopWindingInPlace
 void ChopWindingInPlace (winding_t **inout, vec3_t normal, vec_t dist, vec_t epsilon)
 {
 	winding_t *in;
-	vec_t	dists[MAX_POINTS_ON_WINDING+4];
-	int sides[MAX_POINTS_ON_WINDING+4];
+	vec_t	dists[MAX_POINTS_ON_WINDING+4] = { 0 };
+	int		sides[MAX_POINTS_ON_WINDING+4] = { 0 };
 	int counts[3];
 	//MrElusive: DOH can't use statics when unsing multithreading!!!
 	vec_t dot;		// VC 4.2 optimizer bug if not static
@@ -624,7 +630,7 @@ void CheckWinding (winding_t *w)
 		p1 = w->p[i];
 
 		for (j=0 ; j<3 ; j++)
-			if (p1[j] > BOGUS_RANGE || p1[j] < -BOGUS_RANGE)
+			if (p1[j] > MAX_MAP_BOUNDS || p1[j] < -MAX_MAP_BOUNDS)
 				Error ("CheckWinding: BUGUS_RANGE: %f",p1[j]);
 
 		j = i+1 == w->numpoints ? 0 : i+1;
@@ -957,7 +963,7 @@ int WindingError(winding_t *w)
 
 		for (j=0 ; j<3 ; j++)
 		{
-			if (p1[j] > BOGUS_RANGE || p1[j] < -BOGUS_RANGE)
+			if (p1[j] > MAX_MAP_BOUNDS || p1[j] < -MAX_MAP_BOUNDS)
 			{
 				sprintf(windingerror, "winding point %d BUGUS_RANGE \'%f %f %f\'", j, p1[0], p1[1], p1[2]);
 				return WE_POINTBOGUSRANGE;
