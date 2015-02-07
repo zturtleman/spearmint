@@ -945,7 +945,7 @@ ifneq ($(BUILD_CLIENT),0)
   else
     TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT)
     ifneq ($(BUILD_RENDERER_OPENGL2),0)
-      TARGETS += $(B)/$(CLIENTBIN)-opengl2$(FULLBINEXT)
+      TARGETS += $(B)/$(CLIENTBIN)_opengl2$(FULLBINEXT)
     endif
   endif
 endif
