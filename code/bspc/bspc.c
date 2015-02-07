@@ -520,7 +520,7 @@ int main (int argc, char **argv)
 					AppendPathSeperator(filename, MAX_PATH);
 					ExtractFileBase(qf->origname, &filename[strlen(filename)]);
 					//append .map
-					strcat(filename, ".map");
+					strcat(filename, "_converted.map");
 					//
 					Log_Print("bsp2map: %s to %s\n", qf->origname, filename);
 					if (qf->type != QFILETYPE_BSP) Warning("%s is probably not a BSP file\n", qf->origname);
