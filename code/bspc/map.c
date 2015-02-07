@@ -529,14 +529,14 @@ void MarkBrushBevels(mapbrush_t *brush)
 		//if the side has no winding
 		if (!s->winding)
 		{
-			Log_Write("MarkBrushBevels: brush %d no winding", brush->brushnum);
+			Log_Write("MarkBrushBevels: brush %d no winding\r\n", brush->brushnum);
 			s->flags |= SFL_BEVEL;
 		} //end if
 		//if the winding is tiny
 		else if (WindingIsTiny(s->winding))
 		{
 			s->flags |= SFL_BEVEL;
-			Log_Write("MarkBrushBevels: brush %d tiny winding", brush->brushnum);
+			Log_Write("MarkBrushBevels: brush %d tiny winding\r\n", brush->brushnum);
 		} //end else if
 		//if the winding has errors
 		else
@@ -548,7 +548,7 @@ void MarkBrushBevels(mapbrush_t *brush)
 //					|| we == WE_NONCONVEX
 					)
 			{
-				Log_Write("MarkBrushBevels: brush %d %s", brush->brushnum, WindingErrorString());
+				Log_Write("MarkBrushBevels: brush %d %s\r\n", brush->brushnum, WindingErrorString());
 				s->flags |= SFL_BEVEL;
 			} //end else if
 		} //end else
