@@ -191,7 +191,7 @@ typedef struct {
 static int GetLumpElements( dheader_t *header, int lump, int size ) {
 	/* check for odd size */
 	if ( header->lumps[ lump ].filelen % size ) {
-		Com_Printf( "GetLumpElements: odd lump size (%d) in lump %d", header->lumps[ lump ].filelen, lump );
+		Com_Printf( "GetLumpElements: odd lump size (%d) in lump %d\n", header->lumps[ lump ].filelen, lump );
 		return 0;
 	}
 
