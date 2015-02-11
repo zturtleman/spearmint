@@ -229,6 +229,9 @@ extern bspFormat_t quake3BspFormat;
 extern bspFormat_t wolfBspFormat;
 extern bspFormat_t darksBspFormat;
 
+// bsp_q3test106.c
+extern bspFormat_t q3Test106BspFormat;
+
 // bsp_fakk.c
 extern bspFormat_t fakkBspFormat;
 extern bspFormat_t aliceBspFormat;

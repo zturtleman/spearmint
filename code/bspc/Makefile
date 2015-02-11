@@ -425,6 +425,7 @@ BSPC_OBJS = \
 	$(B)/bspc/bspc.o\
 	$(B)/qcommon/bsp.o\
 	$(B)/qcommon/bsp_q3.o\
+	$(B)/qcommon/bsp_q3test106.o\
 	$(B)/qcommon/bsp_fakk.o\
 	$(B)/qcommon/bsp_sof2.o\
 	$(B)/qcommon/bsp_ef2.o\

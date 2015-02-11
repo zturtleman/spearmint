@@ -27,7 +27,7 @@ terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
 Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
-// bsp_q3.c -- Q3/RTCW/ET/EF BSP Level Loading
+// bsp_q3test106.c -- Q3Test 1.06/1.07/1.08 BSP Level Loading
 
 #include "q_shared.h"
 #include "qcommon.h"
@@ -36,9 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define BSP_IDENT	(('P'<<24)+('S'<<16)+('B'<<8)+'I')
 		// little-endian "IBSP"
 
-#define Q3_BSP_VERSION			46 // Quake III / Team Arena
-#define WOLF_BSP_VERSION		47 // RTCW / WolfET
-#define DARKS_BSP_VERSION		666 // Dark Salvation
+#define BSP_VERSION			45
 
 typedef struct {
 	int		fileofs, filelen;
@@ -72,6 +70,8 @@ typedef struct {
 
 typedef struct {
 	float		mins[3], maxs[3];
+	int			unknownZeros[3]; // ZTM: These are always 0
+	int			unknownNegative; // ZTM: In model 0 this is 0. model 1 starts at some negative number (I do not know what it means). After model 1, it goes down 1 for each model.
 	int			firstSurface, numSurfaces;
 	int			firstBrush, numBrushes;
 } realDmodel_t;
@@ -87,6 +87,7 @@ typedef struct {
 typedef struct {
 	float		normal[3];
 	float		dist;
+	int			unknown; // ZTM: this might be 'type' like in q2 bsp -- I haven't tried to check
 } realDplane_t;
 
 typedef struct {
@@ -124,7 +125,7 @@ typedef struct {
 typedef struct {
 	char		shader[MAX_QPATH];
 	int			brushNum;
-	int			visibleSide;	// the brush side that ray tests need to clip against (-1 == none)
+	//int			visibleSide;	// the brush side that ray tests need to clip against (-1 == none)
 } realDfog_t;
 
 typedef struct {
@@ -212,7 +213,7 @@ static void *GetLump( dheader_t *header, const void *src, int lump ) {
 	return (void*)( (byte*) src + header->lumps[ lump ].fileofs );
 }
 
-bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *data, int length ) {
+bspFile_t *BSP_LoadQ3Test106( const bspFormat_t *format, const char *name, const void *data, int length ) {
 	int				i, j, k;
 	dheader_t		header;
 	bspFile_t		*bsp;
@@ -430,7 +431,8 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 		for ( i = 0; i < bsp->numFogs; i++, in++, out++ ) {
 			Q_strncpyz( out->shader, in->shader, sizeof ( out->shader ) );
 			out->brushNum = LittleLong (in->brushNum);
-			out->visibleSide = LittleLong (in->visibleSide);
+			// ZTM: Hard code visibleSide to top. I'm unsure if this is the correct handling.
+			out->visibleSide = 5; //LittleLong (in->visibleSide);
 		}
 	}
 
@@ -486,27 +488,10 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 /****************************************************
 */
 
-// Q3, Elite Force, and other games
-bspFormat_t quake3BspFormat = {
-	"Quake3",
+bspFormat_t q3Test106BspFormat = {
+	"Q3Test 1.06/1.07/1.08",
 	BSP_IDENT,
-	Q3_BSP_VERSION,
-	BSP_LoadQ3,
-};
-
-// RTCW, ET, QuakeLive
-bspFormat_t wolfBspFormat = {
-	"RTCW/ET",
-	BSP_IDENT,
-	WOLF_BSP_VERSION,
-	BSP_LoadQ3,
-};
-
-// Dark Salvation
-bspFormat_t darksBspFormat = {
-	"DarkSalvation",
-	BSP_IDENT,
-	DARKS_BSP_VERSION,
-	BSP_LoadQ3,
+	BSP_VERSION,
+	BSP_LoadQ3Test106,
 };
 
