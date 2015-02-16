@@ -47,12 +47,14 @@ struct aas_reachability_s;
 struct aas_predictroute_s;
 
 //debug line colors
-#define LINECOLOR_NONE			-1
-#define LINECOLOR_RED			1//0xf2f2f0f0L
-#define LINECOLOR_GREEN			2//0xd0d1d2d3L
-#define LINECOLOR_BLUE			3//0xf3f3f1f1L
-#define LINECOLOR_YELLOW		4//0xdcdddedfL
-#define LINECOLOR_ORANGE		5//0xe0e1e2e3L
+#define LINECOLOR_NONE			0
+#define LINECOLOR_RED			1
+#define LINECOLOR_GREEN			2
+#define LINECOLOR_YELLOW		3
+#define LINECOLOR_BLUE			4
+#define LINECOLOR_MAGENTA		5
+#define LINECOLOR_CYAN			6
+#define LINECOLOR_WHITE			7
 
 //Print types
 #define PRT_DEVELOPER			0
