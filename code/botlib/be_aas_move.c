@@ -1005,7 +1005,7 @@ int AAS_PlayerMovementPrediction(struct aas_clientmove_s *move,
 			VectorCopy(org, start);
 			VectorCopy(start, end);
 			end[2] -= 48 + aassettings.phys_maxbarrier;
-			gaptrace = AAS_TracePlayerBBox(start, end, PRESENCE_CROUCH, -1, contentmask);
+			gaptrace = AAS_TracePlayerBBox(start, end, PRESENCE_CROUCH, entnum, contentmask);
 			//if solid is found the bot cannot walk any further and will not fall into a gap
 			if (!gaptrace.startsolid)
 			{
