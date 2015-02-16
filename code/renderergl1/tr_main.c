@@ -1721,8 +1721,13 @@ void R_DebugGraphics( void ) {
 	R_IssuePendingRenderCommands();
 
 	GL_Bind( tr.whiteImage);
-	GL_Cull( CT_FRONT_SIDED );
-	ri.CM_DrawDebugSurface( R_DebugPolygon );
+	if ( r_debugSurface->integer == 1 ) {
+		GL_Cull( CT_FRONT_SIDED );
+		ri.CM_DrawDebugSurface( R_DebugPolygon );
+	} else {
+		GL_Cull( CT_TWO_SIDED );
+		ri.BotDrawDebugPolygons( R_DebugPolygon );
+	}
 }
 
 

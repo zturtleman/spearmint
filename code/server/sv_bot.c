@@ -124,9 +124,11 @@ void SV_BotFreeClient( int playerNum ) {
 /*
 ==================
 BotDrawDebugPolygons
+
+Set r_debugSurface to 2 to enable
 ==================
 */
-void BotDrawDebugPolygons(void (*drawPoly)(int color, int numPoints, float *points), int value) {
+void BotDrawDebugPolygons( void (*drawPoly)(int color, int numPoints, float *points) ) {
 	static cvar_t *bot_debug, *bot_groundonly, *bot_reachability, *bot_highlightarea;
 	bot_debugpoly_t *poly;
 	int i, parm0;
