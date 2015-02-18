@@ -114,23 +114,7 @@ char *BotImport_BSPEntityData(void)
 //===========================================================================
 void BotImport_Trace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int passent, int contentmask)
 {
-	trace_t result;
-
-	CM_BoxTrace(&result, start, end, mins, maxs, worldmodel, contentmask, capsule_collision ? TT_CAPSULE : TT_AABB);
-
-	bsptrace->allsolid = result.allsolid;
-	bsptrace->contents = result.contents;
-	VectorCopy(result.endpos, bsptrace->endpos);
-	bsptrace->ent = result.entityNum;
-	bsptrace->fraction = result.fraction;
-	bsptrace->exp_dist = 0;
-	bsptrace->plane.dist = result.plane.dist;
-	VectorCopy(result.plane.normal, bsptrace->plane.normal);
-	bsptrace->plane.signbits = result.plane.signbits;
-	bsptrace->plane.type = result.plane.type;
-	bsptrace->sidenum = 0;
-	bsptrace->startsolid = result.startsolid;
-	bsptrace->surface.flags = result.surfaceFlags;
+	CM_BoxTrace(bsptrace, start, end, mins, maxs, worldmodel, contentmask, capsule_collision ? TT_CAPSULE : TT_AABB);
 } //end of the function BotImport_Trace
 //===========================================================================
 //

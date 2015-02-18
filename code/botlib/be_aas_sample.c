@@ -438,7 +438,7 @@ qboolean AAS_AreaEntityCollision(int areanum, vec3_t start, vec3_t end,
 	if (collision)
 	{
 		trace->startsolid = bsptrace.startsolid;
-		trace->ent = bsptrace.ent;
+		trace->ent = bsptrace.entityNum;
 		VectorCopy(bsptrace.endpos, trace->endpos);
 		trace->area = 0;
 		trace->planenum = 0;
