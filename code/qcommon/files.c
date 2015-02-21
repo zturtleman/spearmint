@@ -816,6 +816,10 @@ long FS_System_FOpenFileRead(const char *ospath, fileHandle_t *fp)
 	fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
 	fsh[f].handleSync = qfalse;
 
+	if (!fsh[f].handleFiles.file.o) {
+		f = 0;
+	}
+
 	*fp = f;
 	if (f) {
 		return FS_filelength(f);
