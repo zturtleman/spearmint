@@ -1036,6 +1036,13 @@ static void IN_ProcessEvents( void )
 						case SDL_BUTTON_RIGHT:  b = K_MOUSE2;     break;
 						case SDL_BUTTON_X1:     b = K_MOUSE4;     break;
 						case SDL_BUTTON_X2:     b = K_MOUSE5;     break;
+
+						// ZTM: HACK around incorrect SDL2 code
+						// SDL X11 passes the button value directly from X11 instead of remapping to SDL_BUTTON_*
+						// Other than that, SDL does not use buttons aside from the above 5, so.. ignore how this would affect AUX
+						case 8:                 b = K_MOUSE4;     break;
+						case 9:                 b = K_MOUSE5;     break;
+
 						default:                b = K_AUX1 + ( e.button.button - SDL_BUTTON_X2 + 1 ) % 16; break;
 					}
 					Com_QueueEvent( 0, SE_KEY, b,
