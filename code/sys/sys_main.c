@@ -28,6 +28,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
+#ifdef WIN32 // ZTM: HACK around missing SDL code
+#include <windows.h>
+#endif
 #include <signal.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -736,17 +739,40 @@ int main( int argc, char **argv )
 	signal( SIGTERM, Sys_SigHandler );
 	signal( SIGINT, Sys_SigHandler );
 
-#if !defined DEDICATED && defined __linux__
-	// SDL doesn't initially set KMOD_NUM on X11.. so let's always assume it's on
-	// because I don't want to deal with including X11 code outside SDL. >.>
+#if !defined DEDICATED && !defined MACOS_X
+	// ZTM: HACK around missing SDL2 code
+	// SDL2 doesn't initially set it's numlock or capslock state on any platform.
 	// Hopefully this gets fixed by SDL 2.1.0...
 	if( SDL_VERSIONNUM( ver.major, ver.minor, ver.patch ) < SDL_VERSIONNUM( 2, 1, 0 ) ) {
-		if ( !( SDL_GetModState() & KMOD_NUM ) ) {
+		SDL_Keymod modState;
+
+		modState = SDL_GetModState();
+
+#ifdef WIN32
+		if ( GetKeyState( VK_NUMLOCK ) & 0x0001 ) {
+			modState |= KMOD_NUM;
+		} else {
+			modState &= ~KMOD_NUM;
+		}
+
+		if ( GetKeyState( VK_CAPITAL ) & 0x0001 ) {
+			modState |= KMOD_CAPS;
+		} else {
+			modState &= ~KMOD_CAPS;
+		}
+#else
+		// linux or any other platform with numlock (i.e. not Mac OS X)
+		// so let's always assume num lock is on, because I always have it on
+		// and I don't want to deal with including X11 code outside SDL. >.>
+		if ( !( modState & KMOD_NUM ) ) {
 			Com_Printf("INFO: Forcing NUMLOCK state to enabled (actual state unknown)!\n");
-			SDL_SetModState( SDL_GetModState() | KMOD_NUM );
+			modState |= KMOD_NUM;
 		} else {
 			Com_Printf("INFO: SDL has NUMLOCK state set to enabled!\n");
 		}
+#endif
+
+		SDL_SetModState( modState );
 	}
 #endif
 
