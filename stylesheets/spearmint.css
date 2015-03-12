@@ -4,8 +4,8 @@
 
 body { margin: 0; padding: 0; background-color: #8A9; color: #000; }
 #outer { margin: 10px 0; width: 100%; background-color: #FFF }
-.illustration { width: 60%; max-width: 600px; height: auto; }
-div.logoarea { padding-top:15%; padding-left:10%; width: 30%; max-width: 256px; }
+.illustration { width: 55%; max-width: 600px; height: auto; }
+div.logoarea { padding-top:15%; padding-left:10%; width: 35%; max-width: 300px; }
 img.logoarea { width: 100%; max-width: 256px; height: auto; }
 div.screenshot { text-align: center; background-color: #555; }
 img.screenshot { width: 100%; max-width: 480px; height: auto; }

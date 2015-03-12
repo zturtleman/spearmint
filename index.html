@@ -50,45 +50,48 @@
 
 		<div class="screenshot">
 			<a href="images/q3a-screenshot.png"><img class="screenshot" src="images/q3a-screenshot-small.png" width="460" height="259" title="Spearmint Quake 3 screenshot" alt="Spearmint Quake 3 screenshot"/></a>
+			<br />
+			<span style="color: white">Spearmint Quake 3 screenshot</span>
 		</div>
 
 		<div class="whatisContent">
 			<p><span class="title">Spearmint</span> is a heavily modified version of the <a href="https://en.wikipedia.org/wiki/id_Tech_3">Quake III Arena engine</a>. Spearmint is directly based on <a href="http://ioquake3.org">ioquake3</a>.</p>
 
-			<!-- TODO: should probably talk about it's force on standalone games and extending the hell out of it -->
+			<!-- TODO: should probably talk about it's focused on standalone games and extending the hell out of it -->
 
 			<!-- FIXME: this isn't explained or backed up as to how it's different than ioq3
 			<p>It's possible to create new cross-platform games without modifying the engine or having multiple operating systems.</p>
 			 -->
 
-			<span>How Spearmint is different from the original Quake 3 / ioquake3 engine;</span>
-			<ul>
-				<li>It is possible to do a hell of a lot more without modifying the engine.</li>
+			<span>Some of the new features / changes:</span>
+			<ol>
+				<li>Four player splitscreen support.</li>
+				<li>Bullet marks on doors and moving platforms.</li>
+				<li>Gibs and bullet shells ride moving platforms.</li>
+				<li>Aspect correct wide screen FOV and HUD in Q3A.</li>
+				<li>Improved Bot AI.</li>
+				<li>Improved gamepad support.</li>
+				<li>Improved third person view.</li>
+				<li>Smooth corpse sinking.</li>
+				<li>Player shadow moves with animations.</li>
+				<li>PNG screenshots (with ext data containing map name and player origin, etc).</li>
+				<li>In multiplayer with gibs disabled, bodies no longer become invisible when gibbed.</li>
+				<li>Option to fade out explosion lights instead of shrinking them (set cg_fadeExplosions cvar to 1).</li>
+			</ol>
+
+			<span>Modding differences from ioquake3:</span>
+			<ol>
+				<li>It is possible to do a lot more without modifying the engine.</li>
 				<li>New features for the modding APIs and shader files.</li>
 				<li>Split engine and game code into separate projects.</li>
-				<li>More Quake 3 game code improvements.</li>
-				<li>4-Player Splitscreen support.</li>
-				<li>Not compatible with Quake 3 mods or replay demos.</il>
-			</ul>
-
-			<span>For people familiar with modding Quake 3 based games;</span>
-			<ul>
+				<li>Not compatible with Quake 3 mods (QVMs/DLLs) or replay demos.</il>
 				<li>It's possible to extend the entityState_t and playerState_t data structures without changing the engine.</li>
-				<li>Merged UI VM into CGame VM so the CGame&lt;-&gt;UI communication is more flexable.</li>
+				<li>Merged UI VM into CGame VM so the CGame&lt;-&gt;UI communication is more flexible.</li>
 				<li>Moved a lot of code from server and client to Game and CGame VMs;</li>
 				<ul>
 					<li>including the console, chat input overlay, usercmd_t creation, and a lot of bot AI code.</li>
 				</ul>
-			</ul>
-
-			<!-- FIXME: not sure this is really front page news -->
-			<span>Spearmint has support for some data formats used by other Quake 3 based games:</span>
-			<ul>
-				<li>Support for map and model formats from RTCW and ET (missing player model torso frame/axis control).</li>
-				<li>Support for FAKK / Alice FTX images.</li>
-				<li>Partial support for FAKK / Alice BSP map format (missing dynamic entity lights).</li>
-				<li>Partial support for SoF2 / JK2 / JA BSP map format (missing light styles support).</li>
-			</ul>
+			</ol>
 		</div>
 	</div>
 	<!-- end section -->
@@ -150,7 +153,9 @@
 
 		<div class="sectionContent">
 			<h3>Spearmint Logo</h3>
-			<p>Copyright 2014 Zack Middleton, uses "M+ 1mn Medium" font from <a href="http://mplus-fonts.sourceforge.jp/mplus-outline-fonts/index-en.html">M<sup>+</sup> Outline Fonts</a>.</p>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/StillImage" property="dct:title" rel="dct:type">Spearmint Icon</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://spearmint.pw" property="cc:attributionName" rel="cc:attributionURL">Zack Middleton</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-ShareAlike 3.0 International License</a>.
+
+			<p>Spearmint Icon with caption uses "M+ 1mn Medium" font from <a href="http://mplus-fonts.sourceforge.jp/mplus-outline-fonts/index-en.html">M<sup>+</sup> Outline Fonts</a>.</p>
 
 			<h3>Hatsune Miku illustration with Spearmint accessory</h3>
 			<div class="ccbox"><a rel="license" href="http://creativecommons.org/licenses/by-nc/3.0/deed.en_US"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></div>
