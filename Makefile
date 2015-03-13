@@ -374,6 +374,12 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
   CLIENT_LIBS=$(SDL_LIBS)
   RENDERER_LIBS = $(SDL_LIBS) -lGL
 
+  ifeq ($(USE_PORTABLE_RPATH),1)
+    # $ is escaped using two, so this is litterly $ORIGIN
+    CLIENT_LIBS+=-Wl,-rpath,'$$ORIGIN/lib/$(ARCH)'
+    RENDERER_LIBS+=-Wl,-rpath,'$$ORIGIN/lib/$(ARCH)'
+  endif
+
   ifeq ($(USE_OPENAL),1)
     ifneq ($(USE_OPENAL_DLOPEN),1)
       CLIENT_LIBS += $(THREAD_LIBS) $(OPENAL_LIBS)
