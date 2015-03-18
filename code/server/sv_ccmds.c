@@ -1329,8 +1329,6 @@ void SV_RemoveOperatorCommands( void ) {
 	Cmd_RemoveCommand ("kicknum");
 	Cmd_RemoveCommand ("kickall");
 	Cmd_RemoveCommand ("kickbots");
-	Cmd_RemoveCommand ("banUser");
-	Cmd_RemoveCommand ("banClient");
 	Cmd_RemoveCommand ("status");
 	Cmd_RemoveCommand ("serverinfo");
 	Cmd_RemoveCommand ("systeminfo");

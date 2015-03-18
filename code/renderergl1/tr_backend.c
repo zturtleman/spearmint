@@ -506,26 +506,14 @@ void RB_BeginDrawingView (void) {
 }
 
 /*
-=================
-RB_EndDrawingView
-=================
-*/
-void RB_EndDrawingView( void ) {
-	// ZTM: Disable fog?
-	//R_FogOff();
-
-	// ZTM: Reset portal clipping?
-	//qglDisable (GL_CLIP_PLANE0);
-}
-
-/*
 ==================
 RB_EntityMergable
 ==================
 */
 qboolean RB_EntityMergable( int entityNum, const shader_t *shader ) {
-	if ( entityNum == REFENTITYNUM_WORLD )
+	if ( entityNum == REFENTITYNUM_WORLD ) {
 		return shader->entityMergable;
+	}
 
 	switch (backEnd.refdef.entities[entityNum].e.reType) {
 		case RT_SPRITE:
@@ -737,8 +725,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	// add light flares on lights that aren't obscured
 	RB_RenderFlares();
-
-	RB_EndDrawingView();
 }
 
 

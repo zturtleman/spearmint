@@ -624,8 +624,9 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 			for ( j = 0; j < MAX_SPLITVIEW; j++ ) {
 				player = svs.clients[i].localPlayers[j];
 
-				if ( !player )
+				if ( !player ) {
 					continue;
+				}
 
 				// setup entity before connecting
 				SV_SetupPlayerEntity( player );
@@ -670,7 +671,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	svs.time += 100;
 
 	// Force sv_pure to off if invalid default pk3s
-	if (sv_pure->integer && !com_fs_pure->integer) {
+	if ( sv_pure->integer && !com_fs_pure->integer ) {
 		Cvar_Set( "sv_pure", "0" );
 	}
 
@@ -771,10 +772,11 @@ void SV_Init (void)
 	sv_cheats = Cvar_Get ("sv_cheats", "1", CVAR_SYSTEMINFO | CVAR_ROM );
 	sv_serverid = Cvar_Get ("sv_serverid", "0", CVAR_SYSTEMINFO | CVAR_ROM );
 
-	if (!com_fs_pure->integer)
+	if ( !com_fs_pure->integer ) {
 		sv_pure = Cvar_Get ("sv_pure", "0", CVAR_SYSTEMINFO | CVAR_ROM );
-	else
+	} else {
 		sv_pure = Cvar_Get ("sv_pure", "1", CVAR_SYSTEMINFO );
+	}
 
 #ifdef USE_VOIP
 	sv_voip = Cvar_Get("sv_voip", "1", CVAR_SYSTEMINFO | CVAR_LATCH);
