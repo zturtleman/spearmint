@@ -1423,7 +1423,8 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 	refEntity_t *refent;
 	int *boneList;
 	mdsHeader_t *header;
-	int *triangles, *pIndexes;
+	int *triangles;
+	glIndex_t *pIndexes;
 	int indexes;
 	int baseIndex, baseVertex, oldIndexes;
 	mdsVertex_t *v;
@@ -1516,17 +1517,13 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 
 	tess.numVertexes += render_count;
 
-	pIndexes = (int*)&tess.indexes[baseIndex];
+	pIndexes = (glIndex_t *)&tess.indexes[baseIndex];
 
 //DBG_SHOWTIME
 
 	if ( render_count == surface->numVerts ) {
-		memcpy( pIndexes, triangles, sizeof( triangles[0] ) * indexes );
-		if ( baseVertex ) {
-			int *indexesEnd;
-			for ( indexesEnd = pIndexes + indexes ; pIndexes < indexesEnd ; pIndexes++ ) {
-				*pIndexes += baseVertex;
-			}
+		for ( j = 0; j < indexes; j++ ) {
+			pIndexes[j] = triangles[j] + baseVertex;
 		}
 		tess.numIndexes += indexes;
 	} else
@@ -1733,7 +1730,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 			qglBegin( GL_LINES );
 			qglColor3f( .0,.0,.8 );
 
-			pIndexes = (int*)&tess.indexes[oldIndexes];
+			pIndexes = (glIndex_t *)&tess.indexes[oldIndexes];
 			for ( j = 0; j < render_indexes / 3; j++, pIndexes += 3 ) {
 				qglVertex3fv( tempVert + 4 * pIndexes[0] );
 				qglVertex3fv( tempVert + 4 * pIndexes[1] );
