@@ -1226,12 +1226,14 @@ void CL_PlayDemo( const char *demoName, qboolean isOsPath ) {
 	// 2 means don't force disconnect of local client
 	Cvar_Set( "sv_killserver", "2" );
 
-	CL_Disconnect( qtrue );
+	if ( clc.state != CA_DISCONNECTED ) {
+		CL_Disconnect( qtrue );
+	}
 
 	// open the demo file
 	if ( !CL_ValidDemoFile( demoName, isOsPath, &protocol, &clc.demoLength, &clc.demofile, startTime, endTime, &runTime ) ) {
 		if ( clc.demoLength <= 0 || clc.demofile == 0 ) {
-			Com_Printf( S_COLOR_YELLOW "WARNING: Couldn't open demo %s", demoName );
+			Com_Printf( S_COLOR_YELLOW "WARNING: Couldn't open demo %s\n", demoName );
 			return;
 		}
 		else if ( protocol > 0 ) {
