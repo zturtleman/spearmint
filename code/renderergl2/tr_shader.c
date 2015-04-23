@@ -4341,9 +4341,11 @@ static shader_t *FinishShader( void ) {
 	int bundle;
 	qboolean		hasLightmapStage;
 	qboolean		vertexLightmap;
+	qboolean		hasOpaqueStage;
 
 	hasLightmapStage = qfalse;
 	vertexLightmap = qfalse;
+	hasOpaqueStage = qfalse;
 
 	//
 	// set sky stuff appropriate
@@ -4371,9 +4373,14 @@ static shader_t *FinishShader( void ) {
 	//
 	for ( stage = 0; stage < MAX_SHADER_STAGES; ) {
 		shaderStage_t *pStage = &stages[stage];
+		qboolean isLightmap;
 
 		if ( !pStage->active ) {
 			break;
+		}
+
+		if ( ( pStage->stateBits & ( GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS ) ) == 0 ) {
+			hasOpaqueStage = qtrue;
 		}
 
     // check for a missing texture
@@ -4413,6 +4420,7 @@ static shader_t *FinishShader( void ) {
 		//
 		// default texture coordinate generation
 		//
+		isLightmap = qtrue;
 		for ( bundle = 0; bundle < NUM_TEXTURE_BUNDLES; bundle++ ) {
 			textureBundle_t *pBundle = &pStage->bundle[bundle];
 
@@ -4431,6 +4439,9 @@ static shader_t *FinishShader( void ) {
 				if ( pBundle->tcGen == TCGEN_BAD ) {
 					pBundle->tcGen = TCGEN_TEXTURE;
 				}
+
+				// contains a non-lightmap bundle
+				isLightmap = qfalse;
 			}
 		}
 
@@ -4446,8 +4457,8 @@ static shader_t *FinishShader( void ) {
 		//
 		// determine sort order and fog color adjustment
 		//
-		if ( ( pStage->stateBits & ( GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS ) ) &&
-			 ( stages[0].stateBits & ( GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS ) ) ) {
+		if ( ( pStage->stateBits & ( GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS ) )
+			 && !isLightmap && !hasOpaqueStage ) {
 			int blendSrcBits = pStage->stateBits & GLS_SRCBLEND_BITS;
 			int blendDstBits = pStage->stateBits & GLS_DSTBLEND_BITS;
 
