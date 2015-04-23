@@ -956,11 +956,6 @@ static void RB_FogPass( void ) {
 	fogType_t	fogType;
 	int			i;
 
-	// no fog pass
-	if ( tess.shader->noFog ) {
-		return;
-	}
-
 	// no world, no fogging
 	if ( backEnd.refdef.rdflags & RDF_NOWORLDMODEL ) {
 		return;
@@ -988,6 +983,23 @@ static void RB_FogPass( void ) {
 
 	if ( fogType == FT_NONE ) {
 		return;
+	}
+
+	// check if any stage is fogged
+	if ( tess.shader->noFog ) {
+		int i;
+
+		for ( i = 0 ; i < MAX_SHADER_STAGES; i++ ) {
+			shaderStage_t *pStage = tess.xstages[i];
+
+			if ( !pStage ) {
+				return;
+			}
+
+			if ( pStage->isFogged ) {
+				break;
+			}
+		}
 	}
 
 	qglEnableClientState( GL_COLOR_ARRAY );
@@ -1234,7 +1246,7 @@ static void ComputeColors( shaderStage_t *pStage )
 	//
 	// fog adjustment for colors to fade out as fog increases
 	//
-	if ( tess.fogNum && !tess.shader->noFog )
+	if ( tess.fogNum && ( !tess.shader->noFog || pStage->isFogged ) )
 	{
 		switch ( pStage->adjustColorsForFog )
 		{

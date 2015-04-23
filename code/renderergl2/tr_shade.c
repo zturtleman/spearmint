@@ -1126,11 +1126,6 @@ static void RB_FogPass( void ) {
 	int deformGen;
 	vec5_t deformParams;
 
-	// no fog pass
-	if ( tess.shader->noFog ) {
-		return;
-	}
-
 	if ( tess.shader->isSky ) {
 		fogType = tr.skyFogType;
 		colorInt = tr.skyFogColorInt;
@@ -1149,6 +1144,23 @@ static void RB_FogPass( void ) {
 
 	if ( fogType == FT_NONE ) {
 		return;
+	}
+
+	// check if any stage is fogged
+	if ( tess.shader->noFog ) {
+		int i;
+
+		for ( i = 0 ; i < MAX_SHADER_STAGES; i++ ) {
+			shaderStage_t *pStage = tess.xstages[i];
+
+			if ( !pStage ) {
+				return;
+			}
+
+			if ( pStage->isFogged ) {
+				break;
+			}
+		}
 	}
 
 	ComputeDeformValues(&deformGen, deformParams);
