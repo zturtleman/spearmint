@@ -641,7 +641,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			}
 		}
 
-		if ( node->contents != -1 ) {
+		if ( node->isLeaf ) {
 			break;
 		}
 
@@ -768,7 +768,7 @@ static mnode_t *R_PointInLeaf( const vec3_t p ) {
 
 	node = tr.world->nodes;
 	while( 1 ) {
-		if (node->contents != -1) {
+		if ( node->isLeaf ) {
 			break;
 		}
 		plane = node->plane;

@@ -1206,10 +1206,9 @@ typedef struct msurface_s {
 } msurface_t;
 
 
-#define	CONTENTS_NODE		-1
 typedef struct mnode_s {
 	// common with leaf and node
-	int			contents;		// -1 for nodes, to differentiate from leafs
+	qboolean	isLeaf;			// to differentiate nodes from leafs
 	int             visCounts[MAX_VISCOUNTS];	// node needs to be traversed if current
 	vec3_t		mins, maxs;		// for bounding box culling
 	vec3_t		surfMins, surfMaxs; // bounding box including surfaces

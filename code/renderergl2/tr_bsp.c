@@ -2759,7 +2759,7 @@ static	void R_SetParent (mnode_t *node, mnode_t *parent) {
 	node->parent = parent;
 
 	// handle leaf nodes
-	if ( node->contents != -1 ) {
+	if ( node->isLeaf ) {
 		// add node surfaces to bounds
 		if ( node->nummarksurfaces > 0 ) {
 			int c;
@@ -2829,7 +2829,7 @@ static	void R_LoadNodesAndLeafs( const bspFile_t *bsp ) {
 		p = LittleLong(in->planeNum);
 		out->plane = s_worldData.planes + p;
 
-		out->contents = CONTENTS_NODE;	// differentiate from leafs
+		out->isLeaf = qfalse;	// differentiate from leafs
 
 		for (j=0 ; j<2 ; j++)
 		{
@@ -2853,6 +2853,8 @@ static	void R_LoadNodesAndLeafs( const bspFile_t *bsp ) {
 
 		// surface bounds
 		ClearBounds( out->surfMins, out->surfMaxs );
+
+		out->isLeaf = qtrue;	// differentiate from nodes
 
 		out->cluster = LittleLong(inLeaf->cluster);
 		out->area = LittleLong(inLeaf->area);

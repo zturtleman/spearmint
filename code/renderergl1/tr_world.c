@@ -460,7 +460,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits )
 		}
 
 		// handle leaf nodes
-		if ( node->contents != -1 ) {
+		if ( node->isLeaf ) {
 			break;
 		}
 
@@ -499,7 +499,7 @@ static mnode_t *R_PointInLeaf( const vec3_t p ) {
 
 	node = tr.world->nodes;
 	while( 1 ) {
-		if (node->contents != -1) {
+		if ( node->isLeaf ) {
 			break;
 		}
 		plane = node->plane;
@@ -591,9 +591,7 @@ static void R_MarkLeaves (void) {
 
 	if ( r_novis->integer || tr.viewCluster == -1 ) {
 		for (i=0 ; i<tr.world->numnodes ; i++) {
-			if (tr.world->nodes[i].contents != CONTENTS_SOLID) {
-				tr.world->nodes[i].visframe = tr.visCount;
-			}
+			tr.world->nodes[i].visframe = tr.visCount;
 		}
 		return;
 	}
