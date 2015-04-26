@@ -1772,7 +1772,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		( stage->bundle[1].isLightmap && stage->bundle[1].image[0] == tr.whiteImage ) )
 		&& shader.lightmapIndex < 0 )
 	{
-		if ( !( shader.surfaceFlags & SURF_NOLIGHTMAP ) || ( shader.surfaceFlags & SURF_POINTLIGHT ) ) {
+		if ( !( shader.surfaceParms & SURF_NOLIGHTMAP ) || ( shader.surfaceParms & SURF_POINTLIGHT ) ) {
 			// surfaceParm pointlight, vertex-approximated surfaces, non-lightmapped misc_models, or not a world surface
 			ri.Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap stage but no lightmap, using diffuse lighting.\n", shader.name );
 			stage->bundle[0].isLightmap = qfalse;
@@ -2073,54 +2073,19 @@ void ParseSort( char **text ) {
 
 
 
-// this table is also present in q3map
-
 typedef struct {
 	char	*name;
-	int		clearSolid, surfaceFlags, contents;
+	int		surfaceParms;
 } infoParm_t;
 
 infoParm_t	infoParms[] = {
-	// server relevant contents
-	{"water",		1,	0,	CONTENTS_WATER },
-	{"slime",		1,	0,	CONTENTS_SLIME },		// mildly damaging
-	{"lava",		1,	0,	CONTENTS_LAVA },		// very damaging
-	{"playerclip",	1,	0,	CONTENTS_PLAYERCLIP },
-	{"monsterclip",	1,	0,	CONTENTS_MONSTERCLIP },
-	{"nodrop",		1,	0,	CONTENTS_NODROP },		// don't drop items or leave bodies (death fog, lava, etc)
-	{"nonsolid",	1,	SURF_NONSOLID,	0},						// clears the solid flag
-
-	// utility relevant attributes
-	{"origin",		1,	0,	CONTENTS_ORIGIN },		// center of rotating brushes
-	{"trans",		0,	0,	CONTENTS_TRANSLUCENT },	// don't eat contained surfaces
-	{"detail",		0,	0,	CONTENTS_DETAIL },		// don't include in structural bsp
-	{"structural",	0,	0,	CONTENTS_STRUCTURAL },	// force into structural bsp even if trnas
-	{"areaportal",	1,	0,	CONTENTS_AREAPORTAL },	// divides areas
-	{"clusterportal", 1,0,  CONTENTS_CLUSTERPORTAL },	// for bots
-	{"donotenter",  1,  0,  CONTENTS_DONOTENTER },		// for bots
-
-	{"fog",			1,	0,	CONTENTS_FOG},			// carves surfaces entering
-	{"sky",			0,	SURF_SKY,		0 },		// emit light from an environment map
-	{"lightfilter",	0,	SURF_LIGHTFILTER, 0 },		// filter light going through it
-	{"alphashadow",	0,	SURF_ALPHASHADOW, 0 },		// test light on a per-pixel basis
-	{"hint",		0,	SURF_HINT,		0 },		// use as a primary splitter
-
-	// server attributes
-	{"slick",		0,	SURF_SLICK,		0 },
-	{"noimpact",	0,	SURF_NOIMPACT,	0 },		// don't make impact explosions or marks
-	{"nomarks",		0,	SURF_NOMARKS,	0 },		// don't make impact marks, but still explode
-	{"ladder",		0,	SURF_LADDER,	0 },
-	{"nodamage",	0,	SURF_NODAMAGE,	0 },
-	{"metalsteps",	0,	SURF_METALSTEPS,0 },
-	{"flesh",		0,	SURF_FLESH,		0 },
-	{"nosteps",		0,	SURF_NOSTEPS,	0 },
-
-	// drawsurf attributes
-	{"nodraw",		0,	SURF_NODRAW,	0 },	// don't generate a drawsurface (or a lightmap)
-	{"pointlight",	0,	SURF_POINTLIGHT, 0 },	// sample lighting at vertexes
-	{"nolightmap",	0,	SURF_NOLIGHTMAP,0 },	// don't generate a lightmap
-	{"nodlight",	0,	SURF_NODLIGHT, 0 },		// don't ever add dynamic lights
-	{"dust",		0,	SURF_DUST, 0}			// leave a dust trail when walking on this surface
+	{"fog",			SURF_FOG		},	// carves surfaces entering
+	{"sky",			SURF_SKY		},	// emit light from an environment map
+	{"noimpact",	SURF_NOIMPACT	},	// don't make impact explosions or marks
+	{"nomarks",		SURF_NOMARKS	},	// don't make impact marks, but still explode
+	{"pointlight",	SURF_POINTLIGHT	},	// sample lighting at vertexes
+	{"nolightmap",	SURF_NOLIGHTMAP	},	// don't generate a lightmap
+	{"nodlight",	SURF_NODLIGHT	},	// don't ever add dynamic lights
 };
 
 
@@ -2139,13 +2104,7 @@ static void ParseSurfaceParm( char **text ) {
 	token = COM_ParseExt( text, qfalse );
 	for ( i = 0 ; i < numInfoParms ; i++ ) {
 		if ( !Q_stricmp( token, infoParms[i].name ) ) {
-			shader.surfaceFlags |= infoParms[i].surfaceFlags;
-			shader.contentFlags |= infoParms[i].contents;
-#if 0
-			if ( infoParms[i].clearSolid ) {
-				si->contents &= ~CONTENTS_SOLID;
-			}
-#endif
+			shader.surfaceParms |= infoParms[i].surfaceParms;
 			break;
 		}
 	}
@@ -2797,7 +2756,7 @@ static qboolean ParseShader( char **text )
 	//
 	// ignore shaders that don't have any stages, unless it is a sky, fog, or have implicit mapping
 	//
-	if ( s == 0 && !shader.isSky && !( shader.contentFlags & CONTENTS_FOG ) && implicitMap[ 0 ] == '\0' ) {
+	if ( s == 0 && !shader.isSky && !( shader.surfaceParms & SURF_FOG ) && implicitMap[ 0 ] == '\0' ) {
 		return qfalse;
 	}
 
@@ -3187,7 +3146,7 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	if ( shader.sort <= SS_SEE_THROUGH ) {
 		newShader->fogPass = FP_EQUAL;
-	} else if ( shader.contentFlags & CONTENTS_FOG ) {
+	} else if ( shader.surfaceParms & SURF_FOG ) {
 		newShader->fogPass = FP_LE;
 	}
 

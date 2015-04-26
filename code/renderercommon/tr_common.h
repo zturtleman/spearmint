@@ -91,6 +91,15 @@ extern glconfig_t	glConfig;		// outside of TR since it shouldn't be cleared duri
 #define REF_VERTEX_DLIGHT	0x10 // ET style spherical dlight using vertex light rendering
 #define REF_FORCE_DLIGHT	0x20 // force this dlight under all conditions
 
+// surfaceParm flags (these are only used internally, not to be confused with surfaceFlags values in BSPs)
+#define	SURF_SKY				0x01	// lighting from environment map
+#define	SURF_NOIMPACT			0x02	// don't make missile explosions
+#define	SURF_NOMARKS			0x04	// don't leave missile marks
+#define	SURF_NOLIGHTMAP			0x08	// surface doesn't need a lightmap
+#define	SURF_POINTLIGHT			0x10	// generate lighting info at vertexes
+#define	SURF_NODLIGHT			0x20	// don't dlight even if solid (solid lava, skies)
+#define	SURF_FOG				0x40
+
 //
 // cvars
 //

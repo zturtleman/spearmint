@@ -371,10 +371,10 @@ R_AddWorldSurface
 */
 static void R_AddWorldSurface( msurface_t *surf, shader_t *shader, int fogNum, int dlightBits, int pshadowBits ) {
 	// no sky surfaces or only sky surfaces
-	if ( ( tr.refdef.rdflags & RDF_NOSKY ) && ( shader->isSky || ( shader->surfaceFlags & SURF_SKY ) ) ) {
+	if ( ( tr.refdef.rdflags & RDF_NOSKY ) && ( shader->isSky || ( shader->surfaceParms & SURF_SKY ) ) ) {
 		return;
 	}
-	if ( ( tr.refdef.rdflags & RDF_ONLYSKY ) && !shader->isSky && !( shader->surfaceFlags & SURF_SKY ) ) {
+	if ( ( tr.refdef.rdflags & RDF_ONLYSKY ) && !shader->isSky && !( shader->surfaceParms & SURF_SKY ) ) {
 		return;
 	}
 

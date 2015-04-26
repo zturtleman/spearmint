@@ -147,8 +147,7 @@ void R_AddSurfaceToList( int bmodelNum, msurface_t *surf, vec3_t mins, vec3_t ma
 		return;
 
 	// check if the surface has NOIMPACT or NOMARKS set
-	if ( ( surf->shader->surfaceFlags & ( SURF_NOIMPACT | SURF_NOMARKS ) )
-		|| ( surf->shader->contentFlags & CONTENTS_FOG ) ) {
+	if ( surf->shader->surfaceParms & ( SURF_NOIMPACT | SURF_NOMARKS | SURF_FOG ) ) {
 		surf->viewCount = tr.viewCount;
 	}
 	// extra check for surfaces to avoid list overflows

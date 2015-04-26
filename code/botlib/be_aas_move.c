@@ -38,6 +38,7 @@ Suite 120, Rockville, Maryland 20850 USA.
  *****************************************************************************/
 
 #include "../qcommon/q_shared.h"
+#include "../qcommon/surfaceflags.h" // for CONTENTS_WATER, CONTENTS_LAVA, CONTENTS_SLIME
 #include "l_memory.h"
 #include "l_script.h"
 #include "l_precomp.h"
