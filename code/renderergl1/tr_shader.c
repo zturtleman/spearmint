@@ -3144,12 +3144,6 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	*newShader = shader;
 
-	if ( shader.sort <= SS_SEE_THROUGH ) {
-		newShader->fogPass = FP_EQUAL;
-	} else if ( shader.surfaceParms & SURF_FOG ) {
-		newShader->fogPass = FP_LE;
-	}
-
 	tr.shaders[ tr.numShaders ] = newShader;
 	newShader->index = tr.numShaders;
 	
@@ -3602,6 +3596,13 @@ static shader_t *FinishShader( void ) {
 	// opaque alpha tested shaders that have later blend passes
 	if ( !shader.sort ) {
 		shader.sort = SS_OPAQUE;
+	}
+
+	//
+	if ( hasOpaqueStage && shader.sort <= SS_SEE_THROUGH ) {
+		shader.fogPass = FP_EQUAL;
+	} else if ( shader.surfaceParms & SURF_FOG ) {
+		shader.fogPass = FP_LE;
 	}
 
 	//
