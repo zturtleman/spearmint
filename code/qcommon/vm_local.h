@@ -158,6 +158,7 @@ struct vm_s {
 	//------------------------------------
    
 	char		name[MAX_QPATH];
+	char		filename[MAX_OSPATH];
 	void	*searchPath;				// hint for FS_ReadFileDir()
 
 	// for dynamic linked modules

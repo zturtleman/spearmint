@@ -684,6 +684,7 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 			if(vm->dllHandle)
 			{
 				vm->systemCall = systemCalls;
+				Q_strncpyz(vm->filename, filename, sizeof(vm->filename));
 				return vm;
 			}
 			
@@ -692,6 +693,7 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 		else if(retval == VMI_COMPILED)
 		{
 			vm->searchPath = startSearch;
+			Q_strncpyz(vm->filename, filename, sizeof(vm->filename));
 			if((header = VM_LoadQVM(vm, qtrue, qtrue)))
 				break;
 
@@ -1079,16 +1081,22 @@ void VM_VmInfo_f( void ) {
 		if ( !vm->name[0] ) {
 			break;
 		}
+
 		Com_Printf( "%s : ", vm->name );
 		if ( vm->dllHandle ) {
 			Com_Printf( "native\n" );
-			continue;
-		}
-		if ( vm->compiled ) {
+		} else if ( vm->compiled ) {
 			Com_Printf( "compiled on load\n" );
 		} else {
 			Com_Printf( "interpreted\n" );
 		}
+
+		Com_Printf( "    file name: \"%s\"\n", vm->filename );
+
+		if ( vm->dllHandle ) {
+			continue;
+		}
+
 		Com_Printf( "    code length : %7i\n", vm->codeLength );
 		Com_Printf( "    table length: %7i\n", vm->instructionCount*4 );
 		Com_Printf( "    data length : %7i\n", vm->dataMask + 1 );

@@ -1490,6 +1490,8 @@ int FS_FindVM(void **startSearch, char *found, int foundlen, const char *name, i
 
 			if(FS_FOpenFileReadDir(qvmName, search, NULL, qfalse, qtrue) > 0)
 			{
+				Com_sprintf( found, foundlen, "%s%c%s", search->dir->fullpath, PATH_SEP, qvmName );
+
 				*startSearch = search;
 				return VMI_COMPILED;
 			}
@@ -1512,6 +1514,8 @@ int FS_FindVM(void **startSearch, char *found, int foundlen, const char *name, i
 
 			if(FS_FOpenFileReadDir(qvmName, search, NULL, qfalse, qfalse) > 0)
 			{
+				Com_sprintf( found, foundlen, "%s%c%s", search->pack->pakFilename, PATH_SEP, qvmName );
+
 				*startSearch = search;
 
 				return VMI_COMPILED;
