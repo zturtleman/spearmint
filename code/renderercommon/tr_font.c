@@ -533,7 +533,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 				WriteTGA(imageName, imageBuff, imageSize, imageSize);
 			}
 
-			image = R_CreateImage(imageName, imageBuff, imageSize, imageSize,  IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0 );
+			image = R_CreateImage(imageName, imageBuff, imageSize, imageSize,  IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE|IMGFLAG_MIPMAP, 0 );
 			h = RE_RegisterShaderFromImage(imageName, LIGHTMAP_2D, image, qfalse);
 			for (j = lastStart; j < i; j++) {
 				font->glyphs[j].glyph = h;
