@@ -1044,9 +1044,6 @@ void GL_SetDefaultState( void )
 	if (glRefConfig.seamlessCubeMap)
 		qglEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-	// GL_POLYGON_OFFSET_FILL will be glEnable()d when this is used
-	qglPolygonOffset( r_offsetFactor->value, r_offsetUnits->value );
-
 	qglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );	// FIXME: get color of sky
 }
 
