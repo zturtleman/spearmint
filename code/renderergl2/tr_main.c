@@ -2030,18 +2030,24 @@ static void R_RadixSort( drawSurf_t *source, int size )
   R_Radix( 2, size, source, scratch );
   R_Radix( 3, size, scratch, source );
   R_Radix( 4, size, source, scratch );
-  R_Radix( 5, size, scratch, source );
+  //R_Radix( 5, size, scratch, source );
   //R_Radix( 6, size, source, scratch );
   //R_Radix( 7, size, scratch, source );
+
+  // ZTM: if odd number of R_Radix, manually update source
+  Com_Memcpy( source, scratch, size * sizeof( drawSurf_t ) );
 #else
-  //R_Radix( 7, size, source, scratch );
-  //R_Radix( 6, size, scratch, source );
+  R_Radix( 7, size, source, scratch );
+  R_Radix( 6, size, scratch, source );
   R_Radix( 5, size, source, scratch );
   R_Radix( 4, size, scratch, source );
   R_Radix( 3, size, source, scratch );
-  R_Radix( 2, size, scratch, source );
-  R_Radix( 1, size, source, scratch );
-  R_Radix( 0, size, scratch, source );
+  //R_Radix( 2, size, scratch, source );
+  //R_Radix( 1, size, source, scratch );
+  //R_Radix( 0, size, scratch, source );
+
+  // ZTM: if odd number of R_Radix, manually update source
+  Com_Memcpy( source, scratch, size * sizeof( drawSurf_t ) );
 #endif //Q3_LITTLE_ENDIAN
 }
 
@@ -2105,7 +2111,7 @@ R_DecomposeSort
 void R_DecomposeSort( const drawSurf_t *drawSurf, shader_t **shader, int *sortOrder,
 					 int *entityNum, int *fogNum, int *dlightMap, int *pshadowMap ) {
 	*shader = tr.sortedShaders[ ( drawSurf->sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1) ];
-	*sortOrder = ( drawSurf->sort >> QSORT_ORDER_SHIFT ) & 31;
+	*sortOrder = ( drawSurf->sort >> QSORT_ORDER_SHIFT ) & ((1<<QSORT_ORDER_BITS) - 1);
 	*entityNum = ( drawSurf->sort >> QSORT_REFENTITYNUM_SHIFT ) & REFENTITYNUM_MASK;
 	*fogNum = ( drawSurf->sort >> QSORT_FOGNUM_SHIFT ) & 31;
 	*pshadowMap = (drawSurf->sort >> QSORT_PSHADOW_SHIFT ) & 1;

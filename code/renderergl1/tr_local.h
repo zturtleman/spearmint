@@ -929,19 +929,23 @@ the bits are allocated as follows:
 7-16  : entity index
 17-30 : sorted shader index
 
-	ZTM - increased entity bits (for splitscreen), made sort 64 bit
+	ZTM - increased entity bits (for splitscreen), made sort 64 bit, added sort order
 0-1   : dlightmap index (2 bits)
 2-6   : fog index (5 bits)
 7-18  : entity index (12 bits)
-19-23 : sorted order value (5 bits)
-24-37 : sorted shader index (14 bits)
+19-32 : sorted shader index (14 bits)
+33-37 : sort order value (5 bits)
+
+Also see R_ComposeSort, R_DecomposeSort
 */
+
+#define	QSORT_ORDER_BITS		5
 
 #define	QSORT_FOGNUM_SHIFT		2
 #define	QSORT_REFENTITYNUM_SHIFT	7
-#define	QSORT_ORDER_SHIFT		(QSORT_REFENTITYNUM_SHIFT+REFENTITYNUM_BITS)
-#define	QSORT_SHADERNUM_SHIFT	(QSORT_ORDER_SHIFT+5) // sort order is 5 bit
-#if (QSORT_SHADERNUM_SHIFT+SHADERNUM_BITS) > 64
+#define	QSORT_SHADERNUM_SHIFT	(QSORT_REFENTITYNUM_SHIFT+REFENTITYNUM_BITS)
+#define	QSORT_ORDER_SHIFT		(QSORT_SHADERNUM_SHIFT+SHADERNUM_BITS)
+#if (QSORT_ORDER_SHIFT+QSORT_ORDER_BITS) > 64
 	#error "Need to update sorting, too many bits."
 #endif
 
