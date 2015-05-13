@@ -2236,13 +2236,13 @@ static void R_AddEntitySurface (int entityNum)
 
 	case RT_SPRITE:
 		shader = R_GetShaderByHandle( ent->e.customShader );
-		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, 0, 0 /*cubeMap*/ );
+		R_AddEntDrawSurf( ent, &entitySurface, shader, R_SpriteFogNum( ent ), 0, 0, 0 /*cubeMap*/ );
 		break;
 
 	case RT_POLY_GLOBAL:
 	case RT_POLY_LOCAL:
 		shader = R_GetShaderByHandle( ent->e.customShader );
-		R_AddDrawSurf( &entitySurface, shader, R_PolyEntFogNum( ent ), 0, 0, 0 /*cubeMap*/ );
+		R_AddEntDrawSurf( ent, &entitySurface, shader, R_PolyEntFogNum( ent ), 0, 0, 0 /*cubeMap*/ );
 		break;
 
 	case RT_MODEL:
