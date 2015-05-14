@@ -246,9 +246,10 @@ RE_AddPolyToScene
 
 =====================
 */
-void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum, int sortLevel ) {
+void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum ) {
 	srfPoly_t	*poly;
 	int			j;
+	int			sortLevel = 0; // ZTM: TODO: make this an argument, breaks renderer API compatibility
 
 	if ( !tr.registered ) {
 		return;
