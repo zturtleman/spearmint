@@ -2059,14 +2059,32 @@ R_AddEntDrawSurf
 =================
 */
 void R_AddEntDrawSurf( trRefEntity_t *ent, surfaceType_t *surface, shader_t *shader, 
-				   int fogIndex, int dlightMap, int pshadowMap, int cubemap ) {
-	int			index;
-	int			sortOrder;
+				   int fogIndex, int dlightMap, int sortLevel, int pshadowMap, int cubemap ) {
+	int				index;
+	int				sortOrder;
+	shaderSort_t	shaderSort;
+	int				i;
 
 	if ( ent && ( ent->e.renderfx & RF_FORCE_ENT_ALPHA ) ) {
-		sortOrder = SS_BLEND0;
+		shaderSort = SS_BLEND0;
 	} else {
-		sortOrder = shader->sort;
+		shaderSort = shader->sort;
+	}
+
+	// if sortLevel is set, make the sort order be 'the last sorted shader for shaderSort' plus sortLevel
+	if ( sortLevel > 0 ) {
+		if ( sortLevel > 1024 ) {
+			sortLevel = 1024;
+		}
+
+		sortOrder = 1024 * ( shaderSort - 1 ) + sortLevel;
+
+		for ( i = 1; i <= shaderSort; ++i ) {
+			sortOrder += tr.numShadersSort[ shaderSort ];
+		}
+	} else {
+		// if this is changed, update SortNewShader()
+		sortOrder = 1024 * ( shaderSort - 1 ) + shader->sortedIndex;
 	}
 
 	// instead of checking for overflow, we just mask the index
@@ -2088,7 +2106,7 @@ R_AddDrawSurf
 */
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, 
 				   int fogIndex, int dlightMap, int pshadowMap, int cubemap ) {
-	R_AddEntDrawSurf( NULL, surface, shader, fogIndex, dlightMap, pshadowMap, cubemap );
+	R_AddEntDrawSurf( NULL, surface, shader, fogIndex, dlightMap, 0, pshadowMap, cubemap );
 }
 
 /*
@@ -2098,7 +2116,8 @@ R_ComposeSort
 */
 void R_ComposeSort( drawSurf_t *drawSurf, int sortedShaderIndex, int sortOrder,
 					 int shiftedEntityNum, int fogIndex, int dlightMap, int pshadowMap ) {
-	drawSurf->sort = ((uint64_t)sortedShaderIndex << QSORT_SHADERNUM_SHIFT) | ((uint64_t)sortOrder << QSORT_ORDER_SHIFT) 
+	drawSurf->shaderIndex = tr.sortedShaders[ sortedShaderIndex ]->index;
+	drawSurf->sort = ((uint64_t)sortOrder << QSORT_ORDER_SHIFT) 
 		| (uint64_t)shiftedEntityNum | ( (uint64_t)fogIndex << QSORT_FOGNUM_SHIFT )
 		| ((uint64_t)pshadowMap << QSORT_PSHADOW_SHIFT) | (uint64_t)dlightMap;
 }
@@ -2110,7 +2129,7 @@ R_DecomposeSort
 */
 void R_DecomposeSort( const drawSurf_t *drawSurf, shader_t **shader, int *sortOrder,
 					 int *entityNum, int *fogNum, int *dlightMap, int *pshadowMap ) {
-	*shader = tr.sortedShaders[ ( drawSurf->sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1) ];
+	*shader = tr.shaders[ drawSurf->shaderIndex ];
 	*sortOrder = ( drawSurf->sort >> QSORT_ORDER_SHIFT ) & ((1<<QSORT_ORDER_BITS) - 1);
 	*entityNum = ( drawSurf->sort >> QSORT_REFENTITYNUM_SHIFT ) & REFENTITYNUM_MASK;
 	*fogNum = ( drawSurf->sort >> QSORT_FOGNUM_SHIFT ) & 31;
@@ -2163,17 +2182,13 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	for ( i = 0 ; i < numDrawSurfs ; i++ ) {
 		R_DecomposeSort( (drawSurfs+i), &shader, &sortOrder, &entityNum, &fogNum, &dlighted, &pshadowed );
 
-		if ( sortOrder > SS_PORTAL ) {
+		if ( shader->sort > SS_PORTAL ) {
 			break;
 		}
 
 		// no shader should ever have this sort type
-		if ( sortOrder == SS_BAD ) {
-			if ( shader->sort == SS_BAD ) {
-				ri.Error (ERR_DROP, "Shader '%s' with sort == SS_BAD", shader->name );
-			} else {
-				ri.Error (ERR_DROP, "Surface with shader '%s' has sort == SS_BAD", shader->name );
-			}
+		if ( shader->sort == SS_BAD ) {
+			ri.Error (ERR_DROP, "Shader '%s' with sort == SS_BAD", shader->name );
 		}
 
 		// if the mirror was completely clipped away, we may need to check another surface
@@ -2236,13 +2251,13 @@ static void R_AddEntitySurface (int entityNum)
 
 	case RT_SPRITE:
 		shader = R_GetShaderByHandle( ent->e.customShader );
-		R_AddEntDrawSurf( ent, &entitySurface, shader, R_SpriteFogNum( ent ), 0, 0, 0 /*cubeMap*/ );
+		R_AddEntDrawSurf( ent, &entitySurface, shader, R_SpriteFogNum( ent ), 0, 0, 0, 0 /*cubeMap*/ );
 		break;
 
 	case RT_POLY_GLOBAL:
 	case RT_POLY_LOCAL:
 		shader = R_GetShaderByHandle( ent->e.customShader );
-		R_AddEntDrawSurf( ent, &entitySurface, shader, R_PolyEntFogNum( ent ), 0, 0, 0 /*cubeMap*/ );
+		R_AddEntDrawSurf( ent, &entitySurface, shader, R_PolyEntFogNum( ent ), 0, 0, 0, 0 /*cubeMap*/ );
 		break;
 
 	case RT_MODEL:

@@ -236,7 +236,7 @@ void R_AddPolygonSurfaces( void ) {
 
 		tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
 		sh = R_GetShaderByHandle( poly->hShader );
-		R_AddDrawSurf( ( void * )poly, sh, R_PolyFogNum( poly ), qfalse );
+		R_AddEntDrawSurf( NULL, ( void * )poly, sh, R_PolyFogNum( poly ), qfalse, poly->sortLevel );
 	}
 }
 
@@ -246,7 +246,7 @@ RE_AddPolyToScene
 
 =====================
 */
-void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum ) {
+void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum, int sortLevel ) {
 	srfPoly_t	*poly;
 	int			j;
 
@@ -276,6 +276,7 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 		poly = &backEndData->polys[r_numpolys];
 		poly->surfaceType = SF_POLY;
 		poly->bmodelNum = bmodelNum;
+		poly->sortLevel = sortLevel;
 		poly->hShader = hShader;
 		poly->numVerts = numVerts;
 		poly->verts = &backEndData->polyVerts[r_numpolyverts];

@@ -955,7 +955,7 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 		}
 
 		if( !personalModel ) {
-			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, 0, 0, cubemapIndex );
+			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, 0, 0, 0, cubemapIndex );
 		}
 
 		surface++;

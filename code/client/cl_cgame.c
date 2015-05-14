@@ -1363,10 +1363,10 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.AddRefEntityToScene( VMA(1), args[2], args[3], VMA(4), args[5] );
 		return 0;
 	case CG_R_ADDPOLYTOSCENE:
-		re.AddPolyToScene( args[1], args[2], VMA(3), 1, args[4] );
+		re.AddPolyToScene( args[1], args[2], VMA(3), 1, args[4], 0 /* TODO sortLevel */ );
 		return 0;
 	case CG_R_ADDPOLYSTOSCENE:
-		re.AddPolyToScene( args[1], args[2], VMA(3), args[4], args[5] );
+		re.AddPolyToScene( args[1], args[2], VMA(3), args[4], args[5], 0 /* TODO sortLevel */  );
 		return 0;
 	case CG_R_ADDPOLYBUFFERTOSCENE:
 		re.AddPolyBufferToScene( VMA( 1 ) );

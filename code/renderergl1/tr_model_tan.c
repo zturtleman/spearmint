@@ -313,7 +313,7 @@ void R_AddTANSurfaces( trRefEntity_t *ent ) {
 
 		// don't add third_person objects if not viewing through a portal
 		if ( !personalModel ) {
-			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, qfalse );
+			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, qfalse, 0 );
 		}
 
 		surface = (tanSurface_t *)( (byte *)surface + surface->ofsEnd );

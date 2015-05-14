@@ -119,7 +119,7 @@ void RB_CheckOverflow( int verts, int indexes ) {
 
 }
 
-void R_AddEntDrawSurf( trRefEntity_t *ent, surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap ) {
+void R_AddEntDrawSurf( trRefEntity_t *ent, surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap, int sortLevel ) {
 
 }
 

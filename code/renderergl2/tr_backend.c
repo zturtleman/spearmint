@@ -596,7 +596,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int				fogNum, oldFogNum;
 	int				entityNum, oldEntityNum;
 	int				dlighted, oldDlighted;
-	int				sortOrder, oldSortOrder;
+	int				sortOrder;
+	int				oldShaderIndex;
 	int				pshadowed, oldPshadowed;
 	int             cubemapIndex, oldCubemapIndex;
 	qboolean		depthRange, oldDepthRange, isCrosshair, wasCrosshair;
@@ -625,8 +626,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldDlighted = qfalse;
 	oldPshadowed = qfalse;
 	oldCubemapIndex = -1;
-	oldSortOrder = -1;
 	oldSort = -1;
+	oldShaderIndex = -1;
 
 	depth[0] = 0.f;
 	depth[1] = 1.f;
@@ -634,7 +635,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	backEnd.pc.c_surfaces += numDrawSurfs;
 
 	for (i = 0, drawSurf = drawSurfs ; i < numDrawSurfs ; i++, drawSurf++) {
-		if ( drawSurf->sort == oldSort && drawSurf->cubemapIndex == oldCubemapIndex) {
+		if ( drawSurf->sort == oldSort && drawSurf->shaderIndex == oldShaderIndex && drawSurf->cubemapIndex == oldCubemapIndex) {
 			if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE)
 				continue;
 
@@ -643,6 +644,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			continue;
 		}
 		oldSort = drawSurf->sort;
+		oldShaderIndex = drawSurf->shaderIndex;
 		R_DecomposeSort( drawSurf, &shader, &sortOrder, &entityNum, &fogNum, &dlighted, &pshadowed );
 		cubemapIndex = drawSurf->cubemapIndex;
 
@@ -651,7 +653,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		// a "entityMergable" shader is a shader that can have surfaces from seperate
 		// entities merged into a single batch, like smoke and blood puff sprites
 		if ( shader != NULL && ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted || pshadowed != oldPshadowed || cubemapIndex != oldCubemapIndex
-			|| sortOrder != oldSortOrder
 			|| ( entityNum != oldEntityNum && !RB_EntityMergable( entityNum, shader) ) ) ) {
 			if (oldShader != NULL) {
 				RB_EndSurface();
@@ -661,7 +662,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			oldShader = shader;
 			oldFogNum = fogNum;
 			oldDlighted = dlighted;
-			oldSortOrder = sortOrder;
 			oldPshadowed = pshadowed;
 			oldCubemapIndex = cubemapIndex;
 		}

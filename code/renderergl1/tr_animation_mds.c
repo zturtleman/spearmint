@@ -408,7 +408,7 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 		}
 
 		if (!personalModel)
-			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, qfalse );
+			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, qfalse, 0 );
 
 		surface = ( mdsSurface_t * )( (byte *)surface + surface->ofsEnd );
 	}

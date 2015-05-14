@@ -382,7 +382,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 		{
 			srfVaoMdvMesh_t *vaoSurface = &model->vaoSurfaces[i];
 
-			R_AddEntDrawSurf( ent, (void *)vaoSurface, shader, fogNum, qfalse, qfalse, cubemapIndex );
+			R_AddEntDrawSurf( ent, (void *)vaoSurface, shader, fogNum, qfalse, 0, qfalse, cubemapIndex );
 		}
 
 		surface++;

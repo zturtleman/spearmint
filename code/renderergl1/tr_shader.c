@@ -2068,6 +2068,11 @@ void ParseSort( char **text ) {
 		shader.sort = SS_UNDERWATER;
 	} else {
 		shader.sort = atof( token );
+
+		if ( floor( shader.sort ) < 1 || floor( shader.sort ) >= SS_MAX_SORT ) {
+			ri.Printf( PRINT_WARNING, "WARNING: sort parameter %f in shader '%s' is out of range (min 1, max %d)\n", shader.sort, shader.name, SS_MAX_SORT - 1 );
+			shader.sort = Com_Clamp( 1, SS_MAX_SORT - 1, shader.sort );
+		}
 	}
 }
 
@@ -3013,9 +3018,11 @@ Arnout: this is a nasty issue. Shaders can be registered after drawsurfaces are 
 but before the frame is rendered. This will, for the duration of one frame, cause drawsurfaces
 to be rendered with bad shaders. To fix this, need to go through all render commands and fix
 sortedIndex.
+ZTM: Spearmint keeps shaderIndex in drawSurf_t so this function only fixes the sort order,
+not the actual shader
 ==============
 */
-static void FixRenderCommandList( int newShader ) {
+static void FixRenderCommandList( int newSortOrder ) {
 	renderCommandList_t	*cmdList = &backEndData->commands;
 
 	if( cmdList ) {
@@ -3054,15 +3061,13 @@ static void FixRenderCommandList( int newShader ) {
 				int			fogNum;
 				int			entityNum;
 				int			dlightMap;
-				int			sortedIndex;
 				const drawSurfsCommand_t *ds_cmd =  (const drawSurfsCommand_t *)curCmd;
 
 				for( i = 0, drawSurf = ds_cmd->drawSurfs; i < ds_cmd->numDrawSurfs; i++, drawSurf++ ) {
 					R_DecomposeSort(drawSurf, &shader, &sortOrder, &entityNum, &fogNum, &dlightMap);
-					sortedIndex = (( drawSurf->sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1));
-					if( sortedIndex >= newShader ) {
-						sortedIndex++;
-						R_ComposeSort(drawSurf, sortedIndex, sortOrder, (entityNum << QSORT_REFENTITYNUM_SHIFT),
+					if( sortOrder >= newSortOrder ) {
+						sortOrder++;
+						R_ComposeSort(drawSurf, shader->sortedIndex, sortOrder, (entityNum << QSORT_REFENTITYNUM_SHIFT),
 										fogNum, dlightMap);
 					}
 				}
@@ -3102,6 +3107,7 @@ Sets shader->sortedIndex
 */
 static void SortNewShader( void ) {
 	int		i;
+	int		newSortOrder;
 	float	sort;
 	shader_t	*newShader;
 
@@ -3118,7 +3124,8 @@ static void SortNewShader( void ) {
 
 	// Arnout: fix rendercommandlist
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=493
-	FixRenderCommandList( i+1 );
+	newSortOrder = 1024 * ( sort - 1 ) + newShader->sortedIndex;
+	FixRenderCommandList( newSortOrder+1 );
 
 	newShader->sortedIndex = i+1;
 	tr.sortedShaders[i+1] = newShader;
@@ -3151,6 +3158,8 @@ static shader_t *GeneratePermanentShader( void ) {
 	newShader->sortedIndex = tr.numShaders;
 
 	tr.numShaders++;
+
+	tr.numShadersSort[ (int)floor( newShader->sort ) ]++;
 
 	for ( i = 0 ; i < newShader->numUnfoggedPasses ; i++ ) {
 		if ( !stages[i].active ) {

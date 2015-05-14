@@ -127,7 +127,9 @@ typedef enum {
 	SS_STENCIL_SHADOW,
 	SS_ALMOST_NEAREST,	// gun smoke puffs
 
-	SS_NEAREST			// blood blobs
+	SS_NEAREST,			// blood blobs
+
+	SS_MAX_SORT			// number of shader sorts
 } shaderSort_t;
 
 
@@ -559,6 +561,7 @@ typedef enum {
 typedef struct drawSurf_s {
 	uint64_t			sort;			// bit combination for fast compares
 	surfaceType_t		*surface;		// any of surface*_t
+	int					shaderIndex;
 } drawSurf_t;
 
 #define	MAX_FACE_POINTS		64
@@ -574,6 +577,7 @@ typedef struct srfPoly_s {
 	int				numVerts;
 	polyVert_t		*verts;
 	int				bmodelNum;
+	int				sortLevel;
 } srfPoly_t;
 
 typedef struct srfPolyBuffer_s {
@@ -933,18 +937,16 @@ the bits are allocated as follows:
 0-1   : dlightmap index (2 bits)
 2-6   : fog index (5 bits)
 7-18  : entity index (12 bits)
-19-32 : sorted shader index (14 bits)
-33-37 : sort order value (5 bits)
+19-33 : sort order (15 bits) -- modified sorted shader index
 
 Also see R_ComposeSort, R_DecomposeSort
 */
 
-#define	QSORT_ORDER_BITS		5
+#define	QSORT_ORDER_BITS		(SHADERNUM_BITS+1)
 
 #define	QSORT_FOGNUM_SHIFT		2
 #define	QSORT_REFENTITYNUM_SHIFT	7
-#define	QSORT_SHADERNUM_SHIFT	(QSORT_REFENTITYNUM_SHIFT+REFENTITYNUM_BITS)
-#define	QSORT_ORDER_SHIFT		(QSORT_SHADERNUM_SHIFT+SHADERNUM_BITS)
+#define	QSORT_ORDER_SHIFT	(QSORT_REFENTITYNUM_SHIFT+REFENTITYNUM_BITS)
 #if (QSORT_ORDER_SHIFT+QSORT_ORDER_BITS) > 64
 	#error "Need to update sorting, too many bits."
 #endif
@@ -1116,6 +1118,9 @@ typedef struct {
 	shader_t				*shaders[MAX_SHADERS];
 	shader_t				*sortedShaders[MAX_SHADERS];
 
+	// number of shaders using each sort value. SS_OPAQUE, etc
+	int						numShadersSort[SS_MAX_SORT];
+
 	int						numSkinSurfaces;
 	skinSurface_t			skinSurfaces[MAX_SKINSURFACES];
 	int						skinSurfaceNameMemory;
@@ -1268,7 +1273,7 @@ void R_DecomposeSort( const drawSurf_t *drawSurf, shader_t **shader, int *sortOr
 
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap );
 
-void R_AddEntDrawSurf( trRefEntity_t *ent, surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap );
+void R_AddEntDrawSurf( trRefEntity_t *ent, surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap, int sortLevel );
 
 
 #define	CULL_IN		0		// completely unclipped
@@ -1565,7 +1570,7 @@ qhandle_t RE_AddSkinToFrame( int numSurfaces, const qhandle_t *surfaces );
 
 void RE_ClearScene( void );
 void RE_AddRefEntityToScene( const refEntity_t *ent, int entBufSize, int numVerts, const polyVert_t *verts, int numPolys );
-void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum );
+void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum, int sortLevel );
 void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void RE_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
 void RE_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
