@@ -269,6 +269,31 @@ void S_UpdateListener(int entityNum, const vec3_t origin, const vec3_t axis[3], 
 
 /*
 =================
+S_NumUpdatedListeners
+
+Returns the number of listeners updated this frame.
+
+Listeners are valid for one frame after they're added, so they can carry over
+between frames. Therefore this function has very limited usefulness.
+=================
+*/
+int S_NumUpdatedListeners( void ) {
+	int i;
+	int numListeners = 0;
+
+	for (i = 0; i < MAX_LISTENERS; ++i)
+	{
+		if (listeners[i].updated)
+		{
+			numListeners++;
+		}
+	}
+
+	return numListeners;
+}
+
+/*
+=================
 S_ValidateInterface
 =================
 */

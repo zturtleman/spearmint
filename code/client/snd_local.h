@@ -195,6 +195,7 @@ float S_ListenersClosestDistance(const vec3_t origin);
 float S_ListenersClosestDistanceSquared(const vec3_t origin);
 int S_ListenerNumForEntity(int entityNum, qboolean create);
 void S_UpdateListener(int entityNum, const vec3_t origin, const vec3_t axis[3], int inwater, qboolean firstPerson);
+int S_NumUpdatedListeners( void );
 
 /*
 ====================================================================
