@@ -836,7 +836,7 @@ typedef struct {
 
 	int		ofsFrames;			// offset for first frame
 	int		ofsSurfaces;		// first surface, others follow
-	int		ofsTags[ TIKI_MAX_TAGS ]; // tikiTag_t + numFrames * tikiTagData_t
+	int		ofsTags[ TIKI_MAX_TAGS ]; // tanTag_t + numFrames * tanTagData_t
 
 	int		ofsEnd;				// end of file
 } tanHeader_t;

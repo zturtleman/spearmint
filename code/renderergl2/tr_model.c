@@ -1526,6 +1526,13 @@ static qboolean R_LoadTAN(model_t * mod, void *buffer, const char *modName)
 	LL(tanModel->version);
 	LL(tanModel->numFrames);
 	LL(tanModel->numTags);
+
+	if ( tanModel->numTags > TIKI_MAX_TAGS ) {
+		ri.Printf( PRINT_WARNING, "R_LoadTAN: %s has %d tags (format is limited to %d)!\n",
+				 modName, tanModel->numTags, TIKI_MAX_TAGS );
+		tanModel->numTags = TIKI_MAX_TAGS;
+	}
+
 	LL(tanModel->numSurfaces);
 	LL(tanModel->ofsFrames);
 	for ( i = 0 ; i < tanModel->numTags ; i++ ) {
