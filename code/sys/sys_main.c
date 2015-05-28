@@ -28,7 +28,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
-#ifdef WIN32 // ZTM: HACK around missing SDL code
+#ifdef WIN32 // ZTM: for numlock state
 #include <windows.h>
 #endif
 #include <signal.h>
@@ -174,7 +174,12 @@ Sys_GetCapsLockMode
 ===============
 */
 qboolean Sys_GetCapsLockMode( void ) {
+#ifdef WIN32
+	// ZTM: TODO: SDL does not track Windows num/caps lock state. Remove this after it's fixed by a major SDL version? (i.e., SDL 2.1)
+	return ( GetKeyState( VK_CAPITAL ) & 0x0001 ) ? qtrue : qfalse;
+#else
 	return ( SDL_GetModState() & KMOD_CAPS ) ? qtrue : qfalse;
+#endif
 }
 
 /*
@@ -183,7 +188,12 @@ Sys_GetNumLockMode
 ===============
 */
 qboolean Sys_GetNumLockMode( void ) {
+#ifdef WIN32
+	// ZTM: TODO: SDL does not track Windows num/caps lock state. Remove this after it's fixed by a major SDL version? (i.e., SDL 2.1)
+	return ( GetKeyState( VK_NUMLOCK ) & 0x0001 ) ? qtrue : qfalse;
+#else
 	return ( SDL_GetModState() & KMOD_NUM ) ? qtrue : qfalse;
+#endif
 }
 #endif
 
@@ -739,40 +749,17 @@ int main( int argc, char **argv )
 	signal( SIGTERM, Sys_SigHandler );
 	signal( SIGINT, Sys_SigHandler );
 
-#if !defined DEDICATED && !defined MACOS_X
-	// ZTM: HACK around missing SDL2 code
-	// SDL2 doesn't initially set it's numlock or capslock state on any platform.
-	// Hopefully this gets fixed by SDL 2.1.0...
-	if( SDL_VERSIONNUM( ver.major, ver.minor, ver.patch ) < SDL_VERSIONNUM( 2, 1, 0 ) ) {
-		SDL_Keymod modState;
-
-		modState = SDL_GetModState();
-
-#ifdef WIN32
-		if ( GetKeyState( VK_NUMLOCK ) & 0x0001 ) {
-			modState |= KMOD_NUM;
-		} else {
-			modState &= ~KMOD_NUM;
+#if !defined DEDICATED && !defined MACOS_X && !defined WIN32
+	// HACK: Before SDL 2.0.4, Linux (X11) did not set numlock or capslock state
+	//       so I made the engine always assumed num lock was on.
+	// NOTE: The SDL mod state on X11 is not set at this point even when it's fixed
+	//       and will be corrected regardless of what is done here,
+	//       but limit to SDL 2.0.3 and earlier so that the message isn't shown.
+	if( SDL_VERSIONNUM( ver.major, ver.minor, ver.patch ) < SDL_VERSIONNUM( 2, 0, 4 ) ) {
+		if ( !( SDL_GetModState() & KMOD_NUM ) ) {
+			Com_Printf("INFO: Forcing NUMLOCK modifier state to enabled (actual state unknown)!\n");
+			SDL_SetModState( SDL_GetModState() | KMOD_NUM );
 		}
-
-		if ( GetKeyState( VK_CAPITAL ) & 0x0001 ) {
-			modState |= KMOD_CAPS;
-		} else {
-			modState &= ~KMOD_CAPS;
-		}
-#else
-		// linux or any other platform with numlock (i.e. not Mac OS X)
-		// so let's always assume num lock is on, because I always have it on
-		// and I don't want to deal with including X11 code outside SDL. >.>
-		if ( !( modState & KMOD_NUM ) ) {
-			Com_Printf("INFO: Forcing NUMLOCK state to enabled (actual state unknown)!\n");
-			modState |= KMOD_NUM;
-		} else {
-			Com_Printf("INFO: SDL has NUMLOCK state set to enabled!\n");
-		}
-#endif
-
-		SDL_SetModState( modState );
 	}
 #endif
 
