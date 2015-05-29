@@ -175,9 +175,7 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 	mdrSurface_t	*surface;
 	mdrLOD_t		*lod;
 	shader_t		*shader;
-	skin_t		*skin;
-	skinSurface_t	*skinSurf;
-	int				i, j;
+	int				i;
 	int				lodnum = 0;
 	int				fogNum = 0;
 	int				cull;
@@ -252,24 +250,8 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 	for ( i = 0 ; i < lod->numSurfaces ; i++ )
 	{
 		
-		if(ent->e.customShader)
-			shader = R_GetShaderByHandle(ent->e.customShader);
-		else if(ent->e.customSkin > 0 && ent->e.customSkin <= tr.refdef.numSkins)
-		{
-			skin = &tr.refdef.skins[ent->e.customSkin - 1];
-			shader = tr.defaultShader;
-
-			for(j = 0 ; j < skin->numSurfaces ; j++)
-			{
-				skinSurf = &tr.skinSurfaces[ skin->surfaces[ j ] ];
-
-				if (!strcmp(skinSurf->name, surface->name))
-				{
-					shader = skinSurf->shader;
-					break;
-				}
-			}
-
+		if ( ent->e.customShader || ent->e.customSkin ) {
+			shader = R_CustomSurfaceShader( surface->name, ent->e.customShader, ent->e.customSkin );
 			if (shader == tr.nodrawShader) {
 				surface = (mdrSurface_t *)( (byte *)surface + surface->ofsEnd );
 				continue;

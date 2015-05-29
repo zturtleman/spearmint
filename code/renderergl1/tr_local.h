@@ -901,6 +901,7 @@ int			R_LerpTag( orientation_t *tag, qhandle_t handle,
 					 qhandle_t endFrameModel, int endFrame,
 					 float frac, const char *tagName );
 int			R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
+shader_t	*R_CustomSurfaceShader( const char *surfaceName, qhandle_t customShader, qhandle_t customSkin );
 
 void		R_Modellist_f (void);
 

@@ -194,7 +194,7 @@ R_AddTANSurfaces
 =================
 */
 void R_AddTANSurfaces( trRefEntity_t *ent ) {
-	int				i, j;
+	int				i;
 	tanHeader_t		*header = NULL;
 	tanSurface_t	*surface = NULL;
 	shader_t		*shader = NULL;
@@ -264,25 +264,8 @@ void R_AddTANSurfaces( trRefEntity_t *ent ) {
 	surface = (tanSurface_t *)( (byte *)header + header->ofsSurfaces );
 	for ( i = 0 ; i < header->numSurfaces ; i++ ) {
 
-		if ( ent->e.customShader ) {
-			shader = R_GetShaderByHandle( ent->e.customShader );
-		} else if ( ent->e.customSkin > 0 && ent->e.customSkin <= tr.refdef.numSkins ) {
-			skin_t *skin;
-			skinSurface_t *skinSurf;
-
-			skin = &tr.refdef.skins[ent->e.customSkin - 1];
-
-			// match the surface name to something in the skin
-			shader = tr.defaultShader;
-			for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
-				skinSurf = &tr.skinSurfaces[ skin->surfaces[ j ] ];
-				// the names have both been lowercased
-				if ( !strcmp( skinSurf->name, surface->name ) ) {
-					shader = skinSurf->shader;
-					break;
-				}
-			}
-
+		if ( ent->e.customShader || ent->e.customSkin ) {
+			shader = R_CustomSurfaceShader( surface->name, ent->e.customShader, ent->e.customSkin );
 			if ( shader == tr.nodrawShader ) {
 				surface = (tanSurface_t *)( (byte *)surface + surface->ofsEnd );
 				continue;

@@ -840,13 +840,11 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	iqmData_t		*skeleton;
 	iqmData_t		*oldSkeleton;
 	srfIQModel_t		*surface;
-	int			i, j;
+	int			i;
 	qboolean		personalModel;
 	int			cull;
 	int			fogNum;
 	shader_t		*shader;
-	skin_t			*skin;
-	skinSurface_t	*skinSurf;
 
 	data = tr.currentModel->modelData;
 	surface = data->surfaces;
@@ -906,24 +904,8 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	fogNum = R_ComputeIQMFogNum( skeleton, ent );
 
 	for ( i = 0 ; i < data->num_surfaces ; i++ ) {
-		if(ent->e.customShader)
-			shader = R_GetShaderByHandle( ent->e.customShader );
-		else if(ent->e.customSkin > 0 && ent->e.customSkin <= tr.refdef.numSkins)
-		{
-			skin = &tr.refdef.skins[ent->e.customSkin - 1];
-			shader = tr.defaultShader;
-
-			for(j = 0 ; j < skin->numSurfaces ; j++)
-			{
-				skinSurf = &tr.skinSurfaces[ skin->surfaces[ j ] ];
-
-				if (!strcmp(skinSurf->name, surface->name))
-				{
-					shader = skinSurf->shader;
-					break;
-				}
-			}
-
+		if ( ent->e.customShader || ent->e.customSkin ) {
+			shader = R_CustomSurfaceShader( surface->name, ent->e.customShader, ent->e.customSkin );
 			if (shader == tr.nodrawShader) {
 				surface++;
 				continue;

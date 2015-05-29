@@ -3109,6 +3109,51 @@ int R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, i
 }
 
 /*
+====================
+R_CustomSurfaceShader
+
+surfaceName must be lowercase
+
+Returns the shader to use for the surface, or tr.nodrawShader if the surface should not be rendered
+
+If there is a custom shader and skin, the skin will be used to see if the surface should
+be drawn (returning tr.nodrawShader if it should not) and then return the custom shader.
+====================
+*/
+shader_t *R_CustomSurfaceShader( const char *surfaceName, qhandle_t customShader, qhandle_t customSkin ) {
+	shader_t *shader = tr.defaultShader;
+
+	if ( customSkin > 0 && customSkin <= tr.refdef.numSkins ) {
+		skin_t *skin;
+		skinSurface_t *skinSurf;
+		int j;
+
+		skin = &tr.refdef.skins[customSkin - 1];
+
+		// match the surface name to something in the skin
+		for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
+			skinSurf = &tr.skinSurfaces[ skin->surfaces[ j ] ];
+			// the names have both been lowercased
+			if ( !strcmp( skinSurf->name, surfaceName ) ) {
+				shader = skinSurf->shader;
+				break;
+			}
+		}
+
+		if ( shader == tr.nodrawShader ) {
+			return shader;
+		}
+	}
+
+	if ( customShader ) {
+		shader = R_GetShaderByHandle( customShader );
+	}
+
+	return shader;
+}
+
+
+/*
 =============================================================
 
 UNCOMPRESSING BONES

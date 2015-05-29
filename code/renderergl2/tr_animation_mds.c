@@ -324,10 +324,8 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	mdsHeader_t     *header;
 	mdsSurface_t    *surface;
 	shader_t        *shader;
-	skin_t		*skin;
-	skinSurface_t	*skinSurf;
 	int             cubemapIndex;
-	int i, j, fogNum, cull;
+	int i, fogNum, cull;
 	qboolean personalModel;
 
 	// don't add mirror only objects if not in a mirror/portal
@@ -362,24 +360,8 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	surface = ( mdsSurface_t * )( (byte *)header + header->ofsSurfaces );
 	for ( i = 0 ; i < header->numSurfaces ; i++ ) {
 
-		if(ent->e.customShader)
-			shader = R_GetShaderByHandle(ent->e.customShader);
-		else if(ent->e.customSkin > 0 && ent->e.customSkin <= tr.refdef.numSkins)
-		{
-			skin = &tr.refdef.skins[ent->e.customSkin - 1];
-			shader = tr.defaultShader;
-
-			for(j = 0 ; j < skin->numSurfaces ; j++)
-			{
-				skinSurf = &tr.skinSurfaces[ skin->surfaces[ j ] ];
-
-				if (!strcmp(skinSurf->name, surface->name))
-				{
-					shader = skinSurf->shader;
-					break;
-				}
-			}
-
+		if ( ent->e.customShader || ent->e.customSkin ) {
+			shader = R_CustomSurfaceShader( surface->name, ent->e.customShader, ent->e.customSkin );
 			if (shader == tr.nodrawShader) {
 				surface = ( mdsSurface_t * )( (byte *)surface + surface->ofsEnd );
 				continue;
