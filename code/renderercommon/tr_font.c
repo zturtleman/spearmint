@@ -373,6 +373,8 @@ qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 		Com_Memcpy(&registeredFont[registeredFontCount++], font, sizeof(fontInfo_t));
 		ri.FS_FreeFile(faceData);
 		return qtrue;
+	} else if (len != -1) {
+		ri.Printf(PRINT_WARNING, "RE_RegisterFont: Cannot load %s, unsupported file length.\n", datName);
 	}
 
 	return qfalse;
