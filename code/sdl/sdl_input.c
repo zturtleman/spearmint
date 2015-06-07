@@ -43,7 +43,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 static cvar_t *in_keyboardDebug     = NULL;
 
-static SDL_Joystick *stick[MAX_SPLITVIEW] = {NULL, NULL, NULL, NULL};
+static SDL_Joystick *stick[CL_MAX_SPLITVIEW] = {NULL};
 
 static qboolean mouseAvailable = qfalse;
 static qboolean mouseActive = qfalse;
@@ -51,9 +51,9 @@ static qboolean mouseActive = qfalse;
 static cvar_t *in_mouse             = NULL;
 static cvar_t *in_nograb;
 
-static cvar_t *in_joystick[MAX_SPLITVIEW] 			= {NULL, NULL, NULL, NULL};
-static cvar_t *in_joystickThreshold[MAX_SPLITVIEW]	= {NULL, NULL, NULL, NULL};
-static cvar_t *in_joystickNo[MAX_SPLITVIEW]			= {NULL, NULL, NULL, NULL};
+static cvar_t *in_joystick[CL_MAX_SPLITVIEW] 			= {NULL};
+static cvar_t *in_joystickThreshold[CL_MAX_SPLITVIEW]	= {NULL};
+static cvar_t *in_joystickNo[CL_MAX_SPLITVIEW]			= {NULL};
 
 static SDL_Window *SDL_window = NULL;
 
