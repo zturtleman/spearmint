@@ -404,19 +404,6 @@ static void ProjectDlightTexture( void ) {
 
 		vertexLight = ( ( dl->flags & REF_DIRECTED_DLIGHT ) || ( dl->flags & REF_VERTEX_DLIGHT ) );
 
-#if 0 // ZTM: FIXME: support ET dlight and directed light
-		if ( dl->flags & REF_DIRECTED_DLIGHT ) {
-			scale = radius;
-
-			GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, origin);
-
-			shaderNum = (deformGen == DGEN_NONE) ? 4 : 3;
-		} else if ( dl->flags & REF_VERTEX_DLIGHT ) {
-			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, radius);
-
-			shaderNum = (deformGen == DGEN_NONE) ? 4 : 3;
-		} else
-#endif
 		shaderNum = (deformGen == DGEN_NONE) ? 0 : 1;
 
 		sp = &tr.dlightShader[shaderNum];
@@ -434,6 +421,22 @@ static void ProjectDlightTexture( void ) {
 		{
 			GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+		}
+
+#if 0 // ZTM: FIXME: support ET directed dlight
+		if ( dl->flags & REF_DIRECTED_DLIGHT ) {
+			scale = radius;
+
+			GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, origin);
+		}
+#endif
+
+		if ( dl->flags & REF_VERTEX_DLIGHT ) {
+			scale = dl->radiusInverseCubed;
+
+			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, radius);
+		} else {
+			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0);
 		}
 
 		vector[0] = dl->color[0];

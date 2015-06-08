@@ -12,6 +12,7 @@ uniform float  u_Time;
 
 uniform vec4   u_Color;
 uniform float  u_Intensity;
+uniform float  u_LightRadius;
 uniform mat4   u_ModelViewProjectionMatrix;
 
 varying vec2   var_Tex1;
@@ -85,10 +86,33 @@ void main()
 		
 	vec3 dist = u_DlightInfo.xyz - position;
 
-	var_Tex1 = dist.xy * u_DlightInfo.a + vec2(0.5);
+	float dlightmod = 0;
 
-	float dlightmod = step(0.0, dot(dist, normal));
-	dlightmod *= clamp(u_Intensity * 2.0 * (1.0 - abs(dist.z) * u_DlightInfo.a), 0.0, 1.0);
-	
+	// ET spherical dlight using vertex light
+	if (u_LightRadius > 0)
+	{
+		var_Tex1 = vec2(0.0);
+
+		vec3 dir = vec3(u_LightRadius) - abs(dist);
+
+		if (dir.x > 0 && dir.y > 0 && dir.z > 0)
+		{
+			dlightmod = clamp(u_Intensity * dir.x * dir.y * dir.z * u_DlightInfo.a, 0.0, 1.0);
+
+			if ( dlightmod < ( 1.0 / 128.0 ) )
+			{
+				dlightmod = 0;
+			}
+		}
+	}
+	else
+	{
+		// Q3 cylinder dlight with texture
+		var_Tex1 = dist.xy * u_DlightInfo.a + vec2(0.5);
+
+		float dlightmod = step(0.0, dot(dist, normal));
+		dlightmod *= clamp(u_Intensity * 2.0 * (1.0 - abs(dist.z) * u_DlightInfo.a), 0.0, 1.0);
+	}
+
 	var_Color = u_Color * dlightmod;
 }
