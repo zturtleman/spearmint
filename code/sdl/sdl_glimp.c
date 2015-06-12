@@ -593,10 +593,12 @@ static void GLimp_InitExtensions( void )
 	if ( GLimp_HaveExtension( "GL_ARB_texture_compression" ) &&
 	     GLimp_HaveExtension( "GL_EXT_texture_compression_s3tc" ) )
 	{
+		// Compressed DDS image uploading requires this
+		qglCompressedTexImage2DARB = SDL_GL_GetProcAddress( "glCompressedTexImage2DARB" );
+
 		if ( r_ext_compressed_textures->value )
 		{
 			glConfig.textureCompression = TC_S3TC_ARB;
-			qglCompressedTexImage2DARB = SDL_GL_GetProcAddress( "glCompressedTexImage2DARB" );
 			ri.Printf( PRINT_ALL, "...using GL_EXT_texture_compression_s3tc\n" );
 		}
 		else
