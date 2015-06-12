@@ -34,7 +34,7 @@ typedef struct {
 	int width, height, hasTranparency;
 } FtxHeader;
 
-void R_LoadFTX ( const char *name, byte **pic, int *width, int *height)
+void R_LoadFTX( const char *name, int *numTexLevels, textureLevel_t **pic )
 {
 	unsigned	numPixels;
 	byte	*buf_p;
@@ -47,11 +47,7 @@ void R_LoadFTX ( const char *name, byte **pic, int *width, int *height)
 	int length;
 
 	*pic = NULL;
-
-	if(width)
-		*width = 0;
-	if(height)
-		*height = 0;
+	*numTexLevels = 0;
 
 	//
 	// load the file
@@ -82,16 +78,15 @@ void R_LoadFTX ( const char *name, byte **pic, int *width, int *height)
 		ri.Error (ERR_DROP, "LoadFTX: %s has an invalid image size", name);
 	}
 
-	ftx_rgba = ri.Malloc (numPixels);
+	*pic = ri.Malloc( sizeof(textureLevel_t) + numPixels );
+	(*pic)->format = GL_RGBA8;
+	(*pic)->width = ftx_header.width;
+	(*pic)->height = ftx_header.height;
+	(*pic)->size = numPixels;
+	(*pic)->data = ftx_rgba = (byte *)(*pic + 1);
+	*numTexLevels = 1;
 
 	Com_Memcpy( ftx_rgba, buf_p, numPixels );
-
-	if (width)
-		*width = ftx_header.width;
-	if (height)
-		*height = ftx_header.height;
-
-	*pic = ftx_rgba;
 
 	ri.FS_FreeFile (buffer.v);
 }

@@ -50,7 +50,7 @@ typedef struct
 	unsigned char palette[256][4];
 } BMPHeader_t;
 
-void R_LoadBMP( const char *name, byte **pic, int *width, int *height )
+void R_LoadBMP( const char *name, int *numTexLevels, textureLevel_t **pic )
 {
 	int		columns, rows;
 	unsigned	numPixels;
@@ -67,12 +67,7 @@ void R_LoadBMP( const char *name, byte **pic, int *width, int *height )
 	byte		*bmpRGBA;
 
 	*pic = NULL;
-
-	if(width)
-		*width = 0;
-
-	if(height)
-		*height = 0;
+	*numTexLevels = 0;
 
 	//
 	// load the file
@@ -181,14 +176,13 @@ void R_LoadBMP( const char *name, byte **pic, int *width, int *height )
 	  ri.Error (ERR_DROP, "LoadBMP: file truncated (%s)", name);
 	}
 
-	if ( width ) 
-		*width = columns;
-	if ( height )
-		*height = rows;
-
-	bmpRGBA = ri.Malloc( numPixels * 4 );
-	*pic = bmpRGBA;
-
+	*pic = (textureLevel_t *)ri.Malloc( sizeof(textureLevel_t) + numPixels * 4 );
+	(*pic)->format = GL_RGBA8;
+	(*pic)->width = columns;
+	(*pic)->height = rows;
+	(*pic)->size = numPixels * 4;
+	(*pic)->data = bmpRGBA = (byte *)(*pic + 1);
+	*numTexLevels = 1;
 
 	for ( row = rows-1; row >= 0; row-- )
 	{

@@ -46,7 +46,7 @@ typedef struct _TargaHeader {
 	unsigned char	pixel_size, attributes;
 } TargaHeader;
 
-void R_LoadTGA ( const char *name, byte **pic, int *width, int *height)
+void R_LoadTGA ( const char *name, int *numTexLevels, textureLevel_t **pic)
 {
 	unsigned	columns, rows, numPixels;
 	byte	*pixbuf;
@@ -62,11 +62,7 @@ void R_LoadTGA ( const char *name, byte **pic, int *width, int *height)
 	int length;
 
 	*pic = NULL;
-
-	if(width)
-		*width = 0;
-	if(height)
-		*height = 0;
+	*numTexLevels = 0;
 
 	//
 	// load the file
@@ -134,7 +130,13 @@ void R_LoadTGA ( const char *name, byte **pic, int *width, int *height)
 	}
 
 
-	targa_rgba = ri.Malloc (numPixels);
+	*pic = (textureLevel_t *)ri.Malloc( sizeof(textureLevel_t) + numPixels );
+	(*pic)->format = GL_RGBA8;
+	(*pic)->width = columns;
+	(*pic)->height = rows;
+	(*pic)->size = numPixels;
+	(*pic)->data = targa_rgba = (byte *)(*pic + 1);
+	*numTexLevels = 1;
 
 	if (targa_header.id_length != 0)
 	{
@@ -311,13 +313,6 @@ void R_LoadTGA ( const char *name, byte **pic, int *width, int *height)
   if (targa_header.attributes & 0x20) {
     ri.Printf( PRINT_WARNING, "WARNING: '%s' TGA file header declares top-down image, ignoring\n", name);
   }
-
-  if (width)
-	  *width = columns;
-  if (height)
-	  *height = rows;
-
-  *pic = targa_rgba;
 
   ri.FS_FreeFile (buffer.v);
 }

@@ -74,6 +74,17 @@ typedef struct image_s {
 	struct image_s*	next;
 } image_t;
 
+#ifdef DEDICATED
+typedef int GLenum;
+typedef int GLsizei;
+#endif
+typedef struct textureLevel_s {
+	GLenum  format;
+	int     width, height;
+	GLsizei size;
+	void    *data;
+} textureLevel_t;
+
 extern	refimport_t		ri;
 extern glconfig_t	glConfig;		// outside of TR since it shouldn't be cleared during ref re-init
 
@@ -139,9 +150,10 @@ float R_NoiseGet4f( float x, float y, float z, float t );
 int R_RandomOn( float t );
 void  R_NoiseInit( void );
 
-void	R_LoadImage( const char *name, byte **pic, int *width, int *height );
+void	R_LoadImage( const char *name, int *numLevels, textureLevel_t **pic );
 image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags );
 image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgType_t type, imgFlags_t flags, int internalFormat );
+image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_t *pic, imgType_t type, imgFlags_t flags, int internalFormat );
 
 void R_IssuePendingRenderCommands( void );
 qhandle_t		 RE_RegisterShaderEx( const char *name, int lightmapIndex, qboolean mipRawImage );
@@ -153,6 +165,26 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 void R_InitFreeType( void );
 void R_DoneFreeType( void );
 void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *vmFont, int vmFontBufSize);
+
+/*
+=============================================================
+
+IMAGE LOADERS
+
+=============================================================
+*/
+
+// pic points to an array of numLevels textureLevel_t structs that describe
+// the individual mip levels, the format is either GL_RGBA8 or a compressed
+// internalformat if the data is precompressed.
+
+void R_LoadBMP( const char *name, int *numLevels, textureLevel_t **pic );
+void R_LoadDDS( const char *name, int *numLevels, textureLevel_t **pic );
+void R_LoadFTX( const char *name, int *numLevels, textureLevel_t **pic );
+void R_LoadJPG( const char *name, int *numLevels, textureLevel_t **pic );
+void R_LoadPCX( const char *name, int *numLevels, textureLevel_t **pic );
+void R_LoadPNG( const char *name, int *numLevels, textureLevel_t **pic );
+void R_LoadTGA( const char *name, int *numLevels, textureLevel_t **pic );
 
 /*
 ====================================================================
