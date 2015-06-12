@@ -1481,7 +1481,7 @@ RawImage_ScaleToPower2
 
 ===============
 */
-static void RawImage_ScaleToPower2( byte **data, int *inout_width, int *inout_height, int *inout_scaled_width, int *inout_scaled_height, imgType_t type, imgFlags_t flags, byte **resampledBuffer)
+static void RawImage_ScaleToPower2( byte **data, int baseLevel, int *inout_width, int *inout_height, int *inout_scaled_width, int *inout_scaled_height, imgType_t type, imgFlags_t flags, byte **resampledBuffer)
 {
 	int width =         *inout_width;
 	int height =        *inout_height;
@@ -1597,8 +1597,8 @@ static void RawImage_ScaleToPower2( byte **data, int *inout_width, int *inout_he
 	// perform optional picmip operation
 	//
 	if ( picmip ) {
-		scaled_width >>= r_picmip->integer;
-		scaled_height >>= r_picmip->integer;
+		scaled_width >>= r_picmip->integer - baseLevel;
+		scaled_height >>= r_picmip->integer - baseLevel;
 	}
 
 	//
@@ -1647,12 +1647,20 @@ static qboolean RawImage_HasAlpha(const byte *scan, int numPixels)
 	return qfalse;
 }
 
-static GLenum RawImage_GetFormat(const byte *data, int numPixels, qboolean lightMap, imgType_t type, imgFlags_t flags)
+static GLenum RawImage_GetFormat(const textureLevel_t *pic, int numPixels, qboolean lightMap, imgType_t type, imgFlags_t flags)
 {
 	int samples = 3;
 	GLenum internalFormat = GL_RGB;
 	qboolean forceNoCompression = (flags & IMGFLAG_NO_COMPRESSION);
 	qboolean normalmap = (type == IMGTYPE_NORMAL || type == IMGTYPE_NORMALHEIGHT);
+	const byte *data;
+
+	// check if pic is a compressed format
+	if ( pic->format != GL_RGBA8 ) {
+		return pic->format;
+	}
+
+	data = pic[0].data;
 
 	if(normalmap)
 	{
@@ -1855,13 +1863,40 @@ static void RawImage_UploadTexture( byte *data, int x, int y, int width, int hei
 }
 
 
+static qboolean UploadOneTexLevel( int level, const textureLevel_t *pic )
+{
+	GLsizei w;
+	if ( pic->format != GL_RGBA8 ) {
+		return qfalse;
+	} else {
+		qglTexImage2D( GL_PROXY_TEXTURE_2D, level,
+						pic->format,
+						pic->width, pic->height, 0,
+						GL_RGBA, GL_UNSIGNED_BYTE,
+						NULL );
+
+		qglGetTexLevelParameteriv( GL_PROXY_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &w);
+		if ( !w ) {
+			return qfalse;
+		}
+
+		qglTexImage2D( GL_TEXTURE_2D, level,
+						pic->format,
+						pic->width, pic->height, 0,
+						GL_RGBA, GL_UNSIGNED_BYTE,
+						pic->data );
+	}
+
+	return qtrue;
+}
+
 /*
 ===============
 Upload32
 
 ===============
 */
-static void Upload32( byte *data, int width, int height, imgType_t type, imgFlags_t flags,
+static void Upload32( int numTexLevels, const textureLevel_t *pics, imgType_t type, imgFlags_t flags,
 	qboolean lightMap, GLenum internalFormat, int *pUploadWidth, int *pUploadHeight)
 {
 	byte		*scaledBuffer = NULL;
@@ -1869,8 +1904,36 @@ static void Upload32( byte *data, int width, int height, imgType_t type, imgFlag
 	int			scaled_width, scaled_height;
 	int			i, c;
 	byte		*scan;
+	int			baseLevel;
+	int			width, height;
+	byte		*data;
 
-	RawImage_ScaleToPower2(&data, &width, &height, &scaled_width, &scaled_height, type, flags, &resampledBuffer);
+	// we may skip some textureLevels, if r_picmip is set
+	if ( flags & IMGFLAG_PICMIP ) {
+		baseLevel = Com_Clamp( 0, numTexLevels - 1, r_picmip->integer );
+	} else {
+		baseLevel = 0;
+	}
+
+	width = pics[baseLevel].width;
+	height = pics[baseLevel].height;
+
+	if( pics[0].format != GL_RGBA8 ) {
+		// compressed texture
+		for( i = baseLevel; i < numTexLevels; i++ ) {
+			if( !UploadOneTexLevel( i - baseLevel, &pics[i] ) )
+				break;
+		}
+		if( i >= numTexLevels )
+			goto done;
+
+		// failed to upload all levels
+		ri.Error(ERR_DROP, "Unsupported Texture format: %x", pics[0].format);
+	} else {
+		data = pics[baseLevel].data;
+	}
+
+	RawImage_ScaleToPower2(&data, baseLevel, &width, &height, &scaled_width, &scaled_height, type, flags, &resampledBuffer);
 
 	scaledBuffer = ri.Hunk_AllocateTempMemory( sizeof( unsigned ) * scaled_width * scaled_height );
 
@@ -2010,7 +2073,7 @@ static void EmptyTexture( int width, int height, imgType_t type, imgFlags_t flag
 {
 	int			scaled_width, scaled_height;
 
-	RawImage_ScaleToPower2(NULL, &width, &height, &scaled_width, &scaled_height, type, flags, NULL);
+	RawImage_ScaleToPower2(NULL, 0, &width, &height, &scaled_width, &scaled_height, type, flags, NULL);
 
 	*pUploadWidth = scaled_width;
 	*pUploadHeight = scaled_height;
@@ -2062,7 +2125,28 @@ R_CreateImage
 This is the only way any image_t are created
 ================
 */
-image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgType_t type, imgFlags_t flags, int internalFormat ) {
+image_t *R_CreateImage( const char *name, byte *pic, int width, int height,
+		imgType_t type, imgFlags_t flags, int internalFormat ) {
+	textureLevel_t texLevel;
+
+	texLevel.format = GL_RGBA8;
+	texLevel.width = width;
+	texLevel.height = height;
+	texLevel.size = width * height * 4;
+	texLevel.data = pic;
+
+	return R_CreateImage2( name, 1, &texLevel, type, flags, internalFormat );
+}
+
+/*
+================
+R_CreateImage2
+
+This is the only way any image_t are created
+================
+*/
+image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_t *pic,
+		imgType_t type, imgFlags_t flags, int internalFormat ) {
 	image_t		*image;
 	qboolean	isLightmap = qfalse;
 	long		hash;
@@ -2088,8 +2172,8 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 
 	strcpy (image->imgName, name);
 
-	image->width = width;
-	image->height = height;
+	image->width = pic[0].width;
+	image->height = pic[0].height;
 	if (flags & IMGFLAG_CLAMPTOEDGE)
 		glWrapClampMode = GL_CLAMP_TO_EDGE;
 	else
@@ -2100,7 +2184,7 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 		if (image->flags & IMGFLAG_CUBEMAP)
 			internalFormat = GL_RGBA8;
 		else
-			internalFormat = RawImage_GetFormat(pic, width * height, isLightmap, image->type, image->flags);
+			internalFormat = RawImage_GetFormat(pic, image->width * image->height, isLightmap, image->type, image->flags);
 	}
 
 	image->internalFormat = internalFormat;
@@ -2135,18 +2219,18 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 			qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		}
 
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
+		qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
+		qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
+		qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
+		qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
+		qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
+		qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
 
 		if (image->flags & IMGFLAG_MIPMAP)
 			qglGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP);
 
-		image->uploadWidth = width;
-		image->uploadHeight = height;
+		image->uploadWidth = image->width;
+		image->uploadHeight = image->height;
 	}
 	else
 	{
@@ -2154,7 +2238,7 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 
 		if (pic)
 		{
-			Upload32( pic, image->width, image->height, image->type, image->flags,
+			Upload32( numTexLevels, pic, image->type, image->flags,
 				isLightmap, image->internalFormat, &image->uploadWidth,
 				&image->uploadHeight );
 		}
@@ -2205,7 +2289,7 @@ void R_UpdateSubImage( image_t *image, byte *pic, int x, int y, int width, int h
 	}
 
 
-	RawImage_ScaleToPower2(&pic, &width, &height, &scaled_width, &scaled_height, image->type, image->flags, &resampledBuffer);
+	RawImage_ScaleToPower2(&pic, 0, &width, &height, &scaled_width, &scaled_height, image->type, image->flags, &resampledBuffer);
 
 	scaledBuffer = ri.Hunk_AllocateTempMemory( sizeof( unsigned ) * scaled_width * scaled_height );
 
@@ -2289,7 +2373,7 @@ done:
 typedef struct
 {
 	char *ext;
-	void (*ImageLoader)( const char *, unsigned char **, int *, int * );
+	void (*ImageLoader)( const char *, int *, textureLevel_t ** );
 } imageExtToLoaderMap_t;
 
 // Note that the ordering indicates the order of preference used
@@ -2314,7 +2398,7 @@ Loads any of the supported image types into a cannonical
 32 bit format.
 =================
 */
-void R_LoadImage( const char *name, byte **pic, int *width, int *height )
+static void R_LoadImage( const char *name, int *numLevels, textureLevel_t **pic )
 {
 	qboolean orgNameFailed = qfalse;
 	int orgLoader = -1;
@@ -2324,8 +2408,7 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height )
 	char *altName;
 
 	*pic = NULL;
-	*width = 0;
-	*height = 0;
+	*numLevels = 0;
 
 	Q_strncpyz( localName, name, MAX_QPATH );
 
@@ -2339,7 +2422,7 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height )
 			if( !Q_stricmp( ext, imageLoaders[ i ].ext ) )
 			{
 				// Load
-				imageLoaders[ i ].ImageLoader( localName, pic, width, height );
+				imageLoaders[ i ].ImageLoader( localName, numLevels, pic );
 				break;
 			}
 		}
@@ -2373,7 +2456,7 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height )
 		altName = va( "%s.%s", localName, imageLoaders[ i ].ext );
 
 		// Load
-		imageLoaders[ i ].ImageLoader( altName, pic, width, height );
+		imageLoaders[ i ].ImageLoader( altName, numLevels, pic );
 
 		if( *pic )
 		{
@@ -2400,8 +2483,8 @@ Returns NULL if it fails, not a default image.
 image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 {
 	image_t	*image;
-	int		width, height;
-	byte	*pic;
+	int	numLevels;
+	textureLevel_t	*pic;
 	long	hash;
 
 	if (!name) {
@@ -2428,7 +2511,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	//
 	// load the pic from disk
 	//
-	R_LoadImage( name, &pic, &width, &height );
+	R_LoadImage( name, &numLevels, &pic );
 	if ( pic == NULL ) {
 		return NULL;
 	}
@@ -2449,22 +2532,27 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		normalImage = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
 
 		// if not, generate it
-		if (normalImage == NULL)
+		if (normalImage == NULL && pic->format == GL_RGBA8)
 		{
 			byte *normalPic;
-			int x, y;
+			byte *basePic;
+			int x, y, width, height;
+
+			basePic = pic[0].data;
+			width = pic[0].width;
+			height = pic[0].height;
 
 			normalWidth = width;
 			normalHeight = height;
 			normalPic = ri.Malloc(width * height * 4);
-			RGBAtoNormal(pic, normalPic, width, height, flags & IMGFLAG_CLAMPTOEDGE);
+			RGBAtoNormal(basePic, normalPic, width, height, flags & IMGFLAG_CLAMPTOEDGE);
 
 #if 1
 			// Brighten up the original image to work with the normal map
-			RGBAtoYCoCgA(pic, pic, width, height);
+			RGBAtoYCoCgA(basePic, basePic, width, height);
 			for (y = 0; y < height; y++)
 			{
-				byte *picbyte  = pic       + y * width * 4;
+				byte *picbyte  = basePic   + y * width * 4;
 				byte *normbyte = normalPic + y * width * 4;
 				for (x = 0; x < width; x++)
 				{
@@ -2474,18 +2562,18 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 					normbyte += 4;
 				}
 			}
-			YCoCgAtoRGBA(pic, pic, width, height);
+			YCoCgAtoRGBA(basePic, basePic, width, height);
 #else
 			// Blur original image's luma to work with the normal map
 			{
 				byte *blurPic;
 
-				RGBAtoYCoCgA(pic, pic, width, height);
+				RGBAtoYCoCgA(basePic, basePic, width, height);
 				blurPic = ri.Malloc(width * height);
 
 				for (y = 1; y < height - 1; y++)
 				{
-					byte *picbyte  = pic     + y * width * 4;
+					byte *picbyte  = basePic + y * width * 4;
 					byte *blurbyte = blurPic + y * width;
 
 					picbyte += 4;
@@ -2511,7 +2599,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 
 				for (y = 1; y < height - 1; y++)
 				{
-					byte *picbyte  = pic     + y * width * 4;
+					byte *picbyte  = basePic + y * width * 4;
 					byte *blurbyte = blurPic + y * width;
 
 					picbyte += 4;
@@ -2527,7 +2615,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 
 				ri.Free(blurPic);
 
-				YCoCgAtoRGBA(pic, pic, width, height);
+				YCoCgAtoRGBA(basePic, basePic, width, height);
 			}
 #endif
 
@@ -2536,7 +2624,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		}
 	}
 
-	image = R_CreateImage( ( char * ) name, pic, width, height, type, flags, 0 );
+	image = R_CreateImage2( ( char * ) name, numLevels, pic, type, flags, 0 );
 	ri.Free( pic );
 	return image;
 }

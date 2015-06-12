@@ -48,7 +48,7 @@ typedef struct {
 	unsigned char	data[];
 } pcx_t;
 
-void R_LoadPCX ( const char *filename, byte **pic, int *width, int *height)
+void R_LoadPCX ( const char *filename, int *numTexLevels, textureLevel_t **pic)
 {
 	union {
 		byte *b;
@@ -58,18 +58,15 @@ void R_LoadPCX ( const char *filename, byte **pic, int *width, int *height)
 	pcx_t	*pcx;
 	int		len;
 	unsigned char	dataByte = 0, runLength = 0;
-	byte	*out, *pix;
+	byte	*pix;
 	unsigned short w, h;
 	byte	*pic8;
 	byte	*palette;
 	int	i;
 	unsigned size = 0;
 
-	if (width)
-		*width = 0;
-	if (height)
-		*height = 0;
 	*pic = NULL;
+	*numTexLevels = 0;
 
 	//
 	// load the file
@@ -152,7 +149,14 @@ void R_LoadPCX ( const char *filename, byte **pic, int *width, int *height)
 
 	palette = end-768;
 
-	pix = out = ri.Malloc(4 * size );
+	*pic = ri.Malloc( sizeof(textureLevel_t) + 4 * size );
+	(*pic)->format = GL_RGBA8;
+	(*pic)->width = w;
+	(*pic)->height = h;
+	(*pic)->size = size * 4;
+	(*pic)->data = pix = (byte *)(*pic + 1);
+	*numTexLevels = 1;
+
 	for (i = 0 ; i < size ; i++)
 	{
 		unsigned char p = pic8[i];
@@ -162,13 +166,6 @@ void R_LoadPCX ( const char *filename, byte **pic, int *width, int *height)
 		pix[3] = 255;
 		pix += 4;
 	}
-
-	if (width)
-		*width = w;
-	if (height)
-		*height = h;
-
-	*pic = out;
 
 	ri.FS_FreeFile (pcx);
 	ri.Free (pic8);

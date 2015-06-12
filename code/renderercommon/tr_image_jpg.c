@@ -65,7 +65,7 @@ static void R_JPGOutputMessage(j_common_ptr cinfo)
   ri.Printf(PRINT_ALL, "%s\n", buffer);
 }
 
-void R_LoadJPG(const char *filename, unsigned char **pic, int *width, int *height)
+void R_LoadJPG(const char *filename, int *numTexLevels, textureLevel_t **pic)
 {
   /* This struct contains the JPEG decompression parameters and pointers to
    * working space (which is allocated as needed by the JPEG library).
@@ -176,10 +176,13 @@ void R_LoadJPG(const char *filename, unsigned char **pic, int *width, int *heigh
   memcount = pixelcount * 4;
   row_stride = cinfo.output_width * cinfo.output_components;
 
-  out = ri.Malloc(memcount);
-
-  *width = cinfo.output_width;
-  *height = cinfo.output_height;
+  *pic = (textureLevel_t *)ri.Malloc(sizeof(textureLevel_t) + memcount);
+  (*pic)->format = GL_RGBA8;
+  (*pic)->width = cinfo.output_width;
+  (*pic)->height = cinfo.output_height;
+  (*pic)->size = memcount;
+  (*pic)->data = out = (byte *)(*pic + 1);
+  *numTexLevels = 1;
 
   /* Step 6: while (scan lines remain to be read) */
   /*           jpeg_read_scanlines(...); */
@@ -210,8 +213,6 @@ void R_LoadJPG(const char *filename, unsigned char **pic, int *width, int *heigh
     buf[--dindex] = buf[--sindex];
     buf[--dindex] = buf[--sindex];
   } while(sindex);
-
-  *pic = out;
 
   /* Step 7: Finish decompression */
 

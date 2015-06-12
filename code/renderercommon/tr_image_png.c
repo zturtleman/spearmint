@@ -1900,7 +1900,7 @@ static qboolean DecodeImageInterlaced(struct PNG_Chunk_IHDR *IHDR,
  *  The PNG loader
  */
 
-void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
+void R_LoadPNG(const char *name, int *numTexLevels, textureLevel_t **pic)
 {
 	struct BufferedFile *ThePNG;
 	byte *OutBuffer;
@@ -1944,16 +1944,7 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 	 */
 
 	*pic = NULL;
-
-	if(width)
-	{
-		*width = 0;
-	}
-
-	if(height)
-	{
-		*height = 0;
-	}
+	*numTexLevels = 0;
 
 	/*
 	 *  Read the file.
@@ -2398,14 +2389,22 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 	 *  Allocate output buffer.
 	 */
 
-	OutBuffer = ri.Malloc(IHDR_Width * IHDR_Height * Q3IMAGE_BYTESPERPIXEL); 
-	if(!OutBuffer)
+	*pic = (textureLevel_t *)ri.Malloc( sizeof(textureLevel_t) + IHDR_Width * IHDR_Height * Q3IMAGE_BYTESPERPIXEL );
+
+	if(!(*pic))
 	{
 		ri.Free(DecompressedData); 
 		CloseBufferedFile(ThePNG);
 
 		return;  
 	}
+
+	(*pic)->format = GL_RGBA8;
+	(*pic)->width = IHDR_Width;
+	(*pic)->height = IHDR_Height;
+	(*pic)->size = IHDR_Width * IHDR_Height * Q3IMAGE_BYTESPERPIXEL;
+	(*pic)->data = OutBuffer = (byte *)(*pic + 1);
+	*numTexLevels = 1;
 
 	/*
 	 *  Interlaced and Non-interlaced images need to be handled differently.
@@ -2449,26 +2448,6 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 
 			return;
 		}
-	}
-
-	/*
-	 *  update the pointer to the image data
-	 */
-
-	*pic = OutBuffer;
-
-	/*
-	 *  Fill width and height.
-	 */
-
-	if(width)
-	{
-		*width = IHDR_Width;
-	}
-
-	if(height)
-	{
-		*height = IHDR_Height;
 	}
 
 	/*

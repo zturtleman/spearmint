@@ -64,6 +64,13 @@ typedef struct image_s {
 	struct image_s*	next;
 } image_t;
 
+typedef struct textureLevel_s {
+	GLenum  format;
+	int     width, height;
+	GLsizei size;
+	void    *data;
+} textureLevel_t;
+
 // any change in the LIGHTMAP_* defines here MUST be reflected in
 // R_FindShader() in tr_bsp.c
 #define LIGHTMAP_2D         -4	// shader is for 2D rendering
@@ -122,6 +129,7 @@ void  R_NoiseInit( void );
 
 image_t     *R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags );
 image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgType_t type, imgFlags_t flags, int internalFormat );
+image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_t *pic, imgType_t type, imgFlags_t flags, int internalFormat );
 
 void R_IssuePendingRenderCommands( void );
 qhandle_t		 RE_RegisterShaderLightMap( const char *name, int lightmapIndex );
@@ -142,11 +150,15 @@ IMAGE LOADERS
 =============================================================
 */
 
-void R_LoadBMP( const char *name, byte **pic, int *width, int *height );
-void R_LoadJPG( const char *name, byte **pic, int *width, int *height );
-void R_LoadPCX( const char *name, byte **pic, int *width, int *height );
-void R_LoadPNG( const char *name, byte **pic, int *width, int *height );
-void R_LoadTGA( const char *name, byte **pic, int *width, int *height );
+// pic points to an array of numLevels textureLevel_t structs that describe
+// the individual mip levels, the format is either GL_RGBA8 or a compressed
+// internalformat if the data is precompressed.
+
+void R_LoadBMP( const char *name, int *numLevels, textureLevel_t **pic );
+void R_LoadJPG( const char *name, int *numLevels, textureLevel_t **pic );
+void R_LoadPCX( const char *name, int *numLevels, textureLevel_t **pic );
+void R_LoadPNG( const char *name, int *numLevels, textureLevel_t **pic );
+void R_LoadTGA( const char *name, int *numLevels, textureLevel_t **pic );
 
 /*
 ====================================================================
