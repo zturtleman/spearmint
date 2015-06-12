@@ -155,6 +155,7 @@ IMAGE LOADERS
 // internalformat if the data is precompressed.
 
 void R_LoadBMP( const char *name, int *numLevels, textureLevel_t **pic );
+void R_LoadDDS( const char *name, int *numLevels, textureLevel_t **pic );
 void R_LoadJPG( const char *name, int *numLevels, textureLevel_t **pic );
 void R_LoadPCX( const char *name, int *numLevels, textureLevel_t **pic );
 void R_LoadPNG( const char *name, int *numLevels, textureLevel_t **pic );
