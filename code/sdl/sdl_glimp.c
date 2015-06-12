@@ -62,12 +62,21 @@ cvar_t *r_centerWindow;
 cvar_t *r_sdlDriver;
 cvar_t *r_forceWindowIcon32;
 
+// GL_ARB_multisample
 void (APIENTRYP qglActiveTextureARB) (GLenum texture);
 void (APIENTRYP qglClientActiveTextureARB) (GLenum texture);
 void (APIENTRYP qglMultiTexCoord2fARB) (GLenum target, GLfloat s, GLfloat t);
 
+// GL_EXT_compiled_vertex_array
 void (APIENTRYP qglLockArraysEXT) (GLint first, GLsizei count);
 void (APIENTRYP qglUnlockArraysEXT) (void);
+
+// GL_ARB_texture_compression
+void (APIENTRYP qglCompressedTexImage2DARB) (GLenum target, GLint level,
+						GLenum internalformat,
+						GLsizei width, GLsizei height,
+						GLint border, GLsizei imageSize,
+						const GLvoid *data);
 
 /*
 ===============
@@ -139,7 +148,8 @@ static void GLimp_DetectAvailableModes(void)
 {
 	int i, j;
 	char buf[ MAX_STRING_CHARS ] = { 0 };
-	SDL_Rect modes[ 128 ];
+	size_t numSDLModes;
+	SDL_Rect *modes;
 	int numModes = 0;
 
 	int display = SDL_GetWindowDisplayIndex( SDL_window );
@@ -151,7 +161,14 @@ static void GLimp_DetectAvailableModes(void)
 		return;
 	}
 
-	for( i = 0; i < SDL_GetNumDisplayModes( display ); i++ )
+	numSDLModes = SDL_GetNumDisplayModes( display );
+	modes = SDL_calloc( numSDLModes, sizeof( SDL_Rect ) );
+	if ( !modes )
+	{
+		ri.Error( ERR_FATAL, "Out of memory" );
+	}
+
+	for( i = 0; i < numSDLModes; i++ )
 	{
 		SDL_DisplayMode mode;
 
@@ -161,6 +178,7 @@ static void GLimp_DetectAvailableModes(void)
 		if( !mode.w || !mode.h )
 		{
 			ri.Printf( PRINT_ALL, "Display supports any resolution\n" );
+			SDL_free( modes );
 			return;
 		}
 
@@ -202,6 +220,7 @@ static void GLimp_DetectAvailableModes(void)
 		ri.Printf( PRINT_ALL, "Available modes: '%s'\n", buf );
 		ri.Cvar_Set( "r_availableModes", buf );
 	}
+	SDL_free( modes );
 }
 
 /*
@@ -222,9 +241,9 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 	int display = 0;
 	int x = SDL_WINDOWPOS_UNDEFINED, y = SDL_WINDOWPOS_UNDEFINED;
 	char windowTitle[128];
+	textureLevel_t *iconPic;
 	byte *pixelData;
 	int bytesPerPixel, width, height;
-	qboolean internalIcon;
 
 	ri.Printf( PRINT_ALL, "Initializing OpenGL display\n");
 
@@ -233,28 +252,35 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 	if ( r_allowResize->integer )
 		flags |= SDL_WINDOW_RESIZABLE;
 
+	iconPic = NULL;
 	pixelData = NULL;
 	bytesPerPixel = 4;
-	internalIcon = qfalse;
 
 #ifdef USE_ICON
 	// try to load 32 x 32 icon
 	if ( r_forceWindowIcon32->integer ) {
-		R_LoadImage( "windowicon32", &pixelData, &width, &height );
+		int numLevels;
 
-		if ( pixelData && ( width != 32 || height != 32 ) ) {
-			ri.Free( pixelData );
-			pixelData = NULL;
+		R_LoadImage( "windowicon32", &numLevels, &iconPic );
+
+		if ( iconPic && ( iconPic[0].width != 32 || iconPic[0].height != 32 ) ) {
+			ri.Free( iconPic );
+			iconPic = NULL;
 			ri.Printf( PRINT_WARNING, "Ignoring windowicon32: Image must be 32 x 32!\n");
 		}
 	} else {
+		int numLevels;
+
 		// try to load high resolution icon
-		R_LoadImage( "windowicon", &pixelData, &width, &height );
+		R_LoadImage( "windowicon", &numLevels, &iconPic );
 	}
 
-	// fallback to default icon
-	if ( !pixelData ) {
-		internalIcon = qtrue;
+	if ( iconPic ) {
+		pixelData = iconPic[0].data;
+		width = iconPic[0].width;
+		height = iconPic[0].height;
+	} else {
+		// fallback to default icon
 		pixelData = (byte *)CLIENT_WINDOW_ICON.pixel_data;
 		bytesPerPixel = CLIENT_WINDOW_ICON.bytes_per_pixel;
 		width = CLIENT_WINDOW_ICON.width;
@@ -527,9 +553,9 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 
 	SDL_FreeSurface( icon );
 
-	if ( !internalIcon && pixelData ) {
-		ri.Free( pixelData );
-		pixelData = NULL;
+	if ( iconPic ) {
+		ri.Free( iconPic );
+		iconPic = NULL;
 	}
 
 	if( !SDL_window )
@@ -638,11 +664,15 @@ static void GLimp_InitExtensions( void )
 	ri.Printf( PRINT_ALL, "Initializing OpenGL extensions\n" );
 
 	glConfig.textureCompression = TC_NONE;
+	qglCompressedTexImage2DARB = NULL;
 
 	// GL_EXT_texture_compression_s3tc
 	if ( GLimp_HaveExtension( "GL_ARB_texture_compression" ) &&
 	     GLimp_HaveExtension( "GL_EXT_texture_compression_s3tc" ) )
 	{
+		// Compressed DDS image uploading requires this
+		qglCompressedTexImage2DARB = SDL_GL_GetProcAddress( "glCompressedTexImage2DARB" );
+
 		if ( r_ext_compressed_textures->value )
 		{
 			glConfig.textureCompression = TC_S3TC_ARB;

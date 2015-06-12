@@ -53,6 +53,11 @@ extern void (APIENTRYP qglMultiTexCoord2fARB) (GLenum target, GLfloat s, GLfloat
 extern void (APIENTRYP qglLockArraysEXT) (GLint first, GLsizei count);
 extern void (APIENTRYP qglUnlockArraysEXT) (void);
 
+extern void (APIENTRYP qglCompressedTexImage2DARB) (GLenum target, GLint level,
+							GLenum internalformat,
+							GLsizei width, GLsizei height,
+							GLint border, GLsizei imageSize,
+							const GLvoid *data);
 
 //===========================================================================
 
