@@ -1867,7 +1867,24 @@ static qboolean UploadOneTexLevel( int level, const textureLevel_t *pic )
 {
 	GLsizei w;
 	if ( pic->format != GL_RGBA8 ) {
-		return qfalse;
+		if ( !qglCompressedTexImage2DARB ) {
+			return qfalse;
+		}
+
+		qglCompressedTexImage2DARB( GL_PROXY_TEXTURE_2D, level,
+						pic->format,
+						pic->width, pic->height, 0,
+						pic->size, NULL);
+
+		qglGetTexLevelParameteriv( GL_PROXY_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &w);
+		if ( !w ) {
+			return qfalse;
+		}
+
+		qglCompressedTexImage2DARB( GL_TEXTURE_2D, level,
+						pic->format,
+						pic->width, pic->height, 0,
+						pic->size, pic->data);
 	} else {
 		qglTexImage2D( GL_PROXY_TEXTURE_2D, level,
 						pic->format,

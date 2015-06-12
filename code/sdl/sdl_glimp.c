@@ -53,12 +53,21 @@ cvar_t *r_allowResize; // make window resizable
 cvar_t *r_centerWindow;
 cvar_t *r_sdlDriver;
 
+// GL_ARB_multisample
 void (APIENTRYP qglActiveTextureARB) (GLenum texture);
 void (APIENTRYP qglClientActiveTextureARB) (GLenum texture);
 void (APIENTRYP qglMultiTexCoord2fARB) (GLenum target, GLfloat s, GLfloat t);
 
+// GL_EXT_compiled_vertex_array
 void (APIENTRYP qglLockArraysEXT) (GLint first, GLsizei count);
 void (APIENTRYP qglUnlockArraysEXT) (void);
+
+// GL_ARB_texture_compression
+void (APIENTRYP qglCompressedTexImage2DARB) (GLenum target, GLint level,
+						GLenum internalformat,
+						GLsizei width, GLsizei height,
+						GLint border, GLsizei imageSize,
+						const GLvoid *data);
 
 /*
 ===============
@@ -578,6 +587,7 @@ static void GLimp_InitExtensions( void )
 	ri.Printf( PRINT_ALL, "Initializing OpenGL extensions\n" );
 
 	glConfig.textureCompression = TC_NONE;
+	qglCompressedTexImage2DARB = NULL;
 
 	// GL_EXT_texture_compression_s3tc
 	if ( GLimp_HaveExtension( "GL_ARB_texture_compression" ) &&
@@ -586,6 +596,7 @@ static void GLimp_InitExtensions( void )
 		if ( r_ext_compressed_textures->value )
 		{
 			glConfig.textureCompression = TC_S3TC_ARB;
+			qglCompressedTexImage2DARB = SDL_GL_GetProcAddress( "glCompressedTexImage2DARB" );
 			ri.Printf( PRINT_ALL, "...using GL_EXT_texture_compression_s3tc\n" );
 		}
 		else
