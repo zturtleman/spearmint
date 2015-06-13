@@ -418,7 +418,7 @@ static void SetupLinear( textureLevel_t **pic, int width, int height,
 
 		for( j = 0; j < size; j++ ) {
 			while( bitsStored < bitCount ) {
-				bits |= (*(unsigned int *)data << bitsStored);
+				bits |= ((uint64_t)(*(unsigned int *)data) << bitsStored);
 				bitsStored += 32;
 			}
 			if( RMask )
