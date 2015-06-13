@@ -2260,7 +2260,7 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 	{
 		GL_Bind(image);
 
-		if (pic)
+		if (pic[0].data)
 		{
 			Upload32( numTexLevels, pic, image->type, image->flags,
 				isLightmap, image->internalFormat, &image->uploadWidth,
