@@ -466,17 +466,17 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 	//
 	// load the file
 	//
-	length = ri.FS_ReadFile ( ( char * ) name, &buffer.v);
-	if (!buffer.b || length < 0) {
+	length = ri.FS_ReadFile ( ( char * ) name, &buffer.v );
+	if ( !buffer.b || length < 0 ) {
 		return;
 	}
 
 	if( length < 4 || Q_strncmp((char *)buffer.v, "DDS ", 4) ) {
-		ri.Error( ERR_DROP, "LoadDDS: missig DDS signature (%s)\n", name );
+		ri.Error( ERR_DROP, "LoadDDS: Missing DDS signature (%s)", name );
 	}
 
 	if( length < 4 + sizeof(DDS_HEADER) ) {
-		ri.Error( ERR_DROP, "LoadDDS: DDS header missing (%s)\n", name );
+		ri.Error( ERR_DROP, "LoadDDS: DDS header missing (%s)", name );
 	}
 	hdr = (DDS_HEADER *)(buffer.b + 4);
 	LL(hdr->dwSize);
@@ -497,7 +497,16 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 
 	if( hdr->dwSize != sizeof( DDS_HEADER ) ||
 	    hdr->ddspf.dwSize != sizeof( DDS_PIXELFORMAT ) ) {
-		ri.Error( ERR_DROP, "LoadDDS: DDS header missing (%s)\n", name );
+		ri.Error( ERR_DROP, "LoadDDS: DDS header missing (%s)", name );
+	}
+
+	if ( hdr->dwCubemapFlags & DDSCAPS2_CUBEMAP )
+	{
+		ri.Printf( PRINT_WARNING, "LoadDDS: Cube map images are not supported (%s)\n", name );
+	}
+	else if ( ( hdr->dwCubemapFlags & DDSCAPS2_VOLUME ) && ( hdr->dwHeaderFlags & DDSD_DEPTH ) )
+	{
+		ri.Printf( PRINT_WARNING, "LoadDDS: 3D images are not supported (%s)\n", name );
 	}
 
 	// analyze the header
@@ -582,7 +591,7 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 				hdr->ddspf.dwABitMask = 0;
 				break;
 			default:
-				ri.Error( ERR_DROP, "LoadDDS: unsupported texture format(%s)\n", name );
+				ri.Error( ERR_DROP, "LoadDDS: Unsupported DXGI format (%s)", name );
 			}
 		} else {
 			// check if it is one of the DXTn formats
@@ -598,7 +607,7 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 			case D3DFMT_DXT5:
 				glFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 				break;
-// should we support compressed luminance-alpha	formats too ?
+// should we support compressed luminance-alpha formats too ?
 #ifdef GL_COMPRESSED_LUMINANCE_LATC1_EXT
 			case D3DFMT_ATI1:
 				glFormat = GL_COMPRESSED_LUMINANCE_LATC1_EXT;
@@ -737,7 +746,7 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 				hdr->ddspf.dwABitMask = 0xf0;
 				break;
 			default:
-				ri.Error( ERR_DROP, "LoadDDS: unsupported texture format(%s)\n", name );
+				ri.Error( ERR_DROP, "LoadDDS: Unsupported texture format (%s)", name );
 				break;
 			}
 		}
@@ -746,29 +755,39 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 		glFormat = GL_RGBA8;
 	}
 
-	switch( glFormat ) {
-	case GL_RGBA8:
-		SetupLinear( pic, hdr->dwWidth, hdr->dwHeight,
-			     hdr->ddspf.dwRGBBitCount,
-			     hdr->ddspf.dwRBitMask, hdr->ddspf.dwGBitMask,
-			     hdr->ddspf.dwBBitMask, hdr->ddspf.dwABitMask,
-			     mipmaps, base );
-		break;
-	case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-		SetupBlocks( pic, hdr->dwWidth, hdr->dwHeight, glFormat,
-			     4, 4, 8, mipmaps, base );
-		break;
-	case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-		SetupBlocks( pic, hdr->dwWidth, hdr->dwHeight, glFormat,
-			     4, 4, 16, mipmaps, base );
-		break;
-	case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-		SetupBlocks( pic, hdr->dwWidth, hdr->dwHeight, glFormat,
-			     4, 4, 16, mipmaps, base );
-		break;
-	}
+	if ( !qglCompressedTexImage2DARB && (
+			glFormat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ||
+			glFormat == GL_COMPRESSED_RGBA_S3TC_DXT3_EXT ||
+			glFormat == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT ) ) {
+		ri.Printf( PRINT_WARNING, "LoadDDS: DXTn decompression is not supported by GPU driver (%s)\n", name );
+	} else {
+		switch( glFormat ) {
+		case GL_RGBA8:
+			SetupLinear( pic, hdr->dwWidth, hdr->dwHeight,
+					 hdr->ddspf.dwRGBBitCount,
+					 hdr->ddspf.dwRBitMask, hdr->ddspf.dwGBitMask,
+					 hdr->ddspf.dwBBitMask, hdr->ddspf.dwABitMask,
+					 mipmaps, base );
+			break;
+		case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+			SetupBlocks( pic, hdr->dwWidth, hdr->dwHeight, glFormat,
+					 4, 4, 8, mipmaps, base );
+			break;
+		case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+			SetupBlocks( pic, hdr->dwWidth, hdr->dwHeight, glFormat,
+					 4, 4, 16, mipmaps, base );
+			break;
+		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+			SetupBlocks( pic, hdr->dwWidth, hdr->dwHeight, glFormat,
+					 4, 4, 16, mipmaps, base );
+			break;
+		default:
+			ri.Error( ERR_DROP, "LoadDDS: GL format %x not supported (%s)", glFormat, name );
+			break;
+		}
 
-	*numTexLevels = mipmaps;
+		*numTexLevels = mipmaps;
+	}
 
 	ri.FS_FreeFile (buffer.v);
 }
