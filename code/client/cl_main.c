@@ -2467,10 +2467,9 @@ Resend a connect message if the last one has timed out
 */
 void CL_CheckForResend( void ) {
 	int		port, i;
-	int		size, j;
 	int		protocol;
 	char	info[MAX_INFO_STRING];
-	char	data[MAX_INFO_STRING*CL_MAX_SPLITVIEW];
+	char	data[(MAX_INFO_STRING+3)*CL_MAX_SPLITVIEW + 7];
 
 	// don't send anything if playing back a demo
 	if ( clc.demoplaying ) {
@@ -2514,46 +2513,27 @@ void CL_CheckForResend( void ) {
 #endif
 			protocol = com_protocol->integer;
 		
-		strcpy(data, "connect ");
-		size = 8;
+		Q_strncpyz( data, "connect", sizeof( data ) );
 
-		for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
-			if (!(clc.desiredPlayerBits & (1<<(i)))) {
-				// Dummy string.
-				data[size] = '"'; size++;
-				data[size] = '"'; size++;
-
-				// Add space between info strings.
-				if (i != CL_MAX_SPLITVIEW-1) {
-					data[size] = ' '; size++;
-				}
+		for ( i = 0; i < CL_MAX_SPLITVIEW; i++ ) {
+			if ( !( clc.desiredPlayerBits & ( 1 << i ) ) ) {
+				// dummy string so server knows which local player the
+				// following info strings are for
+				Q_strcat( data, sizeof( data ), " \"\"" );
 				continue;
 			}
 
 			Q_strncpyz( info, Cvar_InfoString( cl_userinfoFlags[i] ), sizeof( info ) );
 
-			Info_SetValueForKey( info, "protocol", va("%i", protocol ) );
-			Info_SetValueForKey( info, "qport", va("%i", port ) );
-			Info_SetValueForKey( info, "challenge", va("%i", clc.challenge ) );
+			Info_SetValueForKey( info, "protocol", va( "%i", protocol ) );
+			Info_SetValueForKey( info, "qport", va( "%i", port ) );
+			Info_SetValueForKey( info, "challenge", va( "%i", clc.challenge ) );
 
-			// TTimo adding " " around the userinfo string to avoid truncated userinfo on the server
-			//   (Com_TokenizeString tokenizes around spaces)
-			data[size] = '"'; size++;
-			for(j = 0; j < strlen(info); j++) {
-				data[size+j] = info[j];	// + (clc.challenge)&0x3;
-			}
-			size += j;
-			data[size] = '"'; size++;
-
-			// Add space between info strings.
-			if (i != CL_MAX_SPLITVIEW-1) {
-				data[size] = ' '; size++;
-			}
+			Q_strcat( data, sizeof( data ), va( " \"%s\"", info ) );
 		}
-		data[size] = 0;
 
-		// NOTE TTimo don't forget to set the right data length!
-		NET_OutOfBandData( NS_CLIENT, clc.serverAddress, (byte *) &data[0], size );
+		NET_OutOfBandData( NS_CLIENT, clc.serverAddress, (byte *) data, strlen ( data ) );
+
 		// the most current userinfo has been sent, so watch for any
 		// newer changes to userinfo variables
 		cvar_modifiedFlags &= ~CVAR_USERINFO_ALL;
