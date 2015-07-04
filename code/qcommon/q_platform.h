@@ -177,14 +177,16 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 //================================================================= LINUX ===
 
-#if defined(__linux__) || defined(__FreeBSD_kernel__)
+#if defined(__linux__) || defined(__FreeBSD_kernel__) || defined(__GNU__)
 
 #include <endian.h>
 
 #if defined(__linux__)
 #define OS_STRING "linux"
-#else
+#elif defined(__FreeBSD_kernel__)
 #define OS_STRING "kFreeBSD"
+#else
+#define OS_STRING "GNU"
 #endif
 
 #define ID_INLINE inline
@@ -213,6 +215,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define ARCH_STRING "sparc"
 #elif defined __arm__
 #define ARCH_STRING "arm"
+#elif defined __aarch64__
+#define ARCH_STRING "aarch64"
 #elif defined __cris__
 #define ARCH_STRING "cris"
 #elif defined __hppa__
