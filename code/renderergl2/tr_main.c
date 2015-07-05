@@ -1943,6 +1943,10 @@ See if a sprite is inside a fog volume
 =================
 */
 int R_SpriteFogNum( trRefEntity_t *ent ) {
+	if ( ent->e.renderfx & RF_CROSSHAIR ) {
+		return 0;
+	}
+
 	return R_PointFogNum( &tr.refdef, ent->e.origin, ent->e.radius );
 }
 
