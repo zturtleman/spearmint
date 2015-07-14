@@ -190,7 +190,7 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t *world ) {
 	vec3_t	lightOrigin;
 	int		pos[3];
 	int		i, j;
-	int		startGridPos;
+	int		gridIndex;
 	float	frac[3];
 	int		gridStep[3];
 	vec3_t	direction;
@@ -232,7 +232,7 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t *world ) {
 	gridStep[0] = 1;
 	gridStep[1] = world->lightGridBounds[0];
 	gridStep[2] = world->lightGridBounds[0] * world->lightGridBounds[1];
-	startGridPos = pos[0] * gridStep[0] + pos[1] * gridStep[1] + pos[2] * gridStep[2];
+	gridIndex = pos[0] * gridStep[0] + pos[1] * gridStep[1] + pos[2] * gridStep[2];
 
 	totalFactor = 0;
 	for ( i = 0 ; i < 8 ; i++ ) {
@@ -240,19 +240,19 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t *world ) {
 		byte	*data;
 		int		lat, lng;
 		vec3_t	normal;
-		int		gridPos;
+		int		index;
 		#if idppc
 		float d0, d1, d2, d3, d4, d5;
 		#endif
 		factor = 1.0;
-		gridPos = startGridPos;
+		index = gridIndex;
 		for ( j = 0 ; j < 3 ; j++ ) {
 			if ( i & (1<<j) ) {
 				if ( pos[j] + 1 > world->lightGridBounds[j] - 1 ) {
 					break; // ignore values outside lightgrid
 				}
 				factor *= frac[j];
-				gridPos += gridStep[j];
+				index += gridStep[j];
 			} else {
 				factor *= (1.0f - frac[j]);
 			}
@@ -263,21 +263,14 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t *world ) {
 		}
 
 		if ( world->lightGridArray ) {
-			if ( gridPos >= world->numGridArrayPoints ) {
-				continue;
-			}
-			gridPos = world->lightGridArray[gridPos];
+			index = world->lightGridArray[index];
 		}
 
-		if ( gridPos >= world->numGridPoints ) {
-			continue;
-		}
-
-		data = world->lightGridData + gridPos * 8;
+		data = world->lightGridData + index * 8;
 
 		if (world->hdrLightGrid)
 		{
-			float *hdrData = world->hdrLightGrid + (int)(data - world->lightGridData) / 8 * 6;
+			float *hdrData = world->hdrLightGrid + index * 6;
 			if (!(hdrData[0]+hdrData[1]+hdrData[2]+hdrData[3]+hdrData[4]+hdrData[5]) ) {
 				continue;	// ignore samples in walls
 			}
@@ -303,8 +296,7 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t *world ) {
 		#else
 		if (world->hdrLightGrid)
 		{
-			// FIXME: this is hideous
-			float *hdrData = world->hdrLightGrid + (int)(data - world->lightGridData) / 8 * 6;
+			float *hdrData = world->hdrLightGrid + index * 6;
 
 			ent->ambientLight[0] += factor * hdrData[0];
 			ent->ambientLight[1] += factor * hdrData[1];
