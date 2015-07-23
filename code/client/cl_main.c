@@ -3582,7 +3582,7 @@ void CL_Init( void ) {
 	// ~ and `, as keys and characters
 	cl_consoleKeys = Cvar_Get( "cl_consoleKeys", "~ ` 0x7e 0x60", CVAR_ARCHIVE);
 
-	cl_loadingScreenIndex = Cvar_Get( "cl_loadingScreenIndex", "0", CVAR_ARCHIVE );
+	cl_loadingScreenIndex = Cvar_Get( "cl_loadingScreenIndex", "0", CVAR_ARCHIVE | CVAR_NORESTART );
 
 	// select which local players (using bits) should join a server on connect
 	Cvar_Get ("cl_localPlayers", "1", 0 );
