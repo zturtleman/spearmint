@@ -4,9 +4,9 @@
 # GNU Make required
 #
 
-COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]')
+COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
-COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/x86/)
+COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/x86/ | sed -e 's/^arm.*/arm/')
 
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
@@ -28,16 +28,42 @@ endif
 #############################################################################
 -include Makefile.local
 
+ifeq ($(COMPILE_PLATFORM),cygwin)
+  PLATFORM=mingw32
+endif
+
 ifndef PLATFORM
 PLATFORM=$(COMPILE_PLATFORM)
 endif
 export PLATFORM
+
+ifeq ($(PLATFORM),mingw32)
+  MINGW=1
+endif
+ifeq ($(PLATFORM),mingw64)
+  MINGW=1
+endif
+
+ifeq ($(COMPILE_ARCH),i86pc)
+  COMPILE_ARCH=x86
+endif
+
+ifeq ($(COMPILE_ARCH),amd64)
+  COMPILE_ARCH=x86_64
+endif
+ifeq ($(COMPILE_ARCH),x64)
+  COMPILE_ARCH=x86_64
+endif
 
 ifeq ($(COMPILE_ARCH),powerpc)
   COMPILE_ARCH=ppc
 endif
 ifeq ($(COMPILE_ARCH),powerpc64)
   COMPILE_ARCH=ppc64
+endif
+
+ifeq ($(COMPILE_ARCH),axp)
+  COMPILE_ARCH=alpha
 endif
 
 ifndef ARCH
@@ -124,19 +150,14 @@ BASE_CFLAGS+=-DCom_Memcpy=memcpy -DCom_Memset=memset
 # SETUP AND BUILD -- Linux
 #############################################################################
 
-## Defaults
-LIB=lib
-
 INSTALL=install
 MKDIR=mkdir
 
-ifeq ($(PLATFORM),linux)
+ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu" "gnu"))
+  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
+    -DARCH_STRING=\\\"$(ARCH)\\\"
 
-  BASE_CFLAGS+= -Dstricmp=strcasecmp -DBSPC -Wall
-
-  ifeq ($(ARCH),alpha)
-    ARCH=axp
-  endif
+  BASE_CFLAGS += -DBSPC -Dstricmp=strcasecmp
 
   ifeq ($(ARCH),x86)
     # linux32 make ...
@@ -163,7 +184,7 @@ ifeq ($(PLATFORM),darwin)
 
   BINEXT=
 
-  BASE_CFLAGS+= -DBSPC -Wall -Dstricmp=strcasecmp
+  BASE_CFLAGS+= -DBSPC -Wall -Wimplicit -Wstrict-prototypes -Dstricmp=strcasecmp
   ifeq ($(ARCH),x86)
     # build 32bit
     BASE_CFLAGS += -m32
@@ -182,7 +203,7 @@ else # ifeq darwin
 # SETUP AND BUILD -- MINGW32
 #############################################################################
 
-ifeq ($(PLATFORM),mingw32)
+ifdef MINGW
 
   ifeq ($(CROSS_COMPILING),1)
     # If CC is already set to something generic, we probably want to use
@@ -196,7 +217,7 @@ ifeq ($(PLATFORM),mingw32)
       MINGW_PREFIXES=amd64-mingw32msvc x86_64-w64-mingw32
     endif
     ifeq ($(ARCH),x86)
-      MINGW_PREFIXES=i586-mingw32msvc i686-w64-mingw32
+      MINGW_PREFIXES=i586-mingw32msvc i686-w64-mingw32 i686-pc-mingw32
     endif
 
     ifndef CC
@@ -222,7 +243,7 @@ ifeq ($(PLATFORM),mingw32)
 
   BINEXT=.exe
 
-  BASE_CFLAGS+= -DBSPC -Wall
+  BASE_CFLAGS+= -DBSPC -Wall -Wimplicit -Wstrict-prototypes
   ifeq ($(ARCH),x86)
     # build 32bit
     BASE_CFLAGS += -m32
@@ -239,7 +260,7 @@ ifeq ($(PLATFORM),mingw32)
 
   LDFLAGS=-lws2_32 -lwinmm -mwindows
 
-else # ifeq mingw32
+else # ifdef MINGW
 
 #############################################################################
 # SETUP AND BUILD -- FREEBSD
