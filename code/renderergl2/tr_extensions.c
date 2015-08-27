@@ -120,8 +120,10 @@ void            (APIENTRY * qglGetShaderSourceARB) (GLhandleARB obj, GLsizei max
 // GL_ARB_texture_compression
 void (APIENTRY * qglCompressedTexImage3DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, 
 	GLsizei depth, GLint border, GLsizei imageSize, const GLvoid *data);
+#if 0 // Spearmint: Moved to sdl_glimp.c
 void (APIENTRY * qglCompressedTexImage2DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height,
 	GLint border, GLsizei imageSize, const GLvoid *data);
+#endif
 void (APIENTRY * qglCompressedTexImage1DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLint border,
 	GLsizei imageSize, const GLvoid *data);
 void (APIENTRY * qglCompressedTexSubImage3DARB)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
