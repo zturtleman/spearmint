@@ -143,6 +143,7 @@ extern cvar_t *r_ext_max_anisotropy;
 extern cvar_t *r_stereoEnabled;
 
 extern	cvar_t	*r_saveFontData;
+extern	cvar_t	*r_fontBorderWidth;
 
 qboolean	R_GetModeInfo( int *width, int *height, float *windowAspect, int mode );
 

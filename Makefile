@@ -1559,6 +1559,9 @@ ifneq ($(USE_INTERNAL_FREETYPE),0)
     $(B)/renderergl1/ftinit.o \
     $(B)/renderergl1/ftsystem.o \
     $(B)/renderergl1/ftbase.o \
+    $(B)/renderergl1/ftstroke.o \
+    $(B)/renderergl1/ftglyph.o \
+    $(B)/renderergl1/ftbitmap.o \
 	\
     $(B)/renderergl1/ftbzip2.o \
     $(B)/renderergl1/ftgzip.o \
