@@ -365,7 +365,8 @@ FT_Bitmap *R_RenderGlyph(FT_GlyphSlot glyph, glyphInfo_t* glyphOut, float border
 		bit2 = ri.Malloc(sizeof(FT_Bitmap));
 		bit2->buffer = NULL;
 
-		if ( R_RenderOutlineBitmap( glyph, bit2, borderWidth ) ) {
+		// ZTM: FIXME: Why is R_RenderOutlineBitmap with borderWidth == 0 different than FT_Outline_Get_Bitmap?
+		if ( borderWidth != 0 && R_RenderOutlineBitmap( glyph, bit2, borderWidth ) ) {
 			// check how much the border increased the size of the glyph
 			borderSizeX = bit2->width - width;
 			borderSizeY = bit2->rows - height;
