@@ -490,9 +490,9 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 /*
 		// need to convert to power of 2 sizes so we do not get 
 		// any scaling from the gl upload
-		for (scaled_width = 1 ; scaled_width < glyph.pitch ; scaled_width<<=1)
+		for (scaled_width = 1 ; scaled_width < bitmap->width ; scaled_width<<=1)
 			;
-		for (scaled_height = 1 ; scaled_height < glyph.height ; scaled_height<<=1)
+		for (scaled_height = 1 ; scaled_height < bitmap->rows ; scaled_height<<=1)
 			;
 */
 
