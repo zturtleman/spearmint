@@ -144,6 +144,7 @@ extern cvar_t *r_stereoEnabled;
 
 extern	cvar_t	*r_saveFontData;
 extern	cvar_t	*r_fontBorderWidth;
+extern	cvar_t	*r_fontForceAutoHint;
 
 qboolean	R_GetModeInfo( int *width, int *height, float *windowAspect, int mode );
 

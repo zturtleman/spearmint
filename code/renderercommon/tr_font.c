@@ -472,7 +472,13 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 	Com_Memset(&glyph, 0, sizeof(glyphInfo_t));
 	// make sure everything is here
 	if (face != NULL) {
-		FT_Load_Glyph(face, FT_Get_Char_Index( face, c), FT_LOAD_DEFAULT );
+		int loadFlags = FT_LOAD_DEFAULT | FT_LOAD_NO_BITMAP;
+
+		if ( r_fontForceAutoHint->integer ) {
+			loadFlags |= FT_LOAD_FORCE_AUTOHINT;
+		}
+
+		FT_Load_Glyph( face, FT_Get_Char_Index( face, c ), loadFlags );
 		bitmap = R_RenderGlyph(face->glyph, &glyph, borderWidth);
 		if (!bitmap) {
 			return &glyph;
