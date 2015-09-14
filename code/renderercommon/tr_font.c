@@ -461,7 +461,7 @@ static void WriteTGA (char *filename, byte *data, int width, int height) {
 	ri.Free (buffer);
 }
 
-static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut, int *xOut, int *yOut, int *maxHeight, FT_Face face, unsigned long c, float borderWidth, qboolean calcHeight) {
+static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut, int *xOut, int *yOut, int *rowHeight, FT_Face face, unsigned long c, float borderWidth) {
 	int i;
 	static glyphInfo_t glyph;
 	unsigned char *src, *dst;
@@ -477,14 +477,8 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 			return &glyph;
 		}
 
-		if (glyph.height > *maxHeight) {
-			*maxHeight = glyph.height;
-		}
-
-		if (calcHeight) {
-			ri.Free(bitmap->buffer);
-			ri.Free(bitmap);
-			return &glyph;
+		if (glyph.height > *rowHeight) {
+			*rowHeight = glyph.height;
 		}
 
 /*
@@ -502,12 +496,14 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 		// we need to make sure we fit
 		if (*xOut + scaled_width + 1 >= imageSize-1) {
 			*xOut = 0;
-			*yOut += *maxHeight + 1;
+			*yOut += *rowHeight + 1;
+			*rowHeight = 0;
 		}
 
-		if (*yOut + *maxHeight + 1 >= imageSize-1) {
+		if (*yOut + scaled_height + 1 >= imageSize-1) {
 			*yOut = -1;
 			*xOut = -1;
+			*rowHeight = 0;
 			ri.Free(bitmap->buffer);
 			ri.Free(bitmap);
 			return &glyph;
@@ -699,7 +695,7 @@ R_LoadScalableFont
 qboolean R_LoadScalableFont( const char *name, int pointSize, float borderWidth, fontInfo_t *font ) {
 	FT_Face		face;
 	int			j, k, xOut, yOut, lastStart, imageNumber;
-	int			scaledSize, maxHeight;
+	int			scaledSize, rowHeight;
 	unsigned char *out;
 	glyphInfo_t *glyph;
 	image_t		*image;
@@ -775,12 +771,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, float borderWidth,
 	}
 	Com_Memset(out, 0, imageSize*imageSize*4);
 
-	maxHeight = 0;
-
-	for (i = GLYPH_START; i <= GLYPH_END; i++) {
-		RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &maxHeight, face, R_RemapGlyphCharacter(i), borderWidth, qtrue);
-	}
-
+	rowHeight = 0;
 	xOut = 0;
 	yOut = 0;
 	i = GLYPH_START;
@@ -793,7 +784,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, float borderWidth,
 			// upload/save current image buffer
 			xOut = yOut = -1;
 		} else {
-			glyph = RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &maxHeight, face, R_RemapGlyphCharacter(i), borderWidth, qfalse);
+			glyph = RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &rowHeight, face, R_RemapGlyphCharacter(i), borderWidth);
 		}
 
 		if (xOut == -1 || yOut == -1)  {
