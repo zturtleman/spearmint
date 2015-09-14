@@ -463,16 +463,15 @@ static void WriteTGA (char *filename, byte *data, int width, int height) {
 
 // returns NULL if glyph does not fit in image
 static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut, int *xOut, int *yOut, int *rowHeight, FT_Face face, unsigned long c, float borderWidth) {
-	int i;
+	int i, loadFlags;
 	static glyphInfo_t glyph;
 	unsigned char *src, *dst;
-	float scaled_width, scaled_height;
 	FT_Bitmap *bitmap = NULL;
 
 	Com_Memset(&glyph, 0, sizeof(glyphInfo_t));
 	// make sure everything is here
 	if (face != NULL) {
-		int loadFlags = FT_LOAD_DEFAULT | FT_LOAD_NO_BITMAP;
+		loadFlags = FT_LOAD_DEFAULT | FT_LOAD_NO_BITMAP;
 
 		if ( r_fontForceAutoHint->integer ) {
 			loadFlags |= FT_LOAD_FORCE_AUTOHINT;
@@ -484,47 +483,35 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 			return &glyph;
 		}
 
-		if (glyph.height > *rowHeight) {
-			*rowHeight = glyph.height;
+		if (bitmap->rows > *rowHeight) {
+			*rowHeight = bitmap->rows;
 		}
 
-/*
-		// need to convert to power of 2 sizes so we do not get 
-		// any scaling from the gl upload
-		for (scaled_width = 1 ; scaled_width < bitmap->width ; scaled_width<<=1)
-			;
-		for (scaled_height = 1 ; scaled_height < bitmap->rows ; scaled_height<<=1)
-			;
-*/
-
-		scaled_width = bitmap->width;
-		scaled_height = bitmap->rows;
-
 		// we need to make sure we fit
-		if (*xOut + scaled_width + 1 >= imageSize-1) {
+		if (*xOut + bitmap->width + 1 >= imageSize-1) {
 			*xOut = 0;
 			*yOut += *rowHeight + 1;
 			*rowHeight = 0;
 		}
 
-		if (*yOut + scaled_height + 1 >= imageSize-1) {
+		if (*yOut + bitmap->rows + 1 >= imageSize-1) {
 			ri.Free(bitmap->buffer);
 			ri.Free(bitmap);
 			return NULL;
 		}
 
-
+		// convert glyph image into a 32 bit RGBA image
 		src = bitmap->buffer;
 		dst = imageOut + (*yOut * imageSize * 4) + *xOut * 4;
 
 		if (bitmap->pixel_mode == FT_PIXEL_MODE_MONO) {
-			for (i = 0; i < glyph.height; i++) {
+			for (i = 0; i < bitmap->rows; i++) {
 				int j;
 				unsigned char *_src = src;
 				unsigned char *_dst = dst;
 				unsigned char mask = 0x80;
 				unsigned char val = *_src;
-				for (j = 0; j < glyph.pitch; j++) {
+				for (j = 0; j < bitmap->pitch; j++) {
 					if (mask == 0x80) {
 						val = *_src++;
 					}
@@ -542,49 +529,44 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 					_dst += 4;
 				}
 
-				src += glyph.pitch;
+				src += bitmap->pitch;
 				dst += imageSize * 4;
 			}
 		} else if (bitmap->pixel_mode == FT_PIXEL_MODE_GRAY) {
 			int j;
-			for (i = 0; i < glyph.height; i++) {
-				for ( j = 0; j < glyph.pitch; j++ ) {
+			for (i = 0; i < bitmap->rows; i++) {
+				for ( j = 0; j < bitmap->pitch; j++ ) {
 					dst[j*4] = 255;
 					dst[j*4+1] = 255;
 					dst[j*4+2] = 255;
 					dst[j*4+3] = src[j];
 				}
-				src += glyph.pitch;
+				src += bitmap->pitch;
 				dst += imageSize * 4;
 			}
 		} else {
 			// FT_PIXEL_MODE_BGRA
 			int j;
 			// swap BGRA src to RGBA dst
-			for (i = 0; i < glyph.height; i++) {
-				for ( j = 0; j < glyph.pitch; j += 4 ) {
+			for (i = 0; i < bitmap->rows; i++) {
+				for ( j = 0; j < bitmap->pitch; j += 4 ) {
 					dst[j+0] = src[j+2];	// red
 					dst[j+1] = src[j+1];	// green
 					dst[j+2] = src[j+0];	// blue
 					dst[j+3] = src[j+3];	// alpha
 				}
-				src += glyph.pitch;
+				src += bitmap->pitch;
 				dst += imageSize * 4;
 			}
 		}
 
-		// we now have an 8 bit per pixel grey scale bitmap 
-		// that is width wide and pf->ftSize->metrics.y_ppem tall
-
-		glyph.imageHeight = scaled_height;
-		glyph.imageWidth = scaled_width;
-
-		// texture coords are set after the image height is known
-		// x and y are temporarily stored in s and t
+		// store the pixel values in texture coords until the image height is known
 		glyph.s = *xOut;
 		glyph.t = *yOut;
+		glyph.imageWidth = bitmap->width;
+		glyph.imageHeight = bitmap->rows;
 
-		*xOut += scaled_width + 1;
+		*xOut += bitmap->width + 1;
 
 		ri.Free(bitmap->buffer);
 		ri.Free(bitmap);
