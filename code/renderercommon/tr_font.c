@@ -461,6 +461,7 @@ static void WriteTGA (char *filename, byte *data, int width, int height) {
 	ri.Free (buffer);
 }
 
+// returns NULL if glyph does not fit in image
 static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut, int *xOut, int *yOut, int *rowHeight, FT_Face face, unsigned long c, float borderWidth) {
 	int i;
 	static glyphInfo_t glyph;
@@ -501,12 +502,9 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 		}
 
 		if (*yOut + scaled_height + 1 >= imageSize-1) {
-			*yOut = -1;
-			*xOut = -1;
-			*rowHeight = 0;
 			ri.Free(bitmap->buffer);
 			ri.Free(bitmap);
-			return &glyph;
+			return NULL;
 		}
 
 
@@ -574,10 +572,11 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 
 		glyph.imageHeight = scaled_height;
 		glyph.imageWidth = scaled_width;
-		glyph.s = (float)*xOut / imageSize;
-		glyph.t = (float)*yOut / imageSize;
-		glyph.s2 = glyph.s + (float)scaled_width / imageSize;
-		glyph.t2 = glyph.t + (float)scaled_height / imageSize;
+
+		// texture coords are set after the image height is known
+		// x and y are temporarily stored in s and t
+		glyph.s = *xOut;
+		glyph.t = *yOut;
 
 		*xOut += scaled_width + 1;
 
@@ -711,6 +710,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, float borderWidth,
 	char		datName[MAX_QPATH];
 	char		strippedName[MAX_QPATH];
 	float		screenScale;
+	int			saveHeight;
 
 	if (ftLibrary == NULL) {
 		ri.Printf(PRINT_WARNING, "RE_RegisterFont: FreeType not initialized.\n");
@@ -782,12 +782,12 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, float borderWidth,
 
 		if ( i == GLYPH_END + 1 ) {
 			// upload/save current image buffer
-			xOut = yOut = -1;
+			glyph = NULL;
 		} else {
 			glyph = RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &rowHeight, face, R_RemapGlyphCharacter(i), borderWidth);
 		}
 
-		if (xOut == -1 || yOut == -1)  {
+		if (!glyph)  {
 			// ran out of room
 			// we need to create an image from the bitmap, set all the handles in the glyphs to this point
 			// 
@@ -809,21 +809,38 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, float borderWidth,
 				out[k+3] = ((float)out[k+3] * max);
 			}
 
-			Com_sprintf(imageName, sizeof(imageName), "%s_%i_%i.tga", strippedName, imageNumber++, pointSize);
-			if(r_saveFontData->integer && !ri.FS_FileExists(imageName)) {
-				WriteTGA(imageName, out, imageSize, imageSize);
+			// make sure last row doesn't get cut off when reducing image height
+			yOut += rowHeight + 1;
+
+			// check if image height can be reduced to a lower power of two
+			for ( saveHeight = 1; saveHeight < yOut; saveHeight <<= 1 );
+
+			if ( saveHeight > imageSize ) {
+				saveHeight = imageSize;
 			}
 
-			image = R_CreateImage(imageName, out, imageSize, imageSize, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE|IMGFLAG_MIPMAP, 0 );
+			Com_sprintf(imageName, sizeof(imageName), "%s_%i_%i.tga", strippedName, imageNumber++, pointSize);
+			if(r_saveFontData->integer && !ri.FS_FileExists(imageName)) {
+				WriteTGA(imageName, out, imageSize, saveHeight);
+			}
+
+			image = R_CreateImage(imageName, out, imageSize, saveHeight, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE|IMGFLAG_MIPMAP, 0 );
 			h = RE_RegisterShaderFromImage(imageName, LIGHTMAP_2D, image, qfalse);
 			for (j = lastStart; j < i; j++) {
 				font->glyphs[j].glyph = h;
 				COM_StripExtension(imageName, font->glyphs[j].shaderName, sizeof(font->glyphs[j].shaderName));
+
+				// fill in the texture coords now that image height is known
+				font->glyphs[j].s = (float)font->glyphs[j].s / imageSize;
+				font->glyphs[j].t = (float)font->glyphs[j].t / saveHeight;
+				font->glyphs[j].s2 = font->glyphs[j].s + (float)font->glyphs[j].imageWidth / imageSize;
+				font->glyphs[j].t2 = font->glyphs[j].t + (float)font->glyphs[j].imageHeight / saveHeight;
 			}
 			lastStart = i;
 			Com_Memset(out, 0, imageSize*imageSize*4);
 			xOut = 0;
 			yOut = 0;
+			rowHeight = 0;
 			if ( i == GLYPH_END + 1 )
 				i++;
 		} else {
