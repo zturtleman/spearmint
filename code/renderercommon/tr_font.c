@@ -483,21 +483,22 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 			return &glyph;
 		}
 
-		if (bitmap->rows > *rowHeight) {
-			*rowHeight = bitmap->rows;
-		}
-
 		// we need to make sure we fit
 		if (*xOut + bitmap->width + 1 >= imageSize-1) {
 			*xOut = 0;
 			*yOut += *rowHeight + 1;
-			*rowHeight = bitmap->rows;
+			*rowHeight = 0;
 		}
 
 		if (*yOut + bitmap->rows + 1 >= imageSize-1) {
 			ri.Free(bitmap->buffer);
 			ri.Free(bitmap);
 			return NULL;
+		}
+
+		// reserve vertical space in image
+		if (bitmap->rows > *rowHeight) {
+			*rowHeight = bitmap->rows;
 		}
 
 		// convert glyph image into a 32 bit RGBA image
