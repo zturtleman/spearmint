@@ -491,7 +491,7 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 		if (*xOut + bitmap->width + 1 >= imageSize-1) {
 			*xOut = 0;
 			*yOut += *rowHeight + 1;
-			*rowHeight = 0;
+			*rowHeight = bitmap->rows;
 		}
 
 		if (*yOut + bitmap->rows + 1 >= imageSize-1) {
