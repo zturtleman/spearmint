@@ -680,7 +680,7 @@ unsigned long R_RemapGlyphCharacter( int charIndex ) {
 R_LoadScalableFont
 ===============
 */
-qboolean R_LoadScalableFont( const char *name, int pointSize, float borderWidth, fontInfo_t *font ) {
+qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWidth, fontInfo_t *font ) {
 	FT_Face		face;
 	int			j, k, xOut, yOut, lastStart, imageNumber;
 	int			scaledSize, rowHeight;
@@ -694,7 +694,6 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, float borderWidth,
 	float		glyphScale;
 	void		*faceData;
 	int			i, len;
-	char		fontName[MAX_QPATH];
 	char		imageName[MAX_QPATH];
 	char		datName[MAX_QPATH];
 	char		strippedName[MAX_QPATH];
@@ -706,10 +705,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, float borderWidth,
 		return qfalse;
 	}
 
-	COM_StripExtension( name, strippedName, sizeof ( strippedName ) );
-
-	Q_strncpyz( fontName, name, sizeof ( fontName ) );
-	COM_DefaultExtension( fontName, sizeof ( fontName ), ".ttf" );
+	COM_StripExtension( fontName, strippedName, sizeof ( strippedName ) );
 
 	len = ri.FS_ReadFile(fontName, &faceData);
 	if (len <= 0) {
@@ -872,6 +868,11 @@ static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, fo
 	int			i;
 	char		strippedName[MAX_QPATH];
 	char		datName[MAX_QPATH];
+#ifdef BUILD_FREETYPE
+	char		altName[MAX_QPATH];
+	char		*scaleableFontExts[] = { "ttf", "otf", NULL };
+	const char	*ext;
+#endif
 
 	COM_StripExtension( name, strippedName, sizeof ( strippedName ) );
 	Com_sprintf( datName, sizeof ( datName ), "%s_%i.dat", strippedName, pointSize );
@@ -889,8 +890,34 @@ static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, fo
 	}
 
 #ifdef BUILD_FREETYPE
-	if ( R_LoadScalableFont( name, pointSize, borderWidth, font ) )
-		return qtrue;
+	ext = COM_GetExtension( name );
+
+	// if there is an extension, check if it's a supported format
+	if ( *ext ) {
+		for ( i = 0; scaleableFontExts[i] != NULL; i++ ) {
+			if ( Q_stricmp( ext, scaleableFontExts[i] ) != 0 ) {
+				continue;
+			}
+
+			if ( R_LoadScalableFont( name, pointSize, borderWidth, font ) ) {
+				return qtrue;
+			}
+			break;
+		}
+	}
+
+	// fallback to all formats, but don't retry the original extension
+	for ( i = 0; scaleableFontExts[i] != NULL; i++ ) {
+		if ( *ext && Q_stricmp( ext, scaleableFontExts[i] ) == 0 ) {
+			continue;
+		}
+
+		Com_sprintf( altName, sizeof (altName), "%s.%s", strippedName, scaleableFontExts[i] );
+
+		if ( R_LoadScalableFont( altName, pointSize, borderWidth, font ) ) {
+			return qtrue;
+		}
+	}
 #endif
 
 	if ( R_LoadPreRenderedFont( datName, font ) )
@@ -938,9 +965,9 @@ void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *vmFont, in
 	}
 
 #ifdef BUILD_FREETYPE
-	ri.Printf( PRINT_WARNING, "RE_RegisterFont: Failed to register font %s.\n", fontName );
+	ri.Printf( PRINT_DEVELOPER, "RE_RegisterFont: Failed to register font %s.\n", fontName );
 #else
-	ri.Printf( PRINT_WARNING, "RE_RegisterFont: Failed to register font %s (Note: FreeType code is not available).\n", fontName );
+	ri.Printf( PRINT_DEVELOPER, "RE_RegisterFont: Failed to register font %s (Note: FreeType code is not available).\n", fontName );
 #endif
 }
 
