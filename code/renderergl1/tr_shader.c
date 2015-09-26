@@ -175,9 +175,9 @@ void RE_SetSurfaceShader( int surfaceNum, const char *name ) {
 	if ( !name ) {
 		surf->shader = surf->originalShader;
 	} else if ( surf->originalShader ) {
-		surf->shader = R_FindShader( name, surf->originalShader->lightmapIndex, qtrue );
+		surf->shader = R_FindShader( name, surf->originalShader->lightmapIndex, MIP_RAW_IMAGE );
 	} else {
-		surf->shader = R_FindShader( name, LIGHTMAP_NONE, qtrue );
+		surf->shader = R_FindShader( name, LIGHTMAP_NONE, MIP_RAW_IMAGE );
 	}
 }
 
@@ -215,7 +215,7 @@ qhandle_t RE_GetSurfaceShader( int surfaceNum, int lightmapIndex ) {
 	}
 
 	if ( lightmapIndex < 0 && surf->shader->lightmapIndex != lightmapIndex ) {
-		shd = R_FindShader( surf->shader->name, lightmapIndex, qtrue );
+		shd = R_FindShader( surf->shader->name, lightmapIndex, MIP_RAW_IMAGE );
 
 		// ZTM: FIXME: I'm not sure forcing lighting diffuse is good idea...
 		//             at least allow const and waveform
@@ -3854,7 +3854,7 @@ most world construction surfaces.
 
 ===============
 */
-shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImage ) {
+shader_t *R_FindShader( const char *name, int lightmapIndex, imgFlags_t rawImageFlags ) {
 	char		strippedName[MAX_QPATH];
 	char		fileName[MAX_QPATH];
 	int			hash;
@@ -3931,7 +3931,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 			Q_strncpyz( storedAlias, aliasShader, sizeof ( storedAlias ) );
 
-			return R_FindShader( storedAlias, lightmapIndex, mipRawImage );
+			return R_FindShader( storedAlias, lightmapIndex, rawImageFlags );
 		}
 
 		// allow implicit mappings
@@ -3950,10 +3950,8 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	}
 
 	// implicit shaders were breaking nopicmip/nomipmaps
-	if ( !mipRawImage ) {
-		shader.noMipMaps = qtrue;
-		shader.noPicMip = qtrue;
-	}
+	shader.noMipMaps = !( rawImageFlags & IMGFLAG_MIPMAP );
+	shader.noPicMip = !( rawImageFlags & IMGFLAG_PICMIP );
 
 	//
 	// if not defined in the in-memory shader descriptions,
@@ -3964,14 +3962,13 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 		flags = IMGFLAG_NONE;
 
-		if (mipRawImage)
-		{
-			flags |= IMGFLAG_MIPMAP | shader_picmipFlag;
+		// allow implicit shaders to use picmip2
+		if ( rawImageFlags & IMGFLAG_PICMIP ) {
+			flags |= shader_picmipFlag;
+			rawImageFlags &= ~IMGFLAG_PICMIP;
 		}
-		else
-		{
-			flags |= IMGFLAG_CLAMPTOEDGE;
-		}
+
+		flags |= rawImageFlags;
 
 		image = R_FindImageFile( fileName, IMGTYPE_COLORALPHA, flags );
 		if ( !image ) {
@@ -4049,7 +4046,7 @@ qhandle_t RE_RegisterShaderEx( const char *name, int lightmapIndex, qboolean mip
 		return 0;
 	}
 
-	sh = R_FindShader( name, lightmapIndex, mipRawImage );
+	sh = R_FindShader( name, lightmapIndex, mipRawImage ? ( IMGFLAG_MIPMAP | IMGFLAG_PICMIP ) : IMGFLAG_CLAMPTOEDGE );
 
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
@@ -4084,11 +4081,40 @@ qhandle_t RE_RegisterShader( const char *name ) {
 ====================
 RE_RegisterShaderNoMip
 
-For menu graphics that should never be picmiped
+For menu graphics that should never be picmiped and not have mipmaps
 ====================
 */
 qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	return RE_RegisterShaderEx( name, LIGHTMAP_2D, qfalse );
+}
+
+/*
+====================
+RE_RegisterShaderNoPicMip
+
+For menu graphics that should never be picmiped but will have mipmaps
+====================
+*/
+qhandle_t RE_RegisterShaderNoPicMip( const char *name ) {
+	shader_t	*sh;
+
+	if ( strlen( name ) >= MAX_QPATH ) {
+		ri.Printf( PRINT_ALL, "Shader name exceeds MAX_QPATH\n" );
+		return 0;
+	}
+
+	sh = R_FindShader( name, LIGHTMAP_2D, IMGFLAG_MIPMAP | IMGFLAG_CLAMPTOEDGE );
+
+	// we want to return 0 if the shader failed to
+	// load for some reason, but R_FindShader should
+	// still keep a name allocated for it, so if
+	// something calls RE_RegisterShader again with
+	// the same name, we don't try looking for it again
+	if ( sh->defaultShader ) {
+		return 0;
+	}
+
+	return sh->index;
 }
 
 /*
@@ -4374,14 +4400,14 @@ static void CreateInternalShaders( void ) {
 }
 
 static void CreateExternalShaders( void ) {
-	tr.projectionShadowShader = R_FindShader( "projectionShadow", LIGHTMAP_NONE, qtrue );
-	tr.flareShader = R_FindShader( "flareShader", LIGHTMAP_NONE, qtrue );
+	tr.projectionShadowShader = R_FindShader( "projectionShadow", LIGHTMAP_NONE, MIP_RAW_IMAGE );
+	tr.flareShader = R_FindShader( "flareShader", LIGHTMAP_NONE, MIP_RAW_IMAGE );
 
 	if ( !tr.sunShaderName[0] ) {
 		Q_strncpyz( tr.sunShaderName, "sun", sizeof ( tr.sunShaderName ) );
 	}
 
-	tr.sunShader = R_FindShader( tr.sunShaderName, LIGHTMAP_NONE, qtrue );
+	tr.sunShader = R_FindShader( tr.sunShaderName, LIGHTMAP_NONE, MIP_RAW_IMAGE );
 }
 
 /*

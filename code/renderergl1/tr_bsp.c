@@ -337,7 +337,7 @@ static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 		lightmapNum = LIGHTMAP_WHITEIMAGE;
 	}
 
-	shader = R_FindShader( dsh->shader, lightmapNum, qtrue );
+	shader = R_FindShader( dsh->shader, lightmapNum, MIP_RAW_IMAGE );
 
 	// if the shader had errors, just use default shader
 	if ( shader->defaultShader ) {
@@ -1899,7 +1899,7 @@ static	void R_LoadFogs( const bspFile_t *bsp ) {
 		}
 
 		// get information from the shader for fog parameters
-		shader = R_FindShader( fogs->shader, LIGHTMAP_NONE, qtrue );
+		shader = R_FindShader( fogs->shader, LIGHTMAP_NONE, MIP_RAW_IMAGE );
 
 		out->shader = shader;
 
