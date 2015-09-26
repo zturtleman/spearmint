@@ -419,7 +419,7 @@ void RE_AddRefEntityToScene( const refEntity_t *ent, int entBufSize, int numVert
 		model_t *model = R_GetModelByHandle( ent->hModel );
 
 		if ( model && model->type == MOD_BRUSH ) {
-			model->bmodel->entityNum = r_numentities;
+			model->bmodel->entityNum = r_numentities - r_firstSceneEntity;
 		}
 	}
 
