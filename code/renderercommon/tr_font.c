@@ -646,7 +646,7 @@ qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 //		Com_Memcpy(font, faceData, sizeof(fontInfo_t));
 		Q_strncpyz(font->name, datName, sizeof(font->name));
 		for (i = GLYPH_START; i <= GLYPH_END; i++) {
-			font->glyphs[i].glyph = RE_RegisterShaderNoMip(font->glyphs[i].shaderName);
+			font->glyphs[i].glyph = RE_RegisterShaderNoPicMip(font->glyphs[i].shaderName);
 		}
 		Com_Memcpy(&registeredFont[registeredFontCount++], font, sizeof(fontInfo_t));
 		ri.FS_FreeFile(faceData);
