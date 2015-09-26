@@ -3325,7 +3325,8 @@ static void SetImplicitShaderStages( image_t *image ) {
 		stages[ 0 ].active = qtrue;
 		stages[ 0 ].rgbGen = CGEN_VERTEX;
 		stages[ 0 ].alphaGen = AGEN_SKIP;
-		stages[ 0 ].stateBits = GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+		// ZTM: NOTE: Moved GLS_DEPTHTEST_DISABLE to tr_shade.c for entity2D only so that it doesn't affect sprites
+		stages[ 0 ].stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
 		break;
 
 		// fullbright is disabled per atvi request

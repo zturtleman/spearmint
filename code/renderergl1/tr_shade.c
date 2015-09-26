@@ -1499,7 +1499,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			R_BindAnimatedImage( &pStage->bundle[0] );
 
-			GL_State( pStage->stateBits );
+			// Disable depth test for 2D drawing
+			if ( backEnd.currentEntity == &backEnd.entity2D ) {
+				GL_State( pStage->stateBits | GLS_DEPTHTEST_DISABLE );
+			} else {
+				GL_State( pStage->stateBits );
+			}
 
 			//
 			// draw
