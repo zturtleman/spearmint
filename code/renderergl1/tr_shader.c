@@ -4137,7 +4137,15 @@ void	R_ShaderList_f (void) {
 		ri.Printf( PRINT_ALL, "%i ", shader->numUnfoggedPasses );
 
 		if (shader->lightmapIndex >= 0 ) {
-			ri.Printf (PRINT_ALL, "L ");
+			ri.Printf (PRINT_ALL, "LM ");
+		} else if ( shader->lightmapIndex == LIGHTMAP_2D ) {
+			ri.Printf( PRINT_ALL, "2D " );
+		} else if ( shader->lightmapIndex == LIGHTMAP_BY_VERTEX ) {
+			ri.Printf( PRINT_ALL, "VT " );
+		} else if ( shader->lightmapIndex == LIGHTMAP_WHITEIMAGE ) {
+			ri.Printf( PRINT_ALL, "WI " );
+		} else if ( shader->lightmapIndex == LIGHTMAP_NONE ) {
+			ri.Printf( PRINT_ALL, "3D " );
 		} else {
 			ri.Printf (PRINT_ALL, "  ");
 		}
