@@ -1,3 +1,3 @@
 #!/bin/sh
-echo "Edit this script to change the path to ioquake3's dedicated server executable and which binary if you aren't on x86_64.\n Set the sv_dlURL setting to a url like http://yoursite.com/ioquake3_path for ioquake3 clients to download extra data"
-~/ioquake3/ioq3ded.x86_64 +set dedicated 2 +set sv_allowDownload 1 +set sv_dlURL "" +set com_hunkmegs 64 "$@"
+echo "Edit this script to change the path to Spearmint's dedicated server executable and which binary if you aren't on x86_64.\n Set the sv_dlURL setting to a url like http://yoursite.com/spearmint_path for clients to download extra data"
+~/spearmint/spearmint-server_x86_64 +set dedicated 2 +set sv_allowDownload 1 +set sv_dlURL "" +set com_hunkmegs 64 "$@"
