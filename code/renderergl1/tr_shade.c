@@ -1246,15 +1246,18 @@ static void ComputeColors( shaderStage_t *pStage )
 			float alpha, range, lowest, highest, dot;
 			vec3_t worldUp;
 			qboolean zombieEffect = qfalse;
+			vec3_t fireRiseDir = { 0, 0, 1 };
 
-			if ( VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
-				VectorSet( backEnd.currentEntity->e.fireRiseDir, 0, 0, 1 );
+#if 0
+			if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
+				VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 			}
+#endif
 
-			if ( backEnd.currentEntity->e.hModel ) {    // world surfaces dont have an axis
-				VectorRotate( backEnd.currentEntity->e.fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
+			if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
+				VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
 			} else {
-				VectorCopy( backEnd.currentEntity->e.fireRiseDir, worldUp );
+				VectorCopy( fireRiseDir, worldUp );
 			}
 
 			lowest = pStage->zFadeBounds[0];

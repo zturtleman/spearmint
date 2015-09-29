@@ -425,15 +425,18 @@ static void ProjectDlightTexture( void ) {
 			if (tess.shader->deforms[0].deformationWave.frequency < 0)
 			{
 				vec3_t worldUp;
+				vec3_t fireRiseDir = { 0, 0, 1 };
 
-				if ( VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
-					VectorSet( backEnd.currentEntity->e.fireRiseDir, 0, 0, 1 );
+#if 0
+				if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
+					VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 				}
+#endif
 
-				if ( backEnd.currentEntity->e.hModel ) {    // world surfaces dont have an axis
-					VectorRotate( backEnd.currentEntity->e.fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
+				if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
+					VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
 				} else {
-					VectorCopy( backEnd.currentEntity->e.fireRiseDir, worldUp );
+					VectorCopy( fireRiseDir, worldUp );
 				}
 
 				GLSL_SetUniformVec3(sp, UNIFORM_FIRERISEDIR, worldUp);
@@ -934,15 +937,18 @@ static void ForwardDlight( void ) {
 			|| pStage->alphaGen == AGEN_NORMALZFADE)
 		{
 			vec3_t worldUp;
+			vec3_t fireRiseDir = { 0, 0, 1 };
 
-			if ( VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
-				VectorSet( backEnd.currentEntity->e.fireRiseDir, 0, 0, 1 );
+#if 0
+			if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
+				VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 			}
+#endif
 
-			if ( backEnd.currentEntity->e.hModel ) {    // world surfaces dont have an axis
-				VectorRotate( backEnd.currentEntity->e.fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
+			if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
+				VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
 			} else {
-				VectorCopy( backEnd.currentEntity->e.fireRiseDir, worldUp );
+				VectorCopy( fireRiseDir, worldUp );
 			}
 
 			GLSL_SetUniformVec3(sp, UNIFORM_FIRERISEDIR, worldUp);
@@ -1261,15 +1267,18 @@ static void RB_FogPass( void ) {
 		if (tess.shader->deforms[0].deformationWave.frequency < 0)
 		{
 			vec3_t worldUp;
+			vec3_t fireRiseDir = { 0, 0, 1 };
 
-			if ( VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
-				VectorSet( backEnd.currentEntity->e.fireRiseDir, 0, 0, 1 );
+#if 0
+			if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
+				VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 			}
+#endif
 
-			if ( backEnd.currentEntity->e.hModel ) {    // world surfaces dont have an axis
-				VectorRotate( backEnd.currentEntity->e.fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
+			if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
+				VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
 			} else {
-				VectorCopy( backEnd.currentEntity->e.fireRiseDir, worldUp );
+				VectorCopy( fireRiseDir, worldUp );
 			}
 
 			GLSL_SetUniformVec3(sp, UNIFORM_FIRERISEDIR, worldUp);
@@ -1475,15 +1484,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			|| pStage->alphaGen == AGEN_NORMALZFADE)
 		{
 			vec3_t worldUp;
+			vec3_t fireRiseDir = { 0, 0, 1 };
 
-			if ( VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
-				VectorSet( backEnd.currentEntity->e.fireRiseDir, 0, 0, 1 );
+#if 0
+			if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
+				VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 			}
+#endif
 
-			if ( backEnd.currentEntity->e.hModel ) {    // world surfaces dont have an axis
-				VectorRotate( backEnd.currentEntity->e.fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
+			if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
+				VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
 			} else {
-				VectorCopy( backEnd.currentEntity->e.fireRiseDir, worldUp );
+				VectorCopy( fireRiseDir, worldUp );
 			}
 
 			GLSL_SetUniformVec3(sp, UNIFORM_FIRERISEDIR, worldUp);
@@ -1821,15 +1833,18 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 			if (tess.shader->deforms[0].deformationWave.frequency < 0)
 			{
 				vec3_t worldUp;
+				vec3_t fireRiseDir = { 0, 0, 1 };
 
-				if ( VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
-					VectorSet( backEnd.currentEntity->e.fireRiseDir, 0, 0, 1 );
+#if 0
+				if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
+					VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 				}
+#endif
 
-				if ( backEnd.currentEntity->e.hModel ) {    // world surfaces dont have an axis
-					VectorRotate( backEnd.currentEntity->e.fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
+				if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
+					VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
 				} else {
-					VectorCopy( backEnd.currentEntity->e.fireRiseDir, worldUp );
+					VectorCopy( fireRiseDir, worldUp );
 				}
 
 				GLSL_SetUniformVec3(sp, UNIFORM_FIRERISEDIR, worldUp);
