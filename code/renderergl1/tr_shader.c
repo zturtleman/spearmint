@@ -1581,6 +1581,26 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				stage->alphaGen = AGEN_ONE_MINUS_SKY_ALPHA;
 			}
+			else if ( !Q_stricmp( token, "normalzfade" ) )
+			{
+				stage->alphaGen = AGEN_NORMALZFADE;
+				token = COM_ParseExt( text, qfalse );
+				if ( token[0] ) {
+					stage->constantColor[3] = 255 * atof( token );
+				} else {
+					stage->constantColor[3] = 255;
+				}
+
+				token = COM_ParseExt( text, qfalse );
+				if ( token[0] ) {
+					stage->zFadeBounds[0] = atof( token );    // lower range
+					token = COM_ParseExt( text, qfalse );
+					stage->zFadeBounds[1] = atof( token );    // upper range
+				} else {
+					stage->zFadeBounds[0] = -1.0;   // lower range
+					stage->zFadeBounds[1] =  1.0;   // upper range
+				}
+			}
 			else
 			{
 				ri.Printf( PRINT_WARNING, "WARNING: unknown alphaGen parameter '%s' in shader '%s'\n", token, shader.name );
