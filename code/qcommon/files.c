@@ -250,13 +250,12 @@ typedef struct searchpath_s {
 static	char		fs_gamedir[MAX_OSPATH];	// this will be a single file name with no separators
 static	cvar_t		*fs_debug;
 static	cvar_t		*fs_homepath;
-
 #ifdef MACOS_X
 // Also search the .app bundle for .pk3 files
-static  cvar_t          *fs_apppath;
+static	cvar_t		*fs_apppath;
 #endif
-
 static	cvar_t		*fs_basepath;
+static	cvar_t		*fs_cdpath;
 static	cvar_t		*fs_gamedirvar;
 static	searchpath_t	*fs_searchpaths;
 static	searchpath_t	*fs_stashedPath = NULL;
@@ -767,6 +766,21 @@ long FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp)
 			if ( fs_debug->integer )
 			{
 				Com_Printf( "FS_SV_FOpenFileRead (fs_basepath): %s\n", ospath );
+			}
+
+			fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
+			fsh[f].handleSync = qfalse;
+		}
+
+		if (!fsh[f].handleFiles.file.o && fs_cdpath->string[0])
+		{
+			// search cd path
+			ospath = FS_BuildOSPath( fs_cdpath->string, filename, "" );
+			ospath[strlen(ospath)-1] = '\0';
+
+			if ( fs_debug->integer )
+			{
+				Com_Printf( "FS_SV_FOpenFileRead (fs_cdpath): %s\n", ospath );
 			}
 
 			fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
@@ -2774,13 +2788,14 @@ static unsigned int Sys_CountFileList(char **list)
 	return i;
 }
 
-static char** Sys_ConcatenateFileLists( char **list0, char **list1 )
+static char** Sys_ConcatenateFileLists( char **list0, char **list1, char **list2 )
 {
 	int totalLength = 0;
 	char** cat = NULL, **dst, **src;
 
 	totalLength += Sys_CountFileList(list0);
 	totalLength += Sys_CountFileList(list1);
+	totalLength += Sys_CountFileList(list2);
 
 	/* Create new list. */
 	dst = cat = Z_Malloc( ( totalLength + 1 ) * sizeof( char* ) );
@@ -2796,6 +2811,11 @@ static char** Sys_ConcatenateFileLists( char **list0, char **list1 )
 		for (src = list1; *src; src++, dst++)
 			*dst = *src;
 	}
+	if (list2)
+	{
+		for (src = list2; *src; src++, dst++)
+			*dst = *src;
+	}
 
 	// Terminate the list
 	*dst = NULL;
@@ -2804,6 +2824,7 @@ static char** Sys_ConcatenateFileLists( char **list0, char **list1 )
 	// NOTE: not freeing their content, it's been merged in dst and still being used
 	if (list0) Z_Free( list0 );
 	if (list1) Z_Free( list1 );
+	if (list2) Z_Free( list2 );
 
 	return cat;
 }
@@ -2865,6 +2886,7 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 	int dummy;
 	char **pFiles0 = NULL;
 	char **pFiles1 = NULL;
+	char **pFiles2 = NULL;
 	qboolean bDrop = qfalse;
 
 	*listbuf = 0;
@@ -2872,9 +2894,11 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 
 	pFiles0 = Sys_ListFiles( fs_homepath->string, NULL, NULL, &dummy, qtrue );
 	pFiles1 = Sys_ListFiles( fs_basepath->string, NULL, NULL, &dummy, qtrue );
+	pFiles2 = Sys_ListFiles( fs_cdpath->string, NULL, NULL, &dummy, qtrue );
 	// we searched for mods in the three paths
 	// it is likely that we have duplicate names now, which we will cleanup below
-	pFiles = Sys_ConcatenateFileLists( pFiles0, pFiles1 );
+	pFiles = Sys_ConcatenateFileLists( pFiles0, pFiles1, pFiles2 );
+
 	nPotential = Sys_CountFileList(pFiles);
 
 	for ( i = 0 ; i < nPotential ; i++ ) {
@@ -2907,8 +2931,18 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 			pPaks = Sys_ListFiles(path, ".pk3", NULL, &nPaks, qfalse); 
 			Sys_FreeFileList( pPaks ); // we only use Sys_ListFiles to check wether .pk3 files are present
 
+			/* try on cd path */
+			if (nPaks <= 0 && fs_cdpath->string[0])
+			{
+				path = FS_BuildOSPath( fs_cdpath->string, name, "" );
+				nPaks = 0;
+				pPaks = Sys_ListFiles( path, ".pk3", NULL, &nPaks, qfalse );
+				Sys_FreeFileList( pPaks );
+			}
+
 			/* try on home path */
-			if ( nPaks <= 0 )
+			// If fs_homepath == fs_basepath, don't bother
+			if (nPaks <= 0 && Q_stricmp(fs_homepath->string,fs_basepath->string))
 			{
 				path = FS_BuildOSPath( fs_homepath->string, name, "" );
 				nPaks = 0;
@@ -3808,18 +3842,20 @@ FS_AddGame
 */
 static void FS_AddGame( const char *gameName ) {
 	// add search path elements in reverse priority order
+	if (fs_cdpath->string[0]) {
+		FS_AddGameDirectory( fs_cdpath->string, gameName );
+	}
 	if (fs_basepath->string[0]) {
 		FS_AddGameDirectory( fs_basepath->string, gameName );
 	}
-	// fs_homepath is somewhat particular to *nix systems, only add if relevant
 
 #ifdef MACOS_X
-	fs_apppath = Cvar_Get ("fs_apppath", Sys_DefaultAppPath(), CVAR_INIT|CVAR_PROTECTED );
 	// Make MacOSX also include the base path included with the .app bundle
 	if (fs_apppath->string[0])
-		FS_AddGameDirectory(fs_apppath->string, gameName);
+		FS_AddGameDirectory( fs_apppath->string, gameName );
 #endif
 
+	// fs_homepath is somewhat particular to *nix systems, only add if relevant
 	if (fs_homepath->string[0] && Q_stricmp(fs_homepath->string,fs_basepath->string)) {
 		FS_CreatePath ( fs_homepath->string );
 		FS_AddGameDirectory ( fs_homepath->string, gameName );
@@ -3846,7 +3882,11 @@ static void FS_Startup( qboolean quiet )
 	fs_packFiles = 0;
 
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
+	fs_cdpath = Cvar_Get ("fs_cdpath", Sys_SteamPath(), CVAR_INIT|CVAR_PROTECTED );
 	fs_basepath = Cvar_Get ("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT|CVAR_PROTECTED );
+#ifdef MACOS_X
+	fs_apppath = Cvar_Get ("fs_apppath", Sys_DefaultAppPath(), CVAR_INIT|CVAR_PROTECTED );
+#endif
 	homePath = FS_PortableHomePath();
 	if (!homePath || !homePath[0]) {
 		homePath = Sys_DefaultHomePath();
@@ -4531,6 +4571,7 @@ void FS_InitFilesystem( void ) {
 	// we have to specially handle this, because normal command
 	// line variable sets don't happen until after the filesystem
 	// has already been initialized
+	Com_StartupVariable("fs_cdpath");
 	Com_StartupVariable("fs_basepath");
 	Com_StartupVariable("fs_homepath");
 	Com_StartupVariable("fs_game");

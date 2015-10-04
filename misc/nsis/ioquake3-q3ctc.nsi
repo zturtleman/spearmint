@@ -6,7 +6,7 @@
 !define RELEASE "1"
 !define MODDIR "q3ctc"
 !define PUBLISHER "The Spearmint Team"
-!define URL "http://github.com/zturtleman/spearmint/"
+!define URL "http://spearmint.pw"
 
 !define MUI_ICON "../quake3.ico"
 
@@ -26,7 +26,7 @@
 ; no need to edit below in theory
 
 !define GAMENAME "Spearmint"
-!define CLIENT "spearmint.x86.exe"
+!define CLIENT "spearmint_x86.exe"
 !define GAMEDIR "Spearmint"
 !define GAMEKEY "spearmint"
 

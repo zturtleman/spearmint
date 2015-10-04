@@ -258,7 +258,7 @@ VORBISDIR=$(MOUNT_DIR)/libvorbis-1.3.4
 OPUSDIR=$(MOUNT_DIR)/opus-1.1
 OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.5
 ZDIR=$(MOUNT_DIR)/zlib
-FTDIR=$(MOUNT_DIR)/freetype-2.4.11
+FTDIR=$(MOUNT_DIR)/freetype-2.6
 NSISDIR=misc/nsis
 SDLHDIR=$(MOUNT_DIR)/SDL2
 LIBSDIR=$(MOUNT_DIR)/libs
@@ -1559,6 +1559,9 @@ ifneq ($(USE_INTERNAL_FREETYPE),0)
     $(B)/renderergl1/ftinit.o \
     $(B)/renderergl1/ftsystem.o \
     $(B)/renderergl1/ftbase.o \
+    $(B)/renderergl1/ftstroke.o \
+    $(B)/renderergl1/ftglyph.o \
+    $(B)/renderergl1/ftbitmap.o \
 	\
     $(B)/renderergl1/ftbzip2.o \
     $(B)/renderergl1/ftgzip.o \

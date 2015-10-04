@@ -137,7 +137,61 @@ void RB_CalcDeformVertexes( deformStage_t *ds )
 	float	*normal = ( float * ) tess.normal;
 	float	*table;
 
-	if ( ds->deformationWave.frequency == 0 )
+	// RTCW's negative frequency only affects Z
+	if ( ds->deformationWave.frequency < 0 ) {
+		qboolean inverse = qfalse;
+		vec3_t worldUp;
+		vec3_t fireRiseDir = { 0, 0, 1 };
+
+#if 0
+		if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
+			VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
+		}
+#endif
+
+		// get the world up vector in local coordinates
+		if ( backEnd.currentEntity != &tr.worldEntity ) {  // world surfaces dont have an axis
+			VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
+		} else {
+			VectorCopy( fireRiseDir, worldUp );
+		}
+		// don't go so far if sideways, since they must be moving
+		VectorScale( worldUp, 0.4 + 0.6 * fabs( fireRiseDir[2] ), worldUp );
+
+		ds->deformationWave.frequency *= -1;
+		if ( ds->deformationWave.frequency > 999 ) {  // hack for negative Z deformation (ack)
+			inverse = qtrue;
+			ds->deformationWave.frequency -= 999;
+		}
+
+		table = TableForFunc( ds->deformationWave.func );
+
+		for ( i = 0; i < tess.numVertexes; i++, xyz += 4, normal += 4 )
+		{
+			float off = ( xyz[0] + xyz[1] + xyz[2] ) * ds->deformationSpread;
+			float dot;
+
+			scale = WAVEVALUE( table, ds->deformationWave.base,
+							   ds->deformationWave.amplitude,
+							   ds->deformationWave.phase + off,
+							   ds->deformationWave.frequency );
+
+			dot = DotProduct( worldUp, normal );
+
+			if ( dot * scale > 0 ) {
+				if ( inverse ) {
+					scale *= -1;
+				}
+				VectorMA( xyz, dot * scale, worldUp, xyz );
+			}
+		}
+
+		if ( inverse ) {
+			ds->deformationWave.frequency += 999;
+		}
+		ds->deformationWave.frequency *= -1;
+	}
+	else if ( ds->deformationWave.frequency == 0 )
 	{
 		scale = EvalWaveForm( &ds->deformationWave );
 

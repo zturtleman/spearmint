@@ -255,7 +255,8 @@ typedef enum {
 	AGEN_PORTAL,
 	AGEN_CONST,
 	AGEN_SKY_ALPHA,
-	AGEN_ONE_MINUS_SKY_ALPHA
+	AGEN_ONE_MINUS_SKY_ALPHA,
+	AGEN_NORMALZFADE
 } alphaGen_t;
 
 typedef enum {
@@ -423,6 +424,8 @@ typedef struct {
 	unsigned		stateBits;					// GLS_xxxx mask
 
 	acff_t			adjustColorsForFog;
+
+	float			zFadeBounds[2];
 
 	qboolean		isDetail;
 	qboolean		isFogged;					// used only for shaders that have fog disabled, so we can enable it for individual stages
@@ -751,6 +754,10 @@ typedef enum
 	UNIFORM_INTENSITY,
 	UNIFORM_DIFFUSECOLOR,
 	UNIFORM_FOGTYPE,
+
+	UNIFORM_FIRERISEDIR,
+	UNIFORM_ZFADELOWEST,
+	UNIFORM_ZFADEHIGHEST,
 
 	UNIFORM_COUNT
 } uniform_t;
@@ -2175,7 +2182,7 @@ const void *RB_TakeVideoFrameCmd( const void *data );
 //
 // tr_shader.c
 //
-shader_t	*R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImage );
+shader_t	*R_FindShader( const char *name, int lightmapIndex, imgFlags_t rawImageFlags );
 shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
 shader_t *R_FindShaderByName( const char *name );

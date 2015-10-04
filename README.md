@@ -53,6 +53,9 @@ The original id software readme that accompanied the Q3 source release has been
 renamed to id-readme.txt so as to prevent confusion. Please refer to the
 web-site for updated status.
 
+More documentation is on:
+http://wiki.ioquake3.org/
+
 # Game Code
 
 The Quake 3 game, cgame, and ui code and QVM compiler are not included. If you wish to play Quake 3, you'll need to get
@@ -706,11 +709,8 @@ directory, this restriction is lifted.
 
 # Contributing
 
-Please submit all patches to the issue tracker
-(http://github.com/zturtleman/spearmint/issues), or join the mailing list
-(http://groups.google.com/group/spearmint-engine) and submit your patch there.
-The best case scenario is that you submit your patch to the issue tracker, and
-then post the URL to the mailing list.
+Please send all patches to the issue tracker (http://github.com/zturtleman/spearmint/issues),
+or as a GitHub pull request and submit your patch there.
 
 The focus for Spearmint is to develop a stable base suitable for further
 development and provide players with the same Quake 3 game play experience
@@ -744,4 +744,3 @@ Significant contributions from
   * Aaron Gyes <floam@aaron.gy>
 
 
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/c70d32036961d36ad84b043f6ab8bb64 "githalytics.com")](http://githalytics.com/zturtleman/spearmint)

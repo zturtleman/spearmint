@@ -57,6 +57,8 @@ typedef enum
 	IMGFLAG_PICMIP2        = 0x0400,
 } imgFlags_t;
 
+#define MIP_RAW_IMAGE ( IMGFLAG_MIPMAP | IMGFLAG_PICMIP )
+
 typedef struct image_s {
 	char		imgName[MAX_QPATH];		// game path, including extension
 	int			width, height;				// source image
@@ -143,6 +145,8 @@ extern cvar_t *r_ext_max_anisotropy;
 extern cvar_t *r_stereoEnabled;
 
 extern	cvar_t	*r_saveFontData;
+extern	cvar_t	*r_fontBorderWidth;
+extern	cvar_t	*r_fontForceAutoHint;
 
 qboolean	R_GetModeInfo( int *width, int *height, float *windowAspect, int mode );
 
@@ -159,6 +163,7 @@ void R_IssuePendingRenderCommands( void );
 qhandle_t		 RE_RegisterShaderEx( const char *name, int lightmapIndex, qboolean mipRawImage );
 qhandle_t		 RE_RegisterShader( const char *name );
 qhandle_t		 RE_RegisterShaderNoMip( const char *name );
+qhandle_t		 RE_RegisterShaderNoPicMip( const char *name );
 qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_t *image, qboolean mipRawImage);
 
 // font stuff

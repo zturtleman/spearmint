@@ -49,6 +49,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define HOMEPATH_NAME_WIN			"Spearmint"
 #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
 
+// Steam installation information
+//#define STEAMPATH_NAME			"Quake 3 Arena"
+//#define STEAMPATH_APPID			"2200"
+
 // Separates games in server browser. Must NOT contain whitespace (dpmaster will reject the game servers).
 // Change this if not compatible with Spearmint games aka cannot play them (such as if you break VM compatibility).
 #define GAMENAME_FOR_MASTER			"Spearmint"
@@ -1260,6 +1264,7 @@ int		Sys_StatFile( char *ospath );
 char	*Sys_Cwd( void );
 void	Sys_SetDefaultInstallPath(const char *path);
 char	*Sys_DefaultInstallPath(void);
+char	*Sys_SteamPath(void);
 
 #ifdef MACOS_X
 char    *Sys_DefaultAppPath(void);

@@ -480,8 +480,10 @@ extern          GLint(APIENTRY * qglGetAttribLocationARB) (GLhandleARB programOb
 // GL_ARB_texture_compression
 extern void (APIENTRY * qglCompressedTexImage3DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, 
 	GLsizei depth, GLint border, GLsizei imageSize, const GLvoid *data);
+#if 0 // Spearmint: Moved to top of file
 extern void (APIENTRY * qglCompressedTexImage2DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height,
 	GLint border, GLsizei imageSize, const GLvoid *data);
+#endif
 extern void (APIENTRY * qglCompressedTexImage1DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLint border,
 	GLsizei imageSize, const GLvoid *data);
 extern void (APIENTRY * qglCompressedTexSubImage3DARB)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,

@@ -1241,6 +1241,80 @@ static void ComputeColors( shaderStage_t *pStage )
 			}
 		}
 		break;
+	case AGEN_NORMALZFADE:
+		{
+			float alpha, range, lowest, highest, dot;
+			vec3_t worldUp;
+			qboolean zombieEffect = qfalse;
+			vec3_t fireRiseDir = { 0, 0, 1 };
+
+#if 0
+			if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
+				VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
+			}
+#endif
+
+			if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
+				VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
+			} else {
+				VectorCopy( fireRiseDir, worldUp );
+			}
+
+			lowest = pStage->zFadeBounds[0];
+			if ( lowest == -1000 ) {    // use entity alpha
+				lowest = backEnd.currentEntity->e.shaderTime;
+				zombieEffect = qtrue;
+			}
+			highest = pStage->zFadeBounds[1];
+			if ( highest == -1000 ) {   // use entity alpha
+				highest = backEnd.currentEntity->e.shaderTime;
+				zombieEffect = qtrue;
+			}
+			range = highest - lowest;
+			for ( i = 0; i < tess.numVertexes; i++ ) {
+				dot = DotProduct( tess.normal[i], worldUp );
+
+				// special handling for Zombie fade effect
+				if ( zombieEffect ) {
+					alpha = (float)backEnd.currentEntity->e.shaderRGBA[3] * ( dot + 1.0 ) / 2.0;
+					alpha += ( 2.0 * (float)backEnd.currentEntity->e.shaderRGBA[3] ) * ( 1.0 - ( dot + 1.0 ) / 2.0 );
+					if ( alpha > 255.0 ) {
+						alpha = 255.0;
+					} else if ( alpha < 0.0 ) {
+						alpha = 0.0;
+					}
+					tess.svars.colors[i][3] = (byte)( alpha );
+					continue;
+				}
+
+				if ( dot < highest ) {
+					if ( dot > lowest ) {
+						if ( dot < lowest + range / 2 ) {
+							alpha = ( (float)pStage->constantColor[3] * ( ( dot - lowest ) / ( range / 2 ) ) );
+						} else {
+							alpha = ( (float)pStage->constantColor[3] * ( 1.0 - ( ( dot - lowest - range / 2 ) / ( range / 2 ) ) ) );
+						}
+						if ( alpha > 255.0 ) {
+							alpha = 255.0;
+						} else if ( alpha < 0.0 ) {
+							alpha = 0.0;
+						}
+
+						// finally, scale according to the entity's alpha
+						if ( backEnd.currentEntity->e.hModel ) {
+							alpha *= (float)backEnd.currentEntity->e.shaderRGBA[3] / 255.0;
+						}
+
+						tess.svars.colors[i][3] = (byte)( alpha );
+					} else {
+						tess.svars.colors[i][3] = 0;
+					}
+				} else {
+					tess.svars.colors[i][3] = 0;
+				}
+			}
+		}
+		break;
 	}
 
 	//
@@ -1499,7 +1573,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			R_BindAnimatedImage( &pStage->bundle[0] );
 
-			GL_State( pStage->stateBits );
+			// Disable depth test for 2D drawing
+			if ( backEnd.currentEntity == &backEnd.entity2D ) {
+				GL_State( pStage->stateBits | GLS_DEPTHTEST_DISABLE );
+			} else {
+				GL_State( pStage->stateBits );
+			}
 
 			//
 			// draw

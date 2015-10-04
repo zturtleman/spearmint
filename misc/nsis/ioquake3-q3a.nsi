@@ -6,7 +6,7 @@
 !define RELEASE "1"
 
 !define GAMENAME "Spearmint"
-!define CLIENT "spearmint.x86.exe"
+!define CLIENT "spearmint_x86.exe"
 !define GAMEDIR "Spearmint"
 !define GAMEKEY "spearmint"
 

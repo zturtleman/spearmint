@@ -580,7 +580,7 @@ static qboolean R_LoadMD3 (model_t *mod, int lod, void *buffer, const char *mod_
         for ( j = 0 ; j < surf->numShaders ; j++, shader++ ) {
             shader_t	*sh;
 
-            sh = R_FindShader( shader->name, LIGHTMAP_NONE, qtrue );
+            sh = R_FindShader( shader->name, LIGHTMAP_NONE, MIP_RAW_IMAGE );
 			if ( sh->defaultShader ) {
 				shader->shaderIndex = 0;
 			} else {
@@ -766,7 +766,7 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *mod_
 		for ( j = 0 ; j < surf->numShaders ; j++, shader++ ) {
 			shader_t    *sh;
 
-			sh = R_FindShader( shader->name, LIGHTMAP_NONE, qtrue );
+			sh = R_FindShader( shader->name, LIGHTMAP_NONE, MIP_RAW_IMAGE );
 			if ( sh->defaultShader ) {
 				shader->shaderIndex = 0;
 			} else {
@@ -1222,7 +1222,7 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			Q_strlwr( surf->name );
 
 			// register the shaders
-			sh = R_FindShader(surf->shader, LIGHTMAP_NONE, qtrue);
+			sh = R_FindShader(surf->shader, LIGHTMAP_NONE, MIP_RAW_IMAGE);
 			if ( sh->defaultShader ) {
 				surf->shaderIndex = 0;
 			} else {
@@ -1471,7 +1471,7 @@ static qboolean R_LoadMDS( model_t *mod, void *buffer, const char *mod_name ) {
 
 		// register the shaders
 		if ( surf->shader[0] ) {
-			sh = R_FindShader( surf->shader, LIGHTMAP_NONE, qtrue );
+			sh = R_FindShader( surf->shader, LIGHTMAP_NONE, MIP_RAW_IMAGE );
 			if ( sh->defaultShader ) {
 				surf->shaderIndex = 0;
 			} else {
@@ -1684,7 +1684,7 @@ static qboolean R_LoadMDM( model_t *mod, void *buffer, const char *mod_name ) {
 
 		// register the shaders
 		if ( surf->shader[0] ) {
-			sh = R_FindShader( surf->shader, LIGHTMAP_NONE, qtrue );
+			sh = R_FindShader( surf->shader, LIGHTMAP_NONE, MIP_RAW_IMAGE );
 			if ( sh->defaultShader ) {
 				surf->shaderIndex = 0;
 			} else {
