@@ -1166,7 +1166,6 @@ static qboolean R_BonesStillValid( const refEntity_t *refent ) {
 		return qfalse;
 	} else if ( lastBoneEntity.backlerp != refent->backlerp ) {
 		return qfalse;
-/*
 	} else if ( lastBoneEntity.torsoFrame != refent->torsoFrame ) {
 		return qfalse;
 	} else if ( lastBoneEntity.oldTorsoFrame != refent->oldTorsoFrame ) {
@@ -1177,13 +1176,14 @@ static qboolean R_BonesStillValid( const refEntity_t *refent ) {
 		return qfalse;
 	} else if ( lastBoneEntity.torsoBacklerp != refent->torsoBacklerp ) {
 		return qfalse;
+/*
 	} else if ( lastBoneEntity.reFlags != refent->reFlags ) {
 		return qfalse;
+*/
 	} else if ( !VectorCompare( lastBoneEntity.torsoAxis[0], refent->torsoAxis[0] ) ||
 				!VectorCompare( lastBoneEntity.torsoAxis[1], refent->torsoAxis[1] ) ||
 				!VectorCompare( lastBoneEntity.torsoAxis[2], refent->torsoAxis[2] ) ) {
 		return qfalse;
-*/
 	}
 
 	return qtrue;
@@ -1206,8 +1206,8 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 
 	frameHeader = R_GetFrameModelDataByHandle( refent, refent->frameModel );
 	oldFrameHeader = R_GetFrameModelDataByHandle( refent, refent->oldframeModel );
-	torsoFrameHeader = R_GetFrameModelDataByHandle( refent, refent->frameModel );
-	oldTorsoFrameHeader = R_GetFrameModelDataByHandle( refent, refent->oldframeModel );
+	torsoFrameHeader = R_GetFrameModelDataByHandle( refent, refent->torsoFrameModel );
+	oldTorsoFrameHeader = R_GetFrameModelDataByHandle( refent, refent->oldTorsoFrameModel );
 
 	if ( !frameHeader || !oldFrameHeader || !torsoFrameHeader || !oldTorsoFrameHeader ) {
 		return;
@@ -1249,10 +1249,6 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 		frontlerp = 1.0f - backlerp;
 	}
 
-#if 1 // ZTM: FIXME: torso isn't separate yet
-	torsoBacklerp = backlerp;
-	torsoFrontlerp = frontlerp;
-#else
 	if ( refent->oldTorsoFrame == refent->torsoFrame ) {
 		torsoBacklerp = 0;
 		torsoFrontlerp = 1;
@@ -1260,12 +1256,11 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 		torsoBacklerp = refent->torsoBacklerp;
 		torsoFrontlerp = 1.0f - torsoBacklerp;
 	}
-#endif
 
 	frame = MDS_FRAME( frameHeader, refent->frame );
-	torsoFrame = MDS_FRAME( torsoFrameHeader, refent->frame ); // ZTM: FIXME: was torsoFrame
+	torsoFrame = MDS_FRAME( torsoFrameHeader, refent->torsoFrame );
 	oldFrame = MDS_FRAME( oldFrameHeader, refent->oldframe );
-	oldTorsoFrame = MDS_FRAME( oldTorsoFrameHeader, refent->oldframe ); // ZTM: FIXME: was oldTorsoFrame
+	oldTorsoFrame = MDS_FRAME( oldTorsoFrameHeader, refent->oldTorsoFrame );
 
 	//
 	// lerp all the needed bones (torsoParent is always the first bone in the list)
@@ -1276,14 +1271,7 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 	boneInfo = ( mdsBoneInfo_t * )( (byte *)frameHeader + frameHeader->ofsBones );
 	boneRefs = boneList;
 	//
-#if 1 // ZTM: FIXME: torsoAxis not supported yet, use identity matrix
-	int j;
-	for ( i = 0; i < 3; i++ )
-		for ( j = 0; j < 3; j++ )
-			torsoAxis[i][j] = ( i == j ) ? 1 : 0;
-#else
 	Matrix3Transpose( refent->torsoAxis, torsoAxis );
-#endif
 
 #ifdef HIGH_PRECISION_BONES
 	if ( qtrue ) {

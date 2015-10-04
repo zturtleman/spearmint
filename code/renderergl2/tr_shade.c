@@ -427,11 +427,9 @@ static void ProjectDlightTexture( void ) {
 				vec3_t worldUp;
 				vec3_t fireRiseDir = { 0, 0, 1 };
 
-#if 0
 				if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
 					VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 				}
-#endif
 
 				if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
 					VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
@@ -939,11 +937,9 @@ static void ForwardDlight( void ) {
 			vec3_t worldUp;
 			vec3_t fireRiseDir = { 0, 0, 1 };
 
-#if 0
 			if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
 				VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 			}
-#endif
 
 			if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
 				VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
@@ -1269,11 +1265,9 @@ static void RB_FogPass( void ) {
 			vec3_t worldUp;
 			vec3_t fireRiseDir = { 0, 0, 1 };
 
-#if 0
 			if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
 				VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 			}
-#endif
 
 			if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
 				VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
@@ -1486,11 +1480,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			vec3_t worldUp;
 			vec3_t fireRiseDir = { 0, 0, 1 };
 
-#if 0
 			if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
 				VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 			}
-#endif
 
 			if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
 				VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );
@@ -1835,11 +1827,9 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 				vec3_t worldUp;
 				vec3_t fireRiseDir = { 0, 0, 1 };
 
-#if 0
 				if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
 					VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 				}
-#endif
 
 				if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
 					VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );

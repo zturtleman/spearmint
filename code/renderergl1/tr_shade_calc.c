@@ -143,11 +143,9 @@ void RB_CalcDeformVertexes( deformStage_t *ds )
 		vec3_t worldUp;
 		vec3_t fireRiseDir = { 0, 0, 1 };
 
-#if 0
 		if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
 			VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 		}
-#endif
 
 		// get the world up vector in local coordinates
 		if ( backEnd.currentEntity != &tr.worldEntity ) {  // world surfaces dont have an axis

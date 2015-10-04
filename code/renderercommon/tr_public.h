@@ -39,7 +39,7 @@ Suite 120, Rockville, Maryland 20850 USA.
   #include <zlib.h>
 #endif
 
-#define	REF_API_VERSION		8
+#define	REF_API_VERSION		9
 
 //
 // these are the functions exported by the refresh module
@@ -96,7 +96,7 @@ typedef struct {
 	void	(*SetClipRegion)( const float *region );
 	void	(*DrawStretchPic)( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader );	// 0 = white
 	void	(*DrawRotatedPic)( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader, float angle );
-	void	(*DrawStretchPicGradient)( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
+	void	(*DrawStretchPicGradient)( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor );
 	void	(*Add2dPolys)( polyVert_t* polys, int numverts, qhandle_t hShader );
 
 	// Draw images for cinematic rendering, pass as 32 bit rgba

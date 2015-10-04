@@ -1248,11 +1248,9 @@ static void ComputeColors( shaderStage_t *pStage )
 			qboolean zombieEffect = qfalse;
 			vec3_t fireRiseDir = { 0, 0, 1 };
 
-#if 0
 			if ( !VectorCompare( backEnd.currentEntity->e.fireRiseDir, vec3_origin ) ) {
 				VectorCopy( backEnd.currentEntity->e.fireRiseDir, fireRiseDir );
 			}
-#endif
 
 			if ( backEnd.currentEntity != &tr.worldEntity ) {    // world surfaces dont have an axis
 				VectorRotate( fireRiseDir, backEnd.currentEntity->e.axis, worldUp );

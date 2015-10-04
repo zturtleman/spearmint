@@ -408,7 +408,7 @@ RE_StretchPicGradient
 ==============
 */
 void RE_StretchPicGradient( float x, float y, float w, float h,
-							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType ) {
+							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor ) {
 	stretchPicCommand_t *cmd;
 
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
@@ -436,7 +436,6 @@ void RE_StretchPicGradient( float x, float y, float w, float h,
 	cmd->gradientColor[1] = gradientColor[1] * 255;
 	cmd->gradientColor[2] = gradientColor[2] * 255;
 	cmd->gradientColor[3] = gradientColor[3] * 255;
-	cmd->gradientType = gradientType;
 }
 
 /*

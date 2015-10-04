@@ -72,6 +72,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	RF_AUTOAXIS			0x1000		// Similar to autosprite, rotate model forward/side axiis to face screen (including in mirrors and portals)
 #define	RF_AUTOAXIS2		0x2000		// Similar to autosprite2, rotate RT_POLY_LOCAL side axis to face screen (including in mirrors and portals)
 
+#define	RF_LIGHTING_GRID	0x4000		// make refEntity in a scene with RDF_NOWORLDMODEL use lighting grid
+
 // refdef flags
 #define RDF_NOWORLDMODEL	0x0001		// used for player configuration screen
 #define RDF_UNDERWATER		0x0002		// underwater
@@ -164,6 +166,20 @@ typedef struct {
 	// extra sprite information
 	float		radius;
 	float		rotation;
+
+	//
+	// added in Spearmint 0.2
+	//
+	vec3_t		fireRiseDir;		// for alphaGen normalzfade and waveforms with negative frequency
+
+	// for MDS and MDX/MDM models
+	vec3_t		torsoAxis[3];		// rotation vectors for torso section of skeletal animation
+	int			torsoFrame;			// skeletal torso can have frame independant of legs frame
+	qhandle_t	torsoFrameModel;
+	int			oldTorsoFrame;
+	qhandle_t	oldTorsoFrameModel;
+	float		torsoBacklerp;
+
 } refEntity_t;
 
 

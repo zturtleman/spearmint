@@ -1404,7 +1404,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.DrawRotatedPic( VMF( 1 ), VMF( 2 ), VMF( 3 ), VMF( 4 ), VMF( 5 ), VMF( 6 ), VMF( 7 ), VMF( 8 ), args[9], VMF( 10 ) );
 		return 0;
 	case CG_R_DRAWSTRETCHPIC_GRADIENT:
-		re.DrawStretchPicGradient( VMF( 1 ), VMF( 2 ), VMF( 3 ), VMF( 4 ), VMF( 5 ), VMF( 6 ), VMF( 7 ), VMF( 8 ), args[9], VMA( 10 ), args[11] );
+		re.DrawStretchPicGradient( VMF( 1 ), VMF( 2 ), VMF( 3 ), VMF( 4 ), VMF( 5 ), VMF( 6 ), VMF( 7 ), VMF( 8 ), args[9], VMA( 10 ) );
 		return 0;
 	case CG_R_DRAW2DPOLYS:
 		re.Add2dPolys( VMA( 1 ), args[2], args[3] );
