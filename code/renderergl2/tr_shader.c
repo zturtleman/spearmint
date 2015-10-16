@@ -40,6 +40,7 @@ static	shader_t		shader;
 static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS][NUM_TEXTURE_BUNDLES];
 static	image_t			*imageAnimations[MAX_SHADER_STAGES][NUM_TEXTURE_BUNDLES][MAX_IMAGE_ANIMATIONS];
 static	imgFlags_t		shader_picmipFlag;
+static	qboolean		shader_allowCompress;
 static	qboolean		stage_ignore;
 
 // these are here because they are only referenced while parsing a shader
@@ -1209,6 +1210,9 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 						flags |= IMGFLAG_GENNORMALMAP;
 				}
 
+				if (!shader_allowCompress)
+					flags |= IMGFLAG_NO_COMPRESSION;
+
 				bundle->image[0] = R_FindImageFile( token, type, flags );
 
 				if ( !bundle->image[0] )
@@ -1239,6 +1243,9 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			if (!stage_noPicMip)
 				flags |= stage_picmipFlag;
 
+			if (!shader_allowCompress)
+				flags |= IMGFLAG_NO_COMPRESSION;
+
 			if (stage->type == ST_NORMALMAP || stage->type == ST_NORMALPARALLAXMAP)
 			{
 				type = IMGTYPE_NORMAL;
@@ -1252,7 +1259,6 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				if (r_genNormalMaps->integer)
 					flags |= IMGFLAG_GENNORMALMAP;
 			}
-
 
 			bundle->image[0] = R_FindImageFile( token, type, flags );
 			if ( !bundle->image[0] )
@@ -1331,6 +1337,9 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 
 			if (!stage_noPicMip)
 				flags |= stage_picmipFlag;
+
+			if (!shader_allowCompress)
+				flags |= IMGFLAG_NO_COMPRESSION;
 
 			// parse up to MAX_IMAGE_ANIMATIONS animations
 			while ( 1 ) {
@@ -2286,6 +2295,9 @@ static void ParseSkyParms( char **text ) {
 	int			i;
 	imgFlags_t imgFlags = IMGFLAG_MIPMAP | shader_picmipFlag;
 
+	if (!shader_allowCompress)
+		imgFlags |= IMGFLAG_NO_COMPRESSION;
+
 	// outerbox
 	token = COM_ParseExt( text, qfalse );
 	if ( token[0] == 0 ) {
@@ -2954,13 +2966,12 @@ static qboolean ParseShader( char **text )
 			shader.noFog = qtrue;
 			continue;
 		}
-		// RF, allow each shader to permit compression if available
-		// ZTM: Just ignore them for now.
+		// allow each shader to permit compression if available
 		else if ( !Q_stricmp( token, "allowcompress" ) ) {
-			//tr.allowCompress = qtrue;
+			shader_allowCompress = qtrue;
 			continue;
-		} else if ( !Q_stricmp( token, "nocompress" ) || !Q_stricmp( token, "notc" ) )   {
-			//tr.allowCompress = -1;
+		} else if ( !Q_stricmp( token, "nocompress" ) || !Q_stricmp( token, "notc" ) ) {
+			shader_allowCompress = qfalse;
 			continue;
 		}
 		// light <value> determines flaring in q3map, not needed here
@@ -3533,6 +3544,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			char normalName[MAX_QPATH];
 			image_t *normalImg;
 			imgFlags_t normalFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+
+			// ZTM: FIXME: check shader_allowCompress? I don't think it's always valid here though.
 
 			COM_StripExtension(diffuseImg->imgName, normalName, MAX_QPATH);
 			Q_strcat(normalName, MAX_QPATH, "_n");
@@ -4780,6 +4793,13 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, imgFlags_t rawImage
 
 	shader_picmipFlag = IMGFLAG_PICMIP;
 
+	if ( r_ext_compressed_textures->integer == 2 ) {
+		// if the shader hasn't specifically asked for it, don't allow compression
+		shader_allowCompress = qfalse;
+	} else {
+		shader_allowCompress = qtrue;
+	}
+
 	// default to no implicit mappings
 	implicitMap[ 0 ] = '\0';
 	implicitStateBits = GLS_DEFAULT;
@@ -4853,6 +4873,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, imgFlags_t rawImage
 			if (r_genNormalMaps->integer)
 				flags |= IMGFLAG_GENNORMALMAP;
 		}
+
+		if (!shader_allowCompress)
+			flags |= IMGFLAG_NO_COMPRESSION;
 
 		image = R_FindImageFile( fileName, IMGTYPE_COLORALPHA, flags );
 		if ( !image ) {
