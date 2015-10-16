@@ -1057,6 +1057,21 @@ static void ParseTexMod( char *_text, textureBundle_t *bundle )
 
 		tmi->type = TMOD_TRANSFORM;
 	}
+	//
+	// swap
+	//
+	else if ( !Q_stricmp( token, "swap" ) )
+	{
+		// swap S and T
+		tmi->matrix[0][0] = 0;
+		tmi->matrix[0][1] = 1;
+		tmi->matrix[1][0] = 1;
+		tmi->matrix[1][0] = 0;
+		tmi->translate[0] = 0;
+		tmi->translate[1] = 0;
+
+		tmi->type = TMOD_TRANSFORM;
+	}
 	else
 	{
 		ri.Printf( PRINT_WARNING, "WARNING: unknown tcMod '%s' in shader '%s'\n", token, shader.name );
