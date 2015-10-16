@@ -799,7 +799,11 @@ static void Upload32( int numTexLevels, const textureLevel_t *pics,
 			}
 			else
 			{
-				if ( r_texturebits->integer == 16 )
+				if ( allowCompression && glConfig.textureCompression == TC_S3TC_ARB )
+				{
+					internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+				}
+				else if ( r_texturebits->integer == 16 )
 				{
 					internalFormat = GL_RGBA4;
 				}
