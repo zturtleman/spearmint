@@ -333,6 +333,7 @@ void SV_ChangeMaxClients( void ) {
 	client_t	*oldClients;
 	player_t	*oldPlayers;
 	int		count;
+	int		playerNum;
 
 	// get the highest client or player number in use
 	count = 0;
@@ -356,21 +357,17 @@ void SV_ChangeMaxClients( void ) {
 	oldPlayers = Hunk_AllocateTempMemory( count * sizeof(player_t) );
 	// copy the clients and players to hunk memory
 	for ( i = 0 ; i < count ; i++ ) {
-		if ( svs.players[i].inUse && svs.players[i].client->state >= CS_CONNECTED ) {
-			oldPlayers[i] = svs.players[i];
-			oldPlayers[i].client = NULL; // client pointer gets restored using localPlayers pointers.
-		}
-		else {
-			Com_Memset(&oldPlayers[i], 0, sizeof(player_t));
-		}
-
 		if ( svs.clients[i].state >= CS_CONNECTED ) {
 			oldClients[i] = svs.clients[i];
 
-			// save player indexes
 			for ( j = 0; j < MAX_SPLITVIEW; j++ ) {
-				if (svs.clients[i].localPlayers[j]) {
-					oldClients[i].localPlayers[j] = (void*)((svs.clients[i].localPlayers[j] - svs.players) + 1);
+				if ( svs.clients[i].localPlayers[j] ) {
+					playerNum = (int)(svs.clients[i].localPlayers[j] - svs.players);
+
+					oldClients[i].localPlayers[j] = &oldPlayers[playerNum];
+
+					oldPlayers[playerNum] = svs.players[playerNum];
+					oldPlayers[playerNum].client = NULL;
 				}
 			}
 		}
@@ -392,18 +389,17 @@ void SV_ChangeMaxClients( void ) {
 
 	// copy the clients and players over
 	for ( i = 0 ; i < count ; i++ ) {
-		if ( oldPlayers[i].inUse ) {
-			svs.players[i] = oldPlayers[i];
-		}
-
 		if ( oldClients[i].state >= CS_CONNECTED ) {
 			svs.clients[i] = oldClients[i];
 
-			// restore pointers
 			for ( j = 0; j < MAX_SPLITVIEW; j++ ) {
-				if (oldClients[i].localPlayers[j]) {
-					svs.clients[i].localPlayers[j] = &svs.players[ (intptr_t)oldClients[i].localPlayers[j] - 1 ];
-					svs.clients[i].localPlayers[j]->client = &svs.clients[i];
+				if ( oldClients[i].localPlayers[j] ) {
+					playerNum = (int)(oldClients[i].localPlayers[j] - oldPlayers);
+
+					svs.clients[i].localPlayers[j] = &svs.players[playerNum];
+
+					svs.players[playerNum] = oldPlayers[playerNum];
+					svs.players[playerNum].client = &svs.clients[i];
 				}
 			}
 		}
