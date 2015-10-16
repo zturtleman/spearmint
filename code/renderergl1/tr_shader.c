@@ -988,6 +988,34 @@ static void ParseTexMod( char *_text, textureBundle_t *bundle )
 	{
 		tmi->type = TMOD_ENTITY_TRANSLATE;
 	}
+	//
+	// offset
+	//
+	else if ( !Q_stricmp( token, "offset" ) )
+	{
+		tmi->matrix[0][0] = 1;
+		tmi->matrix[0][1] = 0;
+		tmi->matrix[1][0] = 0;
+		tmi->matrix[1][0] = 1;
+
+		token = COM_ParseExt( text, qfalse );
+		if ( token[0] == 0 )
+		{
+			ri.Printf( PRINT_WARNING, "WARNING: missing tcMod offset parms in shader '%s'\n", shader.name );
+			return;
+		}
+		tmi->translate[0] = atof( token );
+
+		token = COM_ParseExt( text, qfalse );
+		if ( token[0] == 0 )
+		{
+			ri.Printf( PRINT_WARNING, "WARNING: missing tcMod offset parms in shader '%s'\n", shader.name );
+			return;
+		}
+		tmi->translate[1] = atof( token );
+
+		tmi->type = TMOD_TRANSFORM;
+	}
 	else
 	{
 		ri.Printf( PRINT_WARNING, "WARNING: unknown tcMod '%s' in shader '%s'\n", token, shader.name );
