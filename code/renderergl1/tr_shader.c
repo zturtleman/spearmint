@@ -996,7 +996,7 @@ static void ParseTexMod( char *_text, textureBundle_t *bundle )
 		tmi->matrix[0][0] = 1;
 		tmi->matrix[0][1] = 0;
 		tmi->matrix[1][0] = 0;
-		tmi->matrix[1][0] = 1;
+		tmi->matrix[1][1] = 1;
 
 		token = COM_ParseExt( text, qfalse );
 		if ( token[0] == 0 )
@@ -1025,7 +1025,7 @@ static void ParseTexMod( char *_text, textureBundle_t *bundle )
 		tmi->matrix[0][0] = 0;
 		tmi->matrix[0][1] = 1;
 		tmi->matrix[1][0] = 1;
-		tmi->matrix[1][0] = 0;
+		tmi->matrix[1][1] = 0;
 		tmi->translate[0] = 0;
 		tmi->translate[1] = 0;
 
