@@ -1806,13 +1806,11 @@ int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod, int startTagInde
 	header = (mdmHeader_t *)mod->modelData;
 
 	if ( startTagIndex >= header->numTags ) {
-		memset( outTag, 0, sizeof( *outTag ) );
 		return -1;
 	}
 
 	if ( !frameModel || !oldFrameModel ) {
 		ri.Printf( PRINT_WARNING, "WARNING: Cannot get MDM tag '%s' from '%s' without frameModel\n", tagName, mod->name );
-		memset( outTag, 0, sizeof( *outTag ) );
 		return -1;
 	}
 
@@ -1828,7 +1826,6 @@ int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod, int startTagInde
 	}
 
 	if ( i >= header->numTags ) {
-		memset( outTag, 0, sizeof( *outTag ) );
 		return -1;
 	}
 
