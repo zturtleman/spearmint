@@ -2833,70 +2833,92 @@ void R_Modellist_f( void ) {
 
 /*
 ================
-R_GetTag
+R_GetMDVTag
 ================
 */
-static mdvTag_t *R_GetTag( mdvModel_t *mod, int frame, const char *_tagName ) {
+static int R_GetMDVTagIndex( mdvModel_t *mod, const char *tagName, int startTagIndex ) {
+	mdvTagName_t    *tag;
 	int             i;
-	mdvTag_t       *tag;
-	mdvTagName_t   *tagName;
 
-	if ( frame >= mod->numFrames ) {
-		// it is possible to have a bad frame while changing models, so don't error
-		frame = mod->numFrames - 1;
-	}
-
-	tag = mod->tags + frame * mod->numTags;
-	tagName = mod->tagNames;
-	for(i = 0; i < mod->numTags; i++, tag++, tagName++)
-	{
-		if(!strcmp(tagName->name, _tagName))
-		{
-			return tag;
+	// ZTM: NOTE: Technically the names could be different for each MD3 frame. :(
+	tag = mod->tagNames + startTagIndex;
+	for ( i = startTagIndex ; i < mod->numTags ; i++, tag++ ) {
+		if ( !strcmp( tag->name, tagName ) ) {
+			return i; // found it
 		}
 	}
 
-	return NULL;
+	return -1;
 }
 
-mdvTag_t *R_GetAnimTag( mdrHeader_t *mod, int framenum, const char *tagName, mdvTag_t * dest)
-{
-	int				i, j, k;
-	int				frameSize;
-	mdrFrame_t		*frame;
-	mdrTag_t		*tag;
+static void R_GetMDVTag( mdvModel_t *mod, int frameNum, int tagIndex, orientation_t *outTag ) {
+	mdvTag_t        *tag;
+	int             i;
 
-	if ( framenum >= mod->numFrames ) 
-	{
+	if ( frameNum >= mod->numFrames ) {
 		// it is possible to have a bad frame while changing models, so don't error
-		framenum = mod->numFrames - 1;
+		frameNum = mod->numFrames - 1;
 	}
 
-	tag = (mdrTag_t *)((byte *)mod + mod->ofsTags);
-	for ( i = 0 ; i < mod->numTags ; i++, tag++ )
-	{
-		if ( !strcmp( tag->name, tagName ) )
-		{
-			// uncompressed model...
-			//
-			frameSize = (intptr_t)( &((mdrFrame_t *)0)->bones[ mod->numBones ] );
-			frame = (mdrFrame_t *)((byte *)mod + mod->ofsFrames + framenum * frameSize );
+	assert( tagIndex >= 0 && tagIndex < mod->numTags );
 
-			for (j = 0; j < 3; j++)
-			{
-				for (k = 0; k < 3; k++)
-					dest->axis[j][k]=frame->bones[tag->boneIndex].matrix[k][j];
-			}
+	tag = mod->tags + frameNum * mod->numTags + tagIndex;
 
-			dest->origin[0]=frame->bones[tag->boneIndex].matrix[0][3];
-			dest->origin[1]=frame->bones[tag->boneIndex].matrix[1][3];
-			dest->origin[2]=frame->bones[tag->boneIndex].matrix[2][3];				
+	VectorCopy( tag->origin, outTag->origin );
+	for ( i = 0; i < 3; i++ ) {
+		VectorCopy( tag->axis[i], outTag->axis[i] );
+	}
+}
 
-			return dest;
+
+/*
+================
+R_GetMDRTag
+================
+*/
+static int R_GetMDRTagIndex( mdrHeader_t *mod, const char *tagName, int startTagIndex ) {
+	mdrTag_t        *tag;
+	int             i;
+
+	tag = (mdrTag_t *)((byte *)mod + mod->ofsTags) + startTagIndex;
+	for ( i = startTagIndex ; i < mod->numTags ; i++, tag++ ) {
+		if ( !strcmp( tag->name, tagName ) ) {
+			return i; // found it
 		}
 	}
 
-	return NULL;
+	return -1;
+}
+
+static void R_GetMDRTag( mdrHeader_t *mod, int frameNum, int tagIndex, orientation_t *outTag ) {
+	int             j, k;
+	int             frameSize;
+	mdrFrame_t      *frame;
+	mdrTag_t        *tag;
+
+	if ( frameNum >= mod->numFrames ) {
+		// it is possible to have a bad frame while changing models, so don't error
+		frameNum = mod->numFrames - 1;
+	}
+
+	assert( tagIndex >= 0 && tagIndex < mod->numTags );
+
+	tag = (mdrTag_t *)((byte *)mod + mod->ofsTags) + tagIndex;
+
+	// uncompressed model...
+	//
+	frameSize = (intptr_t)( &((mdrFrame_t *)0)->bones[ mod->numBones ] );
+	frame = (mdrFrame_t *)((byte *)mod + mod->ofsFrames + frameNum * frameSize );
+
+	outTag->origin[0] = frame->bones[tag->boneIndex].matrix[0][3];
+	outTag->origin[1] = frame->bones[tag->boneIndex].matrix[1][3];
+	outTag->origin[2] = frame->bones[tag->boneIndex].matrix[2][3];
+
+	for ( j = 0; j < 3; j++ ) {
+		for ( k = 0; k < 3; k++ ) {
+			outTag->axis[j][k] = frame->bones[tag->boneIndex].matrix[k][j];
+		}
+	}
 }
 
 /*
@@ -2908,79 +2930,106 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 					 qhandle_t frameModel, int startFrame,
 					 qhandle_t endFrameModel, int endFrame,
 					 float frac, const char *tagName ) {
-	mdvTag_t	*start, *end;
-	mdvTag_t	start_space, end_space;
+	orientation_t	start, end;
+	qboolean		lerpTag;
 	int		i;
 	float		frontLerp, backLerp;
 	model_t		*model;
+	int			startTagIndex;
+	int			tagIndex;
+	int			*pTagIndex = NULL; // ZTM: TODO: Move to function argument
+
+	if ( pTagIndex ) {
+		startTagIndex = *pTagIndex;
+
+		// specified invalid starting tag, return tag not found
+		if ( startTagIndex < 0 ) {
+			handle = 0;
+		}
+	} else {
+		startTagIndex = 0;
+	}
 
 	model = R_GetModelByHandle( handle );
-	if ( !model->mdv[0] )
+
+	if ( model->type == MOD_MESH )
 	{
-		if(model->type == MOD_MDR)
-		{
-			start = R_GetAnimTag((mdrHeader_t *) model->modelData, startFrame, tagName, &start_space);
-			end = R_GetAnimTag((mdrHeader_t *) model->modelData, endFrame, tagName, &end_space);
+		lerpTag = qtrue;
+		tagIndex = R_GetMDVTagIndex( model->mdv[0], tagName, startTagIndex );
+
+		if ( tagIndex >= 0 ) {
+			R_GetMDVTag( model->mdv[0], startFrame, tagIndex, &start );
+			R_GetMDVTag( model->mdv[0], endFrame, tagIndex, &end );
 		}
-		else if(model->type == MOD_MDS)
-		{
-			int retval;
+	}
+	else if ( model->type == MOD_MDR )
+	{
+		lerpTag = qtrue;
+		tagIndex = R_GetMDRTagIndex( (mdrHeader_t *) model->modelData, tagName, startTagIndex );
 
-			retval = R_GetMDSBoneTag( tag, model, 0, frameModel, startFrame, endFrameModel, endFrame, frac, tagName );
-
-			if ( retval >= 0 ) {
-				return qtrue;
-			}
-
-			// failed
-			return qfalse;
+		if ( tagIndex >= 0 ) {
+			R_GetMDRTag( (mdrHeader_t *) model->modelData, startFrame, tagIndex, &start );
+			R_GetMDRTag( (mdrHeader_t *) model->modelData, endFrame, tagIndex, &end );
 		}
-		else if(model->type == MOD_MDM)
-		{
-			int retval;
-
-			retval = R_GetMDMBoneTag( tag, model, 0, frameModel, startFrame, endFrameModel, endFrame, frac, tagName );
-
-			if ( retval >= 0 ) {
-				return qtrue;
-			}
-
-			// failed
-			return qfalse;
-		}
-		else if( model->type == MOD_IQM ) {
-			return R_IQMLerpTag( tag, model->modelData,
-					frameModel, startFrame,
-					endFrameModel, endFrame,
-					frac, tagName );
-		} else {
-			start = end = NULL;
-		}
+	}
+	else if ( model->type == MOD_MDS )
+	{
+		lerpTag = qfalse;
+		tagIndex = R_GetMDSBoneTag( tag, model,
+				startTagIndex,
+				frameModel, startFrame,
+				endFrameModel, endFrame,
+				frac, tagName );
+	}
+	else if ( model->type == MOD_MDM )
+	{
+		lerpTag = qfalse;
+		tagIndex = R_GetMDMBoneTag( tag, model,
+				startTagIndex,
+				frameModel, startFrame,
+				endFrameModel, endFrame,
+				frac, tagName );
+	}
+	else if ( model->type == MOD_IQM )
+	{
+		lerpTag = qfalse;
+		tagIndex = R_IQMLerpTag( tag, model->modelData,
+				startTagIndex,
+				frameModel, startFrame,
+				endFrameModel, endFrame,
+				frac, tagName );
 	}
 	else
 	{
-		start = R_GetTag( model->mdv[0], startFrame, tagName );
-		end = R_GetTag( model->mdv[0], endFrame, tagName );
+		lerpTag = qfalse;
+		tagIndex = -1;
 	}
 
-	if ( !start || !end ) {
+	if ( pTagIndex ) {
+		*pTagIndex = tagIndex;
+	}
+
+	if ( tagIndex < 0 ) {
 		AxisClear( tag->axis );
 		VectorClear( tag->origin );
 		return qfalse;
 	}
 
-	frontLerp = frac;
-	backLerp = 1.0f - frac;
+	if ( lerpTag ) {
+		frontLerp = frac;
+		backLerp = 1.0f - frac;
 
-	for ( i = 0 ; i < 3 ; i++ ) {
-		tag->origin[i] = start->origin[i] * backLerp +  end->origin[i] * frontLerp;
-		tag->axis[0][i] = start->axis[0][i] * backLerp +  end->axis[0][i] * frontLerp;
-		tag->axis[1][i] = start->axis[1][i] * backLerp +  end->axis[1][i] * frontLerp;
-		tag->axis[2][i] = start->axis[2][i] * backLerp +  end->axis[2][i] * frontLerp;
+		for ( i = 0 ; i < 3 ; i++ ) {
+			tag->origin[i] = start.origin[i] * backLerp +  end.origin[i] * frontLerp;
+			tag->axis[0][i] = start.axis[0][i] * backLerp +  end.axis[0][i] * frontLerp;
+			tag->axis[1][i] = start.axis[1][i] * backLerp +  end.axis[1][i] * frontLerp;
+			tag->axis[2][i] = start.axis[2][i] * backLerp +  end.axis[2][i] * frontLerp;
+		}
+		VectorNormalize( tag->axis[0] );
+		VectorNormalize( tag->axis[1] );
+		VectorNormalize( tag->axis[2] );
 	}
-	VectorNormalize( tag->axis[0] );
-	VectorNormalize( tag->axis[1] );
-	VectorNormalize( tag->axis[2] );
+
 	return qtrue;
 }
 
@@ -3061,6 +3110,32 @@ int R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, i
 
 		start = (mdsFrame_t *)((byte *) header + header->ofsFrames + ( startFrame % header->numFrames ) * frameSize );
 		end = (mdsFrame_t *)((byte *) header + header->ofsFrames + ( endFrame % header->numFrames ) * frameSize );
+
+		if ( startFrame == endFrame ) {
+			VectorCopy( start->bounds[0], mins );
+			VectorCopy( start->bounds[1], maxs );
+		} else {
+			frontLerp = frac;
+			backLerp = 1.0f - frac;
+
+			for ( i = 0 ; i < 3 ; i++ ) {
+				mins[i] = start->bounds[0][i] * backLerp + end->bounds[0][i] * frontLerp;
+				maxs[i] = start->bounds[1][i] * backLerp + end->bounds[1][i] * frontLerp;
+			}
+		}
+
+		return qtrue;
+	} else if (model->type == MOD_MDX) {
+		mdxHeader_t	*header;
+		mdxFrame_t	*start, *end;
+		int frameSize;
+
+		header = (mdxHeader_t *)model->modelData;
+
+		frameSize = (size_t)( &((mdxFrame_t *)0)->bones[ header->numBones ] );
+
+		start = (mdxFrame_t *)((byte *) header + header->ofsFrames + ( startFrame % header->numFrames ) * frameSize );
+		end = (mdxFrame_t *)((byte *) header + header->ofsFrames + ( endFrame % header->numFrames ) * frameSize );
 
 		if ( startFrame == endFrame ) {
 			VectorCopy( start->bounds[0], mins );

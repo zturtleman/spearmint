@@ -600,6 +600,7 @@ static void Upload32( int numTexLevels, const textureLevel_t *pics,
 						  qboolean mipmap, 
 						  int picmip, 
 							qboolean lightMap,
+						  qboolean allowCompression,
 						  int *format, 
 						  int *pUploadWidth, int *pUploadHeight )
 {
@@ -763,11 +764,11 @@ static void Upload32( int numTexLevels, const textureLevel_t *pics,
 			}
 			else
 			{
-				if ( glConfig.textureCompression == TC_S3TC_ARB )
+				if ( allowCompression && glConfig.textureCompression == TC_S3TC_ARB )
 				{
 					internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
 				}
-				else if ( glConfig.textureCompression == TC_S3TC )
+				else if ( allowCompression && glConfig.textureCompression == TC_S3TC )
 				{
 					internalFormat = GL_RGB4_S3TC;
 				}
@@ -798,7 +799,11 @@ static void Upload32( int numTexLevels, const textureLevel_t *pics,
 			}
 			else
 			{
-				if ( r_texturebits->integer == 16 )
+				if ( allowCompression && glConfig.textureCompression == TC_S3TC_ARB )
+				{
+					internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+				}
+				else if ( r_texturebits->integer == 16 )
 				{
 					internalFormat = GL_RGBA4;
 				}
@@ -991,6 +996,7 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 								image->flags & IMGFLAG_MIPMAP,
 								picmip,
 								isLightmap,
+								!(image->flags & IMGFLAG_NO_COMPRESSION),
 								&image->internalFormat,
 								&image->uploadWidth,
 								&image->uploadHeight );

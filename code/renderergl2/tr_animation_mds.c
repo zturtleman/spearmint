@@ -1802,7 +1802,6 @@ int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagInde
 	header = (mdsHeader_t *)mod->modelData;
 
 	if ( startTagIndex >= header->numTags ) {
-		memset( outTag, 0, sizeof( *outTag ) );
 		return -1;
 	}
 
@@ -1818,7 +1817,6 @@ int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagInde
 	}
 
 	if ( i >= header->numTags ) {
-		memset( outTag, 0, sizeof( *outTag ) );
 		return -1;
 	}
 

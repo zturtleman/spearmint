@@ -441,15 +441,13 @@ static void ProjectDlightTexture( void ) {
 			}
 		}
 
-#if 0 // ZTM: FIXME: support ET directed dlight
 		if ( dl->flags & REF_DIRECTED_DLIGHT ) {
-			scale = radius;
+			VectorCopy( dl->origin, origin );
 
-			GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, origin);
-		}
-#endif
+			scale = (tess.shader->cullType == CT_TWO_SIDED);
 
-		if ( dl->flags & REF_VERTEX_DLIGHT ) {
+			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, -1);
+		} else if ( dl->flags & REF_VERTEX_DLIGHT ) {
 			scale = dl->radiusInverseCubed;
 
 			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, radius);

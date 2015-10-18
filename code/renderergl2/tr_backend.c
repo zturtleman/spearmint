@@ -584,8 +584,6 @@ qboolean RB_EntityMergable( int entityNum, const shader_t *shader ) {
 	}
 }
 
-#define	MAC_EVENT_PUMP_MSEC		5
-
 /*
 ==================
 RB_RenderDrawSurfList
