@@ -88,8 +88,27 @@ void main()
 
 	float dlightmod = 0;
 
+	// ET global directed light
+	if (u_LightRadius < 0)
+	{
+		var_Tex1 = vec2(0.0);
+
+		dlightmod = u_Intensity * dot(u_DlightInfo.xyz, normal);
+		// if two sided, make value absolute
+		if (u_DlightInfo.a == 1 && dlightmod < 0) {
+			dlightmod = -dlightmod;
+		}
+		dlightmod += u_Intensity * 0.125;
+
+		if ( dlightmod < ( 1.0 / 128.0 ) )
+		{
+			dlightmod = 0;
+		}
+
+		dlightmod = clamp( dlightmod, 0.0, 1.0 );
+	}
 	// ET spherical dlight using vertex light
-	if (u_LightRadius > 0)
+	else if (u_LightRadius > 0)
 	{
 		var_Tex1 = vec2(0.0);
 
