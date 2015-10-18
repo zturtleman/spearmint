@@ -507,6 +507,17 @@ void RE_AddJuniorLightToScene( const vec3_t org, float radius, float intensity, 
 }
 
 /*
+=====================
+RE_AddDirectedLightToScene
+
+=====================
+*/
+void RE_AddDirectedLightToScene( const vec3_t normal, float intensity, float r, float g, float b ) {
+	RE_AddDynamicLightToScene( normal, 256, intensity, r, g, b, REF_GRID_DLIGHT | REF_SURFACE_DLIGHT | REF_DIRECTED_DLIGHT, 0 );
+}
+
+
+/*
 ==============
 RE_AddCoronaToScene
 ==============

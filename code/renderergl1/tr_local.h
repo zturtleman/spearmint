@@ -1580,6 +1580,7 @@ void RE_AddLightToScene( const vec3_t org, float radius, float intensity, float 
 void RE_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
 void RE_AddVertexLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
 void RE_AddJuniorLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void RE_AddDirectedLightToScene( const vec3_t normal, float intensity, float r, float g, float b );
 void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible, qhandle_t hShader );
 void RE_RenderScene( const refdef_t *fd, int fdSize );
 

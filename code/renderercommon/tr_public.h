@@ -89,6 +89,7 @@ typedef struct {
 	void	(*AddAdditiveLightToScene)( const vec3_t org, float radius, float intensity, float r, float g, float b );
 	void	(*AddVertexLightToScene)( const vec3_t org, float radius, float intensity, float r, float g, float b );
 	void	(*AddJuniorLightToScene)( const vec3_t org, float radius, float intensity, float r, float g, float b );
+	void	(*AddDirectedLightToScene)( const vec3_t normal, float intensity, float r, float g, float b );
 	void	(*AddCoronaToScene)( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible, qhandle_t hShader );
 	void	(*RenderScene)( const refdef_t *fd, int bufsize );
 
