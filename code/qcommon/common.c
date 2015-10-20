@@ -951,7 +951,7 @@ void Z_Free( void *ptr )
 Z_FreeTags
 ================
 */
-void Z_FreeTags( int tag ) {
+int Z_FreeTags( int tag ) {
 	int			count;
 	memzone_t	*zone;
 
@@ -973,6 +973,8 @@ void Z_FreeTags( int tag ) {
 		}
 		zone->rover = zone->rover->next;
 	} while ( zone->rover != &zone->blocklist );
+
+	return count;
 }
 
 
@@ -3037,11 +3039,19 @@ Com_ShutdownRef
 ============
 */
 void Com_ShutdownRef( void ) {
+	int blocks;
+
 	if ( re.Shutdown ) {
 		re.Shutdown( qtrue );
 	}
 
 	Com_Memset( &re, 0, sizeof( re ) );
+
+	// check if ri.Malloc memory was freed
+	blocks = Z_FreeTags( TAG_RENDERER );
+	if ( blocks > 0 ) {
+		Com_Printf( S_COLOR_YELLOW "WARNING: Renderer did not free %d zone blocks\n", blocks );
+	}
 
 #ifdef USE_RENDERER_DLOPEN
 	if ( rendererLib ) {
