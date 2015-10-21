@@ -446,11 +446,9 @@ void RE_AddDynamicLightToScene( const vec3_t org, float radius, float intensity,
 		return;
 	}
 
-	// RF, allow us to force some dlights under all circumstances
-	if ( !( flags & REF_FORCE_DLIGHT ) ) {
-		if ( r_dynamiclight->integer == 0 ) {
-			return;
-		}
+	// allow forcing some dlights under all circumstances
+	if ( r_dynamiclight->integer == 0 && !( flags & REF_FORCE_DLIGHT ) ) {
+		return;
 	}
 
 	// set up a new dlight
@@ -683,13 +681,6 @@ void RE_BeginScene(const refdef_t *fd)
 
 	tr.refdef.num_pshadows = 0;
 	tr.refdef.pshadows = &backEndData->pshadows[0];
-
-	// turn off dynamic lighting globally by clearing all the
-	// dlights if it needs to be disabled or if vertex lighting is enabled
-	if ( r_dynamiclight->integer == 0 ||
-		 r_vertexLight->integer == 1 ) {
-		tr.refdef.num_dlights = 0;
-	}
 
 	// a single frame may have multiple scenes draw inside it --
 	// a 3D game view, 3D status bar renderings, 3D menus, etc.
