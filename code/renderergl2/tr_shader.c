@@ -3045,6 +3045,10 @@ static qboolean ParseShader( char **text )
 			{
 				shader.cullType = CT_BACK_SIDED;
 			}
+			else if ( !Q_stricmp( token, "front" ) || !Q_stricmp( token, "frontside" ) || !Q_stricmp( token, "frontsided" ) )
+			{
+				shader.cullType = CT_FRONT_SIDED;
+			}
 			else
 			{
 				ri.Printf( PRINT_WARNING, "WARNING: invalid cull parm '%s' in shader '%s'\n", token, shader.name );
