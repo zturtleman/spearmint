@@ -2653,6 +2653,10 @@ static qboolean ParseShader( char **text )
 		else if ( !Q_stricmp( token, "surfaceDensity" ) ) {
 			continue;
 		}
+		// subdivisions <integer> // used by FAKK mapcompiler for patch draw surface's subdivisions
+		else if ( !Q_stricmp( token, "subdivisions" ) ) {
+			continue;
+		}
 		// lightcolor ( <red> <green> <blue> )
 		// ZTM: I think it's used by SoF2 map compiler as an alternative to q3map_lightimage
 		// Might also be used by SoF2's RMG for ambient color (if shader is sky).
