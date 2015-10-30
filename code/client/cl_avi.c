@@ -657,7 +657,7 @@ qboolean CL_CloseAVI( void )
   Z_Free( afd.eBuffer );
   FS_FCloseFile( afd.f );
 
-  Com_Printf( "Wrote %d:%d frames to %s\n", afd.numVideoFrames, afd.numAudioFrames, afd.fileName );
+  Com_Printf( "[skipnotify]Wrote %d:%d frames to %s\n", afd.numVideoFrames, afd.numAudioFrames, afd.fileName );
 
   return qtrue;
 }
