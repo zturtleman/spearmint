@@ -648,6 +648,13 @@ qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 		for (i = GLYPH_START; i <= GLYPH_END; i++) {
 			font->glyphs[i].glyph = RE_RegisterShaderNoPicMip(font->glyphs[i].shaderName);
 		}
+
+		// Team Arena's fonts don't have character 255,
+		// it's suppose to be a lowercase y with two dots over it
+		if (font->glyphs[255].shaderName[0] == '\0') {
+			Com_Memcpy(&font->glyphs[255], &font->glyphs[(int)'y'], sizeof (glyphInfo_t));
+		}
+
 		Com_Memcpy(&registeredFont[registeredFontCount++], font, sizeof(fontInfo_t));
 		ri.FS_FreeFile(faceData);
 		return qtrue;
