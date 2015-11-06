@@ -953,7 +953,12 @@ qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWi
 	Com_Memcpy(&registeredFont[registeredFontCount++], font, sizeof(fontInfo_t));
 
 	if(r_saveFontData->integer && !ri.FS_FileExists(datName)) {
+#if defined Q3_BIG_ENDIAN
+		Com_Printf( S_COLOR_YELLOW "WARNING: Cannot write font data on big endian systems\n" );
+#else
+		// ZTM: FIXME: need to swap for big endian systems
 		ri.FS_WriteFile(datName, font, sizeof(fontInfo_t));
+#endif
 	}
 
 	ri.Free(out);
