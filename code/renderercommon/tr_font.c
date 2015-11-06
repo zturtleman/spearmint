@@ -648,6 +648,13 @@ qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 		for (i = GLYPH_START; i <= GLYPH_END; i++) {
 			font->glyphs[i].glyph = RE_RegisterShaderNoPicMip(font->glyphs[i].shaderName);
 		}
+
+		// Team Arena's fonts don't have character 255,
+		// it's suppose to be a lowercase y with two dots over it
+		if (font->glyphs[255].shaderName[0] == '\0') {
+			Com_Memcpy(&font->glyphs[255], &font->glyphs[(int)'y'], sizeof (glyphInfo_t));
+		}
+
 		Com_Memcpy(&registeredFont[registeredFontCount++], font, sizeof(fontInfo_t));
 		ri.FS_FreeFile(faceData);
 		return qtrue;
@@ -659,15 +666,114 @@ qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 }
 
 #ifdef BUILD_FREETYPE
-// Q3A uses some additional symbols, by default these glyphs would just be default missing glyph anyway
+// Q3A's gfx/2d/bigchars some additional symbols, by default these glyphs would just be default missing glyph anyway
 unsigned long R_RemapGlyphCharacter( int charIndex ) {
 	switch ( charIndex ) {
+		// thick box drawing characters
+		// - top
+		case 1:
+			return 0x2554; // box drawings double down and right
+		case 2:
+			return 0x2550; // box drawings double horizontal
+		case 3:
+			return 0x2557; // box drawings double down and left
+		// - middle
+		case 4:
+			return 0x2551; // box drawings double vertical
+		case 5:
+			return ' '; // blank
+		case 6:
+			return 0x2551; // box drawings double vertical
+		// - bottom
+		case 7:
+			return 0x255A; // box drawings double up and right
+		case 8:
+			return 0x2550; // box drawings double horizontal
+		case 9:
+			return 0x255D; // box drawings double up and left
+
+		//
+		// cursors
+		//
 		case 10:
-			return 0xFF3F; // full width low line
+			return 0xFF3F; // full width low line (underline)
 		case 11:
 			return 0x2588; // full block
 		case 13:
 			return 0x25B6; // right pointing triangle
+
+		//
+		// misc
+		//
+		case 16:
+			return 0x301A; // left white square bracket
+		case 17:
+			return 0x301B; // right white square bracket
+
+		// thin box drawing characters
+		// - top
+		case 18:
+			return 0x250C; // box drawings light down and right
+		case 19:
+			return 0x2500; // box drawings light horizontal
+		case 20:
+			return 0x2510; // box drawings light down and left
+		// - middle
+		case 21:
+			return 0x2502; // box drawings light vertical
+		case 22:
+			return ' '; // blank
+		case 23:
+			return 0x2502; // box drawings light vertical
+		// - bottom
+		case 24:
+			return 0x2514; // box drawings light up and right
+		case 25:
+			return 0x2500; // box drawings light horizontal
+		case 26:
+			return 0x2518; // box drawings light up and left
+
+		//
+		// misc
+		//
+		case 27:
+			return 0xFFE3; // full width macron (overline)
+
+		// horzontal bar
+		case 29:
+			return 0x2576; // box drawings light right
+		case 30:
+			return 0x2500; // box drawings light horizontal
+		case 31:
+			return 0x2574; // box drawings light left
+
+		case 127:
+			return 0x2B05; // leftward black arrow
+
+		// old slider bar characters
+		case 128:
+			return 0x255E; // box drawings vertical single and right double
+		case 129:
+			return 0x2550; // box drawings double horizontal
+		case 130:
+			return 0x2561; // box drawings vertical single and left double
+
+		// 131 is a half width block but unicode doesn't seem to have one that doesn't include space on left or right side
+		// 132 is a transparent square
+
+		case 134:
+			return 0x25BC; // black down-pointing triangle
+		case 135:
+			return 0x25B2; // black up-pointing triangle
+		case 136:
+			return 0x25C0; // black left-pointing triangle
+
+		case 139: // same as index 11
+			return 0x2588; // full block
+
+		case 141: // same as index 13
+			return 0x25B6; // right pointing triangle
+
 		default:
 			break;
 	}
@@ -847,7 +953,12 @@ qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWi
 	Com_Memcpy(&registeredFont[registeredFontCount++], font, sizeof(fontInfo_t));
 
 	if(r_saveFontData->integer && !ri.FS_FileExists(datName)) {
+#if defined Q3_BIG_ENDIAN
+		Com_Printf( S_COLOR_YELLOW "WARNING: Cannot write font data on big endian systems\n" );
+#else
+		// ZTM: FIXME: need to swap for big endian systems
 		ri.FS_WriteFile(datName, font, sizeof(fontInfo_t));
+#endif
 	}
 
 	ri.Free(out);

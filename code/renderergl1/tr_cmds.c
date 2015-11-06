@@ -341,6 +341,10 @@ void RE_RotatedPic( float x, float y, float w, float h,
 					float s1, float t1, float s2, float t2, qhandle_t hShader, float angle ) {
 	stretchPicCommand_t *cmd;
 
+	if ( !tr.registered ) {
+		return;
+	}
+
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
 	if ( !cmd ) {
 		return;
@@ -375,6 +379,10 @@ RE_StretchPicGradient
 void RE_StretchPicGradient( float x, float y, float w, float h,
 							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor ) {
 	stretchPicCommand_t *cmd;
+
+	if ( !tr.registered ) {
+		return;
+	}
 
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
 	if ( !cmd ) {
@@ -412,6 +420,10 @@ extern int r_numpolyverts;
 
 void RE_2DPolyies( polyVert_t* verts, int numverts, qhandle_t hShader ) {
 	poly2dCommand_t* cmd;
+
+	if ( !tr.registered ) {
+		return;
+	}
 
 	if ( r_numpolyverts + numverts > max_polyverts ) {
 		return;

@@ -1664,7 +1664,7 @@ RENDERER BACK END COMMAND QUEUE
 =============================================================
 */
 
-#define	MAX_RENDER_COMMANDS	0x40000
+#define	MAX_RENDER_COMMANDS	0x100000
 
 typedef struct {
 	byte	cmds[MAX_RENDER_COMMANDS];
