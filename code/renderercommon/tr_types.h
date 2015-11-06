@@ -306,10 +306,15 @@ typedef struct {
 	char		shaderName[32];
 } glyphInfo_t;
 
+#define FONTFLAG_CURSORS    0x0001 // font has extra glyphs (notably cursors) like Q3's bigchars font
+#define FONTFLAG_BORDER     0x0002 // font has a border
+
 typedef struct {
 	glyphInfo_t	glyphs [GLYPHS_PER_FONT];
 	float		glyphScale;
 	char		name[MAX_QPATH];
+	int			pointSize;
+	int			flags;
 } fontInfo_t;
 
 #endif	// __TR_TYPES_H

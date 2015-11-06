@@ -613,13 +613,18 @@ float readFloat( void ) {
 R_LoadPreRenderedFont
 ===============
 */
-qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
+qboolean R_LoadPreRenderedFont( const char *datName, int pointSize, fontInfo_t *font ) {
+	typedef struct {
+		glyphInfo_t	glyphs [GLYPHS_PER_FONT];
+		float		glyphScale;
+		char		name[MAX_QPATH];
+	} teamArenaFontInfo_t;
 	void		*faceData;
 	int			len;
 	int			i;
 
 	len = ri.FS_ReadFile(datName, NULL);
-	if (len == sizeof(fontInfo_t)) {
+	if (len == sizeof(teamArenaFontInfo_t)) {
 		ri.FS_ReadFile(datName, &faceData);
 		fdOffset = 0;
 		fdFile = faceData;
@@ -643,6 +648,9 @@ qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 		font->glyphScale = readFloat();
 		Com_Memcpy(font->name, &fdFile[fdOffset], MAX_QPATH);
 
+		font->pointSize = pointSize;
+		font->flags = 0;
+
 //		Com_Memcpy(font, faceData, sizeof(fontInfo_t));
 		Q_strncpyz(font->name, datName, sizeof(font->name));
 		for (i = GLYPH_START; i <= GLYPH_END; i++) {
@@ -655,6 +663,44 @@ qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 			Com_Memcpy(&font->glyphs[255], &font->glyphs[(int)'y'], sizeof (glyphInfo_t));
 		}
 
+		Com_Memcpy(&registeredFont[registeredFontCount++], font, sizeof(fontInfo_t));
+		ri.FS_FreeFile(faceData);
+		return qtrue;
+	}
+	// Spearmint 0.2 font: Replaces glyph bottom offset with left offset and adds pointsize and font flags
+	else if (len == sizeof(fontInfo_t)) {
+		ri.FS_ReadFile(datName, &faceData);
+		fdOffset = 0;
+		fdFile = faceData;
+		for(i=0; i<GLYPHS_PER_FONT; i++) {
+			font->glyphs[i].height		= readInt();
+			font->glyphs[i].top			= readInt();
+			font->glyphs[i].left		= readInt(); // extended font data: left instead of bottom
+			font->glyphs[i].pitch		= readInt();
+			font->glyphs[i].xSkip		= readInt();
+			font->glyphs[i].imageWidth	= readInt();
+			font->glyphs[i].imageHeight = readInt();
+			font->glyphs[i].s			= readFloat();
+			font->glyphs[i].t			= readFloat();
+			font->glyphs[i].s2			= readFloat();
+			font->glyphs[i].t2			= readFloat();
+			font->glyphs[i].glyph		= readInt();
+			Q_strncpyz(font->glyphs[i].shaderName, (const char *)&fdFile[fdOffset], sizeof(font->glyphs[i].shaderName));
+			fdOffset += sizeof(font->glyphs[i].shaderName);
+		}
+		font->glyphScale = readFloat();
+		Com_Memcpy(font->name, &fdFile[fdOffset], MAX_QPATH);
+		fdOffset += MAX_QPATH;
+
+		// extended font data
+		font->pointSize = readInt();
+		font->flags = readInt();
+
+//		Com_Memcpy(font, faceData, sizeof(fontInfo_t));
+		Q_strncpyz(font->name, datName, sizeof(font->name));
+		for (i = GLYPH_START; i <= GLYPH_END; i++) {
+			font->glyphs[i].glyph = RE_RegisterShaderNoPicMip(font->glyphs[i].shaderName);
+		}
 		Com_Memcpy(&registeredFont[registeredFontCount++], font, sizeof(fontInfo_t));
 		ri.FS_FreeFile(faceData);
 		return qtrue;
@@ -946,8 +992,14 @@ qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWi
 	// we also need to adjust the scale based on point size relative to 48 points as the ui scaling is based on a 48 point font
 	glyphScale *= 48.0f / pointSize;
 
-	registeredFont[registeredFontCount].glyphScale = glyphScale;
 	font->glyphScale = glyphScale;
+	font->pointSize = pointSize;
+	font->flags = FONTFLAG_CURSORS;
+
+	if ( borderWidth > 0 ) {
+		font->flags |= FONTFLAG_BORDER;
+	}
+
 	Com_sprintf(datName, sizeof(datName), "%s_%i.dat", strippedName, pointSize);
 	Q_strncpyz(font->name, datName, sizeof(font->name));
 	Com_Memcpy(&registeredFont[registeredFontCount++], font, sizeof(fontInfo_t));
@@ -1031,7 +1083,7 @@ static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, fo
 	}
 #endif
 
-	if ( R_LoadPreRenderedFont( datName, font ) )
+	if ( R_LoadPreRenderedFont( datName, pointSize, font ) )
 		return qtrue;
 
 	return qfalse;
