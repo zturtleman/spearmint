@@ -1092,6 +1092,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 	qboolean depthMaskExplicit = qfalse;
 	qboolean skipRestOfLine = qfalse;
 	qboolean clampMap = qfalse;
+	qboolean clampTexCoords = qfalse;
 	qboolean stage_noMipMaps = shader.noMipMaps;
 	qboolean stage_noPicMip = shader.noPicMip;
 	int stage_picmipFlag = shader_picmipFlag;
@@ -1254,6 +1255,13 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			Q_strncpyz( imageNames[currentBundle][0], token, sizeof( imageNames[currentBundle][0] ) );
 			numImageNames[currentBundle] = 1;
 			clampMap = qtrue;
+		}
+		//
+		// clampTexCoords
+		//
+		else if ( !Q_stricmp( token, "clampTexCoords" ) )
+		{
+			clampTexCoords = qtrue;
 		}
 		//
 		// lightmap <name>
@@ -2038,7 +2046,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			if (!shader_allowCompress)
 				flags |= IMGFLAG_NO_COMPRESSION;
 
-			if (clampMap)
+			if (clampMap || clampTexCoords)
 				flags |= IMGFLAG_CLAMPTOEDGE;
 
 			if (stage->type == ST_NORMALMAP || stage->type == ST_NORMALPARALLAXMAP)
