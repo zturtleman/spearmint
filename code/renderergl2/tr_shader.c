@@ -1091,11 +1091,15 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0, depthTestBits = 0;
 	qboolean depthMaskExplicit = qfalse;
 	qboolean skipRestOfLine = qfalse;
+	qboolean clampMap = qfalse;
 	qboolean stage_noMipMaps = shader.noMipMaps;
 	qboolean stage_noPicMip = shader.noPicMip;
 	int stage_picmipFlag = shader_picmipFlag;
 	int currentBundle = 0;
 	textureBundle_t *bundle = &stage->bundle[0];
+	char imageNames[2/*MAX_TEXTURE_BUNDLES*/][MAX_IMAGE_ANIMATIONS][MAX_QPATH];
+	int numImageNames[2/*MAX_TEXTURE_BUNDLES*/] = {0};
+	int i;
 
 	stage->active = qtrue;
 
@@ -1230,39 +1234,9 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 			else
 			{
-				imgType_t type = IMGTYPE_COLORALPHA;
-				imgFlags_t flags = IMGFLAG_NONE;
-
-				if (!stage_noMipMaps)
-					flags |= IMGFLAG_MIPMAP;
-
-				if (!stage_noPicMip)
-					flags |= stage_picmipFlag;
-
-				if (stage->type == ST_NORMALMAP || stage->type == ST_NORMALPARALLAXMAP)
-				{
-					type = IMGTYPE_NORMAL;
-					flags |= IMGFLAG_NOLIGHTSCALE;
-
-					if (stage->type == ST_NORMALPARALLAXMAP)
-						type = IMGTYPE_NORMALHEIGHT;
-				}
-				else
-				{
-					if (r_genNormalMaps->integer)
-						flags |= IMGFLAG_GENNORMALMAP;
-				}
-
-				if (!shader_allowCompress)
-					flags |= IMGFLAG_NO_COMPRESSION;
-
-				bundle->image[0] = R_FindImageFile( token, type, flags );
-
-				if ( !bundle->image[0] )
-				{
-					ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-					return qfalse;
-				}
+				Q_strncpyz( imageNames[currentBundle][0], token, sizeof( imageNames[currentBundle][0] ) );
+				numImageNames[currentBundle] = 1;
+				clampMap = qfalse;
 			}
 		}
 		//
@@ -1270,9 +1244,6 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		//
 		else if ( !Q_stricmp( token, "clampmap" ) )
 		{
-			imgType_t type = IMGTYPE_COLORALPHA;
-			imgFlags_t flags = IMGFLAG_CLAMPTOEDGE;
-
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] )
 			{
@@ -1280,35 +1251,9 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				return qfalse;
 			}
 
-			if (!stage_noMipMaps)
-				flags |= IMGFLAG_MIPMAP;
-
-			if (!stage_noPicMip)
-				flags |= stage_picmipFlag;
-
-			if (!shader_allowCompress)
-				flags |= IMGFLAG_NO_COMPRESSION;
-
-			if (stage->type == ST_NORMALMAP || stage->type == ST_NORMALPARALLAXMAP)
-			{
-				type = IMGTYPE_NORMAL;
-				flags |= IMGFLAG_NOLIGHTSCALE;
-
-				if (stage->type == ST_NORMALPARALLAXMAP)
-					type = IMGTYPE_NORMALHEIGHT;
-			}
-			else
-			{
-				if (r_genNormalMaps->integer)
-					flags |= IMGFLAG_GENNORMALMAP;
-			}
-
-			bundle->image[0] = R_FindImageFile( token, type, flags );
-			if ( !bundle->image[0] )
-			{
-				ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-				return qfalse;
-			}
+			Q_strncpyz( imageNames[currentBundle][0], token, sizeof( imageNames[currentBundle][0] ) );
+			numImageNames[currentBundle] = 1;
+			clampMap = qtrue;
 		}
 		//
 		// lightmap <name>
@@ -1352,18 +1297,18 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		else if ( !Q_stricmp( token, "animMap" ) || !Q_stricmp( token, "clampAnimMap" ) || !Q_stricmp( token, "oneshotAnimMap" ) || !Q_stricmp( token, "oneshotClampAnimMap" ) )
 		{
 			int	totalImages = 0;
-			imgFlags_t flags = IMGFLAG_NONE;
 
 			bundle->loopingImageAnim = qtrue;
+			clampMap = qfalse;
 
 			if (!Q_stricmp( token, "clampAnimMap" )) {
-				flags |= IMGFLAG_CLAMPTOEDGE;
+				clampMap = qtrue;
 			}
 			else if (!Q_stricmp( token, "oneshotAnimMap" )) {
 				bundle->loopingImageAnim = qfalse;
 			}
 			else if (!Q_stricmp( token, "oneshotClampAnimMap" )) {
-				flags |= IMGFLAG_CLAMPTOEDGE;
+				clampMap = qtrue;
 				bundle->loopingImageAnim = qfalse;
 			}
 
@@ -1375,14 +1320,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 			bundle->imageAnimationSpeed = atof( token );
 
-			if (!stage_noMipMaps)
-				flags |= IMGFLAG_MIPMAP;
-
-			if (!stage_noPicMip)
-				flags |= stage_picmipFlag;
-
-			if (!shader_allowCompress)
-				flags |= IMGFLAG_NO_COMPRESSION;
+			numImageNames[currentBundle] = 0;
 
 			// parse up to MAX_IMAGE_ANIMATIONS animations
 			while ( 1 ) {
@@ -1392,15 +1330,10 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				if ( !token[0] ) {
 					break;
 				}
-				num = bundle->numImageAnimations;
+				num = numImageNames[currentBundle];
 				if ( num < MAX_IMAGE_ANIMATIONS ) {
-					bundle->image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
-					if ( !bundle->image[num] )
-					{
-						ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-						return qfalse;
-					}
-					bundle->numImageAnimations++;
+					Q_strncpyz( imageNames[currentBundle][num], token, sizeof( imageNames[currentBundle][0] ) );
+					numImageNames[currentBundle]++;
 				}
 				totalImages++;
 			}
@@ -2080,6 +2013,61 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			return qfalse;
 		}
 	}
+
+	//
+	// load images
+	//
+	for ( currentBundle = 0; currentBundle < 2; currentBundle++ )
+	{
+		int num;
+
+		num = numImageNames[currentBundle];
+		bundle = &stage->bundle[currentBundle];
+
+		for ( i = 0; i < num; i++ )
+		{
+			imgType_t type = IMGTYPE_COLORALPHA;
+			imgFlags_t flags = IMGFLAG_NONE;
+
+			if (!stage_noMipMaps)
+				flags |= IMGFLAG_MIPMAP;
+
+			if (!stage_noPicMip)
+				flags |= stage_picmipFlag;
+
+			if (!shader_allowCompress)
+				flags |= IMGFLAG_NO_COMPRESSION;
+
+			if (clampMap)
+				flags |= IMGFLAG_CLAMPTOEDGE;
+
+			if (stage->type == ST_NORMALMAP || stage->type == ST_NORMALPARALLAXMAP)
+			{
+				type = IMGTYPE_NORMAL;
+				flags |= IMGFLAG_NOLIGHTSCALE;
+
+				if (stage->type == ST_NORMALPARALLAXMAP)
+					type = IMGTYPE_NORMALHEIGHT;
+			}
+			else
+			{
+				if (r_genNormalMaps->integer)
+					flags |= IMGFLAG_GENNORMALMAP;
+			}
+
+			token = imageNames[currentBundle][i];
+			bundle->image[i] = R_FindImageFile( token, type, flags );
+
+			if ( !bundle->image[i] )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
+				return qfalse;
+			}
+		}
+
+		bundle->numImageAnimations = ( num > 1 ) ? num : 0;
+	}
+
 
 	//
 	// handle multiple bundles
