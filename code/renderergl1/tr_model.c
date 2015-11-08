@@ -2066,12 +2066,20 @@ static void R_GetMDRTag( mdrHeader_t *mod, int frameNum, int tagIndex, orientati
 /*
 ================
 R_LerpTag
+
+"tag" can be NULL if just checking if tag exists.
+
+"pTagIndex" if not NULL specifies that starting tag index to loop for tagName.
+"pTagIndex" will be set to the tag index of the lerped tag or -1 if not found.
+
+returns 1 if tag was found or 0 if not found
 ================
 */
 int R_LerpTag( orientation_t *tag, qhandle_t handle,
 					 qhandle_t frameModel, int startFrame,
 					 qhandle_t endFrameModel, int endFrame,
-					 float frac, const char *tagName ) {
+					 float frac, const char *tagName,
+					 int *pTagIndex ) {
 	orientation_t	start, end;
 	qboolean		lerpTag;
 	int		i;
@@ -2079,7 +2087,6 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 	model_t		*model;
 	int			startTagIndex;
 	int			tagIndex;
-	int			*pTagIndex = NULL; // ZTM: TODO: Move to function argument
 
 	if ( pTagIndex ) {
 		startTagIndex = *pTagIndex;

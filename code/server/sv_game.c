@@ -515,9 +515,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_R_REGISTERMODEL:
 		return re.RegisterModel( VMA(1) );
 	case G_R_LERPTAG:
-		return re.LerpTag( VMA(1), args[2], 0, args[3], 0, args[4], VMF(5), VMA(6) );
+		return re.LerpTag( VMA(1), args[2], 0, args[3], 0, args[4], VMF(5), VMA(6), NULL );
 	case G_R_LERPTAG_FRAMEMODEL:
-		return re.LerpTag( VMA(1), args[2], args[3], args[4], args[5], args[6], VMF(7), VMA(8) );
+		return re.LerpTag( VMA(1), args[2], args[3], args[4], args[5], args[6], VMF(7), VMA(8), VMA(9) );
 	case G_R_MODELBOUNDS:
 		return re.ModelBounds( args[1], VMA(2), VMA(3), args[4], args[5], VMF(6) );
 
