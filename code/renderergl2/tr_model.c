@@ -2957,7 +2957,7 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 		lerpTag = qtrue;
 		tagIndex = R_GetMDVTagIndex( model->mdv[0], tagName, startTagIndex );
 
-		if ( tagIndex >= 0 ) {
+		if ( tagIndex >= 0 && tag ) {
 			R_GetMDVTag( model->mdv[0], startFrame, tagIndex, &start );
 			R_GetMDVTag( model->mdv[0], endFrame, tagIndex, &end );
 		}
@@ -2967,7 +2967,7 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 		lerpTag = qtrue;
 		tagIndex = R_GetMDRTagIndex( (mdrHeader_t *) model->modelData, tagName, startTagIndex );
 
-		if ( tagIndex >= 0 ) {
+		if ( tagIndex >= 0 && tag ) {
 			R_GetMDRTag( (mdrHeader_t *) model->modelData, startFrame, tagIndex, &start );
 			R_GetMDRTag( (mdrHeader_t *) model->modelData, endFrame, tagIndex, &end );
 		}
@@ -3010,12 +3010,14 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 	}
 
 	if ( tagIndex < 0 ) {
-		AxisClear( tag->axis );
-		VectorClear( tag->origin );
+		if ( tag ) {
+			AxisClear( tag->axis );
+			VectorClear( tag->origin );
+		}
 		return qfalse;
 	}
 
-	if ( lerpTag ) {
+	if ( lerpTag && tag ) {
 		frontLerp = frac;
 		backLerp = 1.0f - frac;
 

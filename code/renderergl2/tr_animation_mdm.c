@@ -1817,6 +1817,11 @@ int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod, int startTagInde
 		return -1;
 	}
 
+	// just checking if tag exists
+	if ( !outTag ) {
+		return i;
+	}
+
 	// now set up fake refent
 
 	Com_Memset( &refent, 0, sizeof ( refent ) );

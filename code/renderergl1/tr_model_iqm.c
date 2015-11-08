@@ -1198,6 +1198,11 @@ int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
 		return -1;
 	}
 
+	// just checking if tag exists
+	if( !tag ) {
+		return joint;
+	}
+
 	startSkeleton = R_GetIQMModelDataByHandle( frameModel, data );
 	endSkeleton = R_GetIQMModelDataByHandle( endFrameModel, data );
 
