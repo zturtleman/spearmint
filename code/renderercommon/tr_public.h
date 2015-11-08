@@ -121,7 +121,7 @@ typedef struct {
 #ifdef __USEA3D
 	void    (*A3D_RenderGeometry) (void *pVoidA3D, void *pVoidGeom, void *pVoidMat, void *pVoidGeomStatus);
 #endif
-	void	(*RegisterFont)(const char *fontName, int pointSize, fontInfo_t *font, int bufsize);
+	void	(*RegisterFont)(const char *fontName, int pointSize, float borderWidth, qboolean forceAutoHint, fontInfo_t *font, int bufsize);
 	void	(*RemapShader)(const char *oldShader, const char *newShader, const char *offsetTime);
 	qboolean (*GetEntityToken)( char *buffer, int size );
 	qboolean (*inPVS)( const vec3_t p1, const vec3_t p2 );

@@ -462,7 +462,7 @@ static void WriteTGA (char *filename, byte *data, int width, int height) {
 }
 
 // returns NULL if glyph does not fit in image
-static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut, int *xOut, int *yOut, int *rowHeight, FT_Face face, unsigned long c, float borderWidth) {
+static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut, int *xOut, int *yOut, int *rowHeight, FT_Face face, unsigned long c, float borderWidth, qboolean forceAutoHint) {
 	int i, loadFlags;
 	static glyphInfo_t glyph;
 	unsigned char *src, *dst;
@@ -473,7 +473,7 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 	if (face != NULL) {
 		loadFlags = FT_LOAD_DEFAULT | FT_LOAD_NO_BITMAP;
 
-		if ( r_fontForceAutoHint->integer ) {
+		if ( forceAutoHint ) {
 			loadFlags |= FT_LOAD_FORCE_AUTOHINT;
 		}
 
@@ -832,7 +832,7 @@ unsigned long R_RemapGlyphCharacter( int charIndex ) {
 R_LoadScalableFont
 ===============
 */
-qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWidth, fontInfo_t *font ) {
+qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWidth, qboolean forceAutoHint, fontInfo_t *font ) {
 	FT_Face		face;
 	int			j, k, xOut, yOut, lastStart, imageNumber;
 	int			scaledSize, rowHeight;
@@ -921,7 +921,7 @@ qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWi
 			// upload/save current image buffer
 			glyph = NULL;
 		} else {
-			glyph = RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &rowHeight, face, R_RemapGlyphCharacter(i), borderWidth);
+			glyph = RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &rowHeight, face, R_RemapGlyphCharacter(i), borderWidth, forceAutoHint);
 		}
 
 		if (!glyph)  {
@@ -1027,7 +1027,7 @@ R_GetFont
 Get already registered font or load a scalable font or a pre-rendered legacy font.
 ==================
 */
-static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, fontInfo_t *font) {
+static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, qboolean forceAutoHint, fontInfo_t *font) {
 	int			i;
 	char		strippedName[MAX_QPATH];
 	char		datName[MAX_QPATH];
@@ -1062,7 +1062,7 @@ static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, fo
 				continue;
 			}
 
-			if ( R_LoadScalableFont( name, pointSize, borderWidth, font ) ) {
+			if ( R_LoadScalableFont( name, pointSize, borderWidth, forceAutoHint, font ) ) {
 				return qtrue;
 			}
 			break;
@@ -1077,7 +1077,7 @@ static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, fo
 
 		Com_sprintf( altName, sizeof (altName), "%s.%s", strippedName, scaleableFontExts[i] );
 
-		if ( R_LoadScalableFont( altName, pointSize, borderWidth, font ) ) {
+		if ( R_LoadScalableFont( altName, pointSize, borderWidth, forceAutoHint, font ) ) {
 			return qtrue;
 		}
 	}
@@ -1094,12 +1094,16 @@ static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, fo
 RE_RegisterFont
 ===============
 */
-void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *vmFont, int vmFontBufSize) {
+void RE_RegisterFont(const char *fontName, int pointSize, float borderWidth, qboolean forceAutoHint, fontInfo_t *vmFont, int vmFontBufSize) {
 	char		strippedName[MAX_QPATH];
 	fontInfo_t	font;
-	float		borderWidth; // ZTM: TODO: Add to API
 
-	borderWidth = r_fontBorderWidth->value;
+	if ( borderWidth < r_fontBorderWidth->value ) {
+		borderWidth = r_fontBorderWidth->value;
+	}
+	if ( r_fontForceAutoHint->integer ) {
+		forceAutoHint = qtrue;
+	}
 
 	if (!fontName) {
 		ri.Printf(PRINT_ALL, "RE_RegisterFont: called with empty name\n");
@@ -1112,7 +1116,7 @@ void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *vmFont, in
 
 	R_IssuePendingRenderCommands();
 
-	if ( R_GetFont( fontName, pointSize, borderWidth, &font ) ) {
+	if ( R_GetFont( fontName, pointSize, borderWidth, forceAutoHint, &font ) ) {
 		Com_Memcpy2( vmFont, vmFontBufSize, &font, sizeof ( fontInfo_t ) );
 		return;
 	}
@@ -1121,7 +1125,7 @@ void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *vmFont, in
 
 	// If there is no extension, assume this is loading one of the legacy fonts
 	if( !Q_stricmpn( strippedName, fontName, strlen( fontName ) ) ) {
-		if ( R_GetFont( "fonts/fontImage", pointSize, borderWidth, &font ) ){
+		if ( R_GetFont( "fonts/fontImage", pointSize, borderWidth, forceAutoHint, &font ) ){
 			Com_Memcpy2( vmFont, vmFontBufSize, &font, sizeof ( fontInfo_t ) );
 			return;
 		}
