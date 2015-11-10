@@ -338,6 +338,7 @@ void R_MDMAddAnimSurfaces( trRefEntity_t *ent ) {
 	mdmHeader_t     *header;
 	mdmSurface_t    *surface;
 	mdxHeader_t     *frameHeader, *oldFrameHeader;
+	mdxHeader_t     *torsoFrameHeader, *oldTorsoFrameHeader;
 	shader_t        *shader;
 	int             cubemapIndex;
 	int i, fogNum, cull;
@@ -351,8 +352,10 @@ void R_MDMAddAnimSurfaces( trRefEntity_t *ent ) {
 
 	frameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.frameModel );
 	oldFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.oldframeModel );
+	torsoFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.torsoFrameModel );
+	oldTorsoFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.oldTorsoFrameModel );
 
-	if ( !frameHeader || !oldFrameHeader ) {
+	if ( !frameHeader || !oldFrameHeader || !torsoFrameHeader || !oldTorsoFrameHeader ) {
 		ri.Printf( PRINT_WARNING, "WARNING: Cannot render MDM '%s' without frameModel\n", tr.currentModel->name );
 		return;
 	}
@@ -360,6 +363,8 @@ void R_MDMAddAnimSurfaces( trRefEntity_t *ent ) {
 	if ( ent->e.renderfx & RF_WRAP_FRAMES ) {
 		ent->e.frame %= frameHeader->numFrames;
 		ent->e.oldframe %= oldFrameHeader->numFrames;
+		ent->e.torsoFrame %= torsoFrameHeader->numFrames;
+		ent->e.oldTorsoFrame %= oldTorsoFrameHeader->numFrames;
 	}
 
 	//
@@ -374,6 +379,17 @@ void R_MDMAddAnimSurfaces( trRefEntity_t *ent ) {
 		|| (ent->e.oldframe < 0) ) {
 			ri.Printf( PRINT_DEVELOPER, "R_MDMAddAnimSurfaces: no such frame %d to %d for '%s'\n",
 				ent->e.oldframe, ent->e.frame,
+				tr.currentModel->name );
+			ent->e.frame = 0;
+			ent->e.oldframe = 0;
+	}
+
+	if ( (ent->e.torsoFrame >= torsoFrameHeader->numFrames)
+		|| (ent->e.torsoFrame < 0)
+		|| (ent->e.oldTorsoFrame >= oldTorsoFrameHeader->numFrames)
+		|| (ent->e.oldTorsoFrame < 0) ) {
+			ri.Printf( PRINT_DEVELOPER, "R_MDMAddAnimSurfaces: no such torso frame %d to %d for '%s'\n",
+				ent->e.oldTorsoFrame, ent->e.torsoFrame,
 				tr.currentModel->name );
 			ent->e.frame = 0;
 			ent->e.oldframe = 0;
