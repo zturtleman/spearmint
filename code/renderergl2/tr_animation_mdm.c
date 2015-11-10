@@ -337,6 +337,8 @@ R_MDMAddAnimSurfaces
 void R_MDMAddAnimSurfaces( trRefEntity_t *ent ) {
 	mdmHeader_t     *header;
 	mdmSurface_t    *surface;
+	mdxHeader_t     *frameHeader, *oldFrameHeader;
+	mdxHeader_t     *torsoFrameHeader, *oldTorsoFrameHeader;
 	shader_t        *shader;
 	int             cubemapIndex;
 	int i, fogNum, cull;
@@ -348,11 +350,49 @@ void R_MDMAddAnimSurfaces( trRefEntity_t *ent ) {
 
 	header = (mdmHeader_t *)tr.currentModel->modelData;
 
-	if ( !ent->e.frameModel || !ent->e.oldframeModel || !ent->e.torsoFrameModel || !ent->e.oldTorsoFrameModel ) {
-		model_t *mod = R_GetModelByHandle( ent->e.hModel );
+	frameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.frameModel );
+	oldFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.oldframeModel );
+	torsoFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.torsoFrameModel );
+	oldTorsoFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.oldTorsoFrameModel );
 
-		ri.Printf( PRINT_WARNING, "WARNING: Cannot render MDM '%s' without frameModel\n", mod->name );
+	if ( !frameHeader || !oldFrameHeader || !torsoFrameHeader || !oldTorsoFrameHeader ) {
+		ri.Printf( PRINT_WARNING, "WARNING: Cannot render MDM '%s' without frameModel\n", tr.currentModel->name );
 		return;
+	}
+
+	if ( ent->e.renderfx & RF_WRAP_FRAMES ) {
+		ent->e.frame %= frameHeader->numFrames;
+		ent->e.oldframe %= oldFrameHeader->numFrames;
+		ent->e.torsoFrame %= torsoFrameHeader->numFrames;
+		ent->e.oldTorsoFrame %= oldTorsoFrameHeader->numFrames;
+	}
+
+	//
+	// Validate the frames so there is no chance of a crash.
+	// This will write directly into the entity structure, so
+	// when the surfaces are rendered, they don't need to be
+	// range checked again.
+	//
+	if ( (ent->e.frame >= frameHeader->numFrames)
+		|| (ent->e.frame < 0)
+		|| (ent->e.oldframe >= oldFrameHeader->numFrames)
+		|| (ent->e.oldframe < 0) ) {
+			ri.Printf( PRINT_DEVELOPER, "R_MDMAddAnimSurfaces: no such frame %d to %d for '%s'\n",
+				ent->e.oldframe, ent->e.frame,
+				tr.currentModel->name );
+			ent->e.frame = 0;
+			ent->e.oldframe = 0;
+	}
+
+	if ( (ent->e.torsoFrame >= torsoFrameHeader->numFrames)
+		|| (ent->e.torsoFrame < 0)
+		|| (ent->e.oldTorsoFrame >= oldTorsoFrameHeader->numFrames)
+		|| (ent->e.oldTorsoFrame < 0) ) {
+			ri.Printf( PRINT_DEVELOPER, "R_MDMAddAnimSurfaces: no such torso frame %d to %d for '%s'\n",
+				ent->e.oldTorsoFrame, ent->e.torsoFrame,
+				tr.currentModel->name );
+			ent->e.frame = 0;
+			ent->e.oldframe = 0;
 	}
 
 	//

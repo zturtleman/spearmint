@@ -337,6 +337,8 @@ R_MDSAddAnimSurfaces
 void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	mdsHeader_t     *header;
 	mdsSurface_t    *surface;
+	mdsHeader_t     *frameHeader, *oldFrameHeader;
+	mdsHeader_t     *torsoFrameHeader, *oldTorsoFrameHeader;
 	shader_t        *shader;
 	int             cubemapIndex;
 	int i, fogNum, cull;
@@ -347,6 +349,46 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	                 || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW)));
 
 	header = (mdsHeader_t *)tr.currentModel->modelData;
+
+	frameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.frameModel );
+	oldFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.oldframeModel );
+	torsoFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.torsoFrameModel );
+	oldTorsoFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.oldTorsoFrameModel );
+
+	if ( ent->e.renderfx & RF_WRAP_FRAMES ) {
+		ent->e.frame %= frameHeader->numFrames;
+		ent->e.oldframe %= oldFrameHeader->numFrames;
+		ent->e.torsoFrame %= torsoFrameHeader->numFrames;
+		ent->e.oldTorsoFrame %= oldTorsoFrameHeader->numFrames;
+	}
+
+	//
+	// Validate the frames so there is no chance of a crash.
+	// This will write directly into the entity structure, so
+	// when the surfaces are rendered, they don't need to be
+	// range checked again.
+	//
+	if ( (ent->e.frame >= frameHeader->numFrames)
+		|| (ent->e.frame < 0)
+		|| (ent->e.oldframe >= oldFrameHeader->numFrames)
+		|| (ent->e.oldframe < 0) ) {
+			ri.Printf( PRINT_DEVELOPER, "R_MDSAddAnimSurfaces: no such frame %d to %d for '%s'\n",
+				ent->e.oldframe, ent->e.frame,
+				tr.currentModel->name );
+			ent->e.frame = 0;
+			ent->e.oldframe = 0;
+	}
+
+	if ( (ent->e.torsoFrame >= torsoFrameHeader->numFrames)
+		|| (ent->e.torsoFrame < 0)
+		|| (ent->e.oldTorsoFrame >= oldTorsoFrameHeader->numFrames)
+		|| (ent->e.oldTorsoFrame < 0) ) {
+			ri.Printf( PRINT_DEVELOPER, "R_MDSAddAnimSurfaces: no such torso frame %d to %d for '%s'\n",
+				ent->e.oldTorsoFrame, ent->e.torsoFrame,
+				tr.currentModel->name );
+			ent->e.frame = 0;
+			ent->e.oldframe = 0;
+	}
 
 	//
 	// cull the entire model if merged bounding box of both frames
