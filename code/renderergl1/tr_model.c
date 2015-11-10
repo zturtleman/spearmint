@@ -1398,8 +1398,6 @@ static qboolean R_LoadMDS( model_t *mod, void *buffer, const char *mod_name ) {
 		return qfalse;
 	}
 
-	ri.Printf( PRINT_WARNING, "R_LoadMDS: %s has %d frames\n", mod_name, mds->numFrames );
-
 	if ( LittleLong( 1 ) != 1 ) {
 		// swap all the frames
 		//frameSize = (int)( &((mdsFrame_t *)0)->bones[ mds->numBones ] );
