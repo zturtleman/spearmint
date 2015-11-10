@@ -60,8 +60,6 @@ static char newBones[ MDX_MAX_BONES ];
 static mdxBoneFrame_t  *bonePtr, *parentBone;
 static mdxBoneFrameCompressed_t    *cBonePtr, *cTBonePtr, *cOldBonePtr, *cOldTBonePtr, *cBoneList, *cOldBoneList, *cBoneListTorso, *cOldBoneListTorso;
 static mdxBoneInfo_t   *boneInfo, *thisBoneInfo, *parentBoneInfo;
-static mdxFrame_t      *frame, *torsoFrame;
-static mdxFrame_t      *oldFrame, *oldTorsoFrame;
 static short           *sh, *sh2;
 static float           *pf;
 #ifdef YD_INGLES
@@ -74,7 +72,7 @@ static vec3_t vec, v2, dir;
 static float diff;
 #ifndef DEDICATED
 static int render_count;
-static float lodRadius, lodScale;
+static float lodScale;
 #endif
 static qboolean isTorso, fullTorso;
 static vec4_t m1[4], m2[4];
@@ -248,9 +246,25 @@ RB_CalcMDSLod
 
 =================
 */
-static float RB_CalcMDSLod( refEntity_t *refent, vec3_t origin, float radius, float modelBias, float modelScale ) {
+static float RB_CalcMDSLod( refEntity_t *refent, float modelBias, float modelScale ) {
+	mdxHeader_t *frameHeader;
+	mdxFrame_t  *frame;
+	vec3_t origin;
+	float radius;
 	float flod, lodScale;
 	float projectedRadius;
+
+	frameHeader = R_GetFrameModelDataByHandle( refent, refent->frameModel );
+
+	if ( !frameHeader ) {
+		return 1.0f;
+	}
+
+	frame = MDS_FRAME( frameHeader, refent->frame );
+
+	// TODO: lerp the radius and origin
+	VectorAdd( refent->origin, frame->localOrigin, origin );
+	radius = frame->radius;
 
 	// compute projected bounding sphere and use that as a criteria for selecting LOD
 
@@ -331,6 +345,13 @@ void R_MDMAddAnimSurfaces( trRefEntity_t *ent ) {
 	personalModel = (ent->e.renderfx & RF_ONLY_MIRROR) && !tr.viewParms.isPortal;
 
 	header = (mdmHeader_t *)tr.currentModel->modelData;
+
+	if ( !ent->e.frameModel || !ent->e.oldframeModel || !ent->e.torsoFrameModel || !ent->e.oldTorsoFrameModel ) {
+		model_t *mod = R_GetModelByHandle( ent->e.hModel );
+
+		ri.Printf( PRINT_WARNING, "WARNING: Cannot render MDM '%s' without frameModel\n", mod->name );
+		return;
+	}
 
 	//
 	// cull the entire model if merged bounding box of both frames
@@ -712,7 +733,7 @@ static ID_INLINE void Matrix3Transpose( const vec3_t matrix[3], vec3_t transpose
 R_CalcBone
 ==============
 */
-static void R_CalcBone( int torsoParent, int boneNum ) {
+static void R_CalcBone( mdxFrame_t *frame, int torsoParent, int boneNum ) {
 	int j;
 
 	thisBoneInfo = &boneInfo[boneNum];
@@ -888,7 +909,7 @@ static void R_CalcBone( int torsoParent, int boneNum ) {
 R_CalcBoneLerp
 ==============
 */
-static void R_CalcBoneLerp( int torsoParent, int boneNum ) {
+static void R_CalcBoneLerp( mdxFrame_t *frame, mdxFrame_t *oldFrame, int torsoParent, int boneNum ) {
 	int j;
 
 	if ( boneNum < 0 || boneNum >= MDX_MAX_BONES ) {
@@ -1198,7 +1219,10 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 	int i;
 	int     *boneRefs;
 	float torsoWeight;
-	mdxHeader_t	*frameHeader, *oldFrameHeader, *torsoFrameHeader, *oldTorsoFrameHeader;
+	mdxHeader_t *frameHeader, *oldFrameHeader;
+	mdxHeader_t *torsoFrameHeader, *oldTorsoFrameHeader;
+	mdxFrame_t *frame, *oldFrame;
+	mdxFrame_t *torsoFrame, *oldTorsoFrame;
 
 	frameHeader = R_GetFrameModelDataByHandle( refent, refent->frameModel );
 	oldFrameHeader = R_GetFrameModelDataByHandle( refent, refent->oldframeModel );
@@ -1297,10 +1321,10 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 
 			// find our parent, and make sure it has been calculated
 			if ( ( boneInfo[*boneRefs].parent >= 0 ) && ( !validBones[boneInfo[*boneRefs].parent] && !newBones[boneInfo[*boneRefs].parent] ) ) {
-				R_CalcBone( frameHeader->torsoParent, boneInfo[*boneRefs].parent );
+				R_CalcBone( frame, frameHeader->torsoParent, boneInfo[*boneRefs].parent );
 			}
 
-			R_CalcBone( frameHeader->torsoParent, *boneRefs );
+			R_CalcBone( frame, frameHeader->torsoParent, *boneRefs );
 
 		}
 
@@ -1319,10 +1343,10 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 
 			// find our parent, and make sure it has been calculated
 			if ( ( boneInfo[*boneRefs].parent >= 0 ) && ( !validBones[boneInfo[*boneRefs].parent] && !newBones[boneInfo[*boneRefs].parent] ) ) {
-				R_CalcBoneLerp( frameHeader->torsoParent, boneInfo[*boneRefs].parent );
+				R_CalcBoneLerp( frame, oldFrame, frameHeader->torsoParent, boneInfo[*boneRefs].parent );
 			}
 
-			R_CalcBoneLerp( frameHeader->torsoParent, *boneRefs );
+			R_CalcBoneLerp( frame, oldFrame, frameHeader->torsoParent, *boneRefs );
 
 		}
 
@@ -1448,11 +1472,7 @@ void RB_MDMSurfaceAnim( mdmSurface_t *surface ) {
 	//
 	// calculate LOD
 	//
-	// TODO: lerp the radius and origin
-	VectorAdd( refent->origin, frame->localOrigin, vec );
-	lodRadius = frame->radius;
-	lodScale = RB_CalcMDSLod( refent, vec, lodRadius, header->lodBias, header->lodScale );
-
+	lodScale = RB_CalcMDSLod( refent, header->lodBias, header->lodScale );
 
 //DBG_SHOWTIME
 
