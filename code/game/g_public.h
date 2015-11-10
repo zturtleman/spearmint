@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define	GAME_API_MAJOR_VERSION	0
-#define	GAME_API_MINOR_VERSION	10
+#define	GAME_API_MINOR_VERSION	11
 
 
 // entity->svFlags
@@ -266,7 +266,9 @@ typedef enum {
 
 	G_R_REGISTERMODEL, // ( const char *name );
 	G_R_LERPTAG, // ( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, float frac, const char *tagName );
-	G_R_LERPTAG_FRAMEMODEL, // ( orientation_t *tag, qhandle_t handle, qhandle_t frameModel, int startFrame, qhandle_t endFrameModel, int endFrame, float frac, const char *tagName );
+	G_R_LERPTAG_FRAMEMODEL, // ( orientation_t *tag, qhandle_t handle, qhandle_t frameModel, int startFrame, qhandle_t endFrameModel, int endFrame, float frac, const char *tagName, int *tagIndex );
+	G_R_LERPTAG_TORSO, // ( orientation_t *tag, qhandle_t handle, qhandle_t frameModel, int startFrame, qhandle_t endFrameModel, int endFrame, float frac, const char *tagName, int *tagIndex,
+	                   //   const vec3_t *torsoAxis, qhandle_t torsoFrameModel, int torsoFrame, qhandle_t oldTorsoFrameModel, int oldTorsoFrame, float torsoFrac );
 	G_R_MODELBOUNDS, // ( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 
 	G_CLIENT_COMMAND,	// ( int playerNum, const char *command );

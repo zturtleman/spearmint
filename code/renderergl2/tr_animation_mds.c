@@ -1789,8 +1789,15 @@ static void R_RecursiveBoneListAdd( int bi, int *boneList, int *numBones, mdsBon
 R_GetMDSBoneTag
 ===============
 */
-int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName ) {
-
+int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod,
+					 const char *tagName, int startTagIndex,
+					 qhandle_t frameModel, int startFrame,
+					 qhandle_t endFrameModel, int endFrame,
+					 float frac, const vec3_t *torsoAxis,
+					 qhandle_t torsoFrameModel, int torsoStartFrame,
+					 qhandle_t torsoEndFrameModel, int torsoEndFrame,
+					 float torsoFrac )
+{
 	int i;
 	mdsHeader_t *header;
 	mdsTag_t    *pTag;
@@ -1829,11 +1836,21 @@ int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagInde
 
 	Com_Memset( &refent, 0, sizeof ( refent ) );
 	refent.hModel = mod->index;
-	refent.frameModel = frameModel;
-	refent.oldframeModel = oldFrameModel;
-	refent.frame = frame;
-	refent.oldframe = oldframe;
-	refent.backlerp = frac;
+	refent.frameModel = endFrameModel;
+	refent.oldframeModel = frameModel;
+	refent.frame = endFrame;
+	refent.oldframe = startFrame;
+	refent.backlerp = 1.0f - frac;
+
+	if ( torsoAxis != NULL ) {
+		// ZTM: FIXME: casted away const to silence warning
+		AxisCopy( (vec3_t *)torsoAxis, refent.torsoAxis );
+	}
+	refent.torsoFrameModel = torsoEndFrameModel;
+	refent.oldTorsoFrameModel = torsoFrameModel;
+	refent.torsoFrame = torsoEndFrame;
+	refent.oldTorsoFrame = torsoStartFrame;
+	refent.torsoBacklerp = 1.0f - torsoFrac;
 
 	// now build the list of bones we need to calc to get this tag's bone information
 

@@ -35,8 +35,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define MAX_VMMAIN_ARGS 13
 
 // Max number of arguments to pass from a vm to engine's syscall handler function for the vm.
-// syscall number + 15 arguments
-#define MAX_VMSYSCALL_ARGS 16
+// qvm syscall number + vm syscall number + 15 args
+#define MAX_VMSYSCALL_ARGS 17
 
 // don't change, this is hardcoded into x86 VMs, opStack protection relies
 // on this

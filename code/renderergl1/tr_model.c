@@ -2079,7 +2079,12 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 					 qhandle_t frameModel, int startFrame,
 					 qhandle_t endFrameModel, int endFrame,
 					 float frac, const char *tagName,
-					 int *pTagIndex ) {
+					 int *pTagIndex,
+					 const vec3_t *torsoAxis, // vec3_t[3]
+					 qhandle_t torsoFrameModel, int torsoStartFrame,
+					 qhandle_t torsoEndFrameModel, int torsoEndFrame,
+					 float torsoFrac )
+{
 	orientation_t	start, end;
 	qboolean		lerpTag;
 	int		i;
@@ -2145,19 +2150,25 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle,
 	{
 		lerpTag = qfalse;
 		tagIndex = R_GetMDSBoneTag( tag, model,
-				startTagIndex,
+				tagName, startTagIndex,
 				frameModel, startFrame,
 				endFrameModel, endFrame,
-				frac, tagName );
+				frac, torsoAxis,
+				torsoFrameModel, torsoStartFrame,
+				torsoEndFrameModel, torsoEndFrame,
+				torsoFrac );
 	}
 	else if ( model->type == MOD_MDM )
 	{
 		lerpTag = qfalse;
 		tagIndex = R_GetMDMBoneTag( tag, model,
-				startTagIndex,
+				tagName, startTagIndex,
 				frameModel, startFrame,
 				endFrameModel, endFrame,
-				frac, tagName );
+				frac, torsoAxis,
+				torsoFrameModel, torsoStartFrame,
+				torsoEndFrameModel, torsoEndFrame,
+				torsoFrac );
 	}
 	else if ( model->type == MOD_IQM )
 	{

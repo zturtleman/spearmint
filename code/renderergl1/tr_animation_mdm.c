@@ -1777,8 +1777,15 @@ void RB_MDMSurfaceAnim( mdmSurface_t *surface ) {
 R_GetMDMBoneTag
 ===============
 */
-int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName ) {
-
+int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod,
+					 const char *tagName, int startTagIndex,
+					 qhandle_t frameModel, int startFrame,
+					 qhandle_t endFrameModel, int endFrame,
+					 float frac, const vec3_t *torsoAxis,
+					 qhandle_t torsoFrameModel, int torsoStartFrame,
+					 qhandle_t torsoEndFrameModel, int torsoEndFrame,
+					 float torsoFrac )
+{
 	int i;
 	mdmHeader_t *header;
 	mdmTag_t    *pTag;
@@ -1792,7 +1799,7 @@ int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod, int startTagInde
 		return -1;
 	}
 
-	if ( !frameModel || !oldFrameModel ) {
+	if ( !frameModel || !endFrameModel || !torsoFrameModel || !torsoEndFrameModel ) {
 		ri.Printf( PRINT_WARNING, "WARNING: Cannot get MDM tag '%s' from '%s' without frameModel\n", tagName, mod->name );
 		return -1;
 	}
@@ -1821,11 +1828,21 @@ int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod, int startTagInde
 
 	Com_Memset( &refent, 0, sizeof ( refent ) );
 	refent.hModel = mod->index;
-	refent.frameModel = frameModel;
-	refent.oldframeModel = oldFrameModel;
-	refent.frame = frame;
-	refent.oldframe = oldframe;
-	refent.backlerp = frac;
+	refent.frameModel = endFrameModel;
+	refent.oldframeModel = frameModel;
+	refent.frame = endFrame;
+	refent.oldframe = startFrame;
+	refent.backlerp = 1.0f - frac;
+
+	if ( torsoAxis != NULL ) {
+		// ZTM: FIXME: casted away const to silence warning
+		AxisCopy( (vec3_t *)torsoAxis, refent.torsoAxis );
+	}
+	refent.torsoFrameModel = torsoEndFrameModel;
+	refent.oldTorsoFrameModel = torsoFrameModel;
+	refent.torsoFrame = torsoEndFrame;
+	refent.oldTorsoFrame = torsoStartFrame;
+	refent.torsoBacklerp = 1.0f - torsoFrac;
 
 	// calc the bones
 

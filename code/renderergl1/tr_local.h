@@ -903,7 +903,11 @@ int			R_LerpTag( orientation_t *tag, qhandle_t handle,
 					 qhandle_t frameModel, int startFrame,
 					 qhandle_t endFrameModel, int endFrame,
 					 float frac, const char *tagName,
-					 int *pTagIndex );
+					 int *pTagIndex,
+					 const vec3_t *torsoAxis, // vec3_t[3]
+					 qhandle_t torsoFrameModel, int torsoStartFrame,
+					 qhandle_t torsoEndFrameModel, int torsoEndFrame,
+					 float torsoFrac );
 int			R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 shader_t	*R_CustomSurfaceShader( const char *surfaceName, qhandle_t customShader, qhandle_t customSkin );
 
@@ -1599,11 +1603,25 @@ void MC_UnCompress(float mat[3][4],const unsigned char * comp);
 
 void R_MDSAddAnimSurfaces( trRefEntity_t *ent );
 void RB_MDSSurfaceAnim( mdsSurface_t *surface );
-int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName );
+int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod,
+					 const char *tagName, int startTagIndex,
+					 qhandle_t frameModel, int startFrame,
+					 qhandle_t endFrameModel, int endFrame,
+					 float frac, const vec3_t *torsoAxis,
+					 qhandle_t torsoFrameModel, int torsoStartFrame,
+					 qhandle_t torsoEndFrameModel, int torsoEndFrame,
+					 float torsoFrac );
 
 void R_MDMAddAnimSurfaces( trRefEntity_t *ent );
 void RB_MDMSurfaceAnim( mdmSurface_t *surface );
-int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod, int startTagIndex, qhandle_t frameModel, int frame, qhandle_t oldFrameModel, int oldframe, float frac, const char *tagName );
+int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod,
+					 const char *tagName, int startTagIndex,
+					 qhandle_t frameModel, int startFrame,
+					 qhandle_t endFrameModel, int endFrame,
+					 float frac, const vec3_t *torsoAxis,
+					 qhandle_t torsoFrameModel, int torsoStartFrame,
+					 qhandle_t torsoEndFrameModel, int torsoEndFrame,
+					 float torsoFrac );
 
 qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name );
 void R_AddIQMSurfaces( trRefEntity_t *ent );

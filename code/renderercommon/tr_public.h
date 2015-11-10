@@ -115,7 +115,8 @@ typedef struct {
 				   int maxPoints, vec3_t pointBuffer, int maxFragments, markFragment_t *fragmentBuffer );
 
 	int		(*LerpTag)( orientation_t *tag,  qhandle_t model, qhandle_t frameModel, int startFrame, qhandle_t endFrameModel, int endFrame,
-					 float frac, const char *tagName, int *tagIndex );
+					 float frac, const char *tagName, int *tagIndex, const vec3_t *torsoAxis, qhandle_t torsoFrameModel, int torsoFrame,
+					 qhandle_t oldTorsoFrameModel, int oldTorsoFrame, float torsoFrac );
 	int		(*ModelBounds)( qhandle_t model, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 
 #ifdef __USEA3D
