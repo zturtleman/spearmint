@@ -338,7 +338,6 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	mdsHeader_t     *header;
 	mdsSurface_t    *surface;
 	mdsHeader_t     *frameHeader, *oldFrameHeader;
-	mdsHeader_t     *torsoFrameHeader, *oldTorsoFrameHeader;
 	shader_t        *shader;
 	int i, fogNum, cull;
 	qboolean personalModel;
@@ -350,14 +349,10 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 
 	frameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.frameModel );
 	oldFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.oldframeModel );
-	torsoFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.torsoFrameModel );
-	oldTorsoFrameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.oldTorsoFrameModel );
 
 	if ( ent->e.renderfx & RF_WRAP_FRAMES ) {
 		ent->e.frame %= frameHeader->numFrames;
 		ent->e.oldframe %= oldFrameHeader->numFrames;
-		ent->e.torsoFrame %= torsoFrameHeader->numFrames;
-		ent->e.oldTorsoFrame %= oldTorsoFrameHeader->numFrames;
 	}
 
 	//
@@ -372,17 +367,6 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 		|| (ent->e.oldframe < 0) ) {
 			ri.Printf( PRINT_DEVELOPER, "R_MDSAddAnimSurfaces: no such frame %d to %d for '%s'\n",
 				ent->e.oldframe, ent->e.frame,
-				tr.currentModel->name );
-			ent->e.frame = 0;
-			ent->e.oldframe = 0;
-	}
-
-	if ( (ent->e.torsoFrame >= torsoFrameHeader->numFrames)
-		|| (ent->e.torsoFrame < 0)
-		|| (ent->e.oldTorsoFrame >= oldTorsoFrameHeader->numFrames)
-		|| (ent->e.oldTorsoFrame < 0) ) {
-			ri.Printf( PRINT_DEVELOPER, "R_MDSAddAnimSurfaces: no such torso frame %d to %d for '%s'\n",
-				ent->e.oldTorsoFrame, ent->e.torsoFrame,
 				tr.currentModel->name );
 			ent->e.frame = 0;
 			ent->e.oldframe = 0;
