@@ -113,7 +113,7 @@ R_ColorShiftLightingBytes
 
 ===============
 */
-static	void R_ColorShiftLightingBytes( byte in[4], byte out[4] ) {
+static	void R_ColorShiftLightingBytes( int inSize, byte in[4], byte out[4] ) {
 	int		shift, r, g, b;
 
 	// shift the color data based on overbright range
@@ -138,7 +138,11 @@ static	void R_ColorShiftLightingBytes( byte in[4], byte out[4] ) {
 	out[0] = r;
 	out[1] = g;
 	out[2] = b;
-	out[3] = in[3];
+	if ( inSize == 4 ) {
+		out[3] = in[3];
+	} else {
+		out[3] = 255;
+	}
 }
 
 /*
@@ -192,8 +196,7 @@ float R_ProcessLightmap( byte **pic, int in_padding, int width, int height, byte
 		}
 	} else {
 		for ( j = 0 ; j < width * height; j++ ) {
-			R_ColorShiftLightingBytes( &( *pic )[j * in_padding], &( *pic_out )[j * 4] );
-			( *pic_out )[j * 4 + 3] = 255;
+			R_ColorShiftLightingBytes( 3, &( *pic )[j * in_padding], &( *pic_out )[j * 4] );
 		}
 	}
 
@@ -492,7 +495,7 @@ static void ParseMesh( dsurface_t *ds, drawVert_t *verts, msurface_t *surf ) {
 			points[i].st[j] = LittleFloat( verts[i].st[j] );
 			points[i].lightmap[j] = LittleFloat( verts[i].lightmap[j] );
 		}
-		R_ColorShiftLightingBytes( verts[i].color, points[i].color );
+		R_ColorShiftLightingBytes( 4, verts[i].color, points[i].color );
 	}
 
 	// pre-tesseleate
@@ -582,7 +585,7 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, i
 			tri->verts[i].lightmap[j] = LittleFloat( verts[i].lightmap[j] );
 		}
 
-		R_ColorShiftLightingBytes( verts[i].color, tri->verts[i].color );
+		R_ColorShiftLightingBytes( 4, verts[i].color, tri->verts[i].color );
 	}
 
 	// copy indexes
@@ -723,7 +726,7 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, i
 		AddPointToBounds( boundsTranslated[ 1 ], foliage->bounds[ 0 ], foliage->bounds[ 1 ] );
 
 		// copy color
-		R_ColorShiftLightingBytes( verts[ i ].color, foliage->instances[ i ].color );
+		R_ColorShiftLightingBytes( 4, verts[ i ].color, foliage->instances[ i ].color );
 	}
 
 	// finish surface
@@ -1987,8 +1990,8 @@ void R_LoadLightGrid( const bspFile_t *bsp ) {
 
 	// deal with overbright bits
 	for ( i = 0 ; i < bsp->numGridPoints ; i++ ) {
-		R_ColorShiftLightingBytes( &w->lightGridData[i*8], &w->lightGridData[i*8] );
-		R_ColorShiftLightingBytes( &w->lightGridData[i*8+3], &w->lightGridData[i*8+3] );
+		R_ColorShiftLightingBytes( 4, &w->lightGridData[i*8], &w->lightGridData[i*8] );
+		R_ColorShiftLightingBytes( 4, &w->lightGridData[i*8+3], &w->lightGridData[i*8+3] );
 	}
 }
 

@@ -117,7 +117,7 @@ R_ColorShiftLightingBytes
 
 ===============
 */
-static	void R_ColorShiftLightingBytes( byte in[4], byte out[4] ) {
+static	void R_ColorShiftLightingBytes( int inSize, byte in[4], byte out[4] ) {
 	int		shift, r, g, b;
 
 	// shift the color data based on overbright range
@@ -142,7 +142,11 @@ static	void R_ColorShiftLightingBytes( byte in[4], byte out[4] ) {
 	out[0] = r;
 	out[1] = g;
 	out[2] = b;
-	out[3] = in[3];
+	if ( inSize == 4 ) {
+		out[3] = in[3];
+	} else {
+		out[3] = 255;
+	}
 }
 
 
@@ -312,8 +316,7 @@ float R_ProcessLightmap( byte **pic, int in_padding, int width, int height, byte
 			}
 			else
 			{
-				R_ColorShiftLightingBytes( &( *pic )[j*in_padding], &( *pic_out )[j*4] );
-				( *pic_out )[j*4+3] = 255;
+				R_ColorShiftLightingBytes( 3, &( *pic )[j*in_padding], &( *pic_out )[j*4] );
 			}
 		}
 	}
@@ -3137,8 +3140,8 @@ void R_LoadLightGrid( const bspFile_t *bsp ) {
 
 	// deal with overbright bits
 	for ( i = 0 ; i < bsp->numGridPoints ; i++ ) {
-		R_ColorShiftLightingBytes( &w->lightGridData[i*8], &w->lightGridData[i*8] );
-		R_ColorShiftLightingBytes( &w->lightGridData[i*8+3], &w->lightGridData[i*8+3] );
+		R_ColorShiftLightingBytes( 4, &w->lightGridData[i*8], &w->lightGridData[i*8] );
+		R_ColorShiftLightingBytes( 4, &w->lightGridData[i*8+3], &w->lightGridData[i*8+3] );
 	}
 
 	// load hdr lightgrid
