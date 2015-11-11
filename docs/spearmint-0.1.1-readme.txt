@@ -1,0 +1,106 @@
+Spearmint 0.1.1
+November 11, 2015
+--------------
+
+Spearmint is a engine based on ioquake3 that is not compatible with (io)quake3 mods and demo replays.
+
+Some of the many changes from ioquake3:
+
+  * Four player splitscreen support
+  * Bullet marks on doors and moving platforms
+  * Aspect correct wide screen FOV and HUD in Q3A
+  * Improved Bot AI
+  * Improved gamepad support
+  * PNG screenshots
+  * Many modding improvements
+
+For updates visit
+
+  * http://spearmint.pw
+
+Source files:
+
+  * https://github.com/zturtleman/spearmint
+  * https://github.com/zturtleman/mint-arena
+  * https://github.com/zturtleman/spearmint-patch-data
+
+
+# How to play
+
+To play Spearmint Quake 3, copy Quake 3's baseq3/pak[0-8].pk3 into the local baseq3 directory.
+To play the Team Arena expansion, copy Quake 3 Team Arena's missionpack/pak[0-4].pk3 into the local missionpack directory.
+
+If you don't own Quake 3 or Team Arena, they can be purchased on Steam. http://store.steampowered.com/sub/433/
+Team Arena is not required to play Quake 3.
+
+After copying the data, run spearmint_x86 or if using a 64-bit OS using spearmint_x86_64. On OSX, run the universal App Bundle.
+
+Team Arena's UI does not support adding splitscreen players or setting their controls.
+
+
+# Where do the saved files go?
+
+All files are saved into the "settings" directory if it exists. It has been included so that this is a portable installation.
+
+If the "settings" directory does not exist (i.e., you delete it) then a system path will be used.
+
+  * Windows: \%APPDATA%\Spearmint\
+  * Linux: /home/username/.spearmint/
+  * OSX: /Users/username/Library/Application Support/Spearmint/
+
+
+# Why aren't there any multiplayer servers showing up?
+
+As of writing, there are no Spearmint Quake 3 dedicated servers running.
+There is not a technical reason preventing dedicate servers from being run.
+
+
+# What version of SDL is included?
+
+SDL 2.0.3
+
+
+# Game controllers
+
+To enable a controller, go to controls -> player # -> joy -> select joystick.
+Spearmint supports various controller mappings by default, but requires binding them in the controls menu (like keyboard keys).
+If a controller's buttons cannot be bound in controls menu, it means that the controller mapping must be manually configured.
+See gamepad-controls.txt for details.
+
+settings/gamecontrollerdb.txt is a read-only file with additional controller mappings.
+See https://github.com/gabomdq/SDL_GameControllerDB for details/updates.
+
+
+# Renderer
+
+Spearmint includes two renderers, opengl1 and opengl2. The default is opengl1.
+
+The opengl2 renderer uses newer OpenGL features (OpenGL 2+) and is slower in many cases.
+It's mostly on-par with opengl1, but may have some issues. There are various new features though.
+See opengl2-readme.txt for details.
+
+Open the in-game console by pressing "~" (the key left of 1 on US QWERTY layout) or shift+escape.
+Type "com_renderer opengl2; vid_restart" and press enter. Switch back using
+"com_renderer opengl1; vid_restart".
+
+
+# Credits
+
+Zack Middleton (main developer)
+Tobias Kuehnhammer (feedback / bug reports / Bot AI fixes)
+And other contributors
+
+Spearmint is based on ioquake3 and also contains code from;
+
+RTCW SP - Gray Matter Interactive
+RTCW MP - Nerve Software
+Wolfenstein: Enemy Territory - Splash Damage
+Tremulous - Dark Legion Development
+World of Padman - Padworld Entertainment
+ioquake3 Elite Force MP patch - Thilo Schulz
+NetRadiant's q3map2 - Rudolf Polzer
+OpenArena - OpenArena contributors
+OpenMoHAA - OpenMoHAA contributors
+Xreal (triangle mesh collision) - Robert Beckebans
+
+

@@ -64,23 +64,26 @@
 			 -->
 
 			<span>Some of the new features / changes:</span>
-			<ol>
+			<ul>
 				<li>Four player splitscreen support.</li>
 				<li>Bullet marks on doors and moving platforms.</li>
-				<li>Gibs and bullet shells ride moving platforms.</li>
+				<!--<li>Gibs and bullet shells ride moving platforms.</li>-->
 				<li>Aspect correct wide screen FOV and HUD in Q3A.</li>
 				<li>Improved Bot AI.</li>
 				<li>Improved gamepad support.</li>
-				<li>Improved third person view.</li>
+				<!--<li>Improved third person view.</li>
 				<li>Smooth corpse sinking.</li>
-				<li>Player shadow moves with animations.</li>
-				<li>PNG screenshots (with ext data containing map name and player origin, etc).</li>
-				<li>In multiplayer with gibs disabled, bodies no longer become invisible when gibbed.</li>
-				<li>Option to fade out explosion lights instead of shrinking them (set cg_fadeExplosions cvar to 1).</li>
-			</ol>
+				<li>Player shadow moves with animations.</li>-->
+				<li>PNG screenshots<!-- (with ext data containing map name and player origin, etc)-->.</li>
+				<!--<li>In multiplayer with gibs disabled, bodies no longer become invisible when gibbed.</li>
+				<li>Option to fade out explosion lights instead of shrinking them (set cg_fadeExplosions cvar to 1).</li>-->
+			</ul>
 
+			<span>Many modding improvements:</span>
+			<p>It's possible to do a lot more without modifying the engine. New networked variables can be added to players and game objects<!-- (playerState_t and entityState_t)-->. A lot of code has been moved from the engine to the VMs such as setting up the player input sent to the server<!-- (usercmd_t)-->, a lot of the bot AI, and miscellaneous drawing for the console, chat input, etc. The UI VM has been merged into CGame for greater flexibility. There are new system calls for CGame and Game VMs and new shader keywords. The engine and gamecode have been split into separate repositories.</p>
+<!--
 			<span>Modding differences from ioquake3:</span>
-			<ol>
+			<ul>
 				<li>It is possible to do a lot more without modifying the engine.</li>
 				<li>New features for the modding APIs and shader files.</li>
 				<li>Split engine and game code into separate projects.</li>
@@ -91,7 +94,8 @@
 				<ul>
 					<li>including the console, chat input overlay, usercmd_t creation, and a lot of bot AI code.</li>
 				</ul>
-			</ol>
+			</ul>
+-->
 		</div>
 	</div>
 	<!-- end section -->
@@ -103,12 +107,23 @@
 		</div>
 
 		<div class="sectionContent">
-			<p>Spearmint 0.1 (March 13 2015) with Quake 3 support files. <a href="http://ztm.x10host.com/2015/03/13/spearmint-0-1-released/">Announcement post</a>.</p>
-			<p>Each download contains a spearmint-0.1-platform directory with Spearmint client/server for the specific platform and bundled <a href="http://libsdl.org">SDL 2.0.3</a>.</p>
-			<p>To play Spearmint Quake 3, after extracting the archive you need to copy your Quake 3 pak[0-8].pk3 files into spearmint-0.1-platform/baseq3/.</p>
-			<p>See the included <a href="docs/spearmint-0.1-readme.txt">readme</a> for more details.</p>
+			<p>Each download contains a spearmint-0.x-platform directory containing the Spearmint client/server for the specific platform and bundled <a href="http://libsdl.org">SDL 2.0.3</a>.</p>
+			<p>To play Spearmint Quake 3, after extracting the archive you need to copy your Quake 3 pak[0-8].pk3 files into spearmint-0.x-platform/baseq3/.</p>
+			<p>See the included readme for more details.</p>
 
+			<h2>Spearmint 0.1.1</h2>
+			<p>Spearmint 0.1.1 (November 11 2015) with Quake 3 support files. It's compatible with 0.1. <a href="http://ztm.x10host.com/2015/11/11/spearmint-0-1-1/">Announcement post</a>.</p>
 			<ul>
+				<li><a href="docs/spearmint-0.1.1-readme.txt">Spearmint 0.1.1 &mdash; Readme</a></li>
+				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.1.1/spearmint-0.1.1-windows.zip">Spearmint 0.1.1 &mdash; Windows XP or later (32 and 64 bit)</a></li>
+				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.1.1/spearmint-0.1.1-macosx.dmg">Spearmint 0.1.1 &mdash; OS X 10.5 or later (PPC, Intel 32/64 bit)</a></li>
+				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.1.1/spearmint-0.1.1-linux.tar.xz">Spearmint 0.1.1 &mdash; GNU/Linux glibc 2.13 or later (x86 and x86_64)</a></li>
+			</ul>
+
+			<h2>Spearmint 0.1</h2>
+			<p>Spearmint 0.1 (March 13 2015) with Quake 3 support files. <a href="http://ztm.x10host.com/2015/03/13/spearmint-0-1-released/">Announcement post</a>.</p>
+			<ul>
+				<li><a href="docs/spearmint-0.1-readme.txt">Spearmint 0.1 &mdash; Readme</a></li>
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.1/spearmint-0.1-windows.zip">Spearmint 0.1 &mdash; Windows XP or later (32 and 64 bit)</a></li>
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.1/spearmint-0.1-macosx.dmg">Spearmint 0.1 &mdash; OS X 10.5 or later (PPC, Intel 32/64 bit)</a></li>
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.1/spearmint-0.1-linux.tar.xz">Spearmint 0.1 &mdash; GNU/Linux glibc 2.13 or later (x86 and x86_64)</a></li>
@@ -128,6 +143,7 @@
 			<ul>
 				<li>Spearmint engine: <a href="https://github.com/zturtleman/spearmint">zturtleman/spearmint</a></li>
 				<li>Quake 3 game code: <a href="https://github.com/zturtleman/mint-arena">zturtleman/mint-arena</a></li>
+				<li>Game patch data: <a href="https://github.com/zturtleman/spearmint-patch-data">zturtleman/spearmint-patch-data</a></li>
 			</ul>
 		</div>
 	</div>
