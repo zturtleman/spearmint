@@ -351,7 +351,6 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	// if missing torso information use base
 	if ( AxisEmpty( ent->e.torsoAxis ) ) {
 		// setup identify matrix
-		// ZTM: FIXME: Does default torso axis need to be scaled based on ent->e.axis if nonNormalizedAxes?
 		AxisCopy( axisDefault, ent->e.torsoAxis );
 
 		ent->e.torsoFrameModel = ent->e.frameModel;
