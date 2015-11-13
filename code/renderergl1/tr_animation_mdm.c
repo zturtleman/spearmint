@@ -346,6 +346,19 @@ void R_MDMAddAnimSurfaces( trRefEntity_t *ent ) {
 	// don't add mirror only objects if not in a mirror/portal
 	personalModel = (ent->e.renderfx & RF_ONLY_MIRROR) && !tr.viewParms.isPortal;
 
+	// if missing torso information use base
+	if ( AxisEmpty( ent->e.torsoAxis ) ) {
+		// setup identify matrix
+		// ZTM: FIXME: Does default torso axis need to be scaled based on ent->e.axis if nonNormalizedAxes?
+		AxisCopy( axisDefault, ent->e.torsoAxis );
+
+		ent->e.torsoFrameModel = ent->e.frameModel;
+		ent->e.oldTorsoFrameModel = ent->e.oldframeModel;
+		ent->e.torsoFrame = ent->e.frame;
+		ent->e.oldTorsoFrame = ent->e.oldframe;
+		ent->e.torsoBacklerp = ent->e.backlerp;
+	}
+
 	header = (mdmHeader_t *)tr.currentModel->modelData;
 
 	frameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.frameModel );
@@ -1894,15 +1907,26 @@ int R_GetMDMBoneTag( orientation_t *outTag, const model_t *mod,
 	refent.oldframe = startFrame;
 	refent.backlerp = 1.0f - frac;
 
-	if ( torsoAxis != NULL ) {
-		// ZTM: FIXME: casted away const to silence warning
+	// use torso information if present
+	// ZTM: FIXME: casted away const to silence warning
+	if ( torsoAxis != NULL && !AxisEmpty( (vec3_t *)torsoAxis ) ) {
 		AxisCopy( (vec3_t *)torsoAxis, refent.torsoAxis );
+
+		refent.torsoFrameModel = torsoEndFrameModel;
+		refent.oldTorsoFrameModel = torsoFrameModel;
+		refent.torsoFrame = torsoEndFrame;
+		refent.oldTorsoFrame = torsoStartFrame;
+		refent.torsoBacklerp = 1.0f - torsoFrac;
+	} else {
+		// setup identify matrix
+		AxisCopy( axisDefault, refent.torsoAxis );
+
+		refent.torsoFrameModel = refent.frameModel;
+		refent.oldTorsoFrameModel = refent.oldframeModel;
+		refent.torsoFrame = refent.frame;
+		refent.oldTorsoFrame = refent.oldframe;
+		refent.torsoBacklerp = refent.backlerp;
 	}
-	refent.torsoFrameModel = torsoEndFrameModel;
-	refent.oldTorsoFrameModel = torsoFrameModel;
-	refent.torsoFrame = torsoEndFrame;
-	refent.oldTorsoFrame = torsoStartFrame;
-	refent.torsoBacklerp = 1.0f - torsoFrac;
 
 	// calc the bones
 

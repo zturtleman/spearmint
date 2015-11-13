@@ -348,6 +348,19 @@ void R_MDSAddAnimSurfaces( trRefEntity_t *ent ) {
 	personalModel = (ent->e.renderfx & RF_ONLY_MIRROR) && !(tr.viewParms.isPortal 
 	                 || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW)));
 
+	// if missing torso information use base
+	if ( AxisEmpty( ent->e.torsoAxis ) ) {
+		// setup identify matrix
+		// ZTM: FIXME: Does default torso axis need to be scaled based on ent->e.axis if nonNormalizedAxes?
+		AxisCopy( axisDefault, ent->e.torsoAxis );
+
+		ent->e.torsoFrameModel = ent->e.frameModel;
+		ent->e.oldTorsoFrameModel = ent->e.oldframeModel;
+		ent->e.torsoFrame = ent->e.frame;
+		ent->e.oldTorsoFrame = ent->e.oldframe;
+		ent->e.torsoBacklerp = ent->e.backlerp;
+	}
+
 	header = (mdsHeader_t *)tr.currentModel->modelData;
 
 	frameHeader = R_GetFrameModelDataByHandle( &ent->e, ent->e.frameModel );
@@ -1897,15 +1910,26 @@ int R_GetMDSBoneTag( orientation_t *outTag, const model_t *mod,
 	refent.oldframe = startFrame;
 	refent.backlerp = 1.0f - frac;
 
-	if ( torsoAxis != NULL ) {
-		// ZTM: FIXME: casted away const to silence warning
+	// use torso information if present
+	// ZTM: FIXME: casted away const to silence warning
+	if ( torsoAxis != NULL && !AxisEmpty( (vec3_t *)torsoAxis ) ) {
 		AxisCopy( (vec3_t *)torsoAxis, refent.torsoAxis );
+
+		refent.torsoFrameModel = torsoEndFrameModel;
+		refent.oldTorsoFrameModel = torsoFrameModel;
+		refent.torsoFrame = torsoEndFrame;
+		refent.oldTorsoFrame = torsoStartFrame;
+		refent.torsoBacklerp = 1.0f - torsoFrac;
+	} else {
+		// setup identify matrix
+		AxisCopy( axisDefault, refent.torsoAxis );
+
+		refent.torsoFrameModel = refent.frameModel;
+		refent.oldTorsoFrameModel = refent.oldframeModel;
+		refent.torsoFrame = refent.frame;
+		refent.oldTorsoFrame = refent.oldframe;
+		refent.torsoBacklerp = refent.backlerp;
 	}
-	refent.torsoFrameModel = torsoEndFrameModel;
-	refent.oldTorsoFrameModel = torsoFrameModel;
-	refent.torsoFrame = torsoEndFrame;
-	refent.oldTorsoFrame = torsoStartFrame;
-	refent.torsoBacklerp = 1.0f - torsoFrac;
 
 	// now build the list of bones we need to calc to get this tag's bone information
 
