@@ -44,7 +44,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // List of demo protocols that are supported for playback.
 // Also plays protocol com_protocol
 int demo_protocols[] =
-{ PROTOCOL_VERSION, 2, 0 };
+{ PROTOCOL_VERSION, 3, 2, 0 };
 
 #define MAX_NUM_ARGVS	50
 
