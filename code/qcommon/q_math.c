@@ -447,6 +447,13 @@ void AxisCopy( vec3_t in[3], vec3_t out[3] ) {
 	VectorCopy( in[2], out[2] );
 }
 
+int AxisEmpty( vec3_t *axis ) {
+	if ( !VectorEmpty( axis[0] ) || !VectorEmpty( axis[1] ) || !VectorEmpty( axis[2] ) ) {
+		return 0;
+	}
+	return 1;
+}
+
 void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal )
 {
 	float d;
