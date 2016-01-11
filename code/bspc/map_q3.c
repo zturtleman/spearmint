@@ -219,6 +219,7 @@ void Q3_BSPBrushToMapBrush(dbrush_t *bspbrush, entity_t *mapent)
 	int planenum;
 	dbrushside_t *bspbrushside;
 	dplane_t *bspplane;
+	qboolean foundLadder;
 
 	if (nummapbrushes >= MAX_MAPFILE_BRUSHES)
 		Error ("nummapbrushes >= MAX_MAPFILE_BRUSHES");
@@ -228,6 +229,8 @@ void Q3_BSPBrushToMapBrush(dbrush_t *bspbrush, entity_t *mapent)
 	b->entitynum = mapent-entities;
 	b->brushnum = nummapbrushes - mapent->firstbrush;
 	b->leafnum = dbrushleafnums[bspbrush - q3bsp->brushes];
+
+	foundLadder = qfalse;
 
 	for (n = 0; n < bspbrush->numSides; n++)
 	{
@@ -259,6 +262,12 @@ void Q3_BSPBrushToMapBrush(dbrush_t *bspbrush, entity_t *mapent)
 			{
 				//Log_Print("found hint side\n");
 				side->surf |= SURF_HINT;
+			} //end if
+
+			if ( cfg.rs_allowladders && strstr( q3bsp->shaders[bspbrushside->shaderNum].shader, "common/ladder" ) ) {
+				Log_Print("found ladder side\n");
+				side->contents |= CONTENTS_LADDER;
+				foundLadder = qtrue;
 			} //end if
 		} //end else
 		//
@@ -343,6 +352,13 @@ void Q3_BSPBrushToMapBrush(dbrush_t *bspbrush, entity_t *mapent)
 	// get the content for the entire brush
 	b->contents = q3bsp->shaders[bspbrush->shaderNum].contentFlags;
 	b->contents &= ~(CONTENTS_FOG|CONTENTS_STRUCTURAL);
+
+	// ladder is a fake content value reusing the value of CONTENTS_ORIGIN
+	if (foundLadder)
+		b->contents |= CONTENTS_LADDER;
+	else
+		b->contents &= ~CONTENTS_LADDER;
+
 //	b->contents = Q3_BrushContents(b);
 	//
 

@@ -91,6 +91,7 @@ fielddef_t cfg_fields[] =
 	{"rs_falldamage10", CFG_OFS(rs_falldamage10), FT_FLOAT},
 	{"rs_maxjumpfallheight", CFG_OFS(rs_maxjumpfallheight), FT_FLOAT},
 	{"rs_maxfallheight", CFG_OFS(rs_maxfallheight), FT_FLOAT},
+	{"rs_allowladders", CFG_OFS(rs_allowladders), FT_FLOAT},
 	{NULL, 0, 0, 0}
 };
 

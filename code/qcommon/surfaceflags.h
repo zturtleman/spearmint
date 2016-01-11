@@ -67,6 +67,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	CONTENTS_TRIGGER		0x40000000
 #define	CONTENTS_NODROP			0x80000000	// don't leave bodies or items (death fog, lava)
 
+#define	CONTENTS_LADDER			CONTENTS_ORIGIN		// used by BSPC internally
+
 #define	SURF_NODAMAGE			0x1		// never give falling damage
 #define	SURF_SLICK				0x2		// effects game physics
 #define	SURF_SKY				0x4		// lighting from environment map

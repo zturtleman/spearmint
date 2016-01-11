@@ -146,7 +146,8 @@ void AAS_SetTexinfo(mapbrush_t *brush)
 	int n;
 	side_t *side;
 
-	if ( brush->contents & ( CONTENTS_AREAPORTAL
+	if ( brush->contents & ( CONTENTS_LADDER
+							 | CONTENTS_AREAPORTAL
 							 | CONTENTS_CLUSTERPORTAL
 							 | CONTENTS_TELEPORTER
 							 | CONTENTS_JUMPPAD
@@ -667,6 +668,7 @@ void AAS_CreateMapBrushes(mapbrush_t *brush, entity_t *mapent, int addbevels)
 	//Log_Write("\r\n");
 	//if not one of the following brushes then the brush is NOT used for AAS
 	if ( !( brush->contents & ( CONTENTS_SOLID
+								| CONTENTS_LADDER
 								| CONTENTS_CLUSTERPORTAL
 								| CONTENTS_DONOTENTER
 								//| CONTENTS_DONOTENTER_LARGE // ZTM: TODO: Used by RTCW
@@ -729,7 +731,7 @@ void AAS_CreateMapBrushes(mapbrush_t *brush, entity_t *mapent, int addbevels)
 		AAS_MakeBrushWindings(brush);
 	} //end if
 	//all solid brushes are expanded for all bounding boxes
-	else if ( brush->contents & CONTENTS_SOLID )
+	else if ( brush->contents & ( CONTENTS_SOLID | CONTENTS_LADDER ) )
 	{
 		//brush for the first bounding box
 		bboxbrushes[0] = brush;
