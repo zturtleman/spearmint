@@ -450,7 +450,8 @@ int AAS_AlwaysTriggered_r(char *targetname)
 	for (i = 0; i < num_entities; i++) {
 		// if the entity will activate the given targetname
 		if ( !strcmp(targetname, ValueForKey(&entities[i], "target")) ) {
-			// if this activator is present in deathmatch
+			// ZTM: TODO: what about "gametype" key etc?
+
 			// if it is a trigger_always entity
 			if (!strcmp("trigger_always", ValueForKey(&entities[i], "classname"))) {
 				return true;
