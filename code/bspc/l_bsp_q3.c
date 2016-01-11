@@ -93,6 +93,9 @@ void Q3_SurfacePlane(dsurface_t *surface, vec3_t normal, float *dist)
 	float *p0, *p1, *p2;
 	vec3_t t1, t2;
 
+	VectorClear( t1 );
+	VectorClear( t2 );
+
 	p0 = q3bsp->drawVerts[surface->firstVert].xyz;
 	for (i = 1; i < surface->numVerts-1; i++)
 	{

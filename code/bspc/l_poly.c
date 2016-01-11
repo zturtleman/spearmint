@@ -180,6 +180,8 @@ void WindingPlane (winding_t *w, vec3_t normal, vec_t *dist)
 	vec3_t v1, v2;
 	int i;
 
+	assert( w->numpoints > 0 );
+
 	//find two vectors each longer than 0.5 units
 	for (i = 0; i < w->numpoints; i++)
 	{
