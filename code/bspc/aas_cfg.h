@@ -74,6 +74,7 @@ typedef struct cfg_s
 	float rs_falldamage5;
 	float rs_falldamage10;
 	float rs_maxjumpfallheight;
+	float rs_maxfallheight;
 } cfg_t;
 
 extern cfg_t cfg;

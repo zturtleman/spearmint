@@ -81,4 +81,5 @@ settings
 	rs_falldamage5				300
 	rs_falldamage10				500
 	rs_maxjumpfallheight		450
+	rs_maxfallheight			0 // 0 means no limit
 } //end settings
