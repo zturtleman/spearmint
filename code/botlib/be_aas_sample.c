@@ -442,6 +442,10 @@ qboolean AAS_AreaEntityCollision(int areanum, vec3_t start, vec3_t end,
 		VectorCopy(bsptrace.endpos, trace->endpos);
 		trace->area = 0;
 		trace->planenum = 0;
+		VectorCopy(bsptrace.plane.normal, trace->plane.normal);
+		trace->plane.dist = bsptrace.plane.dist;
+		// ZTM: FIXME: Are AAS plane type and BSP plane type the same values?
+		trace->plane.type = bsptrace.plane.type;
 		return qtrue;
 	} //end if
 	return qfalse;
@@ -496,6 +500,7 @@ aas_trace_t AAS_TracePlayerBBox(vec3_t start, vec3_t end, int presencetype, int 
 			trace.ent = 0;
 			trace.area = 0;
 			trace.planenum = 0;
+			trace.plane = aasworld.planes[trace.planenum];
 			return trace;
 		} //end if
 		//number of the current node to test the line against
@@ -541,6 +546,7 @@ aas_trace_t AAS_TracePlayerBBox(vec3_t start, vec3_t end, int presencetype, int 
 				//always take the plane with normal facing towards the trace start
 				plane = &aasworld.planes[trace.planenum];
 				if (DotProduct(v1, plane->normal) > 0) trace.planenum ^= 1;
+				trace.plane = aasworld.planes[trace.planenum];
 				return trace;
 			} //end if
 			else
@@ -594,6 +600,7 @@ aas_trace_t AAS_TracePlayerBBox(vec3_t start, vec3_t end, int presencetype, int 
 			//always take the plane with normal facing towards the trace start
 			plane = &aasworld.planes[trace.planenum];
 			if (DotProduct(v1, plane->normal) > 0) trace.planenum ^= 1;
+			trace.plane = aasworld.planes[trace.planenum];
 			return trace;
 		} //end if
 #ifdef AAS_SAMPLE_DEBUG

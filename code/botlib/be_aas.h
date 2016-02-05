@@ -99,7 +99,8 @@ typedef struct aas_trace_s
 	int			ent;		// entity blocking the trace
 	int			lastarea;	// last area the trace was in (zero if none)
 	int			area;		// area blocking the trace (zero if none)
-	int			planenum;	// number of the plane that was hit
+	int			planenum;	// number of the plane that was hit (zero if none or hit entity) // ZTM: FIXME: Is zero ever a valid value?
+	aas_plane_t	plane;		// surface normal at impact, transformed to world space
 } aas_trace_t;
 
 // area info

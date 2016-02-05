@@ -217,7 +217,7 @@ int AAS_OnGround(vec3_t origin, int presencetype, int passent, int contentmask)
 	//if too far from the hit plane
 	if (origin[2] - trace.endpos[2] > 10) return qfalse;
 	//check if the plane isn't too steep
-	plane = AAS_PlaneFromNum(trace.planenum);
+	plane = &trace.plane; //AAS_PlaneFromNum(trace.planenum);
 	if (DotProduct(plane->normal, up) < aassettings.phys_maxsteepness) return qfalse;
 	//the bot is on the ground
 	return qtrue;
@@ -500,6 +500,8 @@ int AAS_ClipToBBox(aas_trace_t *trace, vec3_t start, vec3_t end, int presencetyp
 		trace->fraction = frac;
 		trace->ent = 0;
 		trace->planenum = 0;
+		// ZTM: TODO: Use the plane of collision
+		trace->plane = aasworld.planes[trace->planenum];
 		trace->area = 0;
 		trace->lastarea = 0;
 		//trace endpos
@@ -796,7 +798,7 @@ int AAS_PlayerMovementPrediction(struct aas_clientmove_s *move,
 			if (trace.fraction < 1.0)
 			{
 				//get the plane the bounding box collided with
-				plane = AAS_PlaneFromNum(trace.planenum);
+				plane = &trace.plane; //AAS_PlaneFromNum(trace.planenum);
 				//
 				if (stopevent & SE_HITGROUNDAREA)
 				{
@@ -832,7 +834,7 @@ int AAS_PlayerMovementPrediction(struct aas_clientmove_s *move,
 					//
 					if (!steptrace.startsolid)
 					{
-						plane2 = AAS_PlaneFromNum(steptrace.planenum);
+						plane2 = &steptrace.plane; //AAS_PlaneFromNum(steptrace.planenum);
 						if (DotProduct(plane2->normal, up) > phys_maxsteepness)
 						{
 							VectorSubtract(end, steptrace.endpos, left_test_vel);
