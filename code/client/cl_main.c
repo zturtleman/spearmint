@@ -3535,6 +3535,7 @@ void CL_Init( void ) {
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 
 	cl_maxpackets = Cvar_Get ("cl_maxpackets", "30", CVAR_ARCHIVE );
+	Cvar_CheckRange( cl_maxpackets, 15, 125, qtrue );
 	cl_packetdup = Cvar_Get ("cl_packetdup", "1", CVAR_ARCHIVE );
 
 	cl_sensitivity = Cvar_Get ("sensitivity", "5", CVAR_ARCHIVE);
