@@ -2097,7 +2097,6 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 	GLenum textureTarget = cubemap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
 	int depth = cubemap ? 6 : 1;
 
-
 	if ( subtexture ) {
 		baseLevel = 0;
 		data = pics[baseLevel].data;

@@ -354,15 +354,15 @@ static void SetupBlocks( textureLevel_t **pic, int width, int height,
 //
 // handler for linear formats, always unpack into RGBA8
 //
-static void SetupLinear( textureLevel_t **pic, int width, int height,
+static void SetupLinear( textureLevel_t **pic, int width, int height, int depth,
 			 int bitCount, int RMask, int GMask, int BMask,
-			 int AMask, int mipmaps, byte *data ) {
+			 int AMask, int mipmaps, byte *base ) {
 	textureLevel_t *lvl;
-	int i, j;
+	int i, j, k;
 	int size = 0;
 	int w = width;
 	int h = height;
-	color4ub_t *out;
+	color4ub_t *out, *in;
 	int RShift, GShift, BShift, AShift;
 	int RMult, GMult, BMult, AMult;
 
@@ -374,7 +374,7 @@ static void SetupLinear( textureLevel_t **pic, int width, int height,
 		if( h > 1 ) h >>= 1;
 	}
 
-	*pic = lvl = ri.Malloc( mipmaps * sizeof( textureLevel_t ) + size );
+	*pic = lvl = ri.Malloc( mipmaps * sizeof( textureLevel_t ) + size * depth );
 	out = (color4ub_t *)&lvl[mipmaps];
 
 	if( RMask ) {
@@ -405,46 +405,64 @@ static void SetupLinear( textureLevel_t **pic, int width, int height,
 	w = width;
 	h = height;
 	for( i = 0; i < mipmaps; i++ ) {
-		uint64_t bits = 0;
-		int bitsStored = 0;
-
 		size = w * h;
 
 		lvl[i].format = GL_RGBA8;
 		lvl[i].width = w;
 		lvl[i].height = h;
-		lvl[i].size = size * sizeof(color4ub_t);
+		lvl[i].size = size * sizeof(color4ub_t) * depth;
 		lvl[i].data = (byte *)out;
 
-		for( j = 0; j < size; j++ ) {
-			while( bitsStored < bitCount ) {
-				bits |= ((uint64_t)(*(unsigned int *)data) << bitsStored);
-				bitsStored += 32;
-			}
-			if( RMask )
-				(*out)[0] = ((bits & RMask) >> RShift) * RMult >> 8;
-			else
-				(*out)[0] = 0;
-			if( GMask )
-				(*out)[1] = ((bits & GMask) >> GShift) * GMult >> 8;
-			else
-				(*out)[1] = 0;
-			if( BMask )
-				(*out)[2] = ((bits & BMask) >> BShift) * BMult >> 8;
-			else
-				(*out)[2] = 0;
-			if( AMask )
-				(*out)[3] = ((bits & AMask) >> AShift) * AMult >> 8;
-			else
-				(*out)[3] = 255;
-
-			out ++;
-			bits >>= bitCount;
-			bitsStored -= bitCount;
-		}
+		out += lvl[i].size;
 
 		if( w > 1 ) w >>= 1;
 		if( h > 1 ) h >>= 1;
+	}
+
+	// ZTM: Tested and works with RGBA8 cubemap without mipmaps
+	for( k = 0; k < depth; k++ ) {
+		for( i = 0; i < mipmaps; i++ ) {
+			uint64_t bits = 0;
+			int bitsStored = 0;
+
+			size = lvl[i].width * lvl[i].height;
+
+			out = (color4ub_t *)((byte *)lvl[i].data + k * size * sizeof(color4ub_t));
+			in = (color4ub_t *)((byte *)base + k * size * bitCount / 8);
+
+			for( j = 0; j < size; j++ ) {
+				while( bitsStored < bitCount ) {
+					bits |= ((uint64_t)(*(unsigned int *)in) << bitsStored);
+					bitsStored += 32;
+					in ++;
+				}
+
+				// ZTM: I disabled the bit shift right 8 because the RGBA8 opengl2 cubemap was invisible.
+				//     Not sure how this code works exactly, but it was only reading one byte for the whole
+				//     image before so who knows what's broke about this code path.
+				if( RMask )
+					(*out)[0] = (((bits & RMask) >> RShift) * RMult);// >> 8;
+				else
+					(*out)[0] = 0;
+				if( GMask )
+					(*out)[1] = (((bits & GMask) >> GShift) * GMult);// >> 8;
+				else
+					(*out)[1] = 0;
+				if( BMask )
+					(*out)[2] = (((bits & BMask) >> BShift) * BMult);// >> 8;
+				else
+					(*out)[2] = 0;
+				if( AMask )
+					(*out)[3] = (((bits & AMask) >> AShift) * AMult);// >> 8;
+				else
+					(*out)[3] = 255;
+
+				out ++;
+
+				bits >>= bitCount;
+				bitsStored -= bitCount;
+			}
+		}
 	}
 }
 
@@ -459,6 +477,7 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 	GLuint glFormat;
 	int    mipmaps;
 	byte  *base;
+	int    depth;
 
 	*pic = NULL;
 	*numTexLevels = 0;
@@ -502,11 +521,17 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 
 	if ( hdr->dwCubemapFlags & DDSCAPS2_CUBEMAP )
 	{
-		ri.Printf( PRINT_WARNING, "LoadDDS: Cube map images are not supported (%s)\n", name );
+		depth = 6;
 	}
 	else if ( ( hdr->dwCubemapFlags & DDSCAPS2_VOLUME ) && ( hdr->dwHeaderFlags & DDSD_DEPTH ) )
 	{
+		// The file can probably(?) be loaded, but will not be uploaded into OpenGL as a 3D texture
 		ri.Printf( PRINT_WARNING, "LoadDDS: 3D images are not supported (%s)\n", name );
+		depth = hdr->dwDepth;
+	}
+	else
+	{
+		depth = 1;
 	}
 
 	// analyze the header
@@ -763,7 +788,7 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 	} else {
 		switch( glFormat ) {
 		case GL_RGBA8:
-			SetupLinear( pic, hdr->dwWidth, hdr->dwHeight,
+			SetupLinear( pic, hdr->dwWidth, hdr->dwHeight, depth,
 					 hdr->ddspf.dwRGBBitCount,
 					 hdr->ddspf.dwRBitMask, hdr->ddspf.dwGBitMask,
 					 hdr->ddspf.dwBBitMask, hdr->ddspf.dwABitMask,
@@ -789,9 +814,22 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 		*numTexLevels = mipmaps;
 	}
 
+#if 0
+	// debug code for exporting cubemap to TGA
+	extern void RE_SaveTGA_EXT(char * filename, int image_width, int image_height, int bytesPerPixel, byte *image_buffer, int padding);
+	int i;
+	for ( i = 0; i < depth; i++ ) {
+		char filename[128];
+		Com_sprintf( filename, sizeof(filename), "%s_%d.tga", name, i );
+
+		RE_SaveTGA_EXT(filename, (*pic)[0].width, (*pic)[0].height, 4, (*pic)[0].data + (*pic)[0].width * (*pic)[0].height * 4 * i, 0);
+	}
+#endif
+
 	ri.FS_FreeFile (buffer.v);
 }
 
+// ZTM: TODO: Fix saving DDS for big endianess
 void R_SaveDDS(const char *filename, byte *pic, int width, int height, int depth)
 {
 	byte *data;
@@ -822,7 +860,13 @@ void R_SaveDDS(const char *filename, byte *pic, int width, int height, int depth
 	ddsHeader->dwSurfaceFlags = DDSCAPS_COMPLEX | DDSCAPS_TEXTURE;
 
 	if (depth == 6) {
-		ddsHeader->dwCubemapFlags = DDSCAPS2_CUBEMAP;
+		ddsHeader->dwCubemapFlags = DDSCAPS2_CUBEMAP |
+									DDSCAPS2_CUBEMAP_POSITIVEX |
+									DDSCAPS2_CUBEMAP_NEGATIVEX |
+									DDSCAPS2_CUBEMAP_POSITIVEY |
+									DDSCAPS2_CUBEMAP_NEGATIVEY |
+									DDSCAPS2_CUBEMAP_POSITIVEZ |
+									DDSCAPS2_CUBEMAP_NEGATIVEZ;
 	}
 
 	ddsHeader->ddspf.dwFlags = DDPF_RGB | DDPF_ALPHAPIXELS;

@@ -364,3 +364,57 @@ void RE_SaveTGA(char * filename, int image_width, int image_height, byte *image_
 	ri.Hunk_FreeTempMemory(out);
 }
 
+void RE_SaveTGA_EXT(char * filename, int image_width, int image_height, int bytesPerPixel, byte *image_buffer, int padding) {
+	byte *srcptr, *destptr;
+	byte *endline, *endmem;
+	byte *out;
+	size_t bufSize;
+	int linelen;
+
+	if ( bytesPerPixel != 3 && bytesPerPixel != 4 ) {
+		Com_Error( ERR_DROP, "RE_SaveTGA: Unsupported bytes per pixel (%d)\n", bytesPerPixel );
+	}
+
+	bufSize = image_width * image_height * bytesPerPixel + 18;
+	out = ri.Hunk_AllocateTempMemory(bufSize);
+
+	Com_Memset (out, 0, 18);
+	out[2] = 2;		// uncompressed type
+	out[12] = image_width & 255;
+	out[13] = image_width >> 8;
+	out[14] = image_height & 255;
+	out[15] = image_height >> 8;
+	out[16] = bytesPerPixel*8;	// pixel size
+
+	// swap rgb to bgr and remove padding from line endings
+	linelen = image_width * bytesPerPixel;
+
+	srcptr = image_buffer;
+	destptr = out + 18;
+	endmem = srcptr + (linelen + padding) * image_height;
+
+	while(srcptr < endmem)
+	{
+		endline = srcptr + linelen;
+
+		while(srcptr < endline)
+		{
+			*destptr++ = srcptr[2];
+			*destptr++ = srcptr[1];
+			*destptr++ = srcptr[0];
+
+			if ( bytesPerPixel == 4 )
+				*destptr++ = srcptr[3];
+
+			srcptr += bytesPerPixel;
+		}
+		
+		// Skip the pad
+		srcptr += padding;
+	}
+
+	ri.FS_WriteFile(filename, out, bufSize);
+
+	ri.Hunk_FreeTempMemory(out);
+}
+
