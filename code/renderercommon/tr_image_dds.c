@@ -836,41 +836,5 @@ void R_SaveDDS(const char *filename, byte *pic, int width, int height, int depth
 
 	ri.FS_WriteFile(filename, data, size);
 
-	depth = 1;
-
-	picSize = width * height * depth * 4;
-	size = 4 + sizeof(*ddsHeader) + picSize;
-	data = ri.Malloc(size);
-
-	data[0] = 'D';
-	data[1] = 'D';
-	data[2] = 'S';
-	data[3] = ' ';
-
-	ddsHeader = (DDS_HEADER *)(data + 4);
-	memset(ddsHeader, 0, sizeof(*ddsHeader));
-
-	ddsHeader->dwSize = 0x7c;
-	ddsHeader->dwHeaderFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT;
-	ddsHeader->dwHeight = height;
-	ddsHeader->dwWidth = width;
-	ddsHeader->ddspf.dwSize = 0x00000020;
-	ddsHeader->dwSurfaceFlags = DDSCAPS_COMPLEX | DDSCAPS_TEXTURE;
-
-	if (depth == 6) {
-		ddsHeader->dwCubemapFlags = DDSCAPS2_CUBEMAP;
-	}
-
-	ddsHeader->ddspf.dwFlags = DDPF_RGB | DDPF_ALPHAPIXELS;
-	ddsHeader->ddspf.dwRGBBitCount = 32;
-	ddsHeader->ddspf.dwRBitMask = 0x000000ff;
-	ddsHeader->ddspf.dwGBitMask = 0x0000ff00;
-	ddsHeader->ddspf.dwBBitMask = 0x00ff0000;
-	ddsHeader->ddspf.dwABitMask = 0xff000000;
-
-	Com_Memcpy(data + 4 + sizeof(*ddsHeader), pic, picSize);
-
-	ri.FS_WriteFile(filename, data, size);
-
 	ri.Free(data);
 }
