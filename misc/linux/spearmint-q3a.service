@@ -1,0 +1,17 @@
+[Unit]
+Description=This service spawns a Spearmint Quake 3 dedicated server
+# However, these defaults may not apply to all use cases.
+# See comments below for further details
+
+[Service]
+User=q3a
+ExecStart=/usr/local/games/spearmint/spearmint-server_x86_64 +set sv_public 1 +set fs_game baseq3 +map q3dm17
+Restart=on-abort
+# net_port defines the UDP-port used for connections to the server
+# fs_game should be the game you want to play
+# sv_pure 0 allows clients to use pk3-files not present on the server
+# sv_public 0 is LAN, 1 is Internet
+# com_hunkmegs defaults to 384 megabytes
+
+[Install]
+WantedBy=multi-user.target
