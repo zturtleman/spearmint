@@ -2100,9 +2100,9 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 	GLenum textureTarget = cubemap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
 	int depth = cubemap ? 6 : 1;
 
-	if ( subtexture ) {
+	if ( subtexture || !pics ) {
 		baseLevel = 0;
-		data = pics[baseLevel].data;
+		data = pics ? pics[baseLevel].data : NULL;
 	} else {
 		// we may skip some textureLevels, if r_picmip is set
 		if ( flags & IMGFLAG_PICMIP ) {
@@ -2145,7 +2145,9 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 			{
 				RawImage_UploadTexture(image->texnum, data, 0, 0, width, height, uploadTarget + i, picFormat, numMips, internalFormat, type, flags, qfalse);
 
-				data += pics[baseLevel].size / depth;
+				if ( pics ) {
+					data += pics[baseLevel].size / depth;
+				}
 			}
 			goto done;
 		}
