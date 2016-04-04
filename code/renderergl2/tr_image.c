@@ -1906,6 +1906,9 @@ static int CalculateMipSize(int width, int height, GLenum picFormat)
 		case GL_SRGB8_ALPHA8_EXT:
 			return numPixels * 4;
 
+		case GL_RGBA16F_ARB:
+			return numPixels * 4 * 2;
+
 		default:
 			ri.Printf(PRINT_ALL, "Unsupported texture format %08x\n", picFormat);
 			return 0;
@@ -1919,7 +1922,7 @@ static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int
 {
 	int dataFormat, dataType;
 	qboolean rgtc = (internalFormat == GL_COMPRESSED_RG_RGTC2);
-	qboolean compressed = (!(picFormat == GL_RGBA8) || (picFormat == GL_SRGB8_ALPHA8_EXT));
+	qboolean compressed = (picFormat != GL_RGBA8 && picFormat != GL_SRGB8_ALPHA8_EXT && picFormat != GL_RGBA16F_ARB);
 	qboolean mipmap = !!(flags & IMGFLAG_MIPMAP);
 	qboolean picmip = !!(flags & IMGFLAG_PICMIP);
 	int size, miplevel;
@@ -2090,7 +2093,7 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 	GLenum internalFormat = image->internalFormat;
 	qboolean subtexture = (x != 0) || (y != 0) || (width != image->width) || (height != image->height);
 	qboolean notScaled = qtrue;
-	qboolean compressed = (picFormat != GL_RGBA8 && picFormat != GL_SRGB8_ALPHA8_EXT);
+	qboolean compressed = (picFormat != GL_RGBA8 && picFormat != GL_SRGB8_ALPHA8_EXT && picFormat != GL_RGBA16F_ARB);
 	qboolean mipmap = !!(flags & IMGFLAG_MIPMAP) && (!compressed || numMips > 1);
 	qboolean cubemap = !!(flags & IMGFLAG_CUBEMAP);
 	GLenum uploadTarget = cubemap ? GL_TEXTURE_CUBE_MAP_POSITIVE_X : GL_TEXTURE_2D;
@@ -2111,7 +2114,7 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 		width = pics[baseLevel].width;
 		height = pics[baseLevel].height;
 
-		if( pics[0].format != GL_RGBA8 ) {
+		if ( compressed && !cubemap ) {
 			// compressed texture
 			for( i = baseLevel; i < numTexLevels; i++ ) {
 				if( !UploadOneTexLevel( i - baseLevel, &pics[i] ) )
@@ -2121,7 +2124,7 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 				goto done;
 
 			// failed to upload all levels
-			ri.Error(ERR_DROP, "Unsupported Texture format: %x", pics[0].format);
+			ri.Error(ERR_DROP, "Unsupported Texture format: %x for %s", pics[0].format, image->imgName );
 		} else {
 			data = pics[baseLevel].data;
 		}
@@ -2140,14 +2143,9 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 		{
 			for (i = 0; i < depth; i++)
 			{
-				int w2 = width, h2 = height;
 				RawImage_UploadTexture(image->texnum, data, 0, 0, width, height, uploadTarget + i, picFormat, numMips, internalFormat, type, flags, qfalse);
-				for (c = numMips; c; c--)
-				{
-					data += CalculateMipSize(w2, h2, picFormat);
-					w2 = MAX(1, w2 >> 1);
-					h2 = MAX(1, h2 >> 1);
-				}
+
+				data += pics[baseLevel].size / depth;
 			}
 			goto done;
 		}
@@ -2462,7 +2460,6 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	textureLevel_t	*pic;
 	long	hash;
 	int		textureInternalFormat = 0;
-	GLenum	picFormat;
 
 	if (!name) {
 		return NULL;
@@ -2493,27 +2490,32 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		return NULL;
 	}
 
-	picFormat = pic[0].format;
-
 	// apply lightmap coloring
-	if ( ( flags & IMGFLAG_LIGHTMAP ) && picFormat == GL_RGBA8 ) {
-		byte *newPic;
+	if ( ( flags & IMGFLAG_LIGHTMAP ) && pic[0].format == GL_RGBA8 ) {
+		textureLevel_t	*newPic;
 
 		if (glRefConfig.floatLightmap) {
+			// R_ProcessLightmap converts format if floatLightmap is enabled
 			textureInternalFormat = GL_RGBA16F_ARB;
-			newPic = ri.Malloc( pic[0].width * pic[0].height * 4 * 2 );
+
+			newPic = ri.Malloc( sizeof (textureLevel_t) + pic[0].width * pic[0].height * 4 * 2 );
+			newPic[0].format = GL_RGBA16F_ARB;
+			newPic[0].width = pic[0].width;
+			newPic[0].height = pic[0].height;
+			newPic[0].data = (byte*)newPic + sizeof ( textureLevel_t );
+			numLevels = 1;
 		} else {
-			newPic = (byte*)pic[0].data;
+			newPic = pic;
 		}
 
-		R_ProcessLightmap( (byte**)&pic[0].data, 4, pic[0].width, pic[0].height, &newPic, qfalse );
+		R_ProcessLightmap( (byte**)&pic[0].data, 4, pic[0].width, pic[0].height, (byte**)&newPic[0].data, qfalse );
 
-		if ( newPic != pic[0].data ) {
+		if ( newPic != pic ) {
 			ri.Free( pic );
-			pic[0].data = newPic;
+			pic = newPic;
 		}
 	}
-	else if (r_normalMapping->integer && (picFormat == GL_RGBA8) && (type == IMGTYPE_COLORALPHA) &&
+	else if (r_normalMapping->integer && (pic[0].format == GL_RGBA8) && (type == IMGTYPE_COLORALPHA) &&
 		(flags & (IMGFLAG_PICMIP|IMGFLAG_PICMIP2)) && (flags & IMGFLAG_MIPMAP) && (flags & IMGFLAG_GENNORMALMAP) && !(flags & IMGFLAG_CUBEMAP))
 	{
 		char normalName[MAX_QPATH];
@@ -2623,7 +2625,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	}
 
 	// force mipmaps off if image is compressed but doesn't have enough mips
-	if ((flags & IMGFLAG_MIPMAP) && picFormat != GL_RGBA8 && picFormat != GL_SRGB8_ALPHA8_EXT)
+	if ((flags & IMGFLAG_MIPMAP) && pic[0].format != GL_RGBA8 && pic[0].format != GL_SRGB8_ALPHA8_EXT)
 	{
 		int wh = MAX(pic[0].width, pic[0].height);
 		int neededMips = 0;

@@ -626,7 +626,7 @@ static void Upload32( int numTexLevels, const textureLevel_t *pics,
 	width = pics[baseLevel].width;
 	height = pics[baseLevel].height;
 
-	if( pics[0].format != GL_RGBA8 ) {
+	if( pics[0].format != GL_RGBA8 && pics[0].format != GL_RGBA16F_ARB ) {
 		// compressed texture
 		for( i = baseLevel; i < numTexLevels; i++ ) {
 			if( !UploadOneTexLevel( i - baseLevel, &pics[i] ) )
@@ -636,7 +636,9 @@ static void Upload32( int numTexLevels, const textureLevel_t *pics,
 			goto done;
 
 		// failed to upload all levels
-		ri.Error(ERR_DROP, "Unsupported Texture format: %x", pics[0].format);
+		ri.Error(ERR_DROP, "Unsupported Texture format: %8x", pics[0].format );
+		// ZTM: TODO: Pass image to Upload32 in OpenGL1 too
+		//ri.Error(ERR_DROP, "Unsupported Texture format: %x for %s", pics[0].format, image->imgName );
 	} else {
 		data = pics[baseLevel].data;
 	}
