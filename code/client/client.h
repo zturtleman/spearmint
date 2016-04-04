@@ -41,8 +41,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif /* USE_CURL */
 
 #ifdef USE_VOIP
-#include "speex/speex.h"
-#include "speex/speex_preprocess.h"
+#include <opus.h>
 #endif
 
 // Lower this define to change max supported local clients for client/renderer,
@@ -259,14 +258,11 @@ typedef struct {
 
 #ifdef USE_VOIP
 	qboolean voipEnabled;
-	qboolean speexInitialized;
-	int speexFrameSize;
-	int speexSampleRate;
+	qboolean voipCodecInitialized;
 
 	// incoming data...
 	// !!! FIXME: convert from parallel arrays to array of a struct.
-	SpeexBits speexDecoderBits[MAX_CLIENTS];
-	void *speexDecoder[MAX_CLIENTS];
+	OpusDecoder *opusDecoder[MAX_CLIENTS];
 	byte voipIncomingGeneration[MAX_CLIENTS];
 	int voipIncomingSequence[MAX_CLIENTS];
 	float voipGain[MAX_CLIENTS];
@@ -280,9 +276,7 @@ typedef struct {
 	// then we are sending to playerNum i.
 	uint8_t voipTargets[(MAX_CLIENTS + 7) / 8];
 	uint8_t voipFlags;
-	SpeexPreprocessState *speexPreprocessor;
-	SpeexBits speexEncoderBits;
-	void *speexEncoder;
+	OpusEncoder *opusEncoder;
 	int voipOutgoingDataSize;
 	int voipOutgoingDataFrames;
 	int voipOutgoingSequence;
@@ -457,6 +451,13 @@ extern	cvar_t	*cl_voipSendTarget;
 extern	cvar_t	*cl_voipGainDuringCapture;
 extern	cvar_t	*cl_voipCaptureMult;
 extern	cvar_t	*cl_voip;
+
+// 20ms at 48k
+#define VOIP_MAX_FRAME_SAMPLES		( 20 * 48 )
+
+// 3 frame is 60ms of audio, the max opus will encode at once
+#define VOIP_MAX_PACKET_FRAMES		3
+#define VOIP_MAX_PACKET_SAMPLES		( VOIP_MAX_FRAME_SAMPLES * VOIP_MAX_PACKET_FRAMES )
 #endif
 
 //=================================================

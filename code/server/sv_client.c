@@ -1374,8 +1374,8 @@ void SV_UserinfoChanged( player_t *player ) {
 	}
 
 #ifdef USE_VOIP
-	val = Info_ValueForKey(player->userinfo, "cl_voip");
-	cl->hasVoip = atoi(val);
+	val = Info_ValueForKey(player->userinfo, "cl_voipProtocol");
+	cl->hasVoip = !Q_stricmp( val, "opus" );
 #endif
 
 	// TTimo
@@ -1867,7 +1867,7 @@ static qboolean SV_ClientIgnoreVoipTalker(const client_t *client, int playerNum)
 }
 
 static
-void SV_UserVoip(client_t *cl, msg_t *msg)
+void SV_UserVoip(client_t *cl, msg_t *msg, qboolean ignoreData)
 {
 	int sender, localPlayerNum, generation, sequence, frames, packetsize;
 	uint8_t recips[(MAX_CLIENTS + 7) / 8];
@@ -1904,12 +1904,12 @@ void SV_UserVoip(client_t *cl, msg_t *msg)
 
 	MSG_ReadData(msg, encoded, packetsize);
 
-	if (SV_ShouldIgnoreVoipSender(cl, localPlayerNum))
+	if (ignoreData || SV_ShouldIgnoreVoipSender(cl, localPlayerNum))
 		return;   // Blacklisted, disabled, etc.
 
 	// !!! FIXME: see if we read past end of msg...
 
-	// !!! FIXME: reject if not speex narrowband codec.
+	// !!! FIXME: reject if not opus data.
 	// !!! FIXME: decide if this is bogus data?
 
 	playerNum = cl->localPlayers[localPlayerNum] - svs.players;
@@ -2066,8 +2066,13 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 				return;	// disconnect command
 			}
 #ifdef USE_VOIP
-		} else if ( c == clc_voip ) {
-			SV_UserVoip( cl, msg );
+		} else if ( c == clc_voipSpeex ) {
+			// skip legacy speex voip data
+			SV_UserVoip( cl, msg, qtrue );
+			c = MSG_ReadByte( msg );
+		} else if ( c == clc_voipOpus ) {
+			SV_UserVoip( cl, msg, qfalse );
+			c = MSG_ReadByte( msg );
 #endif
 		} else {
 			// unknown command
