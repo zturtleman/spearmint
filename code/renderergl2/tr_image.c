@@ -30,6 +30,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 // tr_image.c
 #include "tr_local.h"
 
+#include "tr_dsa.h"
+
 static byte			 s_intensitytable[256];
 static unsigned char s_gammatable[256];
 
@@ -113,10 +115,9 @@ void GL_TextureMode( const char *string ) {
 	// change all the existing mipmap texture objects
 	for ( i = 0 ; i < tr.numImages ; i++ ) {
 		glt = tr.images[ i ];
-		if ( glt->flags & IMGFLAG_MIPMAP ) {
-			GL_Bind (glt);
-			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
-			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
+		if ( glt->flags & IMGFLAG_MIPMAP && !(glt->flags & IMGFLAG_CUBEMAP)) {
+			qglTextureParameterf(glt->texnum, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
+			qglTextureParameterf(glt->texnum, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 		}
 	}
 }
@@ -1829,7 +1830,7 @@ static void CompressMonoBlock(byte outdata[8], const byte indata[16])
 	}
 }
 
-static void RawImage_UploadToRgtc2Texture(byte *data, int width, int height, int mip)
+static void RawImage_UploadToRgtc2Texture(GLuint texture, byte *data, int width, int height, int mip)
 {
 	int wBlocks, hBlocks, y, x, size;
 	byte *compressedData, *p;
@@ -1869,18 +1870,62 @@ static void RawImage_UploadToRgtc2Texture(byte *data, int width, int height, int
 		}
 	}
 
-	qglCompressedTexImage2DARB(GL_TEXTURE_2D, mip, GL_COMPRESSED_RG_RGTC2, width, height, 0, size, compressedData);
+	qglCompressedTextureImage2D(texture, GL_TEXTURE_2D, mip, GL_COMPRESSED_RG_RGTC2, width, height, 0, size, compressedData);
 
 	ri.Hunk_FreeTempMemory(compressedData);
 }
 
+static int CalculateMipSize(int width, int height, GLenum picFormat)
+{
+	int numBlocks = ((width + 3) / 4) * ((height + 3) / 4);
+	int numPixels = width * height;
 
-static void RawImage_UploadTexture( byte *data, int x, int y, int width, int height, GLenum internalFormat, imgType_t type, imgFlags_t flags, qboolean subtexture )
+	switch (picFormat)
+	{
+		case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+		case GL_COMPRESSED_SRGB_S3TC_DXT1_EXT:
+		case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+		case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
+		case GL_COMPRESSED_RED_RGTC1:
+		case GL_COMPRESSED_SIGNED_RED_RGTC1:
+			return numBlocks * 8;
+
+		case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+		case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT:
+		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+		case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT:
+		case GL_COMPRESSED_RG_RGTC2:
+		case GL_COMPRESSED_SIGNED_RG_RGTC2:
+		case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB:
+		case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB:
+		case GL_COMPRESSED_RGBA_BPTC_UNORM_ARB:
+		case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB:
+			return numBlocks * 16;
+
+		case GL_RGBA8:
+		case GL_SRGB8_ALPHA8_EXT:
+			return numPixels * 4;
+
+		default:
+			ri.Printf(PRINT_ALL, "Unsupported texture format %08x\n", picFormat);
+			return 0;
+	}
+
+	return 0;
+}
+
+
+static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int width, int height, GLenum target, GLenum picFormat, int numMips, GLenum internalFormat, imgType_t type, imgFlags_t flags, qboolean subtexture )
 {
 	int dataFormat, dataType;
 	qboolean rgtc = (internalFormat == GL_COMPRESSED_RG_RGTC2);
+	qboolean compressed = (!(picFormat == GL_RGBA8) || (picFormat == GL_SRGB8_ALPHA8_EXT));
+	qboolean mipmap = !!(flags & IMGFLAG_MIPMAP);
+	qboolean picmip = !!(flags & IMGFLAG_PICMIP);
+	int size, miplevel;
+	qboolean lastMip = qfalse;
 
-	switch(internalFormat)
+	switch (internalFormat)
 	{
 		case GL_DEPTH_COMPONENT:
 		case GL_DEPTH_COMPONENT16_ARB:
@@ -1899,61 +1944,84 @@ static void RawImage_UploadTexture( byte *data, int x, int y, int width, int hei
 			break;
 	}
 
-	if ( subtexture )
-		qglTexSubImage2D( GL_TEXTURE_2D, 0, x, y, width, height, dataFormat, dataType, data );
-	else
+	if (!data)
 	{
-		if (rgtc)
-			RawImage_UploadToRgtc2Texture(data, width, height, 0);
-		else
-			qglTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, dataType, data);
+		miplevel = 0;
+		do
+		{
+			lastMip = (width == 1 && height == 1) || !mipmap;
+			qglTextureImage2D(texture, target, miplevel, internalFormat, width, height, 0, dataFormat, dataType, NULL);
+
+			width = MAX(1, width >> 1);
+			height = MAX(1, height >> 1);
+			miplevel++;
+		}
+		while (!lastMip);
+
+		return;
 	}
 
-	if (flags & IMGFLAG_MIPMAP)
+	if (compressed && picmip)
 	{
-		int miplevel;
-
-		miplevel = 0;
-		while (width > 1 || height > 1)
+		// ZTM: FIXME: ### Support PICMIP2 ???
+		for (miplevel = r_picmip->integer; miplevel > 0 && numMips > 1; miplevel--, numMips--)
 		{
-			if (data)
-			{
-				if (type == IMGTYPE_NORMAL || type == IMGTYPE_NORMALHEIGHT)
-				{
-					R_MipMapNormalHeight( data, data, width, height, glRefConfig.swizzleNormalmap );
-				}
-				else
-				{
-					R_MipMapsRGB( data, width, height );
-				}
-			}
-			
-			width >>= 1;
-			height >>= 1;
-			if (width < 1)
-				width = 1;
-			if (height < 1)
-				height = 1;
-			miplevel++;
-
-			if ( data && r_colorMipLevels->integer )
-				R_BlendOverTexture( (byte *)data, width * height, mipBlendColors[miplevel] );
-
-			if ( subtexture )
-			{
-				x >>= 1;
-				y >>= 1;
-				qglTexSubImage2D( GL_TEXTURE_2D, miplevel, x, y, width, height, dataFormat, dataType, data );
-			}
-			else
-			{
-				if (rgtc)
-					RawImage_UploadToRgtc2Texture(data, width, height, miplevel);
-				else
-					qglTexImage2D(GL_TEXTURE_2D, miplevel, internalFormat, width, height, 0, dataFormat, dataType, data);
-			}
+			size = CalculateMipSize(width, height, picFormat);
+			x >>= 1;
+			y >>= 1;
+			width = MAX(1, width >> 1);
+			height = MAX(1, height >> 1);
+			data += size;
 		}
 	}
+
+	miplevel = 0;
+	do
+	{
+		lastMip = (width == 1 && height == 1) || !mipmap;
+		size = CalculateMipSize(width, height, picFormat);
+
+		if (compressed)
+		{
+			if (subtexture)
+				qglCompressedTextureSubImage2D(texture, target, miplevel, x, y, width, height, picFormat, size, data);
+			else
+				qglCompressedTextureImage2D(texture, target, miplevel, picFormat, width, height, 0, size, data);
+		}
+		else
+		{
+			if (miplevel != 0 && r_colorMipLevels->integer)
+				R_BlendOverTexture((byte *)data, width * height, mipBlendColors[miplevel]);
+
+			if (rgtc)
+				RawImage_UploadToRgtc2Texture(texture, data, width, height, miplevel);
+			else if (subtexture)
+				qglTextureSubImage2D(texture, target, miplevel, x, y, width, height, dataFormat, dataType, data);
+			else
+				qglTextureImage2D(texture, target, miplevel, internalFormat, width, height, 0, dataFormat, dataType, data);
+
+			if (!lastMip && numMips < 2)
+			{
+				if (type == IMGTYPE_NORMAL || type == IMGTYPE_NORMALHEIGHT)
+					R_MipMapNormalHeight(data, data, width, height, glRefConfig.swizzleNormalmap);
+				else
+					R_MipMapsRGB(data, width, height);
+			}
+		}
+
+		x >>= 1;
+		y >>= 1;
+		width = MAX(1, width >> 1);
+		height = MAX(1, height >> 1);
+		miplevel++;
+
+		if (numMips > 1)
+		{
+			data += size;
+			numMips--;
+		}
+	}
+	while (!lastMip);
 }
 
 
@@ -2015,12 +2083,20 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 	int			baseLevel;
 	byte		*data;
 
+	int numMips = numTexLevels;
+	GLenum picFormat = pics ? pics[0].format : GL_RGBA8;
 	imgType_t type = image->type;
 	imgFlags_t flags = image->flags;
 	GLenum internalFormat = image->internalFormat;
 	qboolean subtexture = (x != 0) || (y != 0) || (width != image->width) || (height != image->height);
 	qboolean notScaled = qtrue;
-	qboolean mipmap = !!(flags & IMGFLAG_MIPMAP);
+	qboolean compressed = (picFormat != GL_RGBA8 && picFormat != GL_SRGB8_ALPHA8_EXT);
+	qboolean mipmap = !!(flags & IMGFLAG_MIPMAP) && (!compressed || numMips > 1);
+	qboolean cubemap = !!(flags & IMGFLAG_CUBEMAP);
+	GLenum uploadTarget = cubemap ? GL_TEXTURE_CUBE_MAP_POSITIVE_X : GL_TEXTURE_2D;
+	GLenum textureTarget = cubemap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
+	int depth = cubemap ? 6 : 1;
+
 
 	if ( subtexture ) {
 		baseLevel = 0;
@@ -2055,11 +2131,27 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 	if (!data)
 	{
 		RawImage_ScaleToPower2(NULL, baseLevel, &width, &height, type, flags, NULL);
-		RawImage_UploadTexture(NULL, 0, 0, width, height, internalFormat, type, flags, qfalse);
+		for (i = 0; i < depth; i++)
+			RawImage_UploadTexture(image->texnum, NULL, 0, 0, width, height, uploadTarget + i, GL_RGBA8, 0, internalFormat, type, flags, qfalse);
 		goto done;
 	}
 	else if (!subtexture)
 	{
+		if (compressed || cubemap)
+		{
+			for (i = 0; i < depth; i++)
+			{
+				int w2 = width, h2 = height;
+				RawImage_UploadTexture(image->texnum, data, 0, 0, width, height, uploadTarget + i, picFormat, numMips, internalFormat, type, flags, qfalse);
+				for (c = numMips; c; c--)
+				{
+					data += CalculateMipSize(w2, h2, picFormat);
+					w2 = MAX(1, w2 >> 1);
+					h2 = MAX(1, h2 >> 1);
+				}
+			}
+			goto done;
+		}
 		notScaled = RawImage_ScaleToPower2(&data, baseLevel, &width, &height, type, flags, &resampledBuffer);
 	}
 
@@ -2097,12 +2189,12 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 	if (subtexture)
 	{
 		// FIXME: Incorrect if original texture was not a power of 2 texture or picmipped
-		RawImage_UploadTexture(data, x, y, width, height, internalFormat, type, flags, qtrue);
+		RawImage_UploadTexture(image->texnum, data, x, y, width, height, uploadTarget, GL_RGBA8, 0, internalFormat, type, flags, qtrue);
 		GL_CheckErrors();
 		return;
 	}
 
-	RawImage_UploadTexture(data, 0, 0, width, height, internalFormat, type, flags, qfalse);
+	RawImage_UploadTexture(image->texnum, data, 0, 0, width, height, uploadTarget, GL_RGBA8, 0, internalFormat, type, flags, qfalse);
 
 done:
 
@@ -2111,20 +2203,20 @@ done:
 
 	if (mipmap)
 	{
-		if ( glConfig.textureFilterAnisotropic )
-			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-					(GLint)Com_Clamp( 1, glConfig.maxAnisotropy, r_ext_max_anisotropy->integer ) );
+		if (glConfig.textureFilterAnisotropic && !cubemap)
+			qglTextureParameteri(image->texnum, textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+			(GLint)Com_Clamp(1, glConfig.maxAnisotropy, r_ext_max_anisotropy->integer));
 
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
+		qglTextureParameterf(image->texnum, textureTarget, GL_TEXTURE_MIN_FILTER, gl_filter_min);
+		qglTextureParameterf(image->texnum, textureTarget, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 	}
 	else
 	{
-		if ( glConfig.textureFilterAnisotropic )
-			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1 );
+		if (glConfig.textureFilterAnisotropic && !cubemap)
+			qglTextureParameteri(image->texnum, textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1);
 
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		qglTextureParameterf(image->texnum, textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		qglTextureParameterf(image->texnum, textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 
 	// Fix for sampling depth buffer on old nVidia cards
@@ -2135,9 +2227,9 @@ done:
 		case GL_DEPTH_COMPONENT16_ARB:
 		case GL_DEPTH_COMPONENT24_ARB:
 		case GL_DEPTH_COMPONENT32_ARB:
-			qglTexParameterf(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE );
-			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+			qglTextureParameterf(image->texnum, textureTarget, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
+			qglTextureParameterf(image->texnum, textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			qglTextureParameterf(image->texnum, textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			break;
 		default:
 			break;
@@ -2212,68 +2304,23 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 		glWrapClampMode = GL_REPEAT;
 
 	if (!internalFormat)
-	{
-		if (image->flags & IMGFLAG_CUBEMAP)
-			internalFormat = GL_RGBA8;
-		else
-			internalFormat = RawImage_GetFormat(pic, image->width * image->height, isLightmap, image->type, image->flags);
-	}
+		internalFormat = RawImage_GetFormat(pic, image->width * image->height, isLightmap, image->type, image->flags);
 
 	image->internalFormat = internalFormat;
 		
-
-	// lightmaps are always allocated on TMU 1
-	if ( qglActiveTextureARB && isLightmap ) {
-		image->TMU = 1;
-	} else {
-		image->TMU = 0;
-	}
-
-	if ( qglActiveTextureARB ) {
-		GL_SelectTexture( image->TMU );
-	}
-
-	GL_Bind(image);
+	Upload32(numTexLevels, pic, 0, 0, image->width, image->height, image);
 
 	if (image->flags & IMGFLAG_CUBEMAP)
 	{
-		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		if (image->flags & IMGFLAG_MIPMAP)
-		{
-			qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-		else
-		{
-			qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		}
-
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-		qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA8, image->width, image->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-
-		if (image->flags & IMGFLAG_MIPMAP)
-			qglGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP);
-
-		image->uploadWidth = image->width;
-		image->uploadHeight = image->height;
+		qglTextureParameterf(image->texnum, GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, glWrapClampMode);
+		qglTextureParameterf(image->texnum, GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, glWrapClampMode);
+		qglTextureParameteri(image->texnum, GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, glWrapClampMode);
 	}
 	else
 	{
-		Upload32( numTexLevels, pic, 0, 0, image->width, image->height, image );
-
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
+		qglTextureParameterf(image->texnum, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode);
+		qglTextureParameterf(image->texnum, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode);
 	}
-
-	GL_SelectTexture( 0 );
 
 	hash = generateHashValue(name);
 	image->next = hashTable[hash];
@@ -2286,12 +2333,6 @@ void R_UpdateSubImage( image_t *image, byte *pic, int x, int y, int width, int h
 {
 	textureLevel_t texLevel;
 
-	if (qglActiveTextureARB) {
-		GL_SelectTexture(image->TMU);
-	}
-
-	GL_Bind(image);
-
 	texLevel.format = GL_RGBA8;
 	texLevel.width = width;
 	texLevel.height = height;
@@ -2299,8 +2340,6 @@ void R_UpdateSubImage( image_t *image, byte *pic, int x, int y, int width, int h
 	texLevel.data = pic;
 
 	Upload32(1, &texLevel, x, y, width, height, image);
-
-	GL_SelectTexture(0);
 }
 
 //===================================================================
@@ -2424,6 +2463,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	textureLevel_t	*pic;
 	long	hash;
 	int		textureInternalFormat = 0;
+	GLenum	picFormat;
 
 	if (!name) {
 		return NULL;
@@ -2454,8 +2494,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		return NULL;
 	}
 
+	picFormat = pic[0].format;
+
 	// apply lightmap coloring
-	if ( ( flags & IMGFLAG_LIGHTMAP ) && pic[0].format == GL_RGBA8 ) {
+	if ( ( flags & IMGFLAG_LIGHTMAP ) && picFormat == GL_RGBA8 ) {
 		byte *newPic;
 
 		if (glRefConfig.floatLightmap) {
@@ -2472,7 +2514,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 			pic[0].data = newPic;
 		}
 	}
-	else if (r_normalMapping->integer && !(type == IMGTYPE_NORMAL) && (flags & (IMGFLAG_PICMIP|IMGFLAG_PICMIP2)) && (flags & IMGFLAG_MIPMAP) && (flags & IMGFLAG_GENNORMALMAP))
+	else if (r_normalMapping->integer && (picFormat == GL_RGBA8) && (type == IMGTYPE_COLORALPHA) &&
+		(flags & (IMGFLAG_PICMIP|IMGFLAG_PICMIP2)) && (flags & IMGFLAG_MIPMAP) && (flags & IMGFLAG_GENNORMALMAP) && !(flags & IMGFLAG_CUBEMAP))
 	{
 		char normalName[MAX_QPATH];
 		image_t *normalImage;
@@ -2578,6 +2621,20 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 			R_CreateImage( normalName, normalPic, normalWidth, normalHeight, IMGTYPE_NORMAL, normalFlags, 0 );
 			ri.Free( normalPic );	
 		}
+	}
+
+	// force mipmaps off if image is compressed but doesn't have enough mips
+	if ((flags & IMGFLAG_MIPMAP) && picFormat != GL_RGBA8 && picFormat != GL_SRGB8_ALPHA8_EXT)
+	{
+		int wh = MAX(pic[0].width, pic[0].height);
+		int neededMips = 0;
+		while (wh)
+		{
+			neededMips++;
+			wh >>= 1;
+		}
+		if (neededMips > numLevels)
+			flags &= ~IMGFLAG_MIPMAP;
 	}
 
 	image = R_CreateImage2( ( char * ) name, numLevels, pic, type, flags, textureInternalFormat );
@@ -2873,6 +2930,12 @@ void R_CreateBuiltinImages( void ) {
 
 		tr.renderImage = R_CreateImage("_render", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
+		if (r_shadowBlur->integer)
+			tr.screenScratchImage = R_CreateImage("screenScratch", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, rgbFormat);
+
+		if (r_shadowBlur->integer || r_ssao->integer)
+			tr.hdrDepthImage = R_CreateImage("*hdrDepth", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_INTENSITY32F_ARB);
+
 		if (r_drawSunRays->integer)
 			tr.sunRaysImage = R_CreateImage("*sunRays", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, rgbFormat);
 
@@ -2920,7 +2983,6 @@ void R_CreateBuiltinImages( void ) {
 		if (r_ssao->integer)
 		{
 			tr.screenSsaoImage = R_CreateImage("*screenSsao", NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
-			tr.hdrDepthImage = R_CreateImage("*hdrDepth", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_INTENSITY32F_ARB);
 		}
 
 		if (r_shadows->integer == 4)
@@ -2936,11 +2998,8 @@ void R_CreateBuiltinImages( void ) {
 			for ( x = 0; x < 4; x++)
 			{
 				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer, r_shadowMapSize->integer, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_DEPTH_COMPONENT24_ARB);
-				GL_Bind(tr.sunShadowDepthImage[x]);
-				qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-				qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-				qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-				qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+				qglTextureParameterf(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+				qglTextureParameterf(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 			}
 
 			tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
@@ -2976,6 +3035,11 @@ void R_SetColorMappings( void ) {
 		tr.overbrightBits = 2;
 	} else if ( tr.overbrightBits < 0 ) {
 		tr.overbrightBits = 0;
+	}
+
+	// don't allow more overbright bits than map overbright bits
+	if ( tr.overbrightBits > r_mapOverBrightBits->integer ) {
+		tr.overbrightBits = r_mapOverBrightBits->integer;
 	}
 
 	tr.identityLight = 1.0f / ( 1 << tr.overbrightBits );
@@ -3053,15 +3117,7 @@ void R_DeleteTextures( void ) {
 
 	tr.numImages = 0;
 
-	Com_Memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
-	if ( qglActiveTextureARB ) {
-		GL_SelectTexture( 1 );
-		qglBindTexture( GL_TEXTURE_2D, 0 );
-		GL_SelectTexture( 0 );
-		qglBindTexture( GL_TEXTURE_2D, 0 );
-	} else {
-		qglBindTexture( GL_TEXTURE_2D, 0 );
-	}
+	GL_BindNullTextures();
 }
 
 /*

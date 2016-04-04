@@ -1548,9 +1548,18 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for specular reflectance in shader '%s'\n", shader.name );
 				continue;
 			}
-			stage->specularScale[0] = 
-			stage->specularScale[1] = 
-			stage->specularScale[2] = atof( token );
+
+			if (r_pbr->integer)
+			{
+				// interpret specularReflectance < 0.5 as nonmetal
+				stage->specularScale[1] = (atof(token) < 0.5f) ? 0.0f : 1.0f;
+			}
+			else
+			{
+				stage->specularScale[0] =
+				stage->specularScale[1] =
+				stage->specularScale[2] = atof( token );
+			}
 		}
 		//
 		// specularExponent <value>
@@ -1568,8 +1577,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 
 			exponent = atof( token );
 
-			if (r_glossIsRoughness->integer)
-				stage->specularScale[3] = powf(2.0f / (exponent + 2.0), 0.25);
+			if (r_pbr->integer)
+				stage->specularScale[0] = 1.0f - powf(2.0f / (exponent + 2.0), 0.25);
 			else
 			{
 				// Change shininess to gloss
@@ -1594,8 +1603,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 
 			gloss = atof(token);
 
-			if (r_glossIsRoughness->integer)
-				stage->specularScale[3] = exp2f(-3.0f * gloss);
+			if (r_pbr->integer)
+				stage->specularScale[0] = 1.0f - exp2f(-3.0f * gloss);
 			else
 				stage->specularScale[3] = gloss;
 		}
@@ -1615,8 +1624,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 
 			roughness = atof(token);
 
-			if (r_glossIsRoughness->integer)
-				stage->specularScale[3] = roughness;
+			if (r_pbr->integer)
+				stage->specularScale[0] = 1.0 - roughness;
 			else
 			{
 				if (roughness >= 0.125)
@@ -1676,6 +1685,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		}
 		//
 		// specularScale <rgb> <gloss>
+		// or specularScale <metallic> <smoothness> with r_pbr 1
 		// or specularScale <r> <g> <b>
 		// or specularScale <r> <g> <b> <gloss>
 		//
@@ -1702,10 +1712,19 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			token = COM_ParseExt(text, qfalse);
 			if ( token[0] == 0 )
 			{
-				// two values, rgb then gloss
-				stage->specularScale[3] = stage->specularScale[1];
-				stage->specularScale[1] =
-				stage->specularScale[2] = stage->specularScale[0];
+				if (r_pbr->integer)
+				{
+					// two values, metallic then smoothness
+					float smoothness = stage->specularScale[1];
+					stage->specularScale[1] = (stage->specularScale[0] < 0.5f) ? 0.0f : 1.0f;
+					stage->specularScale[0] = smoothness;
+				}
+				{
+					// two values, rgb then gloss
+					stage->specularScale[3] = stage->specularScale[1];
+					stage->specularScale[1] =
+					stage->specularScale[2] = stage->specularScale[0];
+				}
 				continue;
 			}
 
@@ -4439,10 +4458,17 @@ static void InitShader( const char *name, int lightmapIndex ) {
 
 		// default normal/specular
 		VectorSet4(stages[i].normalScale, 0.0f, 0.0f, 0.0f, 0.0f);
-		stages[i].specularScale[0] =
-		stages[i].specularScale[1] =
-		stages[i].specularScale[2] = r_baseSpecular->value;
-		stages[i].specularScale[3] = r_baseGloss->value;
+		if (r_pbr->integer)
+		{
+			stages[i].specularScale[0] = r_baseGloss->value;
+		}
+		else
+		{
+			stages[i].specularScale[0] =
+			stages[i].specularScale[1] =
+			stages[i].specularScale[2] = r_baseSpecular->value;
+			stages[i].specularScale[3] = r_baseGloss->value;
+		}
 	}
 }
 

@@ -1642,7 +1642,8 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 				bonePtr = &bones[*boneRefs];
 
 				if ( r_bonesDebug->integer != 9 ) {
-					GL_Bind( tr.whiteImage );
+					// ZTM: FIXME: ### do we need to select TMU 0???
+					GL_BindToTMU( tr.whiteImage, 0 );
 					qglLineWidth( 1 );
 					qglBegin( GL_LINES );
 					for ( j = 0; j < 3; j++ ) {
@@ -1719,7 +1720,8 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 						memcpy( outTag.axis, tagBone->matrix, sizeof( outTag.axis ) );
 						VectorCopy( tagBone->translation, outTag.origin );
 
-						GL_Bind( tr.whiteImage );
+						// ZTM: FIXME: ### do we need to select TMU 0???
+						GL_BindToTMU( tr.whiteImage, 0 );
 						qglLineWidth( 2 );
 						qglBegin( GL_LINES );
 						for ( j = 0; j < 3; j++ ) {
@@ -1762,7 +1764,8 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 			// show mesh edges
 			tempVert = ( float * )( tess.xyz + baseVertex );
 
-			GL_Bind( tr.whiteImage );
+			// ZTM: FIXME: ### do we need to select TMU 0???
+			GL_BindToTMU( tr.whiteImage, 0 );
 			qglLineWidth( 1 );
 			qglBegin( GL_LINES );
 			qglColor3f( .0,.0,.8 );
@@ -1799,7 +1802,8 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 		if ( r_bonesDebug->integer == 6 || r_bonesDebug->integer == 7 ) {
 			v = ( mdsVertex_t * )( (byte *)surface + surface->ofsVerts );
 			tempVert = ( float * )( tess.xyz + baseVertex );
-			GL_Bind( tr.whiteImage );
+			// ZTM: FIXME: ### do we need to select TMU 0???
+			GL_BindToTMU( tr.whiteImage, 0 );
 			qglPointSize( 5 );
 			qglBegin( GL_POINTS );
 			for ( j = 0; j < render_count; j++, tempVert += 4 ) {
