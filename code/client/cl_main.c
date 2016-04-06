@@ -1079,13 +1079,15 @@ void CL_ReadDemoMessage( void ) {
 ====================
 CL_ValidDemoFile
 
+if demoName has demo extension checks OS path, otherwise checks game filesystem path.
+
 if returns true, header looks ok and can probably play it (assuming correct cgame and pk3s).
 if returns false, can't play it.
 if returns false and length == 0, either file not found or it's size is 0...
 if returns false and protocol > 0, it's a unsupported protocol.
 ====================
 */
-qboolean CL_ValidDemoFile( const char *demoName, qboolean isOsPath, int *pProtocol, int *pLength, fileHandle_t *pHandle, char *pStartTime, char *pEndTime, int *pRunTime ) {
+qboolean CL_ValidDemoFile( const char *demoName, int *pProtocol, int *pLength, fileHandle_t *pHandle, char *pStartTime, char *pEndTime, int *pRunTime ) {
 	demoHeader_t	header;
 	char			name[MAX_OSPATH];
 	int				r, i;
@@ -1107,9 +1109,11 @@ qboolean CL_ValidDemoFile( const char *demoName, qboolean isOsPath, int *pProtoc
 	if ( pRunTime )
 		*pRunTime = 0;
 
-	if ( isOsPath ) {
+	// try OS path if has demo extension
+	if ( COM_CompareExtension( demoName, "." DEMOEXT ) ) {
 		length = FS_System_FOpenFileRead( demoName, &f );
 	} else {
+		// try game filesystem path
 		Com_sprintf( name, sizeof(name), "demos/%s." DEMOEXT, demoName );
 		length = FS_FOpenFileRead( name, &f, qtrue );
 	}
@@ -1207,7 +1211,7 @@ CL_PlayDemo
 play a demo, fullpath
 ====================
 */
-void CL_PlayDemo( const char *demoName, qboolean isOsPath ) {
+void CL_PlayDemo( const char *demoName ) {
 	int			protocol;
 	char		startTime[20];
 	char		endTime[20];
@@ -1222,7 +1226,7 @@ void CL_PlayDemo( const char *demoName, qboolean isOsPath ) {
 	}
 
 	// open the demo file
-	if ( !CL_ValidDemoFile( demoName, isOsPath, &protocol, &clc.demoLength, &clc.demofile, startTime, endTime, &runTime ) ) {
+	if ( !CL_ValidDemoFile( demoName, &protocol, &clc.demoLength, &clc.demofile, startTime, endTime, &runTime ) ) {
 		if ( clc.demoLength <= 0 || clc.demofile == 0 ) {
 			Com_Printf( S_COLOR_YELLOW "WARNING: Couldn't open demo %s\n", demoName );
 			return;
@@ -1273,7 +1277,6 @@ demo <demoname>
 ====================
 */
 void CL_PlayDemo_f( void ) {
-	char	*arg;
 	char	demoName[MAX_OSPATH];
 
 	if (Cmd_Argc() != 2) {
@@ -1281,11 +1284,9 @@ void CL_PlayDemo_f( void ) {
 		return;
 	}
 
-	arg = Cmd_Argv(1);
+	Q_strncpyz( demoName, Cmd_Argv(1), sizeof (demoName) );
 
-	COM_StripExtension( arg, demoName, sizeof (demoName));
-
-	CL_PlayDemo( demoName, qfalse );
+	CL_PlayDemo( demoName );
 }
 
 

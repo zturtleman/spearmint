@@ -499,8 +499,8 @@ qboolean CL_CheckPaused(void);
 
 void CL_DrawLoadingScreen( void );
 
-qboolean CL_ValidDemoFile( const char *demoName, qboolean isOsPath, int *pProtocol, int *pLength, fileHandle_t *pHandle, char *pStartTime, char *pEndTime, int *pRunTime );
-void CL_PlayDemo( const char *demoName, qboolean isOsPath );
+qboolean CL_ValidDemoFile( const char *demoName, int *pProtocol, int *pLength, fileHandle_t *pHandle, char *pStartTime, char *pEndTime, int *pRunTime );
+void CL_PlayDemo( const char *demoName );
 
 //
 // cl_input

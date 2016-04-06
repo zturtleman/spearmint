@@ -1104,7 +1104,7 @@ static void IN_ProcessEvents( void )
 					char *filename = e.drop.file;
 
 					if ( COM_CompareExtension( filename, "." DEMOEXT ) ) {
-						CL_PlayDemo( filename, qtrue );
+						CL_PlayDemo( filename );
 					} else {
 						Com_Printf( "Ignoring unknown file: %s\n", filename );
 					}
