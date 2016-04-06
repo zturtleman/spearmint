@@ -541,6 +541,9 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 
 		SDL_SetWindowIcon( SDL_window, icon );
 
+		// limit window minimum size to 320x200 unless a smaller size was specified
+		SDL_SetWindowMinimumSize( SDL_window, MIN( 320, glConfig.vidWidth ), MIN( 200, glConfig.vidHeight ) );
+
 		if( ( SDL_glContext = SDL_GL_CreateContext( SDL_window ) ) == NULL )
 		{
 			ri.Printf( PRINT_DEVELOPER, "SDL_GL_CreateContext failed: %s\n", SDL_GetError( ) );
