@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Spearmint
+GenericName=First Person Shooter Game
+Comment=Play Spearmint demo
+Exec=spearmint +demo %f
+MimeType=application/x-spearmint-demo;
+Icon=spearmint-demo
+Terminal=false
+Type=Application
+Categories=Game;ActionGame;
+NoDisplay=true

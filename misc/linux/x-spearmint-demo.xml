@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-spearmint-demo">
+         <comment>Spearmint demo</comment>
+         <magic priority="50">
+                <match type="string" value="SPEARMINT_DEMO" offset="0"/>
+         </magic>
+         <generic-icon name="video-x-generic"/>
+         <glob pattern="*.mintdemo"/>
+  </mime-type>
+</mime-info>
