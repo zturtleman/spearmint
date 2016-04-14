@@ -1005,6 +1005,7 @@ void CM_InitBoxHull (void)
 		s = &cm.brushsides[cm.numBrushSides+i];
 		s->plane = 	cm.planes + (cm.numPlanes+i*2+side);
 		s->surfaceFlags = 0;
+		s->surfaceNum = -1;
 
 		// planes
 		p = &box_planes[i*2];
