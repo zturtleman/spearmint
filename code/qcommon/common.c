@@ -537,9 +537,16 @@ qboolean Com_AddStartupCommands( void ) {
 			continue;
 		}
 
+		Cmd_TokenizeString( com_consoleLines[i] );
+
 		// set commands already added with Com_StartupVariable
-		if ( !Q_stricmpn( com_consoleLines[i], "set", 3 ) ) {
+		if ( !strcmp( Cmd_Argv(0), "set" ) ) {
 			continue;
+		}
+
+		// if passed a demo filename without a command, try to play the demo
+		if ( COM_CompareExtension( Cmd_Argv(0), "." DEMOEXT ) ) {
+			Cbuf_AddText( "demo " );
 		}
 
 		added = qtrue;
