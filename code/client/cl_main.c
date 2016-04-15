@@ -1239,8 +1239,6 @@ void CL_PlayDemo( const char *demoName ) {
 		}
 	}
 
-	CL_DrawLoadingScreen();
-
 	Com_Printf( "Loading demo '%s' recorded from %s to %s (%d seconds)\n", demoName, startTime, endTime, runTime / 1000 );
 
 	Q_strncpyz( clc.demoName, demoName, sizeof( clc.demoName ) );
@@ -1250,6 +1248,8 @@ void CL_PlayDemo( const char *demoName ) {
 	clc.state = CA_CONNECTED;
 	clc.demoplaying = qtrue;
 	Q_strncpyz( clc.servername, demoName, sizeof( clc.servername ) );
+
+	SCR_UpdateScreen();
 
 #ifdef LEGACY_PROTOCOL
 	if(protocol <= com_legacyprotocol->integer)
