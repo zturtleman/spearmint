@@ -236,7 +236,7 @@ typedef struct {
 	qboolean	missingDefaultCfg;	// if true, fellback to last fs_game to attempt download because default.cfg was missing
 
 	// demo information
-	char		demoName[MAX_QPATH];
+	char		demoName[MAX_OSPATH];
 	qboolean	demorecording;
 	qboolean	demoplaying;
 	qboolean	demowaiting;	// don't record until a non-delta message is received
