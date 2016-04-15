@@ -3895,7 +3895,7 @@ static void FS_Startup( qboolean quiet )
 		homePath = fs_basepath->string;
 	}
 	fs_homepath = Cvar_Get ("fs_homepath", homePath, CVAR_INIT|CVAR_PROTECTED );
-	fs_gamedirvar = Cvar_Get ("fs_game", BASEGAME, CVAR_INIT|CVAR_SYSTEMINFO );
+	fs_gamedirvar = Cvar_Get ("fs_game", BASEGAME, CVAR_INIT|CVAR_SYSTEMINFO|CVAR_SERVERINFO );
 
 	if(!fs_gamedirvar->string[0])
 		Cvar_ForceReset("fs_game");
