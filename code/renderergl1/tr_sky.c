@@ -781,7 +781,9 @@ void RB_StageIteratorSky( void ) {
 	// RTCW doesn't draw sky if world global fog is linear.
 	// However, skies are drawn in sky box refdefs that use linear fog
 	// so cannot check if the current refdef uses linear fog.
-	if ( !r_globalLinearFogDrawSky->integer && tr.globalFogType == FT_LINEAR ) {
+	// Water fog does not draw sky if there is linear fog.
+	if ( !r_globalLinearFogDrawSky->integer && ( tr.globalFogType == FT_LINEAR
+			|| ( ( backEnd.refdef.rdflags & RDF_UNDERWATER ) && backEnd.refdef.fogType == FT_LINEAR ) ) ) {
 		return;
 	}
 
