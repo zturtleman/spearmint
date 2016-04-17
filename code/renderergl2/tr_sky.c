@@ -877,7 +877,14 @@ Other things could be stuck in here, like birds in the sky, etc
 ================
 */
 void RB_StageIteratorSky( void ) {
-	if ( r_fastsky->integer || ( !r_globalLinearFogDrawSky->integer && backEnd.refdef.fogType == FT_LINEAR ) ) {
+	if ( r_fastsky->integer ) {
+		return;
+	}
+
+	// RTCW doesn't draw sky if world global fog is linear.
+	// However, skies are drawn in sky box refdefs that use linear fog
+	// so cannot check if the current refdef uses linear fog.
+	if ( !r_globalLinearFogDrawSky->integer && tr.globalFogType == FT_LINEAR ) {
 		return;
 	}
 
