@@ -178,6 +178,7 @@ cvar_t	*r_screenshotJpegQuality;
 cvar_t	*r_useGlFog;
 
 cvar_t	*r_defaultFogParmsType;
+cvar_t	*r_globalLinearFogDrawSky;
 cvar_t	*r_shadersDirectory;
 cvar_t	*r_surfaceFlagNoDraw;
 
@@ -1131,6 +1132,7 @@ void R_Register( void )
 	// cvars for game-specific overrides
 	//
 	r_defaultFogParmsType = ri.Cvar_Get ("r_defaultfogParmsType", "exp", CVAR_LATCH );
+	r_globalLinearFogDrawSky = ri.Cvar_Get ("r_globalLinearFogDrawSky", "1", 0 );
 	r_shadersDirectory = ri.Cvar_Get( "r_shadersDirectory", "scripts", CVAR_LATCH );
 	r_surfaceFlagNoDraw = ri.Cvar_Get( "r_surfaceFlagNoDraw", "128", CVAR_LATCH ); // Q3's SURF_NODRAW (0x80)
 
