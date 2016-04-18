@@ -1421,10 +1421,10 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_LERPTAG_TORSO:
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], args[5], args[6], VMF(7), VMA(8), VMA(9), VMA(10), args[11], args[12], args[13], args[14], VMF(15) );
 	case CG_R_GET_GLOBAL_FOG:
-		re.GetGlobalFog( VMA(1), VMA(2), VMA(3), VMA(4) );
+		re.GetGlobalFog( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5) );
 		return 0;
 	case CG_R_GET_VIEW_FOG:
-		re.GetViewFog( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6] );
+		re.GetViewFog( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), VMA(6), args[7] );
 		return 0;
 	case CG_GETCLIPBOARDDATA:
 		CL_GetClipboardData( VMA(1), args[2] );

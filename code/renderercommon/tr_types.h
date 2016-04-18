@@ -227,6 +227,9 @@ typedef struct {
 
 	// for alphaGen skyAlpha and oneMinusSkyAlpha
 	float			skyAlpha;
+
+	// maximum distance for the far clip plane
+	float			farClip;
 } refdef_t;
 
 

@@ -358,6 +358,7 @@ typedef struct {
 	vec3_t		color;
 	float		depthForOpaque;
 	float		density;
+	float		farClip;
 } fogParms_t;
 
 
@@ -457,6 +458,9 @@ typedef struct {
 	float		fogDepthForOpaque;
 	float		fogDensity;
 	float		fogTcScale;
+
+	// maximum distance for the far clip plane
+	float			maxFarClip;
 
 	int			num_entities;
 	trRefEntity_t	*entities;
@@ -1101,6 +1105,7 @@ typedef struct {
 	vec3_t		globalFogColor;
 	float		globalFogDepthForOpaque;
 	float		globalFogDensity;
+	float		globalFogFarClip;
 
 	// set by skyfogvars in a shader
 	fogType_t	skyFogType;
@@ -1855,8 +1860,8 @@ size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 void RE_SaveTGA(char * filename, int image_width, int image_height, byte *image_buffer, int padding);
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
-void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
-void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
+void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density, float *farClip );
+void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, float *farClip, qboolean inwater );
 
 //------------------------------------------------------------------------------
 // Ridah, mesh compression
