@@ -836,7 +836,7 @@ ifeq ($(PLATFORM),sunos)
   CC=gcc
   INSTALL=ginstall
   MKDIR=gmkdir
-  COPYDIR="/usr/local/share/games/quake3"
+  COPYDIR="/usr/local/share/games/spearmint"
 
   ifneq ($(ARCH),x86)
     ifneq ($(ARCH),sparc)
