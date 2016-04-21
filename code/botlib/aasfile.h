@@ -28,6 +28,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
+#ifndef AASFILE_H
+#define AASFILE_H
+
 
 //NOTE:	int =	default signed
 //				default long
@@ -273,3 +276,5 @@ typedef struct aas_header_s
 -	area zero is a dummy
 -	node zero is a dummy
 */
+
+#endif // AASFILE_H
