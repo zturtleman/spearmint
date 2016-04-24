@@ -38,7 +38,6 @@ Suite 120, Rockville, Maryland 20850 USA.
  *****************************************************************************/
 
 #include "../qcommon/q_shared.h"
-#include "l_memory.h"
 #include "l_log.h"
 #include "l_libvar.h"
 #include "l_script.h"
@@ -67,16 +66,6 @@ int botlibsetup = qfalse;
 //
 //===========================================================================
 
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-int Sys_MilliSeconds(void)
-{
-	return clock() * 1000 / CLOCKS_PER_SEC;
-} //end of the function Sys_MilliSeconds
 //===========================================================================
 //
 // Parameter:				-
@@ -210,7 +199,7 @@ int Export_BotLibShutdown(void)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int Export_BotLibVarSet(char *var_name, char *value)
+int Export_BotLibVarSet(const char *var_name, const char *value)
 {
 	LibVarSet(var_name, value);
 	return BLERR_NOERROR;
@@ -221,7 +210,7 @@ int Export_BotLibVarSet(char *var_name, char *value)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int Export_BotLibVarGet(char *var_name, char *value, int size)
+int Export_BotLibVarGet(const char *var_name, char *value, int size)
 {
 	char *varvalue;
 
@@ -250,7 +239,7 @@ int Export_BotLibStartFrame(float time)
 int Export_BotLibLoadMap(const char *mapname)
 {
 #ifdef DEBUG
-	int starttime = Sys_MilliSeconds();
+	int starttime = botimport.MilliSeconds();
 #endif
 	int errnum;
 
@@ -263,7 +252,7 @@ int Export_BotLibLoadMap(const char *mapname)
 	//
 	botimport.Print(PRT_DEVELOPER, "-------------------------------------\n");
 #ifdef DEBUG
-	botimport.Print(PRT_DEVELOPER, "map loaded in %d msec\n", Sys_MilliSeconds() - starttime);
+	botimport.Print(PRT_DEVELOPER, "map loaded in %d msec\n", botimport.MilliSeconds() - starttime);
 #endif
 	//
 	return BLERR_NOERROR;

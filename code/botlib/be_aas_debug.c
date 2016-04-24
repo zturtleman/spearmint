@@ -40,10 +40,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/q_shared.h"
 #include "../qcommon/surfaceflags.h" // for CONTENTS_* used by BOTMASK_SOLID
 #include "l_memory.h"
-#include "l_script.h"
-#include "l_precomp.h"
-#include "l_struct.h"
-#include "l_libvar.h"
 #include "aasfile.h"
 #include "botlib.h"
 #include "be_aas.h"
