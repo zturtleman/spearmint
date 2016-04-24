@@ -391,8 +391,6 @@ void AAS_ParseBSPEntities(void)
 			strcpy(epair->value, com_token);
 		}
 	}
-
-	botimport.Print( PRT_MESSAGE, "AAS_ParseBSPEntities: found %d entities\n", bspworld.numentities );
 } //end of the function AAS_ParseBSPEntities
 //===========================================================================
 //
