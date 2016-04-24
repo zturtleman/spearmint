@@ -1221,8 +1221,7 @@ typedef struct sharedPlayerState_s {
 
 	int			ping;			// server to game info for scoreboard
 
-	// ZTM: FIXME: make persistant private to game/cgame. Currently server accesses PERS_SCORE (0) in it.
-	int			persistant[1];	// stats that aren't cleared on death
+	int			score;			// persistant[ PERS_SCORE (0) ] in game's playerState_t
 
 } sharedPlayerState_t;
 

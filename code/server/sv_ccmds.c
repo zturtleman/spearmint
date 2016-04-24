@@ -1054,7 +1054,7 @@ static void SV_Status_f( void ) {
 			continue;
 		Com_Printf ("%2i ", i);
 		ps = SV_GamePlayerNum( i );
-		Com_Printf ("%5i ", ps->persistant[PERS_SCORE]);
+		Com_Printf ("%5i ", ps->score);
 
 		if (cl->state == CS_CONNECTED)
 			Com_Printf ("CON ");
