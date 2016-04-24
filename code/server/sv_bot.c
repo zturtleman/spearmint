@@ -254,22 +254,8 @@ static int BotImport_inPVS(vec3_t p1, vec3_t p2) {
 BotImport_GetEntityToken
 ==================
 */
-qboolean BotImport_GetEntityToken( char *buffer, int size ) {
-	static char *parsePoint = NULL;
-	const char	*s;
-
-	if ( !parsePoint ) {
-		parsePoint = CM_EntityString();
-	}
-
-	s = COM_Parse( &parsePoint );
-	Q_strncpyz( buffer, s, size );
-	if ( !parsePoint && !s[0] ) {
-		parsePoint = CM_EntityString();
-		return qfalse;
-	} else {
-		return qtrue;
-	}
+qboolean BotImport_GetEntityToken( int *offset, char *buffer, int size ) {
+	return CM_GetEntityToken( offset, buffer, size );
 }
 
 /*

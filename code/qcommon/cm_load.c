@@ -950,6 +950,28 @@ char	*CM_EntityString( void ) {
 	return cm.entityString;
 }
 
+qboolean CM_GetEntityToken( int *parseOffset, char *token, int size ) {
+	const char	*s;
+	char	*parsePoint = cm.entityString;
+
+	if ( !cm.entityString || *parseOffset < 0 || *parseOffset >= cm.numEntityChars ) {
+		return qfalse;
+	}
+
+	parsePoint = cm.entityString + *parseOffset;
+
+	s = COM_Parse( &parsePoint );
+	Q_strncpyz( token, s, size );
+
+	if ( !parsePoint && !s[0] ) {
+		*parseOffset = 0;
+		return qfalse;
+	} else {
+		*parseOffset = parsePoint - cm.entityString;
+		return qtrue;
+	}
+}
+
 int		CM_LeafCluster( int leafnum ) {
 	if (leafnum < 0 || leafnum >= cm.numLeafs) {
 		Com_Error (ERR_DROP, "CM_LeafCluster: bad number");

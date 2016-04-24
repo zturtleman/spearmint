@@ -328,12 +328,14 @@ void AAS_ParseBSPEntities(void)
 	char		com_token[MAX_TOKEN_CHARS];
 	bsp_entity_t    *ent;
 	bsp_epair_t     *epair;
+	int			offset;
 
 	bspworld.numentities = 1;
+	offset = 0;
 
 	while ( 1 ) {
 		// parse the opening brace
-		if ( !botimport.GetEntityToken( com_token, sizeof( com_token ) ) ) {
+		if ( !botimport.GetEntityToken( &offset, com_token, sizeof( com_token ) ) ) {
 			// end of spawn string
 			break;
 		}
@@ -355,7 +357,7 @@ void AAS_ParseBSPEntities(void)
 		// go through all the key / value pairs
 		while ( 1 ) {
 			// parse key
-			if ( !botimport.GetEntityToken( keyname, sizeof( keyname ) ) ) {
+			if ( !botimport.GetEntityToken( &offset, keyname, sizeof( keyname ) ) ) {
 				AAS_FreeBSPEntities();
 				botimport.Print( PRT_ERROR, "AAS_ParseBSPEntities: EOF without closing brace\n" );
 				return;
@@ -366,7 +368,7 @@ void AAS_ParseBSPEntities(void)
 			}
 
 			// parse value
-			if ( !botimport.GetEntityToken( com_token, sizeof( com_token ) ) ) {
+			if ( !botimport.GetEntityToken( &offset, com_token, sizeof( com_token ) ) ) {
 				AAS_FreeBSPEntities();
 				botimport.Print( PRT_ERROR, "AAS_ParseBSPEntities: EOF without closing brace\n" );
 				return;
