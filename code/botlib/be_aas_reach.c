@@ -41,20 +41,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/surfaceflags.h"
 #include "l_log.h"
 #include "l_memory.h"
-#include "l_script.h"
 #include "l_libvar.h"
-#include "l_precomp.h"
-#include "l_struct.h"
 #include "aasfile.h"
 #include "botlib.h"
 #include "be_aas.h"
 #include "be_aas_funcs.h"
+#include "be_interface.h"
 #include "be_aas_def.h"
-
-extern int Sys_MilliSeconds(void);
-
-
-extern botlib_import_t botimport;
 
 //#define REACH_DEBUG
 
@@ -4390,7 +4383,7 @@ int AAS_ContinueInitReachability(float time)
 	} //end if
 	//number of areas to calculate reachability for this cycle
 	todo = aasworld.numreachabilityareas + (int) framereachability;
-	start_time = Sys_MilliSeconds();
+	start_time = botimport.MilliSeconds();
 	//loop over the areas
 	for (i = aasworld.numreachabilityareas; i < aasworld.numareas && i < todo; i++)
 	{
@@ -4442,7 +4435,7 @@ int AAS_ContinueInitReachability(float time)
 			AAS_Reachability_WeaponJump(i, j);
 		} //end for
 		//if the calculation took more time than the max reachability delay
-		if (Sys_MilliSeconds() - start_time > (int) reachability_delay) break;
+		if (botimport.MilliSeconds() - start_time > (int) reachability_delay) break;
 		//
 		if (aasworld.numreachabilityareas * 1000 / aasworld.numareas > lastpercentage) break;
 	} //end for

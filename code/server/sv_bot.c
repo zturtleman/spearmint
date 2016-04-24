@@ -251,11 +251,25 @@ static int BotImport_inPVS(vec3_t p1, vec3_t p2) {
 
 /*
 ==================
-BotImport_BSPEntityData
+BotImport_GetEntityToken
 ==================
 */
-static char *BotImport_BSPEntityData(void) {
-	return CM_EntityString();
+qboolean BotImport_GetEntityToken( char *buffer, int size ) {
+	static char *parsePoint = NULL;
+	const char	*s;
+
+	if ( !parsePoint ) {
+		parsePoint = CM_EntityString();
+	}
+
+	s = COM_Parse( &parsePoint );
+	Q_strncpyz( buffer, s, size );
+	if ( !parsePoint && !s[0] ) {
+		parsePoint = CM_EntityString();
+		return qfalse;
+	} else {
+		return qtrue;
+	}
 }
 
 /*
@@ -538,12 +552,13 @@ void SV_BotInitBotLib(void) {
 	bot_maxdebugpolys = Cvar_VariableIntegerValue("bot_maxdebugpolys");
 	debugpolygons = Z_Malloc(sizeof(bot_debugpoly_t) * bot_maxdebugpolys);
 
+	botlib_import.MilliSeconds = Sys_Milliseconds;
 	botlib_import.Print = BotImport_Print;
 	botlib_import.Trace = BotImport_Trace;
 	botlib_import.EntityTrace = BotImport_EntityTrace;
 	botlib_import.PointContents = BotImport_PointContents;
 	botlib_import.inPVS = BotImport_inPVS;
-	botlib_import.BSPEntityData = BotImport_BSPEntityData;
+	botlib_import.GetEntityToken = BotImport_GetEntityToken;
 	botlib_import.BSPModelMinsMaxsOrigin = BotImport_BSPModelMinsMaxsOrigin;
 	botlib_import.BotClientCommand = SV_ForceClientCommand;
 

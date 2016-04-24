@@ -39,10 +39,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/surfaceflags.h" // for CONTENTS_WATER, CONTENTS_LAVA, CONTENTS_SLIME
-#include "l_memory.h"
-#include "l_script.h"
-#include "l_precomp.h"
-#include "l_struct.h"
 #include "l_libvar.h"
 #include "aasfile.h"
 #include "botlib.h"
@@ -244,13 +240,13 @@ int AAS_Swimming(vec3_t origin)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-static vec3_t VEC_UP			= {0, -1,  0};
-static vec3_t MOVEDIR_UP		= {0,  0,  1};
-static vec3_t VEC_DOWN		= {0, -2,  0};
-static vec3_t MOVEDIR_DOWN	= {0,  0, -1};
-
 void AAS_SetMovedir(vec3_t angles, vec3_t movedir)
 {
+	static vec3_t VEC_UP			= {0, -1,  0};
+	static vec3_t MOVEDIR_UP		= {0,  0,  1};
+	static vec3_t VEC_DOWN		= {0, -2,  0};
+	static vec3_t MOVEDIR_DOWN	= {0,  0, -1};
+
 	if (VectorCompare(angles, VEC_UP))
 	{
 		VectorCopy(MOVEDIR_UP, movedir);

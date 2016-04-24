@@ -39,9 +39,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "../qcommon/q_shared.h"
 #include "l_memory.h"
-#include "l_script.h"
-#include "l_precomp.h"
-#include "l_struct.h"
 #ifndef BSPC
 #include "l_libvar.h"
 #endif
@@ -727,7 +724,8 @@ aas_trace_t AAS_TracePlayerBBox(vec3_t start, vec3_t end, int presencetype, int 
 			} //end if
 		} //end else
 	} //end while
-//	return trace;
+	//this point is unreachable
+	return trace;
 } //end of the function AAS_TracePlayerBBox
 //===========================================================================
 // recursive subdivision of the line by the BSP tree.
@@ -913,7 +911,8 @@ int AAS_TraceAreas(vec3_t start, vec3_t end, int *areas, vec3_t *points, int max
 			} //end if
 		} //end else
 	} //end while
-//	return numareas;
+	//this point is unreachable
+	return numareas;
 } //end of the function AAS_TraceAreas
 //===========================================================================
 // a simple cross product

@@ -102,10 +102,23 @@ void AAS_ClearShownDebugLines(void)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-char *BotImport_BSPEntityData(void)
-{
-	return CM_EntityString();
-} //end of the function AAS_GetEntityData
+qboolean BotImport_GetEntityToken( char *buffer, int size ) {
+	static char *parsePoint = NULL;
+	const char	*s;
+
+	if ( !parsePoint ) {
+		parsePoint = CM_EntityString();
+	}
+
+	s = COM_Parse( &parsePoint );
+	Q_strncpyz( buffer, s, size );
+	if ( !parsePoint && !s[0] ) {
+		parsePoint = CM_EntityString();
+		return qfalse;
+	} else {
+		return qtrue;
+	}
+} //end of the function BotImport_GetEntityToken
 //===========================================================================
 //
 // Parameter:				-
@@ -208,7 +221,8 @@ void Com_DPrintf(const char *fmt, ...)
 //===========================================================================
 void AAS_InitBotImport(void)
 {
-	botimport.BSPEntityData = BotImport_BSPEntityData;
+	botimport.MilliSeconds = Sys_MilliSeconds;
+	botimport.GetEntityToken = BotImport_GetEntityToken;
 	botimport.GetMemory = BotImport_GetMemory;
 	botimport.FreeMemory = FreeMemory;
 	botimport.Trace = BotImport_Trace;

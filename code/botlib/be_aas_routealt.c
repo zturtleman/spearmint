@@ -38,12 +38,8 @@ Suite 120, Rockville, Maryland 20850 USA.
  *****************************************************************************/
 
 #include "../qcommon/q_shared.h"
-#include "l_utils.h"
 #include "l_memory.h"
 #include "l_log.h"
-#include "l_script.h"
-#include "l_precomp.h"
-#include "l_struct.h"
 #include "aasfile.h"
 #include "botlib.h"
 #include "be_aas.h"
@@ -119,7 +115,7 @@ int AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int g
 #ifdef ALTROUTE_DEBUG
 	int startmillisecs;
 
-	startmillisecs = Sys_MilliSeconds();
+	startmillisecs = botimport.MilliSeconds();
 #endif
 
 	if (!startareanum || !goalareanum)
@@ -210,7 +206,7 @@ int AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int g
 		if (numaltroutegoals >= maxaltroutegoals) break;
 	} //end for
 #ifdef ALTROUTE_DEBUG
-	botimport.Print(PRT_MESSAGE, "alternative route goals in %d msec\n", Sys_MilliSeconds() - startmillisecs);
+	botimport.Print(PRT_MESSAGE, "alternative route goals in %d msec\n", botimport.MilliSeconds() - startmillisecs);
 #endif
 	return numaltroutegoals;
 #endif
