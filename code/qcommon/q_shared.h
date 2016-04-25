@@ -912,18 +912,22 @@ typedef struct
 } qint64;
 
 //=============================================
-/*
+#ifdef Q3_PORTABLE_ENDIAN
 short	BigShort(short l);
 short	LittleShort(short l);
 int		BigLong (int l);
 int		LittleLong (int l);
 qint64  BigLong64 (qint64 l);
 qint64  LittleLong64 (qint64 l);
-float	BigFloat (const float *l);
-float	LittleFloat (const float *l);
+float	BigFloatPtr (const float *l);
+float	LittleFloatPtr (const float *l);
+
+#define BigFloat(x) BigFloatPtr(&x)
+#define LittleFloat(x) LittleFloatPtr(&x)
 
 void	Swap_Init (void);
-*/
+#endif
+
 char	* QDECL va(char *format, ...) __attribute__ ((format (printf, 1, 2)));
 
 #define TRUNCATE_LENGTH	64

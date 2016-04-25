@@ -162,7 +162,7 @@ void COM_SetExtension(char *path, int maxSize, const char *extension)
 
 ============================================================================
 */
-/*
+#ifdef Q3_PORTABLE_ENDIAN
 // can't just use function pointers, or dll linkage can
 // mess up when qcommon is included in multiple places
 static short	(*_BigShort) (short l);
@@ -180,9 +180,9 @@ int		BigLong (int l) {return _BigLong(l);}
 int		LittleLong (int l) {return _LittleLong(l);}
 qint64 	BigLong64 (qint64 l) {return _BigLong64(l);}
 qint64 	LittleLong64 (qint64 l) {return _LittleLong64(l);}
-float	BigFloat (const float *l) {return _BigFloat(l);}
-float	LittleFloat (const float *l) {return _LittleFloat(l);}
-*/
+float	BigFloatPtr (const float *l) {return _BigFloat(l);}
+float	LittleFloatPtr (const float *l) {return _LittleFloat(l);}
+#endif
 
 void CopyShortSwap(void *dest, void *src)
 {
@@ -269,18 +269,18 @@ float FloatNoSwap (const float *f)
 	return *f;
 }
 
+#ifdef Q3_PORTABLE_ENDIAN
 /*
 ================
 Swap_Init
 ================
 */
-/*
 void Swap_Init (void)
 {
 	byte	swaptest[2] = {1,0};
 
-// set the byte swapping variables in a portable manner	
-	if ( *(short *)swaptest == 1)
+	// set the byte swapping variables in a portable manner
+	if ( *(short *)swaptest == 1 )
 	{
 		_BigShort = ShortSwap;
 		_LittleShort = ShortNoSwap;
@@ -302,9 +302,8 @@ void Swap_Init (void)
 		_BigFloat = FloatNoSwap;
 		_LittleFloat = FloatSwap;
 	}
-
 }
-*/
+#endif
 
 /*
 ============================================================================
