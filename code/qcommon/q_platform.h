@@ -307,6 +307,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define ARCH_STRING "bytecode"
 
+#define Q3_PORTABLE_ENDIAN
+
 #define DLL_EXT ".qvm"
 
 #endif
@@ -354,6 +356,7 @@ float FloatSwap (const float *f);
 #define BigShort
 #define BigLong
 #define BigFloat
+#define Swap_Init()
 
 #elif defined( Q3_LITTLE_ENDIAN )
 
@@ -365,15 +368,11 @@ float FloatSwap (const float *f);
 #define BigShort(x) ShortSwap(x)
 #define BigLong(x) LongSwap(x)
 #define BigFloat(x) FloatSwap(&x)
+#define Swap_Init()
 
-#elif defined( Q3_VM )
+#elif defined( Q3_PORTABLE_ENDIAN )
 
-#define LittleShort
-#define LittleLong
-#define LittleFloat
-#define BigShort
-#define BigLong
-#define BigFloat
+// functions in q_shared will be used to check if little or big endian at run time
 
 #else
 #error "Endianness not defined"
