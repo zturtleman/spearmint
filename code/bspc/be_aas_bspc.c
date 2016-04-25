@@ -102,22 +102,8 @@ void AAS_ClearShownDebugLines(void)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-qboolean BotImport_GetEntityToken( char *buffer, int size ) {
-	static char *parsePoint = NULL;
-	const char	*s;
-
-	if ( !parsePoint ) {
-		parsePoint = CM_EntityString();
-	}
-
-	s = COM_Parse( &parsePoint );
-	Q_strncpyz( buffer, s, size );
-	if ( !parsePoint && !s[0] ) {
-		parsePoint = CM_EntityString();
-		return qfalse;
-	} else {
-		return qtrue;
-	}
+qboolean BotImport_GetEntityToken( int *offset, char *buffer, int size ) {
+	return CM_GetEntityToken( offset, buffer, size );
 } //end of the function BotImport_GetEntityToken
 //===========================================================================
 //
