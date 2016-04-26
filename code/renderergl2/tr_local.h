@@ -2038,6 +2038,7 @@ extern cvar_t	*r_defaultFogParmsType;
 extern cvar_t	*r_globalLinearFogDrawSky;
 extern cvar_t	*r_shadersDirectory;
 extern cvar_t	*r_surfaceFlagNoDraw;
+extern cvar_t	*r_colorize2DIdentity;
 
 //====================================================================
 
