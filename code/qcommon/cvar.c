@@ -379,8 +379,11 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 		if(var->flags & CVAR_USER_CREATED)
 		{
 			var->flags &= ~CVAR_USER_CREATED;
-			Z_Free( var->resetString );
-			var->resetString = CopyString( var_value );
+
+			if ( !( var->flags & CVAR_CUSTOM_RESET ) ) {
+				Z_Free( var->resetString );
+				var->resetString = CopyString( var_value );
+			}
 
 			if(flags & CVAR_ROM)
 			{
@@ -504,6 +507,9 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 Cvar_SetDefault
 
 Change default value of a cvar, or create if it doesn't exist
+
+This is treated as an 'untrusted' setting controlled by the user (cannot change current value of ROM cvars).
+If the VM registers the cvar later it claims ownership but the user specified default will be used.
 ============
 */
 cvar_t *Cvar_SetDefault( const char *var_name, const char *var_value ) {
@@ -537,7 +543,7 @@ cvar_t *Cvar_SetDefault( const char *var_name, const char *var_value ) {
 	}
 	else
 	{
-		var = Cvar_Get( var_name, var_value, CVAR_CUSTOM_RESET );
+		var = Cvar_Get( var_name, var_value, CVAR_CUSTOM_RESET | CVAR_USER_CREATED );
 	}
 
 	return var;

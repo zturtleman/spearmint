@@ -726,7 +726,7 @@ Only add command if there isn't a system cvar with the same name
 */
 void	Cmd_AddCommandSafe( const char *cmd_name, xcommand_t function )
 {
-	if( !( Cvar_Flags( cmd_name ) & ( CVAR_NONEXISTENT | CVAR_VM_CREATED ) ) )
+	if( !( Cvar_Flags( cmd_name ) & ( CVAR_NONEXISTENT | CVAR_VM_CREATED | CVAR_USER_CREATED ) ) )
 	{
 		Com_Error( ERR_DROP, "Restricted source tried to override "
 			"system cvar \"%s\" with a command", cmd_name );
