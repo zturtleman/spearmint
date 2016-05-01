@@ -3581,7 +3581,7 @@ void CL_Init( void ) {
 
 	// userinfo
 	cl_rate = Cvar_Get ("rate", "25000", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
-	Cvar_Get ("snaps", "20", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
+	Cvar_Get ("snaps", "", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
 	Cvar_Get ("cl_anonymous", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
 	Cvar_Get ("password", "", CVAR_USERINFO_ALL);
 
