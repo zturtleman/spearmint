@@ -494,6 +494,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 
 	case G_DEBUG_POLYGON_CREATE:
 		return BotImport_DebugPolygonCreate( args[1], args[2], VMA(3) );
+	case G_DEBUG_POLYGON_SHOW:
+		BotImport_DebugPolygonShow( args[1], args[2], args[3], VMA(4) );
+		return 0;
 	case G_DEBUG_POLYGON_DELETE:
 		BotImport_DebugPolygonDelete( args[1] );
 		return 0;
