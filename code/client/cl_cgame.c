@@ -1686,7 +1686,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return getCameraInfo(args[1], VMA(2), VMA(3));
 */
 	case CG_GET_ENTITY_TOKEN:
-		return re.GetEntityToken( VMA(1), args[2] );
+		return CM_GetEntityToken( VMA(1), VMA(2), args[3] );
 	case CG_R_INPVS:
 		return re.inPVS( VMA(1), VMA(2) );
 
