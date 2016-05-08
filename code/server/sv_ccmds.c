@@ -166,7 +166,8 @@ static void SV_Map_f( void ) {
 	char		mapname[MAX_QPATH];
 
 	map = Cmd_Argv(1);
-	if ( !map ) {
+	if ( !*map ) {
+		Com_Printf("Usage: %s <mapname>\n", Cmd_Argv(0) );
 		return;
 	}
 

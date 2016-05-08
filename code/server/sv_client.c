@@ -1364,7 +1364,7 @@ void SV_UserinfoChanged( player_t *player ) {
 		i = 1000 / i;
 	}
 	else
-		i = 50;
+		i = 1000 / sv_fps->integer;
 
 	if(i != cl->snapshotMsec)
 	{

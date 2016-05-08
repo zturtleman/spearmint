@@ -1846,6 +1846,15 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 	}
 
 	//
+	// pre-retail Quake 3 / FAKK colorizies 2D identity and unspecified rgbGen
+	//
+	if ( r_colorize2DIdentity->integer && shader.lightmapIndex == LIGHTMAP_2D ) {
+		if ( stage->rgbGen == CGEN_IDENTITY || stage->rgbGen == CGEN_IDENTITY_LIGHTING ) {
+			stage->rgbGen = CGEN_VERTEX;
+		}
+	}
+
+	//
 	// if shader stage references a lightmap but no lightmap is present
 	// and shader doesn't specify nolightmap (or also has pointlight),
 	// use diffuse cgen
