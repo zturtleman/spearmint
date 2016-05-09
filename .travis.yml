@@ -1,3 +1,8 @@
+# sudo is required for travis-ci to use ubuntu trusty
+# ubuntu trusty is required for libsdl2-dev
+sudo: required
+dist: trusty
+
 language: c
 
 env:
@@ -14,18 +19,24 @@ env:
 
 script: ./travis-ci-build.sh
 
-before_install:
-  - echo "yes" | sudo apt-add-repository ppa:zoogie/sdl2-snapshots
-  - sudo apt-get update -qq
-  - sudo apt-get remove -qq -y mingw32
-  - sudo apt-get install -q -y libgl1-mesa-dev libsdl2-dev mingw-w64
-
 notifications:
-  irc: "irc.freenode.org#spearmint"
-  on_success: change
-  on_failure: always
+  irc:
+    channels:
+      - "irc.freenode.org#spearmint"
+    on_success: change
+    on_failure: always
 
 addons:
+  apt:
+    packages:
+      - binutils-mingw-w64-i686
+      - gcc-mingw-w64-i686
+      - binutils-mingw-w64-x86-64
+      - gcc-mingw-w64-x86-64
+      - gcc-mingw-w64
+      - mingw-w64
+      - libgl1-mesa-dev
+      - libsdl2-dev
   coverity_scan:
     project:
       name: "zturtleman/spearmint"
@@ -33,4 +44,4 @@ addons:
     notification_email: zturtleman@gmail.com
     build_command_prepend: "make clean"
     build_command: "make release"
-    branch_pattern: master
+    branch_pattern: coverity_scan
