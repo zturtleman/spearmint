@@ -1094,12 +1094,6 @@ $(echo_cmd) "CC $<"
 $(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
-# turn off the false positive array-bounds warnings in $(OPUSDIR)/silk/NLSF2A.c
-define DO_NLSF2A_CC
-$(echo_cmd) "CC $<"
-$(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) -Wno-array-bounds $(OPTIMIZE) -o $@ -c $<
-endef
-
 define DO_REF_CC
 $(echo_cmd) "REF_CC $<"
 $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) $(OPTIMIZE) -o $@ -c $<
@@ -2046,9 +2040,6 @@ $(B)/client/opus/%.o: $(OPUSDIR)/celt/%.c
 
 $(B)/client/opus/%.o: $(OPUSDIR)/silk/%.c
 	$(DO_CC)
-
-$(B)/client/opus/NLSF2A.o: $(OPUSDIR)/silk/NLSF2A.c
-	$(DO_NLSF2A_CC)
 
 $(B)/client/opus/%.o: $(OPUSDIR)/silk/float/%.c
 	$(DO_CC)
