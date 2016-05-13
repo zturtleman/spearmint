@@ -291,34 +291,6 @@ void SV_GetUsercmd( int playerNum, usercmd_t *cmd ) {
 
 //==============================================
 
-// These includes and structs are needed for Game API compatibility with Spearmint 0.2
-#include "../botlib/aasfile.h"
-#include "../botlib/be_aas.h"
-
-typedef struct
-{
-	qboolean	startsolid;	// if true, the initial point was in a solid area
-	float		fraction;	// time completed, 1.0 = didn't hit anything
-	vec3_t		endpos;		// final position
-	int			ent;		// entity blocking the trace
-	int			lastarea;	// last area the trace was in (zero if none)
-	int			area;		// area blocking the trace (zero if none)
-	int			planenum;	// number of the AAS plane that was hit
-} old_aas_trace_t;
-
-typedef struct
-{
-	vec3_t endpos;			//position at the end of movement prediction
-	int endarea;			//area at end of movement prediction
-	vec3_t velocity;		//velocity at the end of movement prediction
-	old_aas_trace_t trace;		//last trace
-	int presencetype;		//presence type at end of movement prediction
-	int stopevent;			//event that made the prediction stop
-	int endcontents;		//contents at the end of movement prediction
-	float time;				//time predicted ahead
-	int frames;				//number of frames predicted ahead
-} old_aas_clientmove_t;
-
 /*
 ====================
 SV_GameSystemCalls
@@ -518,20 +490,13 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		SV_GetUsercmd( args[1], VMA(2) );
 		return 0;
 	case G_GET_ENTITY_TOKEN:
-		{
-			const char	*s;
-
-			s = COM_Parse( &sv.entityParsePoint );
-			Q_strncpyz( VMA(1), s, args[2] );
-			if ( !sv.entityParsePoint && !s[0] ) {
-				return qfalse;
-			} else {
-				return qtrue;
-			}
-		}
+		return CM_GetEntityToken( VMA(1), VMA(2), args[3] );
 
 	case G_DEBUG_POLYGON_CREATE:
 		return BotImport_DebugPolygonCreate( args[1], args[2], VMA(3) );
+	case G_DEBUG_POLYGON_SHOW:
+		BotImport_DebugPolygonShow( args[1], args[2], args[3], VMA(4) );
+		return 0;
 	case G_DEBUG_POLYGON_DELETE:
 		BotImport_DebugPolygonDelete( args[1] );
 		return 0;
@@ -603,19 +568,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX:
 		return botlib_export->aas.AAS_PointReachabilityAreaIndex( VMA(1) );
 	case BOTLIB_AAS_TRACE_PLAYER_BBOX:
-		{
-			// work around different aas_trace_t in engine and game VM
-			// ZTM: TODO: Get rid of this when the API breaks compatibility, or maybe have separate structures?
-			//            I don't think the plane is even usable from TracePlayerBBox?
-			old_aas_trace_t *vmTrace = VMA(1);
-			aas_trace_t trace;
-
-			Com_Memcpy2( &trace, sizeof( trace ), vmTrace, sizeof( old_aas_trace_t ) );
-
-			botlib_export->aas.AAS_TracePlayerBBox( &trace, VMA(2), VMA(3), args[4], args[5], args[6] );
-
-			Com_Memcpy2( vmTrace, sizeof( old_aas_trace_t ), &trace, sizeof( trace ) );
-		}
+		botlib_export->aas.AAS_TracePlayerBBox( VMA(1), VMA(2), VMA(3), args[4], args[5], args[6] );
 		return 0;
 	case BOTLIB_AAS_TRACE_AREAS:
 		return botlib_export->aas.AAS_TraceAreas( VMA(1), VMA(2), VMA(3), VMA(4), args[5] );
@@ -683,39 +636,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->aas.AAS_PredictRoute( VMA(1), args[2], VMA(3), args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11] );
 
 	case BOTLIB_AAS_PREDICT_PLAYER_MOVEMENT:
-		{
-			// compatibility is a bitch
-			// work around different aas_trace_t in engine and game VM
-			// ZTM: TODO: Get rid of this when the API breaks compatibility
-			old_aas_clientmove_t	*vmMove = VMA(1);
-			aas_clientmove_t		move;
-			qboolean				success;
-
-			VectorCopy( vmMove->endpos, move.endpos );
-			move.endarea = vmMove->endarea;
-			VectorCopy( vmMove->velocity, move.velocity );
-			Com_Memcpy2( &move.trace, sizeof( aas_trace_t ), &vmMove->trace, sizeof( old_aas_trace_t ) );
-			move.presencetype = vmMove->presencetype;
-			move.stopevent = vmMove->stopevent;
-			move.endcontents = vmMove->endcontents;
-			move.time = vmMove->time;
-			move.frames = vmMove->frames;
-
-			success = botlib_export->aas.AAS_PredictPlayerMovement( &move, args[2], VMA(3), args[4], args[5],
-				VMA(6), VMA(7), args[8], args[9], VMF(10), args[11], args[12], args[13], args[14] );
-
-			VectorCopy( move.endpos, vmMove->endpos );
-			vmMove->endarea = move.endarea;
-			VectorCopy( move.velocity, vmMove->velocity );
-			Com_Memcpy2( &vmMove->trace, sizeof( old_aas_trace_t ), &move.trace, sizeof( aas_trace_t ) );
-			vmMove->presencetype = move.presencetype;
-			vmMove->stopevent = move.stopevent;
-			vmMove->endcontents = move.endcontents;
-			vmMove->time = move.time;
-			vmMove->frames = move.frames;
-
-			return success;
-		}
+		return botlib_export->aas.AAS_PredictPlayerMovement( VMA(1), args[2], VMA(3), args[4], args[5],
+			VMA(6), VMA(7), args[8], args[9], VMF(10), args[11], args[12], args[13], args[14] );
 	case BOTLIB_AAS_ON_GROUND:
 		return botlib_export->aas.AAS_OnGround( VMA(1), args[2], args[3], args[4] );
 	case BOTLIB_AAS_SWIMMING:

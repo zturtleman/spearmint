@@ -701,9 +701,8 @@ static void R_SetFarClip( void )
 	}
 	tr.viewParms.zFar = sqrt( farthestCornerDistance );
 
-	// global fog
-	if ( tr.refdef.fogType == FT_LINEAR && tr.refdef.fogDepthForOpaque > 1 && tr.refdef.fogDepthForOpaque < tr.viewParms.zFar ) {
-		tr.viewParms.zFar = tr.refdef.fogDepthForOpaque;
+	if ( tr.refdef.maxFarClip > 1 && tr.refdef.maxFarClip < tr.viewParms.zFar ) {
+		tr.viewParms.zFar = tr.refdef.maxFarClip;
 	}
 }
 

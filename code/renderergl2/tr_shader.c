@@ -2898,12 +2898,14 @@ static qboolean ParseShader( char **text )
 			if ( !Q_stricmp( token, "linear" ) ) {
 				shader.fogParms.fogType = FT_LINEAR;
 				shader.fogParms.density = DEFAULT_FOG_LINEAR_DENSITY;
+				shader.fogParms.farClip = shader.fogParms.depthForOpaque;
 			} else {
 				if ( Q_stricmp( token, "exp" ) && !Q_isanumber( token ) )
 					ri.Printf( PRINT_WARNING, "WARNING: unknown fog type '%s' for 'fogParms' keyword in shader '%s'\n", token, shader.name );
 
 				shader.fogParms.fogType = FT_EXP;
 				shader.fogParms.density = DEFAULT_FOG_EXP_DENSITY;
+				shader.fogParms.farClip = 0;
 			}
 
 			// note: skips any old gradient directions
@@ -2991,10 +2993,12 @@ static qboolean ParseShader( char **text )
 				tr.waterFogParms.fogType = FT_LINEAR;
 				tr.waterFogParms.depthForOpaque = fogvar;
 				tr.waterFogParms.density = DEFAULT_FOG_LINEAR_DENSITY;
+				tr.waterFogParms.farClip = fogvar;
 			} else {
 				tr.waterFogParms.fogType = FT_EXP;
 				tr.waterFogParms.density = fogvar;
 				tr.waterFogParms.depthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
+				tr.waterFogParms.farClip = 0;
 			}
 
 			VectorCopy( waterColor, tr.waterFogParms.color );
@@ -3034,6 +3038,8 @@ static qboolean ParseShader( char **text )
 				shader.viewFogParms.depthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
 			}
 
+			shader.viewFogParms.farClip = 0;
+
 			VectorCopy( viewColor, shader.viewFogParms.color );
 			continue;
 		}
@@ -3060,10 +3066,12 @@ static qboolean ParseShader( char **text )
 				tr.globalFogType = FT_LINEAR;
 				tr.globalFogDepthForOpaque = fogvar;
 				tr.globalFogDensity = DEFAULT_FOG_LINEAR_DENSITY;
+				tr.globalFogFarClip = fogvar;
 			} else {
 				tr.globalFogType = FT_EXP;
 				tr.globalFogDensity = fogvar;
 				tr.globalFogDepthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
+				tr.globalFogFarClip = 0;
 			}
 
 			VectorCopy( fogColor, tr.globalFogColor );

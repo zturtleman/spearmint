@@ -457,7 +457,7 @@ void RB_BeginDrawingView (void) {
 	{
 		clearBits |= GL_STENCIL_BUFFER_BIT;
 	}
-	if ( ( backEnd.refdef.fogType == FT_LINEAR || r_fastsky->integer )
+	if ( ( backEnd.refdef.maxFarClip > 1 || r_fastsky->integer )
 		&& !( backEnd.refdef.rdflags & (RDF_NOWORLDMODEL|RDF_NOSKY) ) ) {
 		clearBits |= GL_COLOR_BUFFER_BIT;
 

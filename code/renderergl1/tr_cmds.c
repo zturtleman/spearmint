@@ -448,7 +448,7 @@ void RE_2DPolyies( polyVert_t* verts, int numverts, qhandle_t hShader ) {
 RE_GetGlobalFog
 ====================
 */
-void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
+void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density, float *farClip ) {
 	if (type) {
 		*type = tr.globalFogType;
 	}
@@ -463,6 +463,10 @@ void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, floa
 
 	if (density) {
 		*density = tr.globalFogDensity;
+	}
+
+	if (farClip) {
+		*farClip = tr.globalFogFarClip;
 	}
 }
 
@@ -498,22 +502,25 @@ qboolean R_PointInBrush( const vec3_t point, const bmodel_t *bmodel ) {
 RE_GetViewFog
 ====================
 */
-void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater ) {
+void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, float *farClip, qboolean inwater ) {
 	fogType_t			fogType;
 	vec3_t				fogColor;
 	float				fogDepthForOpaque;
 	float				fogDensity;
+	float				fogFarClip;
 
 	if ( inwater ) {
 		fogType = tr.waterFogParms.fogType;
 		VectorCopy( tr.waterFogParms.color, fogColor );
 		fogDepthForOpaque = tr.waterFogParms.depthForOpaque;
 		fogDensity = tr.waterFogParms.density;
+		fogFarClip = tr.waterFogParms.farClip;
 	} else {
 		fogType = FT_NONE;
 		VectorSet( fogColor, 0, 0, 0 );
 		fogDepthForOpaque = 0;
 		fogDensity = 0;
+		fogFarClip = 0;
 	}
 
 	if ( tr.world && tr.world->numBModels > 1 ) {
@@ -541,6 +548,7 @@ void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *d
 					VectorCopy( surface->shader->viewFogParms.color, fogColor );
 					fogDepthForOpaque = surface->shader->viewFogParms.depthForOpaque;
 					fogDensity = surface->shader->viewFogParms.density;
+					fogFarClip = surface->shader->viewFogParms.farClip;
 					break;
 				}
 			}
@@ -565,6 +573,10 @@ void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *d
 
 	if (density) {
 		*density = fogDensity;
+	}
+
+	if (farClip) {
+		*farClip = fogFarClip;
 	}
 }
 

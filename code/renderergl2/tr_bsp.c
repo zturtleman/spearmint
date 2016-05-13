@@ -3934,6 +3934,7 @@ void RE_LoadWorldMap( const bspFile_t *bsp ) {
 		VectorCopy( shader->fogParms.color, tr.globalFogColor );
 		tr.globalFogDepthForOpaque = shader->fogParms.depthForOpaque;
 		tr.globalFogDensity = shader->fogParms.density;
+		tr.globalFogFarClip = shader->fogParms.farClip;
 	}
 
 	R_InitExternalShaders();

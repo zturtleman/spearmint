@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define	GAME_API_MAJOR_VERSION	0
-#define	GAME_API_MINOR_VERSION	11
+#define	GAME_API_MINOR_VERSION	13
 
 
 // entity->svFlags
@@ -251,13 +251,13 @@ typedef enum {
 
 	G_GET_USERCMD,	// ( int playerNum, usercmd_t *cmd )
 
-	G_GET_ENTITY_TOKEN,	// qboolean ( char *buffer, int bufferSize )
+	G_GET_ENTITY_TOKEN,	// qboolean ( int *parseOffset, char *buffer, int bufferSize )
 	// Retrieves the next string token from the entity spawn text, returning
 	// false when all tokens have been parsed.
-	// This should only be done at GAME_INIT time.
 
-	G_DEBUG_POLYGON_CREATE,
-	G_DEBUG_POLYGON_DELETE,
+	G_DEBUG_POLYGON_CREATE, // ( int color, int numPoints, vec3_t *points );
+	G_DEBUG_POLYGON_SHOW, // ( int id, int color, int numPoints, vec3_t *points );
+	G_DEBUG_POLYGON_DELETE, // ( int id );
 
 	G_TRACECAPSULE,	// ( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 	G_ENTITY_CONTACTCAPSULE,	// ( const vec3_t mins, const vec3_t maxs, const gentity_t *ent );

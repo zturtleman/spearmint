@@ -615,6 +615,8 @@ void RE_RenderScene( const refdef_t *vmRefDef, int vmRefDefSize ) {
 	}
 	tr.refdef.fogTcScale = R_FogTcScale( tr.refdef.fogType, tr.refdef.fogDepthForOpaque, tr.refdef.fogDensity );
 
+	tr.refdef.maxFarClip = fd.farClip;
+
 	// copy the areamask data over and note if it has changed, which
 	// will force a reset of the visible leafs even if the view hasn't moved
 	tr.refdef.areamaskModified = qfalse;

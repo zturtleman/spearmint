@@ -340,8 +340,12 @@ int BotImport_DebugPolygonCreate(int color, int numPoints, vec3_t *points) {
 	poly = &debugpolygons[i];
 	poly->inuse = qtrue;
 	poly->color = color;
-	poly->numPoints = numPoints;
-	Com_Memcpy(poly->points, points, numPoints * sizeof(vec3_t));
+	if (!points || numPoints <= 0) {
+		poly->numPoints = 0;
+	} else {
+		poly->numPoints = numPoints;
+		Com_Memcpy(poly->points, points, numPoints * sizeof(vec3_t));
+	}
 	//
 	return i;
 }
@@ -351,15 +355,23 @@ int BotImport_DebugPolygonCreate(int color, int numPoints, vec3_t *points) {
 BotImport_DebugPolygonShow
 ==================
 */
-static void BotImport_DebugPolygonShow(int id, int color, int numPoints, vec3_t *points) {
+void BotImport_DebugPolygonShow(int id, int color, int numPoints, vec3_t *points) {
 	bot_debugpoly_t *poly;
 
-	if (!debugpolygons) return;
+	if (!debugpolygons)
+		return;
+	if (id < 0 || id >= bot_maxdebugpolys)
+		return;
+
 	poly = &debugpolygons[id];
 	poly->inuse = qtrue;
 	poly->color = color;
-	poly->numPoints = numPoints;
-	Com_Memcpy(poly->points, points, numPoints * sizeof(vec3_t));
+	if (!points || numPoints <= 0) {
+		poly->numPoints = 0;
+	} else {
+		poly->numPoints = numPoints;
+		Com_Memcpy(poly->points, points, numPoints * sizeof(vec3_t));
+	}
 }
 
 /*
@@ -369,7 +381,11 @@ BotImport_DebugPolygonDelete
 */
 void BotImport_DebugPolygonDelete(int id)
 {
-	if (!debugpolygons) return;
+	if (!debugpolygons)
+		return;
+	if (id < 0 || id >= bot_maxdebugpolys)
+		return;
+
 	debugpolygons[id].inuse = qfalse;
 }
 
@@ -379,8 +395,7 @@ BotImport_DebugLineCreate
 ==================
 */
 static int BotImport_DebugLineCreate(void) {
-	vec3_t points[1];
-	return BotImport_DebugPolygonCreate(0, 0, points);
+	return BotImport_DebugPolygonCreate(0, 0, NULL);
 }
 
 /*
