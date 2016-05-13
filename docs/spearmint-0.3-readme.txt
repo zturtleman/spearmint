@@ -1,5 +1,5 @@
 Spearmint 0.3
-May 13, 2015
+May 13, 2016
 --------------
 
 Spearmint is a engine based on ioquake3 that is not compatible with (io)quake3 mods and demo replays.
