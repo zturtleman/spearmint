@@ -818,8 +818,50 @@ memzone_t	*mainzone;
 // we also have a small zone for small allocations that would only
 // fragment the main zone (think of cvar and cmd strings)
 memzone_t	*smallzone;
+// zones for Game / CGame VM "dynamic" memory allocation
+memzone_t	*vm_gamezone;
+memzone_t	*vm_cgamezone;
 
 void Z_CheckHeap( void );
+
+/*
+========================
+Z_ZoneForTag
+========================
+*/
+memzone_t *Z_ZoneForTag( int tag ) {
+	switch ( tag ) {
+		case TAG_GAME:
+			return vm_gamezone;
+		case TAG_CGAME:
+			return vm_cgamezone;
+		case TAG_SMALL:
+			return smallzone;
+		default:
+			return mainzone;
+	}
+}
+
+/*
+========================
+Z_NameForZone
+========================
+*/
+const char *Z_NameForZone( memzone_t *zone ) {
+	if ( !zone ) {
+		return "NULL";
+	} else if ( zone == mainzone ) {
+		return "Main";
+	} else if ( zone == smallzone ) {
+		return "Small";
+	} else if ( zone == vm_gamezone ) {
+		return "Game VM";
+	} else if ( zone == vm_cgamezone ) {
+		return "CGame VM";
+	} else {
+		return "Unknown";
+	}
+}
 
 /*
 ========================
@@ -915,12 +957,7 @@ void Z_Free( void *ptr )
 #endif
 	}
 
-	if (block->tag == TAG_SMALL) {
-		zone = smallzone;
-	}
-	else {
-		zone = mainzone;
-	}
+	zone = Z_ZoneForTag( block->tag );
 
 	zone->used -= block->size;
 	// set the block to something that should cause problems
@@ -962,12 +999,7 @@ int Z_FreeTags( int tag ) {
 	int			count;
 	memzone_t	*zone;
 
-	if ( tag == TAG_SMALL ) {
-		zone = smallzone;
-	}
-	else {
-		zone = mainzone;
-	}
+	zone = Z_ZoneForTag( tag );
 	count = 0;
 	// use the rover as our pointer, because
 	// Z_Free automatically adjusts it
@@ -1004,12 +1036,7 @@ void *Z_TagMalloc( int size, int tag ) {
 		Com_Error( ERR_FATAL, "Z_TagMalloc: tried to use a 0 tag" );
 	}
 
-	if ( tag == TAG_SMALL ) {
-		zone = smallzone;
-	}
-	else {
-		zone = mainzone;
-	}
+	zone = Z_ZoneForTag( tag );
 
 #ifdef ZONE_DEBUG
 	allocSize = size;
@@ -1032,10 +1059,10 @@ void *Z_TagMalloc( int size, int tag ) {
 			Z_LogHeap();
 
 			Com_Error(ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes from the %s zone: %s, line: %d (%s)",
-								size, zone == smallzone ? "small" : "main", file, line, label);
+								size, Z_NameForZone(zone), file, line, label);
 #else
 			Com_Error(ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes from the %s zone",
-								size, zone == smallzone ? "small" : "main");
+								size, Z_NameForZone(zone));
 #endif
 			return NULL;
 		}
@@ -1938,6 +1965,84 @@ permanent allocs use this side.
 void Hunk_ClearTempMemory( void ) {
 	if ( s_hunkData != NULL ) {
 		hunk_temp->temp = hunk_temp->permanent;
+	}
+}
+
+/*
+===================================================================
+
+VM memory heap interface
+
+The memory pool is allocated as a single block on the hunk for
+each VM and managed using zone memory functions.
+
+===================================================================
+*/
+
+/*
+=================
+Z_VM_InitHeap
+
+Initialize a zone on the VM's preallocated hunk memory
+=================
+*/
+void Z_VM_InitHeap( int tag, void *preallocated, int size ) {
+	memzone_t *zone;
+
+	zone = preallocated;
+
+	if ( tag == TAG_GAME ) {
+		vm_gamezone = zone;
+	} else if ( tag == TAG_CGAME ) {
+		vm_cgamezone = zone;
+	} else {
+		Com_Error( ERR_FATAL, "Z_VM_InitHeap received unknown tag %d", tag );
+	}
+
+	// if NULL, just clear reference
+	if ( !zone ) {
+		return;
+	}
+
+	Z_ClearZone( zone, size );
+}
+
+/*
+========================
+Z_VM_HeapAvailable
+========================
+*/
+int Z_VM_HeapAvailable( int tag ) {
+	memzone_t *zone = Z_ZoneForTag( tag );
+
+	if ( tag == TAG_GAME ) {
+		zone = vm_gamezone;
+	} else if ( tag == TAG_CGAME ) {
+		zone = vm_cgamezone;
+	} else {
+		Com_Error( ERR_FATAL, "Z_VM_HeapAvailable received unknown tag %d", tag );
+	}
+
+	if ( !zone )
+		return 0;
+
+	return Z_AvailableZoneMemory( zone );
+}
+
+/*
+=================
+Z_VM_ShutdownHeap
+
+Clear reference to VM's zone
+=================
+*/
+void Z_VM_ShutdownHeap( int tag ) {
+	if ( tag == TAG_GAME ) {
+		vm_gamezone = NULL;
+	} else if ( tag == TAG_CGAME ) {
+		vm_cgamezone = NULL;
+	} else {
+		Com_Error( ERR_FATAL, "Z_VM_ShutdownHeap received unknown tag %d", tag );
 	}
 }
 

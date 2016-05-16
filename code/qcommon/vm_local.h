@@ -180,8 +180,10 @@ struct vm_s {
 	byte		*dataBase;
 	int			dataMask;
 
-	int			dataLength;			// length of QVMs data
-	int			dataAlloc;			// QVM's current allocate point
+	int			zoneTag;			// tag for the memory zone owned by the VM (i.e., TAG_GAME or TAG_CGAME)
+	byte		*heapBase;			// base of dynamic memory pool
+	int			heapLength;			// length of the memory pool
+	int			heapRequestedSize;	// requested size of memory pool (for QVMs it may be smaller than heapLength)
 
 	int			stackBottom;		// if programStack < stackBottom, error
 

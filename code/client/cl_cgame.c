@@ -1644,8 +1644,13 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_PC_SOURCE_FILE_AND_LINE:
 		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
 
-	case CG_ALLOC:
-		return VM_Alloc( args[1], VMA(2) );
+	case CG_HEAP_MALLOC:
+		return VM_HeapMalloc( args[1] );
+	case CG_HEAP_AVAILABLE:
+		return VM_HeapAvailable();
+	case CG_HEAP_FREE:
+		VM_HeapFree( VMA(1) );
+		return 0;
 
 	case CG_REAL_TIME:
 		return Com_RealTime( VMA(1) );
@@ -1729,7 +1734,9 @@ void CL_InitCGame( void ) {
 	t1 = Sys_Milliseconds();
 
 	// load the dll or bytecode
-	cgvm = VM_Create( VM_PREFIX "cgame", CL_CgameSystemCalls, Cvar_VariableValue( "vm_cgame" ) );
+	cgvm = VM_Create( VM_PREFIX "cgame", CL_CgameSystemCalls, Cvar_VariableValue( "vm_cgame" ),
+			TAG_CGAME, Cvar_VariableValue( "vm_cgameHeapMegs" ) * 1024 * 1024 );
+
 	if ( !cgvm ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}

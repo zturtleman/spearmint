@@ -405,8 +405,13 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_PC_SOURCE_FILE_AND_LINE:
 		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
 
-	case G_ALLOC:
-		return VM_Alloc( args[1], VMA(2) );
+	case G_HEAP_MALLOC:
+		return VM_HeapMalloc( args[1] );
+	case G_HEAP_AVAILABLE:
+		return VM_HeapAvailable();
+	case G_HEAP_FREE:
+		VM_HeapFree( VMA(1) );
+		return 0;
 
 		//====================================
 
@@ -668,8 +673,6 @@ Call SV_ShutdownGameProgs or SV_RestartGameProgs instead of this directly.
 void SV_GameInternalShutdown( qboolean restart ) {
 	VM_Call( gvm, GAME_SHUTDOWN, restart );
 
-	Z_FreeTags( TAG_GAME );
-
 	Cmd_RemoveCommandsByFunc( SV_GameCommand );
 }
 
@@ -780,7 +783,9 @@ void SV_InitGameProgs( void ) {
 	}
 
 	// load the dll or bytecode
-	gvm = VM_Create( VM_PREFIX "game", SV_GameSystemCalls, Cvar_VariableValue( "vm_game" ) );
+	gvm = VM_Create( VM_PREFIX "game", SV_GameSystemCalls, Cvar_VariableValue( "vm_game" ),
+			TAG_GAME, Cvar_VariableValue( "vm_gameHeapMegs" ) * 1024 * 1024 );
+
 	if ( !gvm ) {
 		Com_Error( ERR_FATAL, "VM_Create on game failed" );
 	}
