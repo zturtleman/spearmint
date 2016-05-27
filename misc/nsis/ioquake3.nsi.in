@@ -1,6 +1,6 @@
 ; NSIS description file for Spearmint installer
 ;
-; you have to copy SDL.dll and OpenAL32.dll here manually
+; you have to copy OpenAL32.dll here manually
 
 !define VERSION "XXXVERSIONXXX"
 !define RELEASE "XXXRELEASEXXX"
@@ -85,7 +85,7 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR
 
-  File "SDL.dll"
+  File "../../build/release-mingw32-x86/SDL2.dll"
 !ifndef USE_INTERNAL_SPEEX
   File "libspeex.dll"
 !endif
@@ -105,7 +105,7 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
 !endif
 
   File "../../COPYING.txt"
-  File "/oname=README.txt" "../../README"
+  File "/oname=README.txt" "../../README.md"
   File "../../id-readme.txt"
   File "../../voip-readme.txt"
 
@@ -177,7 +177,7 @@ Section "Uninstall"
   Delete $INSTDIR\id-readme.txt
   Delete $INSTDIR\voip-readme.txt
 
-  Delete $INSTDIR\SDL.dll
+  Delete $INSTDIR\SDL2.dll
 !ifndef USE_INTERNAL_SPEEX
   Delete $INSTDIR\libspeex.dll
 !endif
