@@ -63,14 +63,14 @@ NSISFILENAME=${FSNAME}-${VERSION}-${RELEASE}.$(ARCH).exe
 
 all: $(NSISFILENAME)
 
-ioquake3.$(ARCH).nsi: ioquake3.nsi.in
+spearmint.$(ARCH).nsi: spearmint.nsi.in
 	sed 's/XXXFILENAMEXXX/$(NSISFILENAME)/;s/XXXVERSIONXXX/$(VERSION)/;s/XXXRELEASEXXX/$(RELEASE)/;s/x86/$(ARCH)/g;s/SDL2.dll/$(SDLDLL)/' < $< > $@
 
-$(NSISFILENAME): ioquake3.$(ARCH).nsi
-	makensis $(DEFINES) ioquake3.$(ARCH).nsi
+$(NSISFILENAME): spearmint.$(ARCH).nsi
+	makensis $(DEFINES) spearmint.$(ARCH).nsi
 
 clean:
-	rm -rf *.exe ioquake3.$(ARCH).nsi
+	rm -rf *.exe spearmint.$(ARCH).nsi
 
 install:
 	mkdir -p $(INSTALLDIR)
