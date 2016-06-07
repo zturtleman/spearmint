@@ -1864,11 +1864,15 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		&& shader.lightmapIndex < 0 )
 	{
 		if ( !( shader.surfaceParms & SURF_NOLIGHTMAP ) || ( shader.surfaceParms & SURF_POINTLIGHT ) ) {
-			// surfaceParm pointlight, vertex-approximated surfaces, non-lightmapped misc_models, or not a world surface
-			ri.Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap stage but no lightmap, using diffuse lighting.\n", shader.name );
-			stage->bundle[0].isLightmap = qfalse;
-			stage->bundle[1].isLightmap = qfalse;
-			stage->rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
+			if ( r_missingLightmapUseDiffuseLighting->integer ) {
+				// surfaceParm pointlight, vertex-approximated surfaces, non-lightmapped misc_models, or not a world surface
+				ri.Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap stage but no lightmap, using diffuse lighting.\n", shader.name );
+				stage->bundle[0].isLightmap = qfalse;
+				stage->bundle[1].isLightmap = qfalse;
+				stage->rgbGen = R_DiffuseColorGen( shader.lightmapIndex );
+			} else {
+				ri.Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap stage but no lightmap, using white image.\n", shader.name );
+			}
 		} else {
 			ri.Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap stage but specifies no lightmap, using white image.\n", shader.name );
 		}

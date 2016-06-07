@@ -182,6 +182,7 @@ cvar_t	*r_globalLinearFogDrawSky;
 cvar_t	*r_shadersDirectory;
 cvar_t	*r_surfaceFlagNoDraw;
 cvar_t	*r_colorize2DIdentity;
+cvar_t	*r_missingLightmapUseDiffuseLighting;
 
 cvar_t	*r_maxpolys;
 int		max_polys;
@@ -1137,6 +1138,7 @@ void R_Register( void )
 	r_shadersDirectory = ri.Cvar_Get( "r_shadersDirectory", "scripts", CVAR_LATCH );
 	r_surfaceFlagNoDraw = ri.Cvar_Get( "r_surfaceFlagNoDraw", "128", CVAR_LATCH ); // Q3's SURF_NODRAW (0x80)
 	r_colorize2DIdentity = ri.Cvar_Get( "r_colorize2DIdentity", "0", CVAR_LATCH );
+	r_missingLightmapUseDiffuseLighting = ri.Cvar_Get( "r_missingLightmapUseDiffuseLighting", "0", CVAR_LATCH );
 
 	//
 	// archived variables that can change at any time
