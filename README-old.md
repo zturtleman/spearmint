@@ -709,8 +709,8 @@ directory, this restriction is lifted.
 
 # Contributing
 
-Please send all patches to the issue tracker (http://github.com/zturtleman/spearmint/issues),
-or as a GitHub pull request and submit your patch there.
+Please sumbit all patches at the [Magical Clover Forum](https://forum.clover.moe)
+or as a GitHub pull request.
 
 The focus for Spearmint is to develop a stable base suitable for further
 development and provide players with the same Quake 3 game play experience
