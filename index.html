@@ -38,22 +38,22 @@ img.logoarea { width: 100%; max-width: 256px; height: auto; }
 div.screenshot { text-align: center; background-color: #555; }
 img.screenshot { width: 100%; max-width: 480px; height: auto; }
 .sectionHeader { clear: both; text-align: center; padding:10px; background: #555; color: #FFF; }
-.whatisContent { padding-left: 1em; padding-right: 1em; }
+.whatisContent { padding-left: 1em; padding-right: 1em; padding-bottom: 1em; }
 .sectionContent { padding-left: 1em; padding-right: 1em; padding-bottom: 1em; }
 
 /* Float the page in the center of the browser. */
 @media screen and (min-width: 1024px) {
 	body { padding-left: 10px; padding-right: 10px; }
 	#outer { margin: 10px auto; width: 70%; }
-	.whatisContent { padding-left: 2em; padding-right: 2em; }
+	.whatisContent { padding-left: 2em; padding-right: 2em; padding-bottom: 2em; }
 	.sectionContent { padding-left: 2em; padding-right: 2em; padding-bottom: 2em; }
 }
 
 /* Big enough that having screenshot float at right side won't crush content text */
 @media screen and (min-width: 1500px) {
-	div.screenshot { float: right; text-align: none; background-color: none; }
+	div.screenshot { float: right; }
 	img.screenshot { width: 460px; height: 259px; }
-	.whatisContent { padding-left: 2em; padding-right: 470px; }
+	.whatisContent { padding-left: 2em; padding-right: 470px; padding-bottom: 2em; }
 }
 
 /* Header sizes */
@@ -82,7 +82,6 @@ h1, h2, h3, h4, h5, h6 {
 .title {
   font-family: mplus-1mn-regular;
 }
-
 </style>
 </head>
 <body>
