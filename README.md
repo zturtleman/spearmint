@@ -16,7 +16,7 @@ Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Sp
 ## Discuss
 
   * [Magical Clover Forum](https://forum.clover.moe) (supports GitHub login)
-  * [#spearmint on freenode.net](irc://chat.freenode.net/#spearmint)
+  * [#spearmint on chat.freenode.net](irc://chat.freenode.net/#spearmint)
 
 
 ## Documentation
