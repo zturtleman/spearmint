@@ -2940,8 +2940,6 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 
 			nPaks = Sys_CountFileList(pPaks);
 
-			Com_Printf( "DEBUG: Found %d paks in %s\n", nPaks, name );
-
 			// don't list the mod if only Spearmint patch pk3 files are found
 			for ( pak = 0; pak < nPaks; pak++ ) {
 				if ( Q_stricmpn( pPaks[pak], "spearmint-patch", 15 ) ) {
