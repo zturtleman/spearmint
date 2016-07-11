@@ -2968,6 +2968,7 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 					nMods++;
 				}
 				else {
+					Com_Printf( S_COLOR_YELLOW "WARNING: Ran out of space for mods in mod list (%d mods fit in the %d byte buffer)\n", nMods, bufsize );
 					break;
 				}
 			}
