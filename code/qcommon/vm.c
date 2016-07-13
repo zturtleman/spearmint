@@ -43,7 +43,8 @@ and one exported function: Perform
 
 #include "vm_local.h"
 
-cvar_t	*vm_minQvmHunkMegs;
+cvar_t	*vm_cgameHeapMegs;
+cvar_t	*vm_gameHeapMegs;
 
 vm_t	*currentVM = NULL;
 vm_t	*lastVM    = NULL;
@@ -82,8 +83,10 @@ void VM_Init( void ) {
 	Cvar_Get( "vm_cgame", "0", CVAR_ARCHIVE );
 	Cvar_Get( "vm_game", "0", CVAR_ARCHIVE );
 
-	vm_minQvmHunkMegs = Cvar_Get( "vm_minQvmHunkMegs", "4", CVAR_ARCHIVE );
-	Cvar_CheckRange( vm_minQvmHunkMegs, 0, 64, qtrue );
+	vm_cgameHeapMegs = Cvar_Get( "vm_cgameHeapMegs", "2", CVAR_ARCHIVE );
+	vm_gameHeapMegs = Cvar_Get( "vm_gameHeapMegs", "8", CVAR_ARCHIVE );
+	Cvar_CheckRange( vm_cgameHeapMegs, 0, 128, qtrue );
+	Cvar_CheckRange( vm_gameHeapMegs, 0, 128, qtrue );
 
 	Cmd_AddCommand ("vmprofile", VM_VmProfile_f );
 	Cmd_AddCommand ("vminfo", VM_VmInfo_f );
@@ -427,9 +430,10 @@ VM_LoadQVM
 Load a .qvm file
 =================
 */
-vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
+vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure, int heapRequestedSize)
 {
 	int					dataLength;
+	int					hunkLength;
 	int					i;
 	char				filename[MAX_QPATH];
 	union {
@@ -499,28 +503,38 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 	dataLength = header.h->dataLength + header.h->litLength +
 		header.h->bssLength;
 
-	// the stack is implicitly at the end of the image
-	vm->dataAlloc = vm->dataLength = dataLength - PROGRAM_STACK_SIZE;
-
-	// reserve additional data for dynamic memory allocation via trap_Alloc
-	dataLength += vm_minQvmHunkMegs->integer * 1024 * 1024;
+	// reserve additional data for dynamic memory allocation via a system call
+	hunkLength = dataLength + heapRequestedSize;
 
 	// round up to next power of 2 so all data operations can
 	// be mask protected, extra data is used for dynamic memory allocation
-	for ( i = 0 ; dataLength > ( 1 << i ) ; i++ ) {
+	for ( i = 0 ; hunkLength > ( 1 << i ) ; i++ ) {
 	}
-	dataLength = 1 << i;
+	hunkLength = 1 << i;
 
 	if(alloc)
 	{
 		// allocate zero filled space for initialized and uninitialized data
-		vm->dataBase = Hunk_Alloc(dataLength, h_high);
-		vm->dataMask = dataLength - 1;
+		vm->dataBase = Hunk_Alloc(hunkLength, h_high);
+		vm->dataMask = hunkLength - 1;
+
+		// set up dynamic memory access
+		if ( heapRequestedSize > 0 ) {
+			vm->heapBase = vm->dataBase + dataLength;
+
+			// the stack is implicitly at the end of the image
+			vm->heapLength = hunkLength - PROGRAM_STACK_SIZE - dataLength;
+
+			Z_VM_InitHeap( vm->zoneTag, vm->heapBase, vm->heapLength );
+		} else {
+			vm->heapBase = NULL;
+			vm->heapLength = 0;
+		}
 	}
 	else
 	{
 		// clear the data, but make sure we're not clearing more than allocated
-		if(vm->dataMask + 1 != dataLength)
+		if(vm->dataMask + 1 != hunkLength)
 		{
 			VM_Free(vm);
 			FS_FreeFile(header.v);
@@ -530,7 +544,7 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 			return NULL;
 		}
 		
-		Com_Memset(vm->dataBase, 0, dataLength);
+		Com_Memset(vm->dataBase, 0, hunkLength);
 	}
 
 	// copy the intialized data
@@ -597,31 +611,31 @@ vm_t *VM_Restart(vm_t *vm, qboolean unpure)
 {
 	vmHeader_t	*header;
 
-	// DLL's can't be restarted in place
-	if ( vm->dllHandle ) {
-		char	name[MAX_QPATH];
-		intptr_t	(*systemCall)( intptr_t *parms );
-		
-		systemCall = vm->systemCall;	
-		Q_strncpyz( name, vm->name, sizeof( name ) );
-
-		VM_Free( vm );
-
-		vm = VM_Create( name, systemCall, VMI_NATIVE );
-		return vm;
-	}
-
-	// load the image
 	Com_Printf("VM_Restart()\n");
 
-	if(!(header = VM_LoadQVM(vm, qfalse, unpure)))
-	{
-		Com_Error(ERR_DROP, "VM_Restart failed");
-		return NULL;
+	if ( vm->dllHandle ) {
+		Sys_UnloadDll( vm->dllHandle );
+
+		vm->dllHandle = Sys_LoadGameDll( vm->filename, &vm->entryPoint, VM_DllSyscall );
+
+		if ( !vm->dllHandle ) {
+			Com_Error( ERR_DROP, "VM_Restart failed" );
+			return NULL;
+		}
+	} else {
+		// load the image
+		if(!(header = VM_LoadQVM(vm, qfalse, unpure, vm->heapRequestedSize)))
+		{
+			Com_Error(ERR_DROP, "VM_Restart failed");
+			return NULL;
+		}
+
+		// free the original file
+		FS_FreeFile(header);
 	}
 
-	// free the original file
-	FS_FreeFile(header);
+	// clear the zone to a single free block
+	Z_VM_InitHeap( vm->zoneTag, vm->heapBase, vm->heapLength );
 
 	return vm;
 }
@@ -635,7 +649,7 @@ it will attempt to load as a system dll
 ================
 */
 vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *), 
-				vmInterpret_t interpret ) {
+				vmInterpret_t interpret, int zoneTag, int heapRequestedSize ) {
 	vm_t		*vm;
 	vmHeader_t	*header;
 	int			i, remaining, retval;
@@ -670,6 +684,8 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 	vm = &vmTable[i];
 
 	Q_strncpyz(vm->name, module, sizeof(vm->name));
+	vm->zoneTag = zoneTag;
+	vm->heapRequestedSize = heapRequestedSize;
 
 	do
 	{
@@ -685,6 +701,9 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 			{
 				vm->systemCall = systemCalls;
 				Q_strncpyz(vm->filename, filename, sizeof(vm->filename));
+				vm->heapBase = heapRequestedSize > 0 ? Hunk_Alloc( heapRequestedSize, h_high ) : NULL;
+				vm->heapLength = heapRequestedSize;
+				Z_VM_InitHeap( vm->zoneTag, vm->heapBase, vm->heapLength );
 				return vm;
 			}
 			
@@ -694,7 +713,7 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 		{
 			vm->searchPath = startSearch;
 			Q_strncpyz(vm->filename, filename, sizeof(vm->filename));
-			if((header = VM_LoadQVM(vm, qtrue, qtrue)))
+			if((header = VM_LoadQVM(vm, qtrue, qtrue, heapRequestedSize)))
 				break;
 
 			// VM_Free overwrites the name on failed load
@@ -760,7 +779,9 @@ void VM_Free( vm_t *vm ) {
 		return;
 	}
 
-	VM_ClearMemoryTags( vm );
+	if ( vm->zoneTag ) {
+		Z_VM_ShutdownHeap( vm->zoneTag );
+	}
 
 	if(vm->callLevel) {
 		if(!forced_unload) {
@@ -776,6 +797,11 @@ void VM_Free( vm_t *vm ) {
 
 	if ( vm->dllHandle ) {
 		Sys_UnloadDll( vm->dllHandle );
+#if 0	// now automatically freed by hunk
+		if ( vm->heapBase ) {
+			Z_Free( vm->heapBase );
+		}
+#endif
 		Com_Memset( vm, 0, sizeof( *vm ) );
 	}
 #if 0	// now automatically freed by hunk
@@ -1074,6 +1100,7 @@ VM_VmInfo_f
 void VM_VmInfo_f( void ) {
 	vm_t	*vm;
 	int		i;
+	int		freeMemory;
 
 	Com_Printf( "Registered virtual machines:\n" );
 	for ( i = 0 ; i < MAX_VM ; i++ ) {
@@ -1091,19 +1118,20 @@ void VM_VmInfo_f( void ) {
 			Com_Printf( "interpreted\n" );
 		}
 
-		Com_Printf( "    file name: \"%s\"\n", vm->filename );
+		Com_Printf( "    file name   : \"%s\"\n", vm->filename );
 
-		if ( vm->dllHandle ) {
-			continue;
+		if ( !vm->dllHandle ) {
+			Com_Printf( "    code length : %7i\n", vm->codeLength );
+			Com_Printf( "    table length: %7i\n", vm->instructionCount*4 );
+			Com_Printf( "    data length : %7i\n", vm->dataMask + 1 );
 		}
 
-		Com_Printf( "    code length : %7i\n", vm->codeLength );
-		Com_Printf( "    table length: %7i\n", vm->instructionCount*4 );
-		Com_Printf( "    data length : %7i\n", vm->dataMask + 1 );
-		Com_Printf( "    trap_Alloc info:\n" );
-		Com_Printf( "      total memory: %7i\n", vm->stackBottom - vm->dataLength );
-		Com_Printf( "      free memory : %7i\n", vm->stackBottom - vm->dataAlloc );
-		Com_Printf( "      used memory : %7i\n", vm->dataAlloc - vm->dataLength );
+		freeMemory = Z_VM_HeapAvailable( vm->zoneTag );
+
+		Com_Printf( "  dynamic memory:\n" );
+		Com_Printf( "    total memory: %7i\n", vm->heapLength );
+		Com_Printf( "    free memory : %7i\n", freeMemory );
+		Com_Printf( "    used memory : %7i\n", vm->heapLength - freeMemory );
 	}
 }
 
@@ -1150,126 +1178,52 @@ void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
 
 /*
 =================
-QVM_Alloc
+VM_HeapMalloc
 =================
 */
-unsigned int QVM_Alloc( vm_t *vm, int size ) {
-	unsigned int pointer;
-	int allocSize;
+intptr_t VM_HeapMalloc( int size ) {
+	byte *buf;
 
-	// need to align addresses for qvm?
-	allocSize = ( size + 31 ) & ~31;
-
-	if ( vm->dataAlloc + allocSize > vm->stackBottom ) {
-		Com_Error( ERR_DROP, "QVM_Alloc: %s failed on allocation of %i bytes", vm->name, size );
+	if ( !currentVM->heapBase ) {
+		Com_Error( ERR_DROP, "VM_HeapMalloc: Cannot allocate %d bytes for %s (no heap)", size, currentVM->name );
 		return 0;
 	}
 
-	pointer = vm->dataAlloc;
-	vm->dataAlloc += allocSize;
+	buf = Z_TagMalloc( size, currentVM->zoneTag );
 
-	// only needed if it's possible to free memory, dataBase is set to 0s on QVM load.
-	//Com_Memset( vm->dataBase + pointer, 0, size );
+	if ( !buf ) {
+		Com_Error( ERR_DROP, "VM_HeapMalloc: Cannot allocate %d bytes for %s (heap full)", size, currentVM->name );
+		return 0;
+	}
 
-	return pointer;
+	Com_Memset( buf, 0, size );
+
+	return buf - currentVM->dataBase;
 }
 
 /*
 =================
-VM_ExplicitAlloc
+VM_HeapAvailable
 =================
 */
-typedef struct {
-	vm_t		*vm;
-	intptr_t	pointer;
-	char		*tag;
-	int			size;
-} vmMemoryTag_t;
-
-#define MAX_VM_MEMORY_TAGS 128
-static vmMemoryTag_t vmMemoryTags[MAX_VM_MEMORY_TAGS];
-
-intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag ) {
-	intptr_t	ptr;
-	int			i;
-	int			freeSlot;
-
-	if (size < 1)
-		Com_Error( ERR_DROP, "VM %s tried to allocate %d bytes of memory", vm->name, size );
-
-	freeSlot = -1;
-
-	// Check if memory with this tag and size already allocated, if so return it.
-	if ( tag ) {
-		for ( i = 0; i < MAX_VM_MEMORY_TAGS; i++ ) {
-			if ( !vmMemoryTags[i].vm ) {
-				freeSlot = i;
-				continue;
-			}
-			if ( vmMemoryTags[i].vm != vm && !( vm->dllHandle && vmMemoryTags[i].vm->dllHandle ) ) {
-				continue;
-			}
-			// ZTM: FIXME: don't allow game vm to reference pointers in cgame vm as they are non-persistant
-			if ( vmMemoryTags[i].size == size && strcmp( tag, vmMemoryTags[i].tag ) == 0 ) {
-				return vmMemoryTags[i].pointer;
-			}
-		}
+int VM_HeapAvailable( void ) {
+	if ( !currentVM->heapBase ) {
+		return 0;
 	}
-
-	if ( vm->dllHandle && !Q_stricmp( vm->name, VM_PREFIX "game" ) ) {
-		// game DLL cannot allocate data on hunk due to hunk getting cleared at vid_restart
-		ptr = (intptr_t)Z_TagMalloc( size, TAG_GAME );
-		Com_Memset( (void*)ptr, 0, size );
-	} else if ( vm->dllHandle ) {
-		ptr = (intptr_t)Hunk_Alloc( size, h_high );
-	} else {
-		ptr = QVM_Alloc( vm, size );
-	}
-
-	if ( tag ) {
-		if ( freeSlot >= 0 && freeSlot < MAX_VM_MEMORY_TAGS ) {
-			vmMemoryTags[ freeSlot ].vm = vm;
-			vmMemoryTags[ freeSlot ].pointer = ptr;
-			vmMemoryTags[ freeSlot ].tag = S_Malloc( strlen(tag)+1 );
-			Q_strncpyz( vmMemoryTags[ freeSlot ].tag, tag, strlen(tag)+1 );
-			vmMemoryTags[ freeSlot ].size = size;
-		} else {
-			Com_Error( ERR_DROP, "Out of free VM memory tags" );
-		}
-	}
-
-	return ptr;
+	return Z_VM_HeapAvailable( currentVM->zoneTag );
 }
 
 /*
 =================
-VM_ClearMemoryTags
+VM_HeapFree
 =================
 */
-void VM_ClearMemoryTags( vm_t *vm ) {
-	int i;
-
-	if ( !vm ) {
+void VM_HeapFree( void *data ) {
+	if ( !currentVM->heapBase ) {
 		return;
 	}
-
-	for ( i = 0; i < MAX_VM_MEMORY_TAGS; i++ ) {
-		if ( vmMemoryTags[i].vm == vm ) {
-			vmMemoryTags[i].vm = NULL;
-
-			Z_Free( vmMemoryTags[i].tag );
-			vmMemoryTags[i].tag = NULL;
-			vmMemoryTags[i].pointer = 0;
-			vmMemoryTags[i].size = 0;
-		}
+	if ( !data ) {
+		Com_Error( ERR_DROP, "VM_HeapFree: NULL pointer from %s", currentVM->name );
 	}
-}
-
-/*
-=================
-VM_Alloc
-=================
-*/
-intptr_t VM_Alloc( int size, const char *tag ) {
-	return VM_ExplicitAlloc( currentVM, size, tag );
+	Z_Free( data );
 }

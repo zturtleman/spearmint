@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define	GAME_API_MAJOR_VERSION	0
-#define	GAME_API_MINOR_VERSION	13
+#define	GAME_API_MINOR_VERSION	14
 
 
 // entity->svFlags
@@ -175,7 +175,9 @@ typedef enum {
 	G_PC_UNREAD_TOKEN,
 	G_PC_SOURCE_FILE_AND_LINE,
 
-	G_ALLOC,			// ( int size, const char *tag );
+	G_HEAP_MALLOC,		// ( int size );
+	G_HEAP_AVAILABLE,	// ( void );
+	G_HEAP_FREE,		// ( void *data );
 
 	//=========== server specific functionality =============
 

@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	36
+#define CG_API_MINOR_VERSION	37
 
 
 #define	CMD_BACKUP			64	
@@ -229,7 +229,9 @@ typedef enum {
 	CG_PC_UNREAD_TOKEN,
 	CG_PC_SOURCE_FILE_AND_LINE,
 
-	CG_ALLOC,
+	CG_HEAP_MALLOC,		// ( int size );
+	CG_HEAP_AVAILABLE,	// ( void );
+	CG_HEAP_FREE,		// ( void *data );
 
 	//=========== client game specific functionality =============
 
