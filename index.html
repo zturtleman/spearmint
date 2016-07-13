@@ -40,6 +40,7 @@ img.screenshot { width: 100%; max-width: 480px; height: auto; }
 .sectionHeader { clear: both; text-align: center; padding:10px; background: #555; color: #FFF; }
 .whatisContent { padding-left: 1em; padding-right: 1em; padding-bottom: 1em; }
 .sectionContent { padding-left: 1em; padding-right: 1em; padding-bottom: 1em; }
+#pastreleases { padding-left: 2em; padding-right: 2em; }
 
 /* Float the page in the center of the browser. */
 @media screen and (min-width: 1024px) {
@@ -178,7 +179,10 @@ h1, h2, h3, h4, h5, h6 {
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.4/spearmint-0.4-linux.tar.xz">Spearmint 0.4 &mdash; GNU/Linux glibc 2.13 or later (x86 and x86_64)</a></li>
 			</ul>
 
-			<h2>Spearmint 0.3</h2>
+			<h2><a href="#pastreleases" onclick="toggleReleases(event);">Past Releases</a></h2>
+
+			<div id="pastreleases">
+			<h3>Spearmint 0.3</h3>
 			<p>Spearmint 0.3 (May 13 2016) with Quake 3 support files. It is not compatible previous versions. <a href="http://clover.moe/2016/05/13/spearmint-0-3-released/">Announcement post</a>.</p>
 			<ul>
 				<li><a href="docs/spearmint-0.3-readme.txt">Spearmint 0.3 &mdash; Readme</a></li>
@@ -187,7 +191,7 @@ h1, h2, h3, h4, h5, h6 {
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.3/spearmint-0.3-linux.tar.xz">Spearmint 0.3 &mdash; GNU/Linux glibc 2.13 or later (x86 and x86_64)</a></li>
 			</ul>
 
-			<h2>Spearmint 0.2</h2>
+			<h3>Spearmint 0.2</h3>
 			<p>Spearmint 0.2 (November 13 2015) with Quake 3 support files. It is not compatible previous versions. <a href="http://clover.moe/2015/11/13/spearmint-0-2-released/">Announcement post</a>.</p>
 			<ul>
 				<li><a href="docs/spearmint-0.2-readme.txt">Spearmint 0.2 &mdash; Readme</a></li>
@@ -196,7 +200,7 @@ h1, h2, h3, h4, h5, h6 {
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.2/spearmint-0.2-linux.tar.xz">Spearmint 0.2 &mdash; GNU/Linux glibc 2.13 or later (x86 and x86_64)</a></li>
 			</ul>
 
-			<h2>Spearmint 0.1.1</h2>
+			<h3>Spearmint 0.1.1</h3>
 			<p>Spearmint 0.1.1 (November 11 2015) with Quake 3 support files. It's compatible with 0.1. <a href="http://clover.moe/2015/11/11/spearmint-0-1-1-released/">Announcement post</a>.</p>
 			<ul>
 				<li><a href="docs/spearmint-0.1.1-readme.txt">Spearmint 0.1.1 &mdash; Readme</a></li>
@@ -205,7 +209,7 @@ h1, h2, h3, h4, h5, h6 {
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.1.1/spearmint-0.1.1-linux.tar.xz">Spearmint 0.1.1 &mdash; GNU/Linux glibc 2.13 or later (x86 and x86_64)</a></li>
 			</ul>
 
-			<h2>Spearmint 0.1</h2>
+			<h3>Spearmint 0.1</h3>
 			<p>Spearmint 0.1 (March 13 2015) with Quake 3 support files. <a href="http://clover.moe/2015/03/13/spearmint-0-1-released/">Announcement post</a>.</p>
 			<ul>
 				<li><a href="docs/spearmint-0.1-readme.txt">Spearmint 0.1 &mdash; Readme</a></li>
@@ -213,6 +217,7 @@ h1, h2, h3, h4, h5, h6 {
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.1/spearmint-0.1-macosx.dmg">Spearmint 0.1 &mdash; OS X 10.5 or later (PPC, Intel 32/64 bit)</a></li>
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.1/spearmint-0.1-linux.tar.xz">Spearmint 0.1 &mdash; GNU/Linux glibc 2.13 or later (x86 and x86_64)</a></li>
 			</ul>
+			<div>
 		</div>
 	</div>
 	<!-- end download section -->
@@ -289,6 +294,24 @@ try {
 var pageTracker = _gat._getTracker("UA-45942785-2");
 pageTracker._trackPageview();
 } catch(err) {}
+</script>
+
+<script type="text/javascript">
+// hide releases by default if javascript is supported
+var ent = document.getElementById( "pastreleases" );
+ent.style.display = 'none';
+
+function toggleReleases(e) {
+	// prevent going to the page
+	e.preventDefault();
+
+	var ent = document.getElementById( "pastreleases" );
+
+	if (ent.style.display == 'block')
+		ent.style.display = 'none';
+	else
+		ent.style.display = 'block';
+}
 </script>
 
 </body>
