@@ -99,6 +99,7 @@ bspFile_t *BSP_Load( const char *name ) {
 #endif
 
 	if ( !buf.i ) {
+		// File not found.
 		return NULL;
 	}
 

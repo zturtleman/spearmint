@@ -191,6 +191,7 @@ static int GetLumpElements( dheader_t *header, int lump, int size ) {
 	return header->lumps[ lump ].filelen / size;
 }
 
+// Read data from lump
 static void CopyLump( dheader_t *header, int lump, const void *src, void *dest, int size, qboolean swap ) {
 	int length;
 
@@ -208,9 +209,37 @@ static void CopyLump( dheader_t *header, int lump, const void *src, void *dest, 
 	}
 }
 
+// Write data to lump
+static void WriteLump( dheader_t *header, int lump, void *dest, const void *src, int size, qboolean swap ) {
+	int length;
+
+	length = GetLumpElements( header, lump, size ) * size;
+
+	/* handle erroneous cases */
+	if ( length <= 0 ) {
+		return;
+	}
+
+	if ( swap ) {
+		BSP_SwapBlock( (int *)((byte*) dest + header->lumps[lump].fileofs), src, length );
+	} else {
+		Com_Memcpy( (byte*) dest + header->lumps[lump].fileofs, src, length );
+	}
+}
+
+static void AddLump( dheader_t *header, int *filePos, int lump, int elements, int size ) {
+	header->lumps[lump].fileofs = *filePos;
+	header->lumps[lump].filelen = elements * size;
+
+	*filePos += elements * size;
+}
+
 static void *GetLump( dheader_t *header, const void *src, int lump ) {
 	return (void*)( (byte*) src + header->lumps[ lump ].fileofs );
 }
+
+/****************************************************
+*/
 
 bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *data, int length ) {
 	int				i, j, k;
@@ -482,6 +511,272 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 	return bsp;
 }
 
+// convert internal BSP format to BSP for saving to disk
+// ZTM: TODO: convert ET foliage surfaces if Q3 format? how to check if Q3 or RTCW and not ET?
+// ZTM: TODO: handle different default light grid sizes?
+int BSP_SaveQ3( const bspFormat_t *format, const char *name, const bspFile_t *bsp, void **dataOut ) {
+	int				i, j, k;
+	dheader_t		header;
+	byte			*data;
+	int				dataLength;
+	int				numGridPoints;
+
+	*dataOut = NULL;
+
+#if 0
+	// ...
+	bsp->checksum = LittleLong (Com_BlockChecksum (data, length));
+	bsp->defaultLightGridSize[0] = LIGHTING_GRIDSIZE_X;
+	bsp->defaultLightGridSize[1] = LIGHTING_GRIDSIZE_Y;
+	bsp->defaultLightGridSize[2] = LIGHTING_GRIDSIZE_Z;
+#endif
+
+	if ( bsp->numGridArrayPoints ) {
+		numGridPoints = bsp->numGridArrayPoints;
+	} else {
+		numGridPoints = bsp->numGridPoints;
+	}
+
+	//
+	// setup header
+	//
+	Com_Memset( &header, 0, sizeof ( dheader_t ) );
+	header.ident = format->ident;
+	header.version = format->version;
+
+	dataLength = sizeof( dheader_t );
+
+	AddLump( &header, &dataLength, LUMP_ENTITIES, bsp->entityStringLength, 1 );
+	AddLump( &header, &dataLength, LUMP_SHADERS, bsp->numShaders, sizeof ( realDshader_t ) );
+	AddLump( &header, &dataLength, LUMP_PLANES, bsp->numPlanes, sizeof ( realDplane_t ) );
+	AddLump( &header, &dataLength, LUMP_NODES, bsp->numNodes, sizeof ( realDnode_t ) );
+	AddLump( &header, &dataLength, LUMP_LEAFS, bsp->numLeafs, sizeof ( realDleaf_t ) );
+	AddLump( &header, &dataLength, LUMP_LEAFSURFACES, bsp->numLeafSurfaces, sizeof ( int ) );
+	AddLump( &header, &dataLength, LUMP_LEAFBRUSHES, bsp->numLeafBrushes, sizeof ( int ) );
+	AddLump( &header, &dataLength, LUMP_MODELS, bsp->numSubmodels, sizeof ( realDmodel_t ) );
+	AddLump( &header, &dataLength, LUMP_BRUSHES, bsp->numBrushes, sizeof ( realDbrush_t ) );
+	AddLump( &header, &dataLength, LUMP_BRUSHSIDES, bsp->numBrushSides, sizeof ( realDbrushside_t ) );
+	AddLump( &header, &dataLength, LUMP_DRAWVERTS, bsp->numDrawVerts, sizeof ( realDrawVert_t ) );
+	AddLump( &header, &dataLength, LUMP_DRAWINDEXES, bsp->numDrawIndexes, sizeof ( int ) );
+	AddLump( &header, &dataLength, LUMP_FOGS, bsp->numFogs, sizeof ( realDfog_t ) );
+	AddLump( &header, &dataLength, LUMP_SURFACES, bsp->numSurfaces, sizeof ( realDsurface_t ) );
+	AddLump( &header, &dataLength, LUMP_LIGHTMAPS, bsp->numLightmaps, 128 * 128 * 3 );
+	AddLump( &header, &dataLength, LUMP_LIGHTGRID, numGridPoints, 8 );
+	if ( bsp->visibilityLength ) {
+		AddLump( &header, &dataLength, LUMP_VISIBILITY, bsp->visibilityLength + VIS_HEADER, 1 );
+	}
+
+	data = malloc( dataLength );
+
+	//
+	// copy and swap and convert data
+	//
+	WriteLump( &header, LUMP_ENTITIES, data, (void *) bsp->entityString, sizeof ( *bsp->entityString ), qfalse ); /* NO SWAP */
+
+	{
+		realDshader_t *out = GetLump( &header, data, LUMP_SHADERS );
+		dshader_t *in = bsp->shaders;
+
+		for ( i = 0; i < bsp->numShaders; i++, in++, out++ ) {
+			Q_strncpyz( out->shader, in->shader, sizeof ( out->shader ) );
+			out->contentFlags = LittleLong( in->contentFlags );
+			out->surfaceFlags = LittleLong( in->surfaceFlags );
+		}
+	}
+
+	{
+		realDplane_t *out = GetLump( &header, data, LUMP_PLANES );
+		dplane_t *in = bsp->planes;
+
+		for ( i = 0; i < bsp->numPlanes; i++, in++, out++) {
+			for (j=0 ; j<3 ; j++) {
+				out->normal[j] = LittleFloat (in->normal[j]);
+			}
+
+			out->dist = LittleFloat (in->dist);
+		}
+	}
+
+	{
+		realDnode_t *out = GetLump( &header, data, LUMP_NODES );
+		dnode_t *in = bsp->nodes;
+
+		for ( i = 0; i < bsp->numNodes; i++, in++, out++ ) {
+			out->planeNum = LittleLong( in->planeNum );
+
+			for ( j = 0; j < 2; j++ ) {
+				out->children[j] = LittleLong( in->children[j] );
+			}
+
+			for ( j = 0; j < 3; j++ ) {
+				out->mins[j] = LittleLong( in->mins[j] );
+				out->maxs[j] = LittleLong( in->maxs[j] );
+			}
+		}
+	}
+
+	{
+		realDleaf_t *out = GetLump( &header, data, LUMP_LEAFS );
+		dleaf_t *in = bsp->leafs;
+
+		for ( i = 0; i < bsp->numLeafs; i++, in++, out++ ) {
+			out->cluster = LittleLong (in->cluster);
+			out->area = LittleLong (in->area);
+
+			for ( j = 0; j < 3; j++ ) {
+				out->mins[j] = LittleLong( in->mins[j] );
+				out->maxs[j] = LittleLong( in->maxs[j] );
+			}
+
+			out->firstLeafBrush = LittleLong (in->firstLeafBrush);
+			out->numLeafBrushes = LittleLong (in->numLeafBrushes);
+			out->firstLeafSurface = LittleLong (in->firstLeafSurface);
+			out->numLeafSurfaces = LittleLong (in->numLeafSurfaces);
+		}
+	}
+
+	WriteLump( &header, LUMP_LEAFSURFACES, data, (void *) bsp->leafSurfaces, sizeof ( *bsp->leafSurfaces ), qtrue );
+	WriteLump( &header, LUMP_LEAFBRUSHES, data, (void *) bsp->leafBrushes, sizeof ( *bsp->leafBrushes ), qtrue );
+
+	{
+		realDmodel_t *out = GetLump( &header, data, LUMP_MODELS );
+		dmodel_t *in = bsp->submodels;
+
+		for ( i = 0; i < bsp->numSubmodels; i++, in++, out++ ) {
+			for ( j = 0; j < 3; j++ ) {
+				out->mins[j] = LittleFloat( in->mins[j] );
+				out->maxs[j] = LittleFloat( in->maxs[j] );
+			}
+
+			out->firstSurface = LittleLong (in->firstSurface);
+			out->numSurfaces = LittleLong (in->numSurfaces);
+			out->firstBrush = LittleLong (in->firstBrush);
+			out->numBrushes = LittleLong (in->numBrushes);
+		}
+	}
+
+	{
+		realDbrush_t *out = GetLump( &header, data, LUMP_BRUSHES );
+		dbrush_t *in = bsp->brushes;
+
+		for ( i = 0; i < bsp->numBrushes; i++, in++, out++ )
+		{
+			out->firstSide = LittleLong (in->firstSide);
+			out->numSides = LittleLong (in->numSides);
+			out->shaderNum = LittleLong (in->shaderNum);
+		}
+	}
+
+	{
+		realDbrushside_t *out = GetLump( &header, data, LUMP_BRUSHSIDES );
+		dbrushside_t *in = bsp->brushSides;
+
+		for ( i = 0; i < bsp->numBrushSides; i++, in++, out++ ) {
+			out->planeNum = LittleLong (in->planeNum);
+			out->shaderNum = LittleLong (in->shaderNum);
+#if 0 // NOT_SAVED
+			out->surfaceNum = -1;
+#endif
+		}
+	}
+
+	{
+		realDrawVert_t *out = GetLump( &header, data, LUMP_DRAWVERTS );
+		drawVert_t *in = bsp->drawVerts;
+
+		for ( i = 0; i < bsp->numDrawVerts; i++, in++, out++ ) {
+			for ( j = 0 ; j < 3 ; j++ ) {
+				out->xyz[j] = LittleFloat( in->xyz[j] );
+				out->normal[j] = LittleFloat( in->normal[j] );
+			}
+			for ( j = 0 ; j < 2 ; j++ ) {
+				out->st[j] = LittleFloat( in->st[j] );
+				out->lightmap[j] = LittleFloat( in->lightmap[j] );
+			}
+
+			/* NO SWAP */
+			for ( j = 0; j < 4; j++ ) {
+				out->color[j] = in->color[j];
+			}
+		}
+	}
+
+	WriteLump( &header, LUMP_DRAWINDEXES, data, (void *) bsp->drawIndexes, sizeof ( *bsp->drawIndexes ), qtrue );
+
+	{
+		realDfog_t *out = GetLump( &header, data, LUMP_FOGS );
+		dfog_t *in = bsp->fogs;
+
+		for ( i = 0; i < bsp->numFogs; i++, in++, out++ ) {
+			Q_strncpyz( out->shader, in->shader, sizeof ( out->shader ) );
+			out->brushNum = LittleLong (in->brushNum);
+			out->visibleSide = LittleLong (in->visibleSide);
+		}
+	}
+
+	{
+		realDsurface_t *out = GetLump( &header, data, LUMP_SURFACES );
+		dsurface_t *in = bsp->surfaces;
+
+		for ( i = 0; i < bsp->numSurfaces; i++, in++, out++ ) {
+			out->shaderNum = LittleLong (in->shaderNum);
+			out->fogNum = LittleLong (in->fogNum);
+			out->surfaceType = LittleLong (in->surfaceType);
+			out->firstVert = LittleLong (in->firstVert);
+			out->numVerts = LittleLong (in->numVerts);
+			out->firstIndex = LittleLong (in->firstIndex);
+			out->numIndexes = LittleLong (in->numIndexes);
+			out->lightmapNum = LittleLong (in->lightmapNum);
+			out->lightmapX = LittleLong (in->lightmapX);
+			out->lightmapY = LittleLong (in->lightmapY);
+			out->lightmapWidth = LittleLong (in->lightmapWidth);
+			out->lightmapHeight = LittleLong (in->lightmapHeight);
+
+			for ( j = 0; j < 3; j++ ) {
+				out->lightmapOrigin[j] = LittleFloat( in->lightmapOrigin[j] );
+				for ( k = 0; k < 3; k++ ) {
+					out->lightmapVecs[j][k] = LittleFloat( in->lightmapVecs[j][k] );
+				}
+			}
+
+			out->patchWidth = LittleLong (in->patchWidth);
+			out->patchHeight = LittleLong (in->patchHeight);
+
+#if 0 // NOT_SAVED
+			out->subdivisions = SUBDIVIDE_DISTANCE;
+#endif
+		}
+	}
+
+	WriteLump( &header, LUMP_LIGHTMAPS, data, (void *) bsp->lightmapData, sizeof ( *bsp->lightmapData ), qfalse ); /* NO SWAP */
+
+	if ( bsp->numGridArrayPoints ) {
+		byte *out = GetLump( &header, data, LUMP_LIGHTGRID );
+		unsigned short *in = bsp->lightGridArray;
+
+		for ( i = 0; i < bsp->numGridArrayPoints; i++, in++, out += 8 ) {
+			Com_Memcpy( out, (byte*)&bsp->lightGridData[(*in) * 8], 8 ); /* NO SWAP */
+		}
+	} else {
+		WriteLump( &header, LUMP_LIGHTGRID, data, (void *) bsp->lightGridData, sizeof ( *bsp->lightGridData ), qfalse ); /* NO SWAP */
+	}
+
+	if ( bsp->visibilityLength )
+	{
+		byte *out = GetLump( &header, data, LUMP_VISIBILITY );
+
+		((int *)out)[0] = LittleLong( bsp->numClusters );
+		((int *)out)[1] = LittleLong( bsp->clusterBytes );
+
+		Com_Memcpy( out + VIS_HEADER, bsp->visibility, bsp->visibilityLength ); /* NO SWAP */
+	}
+
+	BSP_SwapBlock( (int *)data, (int *)&header, sizeof ( dheader_t ) );
+
+	*dataOut = data;
+	return dataLength;
+}
+
 
 /****************************************************
 */
@@ -492,6 +787,7 @@ bspFormat_t quake3BspFormat = {
 	BSP_IDENT,
 	Q3_BSP_VERSION,
 	BSP_LoadQ3,
+	BSP_SaveQ3,
 };
 
 // RTCW, ET, QuakeLive
@@ -500,6 +796,7 @@ bspFormat_t wolfBspFormat = {
 	BSP_IDENT,
 	WOLF_BSP_VERSION,
 	BSP_LoadQ3,
+	BSP_SaveQ3,
 };
 
 // Dark Salvation
@@ -508,5 +805,6 @@ bspFormat_t darksBspFormat = {
 	BSP_IDENT,
 	DARKS_BSP_VERSION,
 	BSP_LoadQ3,
+	BSP_SaveQ3,
 };
 
