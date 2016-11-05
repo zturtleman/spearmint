@@ -2963,9 +2963,9 @@ static qboolean ParseShader( char **text )
 			// sets how big sky box size is too, not just fog tcscale
 			tr.skyFogDepthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
 
-			tr.skyFogColorInt = ColorBytes4 ( fogColor[0] * tr.identityLight,
-										  fogColor[1] * tr.identityLight,
-										  fogColor[2] * tr.identityLight, 1.0 );
+			tr.skyFogColorInt = ColorBytes4 ( fogColor[0],
+										  fogColor[1],
+										  fogColor[2], 1.0 );
 
 			tr.skyFogTcScale = R_FogTcScale( tr.skyFogType, tr.skyFogDepthForOpaque, fogDensity );
 			continue;

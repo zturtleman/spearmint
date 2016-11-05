@@ -573,9 +573,9 @@ void RE_BeginScene(const refdef_t *fd)
 		tr.refdef.fogType = FT_NONE;
 	}
 
-	tr.refdef.fogColor[0] = fd->fogColor[0] * tr.identityLight;
-	tr.refdef.fogColor[1] = fd->fogColor[1] * tr.identityLight;
-	tr.refdef.fogColor[2] = fd->fogColor[2] * tr.identityLight;
+	tr.refdef.fogColor[0] = fd->fogColor[0];
+	tr.refdef.fogColor[1] = fd->fogColor[1];
+	tr.refdef.fogColor[2] = fd->fogColor[2];
 
 	tr.refdef.fogColorInt = ColorBytes4( tr.refdef.fogColor[0],
 									  tr.refdef.fogColor[1],
