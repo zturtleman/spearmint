@@ -7,6 +7,9 @@ endif
 ifndef RELEASE
 RELEASE=0
 endif
+ifndef PLATFORM
+PLATFORM=mingw32
+endif
 ifndef ARCH
 ARCH=x86
 endif
@@ -64,7 +67,7 @@ NSISFILENAME=${FSNAME}-${VERSION}-${RELEASE}.$(ARCH).exe
 all: $(NSISFILENAME)
 
 spearmint.$(ARCH).nsi: spearmint.nsi.in
-	sed 's/XXXFILENAMEXXX/$(NSISFILENAME)/;s/XXXVERSIONXXX/$(VERSION)/;s/XXXRELEASEXXX/$(RELEASE)/;s/x86/$(ARCH)/g;s/SDL2.dll/$(SDLDLL)/' < $< > $@
+	sed 's/XXXFILENAMEXXX/$(NSISFILENAME)/;s/XXXVERSIONXXX/$(VERSION)/;s/XXXRELEASEXXX/$(RELEASE)/;s/mingw32/$(PLATFORM)/g;s/x86/$(ARCH)/g;s/SDL2.dll/$(SDLDLL)/' < $< > $@
 
 $(NSISFILENAME): spearmint.$(ARCH).nsi
 	makensis $(DEFINES) spearmint.$(ARCH).nsi

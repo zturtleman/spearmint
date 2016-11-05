@@ -34,6 +34,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
+#ifndef PRODUCT_DATE
+#  define PRODUCT_DATE __DATE__
+#endif
+
 #ifdef _MSC_VER
 
 #pragma warning(disable : 4018)     // signed/unsigned mismatch

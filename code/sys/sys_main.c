@@ -210,7 +210,12 @@ Sys_PIDFileName
 */
 static char *Sys_PIDFileName( const char *gamedir )
 {
-	return FS_BuildOSPath(Cvar_VariableString("fs_homepath"), gamedir, PID_FILENAME);
+	const char *homePath = Cvar_VariableString( "fs_homepath" );
+
+	if( *homePath != '\0' )
+		return va( "%s/%s/%s", homePath, gamedir, PID_FILENAME );
+
+	return NULL;
 }
 
 /*
@@ -259,6 +264,10 @@ static qboolean Sys_WritePIDFile( const char *gamedir )
 		}
 		else
 			stale = qtrue;
+	}
+
+	if( FS_CreatePath( pidFile ) ) {
+		return 0;
 	}
 
 	if( ( f = fopen( pidFile, "w" ) ) != NULL )
@@ -620,7 +629,7 @@ void Sys_ParseArgs( int argc, char **argv )
 		if( !strcmp( argv[1], "--version" ) ||
 				!strcmp( argv[1], "-v" ) )
 		{
-			const char* date = __DATE__;
+			const char* date = PRODUCT_DATE;
 #ifdef DEDICATED
 			fprintf( stdout, Q3_VERSION " dedicated server (%s)\n", date );
 #else
@@ -632,7 +641,7 @@ void Sys_ParseArgs( int argc, char **argv )
 }
 
 #ifndef DEFAULT_BASEDIR
-#	ifdef MACOS_X
+#	ifdef __APPLE__
 #		define DEFAULT_BASEDIR Sys_StripAppBundle(Sys_BinaryPath())
 #	else
 #		define DEFAULT_BASEDIR Sys_BinaryPath()
@@ -715,7 +724,7 @@ int main( int argc, char **argv )
 	// Set the initial time base
 	Sys_Milliseconds( );
 
-#ifdef MACOS_X
+#ifdef __APPLE__
 	// This is passed if we are launched by double-clicking
 	if ( argc >= 2 && Q_strncmp ( argv[1], "-psn", 4 ) == 0 )
 		argc = 1;

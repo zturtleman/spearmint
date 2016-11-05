@@ -45,8 +45,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../AL/al.h"
 #include "../AL/alc.h"
 #else
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__APPLE__)
   // MSVC users must install the OpenAL SDK which doesn't use the AL/*.h scheme.
+  // OSX framework also needs this
   #include <al.h>
   #include <alc.h>
 #else

@@ -45,7 +45,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #ifdef WIN32
   #define DEFAULT_CURL_LIB "libcurl-4.dll"
   #define ALTERNATE_CURL_LIB "libcurl-3.dll"
-#elif defined(MACOS_X)
+#elif defined(__APPLE__)
   #define DEFAULT_CURL_LIB "libcurl.dylib"
 #else
   #define DEFAULT_CURL_LIB "libcurl.so.4"

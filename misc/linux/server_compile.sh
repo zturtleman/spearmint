@@ -14,6 +14,7 @@ echo "This process requires you to have the following installed through your dis
  git
  and all of the dependencies necessary for the Spearmint server.
  If you do not have the necessary dependencies this script will bail out.
+ Please post a message to https://forum.clover.moe/ asking for help and include whatever error messages you received during the compile phase.
  Please edit this script. Inside you will find a COPYDIR variable you can alter to change where Spearmint will be installed to."
 while true; do
         read -p "Are you ready to compile Spearmint in the $ENGINELOCAL directory, and have it installed into $COPYDIR? " yn

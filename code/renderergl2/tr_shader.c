@@ -2659,10 +2659,12 @@ static qboolean ParseShader( char **text )
 			if (isGL2Sun)
 			{
 				token = COM_ParseExt( text, qfalse );
-				tr.mapLightScale = atof(token);
-
-				token = COM_ParseExt( text, qfalse );
 				tr.sunShadowScale = atof(token);
+
+				// parse twice, since older shaders may include mapLightScale before sunShadowScale
+				token = COM_ParseExt( text, qfalse );
+				if (token[0])
+					tr.sunShadowScale = atof(token);
 			}
 			continue;
 		}
@@ -3366,12 +3368,10 @@ static void ComputeVertexAttribs(void)
 		{
 			shader.vertexAttribs |= ATTR_NORMAL;
 
-#ifdef USE_VERT_TANGENT_SPACE
 			if ((pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK) && !(r_normalMapping->integer == 0 && r_specularMapping->integer == 0))
 			{
 				shader.vertexAttribs |= ATTR_TANGENT;
 			}
-#endif
 
 			switch (pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK)
 			{
@@ -3671,10 +3671,22 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			// ZTM: FIXME: check shader_allowCompress? I don't think it's always valid here though.
 
+			// try a normalheight image first
 			COM_StripExtension(diffuseImg->imgName, normalName, MAX_QPATH);
-			Q_strcat(normalName, MAX_QPATH, "_n");
+			Q_strcat(normalName, MAX_QPATH, "_nh");
 
-			normalImg = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
+			normalImg = R_FindImageFile(normalName, IMGTYPE_NORMALHEIGHT, normalFlags);
+
+			if (normalImg)
+			{
+				parallax = qtrue;
+			}
+			else
+			{
+				// try a normal image ("_n" suffix)
+				normalName[strlen(normalName) - 1] = '\0';
+				normalImg = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
+			}
 
 			if (normalImg)
 			{

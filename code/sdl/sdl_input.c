@@ -252,7 +252,7 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 			case SDLK_LCTRL:
 			case SDLK_RCTRL:        key = K_CTRL;          break;
 
-#ifdef MACOS_X
+#ifdef __APPLE__
 			case SDLK_RGUI:
 			case SDLK_LGUI:         key = K_COMMAND;       break;
 #else
@@ -641,6 +641,10 @@ static void IN_InitJoystick( void )
 		}
 	}
 
+	// SDL 2.0.4 requires SDL_INIT_JOYSTICK to be initialized separately from
+	// SDL_INIT_GAMECONTROLLER for SDL_JoystickOpen() to work correctly,
+	// despite https://wiki.libsdl.org/SDL_Init (retrieved 2016-08-16)
+	// indicating SDL_INIT_JOYSTICK should be initialized automatically.
 	if (!SDL_WasInit(SDL_INIT_JOYSTICK))
 	{
 		Com_DPrintf("Calling SDL_Init(SDL_INIT_JOYSTICK)...\n");
@@ -666,7 +670,6 @@ static void IN_InitJoystick( void )
 
 	if ( !joyEnabled ) {
 		Com_DPrintf( "Joystick is not active.\n" );
-		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 		return;
 	}
 
@@ -1061,6 +1064,14 @@ static void IN_ProcessEvents( void )
 					Com_QueueEvent( 0, SE_KEY, K_MWHEELDOWN, qtrue, 0, NULL );
 					Com_QueueEvent( 0, SE_KEY, K_MWHEELDOWN, qfalse, 0, NULL );
 				}
+				break;
+
+			case SDL_CONTROLLERDEVICEADDED:
+			case SDL_CONTROLLERDEVICEREMOVED:
+#if 0 // ZTM: TODO
+				if (in_joystick->integer)
+					IN_InitJoystick();
+#endif
 				break;
 
 			case SDL_QUIT:

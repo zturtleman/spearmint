@@ -137,7 +137,8 @@ int			com_frameNumber;
 
 int			com_errorEntered = 0;
 qboolean	com_fullyInitialized = qfalse;
-int			com_gameRestarting = 0;
+qboolean	com_gameRestarting = qfalse;
+qboolean	com_gameClientRestarting = qfalse;
 
 char	com_errorMessage[MAXPRINTMSG];
 
@@ -332,15 +333,16 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	if (code != ERR_DISCONNECT)
 		Cvar_Set("com_errorMessage", com_errorMessage);
 
-	restartClient = ( com_gameRestarting & 2 ) && ( !com_cl_running || !com_cl_running->integer );
+	restartClient = com_gameClientRestarting && !( com_cl_running && com_cl_running->integer );
 	if ( com_gameRestarting ) {
-		com_gameRestarting = 0;
-
 		if ( code == ERR_DROP && FS_TryLastValidGame() && com_cl_running && com_cl_running->integer ) {
 			CL_Shutdown(va("Change Game Directory: %s", com_errorMessage), qtrue, qtrue);
 			restartClient = qtrue;
 		}
 	}
+
+	com_gameRestarting = qfalse;
+	com_gameClientRestarting = qfalse;
 
 	if (code == ERR_DISCONNECT || code == ERR_SERVERDISCONNECT) {
 		VM_Forced_Unload_Start();
@@ -446,7 +448,7 @@ void Com_ParseCommandLine( char *commandLine ) {
         if (*commandLine == '"') {
             inq = !inq;
         }
-        // look for a + seperating character
+        // look for a + separating character
         // if commandLine came from a file, we might have real line seperators
         if ( (*commandLine == '+' && !inq) || *commandLine == '\n'  || *commandLine == '\r' ) {
             if ( com_numConsoleLines == MAX_CONSOLE_LINES ) {
@@ -2708,16 +2710,14 @@ void Com_GameRestart(qboolean disconnect)
 	// make sure no recursion can be triggered
 	if(!com_gameRestarting && com_fullyInitialized)
 	{
-		com_gameRestarting = 1;
-
-		if( com_cl_running->integer )
-			com_gameRestarting |= 2;
+		com_gameRestarting = qtrue;
+		com_gameClientRestarting = com_cl_running->integer;
 
 		// Kill server if we have one
 		if(com_sv_running->integer)
 			SV_Shutdown("Game directory changed");
 
-		if(com_gameRestarting & 2)
+		if(com_gameClientRestarting)
 		{
 			if(disconnect)
 				CL_Disconnect(qfalse);
@@ -2742,13 +2742,14 @@ void Com_GameRestart(qboolean disconnect)
 			com_playVideo = 2;
 		}
 
-		if(com_gameRestarting & 2)
+		if(com_gameClientRestarting)
 		{
 			CL_Init();
 			CL_StartHunkUsers(qfalse);
 		}
 		
-		com_gameRestarting = 0;
+		com_gameRestarting = qfalse;
+		com_gameClientRestarting = qfalse;
 	}
 }
 
@@ -2865,7 +2866,7 @@ void Com_Init( char *commandLine ) {
 	char	*s;
 	int	qport;
 
-	Com_Printf( "%s %s %s\n", Q3_VERSION, PLATFORM_STRING, __DATE__ );
+	Com_Printf( "%s %s %s\n", Q3_VERSION, PLATFORM_STRING, PRODUCT_DATE );
 
 	if ( setjmp (abortframe) ) {
 		Sys_Error ("Error during initialization");
@@ -2983,7 +2984,7 @@ void Com_Init( char *commandLine ) {
 
 	com_productName = Cvar_Get( "com_productName", PRODUCT_NAME, CVAR_ROM );
 
-	s = va("%s %s %s", Q3_VERSION, PLATFORM_STRING, __DATE__ );
+	s = va("%s %s %s", Q3_VERSION, PLATFORM_STRING, PRODUCT_DATE );
 	com_version = Cvar_Get ("version", s, CVAR_ROM | CVAR_SERVERINFO );
 	com_gamename = Cvar_Get("com_gamename", GAMENAME_FOR_MASTER, CVAR_SERVERINFO | CVAR_INIT);
 	com_protocol = Cvar_Get("com_protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_INIT);

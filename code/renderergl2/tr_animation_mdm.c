@@ -1635,7 +1635,7 @@ void RB_MDMSurfaceAnim( mdmSurface_t *surface ) {
 
 		LocalMatrixTransformVector( v->normal, bones[v->weights[0].boneIndex].matrix, newNormal );
 
-		R_VaoPackNormal((byte *)&tess.normal[baseVertex + j], newNormal);
+		R_VaoPackNormal(tess.normal[baseVertex + j], newNormal);
 
 		tess.texCoords[baseVertex + j][0][0] = v->texCoords[0];
 		tess.texCoords[baseVertex + j][0][1] = v->texCoords[1];

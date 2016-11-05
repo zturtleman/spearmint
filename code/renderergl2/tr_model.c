@@ -731,6 +731,7 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *modN
 			{
 				unsigned lat, lng;
 				unsigned short normal;
+				vec3_t fNormal;
 
 				v->xyz[0] = md3xyz->xyz[0] * MD3_XYZ_SCALE;
 				v->xyz[1] = md3xyz->xyz[1] * MD3_XYZ_SCALE;
@@ -743,9 +744,11 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *modN
 				lat *= (FUNCTABLE_SIZE/256);
 				lng *= (FUNCTABLE_SIZE/256);
 
-				v->normal[0] = tr.sinTable[(lat+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK] * tr.sinTable[lng];
-				v->normal[1] = tr.sinTable[lat] * tr.sinTable[lng];
-				v->normal[2] = tr.sinTable[(lng+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK];
+				fNormal[0] = tr.sinTable[(lat+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK] * tr.sinTable[lng];
+				fNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+				fNormal[2] = tr.sinTable[(lng+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK];
+
+				R_VaoPackNormal(v->normal, fNormal);
 			}
 		}
 
@@ -771,13 +774,15 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *modN
 			}
 		}
 
-#ifdef USE_VERT_TANGENT_SPACE
 		// calc tangent spaces
 		{
+			vec3_t *sdirs = ri.Malloc(sizeof(*sdirs) * surf->numVerts * mdvModel->numFrames);
+			vec3_t *tdirs = ri.Malloc(sizeof(*tdirs) * surf->numVerts * mdvModel->numFrames);
+
 			for(j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
 			{
-				VectorClear(v->tangent);
-				VectorClear(v->bitangent);
+				VectorClear(sdirs[j]);
+				VectorClear(tdirs[j]);
 			}
 
 			for(f = 0; f < mdvModel->numFrames; f++)
@@ -802,29 +807,33 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *modN
 
 					R_CalcTexDirs(sdir, tdir, v0, v1, v2, t0, t1, t2);
 
-					VectorAdd(sdir, surf->verts[index0].tangent,   surf->verts[index0].tangent);
-					VectorAdd(sdir, surf->verts[index1].tangent,   surf->verts[index1].tangent);
-					VectorAdd(sdir, surf->verts[index2].tangent,   surf->verts[index2].tangent);
-					VectorAdd(tdir, surf->verts[index0].bitangent, surf->verts[index0].bitangent);
-					VectorAdd(tdir, surf->verts[index1].bitangent, surf->verts[index1].bitangent);
-					VectorAdd(tdir, surf->verts[index2].bitangent, surf->verts[index2].bitangent);
+					VectorAdd(sdir, sdirs[index0], sdirs[index0]);
+					VectorAdd(sdir, sdirs[index1], sdirs[index1]);
+					VectorAdd(sdir, sdirs[index2], sdirs[index2]);
+					VectorAdd(tdir, tdirs[index0], tdirs[index0]);
+					VectorAdd(tdir, tdirs[index1], tdirs[index1]);
+					VectorAdd(tdir, tdirs[index2], tdirs[index2]);
 				}
 			}
 
 			for(j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
 			{
-				vec3_t sdir, tdir;
+				vec3_t normal;
+				vec4_t tangent;
 
-				VectorCopy(v->tangent,   sdir);
-				VectorCopy(v->bitangent, tdir);
+				VectorNormalize(sdirs[j]);
+				VectorNormalize(tdirs[j]);
 
-				VectorNormalize(sdir);
-				VectorNormalize(tdir);
+				R_VaoUnpackNormal(normal, v->normal);
 
-				R_CalcTbnFromNormalAndTexDirs(v->tangent, v->bitangent, v->normal, sdir, tdir);
+				tangent[3] = R_CalcTangentSpace(tangent, NULL, normal, sdirs[j], tdirs[j]);
+
+				R_VaoPackTangent(v->tangent, tangent);
 			}
+
+			ri.Free(sdirs);
+			ri.Free(tdirs);
 		}
-#endif
 
 		// find the next surface
 		mdcSurf = (mdcSurface_t *) ((byte *) mdcSurf + mdcSurf->ofsEnd);
@@ -850,14 +859,12 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *modN
 			{
 				// vertex animation, store texcoords first, then position/normal/tangents
 				offset_st      = 0;
-				offset_xyz     = surf->numVerts * glRefConfig.packedTexcoordDataSize;
+				offset_xyz     = surf->numVerts * sizeof(vec2_t);
 				offset_normal  = offset_xyz + sizeof(vec3_t);
-				offset_tangent = offset_normal + sizeof(uint32_t);
-				stride_st  = glRefConfig.packedTexcoordDataSize;
-				stride_xyz = sizeof(vec3_t) + sizeof(uint32_t);
-#ifdef USE_VERT_TANGENT_SPACE
-				stride_xyz += sizeof(uint32_t);
-#endif
+				offset_tangent = offset_normal + sizeof(int16_t) * 4;
+				stride_st  = sizeof(vec2_t);
+				stride_xyz = sizeof(vec3_t) + sizeof(int16_t) * 4;
+				stride_xyz += sizeof(int16_t) * 4;
 				stride_normal = stride_tangent = stride_xyz;
 
 				dataSize = offset_xyz + surf->numVerts * mdvModel->numFrames * stride_xyz;
@@ -867,13 +874,9 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *modN
 				// no animation, interleave everything
 				offset_xyz     = 0;
 				offset_st      = offset_xyz + sizeof(vec3_t);
-				offset_normal  = offset_st + glRefConfig.packedTexcoordDataSize;
-				offset_tangent = offset_normal + sizeof(uint32_t);
-#ifdef USE_VERT_TANGENT_SPACE
-				stride_xyz = offset_tangent + sizeof(uint32_t);
-#else
-				stride_xyz = offset_normal + sizeof(uint32_t);
-#endif
+				offset_normal  = offset_st + sizeof(vec2_t);
+				offset_tangent = offset_normal + sizeof(int16_t) * 4;
+				stride_xyz = offset_tangent + sizeof(int16_t) * 4;
 				stride_st = stride_normal = stride_tangent = stride_xyz;
 
 				dataSize = surf->numVerts * stride_xyz;
@@ -887,31 +890,24 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *modN
 			{
 				st = surf->st;
 				for ( j = 0 ; j < surf->numVerts ; j++, st++ ) {
-					dataOfs += R_VaoPackTexCoord(data + dataOfs, st->st);
+					memcpy(data + dataOfs, &st->st, sizeof(vec2_t));
+					dataOfs += sizeof(st->st);
 				}
 
 				v = surf->verts;
 				for ( j = 0; j < surf->numVerts * mdvModel->numFrames ; j++, v++ )
 				{
-#ifdef USE_VERT_TANGENT_SPACE
-					vec3_t nxt;
-					vec4_t tangent;
-#endif
 					// xyz
 					memcpy(data + dataOfs, &v->xyz, sizeof(vec3_t));
 					dataOfs += sizeof(vec3_t);
 
 					// normal
-					dataOfs += R_VaoPackNormal(data + dataOfs, v->normal);
-
-#ifdef USE_VERT_TANGENT_SPACE
-					CrossProduct(v->normal, v->tangent, nxt);
-					VectorCopy(v->tangent, tangent);
-					tangent[3] = (DotProduct(nxt, v->bitangent) < 0.0f) ? -1.0f : 1.0f;
+					memcpy(data + dataOfs, &v->normal, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 
 					// tangent
-					dataOfs += R_VaoPackTangent(data + dataOfs, tangent);
-#endif
+					memcpy(data + dataOfs, &v->tangent, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 				}
 			}
 			else
@@ -920,28 +916,21 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *modN
 				st = surf->st;
 				for ( j = 0; j < surf->numVerts; j++, v++, st++ )
 				{
-#ifdef USE_VERT_TANGENT_SPACE
-					vec3_t nxt;
-					vec4_t tangent;
-#endif
 					// xyz
 					memcpy(data + dataOfs, &v->xyz, sizeof(vec3_t));
 					dataOfs += sizeof(v->xyz);
 
 					// st
-					dataOfs += R_VaoPackTexCoord(data + dataOfs, st->st);
+					memcpy(data + dataOfs, &st->st, sizeof(vec2_t));
+					dataOfs += sizeof(st->st);
 
 					// normal
-					dataOfs += R_VaoPackNormal(data + dataOfs, v->normal);
-
-#ifdef USE_VERT_TANGENT_SPACE
-					CrossProduct(v->normal, v->tangent, nxt);
-					VectorCopy(v->tangent, tangent);
-					tangent[3] = (DotProduct(nxt, v->bitangent) < 0.0f) ? -1.0f : 1.0f;
+					memcpy(data + dataOfs, &v->normal, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 
 					// tangent
-					dataOfs += R_VaoPackTangent(data + dataOfs, tangent);
-#endif
+					memcpy(data + dataOfs, &v->tangent, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 				}
 			}
 
@@ -959,9 +948,7 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *modN
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].enabled = 1;
 			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].enabled = 1;
 			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].enabled = 1;
-#ifdef USE_VERT_TANGENT_SPACE
 			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].enabled = 1;
-#endif
 
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].count = 3;
 			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].count = 2;
@@ -969,9 +956,9 @@ static qboolean R_LoadMDC( model_t *mod, int lod, void *buffer, const char *modN
 			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].count = 4;
 
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].type = GL_FLOAT;
-			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].type = glRefConfig.packedTexcoordDataType;
-			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].type = glRefConfig.packedNormalDataType;
-			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].type = glRefConfig.packedNormalDataType;
+			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].type = GL_FLOAT;
+			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].type = GL_SHORT;
+			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].type = GL_SHORT;
 
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].normalized = GL_FALSE;
 			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].normalized = GL_FALSE;
@@ -1207,6 +1194,7 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 		{
 			unsigned lat, lng;
 			unsigned short normal;
+			vec3_t fNormal;
 
 			v->xyz[0] = LittleShort(md3xyz->xyz[0]) * MD3_XYZ_SCALE;
 			v->xyz[1] = LittleShort(md3xyz->xyz[1]) * MD3_XYZ_SCALE;
@@ -1223,9 +1211,11 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 			// decode Y as sin( lat ) * sin( long )
 			// decode Z as cos( long )
 
-			v->normal[0] = tr.sinTable[(lat+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK] * tr.sinTable[lng];
-			v->normal[1] = tr.sinTable[lat] * tr.sinTable[lng];
-			v->normal[2] = tr.sinTable[(lng+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK];
+			fNormal[0] = tr.sinTable[(lat+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK] * tr.sinTable[lng];
+			fNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+			fNormal[2] = tr.sinTable[(lng+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK];
+
+			R_VaoPackNormal(v->normal, fNormal);
 		}
 
 		// swap all the ST
@@ -1238,13 +1228,15 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 			st->st[1] = LittleFloat(md3st->st[1]);
 		}
 
-#ifdef USE_VERT_TANGENT_SPACE
 		// calc tangent spaces
 		{
+			vec3_t *sdirs = ri.Malloc(sizeof(*sdirs) * surf->numVerts * mdvModel->numFrames);
+			vec3_t *tdirs = ri.Malloc(sizeof(*tdirs) * surf->numVerts * mdvModel->numFrames);
+
 			for(j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
 			{
-				VectorClear(v->tangent);
-				VectorClear(v->bitangent);
+				VectorClear(sdirs[j]);
+				VectorClear(tdirs[j]);
 			}
 
 			for(f = 0; f < mdvModel->numFrames; f++)
@@ -1269,29 +1261,33 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 
 					R_CalcTexDirs(sdir, tdir, v0, v1, v2, t0, t1, t2);
 
-					VectorAdd(sdir, surf->verts[index0].tangent,   surf->verts[index0].tangent);
-					VectorAdd(sdir, surf->verts[index1].tangent,   surf->verts[index1].tangent);
-					VectorAdd(sdir, surf->verts[index2].tangent,   surf->verts[index2].tangent);
-					VectorAdd(tdir, surf->verts[index0].bitangent, surf->verts[index0].bitangent);
-					VectorAdd(tdir, surf->verts[index1].bitangent, surf->verts[index1].bitangent);
-					VectorAdd(tdir, surf->verts[index2].bitangent, surf->verts[index2].bitangent);
+					VectorAdd(sdir, sdirs[index0], sdirs[index0]);
+					VectorAdd(sdir, sdirs[index1], sdirs[index1]);
+					VectorAdd(sdir, sdirs[index2], sdirs[index2]);
+					VectorAdd(tdir, tdirs[index0], tdirs[index0]);
+					VectorAdd(tdir, tdirs[index1], tdirs[index1]);
+					VectorAdd(tdir, tdirs[index2], tdirs[index2]);
 				}
 			}
 
 			for(j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
 			{
-				vec3_t sdir, tdir;
+				vec3_t normal;
+				vec4_t tangent;
 
-				VectorCopy(v->tangent,   sdir);
-				VectorCopy(v->bitangent, tdir);
+				VectorNormalize(sdirs[j]);
+				VectorNormalize(tdirs[j]);
 
-				VectorNormalize(sdir);
-				VectorNormalize(tdir);
+				R_VaoUnpackNormal(normal, v->normal);
 
-				R_CalcTbnFromNormalAndTexDirs(v->tangent, v->bitangent, v->normal, sdir, tdir);
+				tangent[3] = R_CalcTangentSpace(tangent, NULL, normal, sdirs[j], tdirs[j]);
+
+				R_VaoPackTangent(v->tangent, tangent);
 			}
+
+			ri.Free(sdirs);
+			ri.Free(tdirs);
 		}
-#endif
 
 		// find the next surface
 		md3Surf = (md3Surface_t *) ((byte *) md3Surf + md3Surf->ofsEnd);
@@ -1317,14 +1313,12 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 			{
 				// vertex animation, store texcoords first, then position/normal/tangents
 				offset_st      = 0;
-				offset_xyz     = surf->numVerts * glRefConfig.packedTexcoordDataSize;
+				offset_xyz     = surf->numVerts * sizeof(vec2_t);
 				offset_normal  = offset_xyz + sizeof(vec3_t);
-				offset_tangent = offset_normal + sizeof(uint32_t);
-				stride_st  = glRefConfig.packedTexcoordDataSize;
-				stride_xyz = sizeof(vec3_t) + sizeof(uint32_t);
-#ifdef USE_VERT_TANGENT_SPACE
-				stride_xyz += sizeof(uint32_t);
-#endif
+				offset_tangent = offset_normal + sizeof(int16_t) * 4;
+				stride_st  = sizeof(vec2_t);
+				stride_xyz = sizeof(vec3_t) + sizeof(int16_t) * 4;
+				stride_xyz += sizeof(int16_t) * 4;
 				stride_normal = stride_tangent = stride_xyz;
 
 				dataSize = offset_xyz + surf->numVerts * mdvModel->numFrames * stride_xyz;
@@ -1334,13 +1328,9 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 				// no animation, interleave everything
 				offset_xyz     = 0;
 				offset_st      = offset_xyz + sizeof(vec3_t);
-				offset_normal  = offset_st + glRefConfig.packedTexcoordDataSize;
-				offset_tangent = offset_normal + sizeof(uint32_t);
-#ifdef USE_VERT_TANGENT_SPACE
-				stride_xyz = offset_tangent + sizeof(uint32_t);
-#else
-				stride_xyz = offset_normal + sizeof(uint32_t);
-#endif
+				offset_normal  = offset_st + sizeof(vec2_t);
+				offset_tangent = offset_normal + sizeof(int16_t) * 4;
+				stride_xyz = offset_tangent + sizeof(int16_t) * 4;
 				stride_st = stride_normal = stride_tangent = stride_xyz;
 
 				dataSize = surf->numVerts * stride_xyz;
@@ -1354,31 +1344,24 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 			{
 				st = surf->st;
 				for ( j = 0 ; j < surf->numVerts ; j++, st++ ) {
-					dataOfs += R_VaoPackTexCoord(data + dataOfs, st->st);
+					memcpy(data + dataOfs, &st->st, sizeof(vec2_t));
+					dataOfs += sizeof(st->st);
 				}
 
 				v = surf->verts;
 				for ( j = 0; j < surf->numVerts * mdvModel->numFrames ; j++, v++ )
 				{
-#ifdef USE_VERT_TANGENT_SPACE
-					vec3_t nxt;
-					vec4_t tangent;
-#endif
 					// xyz
 					memcpy(data + dataOfs, &v->xyz, sizeof(vec3_t));
 					dataOfs += sizeof(vec3_t);
 
 					// normal
-					dataOfs += R_VaoPackNormal(data + dataOfs, v->normal);
-
-#ifdef USE_VERT_TANGENT_SPACE
-					CrossProduct(v->normal, v->tangent, nxt);
-					VectorCopy(v->tangent, tangent);
-					tangent[3] = (DotProduct(nxt, v->bitangent) < 0.0f) ? -1.0f : 1.0f;
+					memcpy(data + dataOfs, &v->normal, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 
 					// tangent
-					dataOfs += R_VaoPackTangent(data + dataOfs, tangent);
-#endif
+					memcpy(data + dataOfs, &v->tangent, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 				}
 			}
 			else
@@ -1387,28 +1370,21 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 				st = surf->st;
 				for ( j = 0; j < surf->numVerts; j++, v++, st++ )
 				{
-#ifdef USE_VERT_TANGENT_SPACE
-					vec3_t nxt;
-					vec4_t tangent;
-#endif
 					// xyz
 					memcpy(data + dataOfs, &v->xyz, sizeof(vec3_t));
 					dataOfs += sizeof(v->xyz);
 
 					// st
-					dataOfs += R_VaoPackTexCoord(data + dataOfs, st->st);
+					memcpy(data + dataOfs, &st->st, sizeof(vec2_t));
+					dataOfs += sizeof(st->st);
 
 					// normal
-					dataOfs += R_VaoPackNormal(data + dataOfs, v->normal);
-
-#ifdef USE_VERT_TANGENT_SPACE
-					CrossProduct(v->normal, v->tangent, nxt);
-					VectorCopy(v->tangent, tangent);
-					tangent[3] = (DotProduct(nxt, v->bitangent) < 0.0f) ? -1.0f : 1.0f;
+					memcpy(data + dataOfs, &v->normal, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 
 					// tangent
-					dataOfs += R_VaoPackTangent(data + dataOfs, tangent);
-#endif
+					memcpy(data + dataOfs, &v->tangent, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 				}
 			}
 
@@ -1426,9 +1402,7 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].enabled = 1;
 			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].enabled = 1;
 			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].enabled = 1;
-#ifdef USE_VERT_TANGENT_SPACE
 			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].enabled = 1;
-#endif
 
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].count = 3;
 			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].count = 2;
@@ -1436,9 +1410,9 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].count = 4;
 
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].type = GL_FLOAT;
-			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].type = glRefConfig.packedTexcoordDataType;
-			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].type = glRefConfig.packedNormalDataType;
-			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].type = glRefConfig.packedNormalDataType;
+			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].type = GL_FLOAT;
+			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].type = GL_SHORT;
+			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].type = GL_SHORT;
 
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].normalized = GL_FALSE;
 			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].normalized = GL_FALSE;
@@ -1669,6 +1643,7 @@ static qboolean R_LoadTAN(model_t * mod, void *buffer, const char *modName)
 			{
 				unsigned lat, lng;
 				unsigned short normal;
+				vec3_t fNormal;
 
 				// ZTM: FIXME: tan changed to unsigned short, can LittleShort still be used?
 				v->xyz[0] = LittleShort(tanXyz->xyz[0]) * tanFrame->scale[0] + tanFrame->offset[0];
@@ -1686,9 +1661,11 @@ static qboolean R_LoadTAN(model_t * mod, void *buffer, const char *modName)
 				// decode Y as sin( lat ) * sin( long )
 				// decode Z as cos( long )
 
-				v->normal[0] = tr.sinTable[(lat+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK] * tr.sinTable[lng];
-				v->normal[1] = tr.sinTable[lat] * tr.sinTable[lng];
-				v->normal[2] = tr.sinTable[(lng+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK];
+				fNormal[0] = tr.sinTable[(lat+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK] * tr.sinTable[lng];
+				fNormal[1] = tr.sinTable[lat] * tr.sinTable[lng];
+				fNormal[2] = tr.sinTable[(lng+(FUNCTABLE_SIZE/4))&FUNCTABLE_MASK];
+
+				R_VaoPackNormal(v->normal, fNormal);
 			}
 		}
 
@@ -1781,14 +1758,12 @@ static qboolean R_LoadTAN(model_t * mod, void *buffer, const char *modName)
 			{
 				// vertex animation, store texcoords first, then position/normal/tangents
 				offset_st      = 0;
-				offset_xyz     = surf->numVerts * glRefConfig.packedTexcoordDataSize;
+				offset_xyz     = surf->numVerts * sizeof(vec2_t);
 				offset_normal  = offset_xyz + sizeof(vec3_t);
-				offset_tangent = offset_normal + sizeof(uint32_t);
-				stride_st  = glRefConfig.packedTexcoordDataSize;
-				stride_xyz = sizeof(vec3_t) + sizeof(uint32_t);
-#ifdef USE_VERT_TANGENT_SPACE
-				stride_xyz += sizeof(uint32_t);
-#endif
+				offset_tangent = offset_normal + sizeof(int16_t) * 4;
+				stride_st  = sizeof(vec2_t);
+				stride_xyz = sizeof(vec3_t) + sizeof(int16_t) * 4;
+				stride_xyz += sizeof(int16_t) * 4;
 				stride_normal = stride_tangent = stride_xyz;
 
 				dataSize = offset_xyz + surf->numVerts * mdvModel->numFrames * stride_xyz;
@@ -1798,13 +1773,9 @@ static qboolean R_LoadTAN(model_t * mod, void *buffer, const char *modName)
 				// no animation, interleave everything
 				offset_xyz     = 0;
 				offset_st      = offset_xyz + sizeof(vec3_t);
-				offset_normal  = offset_st + glRefConfig.packedTexcoordDataSize;
-				offset_tangent = offset_normal + sizeof(uint32_t);
-#ifdef USE_VERT_TANGENT_SPACE
-				stride_xyz = offset_tangent + sizeof(uint32_t);
-#else
-				stride_xyz = offset_normal + sizeof(uint32_t);
-#endif
+				offset_normal  = offset_st + sizeof(vec2_t);
+				offset_tangent = offset_normal + sizeof(int16_t) * 4;
+				stride_xyz = offset_tangent + sizeof(int16_t) * 4;
 				stride_st = stride_normal = stride_tangent = stride_xyz;
 
 				dataSize = surf->numVerts * stride_xyz;
@@ -1818,31 +1789,24 @@ static qboolean R_LoadTAN(model_t * mod, void *buffer, const char *modName)
 			{
 				st = surf->st;
 				for ( j = 0 ; j < surf->numVerts ; j++, st++ ) {
-					dataOfs += R_VaoPackTexCoord(data + dataOfs, st->st);
+					memcpy(data + dataOfs, &st->st, sizeof(vec2_t));
+					dataOfs += sizeof(st->st);
 				}
 
 				v = surf->verts;
 				for ( j = 0; j < surf->numVerts * mdvModel->numFrames ; j++, v++ )
 				{
-#ifdef USE_VERT_TANGENT_SPACE
-					vec3_t nxt;
-					vec4_t tangent;
-#endif
 					// xyz
 					memcpy(data + dataOfs, &v->xyz, sizeof(vec3_t));
 					dataOfs += sizeof(vec3_t);
 
 					// normal
-					dataOfs += R_VaoPackNormal(data + dataOfs, v->normal);
-
-#ifdef USE_VERT_TANGENT_SPACE
-					CrossProduct(v->normal, v->tangent, nxt);
-					VectorCopy(v->tangent, tangent);
-					tangent[3] = (DotProduct(nxt, v->bitangent) < 0.0f) ? -1.0f : 1.0f;
+					memcpy(data + dataOfs, &v->normal, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 
 					// tangent
-					dataOfs += R_VaoPackTangent(data + dataOfs, tangent);
-#endif
+					memcpy(data + dataOfs, &v->tangent, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 				}
 			}
 			else
@@ -1851,28 +1815,21 @@ static qboolean R_LoadTAN(model_t * mod, void *buffer, const char *modName)
 				st = surf->st;
 				for ( j = 0; j < surf->numVerts; j++, v++, st++ )
 				{
-#ifdef USE_VERT_TANGENT_SPACE
-					vec3_t nxt;
-					vec4_t tangent;
-#endif
 					// xyz
 					memcpy(data + dataOfs, &v->xyz, sizeof(vec3_t));
 					dataOfs += sizeof(v->xyz);
 
 					// st
-					dataOfs += R_VaoPackTexCoord(data + dataOfs, st->st);
+					memcpy(data + dataOfs, &st->st, sizeof(vec2_t));
+					dataOfs += sizeof(st->st);
 
 					// normal
-					dataOfs += R_VaoPackNormal(data + dataOfs, v->normal);
-
-#ifdef USE_VERT_TANGENT_SPACE
-					CrossProduct(v->normal, v->tangent, nxt);
-					VectorCopy(v->tangent, tangent);
-					tangent[3] = (DotProduct(nxt, v->bitangent) < 0.0f) ? -1.0f : 1.0f;
+					memcpy(data + dataOfs, &v->normal, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 
 					// tangent
-					dataOfs += R_VaoPackTangent(data + dataOfs, tangent);
-#endif
+					memcpy(data + dataOfs, &v->tangent, sizeof(int16_t) * 4);
+					dataOfs += sizeof(int16_t) * 4;
 				}
 			}
 
@@ -1890,9 +1847,7 @@ static qboolean R_LoadTAN(model_t * mod, void *buffer, const char *modName)
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].enabled = 1;
 			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].enabled = 1;
 			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].enabled = 1;
-#ifdef USE_VERT_TANGENT_SPACE
 			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].enabled = 1;
-#endif
 
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].count = 3;
 			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].count = 2;
@@ -1900,9 +1855,9 @@ static qboolean R_LoadTAN(model_t * mod, void *buffer, const char *modName)
 			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].count = 4;
 
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].type = GL_FLOAT;
-			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].type = glRefConfig.packedTexcoordDataType;
-			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].type = glRefConfig.packedNormalDataType;
-			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].type = glRefConfig.packedNormalDataType;
+			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].type = GL_FLOAT;
+			vaoSurf->vao->attribs[ATTR_INDEX_NORMAL  ].type = GL_SHORT;
+			vaoSurf->vao->attribs[ATTR_INDEX_TANGENT ].type = GL_SHORT;
 
 			vaoSurf->vao->attribs[ATTR_INDEX_POSITION].normalized = GL_FALSE;
 			vaoSurf->vao->attribs[ATTR_INDEX_TEXCOORD].normalized = GL_FALSE;

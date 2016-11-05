@@ -371,7 +371,7 @@ static void R_AddLeafSurfaces( mnode_t *node, int dlightBits ) {
 R_RecursiveWorldNode
 ================
 */
-static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits ) {
+static void R_RecursiveWorldNode( mnode_t *node, unsigned int planeBits, unsigned int dlightBits ) {
 	int i, r;
 	dlight_t    *dl;
 

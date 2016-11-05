@@ -1656,8 +1656,7 @@ void CL_Disconnect( qboolean showMainMenu ) {
 		for (i = 0; i < MAX_CLIENTS; i++) {
 			opus_decoder_destroy(clc.opusDecoder[i]);
 		}
-		// ZTM: FIXME: ### Should this be voipCodecInitialized? merge into ioq3?
-		//clc.speexInitialized = qfalse;
+		clc.voipCodecInitialized = qfalse;
 	}
 	Cmd_RemoveCommand ("voip");
 #endif
@@ -3547,7 +3546,7 @@ void CL_Init( void ) {
 	cl_cURLLib = Cvar_Get("cl_cURLLib", DEFAULT_CURL_LIB, CVAR_ARCHIVE);
 #endif
 
-#ifdef MACOS_X
+#ifdef __APPLE__
 	// In game video is REALLY slow in Mac OS X right now due to driver slowness
 	cl_inGameVideo = Cvar_Get ("r_inGameVideo", "0", CVAR_ARCHIVE);
 #else
@@ -3556,7 +3555,7 @@ void CL_Init( void ) {
 
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
 
-#ifdef MACOS_X
+#ifdef __APPLE__
 	// Input is jittery on OS X w/o this
 	m_filter = Cvar_Get ("m_filter", "1", CVAR_ARCHIVE);
 #else
