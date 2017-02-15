@@ -535,8 +535,6 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 
 	float overbright = (isBlend || is2DDraw) ? 1.0f : (float)(1 << tr.overbrightBits);
 
-	fog_t *fog;
-
 	baseColor[0] = 
 	baseColor[1] =
 	baseColor[2] =
