@@ -525,7 +525,7 @@ void PC_PrintDefineHashTable(define_t **definehash)
 
 int PC_NameHash(char *name)
 {
-	int register hash, i;
+	int hash, i;
 
 	hash = 0;
 	for (i = 0; name[i] != '\0'; i++)
@@ -2868,7 +2868,7 @@ void PC_SetIncludePath(source_t *source, char *path)
 {
 	size_t len;
 
-	Q_strncpyz(source->includepath, path, MAX_PATH-1);
+	Q_strncpyz(source->includepath, path, sizeof(source->includepath)-1);
 
 	len = strlen(source->includepath);
 	//add trailing path seperator
@@ -2909,7 +2909,7 @@ source_t *LoadSourceFile(const char *filename)
 	source = (source_t *) GetMemory(sizeof(source_t));
 	Com_Memset(source, 0, sizeof(source_t));
 
-	strncpy(source->filename, filename, MAX_PATH);
+	Q_strncpyz(source->filename, filename, sizeof(source->filename));
 	source->scriptstack = script;
 	source->tokens = NULL;
 	source->defines = NULL;
@@ -2942,7 +2942,7 @@ source_t *LoadSourceMemory(char *ptr, int length, char *name)
 	source = (source_t *) GetMemory(sizeof(source_t));
 	Com_Memset(source, 0, sizeof(source_t));
 
-	strncpy(source->filename, name, MAX_PATH);
+	Q_strncpyz(source->filename, name, sizeof(source->filename));
 	source->scriptstack = script;
 	source->tokens = NULL;
 	source->defines = NULL;

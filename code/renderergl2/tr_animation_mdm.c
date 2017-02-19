@@ -1637,8 +1637,8 @@ void RB_MDMSurfaceAnim( mdmSurface_t *surface ) {
 
 		R_VaoPackNormal(tess.normal[baseVertex + j], newNormal);
 
-		tess.texCoords[baseVertex + j][0][0] = v->texCoords[0];
-		tess.texCoords[baseVertex + j][0][1] = v->texCoords[1];
+		tess.texCoords[baseVertex + j][0] = v->texCoords[0];
+		tess.texCoords[baseVertex + j][1] = v->texCoords[1];
 
 		v = (mdmVertex_t *)&v->weights[v->numWeights];
 	}

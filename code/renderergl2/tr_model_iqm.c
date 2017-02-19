@@ -1042,7 +1042,7 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 	vec4_t		*outXYZ;
 	int16_t	*outNormal;
 	int16_t	*outTangent;
-	vec2_t		(*outTexCoord)[2];
+	vec2_t		*outTexCoord;
 	uint16_t *outColor;
 
 	iqmData_t	*skeleton = R_GetIQMModelDataByHandle( backEnd.currentEntity->e.frameModel, data );
@@ -1127,10 +1127,8 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 		nrmMat[ 7] = vtxMat[ 2]*vtxMat[ 4] - vtxMat[ 0]*vtxMat[ 6];
 		nrmMat[ 8] = vtxMat[ 0]*vtxMat[ 5] - vtxMat[ 1]*vtxMat[ 4];
 
-		(*outTexCoord)[0][0] = data->texcoords[2*vtx + 0];
-		(*outTexCoord)[0][1] = data->texcoords[2*vtx + 1];
-		(*outTexCoord)[1][0] = (*outTexCoord)[0][0];
-		(*outTexCoord)[1][1] = (*outTexCoord)[0][1];
+		(*outTexCoord)[0] = data->texcoords[2*vtx + 0];
+		(*outTexCoord)[1] = data->texcoords[2*vtx + 1];
 
 		(*outXYZ)[0] =
 			vtxMat[ 0] * data->positions[3*vtx+0] +

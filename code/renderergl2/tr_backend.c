@@ -936,29 +936,29 @@ const void *RB_StretchPic ( const void *data ) {
 	tess.xyz[ numVerts ][1] = cmd->y;
 	tess.xyz[ numVerts ][2] = 0;
 
-	tess.texCoords[ numVerts ][0][0] = cmd->s1;
-	tess.texCoords[ numVerts ][0][1] = cmd->t1;
+	tess.texCoords[ numVerts ][0] = cmd->s1;
+	tess.texCoords[ numVerts ][1] = cmd->t1;
 
 	tess.xyz[ numVerts + 1 ][0] = cmd->x + cmd->w;
 	tess.xyz[ numVerts + 1 ][1] = cmd->y;
 	tess.xyz[ numVerts + 1 ][2] = 0;
 
-	tess.texCoords[ numVerts + 1 ][0][0] = cmd->s2;
-	tess.texCoords[ numVerts + 1 ][0][1] = cmd->t1;
+	tess.texCoords[ numVerts + 1 ][0] = cmd->s2;
+	tess.texCoords[ numVerts + 1 ][1] = cmd->t1;
 
 	tess.xyz[ numVerts + 2 ][0] = cmd->x + cmd->w;
 	tess.xyz[ numVerts + 2 ][1] = cmd->y + cmd->h;
 	tess.xyz[ numVerts + 2 ][2] = 0;
 
-	tess.texCoords[ numVerts + 2 ][0][0] = cmd->s2;
-	tess.texCoords[ numVerts + 2 ][0][1] = cmd->t2;
+	tess.texCoords[ numVerts + 2 ][0] = cmd->s2;
+	tess.texCoords[ numVerts + 2 ][1] = cmd->t2;
 
 	tess.xyz[ numVerts + 3 ][0] = cmd->x;
 	tess.xyz[ numVerts + 3 ][1] = cmd->y + cmd->h;
 	tess.xyz[ numVerts + 3 ][2] = 0;
 
-	tess.texCoords[ numVerts + 3 ][0][0] = cmd->s1;
-	tess.texCoords[ numVerts + 3 ][0][1] = cmd->t2;
+	tess.texCoords[ numVerts + 3 ][0] = cmd->s1;
+	tess.texCoords[ numVerts + 3 ][1] = cmd->t2;
 
 	return (const void *)(cmd + 1);
 }
@@ -1013,8 +1013,8 @@ const void* RB_Draw2dPolys( const void* data ) {
 		tess.xyz[ tess.numVertexes ][1] = cmd->verts[i].xyz[1];
 		tess.xyz[ tess.numVertexes ][2] = 0;
 
-		tess.texCoords[ tess.numVertexes ][0][0] = cmd->verts[i].st[0];
-		tess.texCoords[ tess.numVertexes ][0][1] = cmd->verts[i].st[1];
+		tess.texCoords[ tess.numVertexes ][0] = cmd->verts[i].st[0];
+		tess.texCoords[ tess.numVertexes ][1] = cmd->verts[i].st[1];
 
 		{
 			uint16_t color[4];
@@ -1097,32 +1097,32 @@ const void *RB_RotatedPic( const void *data ) {
 	tess.xyz[ numVerts ][1] = cmd->y + ( sin( angle ) * cmd->h );
 	tess.xyz[ numVerts ][2] = 0;
 
-	tess.texCoords[ numVerts ][0][0] = cmd->s1;
-	tess.texCoords[ numVerts ][0][1] = cmd->t1;
+	tess.texCoords[ numVerts ][0] = cmd->s1;
+	tess.texCoords[ numVerts ][1] = cmd->t1;
 
 	angle = cmd->angle * pi2 + 0.25 * pi2;
 	tess.xyz[ numVerts + 1 ][0] = cmd->x + ( cos( angle ) * cmd->w );
 	tess.xyz[ numVerts + 1 ][1] = cmd->y + ( sin( angle ) * cmd->h );
 	tess.xyz[ numVerts + 1 ][2] = 0;
 
-	tess.texCoords[ numVerts + 1 ][0][0] = cmd->s2;
-	tess.texCoords[ numVerts + 1 ][0][1] = cmd->t1;
+	tess.texCoords[ numVerts + 1 ][0] = cmd->s2;
+	tess.texCoords[ numVerts + 1 ][1] = cmd->t1;
 
 	angle = cmd->angle * pi2 + 0.50 * pi2;
 	tess.xyz[ numVerts + 2 ][0] = cmd->x + ( cos( angle ) * cmd->w );
 	tess.xyz[ numVerts + 2 ][1] = cmd->y + ( sin( angle ) * cmd->h );
 	tess.xyz[ numVerts + 2 ][2] = 0;
 
-	tess.texCoords[ numVerts + 2 ][0][0] = cmd->s2;
-	tess.texCoords[ numVerts + 2 ][0][1] = cmd->t2;
+	tess.texCoords[ numVerts + 2 ][0] = cmd->s2;
+	tess.texCoords[ numVerts + 2 ][1] = cmd->t2;
 
 	angle = cmd->angle * pi2 + 0.75 * pi2;
 	tess.xyz[ numVerts + 3 ][0] = cmd->x + ( cos( angle ) * cmd->w );
 	tess.xyz[ numVerts + 3 ][1] = cmd->y + ( sin( angle ) * cmd->h );
 	tess.xyz[ numVerts + 3 ][2] = 0;
 
-	tess.texCoords[ numVerts + 3 ][0][0] = cmd->s1;
-	tess.texCoords[ numVerts + 3 ][0][1] = cmd->t2;
+	tess.texCoords[ numVerts + 3 ][0] = cmd->s1;
+	tess.texCoords[ numVerts + 3 ][1] = cmd->t2;
 
 	return (const void *)( cmd + 1 );
 }
@@ -1195,29 +1195,29 @@ const void *RB_StretchPicGradient( const void *data ) {
 	tess.xyz[ numVerts ][1] = cmd->y;
 	tess.xyz[ numVerts ][2] = 0;
 
-	tess.texCoords[ numVerts ][0][0] = cmd->s1;
-	tess.texCoords[ numVerts ][0][1] = cmd->t1;
+	tess.texCoords[ numVerts ][0] = cmd->s1;
+	tess.texCoords[ numVerts ][1] = cmd->t1;
 
 	tess.xyz[ numVerts + 1 ][0] = cmd->x + cmd->w;
 	tess.xyz[ numVerts + 1 ][1] = cmd->y;
 	tess.xyz[ numVerts + 1 ][2] = 0;
 
-	tess.texCoords[ numVerts + 1 ][0][0] = cmd->s2;
-	tess.texCoords[ numVerts + 1 ][0][1] = cmd->t1;
+	tess.texCoords[ numVerts + 1 ][0] = cmd->s2;
+	tess.texCoords[ numVerts + 1 ][1] = cmd->t1;
 
 	tess.xyz[ numVerts + 2 ][0] = cmd->x + cmd->w;
 	tess.xyz[ numVerts + 2 ][1] = cmd->y + cmd->h;
 	tess.xyz[ numVerts + 2 ][2] = 0;
 
-	tess.texCoords[ numVerts + 2 ][0][0] = cmd->s2;
-	tess.texCoords[ numVerts + 2 ][0][1] = cmd->t2;
+	tess.texCoords[ numVerts + 2 ][0] = cmd->s2;
+	tess.texCoords[ numVerts + 2 ][1] = cmd->t2;
 
 	tess.xyz[ numVerts + 3 ][0] = cmd->x;
 	tess.xyz[ numVerts + 3 ][1] = cmd->y + cmd->h;
 	tess.xyz[ numVerts + 3 ][2] = 0;
 
-	tess.texCoords[ numVerts + 3 ][0][0] = cmd->s1;
-	tess.texCoords[ numVerts + 3 ][0][1] = cmd->t2;
+	tess.texCoords[ numVerts + 3 ][0] = cmd->s1;
+	tess.texCoords[ numVerts + 3 ][1] = cmd->t2;
 
 	return (const void *)( cmd + 1 );
 }
@@ -1271,7 +1271,9 @@ const void	*RB_DrawSurfs( const void *data ) {
 		else if (tr.renderFbo == NULL && tr.renderDepthImage)
 		{
 			// If we're rendering directly to the screen, copy the depth to a texture
-			qglCopyTextureImage2DEXT(tr.renderDepthImage->texnum, GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth, glConfig.vidHeight, 0);
+			// This is incredibly slow on Intel Graphics, so just skip it on there
+			if (!glRefConfig.intelGraphics)
+				qglCopyTextureSubImage2DEXT(tr.renderDepthImage->texnum, GL_TEXTURE_2D, 0, 0, 0, 0, 0, glConfig.vidWidth, glConfig.vidHeight);
 		}
 
 		if (tr.hdrDepthFbo)
@@ -1783,14 +1785,14 @@ const void *RB_CapShadowMap(const void *data)
 		{
 			if (tr.shadowCubemaps[cmd->map])
 			{
-				qglCopyTextureImage2DEXT(tr.shadowCubemaps[cmd->map]->texnum, GL_TEXTURE_CUBE_MAP_POSITIVE_X + cmd->cubeSide, 0, GL_RGBA8, backEnd.refdef.x, glConfig.vidHeight - ( backEnd.refdef.y + PSHADOW_MAP_SIZE ), PSHADOW_MAP_SIZE, PSHADOW_MAP_SIZE, 0);
+				qglCopyTextureSubImage2DEXT(tr.shadowCubemaps[cmd->map]->texnum, GL_TEXTURE_CUBE_MAP_POSITIVE_X + cmd->cubeSide, 0, 0, 0, backEnd.refdef.x, glConfig.vidHeight - ( backEnd.refdef.y + PSHADOW_MAP_SIZE ), PSHADOW_MAP_SIZE, PSHADOW_MAP_SIZE);
 			}
 		}
 		else
 		{
 			if (tr.pshadowMaps[cmd->map])
 			{
-				qglCopyTextureImage2DEXT(tr.pshadowMaps[cmd->map]->texnum, GL_TEXTURE_2D, 0, GL_RGBA8, backEnd.refdef.x, glConfig.vidHeight - (backEnd.refdef.y + PSHADOW_MAP_SIZE), PSHADOW_MAP_SIZE, PSHADOW_MAP_SIZE, 0);
+				qglCopyTextureSubImage2DEXT(tr.pshadowMaps[cmd->map]->texnum, GL_TEXTURE_2D, 0, 0, 0, backEnd.refdef.x, glConfig.vidHeight - (backEnd.refdef.y + PSHADOW_MAP_SIZE), PSHADOW_MAP_SIZE, PSHADOW_MAP_SIZE);
 			}
 		}
 	}
