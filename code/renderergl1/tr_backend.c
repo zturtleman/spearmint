@@ -353,26 +353,36 @@ void GL_State( unsigned long stateBits )
 	//
 	if ( diff & GLS_ATEST_BITS )
 	{
-		switch ( stateBits & GLS_ATEST_BITS )
+		float referenceValue = ( ( stateBits & GLS_ATEST_REF_BITS ) >> GLS_ATEST_REF_SHIFT ) / 100.0f;
+
+		switch ( stateBits & GLS_ATEST_FUNC_BITS )
 		{
 		case 0:
 			qglDisable( GL_ALPHA_TEST );
 			break;
-		case GLS_ATEST_GT_0:
+		case GLS_ATEST_GREATER:
 			qglEnable( GL_ALPHA_TEST );
-			qglAlphaFunc( GL_GREATER, 0.0f );
+			qglAlphaFunc( GL_GREATER, referenceValue );
 			break;
-		case GLS_ATEST_LT_80:
+		case GLS_ATEST_LESS:
 			qglEnable( GL_ALPHA_TEST );
-			qglAlphaFunc( GL_LESS, 0.5f );
+			qglAlphaFunc( GL_LESS, referenceValue );
 			break;
-		case GLS_ATEST_GE_80:
+		case GLS_ATEST_GREATEREQUAL:
 			qglEnable( GL_ALPHA_TEST );
-			qglAlphaFunc( GL_GEQUAL, 0.5f );
+			qglAlphaFunc( GL_GEQUAL, referenceValue );
 			break;
-		case GLS_ATEST_GE_C0:
+		case GLS_ATEST_LESSEQUAL:
 			qglEnable( GL_ALPHA_TEST );
-			qglAlphaFunc( GL_GEQUAL, 0.75f );
+			qglAlphaFunc( GL_LEQUAL, referenceValue );
+			break;
+		case GLS_ATEST_EQUAL:
+			qglEnable( GL_ALPHA_TEST );
+			qglAlphaFunc( GL_EQUAL, referenceValue );
+			break;
+		case GLS_ATEST_NOTEQUAL:
+			qglEnable( GL_ALPHA_TEST );
+			qglAlphaFunc( GL_NOTEQUAL, referenceValue );
 			break;
 		default:
 			assert( 0 );

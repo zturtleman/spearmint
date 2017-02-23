@@ -1404,6 +1404,67 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			atestBits = NameToAFunc( token );
 		}
 		//
+		// alphaTest <func> <value>
+		//
+		else if ( !Q_stricmp( token, "alphaTest" ) )
+		{
+			float fvalue;
+
+			token = COM_ParseExt( text, qfalse );
+			if ( !token[0] )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing alpha func for 'alphaTest' keyword in shader '%s'\n", shader.name );
+				return qfalse;
+			}
+
+			if ( !Q_stricmp( token, "greaterEqual" ) )
+			{
+				atestBits = GLS_ATEST_GREATEREQUAL;
+			}
+			else if ( !Q_stricmp( token, "greater" ) )
+			{
+				atestBits = GLS_ATEST_GREATER;
+			}
+			else if ( !Q_stricmp( token, "less" ) )
+			{
+				atestBits = GLS_ATEST_LESS;
+			}
+			else if ( !Q_stricmp( token, "lessEqual" ) )
+			{
+				atestBits = GLS_ATEST_LESSEQUAL;
+			}
+			else if ( !Q_stricmp( token, "equal" ) )
+			{
+				atestBits = GLS_ATEST_EQUAL;
+			}
+			else if ( !Q_stricmp( token, "notEqual" ) )
+			{
+				atestBits = GLS_ATEST_NOTEQUAL;
+			}
+			else
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: invalid alpha func name '%s' for 'alphaTest' in shader '%s'\n", token, shader.name );
+				return qfalse;
+			}
+
+			token = COM_ParseExt( text, qfalse );
+			if ( !token[0] )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing alpha reference value for 'alphaTest' keyword in shader '%s'\n", shader.name );
+				return qfalse;
+			}
+
+			fvalue = atof( token );
+
+			if ( fvalue < 0.0f || fvalue > 1.0f )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: invalid alpha reference value '%g' for 'alphaTest' in shader '%s'\n", fvalue, shader.name );
+				return qfalse;
+			}
+
+			atestBits |= (unsigned)( fvalue * 100 ) << GLS_ATEST_REF_SHIFT;
+		}
+		//
 		// depthFunc <func>
 		//
 		else if ( !Q_stricmp( token, "depthfunc" ) )

@@ -291,22 +291,30 @@ void GL_State( unsigned long stateBits )
 
 		if (newState != 0 && storedState != newState)
 		{
+			float referenceValue = ( ( newState & GLS_ATEST_REF_BITS ) >> GLS_ATEST_REF_SHIFT ) / 100.0f;
+
 			glState.storedGlState &= ~GLS_ATEST_BITS;
 			glState.storedGlState |= newState;
 
-			switch ( newState )
+			switch ( newState & GLS_ATEST_FUNC_BITS )
 			{
-			case GLS_ATEST_GT_0:
-				qglAlphaFunc( GL_GREATER, 0.0f );
+			case GLS_ATEST_GREATER:
+				qglAlphaFunc( GL_GREATER, referenceValue );
 				break;
-			case GLS_ATEST_LT_80:
-				qglAlphaFunc( GL_LESS, 0.5f );
+			case GLS_ATEST_LESS:
+				qglAlphaFunc( GL_LESS, referenceValue );
 				break;
-			case GLS_ATEST_GE_80:
-				qglAlphaFunc( GL_GEQUAL, 0.5f );
+			case GLS_ATEST_GREATEREQUAL:
+				qglAlphaFunc( GL_GEQUAL, referenceValue );
 				break;
-			case GLS_ATEST_GE_C0:
-				qglAlphaFunc( GL_GEQUAL, 0.75f );
+			case GLS_ATEST_LESSEQUAL:
+				qglAlphaFunc( GL_LEQUAL, referenceValue );
+				break;
+			case GLS_ATEST_EQUAL:
+				qglAlphaFunc( GL_EQUAL, referenceValue );
+				break;
+			case GLS_ATEST_NOTEQUAL:
+				qglAlphaFunc( GL_NOTEQUAL, referenceValue );
 				break;
 			}
 		}
