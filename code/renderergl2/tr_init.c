@@ -243,6 +243,7 @@ cvar_t	*r_fontBorderWidth;
 cvar_t	*r_fontForceAutoHint;
 
 cvar_t	*r_marksOnTriangleMeshes;
+cvar_t	*r_marksOnBrushModels;
 
 cvar_t	*r_aviMotionJpegQuality;
 cvar_t	*r_screenshotJpegQuality;
@@ -1436,6 +1437,7 @@ void R_Register( void )
 	r_shadows = ri.Cvar_Get( "cg_shadows", "1", 0 );
 
 	r_marksOnTriangleMeshes = ri.Cvar_Get("r_marksOnTriangleMeshes", "0", CVAR_ARCHIVE);
+	r_marksOnBrushModels = ri.Cvar_Get("r_marksOnBrushModels", "1", CVAR_ARCHIVE);
 
 	// ZTM: FIXME: r_useGlFog doesn't work correctly with some multistage shaders. So when r_vertexLight is 0 it's fine.
 	r_useGlFog = ri.Cvar_Get("r_useGlFog", "0", CVAR_CHEAT);

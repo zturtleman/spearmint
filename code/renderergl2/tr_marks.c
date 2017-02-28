@@ -467,36 +467,38 @@ int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projectio
 	//assert(numsurfaces <= 64);
 	//assert(numsurfaces != 64);
 
-	// add bmodel surfaces
-	for ( j = 1; j < tr.world->numBModels; j++ ) {
-		vec3_t localProjection, bmodelOrigin, bmodelAxis[3];
+	if (r_marksOnBrushModels->integer) {
+		// add bmodel surfaces
+		for ( j = 1; j < tr.world->numBModels; j++ ) {
+			vec3_t localProjection, bmodelOrigin, bmodelAxis[3];
 
-		R_TransformMarkProjection( j, projection, localProjection, 0, NULL, NULL, NULL, NULL );
-		R_GetBmodelInfo( j, NULL, bmodelOrigin, bmodelAxis );
+			R_TransformMarkProjection( j, projection, localProjection, 0, NULL, NULL, NULL, NULL );
+			R_GetBmodelInfo( j, NULL, bmodelOrigin, bmodelAxis );
 
-		VectorNormalize2( localProjection, localProjectionDir );
-		// find all the brushes that are to be considered
-		ClearBounds( mins, maxs );
-		for ( i = 0 ; i < numPoints ; i++ ) {
-			vec3_t	temp;
-			vec3_t	delta;
-			vec3_t	localPoint;
+			VectorNormalize2( localProjection, localProjectionDir );
+			// find all the brushes that are to be considered
+			ClearBounds( mins, maxs );
+			for ( i = 0 ; i < numPoints ; i++ ) {
+				vec3_t	temp;
+				vec3_t	delta;
+				vec3_t	localPoint;
 
-			// convert point to bmodel local space
-			VectorSubtract( points[i], bmodelOrigin, delta );
-			localPoint[0] = DotProduct( delta, bmodelAxis[0] );
-			localPoint[1] = DotProduct( delta, bmodelAxis[1] );
-			localPoint[2] = DotProduct( delta, bmodelAxis[2] );
+				// convert point to bmodel local space
+				VectorSubtract( points[i], bmodelOrigin, delta );
+				localPoint[0] = DotProduct( delta, bmodelAxis[0] );
+				localPoint[1] = DotProduct( delta, bmodelAxis[1] );
+				localPoint[2] = DotProduct( delta, bmodelAxis[2] );
 
-			AddPointToBounds( localPoint, mins, maxs );
-			VectorAdd( localPoint, localProjection, temp );
-			AddPointToBounds( temp, mins, maxs );
-			// make sure we get all the leafs (also the one(s) in front of the hit surface)
-			VectorMA( localPoint, -20, localProjectionDir, temp );
-			AddPointToBounds( temp, mins, maxs );
+				AddPointToBounds( localPoint, mins, maxs );
+				VectorAdd( localPoint, localProjection, temp );
+				AddPointToBounds( temp, mins, maxs );
+				// make sure we get all the leafs (also the one(s) in front of the hit surface)
+				VectorMA( localPoint, -20, localProjectionDir, temp );
+				AddPointToBounds( temp, mins, maxs );
+			}
+
+			R_BmodelSurfaces( j, mins, maxs, surfaces, surfacesBmodel, 64, &numsurfaces, localProjectionDir);
 		}
-
-		R_BmodelSurfaces( j, mins, maxs, surfaces, surfacesBmodel, 64, &numsurfaces, localProjectionDir);
 	}
 
 	returnedPoints = 0;
