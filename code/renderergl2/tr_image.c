@@ -2663,40 +2663,61 @@ R_CreateDlightImage
 #define	DLIGHT_SIZE	128
 static void R_CreateDlightImage( void ) {
 	int		x,y;
-	byte	data[DLIGHT_SIZE][DLIGHT_SIZE][4];
+	byte	data[DLIGHT_SIZE*DLIGHT_SIZE][4];
 	int		b;
+	int		dlightSize;
+
+	dlightSize = r_dlightImageSize->integer;
+
+	// check if not a power of two
+	if ( ( dlightSize & ( dlightSize - 1 ) ) != 0 ) {
+		if (dlightSize < 16)
+			dlightSize = 16;
+		else if (dlightSize < 32)
+			dlightSize = 32;
+		else if (dlightSize < 64)
+			dlightSize = 64;
+		else
+			dlightSize = 128;
+
+		ri.Printf( PRINT_WARNING, "WARNING: r_dlightImageSize (%d) is not a power of two, using next power of two (%d).\n", r_dlightImageSize->integer, dlightSize );
+	}
 
 	// make a centered inverse-square falloff blob for dynamic lighting
-	for (x=0 ; x<DLIGHT_SIZE ; x++) {
-		for (y=0 ; y<DLIGHT_SIZE ; y++) {
+	for (x = 0; x < dlightSize; x++) {
+		for (y = 0; y < dlightSize; y++) {
 			float	d;
 
-			d = ( DLIGHT_SIZE/2 - 0.5f - x ) * ( DLIGHT_SIZE/2 - 0.5f - x ) +
-				( DLIGHT_SIZE/2 - 0.5f - y ) * ( DLIGHT_SIZE/2 - 0.5f - y );
-			b = DLIGHT_SIZE * DLIGHT_SIZE * 15.625f / d;
-			if (b > 255) {
-				b = 255;
-#if DLIGHT_SIZE >= 64
-			// ZTM: Fade outside edge to look similar to strected 16x16 image.
-			// I choose fading to black using 16 steps, unrelated to original size.
-			// 75 - (FADE_STEPS / 2) = 67. 67 + FADE_STEPS = 83.
-			} else if ( b < 83 && b > 67 ) {
-				b = ( b - 67 ) / 16.0f * 83;
-			} else if ( b <= 67 ) {
-				b = 0;
+			d = ( dlightSize/2 - 0.5f - x ) * ( dlightSize/2 - 0.5f - x ) +
+				( dlightSize/2 - 0.5f - y ) * ( dlightSize/2 - 0.5f - y );
+			b = dlightSize * dlightSize * 15.625f / d;
+
+			if (dlightSize >= 64) {
+				// ZTM: Fade outside edge to look similar to the original 16x16 strected image.
+				// Fade to black using 16 steps, unrelated to original size.
+				// 75 - (FADE_STEPS / 2) = 67. 67 + FADE_STEPS = 83.
+				if (b > 255) {
+					b = 255;
+				} else if (b < 83 && b > 67) {
+					b = ( b - 67 ) / 16.0f * 83;
+				} else if (b <= 67) {
+					b = 0;
+				}
+			} else {
+				if (b > 255) {
+					b = 255;
+				} else if (b < 75) {
+					b = 0;
+				}
 			}
-#else
-			} else if ( b < 75 ) {
-				b = 0;
-			}
-#endif
-			data[y][x][0] = 
-			data[y][x][1] = 
-			data[y][x][2] = b;
-			data[y][x][3] = 255;			
+
+			data[y*dlightSize + x][0] =
+			data[y*dlightSize + x][1] =
+			data[y*dlightSize + x][2] = b;
+			data[y*dlightSize + x][3] = 255;
 		}
 	}
-	tr.dlightImage = R_CreateImage("*dlight", (byte *)data, DLIGHT_SIZE, DLIGHT_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0 );
+	tr.dlightImage = R_CreateImage("*dlight", (byte *)data, dlightSize, dlightSize, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0 );
 }
 
 
