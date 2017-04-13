@@ -281,7 +281,6 @@ typedef struct {
 	int			zipFilePos;
 	int			zipFileLen;
 	qboolean	zipFile;
-	qboolean	streamed;
 	char		name[MAX_ZPATH];
 } fileHandleData_t;
 
@@ -1407,12 +1406,18 @@ long FS_FOpenFileRead(const char *filename, fileHandle_t *file, qboolean uniqueF
 {
 	searchpath_t *search;
 	long len;
+	qboolean isLocalConfig;
 
 	if(!fs_searchpaths)
 		Com_Error(ERR_FATAL, "Filesystem call made without initialization");
 
+	isLocalConfig = !strcmp(filename, "autoexec.cfg") || !strcmp(filename, Q3CONFIG_CFG);
 	for(search = fs_searchpaths; search; search = search->next)
 	{
+		// autoexec.cfg and q3config.cfg can only be loaded outside of pk3 files.
+		if (isLocalConfig && search->pack)
+			continue;
+
 		len = FS_FOpenFileReadDir(filename, search, file, uniqueFILE, qfalse);
 
 		if(file == NULL)
@@ -1677,25 +1682,6 @@ FS_Read
 Properly handles partial reads
 =================
 */
-int FS_Read2( void *buffer, int len, fileHandle_t f ) {
-	if ( !fs_searchpaths ) {
-		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
-	}
-
-	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
-		return 0;
-	}
-	if (fsh[f].streamed) {
-		int r;
-		fsh[f].streamed = qfalse;
-		r = FS_Read( buffer, len, f );
-		fsh[f].streamed = qtrue;
-		return r;
-	} else {
-		return FS_Read( buffer, len, f);
-	}
-}
-
 int FS_Read( void *buffer, int len, fileHandle_t f ) {
 	int		block, remaining;
 	int		read;
@@ -1833,14 +1819,6 @@ int FS_Seek( fileHandle_t f, long offset, int origin ) {
 
 	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
 		return -1;
-	}
-
-	if (fsh[f].streamed) {
-		int r;
-		fsh[f].streamed = qfalse;
-		r = FS_Seek( f, offset, origin );
-		fsh[f].streamed = qtrue;
-		return r;
 	}
 
 	if (fsh[f].zipFile == qtrue) {
@@ -2872,14 +2850,18 @@ void FS_GetModDescription( const char *modDir, char *description, int descriptio
 FS_GetModList
 
 Returns a list of mod directory names
-A mod directory is a peer to baseq3 with a pk3 in it
+A mod directory is a peer to baseq3 with a pk3 or pk3dir in it
 The directories are searched in base path, cd path and home path
 ================
 */
 int	FS_GetModList( char *listbuf, int bufsize ) {
-	int		nMods, i, j, pak, nTotal, nLen, nPaks, nPotential, nDescLen;
+	int i, j, k, pak;
+	int nMods, nPotential;
+	int nPaks, nDirs, nPakDirs;
+	int nTotal, nLen, nDescLen;
 	char **pFiles = NULL;
 	char **pPaks = NULL;
+	char **pDirs = NULL;
 	char *name, *path;
 	char description[MAX_OSPATH];
 
@@ -2901,74 +2883,109 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 
 	nPotential = Sys_CountFileList(pFiles);
 
-	for ( i = 0 ; i < nPotential ; i++ ) {
+	for (i = 0; i < nPotential; i++) {
 		name = pFiles[i];
+
 		// NOTE: cleaner would involve more changes
 		// ignore duplicate mod directories
-		if (i!=0) {
+		if (i != 0) {
 			bDrop = qfalse;
-			for(j=0; j<i; j++)
-			{
-				if (Q_stricmp(pFiles[j],name)==0) {
+			for (j = 0; j < i; j++) {
+				if (Q_stricmp(pFiles[j], name) == 0) {
 					// this one can be dropped
 					bDrop = qtrue;
 					break;
 				}
 			}
 		}
-		if (bDrop) {
+
+		// we also drop "." and ".."
+		if (bDrop || Q_stricmpn(name, ".", 1) == 0) {
 			continue;
 		}
-		// we drop "." and ".."
-		if (Q_stricmpn(name, ".", 1)) {
-			// now we need to find some .pk3 files to validate the mod
-			// NOTE TTimo: (actually I'm not sure why .. what if it's a mod under developement with no .pk3?)
-			// we didn't keep the information when we merged the directory names, as to what OS Path it was found under
-			//   so it could be in base path, cd path or home path
-			//   we will try each three of them here (yes, it's a bit messy)
+
+		// in order to be a valid mod the directory must contain at least one .pk3 or .pk3dir
+		// we didn't keep the information when we merged the directory names, as to what OS Path it was found under
+		// so we will try each of them here
+		path = FS_BuildOSPath( fs_homepath->string, name, "" );
+		pFiles0 = Sys_ListFiles( path, ".pk3", NULL, &dummy, qfalse );
+
+		path = FS_BuildOSPath( fs_basepath->string, name, "" );
+		pFiles1 = Sys_ListFiles( path, ".pk3", NULL, &dummy, qfalse );
+
+		path = FS_BuildOSPath( fs_cdpath->string, name, "" );
+		pFiles2 = Sys_ListFiles( path, ".pk3", NULL, &dummy, qfalse );
+		// we searched for paks in the three paths
+		// it is possible that we have duplicate names now
+		pPaks = Sys_ConcatenateFileLists( pFiles0, pFiles1, pFiles2 );
+
+		nPaks = Sys_CountFileList( pPaks );
+
+		// don't list the mod if only Spearmint patch pk3 files are found
+		for ( pak = 0; pak < nPaks; pak++ ) {
+			if ( Q_stricmpn( pPaks[pak], "spearmint-patch", 15 ) ) {
+				// found a pk3 that isn't a Spearmint patch pk3
+				break;
+			}
+		}
+
+		if ( pak == nPaks ) {
+			// all the paks are spearmint patches, treat as no paks.
+			nPaks = 0;
+		}
+
+		Sys_FreeFileList( pPaks );
+
+		// check for .pk3dir directories
+		if ( nPaks == 0 ) {
 			path = FS_BuildOSPath( fs_homepath->string, name, "" );
-			pFiles0 = Sys_ListFiles( path, ".pk3", NULL, &dummy, qfalse );
+			pFiles0 = Sys_ListFiles( path, "/", NULL, &dummy, qfalse );
 
 			path = FS_BuildOSPath( fs_basepath->string, name, "" );
-			pFiles1 = Sys_ListFiles( path, ".pk3", NULL, &dummy, qfalse );
+			pFiles1 = Sys_ListFiles( path, "/", NULL, &dummy, qfalse );
 
 			path = FS_BuildOSPath( fs_cdpath->string, name, "" );
-			pFiles2 = Sys_ListFiles( path, ".pk3", NULL, &dummy, qfalse );
+			pFiles2 = Sys_ListFiles( path, "/", NULL, &dummy, qfalse );
 			// we searched for paks in the three paths
 			// it is possible that we have duplicate names now
-			pPaks = Sys_ConcatenateFileLists( pFiles0, pFiles1, pFiles2 );
+			pDirs = Sys_ConcatenateFileLists( pFiles0, pFiles1, pFiles2 );
 
-			nPaks = Sys_CountFileList(pPaks);
+			nDirs = Sys_CountFileList( pDirs );
 
-			// don't list the mod if only Spearmint patch pk3 files are found
-			for ( pak = 0; pak < nPaks; pak++ ) {
-				if ( Q_stricmpn( pPaks[pak], "spearmint-patch", 15 ) ) {
-					// found a pk3 that isn't a Spearmint patch pk3
+			// check if there is a directory ending with ".pk3dir"
+			for (k = 0; k < nDirs; k++) {
+				if (FS_IsExt(pDirs[k], ".pk3dir", strlen(pDirs[k]))) {
+					nPakDirs = 1;
 					break;
 				}
 			}
+			if ( k == nDirs ) {
+				// there are no pk3dirs
+				nPakDirs = 0;
+			}
 
-			Sys_FreeFileList( pPaks );
+			Sys_FreeFileList( pDirs );
+		}
 
-			if (nPaks > 0 && pak != nPaks) {
-				nLen = strlen(name) + 1;
-				// nLen is the length of the mod path
-				// we need to see if there is a description available
-				FS_GetModDescription( name, description, sizeof( description ) );
-				nDescLen = strlen(description) + 1;
+		// if there was a game pk3 or .pk3dir, add mod to list
+		if (nPaks > 0 || nPakDirs > 0) {
+			nLen = strlen(name) + 1;
+			// nLen is the length of the mod path
+			// we need to see if there is a description available
+			FS_GetModDescription( name, description, sizeof( description ) );
+			nDescLen = strlen(description) + 1;
 
-				if (nTotal + nLen + 1 + nDescLen + 1 < bufsize) {
-					strcpy(listbuf, name);
-					listbuf += nLen;
-					strcpy(listbuf, description);
-					listbuf += nDescLen;
-					nTotal += nLen + nDescLen;
-					nMods++;
-				}
-				else {
-					Com_Printf( S_COLOR_YELLOW "WARNING: Ran out of space for mods in mod list (%d mods fit in the %d byte buffer)\n", nMods, bufsize );
-					break;
-				}
+			if (nTotal + nLen + 1 + nDescLen + 1 < bufsize) {
+				strcpy(listbuf, name);
+				listbuf += nLen;
+				strcpy(listbuf, description);
+				listbuf += nDescLen;
+				nTotal += nLen + nDescLen;
+				nMods++;
+			}
+			else {
+				Com_Printf( S_COLOR_YELLOW "WARNING: Ran out of space for mods in mod list (%d mods fit in the %d byte buffer)\n", nMods, bufsize );
+				break;
 			}
 		}
 	}
@@ -4761,11 +4778,6 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 
 	if ( *f ) {
 		fsh[*f].fileSize = r;
-		fsh[*f].streamed = qfalse;
-
-		if (mode == FS_READ) {
-			fsh[*f].streamed = qtrue;
-		}
 	}
 	fsh[*f].handleSync = sync;
 

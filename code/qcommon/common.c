@@ -511,7 +511,7 @@ void Com_StartupVariable( const char *match ) {
 		
 		if(!match || !strcmp(s, match))
 		{
-			Cvar_User_Set(s, Cmd_Argv(2));
+			Cvar_User_Set(s, Cmd_ArgsFrom(2));
 		}
 	}
 }
@@ -3337,6 +3337,13 @@ void Com_WriteConfig_f( void ) {
 
 	Q_strncpyz( filename, Cmd_Argv(1), sizeof( filename ) );
 	COM_DefaultExtension( filename, sizeof( filename ), ".cfg" );
+
+	if (!COM_CompareExtension(filename, ".cfg"))
+	{
+		Com_Printf("Com_WriteConfig_f: Only the \".cfg\" extension is supported by this command!\n");
+		return;
+	}
+
 	Com_Printf( "Writing %s.\n", filename );
 	Com_WriteConfigToFile( filename );
 }
