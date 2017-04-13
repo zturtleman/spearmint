@@ -2936,6 +2936,8 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 
 		Sys_FreeFileList( pPaks );
 
+		nPakDirs = 0;
+
 		// check for .pk3dir directories
 		if ( nPaks == 0 ) {
 			path = FS_BuildOSPath( fs_homepath->string, name, "" );
@@ -2958,10 +2960,6 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 					nPakDirs = 1;
 					break;
 				}
-			}
-			if ( k == nDirs ) {
-				// there are no pk3dirs
-				nPakDirs = 0;
 			}
 
 			Sys_FreeFileList( pDirs );
