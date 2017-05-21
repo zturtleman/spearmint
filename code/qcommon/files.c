@@ -4143,7 +4143,15 @@ int FS_PaksumsSortValue( const searchpath_t *s ) {
 
 	if ( s->pack ) {
 		for ( pak = 0 ; pak < fs_numPaksums ; pak++ ) {
-			if ( com_purePaks[pak].checksum == s->pack->checksum ) {
+			// skip default paks for different game directories.
+			if ( Q_stricmp( com_purePaks[pak].gamename, s->pack->pakGamename ) != 0 ) {
+				continue;
+			}
+
+			// if pak has checksum or name of default pak use explicit sort order defined by
+			// mint-game.settings.
+			if ( com_purePaks[pak].checksum == s->pack->checksum
+				|| Q_stricmp( com_purePaks[pak].pakname, s->pack->pakBasename ) == 0 ) {
 				return pak;
 			}
 		}
@@ -4156,6 +4164,7 @@ int FS_PaksumsSortValue( const searchpath_t *s ) {
 		}
 	}
 
+	// unknown pk3s are sorted after ones listed in mint-game.settings.
 	return fs_numPaksums;
 }
 
