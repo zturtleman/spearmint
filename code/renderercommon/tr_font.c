@@ -713,7 +713,7 @@ qboolean R_LoadPreRenderedFont( const char *datName, int pointSize, fontInfo_t *
 
 #ifdef BUILD_FREETYPE
 // Q3A's gfx/2d/bigchars some additional symbols, by default these glyphs would just be default missing glyph anyway
-unsigned long R_RemapGlyphCharacter( int charIndex ) {
+unsigned long R_RemapGlyphCharacter( FT_Face face, int charIndex ) {
 	switch ( charIndex ) {
 		// thick box drawing characters
 		// - top
@@ -746,7 +746,12 @@ unsigned long R_RemapGlyphCharacter( int charIndex ) {
 		case 11:
 			return 0x2588; // full block
 		case 13:
-			return 0x25B6; // right pointing triangle
+			// Many fonts have up/down pointing triangle but matching left/right triangle
+			// are in slot for pointer. So if triangle is missing fallback to pointer.
+			if ( FT_Get_Char_Index( face, 0x25B6 ) != 0 ) {
+				return 0x25B6; // black right-pointing triangle
+			}
+			return 0x25BA; // black right-pointing pointer
 
 		//
 		// misc
@@ -812,13 +817,23 @@ unsigned long R_RemapGlyphCharacter( int charIndex ) {
 		case 135:
 			return 0x25B2; // black up-pointing triangle
 		case 136:
-			return 0x25C0; // black left-pointing triangle
+			// Many fonts have up/down pointing triangle but matching left/right triangle
+			// are in slot for pointer. So if triangle is missing fallback to pointer.
+			if ( FT_Get_Char_Index( face, 0x25C0 ) != 0 ) {
+				return 0x25C0; // black left-pointing triangle
+			}
+			return 0x25C4; // black left-pointing pointer
 
 		case 139: // same as index 11
 			return 0x2588; // full block
 
 		case 141: // same as index 13
-			return 0x25B6; // right pointing triangle
+			// Many fonts have up/down pointing triangle but matching left/right triangle
+			// are in slot for pointer. So if triangle is missing fallback to pointer.
+			if ( FT_Get_Char_Index( face, 0x25B6 ) != 0 ) {
+				return 0x25B6; // black right-pointing triangle
+			}
+			return 0x25BA; // black right-pointing pointer
 
 		default:
 			break;
@@ -921,7 +936,7 @@ qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWi
 			// upload/save current image buffer
 			glyph = NULL;
 		} else {
-			glyph = RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &rowHeight, face, R_RemapGlyphCharacter(i), borderWidth, forceAutoHint);
+			glyph = RE_ConstructGlyphInfo(imageSize, out, &xOut, &yOut, &rowHeight, face, R_RemapGlyphCharacter( face, i ), borderWidth, forceAutoHint);
 		}
 
 		if (!glyph)  {
