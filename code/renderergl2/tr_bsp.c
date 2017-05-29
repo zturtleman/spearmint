@@ -1084,7 +1084,6 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	int			numInstances;
 	vec3_t		bounds[2];
 	vec3_t		boundsTranslated[2];
-	vec4_t		color;
 	float		scale;
 
 	// get fog volume
@@ -1137,50 +1136,12 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	verts += LittleLong(ds->firstVert);
 	for(i = 0; i < numVerts; i++)
 	{
-		for(j = 0; j < 3; j++)
-		{
-			cv->verts[i].xyz[j] = LittleFloat(verts[i].xyz[j]);
-			cv->verts[i].normal[j] = LittleFloat(verts[i].normal[j]);
-		}
+		LoadDrawVertToSrfVert(&cv->verts[i], &verts[i], -1, hdrVertColors ? hdrVertColors + (ds->firstVert + i) * 3 : NULL, NULL);
 
 		// scale height
 		cv->verts[i].xyz[2] *= scale;
 
-		AddPointToBounds( cv->verts[i].xyz, surf->cullinfo.bounds[0], surf->cullinfo.bounds[1] );
-
-		for(j = 0; j < 2; j++)
-		{
-			cv->verts[i].st[j] = LittleFloat(verts[i].st[j]);
-			cv->verts[i].lightmap[j] = LittleFloat(verts[i].lightmap[j]);
-		}
-
-#if 0 // ZTM: foliage doesn't use cv->verts[].vertexColors, uses foliage instance color for all verts.
-		if (hdrVertColors)
-		{
-			color[0] = hdrVertColors[(ds->firstVert + i) * 3    ];
-			color[1] = hdrVertColors[(ds->firstVert + i) * 3 + 1];
-			color[2] = hdrVertColors[(ds->firstVert + i) * 3 + 2];
-		}
-		else
-		{
-			//hack: convert LDR vertex colors to HDR
-			if (r_hdr->integer)
-			{
-				color[0] = verts[i].color[0] + 1.0f;
-				color[1] = verts[i].color[1] + 1.0f;
-				color[2] = verts[i].color[2] + 1.0f;
-			}
-			else
-			{
-				color[0] = verts[i].color[0];
-				color[1] = verts[i].color[1];
-				color[2] = verts[i].color[2];
-			}
-		}
-		color[3] = verts[i].color[3] / 255.0f;
-
-		R_ColorShiftLightingFloats( color, cv->verts[i].vertexColors );
-#endif
+		AddPointToBounds(cv->verts[i].xyz, surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]);
 	}
 
 	// copy triangles
@@ -1216,6 +1177,12 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	verts += numVerts;
 	for ( i = 0; i < numInstances; i++ )
 	{
+		srfVert_t instVert;
+
+		// get instance color
+		LoadDrawVertToSrfVert(&instVert, &verts[i], -1, hdrVertColors ? hdrVertColors + (ds->firstVert + i) * 3 : NULL, NULL);
+		Vector4Copy( instVert.color, cv->instances[ i ].color );
+
 		// copy xyz
 		for ( j = 0; j < 3; j++ )
 			cv->instances[ i ].origin[ j ] = LittleFloat( verts[ i ].xyz[ j ] );
@@ -1223,42 +1190,12 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		VectorAdd( surf->cullinfo.bounds[ 1 ], cv->instances[ i ].origin, boundsTranslated[ 1 ] );
 		AddPointToBounds( boundsTranslated[ 0 ], bounds[ 0 ], bounds[ 1 ] );
 		AddPointToBounds( boundsTranslated[ 1 ], bounds[ 0 ], bounds[ 1 ] );
-
-		// copy color
-		if (hdrVertColors)
-		{
-			color[0] = hdrVertColors[(ds->firstVert + numVerts + i) * 3    ];
-			color[1] = hdrVertColors[(ds->firstVert + numVerts + i) * 3 + 1];
-			color[2] = hdrVertColors[(ds->firstVert + numVerts + i) * 3 + 2];
-		}
-		else
-		{
-			//hack: convert LDR vertex colors to HDR
-			if (r_hdr->integer)
-			{
-				color[0] = MAX(verts[i].color[0], 0.499f);
-				color[1] = MAX(verts[i].color[1], 0.499f);
-				color[2] = MAX(verts[i].color[2], 0.499f);
-			}
-			else
-			{
-				color[0] = verts[i].color[0];
-				color[1] = verts[i].color[1];
-				color[2] = verts[i].color[2];
-			}
-		}
-		color[3] = verts[i].color[3] / 255.0f;
-
-		R_ColorShiftLightingFloats( color, color );
-
-		VectorCopy( color, cv->instances[ i ].color );
 	}
 
 	// replace instance bounds with bounds of all foliage instances
 	VectorCopy( bounds[0], surf->cullinfo.bounds[0] );
 	VectorCopy( bounds[1], surf->cullinfo.bounds[1] );
 
-#ifdef USE_VERT_TANGENT_SPACE
 	// Calculate tangent spaces
 	{
 		srfVert_t      *dv[3];
@@ -1272,7 +1209,6 @@ static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 			R_CalcTangentVectors(dv);
 		}
 	}
-#endif
 
 	// finish surface
 	FinishGenericSurface( ds, cv->verts[ 0 ].xyz, &surf->cullinfo );
@@ -3097,9 +3033,9 @@ void R_CalcVertexLightDirs( void )
 					vec3_t lightDir;
 					vec3_t normal;
 
-					R_VaoUnpackNormal(normal, bspSurf->verts[i].normal);
+					R_VaoUnpackNormal(normal, srf->verts[i].normal);
 					R_LightDirForPoint( srf->verts[i].xyz, lightDir, normal, &s_worldData );
-					R_VaoPackNormal(bspSurf->verts[i].lightdir, lightDir);
+					R_VaoPackNormal(srf->verts[i].lightdir, lightDir);
 				}
 				break;
 			}

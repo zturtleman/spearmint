@@ -1056,7 +1056,7 @@ typedef struct srfBspSurface_s
 typedef struct
 {
 	vec3_t origin;
-	vec3_t color;
+	uint16_t color[4];
 } foliageInstance_t;
 
 typedef struct

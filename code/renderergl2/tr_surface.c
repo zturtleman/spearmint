@@ -560,7 +560,7 @@ static void RB_SurfaceFoliage( srfFoliage_t *srf ) {
 	vec4_t distanceCull, distanceVector;
 	float alpha, z, dist, fovScale;
 	float *xyz;
-	vec4_t fColor;
+	uint16_t srcColor[4];
 	uint16_t *color;
 	vec3_t local;
 	foliageInstance_t   *instance;
@@ -629,10 +629,13 @@ static void RB_SurfaceFoliage( srfFoliage_t *srf ) {
 			}
 
 			// set color
-			alpha = Com_Clamp( 0, 1, alpha );
+			alpha = Com_Clamp( 0, 255, alpha * 255 );
 		} else {
-			alpha = 1.0f;
+			alpha = 255;
 		}
+
+		Vector4Copy( instance->color, srcColor );
+		srcColor[3] = alpha * 257;
 
 		// Com_Printf( "Color: %f %f %f %f\n", instance->color[ 0 ], instance->color[ 1 ], instance->color[ 2 ], alpha );
 
@@ -648,10 +651,7 @@ static void RB_SurfaceFoliage( srfFoliage_t *srf ) {
 		// copy color
 		color = tess.color[ tess.numVertexes -  srf->numVerts ];
 		for ( i = 0 ; i < srf->numVerts ; i++, color+=4 ) {
-			VectorCopy( instance->color, fColor );
-			fColor[3] = alpha;
-
-			VectorScale4( fColor, 257, color );
+			Vector4Copy( srcColor, color );
 		}
 	}
 
