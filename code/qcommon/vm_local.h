@@ -179,6 +179,7 @@ struct vm_s {
 
 	byte		*dataBase;
 	int			dataMask;
+	int			dataAlloc;			// actually allocated
 
 	int			zoneTag;			// tag for the memory zone owned by the VM (i.e., TAG_GAME or TAG_CGAME)
 	byte		*heapBase;			// base of dynamic memory pool

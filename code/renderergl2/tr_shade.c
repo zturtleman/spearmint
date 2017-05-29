@@ -49,42 +49,9 @@ R_DrawElements
 ==================
 */
 
-void R_DrawElementsVao( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex, glIndex_t maxIndex )
+void R_DrawElements( int numIndexes, glIndex_t firstIndex)
 {
-	if (glRefConfig.drawRangeElements)
-		qglDrawRangeElements(GL_TRIANGLES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
-	else
-		qglDrawElements(GL_TRIANGLES, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
-	
-}
-
-
-static void R_DrawMultiElementsVao( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex, 
-	GLsizei *multiDrawNumIndexes, glIndex_t **multiDrawFirstIndex)
-{
-	if (glRefConfig.multiDrawArrays && multiDrawPrimitives > 1)
-	{
-		qglMultiDrawElements(GL_TRIANGLES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
-	}
-	else
-	{
-		int i;
-
-		if (glRefConfig.drawRangeElements)
-		{
-			for (i = 0; i < multiDrawPrimitives; i++)
-			{
-				qglDrawRangeElements(GL_TRIANGLES, multiDrawMinIndex[i], multiDrawMaxIndex[i], multiDrawNumIndexes[i], GL_INDEX_TYPE, multiDrawFirstIndex[i]);
-			}
-		}
-		else
-		{
-			for (i = 0; i < multiDrawPrimitives; i++)
-			{
-				qglDrawElements(GL_TRIANGLES, multiDrawNumIndexes[i], GL_INDEX_TYPE, multiDrawFirstIndex[i]);
-			}
-		}
-	}
+	qglDrawElements(GL_TRIANGLES, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
 }
 
 
@@ -162,14 +129,7 @@ static void DrawTris (shaderCommands_t *input) {
 		VectorSet4(color, 1, 1, 1, 1);
 		GLSL_SetUniformVec4(sp, UNIFORM_COLOR, color);
 
-		if (input->multiDrawPrimitives)
-		{
-			R_DrawMultiElementsVao(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
-		}
-		else
-		{
-			R_DrawElementsVao(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex);
-		}
+		R_DrawElements(input->numIndexes, input->firstIndex);
 	}
 
 	qglDepthRange( 0, 1 );
@@ -203,7 +163,6 @@ void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
 	tess.numIndexes = 0;
 	tess.firstIndex = 0;
 	tess.numVertexes = 0;
-	tess.multiDrawPrimitives = 0;
 	tess.shader = state;
 	tess.fogNum = fogNum;
 	tess.cubemapIndex = cubemapIndex;
@@ -213,6 +172,7 @@ void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
 	tess.numPasses = state->numUnfoggedPasses;
 	tess.currentStageIteratorFunc = state->optimalStageIteratorFunc;
 	tess.useInternalVao = qtrue;
+	tess.useCacheVao = qfalse;
 
 	tess.shaderTime = backEnd.refdef.floatTime - tess.shader->timeOffset;
 	if (tess.shader->clampTime && tess.shaderTime >= tess.shader->clampTime) {
@@ -477,15 +437,7 @@ static void ProjectDlightTexture( void ) {
 				R_BindAnimatedImageToTMU( &dls->stages[i]->bundle[0], TB_COLORMAP );
 				GL_State( stage->stateBits | GLS_DEPTHFUNC_EQUAL );
 
-				if (tess.multiDrawPrimitives)
-				{
-					shaderCommands_t *input = &tess;
-					R_DrawMultiElementsVao(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
-				}
-				else
-				{
-					R_DrawElementsVao(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
-				}
+				R_DrawElements(tess.numIndexes, tess.firstIndex);
 
 				backEnd.pc.c_totalIndexes += tess.numIndexes;
 				backEnd.pc.c_dlightIndexes += tess.numIndexes;
@@ -506,15 +458,7 @@ static void ProjectDlightTexture( void ) {
 				GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
 			}
 
-			if (tess.multiDrawPrimitives)
-			{
-				shaderCommands_t *input = &tess;
-				R_DrawMultiElementsVao(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
-			}
-			else
-			{
-				R_DrawElementsVao(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
-			}
+			R_DrawElements(tess.numIndexes, tess.firstIndex);
 
 			backEnd.pc.c_totalIndexes += tess.numIndexes;
 			backEnd.pc.c_dlightIndexes += tess.numIndexes;
@@ -1058,14 +1002,7 @@ static void ForwardDlight( void ) {
 		// draw
 		//
 
-		if (input->multiDrawPrimitives)
-		{
-			R_DrawMultiElementsVao(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
-		}
-		else
-		{
-			R_DrawElementsVao(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex);
-		}
+		R_DrawElements(input->numIndexes, input->firstIndex);
 
 		backEnd.pc.c_totalIndexes += tess.numIndexes;
 		backEnd.pc.c_dlightIndexes += tess.numIndexes;
@@ -1134,14 +1071,7 @@ static void ProjectPshadowVBOGLSL( void ) {
 		// draw
 		//
 
-		if (input->multiDrawPrimitives)
-		{
-			R_DrawMultiElementsVao(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
-		}
-		else
-		{
-			R_DrawElementsVao(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex);
-		}
+		R_DrawElements(input->numIndexes, input->firstIndex);
 
 		backEnd.pc.c_totalIndexes += tess.numIndexes;
 		//backEnd.pc.c_dlightIndexes += tess.numIndexes;
@@ -1272,15 +1202,7 @@ static void RB_FogPass( void ) {
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
 	}
 
-	if (tess.multiDrawPrimitives)
-	{
-		shaderCommands_t *input = &tess;
-		R_DrawMultiElementsVao(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
-	}
-	else
-	{
-		R_DrawElementsVao(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
-	}
+	R_DrawElements(tess.numIndexes, tess.firstIndex);
 }
 
 
@@ -1772,14 +1694,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//
 		// draw
 		//
-		if (input->multiDrawPrimitives)
-		{
-			R_DrawMultiElementsVao(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
-		}
-		else
-		{
-			R_DrawElementsVao(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex);
-		}
+		R_DrawElements(input->numIndexes, input->firstIndex);
 
 		if ( overridealpha )
 		{
@@ -1865,14 +1780,7 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 			// draw
 			//
 
-			if (input->multiDrawPrimitives)
-			{
-				R_DrawMultiElementsVao(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
-			}
-			else
-			{
-				R_DrawElementsVao(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex);
-			}
+			R_DrawElements(input->numIndexes, input->firstIndex);
 		}
 	}
 }
@@ -2038,7 +1946,6 @@ void RB_StageIteratorGeneric( void )
 	}
 }
 
-
 /*
 ** RB_EndSurface
 */
@@ -2068,6 +1975,12 @@ void RB_EndSurface( void ) {
 		return;
 	}
 
+	if (tess.useCacheVao)
+	{
+		// upload indexes now
+		VaoCache_Commit();
+	}
+
 	//
 	// update performance counters
 	//
@@ -2094,7 +2007,6 @@ void RB_EndSurface( void ) {
 	tess.numIndexes = 0;
 	tess.numVertexes = 0;
 	tess.firstIndex = 0;
-	tess.multiDrawPrimitives = 0;
 
 	GLimp_LogComment( "----------\n" );
 }

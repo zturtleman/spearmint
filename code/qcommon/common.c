@@ -1359,7 +1359,7 @@ Com_Meminfo_f
 void Com_Meminfo_f( void ) {
 	memblock_t	*block;
 	int			zoneBytes, zoneBlocks;
-	int			smallZoneBytes, smallZoneBlocks;
+	int			smallZoneBytes;
 	int			botlibBytes, rendererBytes;
 	int			unused;
 
@@ -1402,11 +1402,9 @@ void Com_Meminfo_f( void ) {
 	}
 
 	smallZoneBytes = 0;
-	smallZoneBlocks = 0;
 	for (block = smallzone->blocklist.next ; ; block = block->next) {
 		if ( block->tag ) {
 			smallZoneBytes += block->size;
-			smallZoneBlocks++;
 		}
 
 		if (block->next == &smallzone->blocklist) {
