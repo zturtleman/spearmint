@@ -26,8 +26,8 @@ Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Sp
 
 ## Git branches
 
-* `master` branch is compatible with Spearmint 0.1.
-* `devil` branch is for Spearmint 0.4 API development (devil-op-mint) &mdash; it may be out of date compared to master.
+* `master` branch is compatible with Spearmint 0.4.
+* `devil` branch is for development (devil-op-mint) that is not compatible with the current release &mdash; it may be out of date compared to master.
 
 
 ## License
@@ -41,7 +41,9 @@ Spearmint is licensed under a [modified version of the GNU GPLv3](COPYING.txt#L6
 * Tobias Kuehnhammer (feedback / bug reports / Bot AI fixes)
 * And other contributors
 
-Spearmint is based on ioquake3 and also contains code from;
+Spearmint contains code from;
+* Quake 3 - id Software
+* ioquake3 - ioquake3 contributors
 * RTCW SP - Gray Matter Interactive
 * RTCW MP - Nerve Software
 * Wolfenstein: Enemy Territory - Splash Damage
