@@ -548,7 +548,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int				dlighted, oldDlighted;
 	int				sortOrder;
 	int				oldShaderIndex;
-	qboolean		depthRange, oldDepthRange, isCrosshair, wasCrosshair;
+	qboolean		depthRange, oldDepthRange;
+	qboolean		weaponProjection, oldWeaponProjection;
 	int				i;
 	drawSurf_t		*drawSurf;
 	uint64_t		oldSort;
@@ -566,7 +567,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldShader = NULL;
 	oldFogNum = -1;
 	oldDepthRange = qfalse;
-	wasCrosshair = qfalse;
+	oldWeaponProjection = qfalse;
 	oldDlighted = qfalse;
 	oldSort = -1;
 	oldShaderIndex = -1;
@@ -603,7 +604,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		// change the modelview matrix if needed
 		//
 		if ( entityNum != oldEntityNum ) {
-			depthRange = isCrosshair = qfalse;
+			depthRange = weaponProjection = qfalse;
 
 			if ( entityNum != REFENTITYNUM_WORLD ) {
 				backEnd.currentEntity = &backEnd.refdef.entities[entityNum];
@@ -625,8 +626,13 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 					// hack the depth range to prevent view model from poking into walls
 					depthRange = qtrue;
 					
-					if(backEnd.currentEntity->e.renderfx & RF_CROSSHAIR)
-						isCrosshair = qtrue;
+					if(!(backEnd.currentEntity->e.renderfx & RF_CROSSHAIR)
+						&& (backEnd.viewParms.stereoFrame != STEREO_CENTER
+							|| backEnd.refdef.weapon_fov_x != backEnd.refdef.fov_x
+							|| backEnd.refdef.weapon_fov_y != backEnd.refdef.fov_y))
+					{
+						weaponProjection = qtrue;
+					}
 				}
 			} else {
 				backEnd.currentEntity = &tr.worldEntity;
@@ -641,54 +647,51 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			qglLoadMatrixf( backEnd.or.modelMatrix );
 
 			//
-			// change depthrange. Also change projection matrix so first person weapon does not look like coming
-			// out of the screen.
+			// change depthrange.
 			//
-			if (oldDepthRange != depthRange || wasCrosshair != isCrosshair)
+			if (oldDepthRange != depthRange)
 			{
 				if (depthRange)
 				{
-					if(backEnd.viewParms.stereoFrame != STEREO_CENTER)
-					{
-						if(isCrosshair)
-						{
-							if(oldDepthRange)
-							{
-								// was not a crosshair but now is, change back proj matrix
-								qglMatrixMode(GL_PROJECTION);
-								qglLoadMatrixf(backEnd.viewParms.projectionMatrix);
-								qglMatrixMode(GL_MODELVIEW);
-							}
-						}
-						else
-						{
-							viewParms_t temp = backEnd.viewParms;
-
-							R_SetupProjection(&temp, r_znear->value, qfalse);
-
-							qglMatrixMode(GL_PROJECTION);
-							qglLoadMatrixf(temp.projectionMatrix);
-							qglMatrixMode(GL_MODELVIEW);
-						}
-					}
-
 					if(!oldDepthRange)
 						qglDepthRange (0, 0.3);
 				}
 				else
 				{
-					if(!wasCrosshair && backEnd.viewParms.stereoFrame != STEREO_CENTER)
-					{
-						qglMatrixMode(GL_PROJECTION);
-						qglLoadMatrixf(backEnd.viewParms.projectionMatrix);
-						qglMatrixMode(GL_MODELVIEW);
-					}
-
 					qglDepthRange (0, 1);
 				}
 
 				oldDepthRange = depthRange;
-				wasCrosshair = isCrosshair;
+			}
+
+			//
+			// change projection matrix so first person weapon does not look like coming
+			// out of the screen in anaglyph stereo 3D mode or for custom weapon fov.
+			//
+			if (weaponProjection && !oldWeaponProjection)
+			{
+				viewParms_t temp = backEnd.viewParms;
+
+				// use view weapon fov
+				temp.fovX = temp.weaponFovX;
+				temp.fovY = temp.weaponFovY;
+
+				R_SetupProjection(&temp, r_znear->value, qfalse);
+
+				qglMatrixMode(GL_PROJECTION);
+				qglLoadMatrixf(temp.projectionMatrix);
+				qglMatrixMode(GL_MODELVIEW);
+
+				oldWeaponProjection = weaponProjection;
+			}
+			else if (!weaponProjection && oldWeaponProjection)
+			{
+				// change back proj matrix
+				qglMatrixMode(GL_PROJECTION);
+				qglLoadMatrixf(backEnd.viewParms.projectionMatrix);
+				qglMatrixMode(GL_MODELVIEW);
+
+				oldWeaponProjection = weaponProjection;
 			}
 
 			oldEntityNum = entityNum;

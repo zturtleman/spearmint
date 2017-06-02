@@ -228,8 +228,17 @@ typedef struct {
 	// for alphaGen skyAlpha and oneMinusSkyAlpha
 	float			skyAlpha;
 
+	//
+	// added in Spearmint 0.3
+	//
 	// maximum distance for the far clip plane
 	float			farClip;
+
+	//
+	// added in Spearmint 0.5
+	//
+	// fov for view weapon (refents with RF_DEPTHHACK and not RF_CROSSHAIR)
+	float weapon_fov_x, weapon_fov_y;
 } refdef_t;
 
 
@@ -316,6 +325,10 @@ typedef struct {
 	glyphInfo_t	glyphs [GLYPHS_PER_FONT];
 	float		glyphScale;
 	char		name[MAX_QPATH];
+
+	//
+	// added in Spearmint 0.2
+	//
 	int			pointSize;
 	int			flags;
 } fontInfo_t;

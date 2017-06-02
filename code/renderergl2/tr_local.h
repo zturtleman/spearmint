@@ -821,6 +821,9 @@ typedef struct {
 	// maximum distance for the far clip plane
 	float			maxFarClip;
 
+	// fov for view weapon
+	float		weapon_fov_x, weapon_fov_y;
+
 	int			num_entities;
 	trRefEntity_t	*entities;
 
@@ -912,6 +915,7 @@ typedef struct {
 	int         targetFboLayer;
 	int         targetFboCubemapIndex;
 	float		fovX, fovY;
+	float		weaponFovX, weaponFovY;
 	float		projectionMatrix[16];
 	cplane_t	frustum[5];
 	vec3_t		visBounds[2];

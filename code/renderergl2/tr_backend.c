@@ -512,16 +512,14 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int				oldShaderIndex;
 	int				pshadowed, oldPshadowed;
 	int             cubemapIndex, oldCubemapIndex;
-	qboolean		depthRange, oldDepthRange, isCrosshair, wasCrosshair;
+	qboolean		depthRange, oldDepthRange;
+	qboolean		weaponProjection, oldWeaponProjection;
 	int				i;
 	drawSurf_t		*drawSurf;
 	uint64_t		oldSort;
 	float			originalTime;
 	FBO_t*			fbo = NULL;
 	qboolean		inQuery = qfalse;
-
-	float			depth[2];
-
 
 	// save original time for entity shader offsets
 	originalTime = backEnd.refdef.floatTime;
@@ -534,15 +532,12 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldShader = NULL;
 	oldFogNum = -1;
 	oldDepthRange = qfalse;
-	wasCrosshair = qfalse;
+	oldWeaponProjection = qfalse;
 	oldDlighted = qfalse;
 	oldPshadowed = qfalse;
 	oldCubemapIndex = -1;
 	oldSort = -1;
 	oldShaderIndex = -1;
-
-	depth[0] = 0.f;
-	depth[1] = 1.f;
 
 	backEnd.pc.c_surfaces += numDrawSurfs;
 
@@ -585,8 +580,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		// change the modelview matrix if needed
 		//
 		if ( entityNum != oldEntityNum ) {
-			qboolean sunflare = qfalse;
-			depthRange = isCrosshair = qfalse;
+			depthRange = weaponProjection = qfalse;
 
 			if ( entityNum != REFENTITYNUM_WORLD ) {
 				backEnd.currentEntity = &backEnd.refdef.entities[entityNum];
@@ -608,8 +602,13 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 					// hack the depth range to prevent view model from poking into walls
 					depthRange = qtrue;
 					
-					if(backEnd.currentEntity->e.renderfx & RF_CROSSHAIR)
-						isCrosshair = qtrue;
+					if(!(backEnd.currentEntity->e.renderfx & RF_CROSSHAIR)
+						&& (backEnd.viewParms.stereoFrame != STEREO_CENTER
+							|| backEnd.refdef.weapon_fov_x != backEnd.refdef.fov_x
+							|| backEnd.refdef.weapon_fov_y != backEnd.refdef.fov_y))
+					{
+						weaponProjection = qtrue;
+					}
 				}
 			} else {
 				backEnd.currentEntity = &tr.worldEntity;
@@ -624,56 +623,47 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			GL_SetModelviewMatrix( backEnd.or.modelMatrix );
 
 			//
-			// change depthrange. Also change projection matrix so first person weapon does not look like coming
-			// out of the screen.
+			// change depthrange.
 			//
-			if (oldDepthRange != depthRange || wasCrosshair != isCrosshair)
+			if (oldDepthRange != depthRange)
 			{
 				if (depthRange)
 				{
-					if(backEnd.viewParms.stereoFrame != STEREO_CENTER)
-					{
-						if(isCrosshair)
-						{
-							if(oldDepthRange)
-							{
-								// was not a crosshair but now is, change back proj matrix
-								GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
-							}
-						}
-						else
-						{
-							viewParms_t temp = backEnd.viewParms;
-
-							R_SetupProjection(&temp, r_znear->value, 0, qfalse);
-
-							GL_SetProjectionMatrix( temp.projectionMatrix );
-						}
-					}
-
- 					if(!oldDepthRange)
-					{
-						depth[0] = 0;
-						depth[1] = 0.3f;
- 						qglDepthRange (depth[0], depth[1]);
-	 				}
+					if(!oldDepthRange)
+						qglDepthRange (0, 0.3);
 				}
 				else
 				{
-					if(!wasCrosshair && backEnd.viewParms.stereoFrame != STEREO_CENTER)
-					{
-						GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
-					}
-
-					if (!sunflare)
-						qglDepthRange (0, 1);
-
-					depth[0] = 0;
-					depth[1] = 1;
+					qglDepthRange (0, 1);
 				}
 
 				oldDepthRange = depthRange;
-				wasCrosshair = isCrosshair;
+			}
+
+			//
+			// change projection matrix so first person weapon does not look like coming
+			// out of the screen in anaglyph stereo 3D mode or for custom weapon fov.
+			//
+			if (weaponProjection && !oldWeaponProjection)
+			{
+				viewParms_t temp = backEnd.viewParms;
+
+				// use view weapon fov
+				temp.fovX = temp.weaponFovX;
+				temp.fovY = temp.weaponFovY;
+
+				R_SetupProjection(&temp, r_znear->value, 0, qfalse);
+
+				GL_SetProjectionMatrix( temp.projectionMatrix );
+
+				oldWeaponProjection = weaponProjection;
+			}
+			else if (!weaponProjection && oldWeaponProjection)
+			{
+				// change back proj matrix
+				GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
+
+				oldWeaponProjection = weaponProjection;
 			}
 
 			oldEntityNum = entityNum;

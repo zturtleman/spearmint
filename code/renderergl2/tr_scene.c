@@ -558,6 +558,14 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.fov_x = fd->fov_x;
 	tr.refdef.fov_y = fd->fov_y;
 
+	if ( fd->weapon_fov_x > 0 && fd->weapon_fov_y > 0 ) {
+		tr.refdef.weapon_fov_x = fd->weapon_fov_x;
+		tr.refdef.weapon_fov_y = fd->weapon_fov_y;
+	} else {
+		tr.refdef.weapon_fov_x = fd->fov_x;
+		tr.refdef.weapon_fov_y = fd->fov_y;
+	}
+
 	VectorCopy( fd->vieworg, tr.refdef.vieworg );
 	VectorCopy( fd->viewaxis[0], tr.refdef.viewaxis[0] );
 	VectorCopy( fd->viewaxis[1], tr.refdef.viewaxis[1] );
@@ -833,6 +841,9 @@ void RE_RenderScene( const refdef_t *vmRefDef, int vmRefDefSize ) {
 
 	parms.fovX = tr.refdef.fov_x;
 	parms.fovY = tr.refdef.fov_y;
+
+	parms.weaponFovX = tr.refdef.weapon_fov_x;
+	parms.weaponFovY = tr.refdef.weapon_fov_y;
 	
 	parms.stereoFrame = tr.refdef.stereoFrame;
 
