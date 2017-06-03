@@ -247,77 +247,6 @@ MASTER SERVER FUNCTIONS
 
 /*
 ================
-SV_RefreshMasterAdr
-================
-*/
-static netadr_t	adr[MAX_MASTER_SERVERS][2]; // [2] for v4 and v6 address for the same address string.
-qboolean SV_RefreshMasterAdr(int i) {
-	int			res;
-	int			netenabled;
-
-	if (i < 0 || i >= MAX_MASTER_SERVERS) {
-		return qfalse;
-	}
-
-	netenabled = Cvar_VariableIntegerValue("net_enabled");
-
-	// see if we haven't already resolved the name
-	// resolving usually causes hitches on win95, so only
-	// do it when needed
-	if(sv_master[i]->modified || (adr[i][0].type == NA_BAD && adr[i][1].type == NA_BAD))
-	{
-		sv_master[i]->modified = qfalse;
-		
-		if(netenabled & NET_ENABLEV4)
-		{
-			Com_Printf("Resolving %s (IPv4)\n", sv_master[i]->string);
-			res = NET_StringToAdr(sv_master[i]->string, &adr[i][0], NA_IP);
-
-			if(res == 2)
-			{
-				// if no port was specified, use the default master port
-				adr[i][0].port = BigShort(PORT_MASTER);
-			}
-			
-			if(res)
-				Com_Printf( "%s resolved to %s\n", sv_master[i]->string, NET_AdrToStringwPort(adr[i][0]));
-			else
-				Com_Printf( "%s has no IPv4 address.\n", sv_master[i]->string);
-		}
-		
-		if(netenabled & NET_ENABLEV6)
-		{
-			Com_Printf("Resolving %s (IPv6)\n", sv_master[i]->string);
-			res = NET_StringToAdr(sv_master[i]->string, &adr[i][1], NA_IP6);
-
-			if(res == 2)
-			{
-				// if no port was specified, use the default master port
-				adr[i][1].port = BigShort(PORT_MASTER);
-			}
-			
-			if(res)
-				Com_Printf( "%s resolved to %s\n", sv_master[i]->string, NET_AdrToStringwPort(adr[i][1]));
-			else
-				Com_Printf( "%s has no IPv6 address.\n", sv_master[i]->string);
-		}
-
-		if(adr[i][0].type == NA_BAD && adr[i][1].type == NA_BAD)
-		{
-			// if the address failed to resolve, clear it
-			// so we don't take repeated dns hits
-			Com_Printf("Couldn't resolve address: %s\n", sv_master[i]->string);
-			Cvar_Set(sv_master[i]->name, "");
-			sv_master[i]->modified = qfalse;
-			return qfalse;
-		}
-	}
-
-	return qtrue;
-}
-
-/*
-================
 SV_MasterHeartbeat
 
 Send a message to the masters every few minutes to
@@ -328,9 +257,12 @@ but not on every player enter or exit.
 ================
 */
 #define	HEARTBEAT_MSEC	300*1000
+#define	MASTERDNS_MSEC	24*60*60*1000
+static netadr_t	adr[MAX_MASTER_SERVERS][2]; // [2] for v4 and v6 address for the same address string.
 void SV_MasterHeartbeat(const char *message)
 {
 	int			i;
+	int			res;
 	int			netenabled;
 
 	// Do not send heartbeats in single player.
@@ -355,8 +287,53 @@ void SV_MasterHeartbeat(const char *message)
 		if(!sv_master[i]->string[0])
 			continue;
 
-		if (!SV_RefreshMasterAdr(i))
+		// see if we haven't already resolved the name or if it's been over 24 hours
+		// resolving usually causes hitches on win95, so only do it when needed
+		if (sv_master[i]->modified || svs.time > svs.masterResolveTime[i])
+		{
+			sv_master[i]->modified = qfalse;
+			svs.masterResolveTime[i] = svs.time + MASTERDNS_MSEC;
+			
+			if(netenabled & NET_ENABLEV4)
+			{
+				Com_Printf("Resolving %s (IPv4)\n", sv_master[i]->string);
+				res = NET_StringToAdr(sv_master[i]->string, &adr[i][0], NA_IP);
+
+				if(res == 2)
+				{
+					// if no port was specified, use the default master port
+					adr[i][0].port = BigShort(PORT_MASTER);
+				}
+				
+				if(res)
+					Com_Printf( "%s resolved to %s\n", sv_master[i]->string, NET_AdrToStringwPort(adr[i][0]));
+				else
+					Com_Printf( "%s has no IPv4 address.\n", sv_master[i]->string);
+			}
+			
+			if(netenabled & NET_ENABLEV6)
+			{
+				Com_Printf("Resolving %s (IPv6)\n", sv_master[i]->string);
+				res = NET_StringToAdr(sv_master[i]->string, &adr[i][1], NA_IP6);
+
+				if(res == 2)
+				{
+					// if no port was specified, use the default master port
+					adr[i][1].port = BigShort(PORT_MASTER);
+				}
+				
+				if(res)
+					Com_Printf( "%s resolved to %s\n", sv_master[i]->string, NET_AdrToStringwPort(adr[i][1]));
+				else
+					Com_Printf( "%s has no IPv6 address.\n", sv_master[i]->string);
+			}
+		}
+
+		if(adr[i][0].type == NA_BAD && adr[i][1].type == NA_BAD)
+		{
 			continue;
+		}
+
 
 		Com_DPrintf("Sending heartbeat to %s\n", sv_master[i]->string);
 

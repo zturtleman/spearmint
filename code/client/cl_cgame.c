@@ -894,6 +894,12 @@ static int LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int
 					clients2 = server2->clients;
 				}
 
+				// sub-sort clients by max clients
+				if ( clients1 == clients2 ) {
+					clients1 = server1->maxClients;
+					clients2 = server2->maxClients;
+				}
+
 				if (clients1 < clients2) {
 					res = -1;
 				}
