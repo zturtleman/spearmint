@@ -1000,6 +1000,9 @@ extern	cvar_t	*com_protocol;
 #ifdef LEGACY_PROTOCOL
 extern	cvar_t	*com_legacyprotocol;
 #endif
+#ifndef DEDICATED
+extern  cvar_t  *con_autochat;
+#endif
 
 #ifdef USE_RENDERER_DLOPEN
 extern	cvar_t	*com_renderer;

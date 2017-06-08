@@ -546,8 +546,12 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_GET_CONSOLE_MESSAGE:
 		return SV_BotGetConsoleMessage( args[1], VMA(2), args[3] );
 	case BOTLIB_USER_COMMAND:
-		if ( args[1] >= 0 && args[1] < MAX_CLIENTS ) {
-			SV_PlayerThink( &svs.players[args[1]], VMA(2) );
+		{
+			int playerNum = args[1];
+
+			if ( playerNum >= 0 && playerNum < sv_maxclients->integer ) {
+				SV_PlayerThink( &svs.players[playerNum], VMA(2) );
+			}
 		}
 		return 0;
 

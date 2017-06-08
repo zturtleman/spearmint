@@ -109,6 +109,9 @@ cvar_t	*com_legacyprotocol;
 #endif
 cvar_t  *com_homepath;
 cvar_t	*com_busyWait;
+#ifndef DEDICATED
+cvar_t  *con_autochat;
+#endif
 
 #ifdef USE_RENDERER_DLOPEN
 cvar_t	*com_renderer;
@@ -2997,7 +3000,7 @@ void Com_Init( char *commandLine ) {
 		Cvar_Get("protocol", com_protocol->string, CVAR_ROM);
 
 #ifndef DEDICATED
-	con_autochat = Cvar_Get( "con_autochat", "0", CVAR_ARCHIVE );
+	con_autochat = Cvar_Get("con_autochat", "0", CVAR_ARCHIVE);
 #endif
 
 	Sys_Init();
@@ -3838,7 +3841,7 @@ void Field_CompleteCommand( char *cmd,
 		completionString = Cmd_Argv( completionArgument - 1 );
 
 #ifndef DEDICATED
-	// Add a '\' to the start of the buffer if it might be sent as chat otherwise
+	// add a '\' to the start of the buffer if it might be sent as chat otherwise
 	if( con_autochat->integer && completionField->buffer[ 0 ] &&
 			completionField->buffer[ 0 ] != '\\' )
 	{
