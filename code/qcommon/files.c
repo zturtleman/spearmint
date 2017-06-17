@@ -2922,8 +2922,9 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 		nPaks = Sys_CountFileList( pPaks );
 
 		// don't list the mod if only Spearmint patch pk3 files are found
+		// example names: spearmint-patch-0.5.pk3, spearmint-baseq3-0.5.pk3
 		for ( pak = 0; pak < nPaks; pak++ ) {
-			if ( Q_stricmpn( pPaks[pak], "spearmint-patch", 15 ) ) {
+			if ( Q_stricmpn( pPaks[pak], "spearmint", 9 ) ) {
 				// found a pk3 that isn't a Spearmint patch pk3
 				break;
 			}
