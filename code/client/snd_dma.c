@@ -1463,7 +1463,7 @@ void S_Base_OpenStream( int stream, const char *filename ) {
 	}
 
 	if(s_backgroundStream[stream]->info.channels != 2 || (s_backgroundStream[stream]->info.rate != 22050 && s_backgroundStream[stream]->info.rate != 44100)) {
-		Com_Printf(S_COLOR_YELLOW "WARNING: music file %s is not 22kHz or 44.1kHz stereo\n", filename );
+		Com_DPrintf(S_COLOR_YELLOW "WARNING: music file %s is not 22kHz or 44.1kHz stereo\n", filename );
 	}
 }
 
