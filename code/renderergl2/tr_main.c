@@ -1891,7 +1891,6 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	R_AddDrawSurfCmd( drawSurfs, numDrawSurfs );
 }
 
-// ZTM: TODO: Make sure shadows work correctly in Rend2 with my code changes from classic renderer!
 static void R_AddEntitySurface (int entityNum)
 {
 	trRefEntity_t	*ent;
@@ -1924,7 +1923,13 @@ static void R_AddEntitySurface (int entityNum)
 	// but may need to render shadow.
 	//
 	if ((ent->e.renderfx & RF_ONLY_MIRROR) && !tr.viewParms.isPortal) {
-		if (ent->e.reType == RT_MODEL && (ent->e.renderfx & RF_SHADOW_PLANE)) {
+		// ZTM: NOTE: The OpenGL2 renderer's sunshadows/shadowmaps draw the whole model.
+		if (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW)) {
+			onlyRenderShadows = qfalse;
+		}
+		// ZTM: NOTE: cg_shadows 2 (stencil) doesn't work for first person models
+		//            so this only needs to handle cg_shadows 3 (black planar projection)
+		else if (ent->e.reType == RT_MODEL && (ent->e.renderfx & RF_SHADOW_PLANE) && r_shadows->integer == 3) {
 			onlyRenderShadows = qtrue;
 		} else {
 			return;
