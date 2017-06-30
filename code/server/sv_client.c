@@ -2069,10 +2069,8 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		} else if ( c == clc_voipSpeex ) {
 			// skip legacy speex voip data
 			SV_UserVoip( cl, msg, qtrue );
-			c = MSG_ReadByte( msg );
 		} else if ( c == clc_voipOpus ) {
 			SV_UserVoip( cl, msg, qfalse );
-			c = MSG_ReadByte( msg );
 #endif
 		} else {
 			// unknown command
