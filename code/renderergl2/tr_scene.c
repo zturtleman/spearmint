@@ -785,7 +785,7 @@ void RE_RenderScene( const refdef_t *vmRefDef, int vmRefDefSize ) {
 	// playing with even more shadows
 	if(glRefConfig.framebufferObject && r_sunlightMode->integer && !( fd.rdflags & RDF_NOWORLDMODEL ) && (r_forceSun->integer || tr.sunShadows))
 	{
-		if (r_shadowCascadeZFar != 0)
+		if (r_shadowCascadeZFar->integer != 0)
 		{
 			R_RenderSunShadowMaps(&fd, 0);
 			R_RenderSunShadowMaps(&fd, 1);

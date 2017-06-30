@@ -859,7 +859,8 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	oldSkeleton = R_GetIQMModelDataByHandle( ent->e.oldframeModel, data );
 
 	// don't add mirror only objects if not in a mirror/portal
-	personalModel = (ent->e.renderfx & RF_ONLY_MIRROR) && !tr.viewParms.isPortal;
+	personalModel = (ent->e.renderfx & RF_ONLY_MIRROR) && !(tr.viewParms.isPortal
+	                 || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW)));
 
 	if ( ent->e.renderfx & RF_WRAP_FRAMES ) {
 		ent->e.frame %= skeleton->num_frames;
