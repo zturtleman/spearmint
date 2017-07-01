@@ -4332,7 +4332,15 @@ static void FS_CheckPaks( qboolean quiet )
 		Com_Printf(S_COLOR_YELLOW "WARNING: %s\n%s\n", line1, line2);
 
 #ifndef DEDICATED
-		Sys_Dialog( DT_WARNING, va("%s %s", line1, line2), "Warning" );
+		// the game's config hasn't been loaded yet so this needs to be set on command line.
+		// the cvar is not reset when changing fs_game.
+		{
+			cvar_t *fs_pakWarningDialog = Cvar_Get( "fs_pakWarningDialog", "1", CVAR_INIT );
+
+			if ( fs_pakWarningDialog->integer ) {
+				Sys_Dialog( DT_WARNING, va("%s %s", line1, line2), "Warning" );
+			}
+		}
 #endif
 	}
 }
