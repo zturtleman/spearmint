@@ -428,7 +428,7 @@ void R_InitVaos(void)
 	int             vertexesSize, indexesSize;
 	int             offset;
 
-	ri.Printf(PRINT_ALL, "------- R_InitVaos -------\n");
+	ri.Printf(PRINT_DEVELOPER, "------- R_InitVaos -------\n");
 
 	tr.numVaos = 0;
 
@@ -522,7 +522,7 @@ void R_ShutdownVaos(void)
 	int             i;
 	vao_t          *vao;
 
-	ri.Printf(PRINT_ALL, "------- R_ShutdownVaos -------\n");
+	ri.Printf(PRINT_DEVELOPER, "------- R_ShutdownVaos -------\n");
 
 	R_BindNullVao();
 

@@ -267,7 +267,7 @@ void FBO_Init(void)
 	int             i;
 	int             hdrFormat, multisample = 0;
 
-	ri.Printf(PRINT_ALL, "------- FBO_Init -------\n");
+	ri.Printf(PRINT_DEVELOPER, "------- FBO_Init -------\n");
 
 	if(!glRefConfig.framebufferObject)
 		return;
@@ -444,7 +444,7 @@ void FBO_Shutdown(void)
 	int             i, j;
 	FBO_t          *fbo;
 
-	ri.Printf(PRINT_ALL, "------- FBO_Shutdown -------\n");
+	ri.Printf(PRINT_DEVELOPER, "------- FBO_Shutdown -------\n");
 
 	if(!glRefConfig.framebufferObject)
 		return;
