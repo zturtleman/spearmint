@@ -1478,7 +1478,7 @@ RawImage_ScaleToPower2
 
 ===============
 */
-static qboolean RawImage_ScaleToPower2( byte **data, int baseLevel, int *inout_width, int *inout_height, imgType_t type, imgFlags_t flags, byte **resampledBuffer)
+static qboolean RawImage_ScaleToPower2( const textureLevel_t *pic, int baseLevel, int *inout_width, int *inout_height, imgType_t type, imgFlags_t flags, byte **resampledBuffer)
 {
 	int width =         *inout_width;
 	int height =        *inout_height;
@@ -1515,7 +1515,7 @@ static qboolean RawImage_ScaleToPower2( byte **data, int baseLevel, int *inout_w
 	if ( r_roundImagesDown->integer && scaled_height > height )
 		scaled_height >>= 1;
 
-	if ( picmip && data && resampledBuffer && r_imageUpsample->integer && 
+	if ( picmip && pic && pic->data && resampledBuffer && r_imageUpsample->integer && 
 	     scaled_width < r_imageUpsampleMaxSize->integer && scaled_height < r_imageUpsampleMaxSize->integer)
 	{
 		int finalwidth, finalheight;
@@ -1541,9 +1541,9 @@ static qboolean RawImage_ScaleToPower2( byte **data, int baseLevel, int *inout_w
 		*resampledBuffer = ri.Hunk_AllocateTempMemory( finalwidth * finalheight * 4 );
 
 		if (scaled_width != width || scaled_height != height)
-			ResampleTexture (*data, width, height, *resampledBuffer, scaled_width, scaled_height);
+			ResampleTexture (pic->data, width, height, *resampledBuffer, scaled_width, scaled_height);
 		else
-			Com_Memcpy(*resampledBuffer, *data, width * height * 4);
+			Com_Memcpy(*resampledBuffer, pic->data, width * height * 4);
 
 		if (type == IMGTYPE_COLORALPHA)
 			RGBAtoYCoCgA(*resampledBuffer, *resampledBuffer, scaled_width, scaled_height);
@@ -1564,16 +1564,13 @@ static qboolean RawImage_ScaleToPower2( byte **data, int baseLevel, int *inout_w
 		//endTime = ri.Milliseconds();
 
 		//ri.Printf(PRINT_ALL, "upsampled %dx%d to %dx%d in %dms\n", width, height, scaled_width, scaled_height, endTime - startTime);
-
-		*data = *resampledBuffer;
 	}
 	else if ( scaled_width != width || scaled_height != height )
 	{
-		if (data && resampledBuffer)
+		if (pic && pic->data && resampledBuffer)
 		{
 			*resampledBuffer = ri.Hunk_AllocateTempMemory( scaled_width * scaled_height * 4 );
-			ResampleTexture (*data, width, height, *resampledBuffer, scaled_width, scaled_height);
-			*data = *resampledBuffer;
+			ResampleTexture (pic->data, width, height, *resampledBuffer, scaled_width, scaled_height);
 		}
 	}
 
@@ -1610,14 +1607,14 @@ static qboolean RawImage_ScaleToPower2( byte **data, int baseLevel, int *inout_w
 	//
 	// rescale texture to new size using existing mipmap functions
 	//
-	if (data)
+	if (resampledBuffer && *resampledBuffer)
 	{
 		while (width > scaled_width || height > scaled_height)
 		{
 			if (type == IMGTYPE_NORMAL || type == IMGTYPE_NORMALHEIGHT)
-				R_MipMapNormalHeight(*data, *data, width, height, qfalse);
+				R_MipMapNormalHeight(*resampledBuffer, *resampledBuffer, width, height, qfalse);
 			else
-				R_MipMapsRGB(*data, width, height);
+				R_MipMapsRGB(*resampledBuffer, width, height);
 
 			width  = MAX(1, width >> 1);
 			height = MAX(1, height >> 1);
@@ -2257,7 +2254,7 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 		glWrapClampMode = GL_REPEAT;
 
 	if (!internalFormat)
-		internalFormat = RawImage_GetFormat(&pics[0], image->width * image->height, isLightmap, image->type, image->flags);
+		internalFormat = RawImage_GetFormat(&pics[0], width * height, isLightmap, image->type, image->flags);
 
 	image->internalFormat = internalFormat;
 
@@ -2265,9 +2262,8 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 	// if not rgba8 and uploading an image, skip picmips.
 	if (!cubemap)
 	{
-		// ZTM: FIXME: ### this is crashing and changes pics[0].data to resampled buffer which is freed at end of function which might be bad?
-		if (rgba8)
-			scaled = qfalse; //RawImage_ScaleToPower2(pics[0].data, 0, &width, &height, type, flags, &resampledBuffer);
+		if (rgba8 && numTexLevels == 1)
+			scaled = RawImage_ScaleToPower2(&pics[0], 0, &width, &height, type, flags, &resampledBuffer);
 		else if (pics[0].data && picmip)
 		{
 #if 0
@@ -2284,13 +2280,13 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 		}
 	}
 
-	image->uploadWidth = image->width;
-	image->uploadHeight = image->height;
+	image->uploadWidth = width;
+	image->uploadHeight = height;
 
 	// Allocate texture storage so we don't have to worry about it later.
 	dataFormat = PixelDataFormatFromInternalFormat(internalFormat);
-	mipWidth = image->width;
-	mipHeight = image->height;
+	mipWidth = width;
+	mipHeight = height;
 	miplevel = 0;
 	do
 	{
@@ -2314,11 +2310,21 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 	while (!lastMip);
 
 	// Upload data.
-	if (pics[0].data)
-		Upload32(numTexLevels, pics, 0, 0, image->width, image->height, picFormat, image, scaled);
+	if (resampledBuffer != NULL) {
+		textureLevel_t texLevel;
 
-	if (resampledBuffer != NULL)
+		texLevel.format = picFormat;
+		texLevel.width = width;
+		texLevel.height = height;
+		texLevel.size = width * height * 4;
+		texLevel.data = resampledBuffer;
+		Upload32(1, &texLevel, 0, 0, width, height, picFormat, image, scaled);
+
 		ri.Hunk_FreeTempMemory(resampledBuffer);
+	}
+	else if (pics[0].data) {
+		Upload32(numTexLevels, pics, 0, 0, width, height, picFormat, image, scaled);
+	}
 
 	// Set all necessary texture parameters.
 	qglTextureParameterfEXT(image->texnum, textureTarget, GL_TEXTURE_WRAP_S, glWrapClampMode);
