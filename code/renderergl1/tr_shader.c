@@ -1290,7 +1290,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			}
 
 			if ( totalImages > MAX_IMAGE_ANIMATIONS ) {
-				ri.Printf( PRINT_WARNING, "WARNING: Ignoring excess images for '%s' (found %d, max is %d) in shader '%s'\n",
+				ri.Printf( PRINT_WARNING, "WARNING: ignoring excess images for '%s' (found %d, max is %d) in shader '%s'\n",
 						keyword, totalImages, MAX_IMAGE_ANIMATIONS, shader.name );
 			}
 		}
@@ -1306,6 +1306,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			if (bundle->videoMapHandle != -1) {
 				bundle->isVideoMap = qtrue;
 				bundle->image[0] = tr.scratchImage[bundle->videoMapHandle];
+			} else {
+				ri.Printf( PRINT_WARNING, "WARNING: could not load '%s' for 'videoMap' keyword in shader '%s'\n", token, shader.name );
 			}
 		}
 		//
