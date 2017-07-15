@@ -3803,7 +3803,7 @@ const char *FS_DefaultBaseGame( void ) {
 					continue;
 				}
 
-				// if already found game, just finish parsing the game for error checking.
+				// if already found game, just finish parsing the file for error checking.
 				if ( foundGameDir ) {
 					continue;
 				}
