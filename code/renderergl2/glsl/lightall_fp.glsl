@@ -45,6 +45,9 @@ uniform vec4      u_CubeMapInfo;
 #endif
 #endif
 
+uniform int       u_AlphaTest;
+uniform float     u_AlphaTestRef;
+
 varying vec4      var_TexCoords;
 
 varying vec4      var_Color;
@@ -228,6 +231,38 @@ void main()
 #endif
 
 	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
+	
+	float alpha = diffuse.a * var_Color.a;
+	if (u_AlphaTest == U_ATEST_EQUAL)
+	{
+		if (alpha == u_AlphaTestRef)
+			discard;
+	}
+	else if (u_AlphaTest == U_ATEST_GREATEREQUAL)
+	{
+		if (alpha >= u_AlphaTestRef)
+			discard;
+	}
+	else if (u_AlphaTest == U_ATEST_LESS)
+	{
+		if (alpha < u_AlphaTestRef)
+			discard;
+	}
+	else if (u_AlphaTest == U_ATEST_LESSEQUAL)
+	{
+		if (alpha <= u_AlphaTestRef)
+			discard;
+	}
+	else if (u_AlphaTest == U_ATEST_NOTEQUAL)
+	{
+		if (alpha != u_AlphaTestRef)
+			discard;
+	}
+	else if (u_AlphaTest == U_ATEST_GREATER)
+	{
+		if (alpha > u_AlphaTestRef)
+			discard;
+	}
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 	L = var_LightDir.xyz;
@@ -406,5 +441,5 @@ void main()
 
 #endif
 
-	gl_FragColor.a = diffuse.a * var_Color.a;
+	gl_FragColor.a = alpha;
 }

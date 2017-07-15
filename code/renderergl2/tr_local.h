@@ -754,7 +754,11 @@ typedef enum
 
 	UNIFORM_CUBEMAPINFO,
 
+	UNIFORM_ALPHATEST,
+
 	// new in spearmint
+	UNIFORM_ALPHATESTREF,
+
 	UNIFORM_INTENSITY,
 	UNIFORM_DIFFUSECOLOR,
 	UNIFORM_FOGTYPE,
@@ -765,6 +769,17 @@ typedef enum
 
 	UNIFORM_COUNT
 } uniform_t;
+
+// values for UNIFORM_ALPHATEST. 0-3 match ioquake3's opengl2 renderer.
+enum {
+	U_ATEST_NONE = 0,
+	U_ATEST_EQUAL = 1,
+	U_ATEST_GREATEREQUAL = 2,
+	U_ATEST_LESS = 3,
+	U_ATEST_LESSEQUAL,
+	U_ATEST_NOTEQUAL,
+	U_ATEST_GREATER,
+};
 
 // shaderProgram_t represents a pair of one
 // GLSL vertex and one GLSL fragment shader

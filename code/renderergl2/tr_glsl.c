@@ -156,6 +156,9 @@ static uniformInfo_t uniformsInfo[] =
 
 	{ "u_CubeMapInfo", GLSL_VEC4 },
 
+	{ "u_AlphaTest", GLSL_INT },
+	{ "u_AlphaTestRef", GLSL_FLOAT },
+
 	{ "u_Intensity", GLSL_FLOAT },
 	{ "u_DiffuseColor", GLSL_VEC3 },
 	{ "u_FogType", GLSL_INT },
@@ -256,7 +259,10 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 	// HACK: abuse the GLSL preprocessor to turn GLSL 1.20 shaders into 1.30 ones
 	if(glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 30))
 	{
-		Q_strcat(dest, size, "#version 130\n");
+		if (glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 50))
+			Q_strcat(dest, size, "#version 150\n");
+		else
+			Q_strcat(dest, size, "#version 130\n");
 
 		if(shaderType == GL_VERTEX_SHADER)
 		{
@@ -269,11 +275,15 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 
 			Q_strcat(dest, size, "out vec4 out_Color;\n");
 			Q_strcat(dest, size, "#define gl_FragColor out_Color\n");
+			Q_strcat(dest, size, "#define texture2D texture\n");
+			Q_strcat(dest, size, "#define textureCubeLod textureLod\n");
+			Q_strcat(dest, size, "#define shadow2D texture\n");
 		}
 	}
 	else
 	{
 		Q_strcat(dest, size, "#version 120\n");
+		Q_strcat(dest, size, "#define shadow2D(a,b) shadow2D(a,b).r \n");
 	}
 
 	// HACK: add some macros to avoid extra uniforms and save speed and code maintenance
@@ -366,6 +376,25 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 								FT_NONE,
 								FT_EXP,
 								FT_LINEAR));
+
+	Q_strcat(dest, size,
+							 va("#ifndef alphaTest_t\n"
+								"#define alphaTest_t\n"
+								"#define U_ATEST_NONE %i\n"
+								"#define U_ATEST_EQUAL %i\n"
+								"#define U_ATEST_GREATEREQUAL %i\n"
+								"#define U_ATEST_LESS %i\n"
+								"#define U_ATEST_LESSEQUAL %i\n"
+								"#define U_ATEST_NOTEQUAL %i\n"
+								"#define U_ATEST_GREATER %i\n"
+								"#endif\n",
+								U_ATEST_NONE,
+								U_ATEST_EQUAL,
+								U_ATEST_GREATEREQUAL,
+								U_ATEST_LESS,
+								U_ATEST_LESSEQUAL,
+								U_ATEST_NOTEQUAL,
+								U_ATEST_GREATER));
 
 	fbufWidthScale = 1.0f / ((float)glConfig.vidWidth);
 	fbufHeightScale = 1.0f / ((float)glConfig.vidHeight);
@@ -509,20 +538,6 @@ static void GLSL_LinkProgram(GLuint program)
 	{
 		GLSL_PrintLog(program, GLSL_PRINTLOG_PROGRAM_INFO, qfalse);
 		ri.Error(ERR_DROP, "shaders failed to link");
-	}
-}
-
-static void GLSL_ValidateProgram(GLuint program)
-{
-	GLint           validated;
-
-	qglValidateProgram(program);
-
-	qglGetProgramiv(program, GL_VALIDATE_STATUS, &validated);
-	if(!validated)
-	{
-		GLSL_PrintLog(program, GLSL_PRINTLOG_PROGRAM_INFO, qfalse);
-		ri.Error(ERR_DROP, "shaders failed to validate");
 	}
 }
 
@@ -720,7 +735,6 @@ void GLSL_InitUniforms(shaderProgram_t *program)
 
 void GLSL_FinishGPUShader(shaderProgram_t *program)
 {
-	GLSL_ValidateProgram(program->program);
 	GLSL_ShowProgramUniforms(program->program);
 	GL_CheckErrors();
 }
@@ -982,7 +996,7 @@ void GLSL_InitGPUShaders(void)
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD;
 
-	if (!GLSL_InitGPUShader(&tr.textureColorShader, "texturecolor", attribs, qtrue, NULL, qfalse, fallbackShader_texturecolor_vp, fallbackShader_texturecolor_fp))
+	if (!GLSL_InitGPUShader(&tr.textureColorShader, "texturecolor", attribs, qtrue, extradefines, qtrue, fallbackShader_texturecolor_vp, fallbackShader_texturecolor_fp))
 	{
 		ri.Error(ERR_FATAL, "Could not load texturecolor shader!");
 	}

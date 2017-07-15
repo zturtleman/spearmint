@@ -1,5 +1,8 @@
 uniform sampler2D u_DiffuseMap;
 
+uniform int       u_AlphaTest;
+uniform float     u_AlphaTestRef;
+
 #if defined(USE_LIGHTMAP)
 uniform sampler2D u_LightMap;
 
@@ -41,5 +44,38 @@ void main()
 	//color = color * (u_Texture1Env.xxxx + color2 * u_Texture1Env.z) + color2 * u_Texture1Env.y;
 #endif
 
-	gl_FragColor = color * var_Color;
+	float alpha = color.a * var_Color.a;
+	if (u_AlphaTest == U_ATEST_EQUAL)
+	{
+		if (alpha == u_AlphaTestRef)
+			discard;
+	}
+	else if (u_AlphaTest == U_ATEST_GREATEREQUAL)
+	{
+		if (alpha >= u_AlphaTestRef)
+			discard;
+	}
+	else if (u_AlphaTest == U_ATEST_LESS)
+	{
+		if (alpha < u_AlphaTestRef)
+			discard;
+	}
+	else if (u_AlphaTest == U_ATEST_LESSEQUAL)
+	{
+		if (alpha <= u_AlphaTestRef)
+			discard;
+	}
+	else if (u_AlphaTest == U_ATEST_NOTEQUAL)
+	{
+		if (alpha != u_AlphaTestRef)
+			discard;
+	}
+	else if (u_AlphaTest == U_ATEST_GREATER)
+	{
+		if (alpha > u_AlphaTestRef)
+			discard;
+	}
+	
+	gl_FragColor.rgb = color.rgb * var_Color.rgb;
+	gl_FragColor.a = alpha;
 }
