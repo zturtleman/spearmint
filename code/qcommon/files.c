@@ -318,6 +318,52 @@ FILE*		missingFiles = NULL;
 #  endif
 #endif
 
+struct {
+	unsigned int checksum;
+	char *gamename;
+	char *basename;
+} commercialPaks[] = {
+	// quake3
+	{ 1042450890u, "demoq3", "pak0" },
+	{ 4204185745u, "baseq3", "pak0" },
+	{ 4193093146u, "baseq3", "pak1" },
+	{ 2353701282u, "baseq3", "pak2" },
+	{ 3321918099u, "baseq3", "pak3" },
+	{ 2809125413u, "baseq3", "pak4" },
+	{ 1185311901u, "baseq3", "pak5" },
+	{ 750524939u,  "baseq3", "pak6" },
+	{ 2842227859u, "baseq3", "pak7" },
+	{ 3662040954u, "baseq3", "pak8" },
+
+	// team arena
+	{ 1185930068u, "tademo", "pak0" },
+	{ 946490770u, "missionpack", "pak0" },
+	{ 1414087181u,"missionpack", "pak1" },
+	{ 409244605u, "missionpack", "pak2" },
+	{ 648653547u, "missionpack", "pak3" },
+
+	// rtcw
+	{ 1731729369u, "demomain", "pak0" },
+	{ 1787286276u, "main", "pak0" },
+	{ 825182904u, "main", "mp_pak0" },
+	{ 1872082070u, "main", "mp_pak1" },
+	{ 220365352u, "main", "mp_pak2" },
+	{ 1130325916u, "main", "mp_pak3" },
+	{ 3272074268u, "main", "mp_pak4" },
+	{ 3805724433u, "main", "mp_pak5" },
+	{ 2334312393u, "main", "sp_pak1" },
+	{ 1078227215u, "main", "sp_pak2" },
+	{ 2334312393u, "main", "sp_pak3" },
+	{ 1078227215u, "main", "sp_pak4" },
+
+	// et
+	{ 1627565872u, "etmain", "pak0" },
+	{ 1587932567u,"etmain", "pak1" },
+	{ 3477493040u, "etmain", "pak2" },
+};
+
+int numCommercialPaks = ARRAY_LEN( commercialPaks );
+
 /*
 ==============
 FS_Initialized
@@ -3388,11 +3434,15 @@ void FS_AddGameDirectory( const char *path, const char *dir ) {
 FS_ReferencedPakType
 ================
 */
-pakType_t FS_ReferencedPakType( const char *name, int checksum ) {
+pakType_t FS_ReferencedPakType( const char *name, int checksum, qboolean *pInstalled ) {
 	searchpath_t *sp;
+	int i;
 
 	for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
 		if ( sp->pack && sp->pack->checksum == checksum ) {
+			if ( pInstalled ) {
+				*pInstalled = qtrue;
+			}
 			return sp->pack->pakType;
 		}
 	}
@@ -3419,10 +3469,33 @@ pakType_t FS_ReferencedPakType( const char *name, int checksum ) {
 				FS_FreePak(thepak);
 
 				if ( zipchecksum == checksum ) {
+					if ( pInstalled ) {
+						*pInstalled = qtrue;
+					}
+					// this probably isn't correct type for pak but client just needs to know we already have it
 					return PAK_NO_DOWNLOAD;
 				}
 			}
+		}
+	}
 
+	if ( pInstalled ) {
+		*pInstalled = qfalse;
+	}
+
+	// prevent client from trying to downloading commericial paks that aren't installed (ignore checksum)
+	for ( i = 0; i < numCommercialPaks; ++i ) {
+		if ( /*commercialPaks[i].checksum == checksum
+			&&*/ Q_stricmp( name, va( "%s/%s", commercialPaks[i].gamename, commercialPaks[i].basename ) ) == 0 ) {
+			return PAK_COMMERCIAL;
+		}
+	}
+
+	// make client respect the local nodownload list (ignore checksum)
+	for ( i = 0 ; i < fs_numPaksums ; i++ ) {
+		if ( /*com_purePaks[i].checksum == checksum
+			&&*/ Q_stricmp( name, va( "%s/%s", com_purePaks[i].gamename, com_purePaks[i].pakname ) ) == 0 ) {
+			return PAK_NO_DOWNLOAD;
 		}
 	}
 
@@ -3474,6 +3547,7 @@ we are not interested in a download string format, we want something human-reada
 */
 qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 	pakType_t		pakType;
+	qboolean		installed;
 	char *origpos = neededpaks;
 	int i;
 
@@ -3485,11 +3559,33 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 	for ( i = 0 ; i < fs_numServerReferencedPaks ; i++ )
 	{
 		// Ok, see if we have this pak file
-		pakType = FS_ReferencedPakType( fs_serverReferencedPakNames[i], fs_serverReferencedPaks[ i ] );
+		pakType = FS_ReferencedPakType( fs_serverReferencedPakNames[i], fs_serverReferencedPaks[ i ], &installed );
 
-		// never autodownload any of the id or paks which don't allow it
-		if ( pakType == PAK_COMMERCIAL || pakType == PAK_NO_DOWNLOAD )
+		if ( installed )
 		{
+			continue;
+		}
+
+		// never autodownload any of the id paks
+		// if missing commericial pak, don't download any paks
+		// if pak exists with wrong checksum, allow downloading
+		// FIXME: what if they unzipped the paks? maybe don't download if missing default.cfg? not having a way to know "is this game installed?" sucks.
+		if ( pakType == PAK_COMMERCIAL && dlstring )
+		{
+			if ( FS_SV_FileExists( va( "%s.pk3", fs_serverReferencedPakNames[i] ) ) )
+			{
+				// pak exists with wrong checksum, don't try to download it
+				continue;
+			}
+			else
+			{
+				// don't download addons if the base game is missing.
+				*neededpaks = 0;
+				return qfalse;
+			}
+		}
+
+		if ( pakType == PAK_NO_DOWNLOAD && dlstring ) {
 			continue;
 		}
 
@@ -3500,7 +3596,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 			continue;
 		}
 
-		if ( pakType == PAK_UNKNOWN && fs_serverReferencedPakNames[i] && *fs_serverReferencedPakNames[i] ) { 
+		if ( fs_serverReferencedPakNames[i] && *fs_serverReferencedPakNames[i] ) { 
 			// Don't got it
 
 			if (dlstring)
@@ -4097,52 +4193,6 @@ static void FS_Startup( qboolean quiet )
 	}
 }
 
-struct {
-	unsigned int checksum;
-	char *gamename;
-	char *basename;
-} commercialPaks[] = {
-	// quake3
-	{ 1042450890u, "demoq3", "pak0" },
-	{ 4204185745u, "baseq3", "pak0" },
-	{ 4193093146u, "baseq3", "pak1" },
-	{ 2353701282u, "baseq3", "pak2" },
-	{ 3321918099u, "baseq3", "pak3" },
-	{ 2809125413u, "baseq3", "pak4" },
-	{ 1185311901u, "baseq3", "pak5" },
-	{ 750524939u,  "baseq3", "pak6" },
-	{ 2842227859u, "baseq3", "pak7" },
-	{ 3662040954u, "baseq3", "pak8" },
-
-	// team arena
-	{ 1185930068u, "tademo", "pak0" },
-	{ 946490770u, "missionpack", "pak0" },
-	{ 1414087181u,"missionpack", "pak1" },
-	{ 409244605u, "missionpack", "pak2" },
-	{ 648653547u, "missionpack", "pak3" },
-
-	// rtcw
-	{ 1731729369u, "demomain", "pak0" },
-	{ 1787286276u, "main", "pak0" },
-	{ 825182904u, "main", "mp_pak0" },
-	{ 1872082070u, "main", "mp_pak1" },
-	{ 220365352u, "main", "mp_pak2" },
-	{ 1130325916u, "main", "mp_pak3" },
-	{ 3272074268u, "main", "mp_pak4" },
-	{ 3805724433u, "main", "mp_pak5" },
-	{ 2334312393u, "main", "sp_pak1" },
-	{ 1078227215u, "main", "sp_pak2" },
-	{ 2334312393u, "main", "sp_pak3" },
-	{ 1078227215u, "main", "sp_pak4" },
-
-	// et
-	{ 1627565872u, "etmain", "pak0" },
-	{ 1587932567u,"etmain", "pak1" },
-	{ 3477493040u, "etmain", "pak2" },
-};
-
-int numCommercialPaks = ARRAY_LEN( commercialPaks );
-
 /*
 ===================
 FS_DetectCommercialPaks
@@ -4159,8 +4209,8 @@ void FS_DetectCommercialPaks( void ) {
 			continue;
 
 		for ( i = 0; i < numCommercialPaks; ++i ) {
-			if ( path->pack->checksum == commercialPaks[i].checksum
-				&& Q_stricmp( path->pack->pakGamename, commercialPaks[i].gamename ) == 0
+			if ( /*path->pack->checksum == commercialPaks[i].checksum
+				&& */Q_stricmp( path->pack->pakGamename, commercialPaks[i].gamename ) == 0
 				&& Q_stricmp( path->pack->pakBasename, commercialPaks[i].basename ) == 0 ) {
 				//Com_DPrintf("Found commercial pak: %s (original %s%c%s)\n", path->pack->pakFilename,
 				//		   commercialPaks[i].gamename, PATH_SEP, commercialPaks[i].basename );

@@ -816,7 +816,7 @@ void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames );
 // sole exception of .cfg files.
 
 qboolean FS_CheckDirTraversal(const char *checkdir);
-pakType_t FS_ReferencedPakType( const char *name, int checksum );
+pakType_t FS_ReferencedPakType( const char *name, int checksum, qboolean *installed );
 qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring );
 
 qboolean FS_Rename( const char *from, const char *to );

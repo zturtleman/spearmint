@@ -1081,7 +1081,7 @@ int SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 						// now that we know the file is referenced,
 						// check whether it's legal to download it
 						// or if it is a default pak.
-						pakType = FS_ReferencedPakType( Cmd_Argv(curindex), FS_ReferencedPakChecksum( curindex ) );
+						pakType = FS_ReferencedPakType( Cmd_Argv(curindex), FS_ReferencedPakChecksum( curindex ), NULL );
 						break;
 					}
 				}
@@ -1101,7 +1101,8 @@ int SV_WriteDownloadToClient(client_t *cl, msg_t *msg)
 				Com_Printf("clientDownload: %d : \"%s\" is not referenced and cannot be downloaded.\n", (int) (cl - svs.clients), cl->downloadName);
 				Com_sprintf(errorMessage, sizeof(errorMessage), "File \"%s\" is not referenced and cannot be downloaded.", cl->downloadName);
 			}
-			else if ( pakType == PAK_COMMERCIAL ) {
+			else if ( pakType == PAK_COMMERCIAL )
+			{
 				Com_Printf("clientDownload: %d : \"%s\" cannot download commercial pk3 files\n", (int) (cl - svs.clients), cl->downloadName);
 				Com_sprintf(errorMessage, sizeof(errorMessage), "Cannot autodownload commercial pk3 file \"%s\"", cl->downloadName);
 			}
