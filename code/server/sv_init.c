@@ -681,17 +681,18 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 		}
 		p = FS_LoadedPakNames();
 		Cvar_Set( "sv_pakNames", p );
-
-		// if a dedicated pure server we need to touch the cgame because it could be in a
-		// seperate pk3 file and the client will need to load the latest cgame.qvm
-		if ( com_dedicated->integer ) {
-			SV_TouchCGame();
-		}
 	}
 	else {
 		Cvar_Set( "sv_paks", "" );
 		Cvar_Set( "sv_pakNames", "" );
 	}
+
+	// if a dedicated pure server we need to touch the cgame because it could be in a
+	// seperate pk3 file and the client will need to load the latest cgame.qvm
+	if ( com_dedicated->integer ) {
+		SV_TouchCGame();
+	}
+
 	// the server sends these to the clients so they can figure
 	// out which pk3s should be auto-downloaded
 	p = FS_ReferencedPakChecksums();
