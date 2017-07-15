@@ -1346,6 +1346,11 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 						{
 							pak->referenced = qtrue;
 						}
+						else if ( Q_stricmp(filename, "default.cfg") == 0 ||
+								 Q_stricmp(filename, GAMESETTINGS) == 0)
+						{
+							pak->referenced = qtrue;
+						}
 					}
 
 					if(uniqueFILE)
