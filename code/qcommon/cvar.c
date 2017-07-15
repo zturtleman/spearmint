@@ -1433,7 +1433,10 @@ void Cvar_Restart(qboolean unsetVM)
 
 	while(curvar)
 	{
-		if((curvar->flags & CVAR_USER_CREATED) ||
+		// Custom reset (default value) are reloaded in FS_Restart before this function
+		// is run in Com_GameRestart. Any user cvars with custom reset are for the new
+		// fs_game, so don't remove them.
+		if(((curvar->flags & CVAR_USER_CREATED) && !(curvar->flags & CVAR_CUSTOM_RESET)) ||
 			(unsetVM && (curvar->flags & CVAR_VM_CREATED)))
 		{
 			// throw out any variables the user/vm created
