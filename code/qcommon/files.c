@@ -4410,6 +4410,12 @@ static void FS_CheckPaks( qboolean quiet )
 		for( path = fs_searchpaths; path; path = path->next ) {
 			if ( path->pack && Q_stricmp( path->pack->pakGamename, com_purePaks[pak].gamename ) == 0
 				&& Q_stricmp( path->pack->pakBasename, com_purePaks[pak].pakname ) == 0 ) {
+				// reference all non-optional default paks
+				if ( !com_purePaks[pak].optional ) {
+					path->pack->referenced = qtrue;
+				}
+
+				// commercial paks cannot be downloaded either, don't change their type
 				if ( path->pack->pakType != PAK_COMMERCIAL && com_purePaks[pak].nodownload ) {
 					path->pack->pakType = PAK_NO_DOWNLOAD;
 				}
