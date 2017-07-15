@@ -3706,6 +3706,130 @@ const char *FS_PortableHomePath(void) {
 }
 
 /*
+================
+FS_DefaultBaseGame
+
+Check list of base game overrides.
+================
+*/
+static char defaultBaseGame[ MAX_OSPATH ] = { 0 };
+const char *FS_DefaultBaseGame( void ) {
+	char path[ MAX_OSPATH ];
+	FILE *filep;
+
+	// only check once
+	if ( defaultBaseGame[0] ) {
+		return defaultBaseGame;
+	}
+
+	// default to base game from compile time
+	Q_strncpyz( defaultBaseGame, BASEGAME, sizeof ( defaultBaseGame ) );
+
+	filep = NULL;
+
+	// check for file with list of overrides
+	if ( !filep && fs_homepath->string[0] ) {
+		Com_sprintf( path, sizeof( path ), "%s%c%s", fs_homepath->string, PATH_SEP, MINT_GAMELIST );
+		filep = Sys_FOpen( path, "rb" );
+	}
+#ifdef __APPLE__
+	if ( !filep && fs_apppath->string[0] ) {
+		Com_sprintf( path, sizeof( path ), "%s%c%s", fs_apppath->string, PATH_SEP, MINT_GAMELIST );
+		filep = Sys_FOpen( path, "rb" );
+	}
+#endif
+	if ( !filep && fs_basepath->string[0] ) {
+		Com_sprintf( path, sizeof( path ), "%s%c%s", fs_basepath->string, PATH_SEP, MINT_GAMELIST );
+		filep = Sys_FOpen( path, "rb" );
+	}
+	if ( !filep && fs_cdpath->string[0] ) {
+		Com_sprintf( path, sizeof( path ), "%s%c%s", fs_cdpath->string, PATH_SEP, MINT_GAMELIST );
+		filep = Sys_FOpen( path, "rb" );
+	}
+
+	// found file
+	if ( filep ) {
+		int			len = FS_fplength( filep );
+		char		*buf, *text_p, *token;
+		char		gamedir[MAX_OSPATH];
+		char		file[MAX_OSPATH];
+		qboolean	firstLine = qtrue;
+		qboolean	foundGameDir = qfalse;
+
+		buf = Hunk_AllocateTempMemory(len+1);
+		buf[len] = 0;
+
+		fread( buf, 1, len, filep );
+		fclose( filep );
+
+		text_p = buf;
+
+		while ( 1 ) {
+			if ( firstLine ) {
+				firstLine = qfalse;
+			} else {
+				// skip the rest in case want to add additional options here later
+				SkipRestOfLine( &text_p );
+			}
+
+			token = COM_Parse( &text_p );
+			if ( !*token )
+				break;
+
+			if ( Q_stricmp( token, "tryGameDir" ) == 0 ) {
+				token = COM_ParseExt( &text_p, qfalse );
+				if ( !*token ) {
+					Com_Printf( S_COLOR_YELLOW "WARNING: missing gamedir for 'tryGameDir' in %s\n", path );
+					continue;
+				}
+
+				Q_strncpyz( gamedir, token, sizeof ( gamedir ) );
+
+				if ( FS_CheckDirTraversal( gamedir ) ) {
+					Com_Printf( S_COLOR_YELLOW "WARNING: invalid gamedir %s in %s\n", gamedir, path );
+					continue;
+				}
+
+				token = COM_ParseExt( &text_p, qfalse );
+				if ( !*token ) {
+					Com_Printf( S_COLOR_YELLOW "WARNING: missing file for gamedir %s in %s\n", gamedir, path );
+					continue;
+				}
+
+				Q_strncpyz( file, token, sizeof ( file ) );
+
+				if ( FS_CheckDirTraversal( file ) ) {
+					Com_Printf( S_COLOR_YELLOW "WARNING: invalid file %s in %s\n", file, path );
+					continue;
+				}
+
+				// if already found game, just finish parsing the game for error checking.
+				if ( foundGameDir ) {
+					continue;
+				}
+
+				if ( ( fs_homepath->string[0] && FS_FileInPathExists( FS_BuildOSPath( fs_homepath->string, gamedir, file ) ) )
+#ifdef __APPLE__
+					|| ( fs_apppath->string[0] && FS_FileInPathExists( FS_BuildOSPath( fs_apppath->string, gamedir, file ) ) )
+#endif
+					|| ( fs_basepath->string[0] && FS_FileInPathExists( FS_BuildOSPath( fs_basepath->string, gamedir, file ) ) )
+					|| ( fs_cdpath->string[0] && FS_FileInPathExists( FS_BuildOSPath( fs_cdpath->string, gamedir, file ) ) ) ) {
+					Com_Printf( "Using '%s' as default game as specified in %s.\n", gamedir, path );
+					Q_strncpyz( defaultBaseGame, gamedir, sizeof ( defaultBaseGame ) );
+					foundGameDir = qtrue;
+				}
+			} else {
+				Com_Printf( S_COLOR_YELLOW "WARNING: Unknown token '%s' in %s\n", token, path );
+			}
+		}
+
+		Hunk_FreeTempMemory( buf );
+	}
+
+	return defaultBaseGame;
+}
+
+/*
 ===================
 FS_LoadGameConfig
 
@@ -3749,9 +3873,9 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config, const char *gameDir, qb
 	text_p = buffer.c;
 
 	while ( 1 ) {
-		if ( firstLine )
+		if ( firstLine ) {
 			firstLine = qfalse;
-		else {
+		} else {
 			// skip the rest in case want to add additional options here later
 			SkipRestOfLine( &text_p );
 		}
@@ -3773,8 +3897,10 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config, const char *gameDir, qb
 
 		if ( Q_stricmp( token, "addGameDir" ) == 0 ) {
 			token = COM_ParseExt( &text_p, qfalse );
-			if ( !*token )
+			if ( !*token ) {
+				Com_Printf( S_COLOR_YELLOW "WARNING: missing gamedir for 'addGameDir' in %s\n", path );
 				continue;
+			}
 
 			if ( FS_CheckDirTraversal( token ) ) {
 				Com_Printf( S_COLOR_YELLOW "WARNING: invalid gamedir %s in %s\n", token, path );
@@ -3840,7 +3966,7 @@ static qboolean FS_LoadGameConfig( gameConfig_t *config, const char *gameDir, qb
 			screen->aspect = atof( token );
 #endif
 		} else {
-			Com_Printf("Unknown token '%s' in %s\n", token, path);
+			Com_Printf( S_COLOR_YELLOW "WARNING: Unknown token '%s' in %s\n", token, path );
 		}
 	}
 
@@ -3912,7 +4038,7 @@ static void FS_Startup( qboolean quiet )
 		homePath = fs_basepath->string;
 	}
 	fs_homepath = Cvar_Get ("fs_homepath", homePath, CVAR_INIT|CVAR_PROTECTED );
-	fs_gamedirvar = Cvar_Get ("fs_game", BASEGAME, CVAR_INIT|CVAR_SYSTEMINFO|CVAR_SERVERINFO );
+	fs_gamedirvar = Cvar_Get ("fs_game", FS_DefaultBaseGame(), CVAR_INIT|CVAR_SYSTEMINFO|CVAR_SERVERINFO );
 
 	if(!fs_gamedirvar->string[0])
 		Cvar_ForceReset("fs_game");
