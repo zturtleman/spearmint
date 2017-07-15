@@ -47,32 +47,32 @@ void main()
 	float alpha = color.a * var_Color.a;
 	if (u_AlphaTest == U_ATEST_EQUAL)
 	{
-		if (alpha == u_AlphaTestRef)
+		if (alpha != u_AlphaTestRef)
 			discard;
 	}
 	else if (u_AlphaTest == U_ATEST_GREATEREQUAL)
 	{
-		if (alpha >= u_AlphaTestRef)
+		if (alpha < u_AlphaTestRef)
 			discard;
 	}
 	else if (u_AlphaTest == U_ATEST_LESS)
 	{
-		if (alpha < u_AlphaTestRef)
+		if (alpha >= u_AlphaTestRef)
 			discard;
 	}
 	else if (u_AlphaTest == U_ATEST_LESSEQUAL)
 	{
-		if (alpha <= u_AlphaTestRef)
+		if (alpha > u_AlphaTestRef)
 			discard;
 	}
 	else if (u_AlphaTest == U_ATEST_NOTEQUAL)
 	{
-		if (alpha != u_AlphaTestRef)
+		if (alpha == u_AlphaTestRef)
 			discard;
 	}
 	else if (u_AlphaTest == U_ATEST_GREATER)
 	{
-		if (alpha > u_AlphaTestRef)
+		if (alpha <= u_AlphaTestRef)
 			discard;
 	}
 	
