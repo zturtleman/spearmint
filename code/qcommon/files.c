@@ -4804,7 +4804,7 @@ void FS_InitFilesystem( void ) {
 	// busted and error out now, rather than getting an unreadable
 	// graphics screen when the font fails to load
 	if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
-		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
+		Com_Error( ERR_FATAL, "Couldn't load default.cfg for %s", fs_gamedirvar->string );
 	}
 }
 
@@ -4856,19 +4856,24 @@ void FS_Restart( qboolean gameDirChanged ) {
 	// busted and error out now, rather than getting an unreadable
 	// graphics screen when the font fails to load
 	if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
+		char gamedir[MAX_OSPATH];
+
+		// save gamedir before it's changed by FS_TryLastValidGame
+		Q_strncpyz( gamedir, fs_gamedirvar->string, sizeof ( gamedir ) );
+
 		// this might happen when connecting to a pure server not using BASEGAME/pak0.pk3
 		// (for instance a Team Arena demo server)
 		if (FS_TryLastValidGame()) {
 			// if connected to a remote server, try to download the files
 			if ( CL_ConnectedToRemoteServer() ) {
-				Com_Printf( S_COLOR_YELLOW "WARNING: Couldn't load default.cfg, switched to last game to try to download missing files.\n" );
-				CL_MissingDefaultCfg();
+				Com_Printf( S_COLOR_YELLOW "WARNING: Couldn't load default.cfg for %s, switched to last game to try to download missing files.\n", gamedir );
+				CL_MissingDefaultCfg( gamedir );
 			} else {
-				Com_Error( ERR_DROP, "Couldn't load default.cfg" );
+				Com_Error( ERR_DROP, "Couldn't load default.cfg for %s", gamedir );
 			}
 			return;
 		}
-		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
+		Com_Error( ERR_FATAL, "Couldn't load default.cfg for %s", gamedir );
 	}
 
 	if ( Q_stricmp(fs_gamedirvar->string, lastValidGame) ) {

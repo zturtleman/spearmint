@@ -233,7 +233,7 @@ typedef struct {
 	int			downloadSize;	// how many bytes we got
 	char		downloadList[MAX_INFO_STRING]; // list of paks we need to download
 	qboolean	downloadRestart;	// if true, we need to do another FS_Restart because we downloaded a pak
-	qboolean	missingDefaultCfg;	// if true, fellback to last fs_game to attempt download because default.cfg was missing
+	char		missingDefaultCfg[MAX_OSPATH];	// if set, fellback to last fs_game to attempt download because default.cfg was missing
 
 	// demo information
 	char		demoName[MAX_OSPATH];

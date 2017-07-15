@@ -108,7 +108,7 @@ qboolean CL_ConnectedToRemoteServer( void ) {
 	return qfalse;
 }
 
-void CL_MissingDefaultCfg( void ) {
+void CL_MissingDefaultCfg( const char *gamedir ) {
 
 }
 

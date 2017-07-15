@@ -1196,7 +1196,7 @@ void CL_StartHunkUsers( qboolean rendererOnly );
 qboolean CL_ConnectedToRemoteServer( void );
 // returns qtrue if connected to a remote server
 
-void CL_MissingDefaultCfg( void );
+void CL_MissingDefaultCfg( const char *gamedir );
 // connected to a remote server and is missing default.cfg for new fs_game
 
 void Key_KeynameCompletion( void(*callback)(const char *s) );

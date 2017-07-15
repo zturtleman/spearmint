@@ -2199,14 +2199,14 @@ void CL_DownloadsComplete( void ) {
 		if( clc.cURLDisconnected ) {
 			if(clc.downloadRestart) {
 				clc.downloadRestart = qfalse;
-				clc.missingDefaultCfg = qfalse;
+				clc.missingDefaultCfg[0] = '\0';
 
 				FS_Restart( qfalse ); // We possibly downloaded a pak, restart the file system to load it
 				clc.fsRestarted = qtrue;
 
 				// still missing default.cfg after downloading files
-				if ( clc.missingDefaultCfg ) {
-					Com_Error( ERR_DROP, "Couldn't load default.cfg" );
+				if ( clc.missingDefaultCfg[0] ) {
+					Com_Error( ERR_DROP, "Couldn't load default.cfg for %s", clc.missingDefaultCfg );
 				}
 			}
 			clc.cURLDisconnected = qfalse;
@@ -2219,14 +2219,14 @@ void CL_DownloadsComplete( void ) {
 	// if we downloaded files we need to restart the file system
 	if (clc.downloadRestart) {
 		clc.downloadRestart = qfalse;
-		clc.missingDefaultCfg = qfalse;
+		clc.missingDefaultCfg[0] = '\0';
 
 		FS_Restart( qfalse ); // We possibly downloaded a pak, restart the file system to load it
 		clc.fsRestarted = qtrue;
 
 		// still missing default.cfg after downloading files
-		if ( clc.missingDefaultCfg ) {
-			Com_Error( ERR_DROP, "Couldn't load default.cfg" );
+		if ( clc.missingDefaultCfg[0] ) {
+			Com_Error( ERR_DROP, "Couldn't load default.cfg for %s", clc.missingDefaultCfg );
 		}
 
 		// inform the server so we get new gamestate info
@@ -2243,8 +2243,8 @@ void CL_DownloadsComplete( void ) {
 		clc.fsRestarted = qtrue;
 	}
 
-	if ( clc.missingDefaultCfg ) {
-		Com_Error( ERR_DROP, "Couldn't load default.cfg" );
+	if ( clc.missingDefaultCfg[0] ) {
+		Com_Error( ERR_DROP, "Couldn't load default.cfg for %s", clc.missingDefaultCfg );
 	}
 
 	// let the client game init and load data
@@ -2449,8 +2449,8 @@ Client connected to a remote server and when changing fs_game found
 that it was missing default.cfg.
 =================
 */
-void CL_MissingDefaultCfg( void ) {
-	clc.missingDefaultCfg = qtrue;
+void CL_MissingDefaultCfg( const char *gamedir ) {
+	Q_strncpyz( clc.missingDefaultCfg, gamedir, sizeof ( clc.missingDefaultCfg ) );
 }
 
 /*
