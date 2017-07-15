@@ -3866,7 +3866,7 @@ static void FS_AddGame( const char *gameName ) {
 		FS_AddGameDirectory( fs_basepath->string, gameName );
 	}
 
-#ifdef MACOS_X
+#ifdef __APPLE__
 	// Make MacOSX also include the base path included with the .app bundle
 	if (fs_apppath->string[0])
 		FS_AddGameDirectory( fs_apppath->string, gameName );
@@ -3901,7 +3901,7 @@ static void FS_Startup( qboolean quiet )
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
 	fs_cdpath = Cvar_Get ("fs_cdpath", Sys_SteamPath(), CVAR_INIT|CVAR_PROTECTED );
 	fs_basepath = Cvar_Get ("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT|CVAR_PROTECTED );
-#ifdef MACOS_X
+#ifdef __APPLE__
 	fs_apppath = Cvar_Get ("fs_apppath", Sys_DefaultAppPath(), CVAR_INIT|CVAR_PROTECTED );
 #endif
 	homePath = FS_PortableHomePath();

@@ -794,7 +794,7 @@ int main( int argc, char **argv )
 	signal( SIGTERM, Sys_SigHandler );
 	signal( SIGINT, Sys_SigHandler );
 
-#if !defined DEDICATED && !defined MACOS_X && !defined WIN32
+#if !defined DEDICATED && !defined __APPLE__ && !defined WIN32
 	// HACK: Before SDL 2.0.4, Linux (X11) did not set numlock or capslock state
 	//       so I made the engine always assumed num lock was on.
 	// NOTE: The SDL mod state on X11 is not set at this point even when it's fixed
