@@ -3651,6 +3651,14 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 				{
 					Q_strcat( neededpaks, len, " (local file exists with wrong checksum)");
 				}
+				else if ( pakType == PAK_COMMERCIAL )
+				{
+					Q_strcat( neededpaks, len, " (commercial pak, downloading not allowed)");
+				}
+				else if ( pakType == PAK_NO_DOWNLOAD )
+				{
+					Q_strcat( neededpaks, len, " (downloading not allowed)");
+				}
 				Q_strcat( neededpaks, len, "\n");
 			}
 		}
