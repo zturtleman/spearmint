@@ -971,7 +971,11 @@ qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWi
 				saveHeight = imageSize;
 			}
 
-			Com_sprintf(imageName, sizeof(imageName), "%s_%i_%i.tga", strippedName, imageNumber++, pointSize);
+			if ( borderWidth != 0 ) {
+				Com_sprintf(imageName, sizeof(imageName), "%s_%i_%i_b%g.tga", strippedName, imageNumber++, pointSize, borderWidth);
+			} else {
+				Com_sprintf(imageName, sizeof(imageName), "%s_%i_%i.tga", strippedName, imageNumber++, pointSize);
+			}
 			if(r_saveFontData->integer && !ri.FS_FileExists(imageName)) {
 				WriteTGA(imageName, out, imageSize, saveHeight);
 			}
@@ -1015,7 +1019,11 @@ qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWi
 		font->flags |= FONTFLAG_BORDER;
 	}
 
-	Com_sprintf(datName, sizeof(datName), "%s_%i.dat", strippedName, pointSize);
+	if ( borderWidth != 0 ) {
+		Com_sprintf(datName, sizeof(datName), "%s_%i_b%g.dat", strippedName, pointSize, borderWidth);
+	} else {
+		Com_sprintf(datName, sizeof(datName), "%s_%i.dat", strippedName, pointSize);
+	}
 	Q_strncpyz(font->name, datName, sizeof(font->name));
 	Com_Memcpy(&registeredFont[registeredFontCount++], font, sizeof(fontInfo_t));
 
@@ -1053,7 +1061,7 @@ static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, qb
 #endif
 
 	COM_StripExtension( name, strippedName, sizeof ( strippedName ) );
-	Com_sprintf( datName, sizeof ( datName ), "%s_%i.dat", strippedName, pointSize );
+	Com_sprintf( datName, sizeof ( datName ), "%s_%i_b%g.dat", strippedName, pointSize, borderWidth );
 
 	for (i = 0; i < registeredFontCount; i++) {
 		if (Q_stricmp(datName, registeredFont[i].name) == 0) {
@@ -1064,42 +1072,51 @@ static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, qb
 
 	if (registeredFontCount >= MAX_FONTS) {
 		ri.Printf(PRINT_WARNING, "RE_RegisterFont: Too many fonts registered already.\n");
-		return qfalse;
-	}
-
+	} else {
 #ifdef BUILD_FREETYPE
-	ext = COM_GetExtension( name );
+		ext = COM_GetExtension( name );
 
-	// if there is an extension, check if it's a supported format
-	if ( *ext ) {
+		// if there is an extension, check if it's a supported format
+		if ( *ext ) {
+			for ( i = 0; scaleableFontExts[i] != NULL; i++ ) {
+				if ( Q_stricmp( ext, scaleableFontExts[i] ) != 0 ) {
+					continue;
+				}
+
+				if ( R_LoadScalableFont( name, pointSize, borderWidth, forceAutoHint, font ) ) {
+					return qtrue;
+				}
+				break;
+			}
+		}
+
+		// fallback to all formats, but don't retry the original extension
 		for ( i = 0; scaleableFontExts[i] != NULL; i++ ) {
-			if ( Q_stricmp( ext, scaleableFontExts[i] ) != 0 ) {
+			if ( *ext && Q_stricmp( ext, scaleableFontExts[i] ) == 0 ) {
 				continue;
 			}
 
-			if ( R_LoadScalableFont( name, pointSize, borderWidth, forceAutoHint, font ) ) {
+			Com_sprintf( altName, sizeof (altName), "%s.%s", strippedName, scaleableFontExts[i] );
+
+			if ( R_LoadScalableFont( altName, pointSize, borderWidth, forceAutoHint, font ) ) {
 				return qtrue;
 			}
-			break;
 		}
+#endif
+
+		if ( R_LoadPreRenderedFont( datName, pointSize, font ) )
+			return qtrue;
 	}
 
-	// fallback to all formats, but don't retry the original extension
-	for ( i = 0; scaleableFontExts[i] != NULL; i++ ) {
-		if ( *ext && Q_stricmp( ext, scaleableFontExts[i] ) == 0 ) {
-			continue;
-		}
+	// check for font without border
+	Com_sprintf( datName, sizeof ( datName ), "%s_%i.dat", strippedName, pointSize );
 
-		Com_sprintf( altName, sizeof (altName), "%s.%s", strippedName, scaleableFontExts[i] );
-
-		if ( R_LoadScalableFont( altName, pointSize, borderWidth, forceAutoHint, font ) ) {
+	for (i = 0; i < registeredFontCount; i++) {
+		if (Q_stricmp(datName, registeredFont[i].name) == 0) {
+			Com_Memcpy(font, &registeredFont[i], sizeof(fontInfo_t));
 			return qtrue;
 		}
 	}
-#endif
-
-	if ( R_LoadPreRenderedFont( datName, pointSize, font ) )
-		return qtrue;
 
 	return qfalse;
 }
