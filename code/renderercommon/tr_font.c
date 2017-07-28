@@ -1193,3 +1193,13 @@ void R_DoneFreeType(void) {
 	registeredFontCount = 0;
 }
 
+void R_FontList_f( void ) {
+	int i;
+
+	for (i = 0; i < registeredFontCount; i++) {
+		ri.Printf( PRINT_ALL, "%2d: %s\n", i, registeredFont[i].name );
+	}
+
+	ri.Printf( PRINT_ALL, " ---------\n%2d fonts registered\n", registeredFontCount );
+}
+
