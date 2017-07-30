@@ -4272,8 +4272,6 @@ static void FS_Startup( qboolean quiet )
 	FS_ClearPakChecksums();
 	Com_Memset( &com_gameConfig, 0, sizeof (com_gameConfig) );
 
-	FS_AddDirectory( "fonts" );
-
 	FS_AddGame( fs_gamedirvar->string );
 
 	if ( com_gameConfig.numGameDirs > 0 ) {
@@ -4288,6 +4286,16 @@ static void FS_Startup( qboolean quiet )
 		// put fs_game at the head of list
 		FS_UnstashSearchPath();
 	}
+
+	//
+	// Add fonts at the end of the search path.
+	//
+	// hide game paths
+	FS_StashSearchPath();
+	// add top-level fonts directory
+	FS_AddDirectory( "fonts" );
+	// add game paths to beginning of list
+	FS_UnstashSearchPath();
 
 	Q_strncpyz( fs_gamedir, fs_gamedirvar->string, sizeof( fs_gamedir ) );
 
