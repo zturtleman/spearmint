@@ -875,12 +875,12 @@ unsigned long R_RemapGlyphCharacter( FT_Face face, int charIndex ) {
 
 /*
 ===============
-R_LoadScalableFont
+R_LoadDynamicFont
 
-Load outline or bitmap font using Freetype.
+Load an outline/bitmap font using Freetype for the current game window resolution.
 ===============
 */
-qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWidth, qboolean forceAutoHint, fontInfo_t *font ) {
+qboolean R_LoadDynamicFont( const char *fontName, int pointSize, float borderWidth, qboolean forceAutoHint, fontInfo_t *font ) {
 	FT_Face		face;
 	int			j, k, xOut, yOut, lastStart, imageNumber;
 	int			scaledSize, rowHeight;
@@ -897,7 +897,7 @@ qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWi
 	char		imageName[MAX_QPATH];
 	char		datName[MAX_QPATH];
 	char		strippedName[MAX_QPATH];
-	float		screenScale;
+	float		windowScale;
 	int			saveHeight;
 
 	if (ftLibrary == NULL) {
@@ -932,15 +932,15 @@ qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWi
 
 	FT_Select_Charmap( face, ft_encoding_unicode );
 
-	// point sizes are for a virtual 640x480 screen
+	// point sizes are for a virtual 640x480 window
 	if ( glConfig.vidWidth * 480 > glConfig.vidHeight * 640 ) {
-		screenScale = (glConfig.vidHeight / 480.0f);
+		windowScale = glConfig.vidHeight / 480.0f;
 	} else {
-		screenScale = (glConfig.vidWidth / 640.0f);
+		windowScale = glConfig.vidWidth / 640.0f;
 	}
 
-	// scale dpi based on screen resolution
-	dpi = 72.0f * screenScale;
+	// scale dpi based on window resolution
+	dpi = 72.0f * windowScale;
 
 	// change the scale to be relative to 1 based on 72 dpi ( so dpi of 144 means a scale of .5 )
 	glyphScale = 72.0f / dpi;
@@ -950,7 +950,7 @@ qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWi
 			FT_Pos	desired_y_ppem, largerDiff, smallerDiff, diff;
 			int		largerSize, smallerSize, selectSize;
 
-			desired_y_ppem = (FT_Pos)(pointSize*screenScale) << 6;
+			desired_y_ppem = (FT_Pos)(pointSize*windowScale) << 6;
 			largerSize = smallerSize = -1;
 			largerDiff = smallerDiff = -1;
 
@@ -1145,7 +1145,7 @@ qboolean R_LoadScalableFont( const char *fontName, int pointSize, float borderWi
 ==================
 R_GetFont
 
-Get already registered font or load a scalable font or a pre-rendered legacy font.
+Get already registered font or load a dynamic font or a pre-rendered legacy font.
 ==================
 */
 static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, qboolean forceAutoHint, fontInfo_t *font) {
@@ -1154,7 +1154,7 @@ static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, qb
 	char		datName[MAX_QPATH];
 #ifdef BUILD_FREETYPE
 	char		altName[MAX_QPATH];
-	char		*scaleableFontExts[] = { "ttf", "otf", "ttc", "otc", "fon", NULL };
+	char		*fontExts[] = { "ttf", "otf", "ttc", "otc", "fon", NULL };
 	const char	*ext;
 #endif
 
@@ -1177,12 +1177,12 @@ static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, qb
 
 	// if there is an extension, check if it's a supported format
 	if ( *ext ) {
-		for ( i = 0; scaleableFontExts[i] != NULL; i++ ) {
-			if ( Q_stricmp( ext, scaleableFontExts[i] ) != 0 ) {
+		for ( i = 0; fontExts[i] != NULL; i++ ) {
+			if ( Q_stricmp( ext, fontExts[i] ) != 0 ) {
 				continue;
 			}
 
-			if ( R_LoadScalableFont( name, pointSize, borderWidth, forceAutoHint, font ) ) {
+			if ( R_LoadDynamicFont( name, pointSize, borderWidth, forceAutoHint, font ) ) {
 				return qtrue;
 			}
 			break;
@@ -1190,14 +1190,14 @@ static qboolean R_GetFont(const char *name, int pointSize, float borderWidth, qb
 	}
 
 	// fallback to all formats, but don't retry the original extension
-	for ( i = 0; scaleableFontExts[i] != NULL; i++ ) {
-		if ( *ext && Q_stricmp( ext, scaleableFontExts[i] ) == 0 ) {
+	for ( i = 0; fontExts[i] != NULL; i++ ) {
+		if ( *ext && Q_stricmp( ext, fontExts[i] ) == 0 ) {
 			continue;
 		}
 
-		Com_sprintf( altName, sizeof (altName), "%s.%s", strippedName, scaleableFontExts[i] );
+		Com_sprintf( altName, sizeof (altName), "%s.%s", strippedName, fontExts[i] );
 
-		if ( R_LoadScalableFont( altName, pointSize, borderWidth, forceAutoHint, font ) ) {
+		if ( R_LoadDynamicFont( altName, pointSize, borderWidth, forceAutoHint, font ) ) {
 			return qtrue;
 		}
 	}
