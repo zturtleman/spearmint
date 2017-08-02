@@ -14,8 +14,9 @@ env:
     - CC=gcc
     - CC=clang
     # cross-compile using mingw
-    - CC= PLATFORM="mingw32" ARCH="x86"
-    - CC= PLATFORM="mingw32" ARCH="x86_64"
+    # dlopen curl to workaround link error because mingw-w64 in trusty is missing strtok_r required by libcurl.a
+    - CC= PLATFORM="mingw32" ARCH="x86" USE_CURL_DLOPEN=1
+    - CC= PLATFORM="mingw32" ARCH="x86_64" USE_CURL_DLOPEN=1
 
 script: ./travis-ci-build.sh
 

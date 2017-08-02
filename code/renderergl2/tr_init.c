@@ -1628,19 +1628,18 @@ void RE_Shutdown( qboolean destroyWindow ) {
 		return;
 	}
 
-	ri.Cmd_RemoveCommand ("modellist");
-	ri.Cmd_RemoveCommand ("screenshotPNG");
-	ri.Cmd_RemoveCommand ("screenshotJPEG");
-	ri.Cmd_RemoveCommand ("screenshotTGA");
-	ri.Cmd_RemoveCommand ("screenshot");
-	ri.Cmd_RemoveCommand ("imagelist");
-	ri.Cmd_RemoveCommand ("shaderlist");
-	ri.Cmd_RemoveCommand ("skinlist");
+	ri.Cmd_RemoveCommand( "imagelist" );
+	ri.Cmd_RemoveCommand( "shaderlist" );
+	ri.Cmd_RemoveCommand( "skinlist" );
 	ri.Cmd_RemoveCommand( "fontlist" );
-	ri.Cmd_RemoveCommand ("gfxinfo");
-	ri.Cmd_RemoveCommand("minimize");
+	ri.Cmd_RemoveCommand( "modellist" );
 	ri.Cmd_RemoveCommand( "modelist" );
-	ri.Cmd_RemoveCommand( "shaderstate" );
+	ri.Cmd_RemoveCommand( "screenshot" );
+	ri.Cmd_RemoveCommand( "screenshotTGA" );
+	ri.Cmd_RemoveCommand( "screenshotJPEG" );
+	ri.Cmd_RemoveCommand( "screenshotPNG" );
+	ri.Cmd_RemoveCommand( "gfxinfo" );
+	ri.Cmd_RemoveCommand( "minimize" );
 	ri.Cmd_RemoveCommand( "gfxmeminfo" );
 	ri.Cmd_RemoveCommand( "exportCubemaps" );
 

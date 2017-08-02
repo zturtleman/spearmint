@@ -3730,7 +3730,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		{
 			char normalName[MAX_QPATH];
 			image_t *normalImg;
-			imgFlags_t normalFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+			imgFlags_t normalFlags = (diffuseImg->flags & ~IMGFLAG_GENNORMALMAP) | IMGFLAG_NOLIGHTSCALE;
 
 			// ZTM: FIXME: check shader_allowCompress? I don't think it's always valid here though.
 
@@ -3777,7 +3777,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		{
 			char specularName[MAX_QPATH];
 			image_t *specularImg;
-			imgFlags_t specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+			imgFlags_t specularFlags = (diffuseImg->flags & ~IMGFLAG_GENNORMALMAP) | IMGFLAG_NOLIGHTSCALE;
 
 			COM_StripExtension(diffuseImg->imgName, specularName, MAX_QPATH);
 			Q_strcat(specularName, MAX_QPATH, "_s");
