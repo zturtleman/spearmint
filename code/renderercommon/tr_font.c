@@ -375,7 +375,7 @@ FT_Bitmap *R_RenderGlyph(FT_GlyphSlot glyph, glyphInfo_t* glyphOut, float border
 		// If not able to load the glyph by rendering spans, fallback to original Q3 method.
 		// This fixes 'space' (character 32) not having xSkip.
 
-		size             = width*height;
+		size             = pitch*height;
 		bit2->width      = width;
 		bit2->rows       = height;
 		bit2->pitch      = pitch;
