@@ -3109,6 +3109,15 @@ void Com_ReadFromPipe( void )
 Com_RefMalloc
 ============
 */
+#ifdef ZONE_DEBUG
+void *Com_RefMalloc( int size, char *label, char *file, int line ) {
+	return Z_TagMallocDebug( size, TAG_RENDERER, label, file, line );
+}
+
+void Com_RefFree( void *pointer, char *label, char *file, int line ) {
+	Z_FreeDebug( pointer, label, file, line );
+}
+#else
 void *Com_RefMalloc( int size ) {
 	return Z_TagMalloc( size, TAG_RENDERER );
 }
@@ -3116,6 +3125,7 @@ void *Com_RefMalloc( int size ) {
 void Com_RefFree( void *pointer ) {
 	Z_Free( pointer );
 }
+#endif
 
 int Com_ScaledMilliseconds(void) {
 	return Sys_Milliseconds()*com_timescale->value;
@@ -3232,8 +3242,13 @@ void Com_InitRef( refimport_t *ri ) {
 	ri->Printf = Com_RefPrintf;
 	ri->Error = Com_Error;
 	ri->Milliseconds = Com_ScaledMilliseconds;
+#ifdef ZONE_DEBUG
+	ri->MallocDebug = Com_RefMalloc;
+	ri->FreeDebug = Com_RefFree;
+#else
 	ri->Malloc = Com_RefMalloc;
 	ri->Free = Com_RefFree;
+#endif
 #ifdef HUNK_DEBUG
 	ri->Hunk_AllocDebug = Hunk_AllocDebug;
 #else

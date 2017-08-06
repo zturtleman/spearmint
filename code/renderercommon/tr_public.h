@@ -162,9 +162,17 @@ typedef struct {
 	void	*(*Hunk_AllocateTempMemory)( int size );
 	void	(*Hunk_FreeTempMemory)( void *block );
 
+#ifdef ZONE_DEBUG
+#define Malloc(size)					MallocDebug(size, #size, __FILE__, __LINE__)
+#define Free(ptr)						FreeDebug(ptr, #ptr, __FILE__, __LINE__)
+	// dynamic memory allocator for things that need to be freed
+	void	*(*MallocDebug)( int bytes, char *label, char *file, int line );
+	void	(*FreeDebug)( void *buf, char *label, char *file, int line );
+#else
 	// dynamic memory allocator for things that need to be freed
 	void	*(*Malloc)( int bytes );
 	void	(*Free)( void *buf );
+#endif
 
 	cvar_t	*(*Cvar_Get)( const char *name, const char *value, int flags );
 	cvar_t	*(*Cvar_Set)( const char *name, const char *value );

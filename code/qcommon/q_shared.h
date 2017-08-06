@@ -258,6 +258,10 @@ typedef enum {
 
 
 #if !defined(NDEBUG) && !defined(BSPC)
+	#define ZONE_DEBUG
+#endif
+
+#if !defined(NDEBUG) && !defined(BSPC)
 	#define HUNK_DEBUG
 #endif
 

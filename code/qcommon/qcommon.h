@@ -1060,10 +1060,6 @@ temp file loading
 
 */
 
-#if !defined(NDEBUG) && !defined(BSPC)
-	#define ZONE_DEBUG
-#endif
-
 #ifdef ZONE_DEBUG
 #define Z_TagMalloc(size, tag)			Z_TagMallocDebug(size, tag, #size, __FILE__, __LINE__)
 #define Z_Malloc(size)					Z_MallocDebug(size, #size, __FILE__, __LINE__)
