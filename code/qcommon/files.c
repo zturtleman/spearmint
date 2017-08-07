@@ -2756,6 +2756,12 @@ int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int
 		int extNamesSize = ARRAY_LEN(extensions);
 		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, qfalse);
 	}
+	else if (Q_stricmp(extension, "$fonts") == 0)
+	{
+		const char *extensions[] = { "ttf", "otf", "ttc", "otc", "fon" };
+		int extNamesSize = ARRAY_LEN(extensions);
+		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, qfalse);
+	}
 	// Allow extension to be a list
 	// Example "RoQ;roq;jpg;wav"
 	else if (strstr(extension, ";"))
