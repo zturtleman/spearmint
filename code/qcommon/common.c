@@ -2909,7 +2909,10 @@ void Com_Init( char *commandLine ) {
 
 	com_fs_pure = Cvar_Get ("fs_pure", "", CVAR_ROM);
 
-	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT);
+	com_homepath = Cvar_Get("com_homepath", HOMEPATH_NAME, CVAR_INIT);
+	if ( !com_homepath->string[0] ) {
+		Cvar_ForceReset( "com_homepath" );
+	}
 
 	FS_InitFilesystem ();
 

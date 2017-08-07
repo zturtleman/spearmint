@@ -69,23 +69,46 @@ char *Sys_DefaultHomePath(void)
 
 	if( !*homePath && com_homepath != NULL )
 	{
-		if( ( p = getenv( "HOME" ) ) != NULL )
-		{
-			Com_sprintf(homePath, sizeof(homePath), "%s%c", p, PATH_SEP);
 #ifdef __APPLE__
-			Q_strcat(homePath, sizeof(homePath),
-				"Library/Application Support/");
-
-			if(com_homepath->string[0])
-				Q_strcat(homePath, sizeof(homePath), com_homepath->string);
-			else
-				Q_strcat(homePath, sizeof(homePath), HOMEPATH_NAME_MACOSX);
+		if( ( p = getenv( "HOME" ) ) != NULL && *p != '\0' )
+		{
+			Com_sprintf(homePath, sizeof(homePath), "%s%cLibrary%cApplication Support%c%s", p, PATH_SEP, PATH_SEP, PATH_SEP, com_homepath->string);
+		}
 #else
-			if(com_homepath->string[0])
-				Q_strcat(homePath, sizeof(homePath), com_homepath->string);
+		char	directory[MAX_OSPATH];
+		char	*s;
+
+		Q_strncpyz( directory, com_homepath->string, sizeof(directory) );
+
+		// convert home directory name to lower case and replace spaces with hyphens
+		s = directory;
+		while( *s )
+		{
+			if( *s == ' ' )
+			{
+				*s = '-';
+			}
 			else
-				Q_strcat(homePath, sizeof(homePath), HOMEPATH_NAME_UNIX);
+			{
+				*s = tolower(*s);
+			}
+			s++;
+		}
+
+		if( ( p = getenv( "XDG_DATA_HOME" ) ) != NULL && *p != '\0' )
+		{
+			Com_sprintf(homePath, sizeof(homePath), "%s%c%s", p, PATH_SEP, directory);
+		}
+		else if( ( p = getenv( "HOME" ) ) != NULL && *p != '\0' )
+		{
+			Com_sprintf(homePath, sizeof(homePath), "%s%c.local%cshare%c%s", p, PATH_SEP, PATH_SEP, PATH_SEP, directory);
+		}
 #endif
+
+		if( !*homePath )
+		{
+			Com_Printf("Unable to detect home path\n");
+			return NULL;
 		}
 	}
 

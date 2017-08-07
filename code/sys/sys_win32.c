@@ -134,12 +134,7 @@ char *Sys_DefaultHomePath( void )
 			return NULL;
 		}
 		
-		Com_sprintf(homePath, sizeof(homePath), "%s%c", szPath, PATH_SEP);
-
-		if(com_homepath->string[0])
-			Q_strcat(homePath, sizeof(homePath), com_homepath->string);
-		else
-			Q_strcat(homePath, sizeof(homePath), HOMEPATH_NAME_WIN);
+		Com_sprintf(homePath, sizeof(homePath), "%s%c%s", szPath, PATH_SEP, com_homepath->string);
 	}
 
 	FreeLibrary(shfolder);

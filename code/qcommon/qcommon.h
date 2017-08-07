@@ -45,9 +45,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define Q3_VERSION PRODUCT_NAME " " PRODUCT_VERSION
 
 // Settings directory name
-#define HOMEPATH_NAME_UNIX			".spearmint"
-#define HOMEPATH_NAME_WIN			"Spearmint"
-#define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
+// GNU/Linux: $HOME/.local/share/homepath-name (lower case and spaces replaced with hyphens)
+// MacOS: $HOME/Library/Application Support/Homepath Name
+// Windows: %APPDATA%\Homepath Name
+#define HOMEPATH_NAME				"Spearmint"
 
 // Steam installation information
 //#define STEAMPATH_NAME			"Quake 3 Arena"
