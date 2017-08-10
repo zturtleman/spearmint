@@ -460,13 +460,16 @@ static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide ) {
 			vert[1] = &bspDrawVerts[s->firstVert + bspDrawIndexes[s->firstIndex + t + 1]];
 			vert[2] = &bspDrawVerts[s->firstVert + bspDrawIndexes[s->firstIndex + t + 2]];
 			if ( s->surfaceType == MST_PLANAR && VectorCompare( vert[0]->normal, vert[1]->normal ) && VectorCompare( vert[1]->normal, vert[2]->normal ) ) {
-				VectorSubtract( vert[0]->normal, buildPlane->normal, normdiff ); if ( VectorLength( normdiff ) >= normalEpsilon ) {
+				VectorSubtract( vert[0]->normal, buildPlane->normal, normdiff );
+				if ( VectorLength( normdiff ) >= normalEpsilon ) {
 					continue;
 				}
-				VectorSubtract( vert[1]->normal, buildPlane->normal, normdiff ); if ( VectorLength( normdiff ) >= normalEpsilon ) {
+				VectorSubtract( vert[1]->normal, buildPlane->normal, normdiff );
+				if ( VectorLength( normdiff ) >= normalEpsilon ) {
 					continue;
 				}
-				VectorSubtract( vert[2]->normal, buildPlane->normal, normdiff ); if ( VectorLength( normdiff ) >= normalEpsilon ) {
+				VectorSubtract( vert[2]->normal, buildPlane->normal, normdiff );
+				if ( VectorLength( normdiff ) >= normalEpsilon ) {
 					continue;
 				}
 			}
@@ -478,7 +481,8 @@ static int CMod_GetBestSurfaceNumForBrushSide( const cbrushside_t *buildSide ) {
 				VectorSubtract( vert[2]->xyz, vert[0]->xyz, v2v0 );
 				CrossProduct( v2v0, v1v0, norm );
 				VectorNormalize( norm );
-				VectorSubtract( norm, buildPlane->normal, normdiff ); if ( VectorLength( normdiff ) >= normalEpsilon ) {
+				VectorSubtract( norm, buildPlane->normal, normdiff );
+				if ( VectorLength( normdiff ) >= normalEpsilon ) {
 					continue;
 				}
 			}
