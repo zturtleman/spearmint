@@ -55,6 +55,8 @@ static cvar_t *in_joystick[CL_MAX_SPLITVIEW] 			= {NULL};
 static cvar_t *in_joystickThreshold[CL_MAX_SPLITVIEW]	= {NULL};
 static cvar_t *in_joystickNo[CL_MAX_SPLITVIEW]			= {NULL};
 
+static int in_eventTime = 0;
+
 static SDL_Window *SDL_window = NULL;
 
 #define CTRL(a) ((a)-'a'+1)
@@ -196,7 +198,18 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 {
 	keyNum_t key = 0;
 
-	if( keysym->sym >= SDLK_SPACE && keysym->sym < SDLK_DELETE )
+	if( keysym->scancode >= SDL_SCANCODE_1 && keysym->scancode <= SDL_SCANCODE_0 )
+	{
+		// Always map the number keys as such even if they actually map
+		// to other characters (eg, "1" is "&" on an AZERTY keyboard).
+		// This is required for SDL before 2.0.6, except on Windows
+		// which already had this behavior.
+		if( keysym->scancode == SDL_SCANCODE_0 )
+			key = '0';
+		else
+			key = '1' + keysym->scancode - SDL_SCANCODE_1;
+	}
+	else if( keysym->sym >= SDLK_SPACE && keysym->sym < SDLK_DELETE )
 	{
 		// These happen to match the ASCII chars
 		key = (int)keysym->sym;
@@ -284,6 +297,15 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 			case SDLK_CAPSLOCK:     key = K_CAPSLOCK;      break;
 
 			default:
+				if( !( keysym->sym & SDLK_SCANCODE_MASK ) && keysym->scancode <= 95 )
+				{
+					// Map Unicode characters to 95 world keys using the key's scan code.
+					// FIXME: There aren't enough world keys to cover all the scancodes.
+					// Maybe create a map of scancode to quake key at start up and on
+					// key map change; allocate world key numbers as needed similar
+					// to SDL 1.2.
+					key = K_WORLD_0 + (int)keysym->scancode;
+				}
 				break;
 		}
 	}
@@ -837,7 +859,7 @@ static void IN_JoyMove( void )
 					balldx *= 2;
 				if (abs(balldy) > 1)
 					balldy *= 2;
-				Com_QueueEvent( 0, SE_MOUSE + joy, balldx, balldy, 0, NULL );
+				Com_QueueEvent( in_eventTime, SE_MOUSE + joy, balldx, balldy, 0, NULL );
 			}
 		}
 
@@ -852,7 +874,7 @@ static void IN_JoyMove( void )
 				qboolean pressed = (SDL_JoystickGetButton(stick[joy], i) != 0);
 				if (pressed != stick_state[joy].buttons[i])
 				{
-					Com_QueueEvent( 0, SE_JOYSTICK_BUTTON+joy, i, pressed, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_JOYSTICK_BUTTON+joy, i, pressed, 0, NULL );
 					stick_state[joy].buttons[i] = pressed;
 				}
 			}
@@ -901,7 +923,7 @@ static void IN_JoyMove( void )
 							break;
 					}
 
-					Com_QueueEvent( 0, SE_JOYSTICK_HAT+joy, i, value, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_JOYSTICK_HAT+joy, i, value, 0, NULL );
 					stick_state[joy].oldhats[i] = state;
 				}
 			}
@@ -921,7 +943,7 @@ static void IN_JoyMove( void )
 
 				if ( axis != stick_state[joy].oldaaxes[i] )
 				{
-					Com_QueueEvent( 0, SE_JOYSTICK_AXIS + joy, i, axis, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_JOYSTICK_AXIS + joy, i, axis, 0, NULL );
 					stick_state[joy].oldaaxes[i] = axis;
 				}
 			}
@@ -952,19 +974,19 @@ static void IN_ProcessEvents( void )
 					break;
 
 				if( ( key = IN_TranslateSDLToQ3Key( &e.key.keysym, qtrue ) ) )
-					Com_QueueEvent( 0, SE_KEY, key, qtrue, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_KEY, key, qtrue, 0, NULL );
 
 				if( key == K_BACKSPACE )
-					Com_QueueEvent( 0, SE_CHAR, CTRL('h'), 0, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_CHAR, CTRL('h'), 0, 0, NULL );
 				else if( keys[K_CTRL].down && key >= 'a' && key <= 'z' )
-					Com_QueueEvent( 0, SE_CHAR, CTRL(key), 0, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_CHAR, CTRL(key), 0, 0, NULL );
 
 				lastKeyDown = key;
 				break;
 
 			case SDL_KEYUP:
 				if( ( key = IN_TranslateSDLToQ3Key( &e.key.keysym, qfalse ) ) )
-					Com_QueueEvent( 0, SE_KEY, key, qfalse, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_KEY, key, qfalse, 0, NULL );
 
 				lastKeyDown = 0;
 				break;
@@ -1009,11 +1031,11 @@ static void IN_ProcessEvents( void )
 						{
 							if( IN_IsConsoleKey( 0, utf32 ) )
 							{
-								Com_QueueEvent( 0, SE_KEY, K_CONSOLE, qtrue, 0, NULL );
-								Com_QueueEvent( 0, SE_KEY, K_CONSOLE, qfalse, 0, NULL );
+								Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qtrue, 0, NULL );
+								Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qfalse, 0, NULL );
 							}
 							else
-								Com_QueueEvent( 0, SE_CHAR, utf32, 0, 0, NULL );
+								Com_QueueEvent( in_eventTime, SE_CHAR, utf32, 0, 0, NULL );
 						}
           }
         }
@@ -1024,7 +1046,7 @@ static void IN_ProcessEvents( void )
 				{
 					if( !e.motion.xrel && !e.motion.yrel )
 						break;
-					Com_QueueEvent( 0, SE_MOUSE, e.motion.xrel, e.motion.yrel, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_MOUSE, e.motion.xrel, e.motion.yrel, 0, NULL );
 				}
 				break;
 
@@ -1048,7 +1070,7 @@ static void IN_ProcessEvents( void )
 
 						default:                b = K_AUX1 + ( e.button.button - SDL_BUTTON_X2 + 1 ) % 16; break;
 					}
-					Com_QueueEvent( 0, SE_KEY, b,
+					Com_QueueEvent( in_eventTime, SE_KEY, b,
 						( e.type == SDL_MOUSEBUTTONDOWN ? qtrue : qfalse ), 0, NULL );
 				}
 				break;
@@ -1056,13 +1078,13 @@ static void IN_ProcessEvents( void )
 			case SDL_MOUSEWHEEL:
 				if( e.wheel.y > 0 )
 				{
-					Com_QueueEvent( 0, SE_KEY, K_MWHEELUP, qtrue, 0, NULL );
-					Com_QueueEvent( 0, SE_KEY, K_MWHEELUP, qfalse, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELUP, qtrue, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELUP, qfalse, 0, NULL );
 				}
 				else if( e.wheel.y < 0 )
 				{
-					Com_QueueEvent( 0, SE_KEY, K_MWHEELDOWN, qtrue, 0, NULL );
-					Com_QueueEvent( 0, SE_KEY, K_MWHEELDOWN, qfalse, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELDOWN, qtrue, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELDOWN, qfalse, 0, NULL );
 				}
 				break;
 
@@ -1173,6 +1195,9 @@ void IN_Frame( void )
 		IN_ActivateMouse( );
 
 	IN_ProcessEvents( );
+
+	// Set event time for next frame to earliest possible time an event could happen
+	in_eventTime = Sys_Milliseconds( );
 
 	if( !mouseActive )
 	{

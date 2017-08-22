@@ -2288,6 +2288,19 @@ void Com_QueueEvent( int time, sysEventType_t type, int value, int value2, int p
 {
 	sysEvent_t  *ev;
 
+	// combine mouse movement with previous mouse event
+	if ( type == SE_MOUSE && eventHead != eventTail )
+	{
+		ev = &eventQueue[ ( eventHead + MAX_QUEUED_EVENTS - 1 ) & MASK_QUEUED_EVENTS ];
+
+		if ( ev->evType == SE_MOUSE )
+		{
+			ev->evValue += value;
+			ev->evValue2 += value2;
+			return;
+		}
+	}
+
 	ev = &eventQueue[ eventHead & MASK_QUEUED_EVENTS ];
 
 	if ( eventHead - eventTail >= MAX_QUEUED_EVENTS )
@@ -3527,6 +3540,8 @@ void Com_Frame( void ) {
 			NET_Sleep(timeVal - 1);
 	} while(Com_TimeVal(minMsec));
 	
+	IN_Frame();
+
 	lastTime = com_frameTime;
 	com_frameTime = Com_EventLoop();
 	
