@@ -1955,6 +1955,7 @@ extern  cvar_t  *r_forceSunLightScale;
 extern  cvar_t  *r_forceSunAmbientScale;
 extern  cvar_t  *r_sunlightMode;
 extern  cvar_t  *r_drawSunRays;
+extern  cvar_t  *r_drawSunRaysOcclusionQuery;
 extern  cvar_t  *r_sunShadows;
 extern  cvar_t  *r_shadowFilter;
 extern  cvar_t  *r_shadowBlur;

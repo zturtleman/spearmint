@@ -1454,7 +1454,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 			qglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
 			qglClear( GL_COLOR_BUFFER_BIT );
 
-			if (glRefConfig.occlusionQuery)
+			if (glRefConfig.occlusionQuery && r_drawSunRaysOcclusionQuery->integer)
 			{
 				tr.sunFlareQueryActive[tr.sunFlareQueryIndex] = qtrue;
 				qglBeginQuery(GL_SAMPLES_PASSED, tr.sunFlareQuery[tr.sunFlareQueryIndex]);
@@ -1462,7 +1462,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 			RB_DrawSun(scale * 0.2f + 0.2f, tr.sunFlareShader);
 
-			if (glRefConfig.occlusionQuery)
+			if (glRefConfig.occlusionQuery && r_drawSunRaysOcclusionQuery->integer)
 			{
 				qglEndQuery(GL_SAMPLES_PASSED);
 			}

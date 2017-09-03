@@ -276,7 +276,7 @@ static void RB_RadialBlur(FBO_t *srcFbo, FBO_t *dstFbo, int passes, float stretc
 static qboolean RB_UpdateSunFlareVis(void)
 {
 	GLuint sampleCount = 0;
-	if (!glRefConfig.occlusionQuery)
+	if (!glRefConfig.occlusionQuery || !r_drawSunRaysOcclusionQuery->integer)
 		return qtrue;
 
 	tr.sunFlareQueryIndex ^= 1;

@@ -165,6 +165,7 @@ cvar_t  *r_forceSunLightScale;
 cvar_t  *r_forceSunAmbientScale;
 cvar_t  *r_sunlightMode;
 cvar_t  *r_drawSunRays;
+cvar_t  *r_drawSunRaysOcclusionQuery;
 cvar_t  *r_sunShadows;
 cvar_t  *r_shadowFilter;
 cvar_t  *r_shadowBlur;
@@ -1327,6 +1328,7 @@ void R_Register( void )
 	r_forceSunLightScale = ri.Cvar_Get( "r_forceSunLightScale", "1.0", CVAR_CHEAT );
 	r_forceSunAmbientScale = ri.Cvar_Get( "r_forceSunAmbientScale", "0.5", CVAR_CHEAT );
 	r_drawSunRays = ri.Cvar_Get( "r_drawSunRays", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_drawSunRaysOcclusionQuery = ri.Cvar_Get( "r_drawSunRaysOcclusionQuery", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_sunlightMode = ri.Cvar_Get( "r_sunlightMode", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_sunShadows = ri.Cvar_Get( "r_sunShadows", "1", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1473,7 +1475,7 @@ void R_InitQueries(void)
 	if (!glRefConfig.occlusionQuery)
 		return;
 
-	if (r_drawSunRays->integer)
+	if (r_drawSunRays->integer && r_drawSunRaysOcclusionQuery->integer)
 		qglGenQueries(ARRAY_LEN(tr.sunFlareQuery), tr.sunFlareQuery);
 }
 
@@ -1482,7 +1484,7 @@ void R_ShutDownQueries(void)
 	if (!glRefConfig.occlusionQuery)
 		return;
 
-	if (r_drawSunRays->integer)
+	if (r_drawSunRays->integer && r_drawSunRaysOcclusionQuery->integer)
 		qglDeleteQueries(ARRAY_LEN(tr.sunFlareQuery), tr.sunFlareQuery);
 }
 
