@@ -925,16 +925,8 @@ const void* RB_Draw2dPolys( const void* data ) {
 	cmd = (const poly2dCommand_t* )data;
 
 	// FIXME: HUGE hack
-	if (glRefConfig.framebufferObject)
-	{
-		if (!tr.renderFbo || backEnd.framePostProcessed)
-		{
-			FBO_Bind(NULL);
-		}
-		else
-		{
-			FBO_Bind(tr.renderFbo);
-		}
+	if (glRefConfig.framebufferObject) {
+		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -993,16 +985,8 @@ const void *RB_RotatedPic( const void *data ) {
 	cmd = (const stretchPicCommand_t *)data;
 
 	// FIXME: HUGE hack
-	if (glRefConfig.framebufferObject)
-	{
-		if (!tr.renderFbo || backEnd.framePostProcessed)
-		{
-			FBO_Bind(NULL);
-		}
-		else
-		{
-			FBO_Bind(tr.renderFbo);
-		}
+	if (glRefConfig.framebufferObject) {
+		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -1089,16 +1073,8 @@ const void *RB_StretchPicGradient( const void *data ) {
 	cmd = (const stretchPicCommand_t *)data;
 
 	// FIXME: HUGE hack
-	if (glRefConfig.framebufferObject)
-	{
-		if (!tr.renderFbo || backEnd.framePostProcessed)
-		{
-			FBO_Bind(NULL);
-		}
-		else
-		{
-			FBO_Bind(tr.renderFbo);
-		}
+	if (glRefConfig.framebufferObject) {
+		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
 	}
 
 	RB_SetGL2D();
