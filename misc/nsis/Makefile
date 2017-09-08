@@ -41,6 +41,13 @@ ifndef SDLDLL
 		SDLDLL=SDL2.dll
 	endif
 endif
+ifndef OPENALDLL
+	ifeq ($(ARCH),x86_64)
+		OPENALDLL=OpenAL64.dll
+	else
+		OPENALDLL=OpenAL32.dll
+	endif
+endif
 
 DEFINES=
 ifeq ($(USE_RENDERER_DLOPEN),1)
@@ -67,7 +74,7 @@ NSISFILENAME=${FSNAME}-${VERSION}-${RELEASE}.$(ARCH).exe
 all: $(NSISFILENAME)
 
 spearmint.$(ARCH).nsi: spearmint.nsi.in
-	sed 's/XXXFILENAMEXXX/$(NSISFILENAME)/;s/XXXVERSIONXXX/$(VERSION)/;s/XXXRELEASEXXX/$(RELEASE)/;s/mingw32/$(PLATFORM)/g;s/x86/$(ARCH)/g;s/SDL2.dll/$(SDLDLL)/' < $< > $@
+	sed 's/XXXFILENAMEXXX/$(NSISFILENAME)/;s/XXXVERSIONXXX/$(VERSION)/;s/XXXRELEASEXXX/$(RELEASE)/;s/mingw32/$(PLATFORM)/g;s/x86/$(ARCH)/g;s/SDL2.dll/$(SDLDLL)/g;s/OpenAL32.dll/$(OPENALDLL)/g' < $< > $@
 
 $(NSISFILENAME): spearmint.$(ARCH).nsi
 	makensis $(DEFINES) spearmint.$(ARCH).nsi

@@ -97,7 +97,11 @@ static void R_BindAnimatedImageToTMU( textureBundle_t *bundle, int tmu ) {
 	}
 
 	if ( bundle->loopingImageAnim ) {
-		index %= bundle->numImageAnimations;
+		// Windows x86 doesn't load renderer DLL with 64 bit modulus
+		//index %= bundle->numImageAnimations;
+		while ( index >= bundle->numImageAnimations ) {
+			index -= bundle->numImageAnimations;
+		}
 	} else if ( index >= bundle->numImageAnimations ) {
 		index = bundle->numImageAnimations-1;
 	}
