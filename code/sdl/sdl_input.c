@@ -397,10 +397,13 @@ static void IN_ActivateMouse( void )
 	{
 		if( in_nograb->modified || !mouseActive )
 		{
-			if( in_nograb->integer )
+			if( in_nograb->integer ) {
+				SDL_SetRelativeMouseMode( SDL_FALSE );
 				SDL_SetWindowGrab( SDL_window, SDL_FALSE );
-			else
+			} else {
+				SDL_SetRelativeMouseMode( SDL_TRUE );
 				SDL_SetWindowGrab( SDL_window, SDL_TRUE );
+			}
 
 			in_nograb->modified = qfalse;
 		}
@@ -1109,6 +1112,12 @@ static void IN_ProcessEvents( void )
 
 							width = e.window.data1;
 							height = e.window.data2;
+
+							// ignore this event on fullscreen
+							if( cls.glconfig.isFullscreen )
+							{
+								break;
+							}
 
 							// check if size actually changed
 							if( cls.glconfig.vidWidth == width && cls.glconfig.vidHeight == height )
