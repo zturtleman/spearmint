@@ -1122,7 +1122,7 @@ void R_Register( void )
 	r_greyscale = ri.Cvar_Get("r_greyscale", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	ri.Cvar_CheckRange(r_greyscale, 0, 1, qfalse);
 	r_dlightImageSize = ri.Cvar_Get( "r_dlightImageSize", "128", CVAR_ARCHIVE | CVAR_LATCH);
-	ri.Cvar_CheckRange(r_dlightImageSize, 16, 128, qfalse);
+	ri.Cvar_CheckRange(r_dlightImageSize, 16, 128, qtrue);
 
 	//
 	// temporary latched variables that can only change over a restart
