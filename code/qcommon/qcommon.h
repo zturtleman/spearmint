@@ -80,7 +80,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // File containing a list of games to check if are installed to use as default base game.
 // This overrides BASEGAME if a game is found. If none are found, uses BASEGAME.
-#define MINT_GAMELIST					"mint-gamelist.txt"
+#define MINT_GAMELIST					"spearmint-gamelist.txt"
 
 // In the future if the client-server protocol is modified, this may allow old and new engines to play together
 //#define LEGACY_PROTOCOL
