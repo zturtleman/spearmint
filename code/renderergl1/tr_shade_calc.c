@@ -1512,9 +1512,9 @@ static void RB_CalcDiffuseColor_scalar( unsigned char *colors, const byte *color
 void RB_CalcDiffuseColor( unsigned char *colors, const byte *colorMult )
 {
 #if idppc_altivec
-	if (com_altivec->integer) {
+	// ZTM: TODO?: Support lightingDiffuseEntity on altivec code path
+	if (com_altivec->integer && !colorMult) {
 		// must be in a seperate function or G3 systems will crash.
-		// ZTM: FIXME: lightingDiffuseEntity not supported on altivec
 		RB_CalcDiffuseColor_altivec( colors );
 		return;
 	}
