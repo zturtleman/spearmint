@@ -56,6 +56,7 @@ Spearmint contains code from;
 * OpenArena - OpenArena contributors
 * OpenMoHAA - OpenMoHAA contributors
 * Xreal (triangle mesh collision) - Robert Beckebans
+* ZEQ2-lite (cel shading) - ZEQ2 project
 
 
 ## Contributing
