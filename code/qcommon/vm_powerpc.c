@@ -28,8 +28,14 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
+#ifndef __wii__
+#define PPC_MMAP
+#endif
+
+#ifdef PPC_MMAP
 #include <sys/types.h> /* needed by sys/mman.h on OSX */
 #include <sys/mman.h>
+#endif
 #include <sys/time.h>
 #include <time.h>
 #include <stddef.h>
@@ -1819,6 +1825,7 @@ PPC_ComputeCode( vm_t *vm )
 		+ sizeof( unsigned int ) * data_acc
 		+ sizeof( ppc_instruction_t ) * codeInstructions;
 
+#ifdef PPC_MMAP
 	// get the memory for the generated code, smarter ppcs need the
 	// mem to be marked as executable (whill change later)
 	unsigned char *dataAndCode = mmap( NULL, codeLength,
@@ -1826,6 +1833,13 @@ PPC_ComputeCode( vm_t *vm )
 
 	if (dataAndCode == MAP_FAILED)
 		DIE( "Not enough memory" );
+#else
+	// get the memory for the generated code
+	unsigned char *dataAndCode = PPC_Malloc(codeLength);
+
+	if (dataAndCode == NULL)
+		DIE( "Not enough memory" );
+#endif
 
 	ppc_instruction_t *codeNow, *codeBegin;
 	codeNow = codeBegin = (ppc_instruction_t *)( dataAndCode + VM_Data_Offset( data[ data_acc ] ) );
@@ -1971,6 +1985,7 @@ PPC_ComputeCode( vm_t *vm )
 	}
 }
 
+#ifdef PPC_MMAP
 static void
 VM_Destroy_Compiled( vm_t *self )
 {
@@ -1980,6 +1995,14 @@ VM_Destroy_Compiled( vm_t *self )
 	}
 	self->codeBase = NULL;
 }
+#endif
+
+#ifdef __wii__
+void timersub(struct timeval *a, struct timeval *b, struct timeval *res) {
+	res->tv_sec = a->tv_sec - b->tv_sec;
+	res->tv_usec = a->tv_usec - b->tv_usec;
+}
+#endif
 
 void
 VM_Compile( vm_t *vm, vmHeader_t *header )
@@ -2067,6 +2090,7 @@ VM_Compile( vm_t *vm, vmHeader_t *header )
 			Com_Printf( S_COLOR_RED "Pointer %ld not initialized !\n", i );
 #endif
 
+#ifdef PPC_MMAP
 	/* mark memory as executable and not writeable */
 	if ( mprotect( vm->codeBase, vm->codeLength, PROT_READ|PROT_EXEC ) ) {
 
@@ -2076,6 +2100,7 @@ VM_Compile( vm_t *vm, vmHeader_t *header )
 	}
 
 	vm->destroy = VM_Destroy_Compiled;
+#endif
 	vm->compiled = qtrue;
 
 	{

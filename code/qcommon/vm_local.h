@@ -162,7 +162,9 @@ struct vm_s {
 	void	*searchPath;				// hint for FS_ReadFileDir()
 
 	// for dynamic linked modules
+#ifndef NO_NATIVE_SUPPORT
 	void		*dllHandle;
+#endif
 	intptr_t			(QDECL *entryPoint)( int callNum, ... );
 	void (*destroy)(vm_t* self);
 

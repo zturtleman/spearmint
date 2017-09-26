@@ -33,7 +33,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "qcommon.h"
 #include <setjmp.h>
 #ifndef _WIN32
+#ifndef __wii__
 #include <netinet/in.h>
+#endif
 #include <sys/stat.h> // umask
 #else
 #include <winsock.h>
@@ -49,11 +51,24 @@ int demo_protocols[] =
 #define MAX_NUM_ARGVS	50
 
 #define MIN_DEDICATED_COMHUNKMEGS 1
+#ifdef __wii__
+#define MIN_COMHUNKMEGS		16
+#define DEF_COMHUNKMEGS		26
+#define DEF_COMZONEMEGS		24
+#else
 #define MIN_COMHUNKMEGS		56
 #define DEF_COMHUNKMEGS 	384
 #define DEF_COMZONEMEGS		64
+#endif
 #define DEF_COMHUNKMEGS_S	XSTRING(DEF_COMHUNKMEGS)
 #define DEF_COMZONEMEGS_S	XSTRING(DEF_COMZONEMEGS)
+
+#ifdef __wii__
+extern void* SYS_AllocArena2MemLo(unsigned int size, unsigned int align);
+#define Com_calloc SYS_AllocArena2MemLo
+#else
+#define Com_calloc calloc
+#endif
 
 int		com_argc;
 char	*com_argv[MAX_NUM_ARGVS+1];
@@ -1505,7 +1520,7 @@ Com_InitZoneMemory
 */
 void Com_InitSmallZoneMemory( void ) {
 	s_smallZoneTotal = 512 * 1024;
-	smallzone = calloc( s_smallZoneTotal, 1 );
+	smallzone = Com_calloc( s_smallZoneTotal, 1 );
 	if ( !smallzone ) {
 		Com_Error( ERR_FATAL, "Small zone data failed to allocate %1.1f megs", (float)s_smallZoneTotal / (1024*1024) );
 	}
@@ -1531,7 +1546,7 @@ void Com_InitZoneMemory( void ) {
 		s_zoneTotal = cv->integer * 1024 * 1024;
 	}
 
-	mainzone = calloc( s_zoneTotal, 1 );
+	mainzone = Com_calloc( s_zoneTotal, 1 );
 	if ( !mainzone ) {
 		Com_Error( ERR_FATAL, "Zone data failed to allocate %i megs", s_zoneTotal / (1024*1024) );
 	}
@@ -1657,7 +1672,7 @@ void Com_InitHunkMemory( void ) {
 		s_hunkTotal = cv->integer * 1024 * 1024;
 	}
 
-	s_hunkData = calloc( s_hunkTotal + 31, 1 );
+	s_hunkData = Com_calloc( s_hunkTotal + 31, 1 );
 	if ( !s_hunkData ) {
 		Com_Error( ERR_FATAL, "Hunk data failed to allocate %i megs", s_hunkTotal / (1024*1024) );
 	}

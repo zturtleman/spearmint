@@ -1238,10 +1238,12 @@ NON-PORTABLE SYSTEM SERVICES
 
 void	Sys_Init (void);
 
+#ifndef NO_NATIVE_SUPPORT
 // general development dll loading for virtual machine testing
 void	* QDECL Sys_LoadGameDll( const char *name, intptr_t (QDECL **entryPoint)(int, ...),
 				  intptr_t (QDECL *systemcalls)(intptr_t, ...) );
 void	Sys_UnloadDll( void *dllHandle );
+#endif
 
 qboolean Sys_DllExtension( const char *name );
 

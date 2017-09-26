@@ -508,6 +508,7 @@ int Sys_FileTime( char *path )
 	return buf.st_mtime;
 }
 
+#ifndef NO_NATIVE_SUPPORT
 /*
 =================
 Sys_UnloadDll
@@ -647,6 +648,7 @@ void *Sys_LoadGameDll(const char *name,
 
 	return libHandle;
 }
+#endif
 
 /*
 =================
@@ -783,7 +785,7 @@ int main( int argc, char **argv )
 		Q_strcat( commandLine, sizeof( commandLine ), " " );
 	}
 
-	CON_Init( );
+	CON_Initialize( );
 	Com_Init( commandLine );
 	NET_Init( );
 

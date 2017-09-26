@@ -292,6 +292,23 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #endif
 
+//================================================================== IRIX ===
+
+#ifdef __wii__
+
+#define OS_STRING "wii"
+
+#define ID_INLINE inline
+#define PATH_SEP '/'
+
+#define __powerpc__
+#define ARCH_STRING "ppc"
+#define Q3_BIG_ENDIAN
+
+#define DLL_EXT ".so" // lies, there are no native libs
+
+#endif
+
 //================================================================== Q3VM ===
 
 #ifdef Q3_VM

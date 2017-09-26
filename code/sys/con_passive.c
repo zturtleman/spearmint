@@ -45,10 +45,10 @@ void CON_Shutdown( void )
 
 /*
 ==================
-CON_Init
+CON_Initialize
 ==================
 */
-void CON_Init( void )
+void CON_Initialize( void )
 {
 }
 

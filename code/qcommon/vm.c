@@ -615,6 +615,7 @@ vm_t *VM_Restart(vm_t *vm, qboolean unpure)
 
 	Com_Printf("VM_Restart()\n");
 
+#ifndef NO_NATIVE_SUPPORT
 	if ( vm->dllHandle ) {
 		Sys_UnloadDll( vm->dllHandle );
 
@@ -624,7 +625,9 @@ vm_t *VM_Restart(vm_t *vm, qboolean unpure)
 			Com_Error( ERR_DROP, "VM_Restart failed" );
 			return NULL;
 		}
-	} else {
+	} else
+#endif
+	{
 		// load the image
 		if(!(header = VM_LoadQVM(vm, qfalse, unpure, vm->heapRequestedSize)))
 		{
@@ -695,6 +698,9 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 		
 		if(retval == VMI_NATIVE)
 		{
+#ifdef NO_NATIVE_SUPPORT
+			Com_Printf("Skipping dll file %s, not supported\n", filename);
+#else
 			Com_DPrintf("Try loading dll file %s\n", filename);
 
 			vm->dllHandle = Sys_LoadGameDll(filename, &vm->entryPoint, VM_DllSyscall);
@@ -710,6 +716,7 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 			}
 			
 			Com_Printf("Failed loading dll, trying next\n");
+#endif
 		}
 		else if(retval == VMI_COMPILED)
 		{
@@ -797,6 +804,7 @@ void VM_Free( vm_t *vm ) {
 	if(vm->destroy)
 		vm->destroy(vm);
 
+#ifndef NO_NATIVE_SUPPORT
 	if ( vm->dllHandle ) {
 		Sys_UnloadDll( vm->dllHandle );
 #if 0	// now automatically freed by hunk
@@ -806,6 +814,7 @@ void VM_Free( vm_t *vm ) {
 #endif
 		Com_Memset( vm, 0, sizeof( *vm ) );
 	}
+#endif
 #if 0	// now automatically freed by hunk
 	if ( vm->codeBase ) {
 		Z_Free( vm->codeBase );
@@ -1112,9 +1121,12 @@ void VM_VmInfo_f( void ) {
 		}
 
 		Com_Printf( "%s : ", vm->name );
+#ifndef NO_NATIVE_SUPPORT
 		if ( vm->dllHandle ) {
 			Com_Printf( "native\n" );
-		} else if ( vm->compiled ) {
+		} else
+#endif
+		if ( vm->compiled ) {
 			Com_Printf( "compiled on load\n" );
 		} else {
 			Com_Printf( "interpreted\n" );
@@ -1122,7 +1134,10 @@ void VM_VmInfo_f( void ) {
 
 		Com_Printf( "    file name   : \"%s\"\n", vm->filename );
 
-		if ( !vm->dllHandle ) {
+#ifndef NO_NATIVE_SUPPORT
+		if ( !vm->dllHandle )
+#endif
+		{
 			Com_Printf( "    code length : %7i\n", vm->codeLength );
 			Com_Printf( "    table length: %7i\n", vm->instructionCount*4 );
 			Com_Printf( "    data length : %7i\n", vm->dataMask + 1 );

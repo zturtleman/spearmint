@@ -38,7 +38,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // Console
 void CON_Shutdown( void );
-void CON_Init( void );
+void CON_Initialize( void );
 char *CON_Input( void );
 void CON_Print( const char *message );
 
