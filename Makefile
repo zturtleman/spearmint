@@ -596,7 +596,7 @@ ifdef MINGW
     TOOLS_CC=$(CC)
   endif
 
-  LIBS= -lws2_32 -lwinmm -lpsapi
+  LIBS= -lws2_32 -lwinmm -lpsapi -lshlwapi
   AUTOUPDATER_LIBS += -lwininet
 
   # clang 3.4 doesn't support this

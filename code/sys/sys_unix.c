@@ -1020,3 +1020,18 @@ qboolean Sys_DllExtension( const char *name ) {
 
 	return qfalse;
 }
+
+/*
+=================
+Sys_PathIsAbsolute
+
+Check if filename is an absolute path.
+=================
+*/
+qboolean Sys_PathIsAbsolute( const char *path ) {
+	if ( !path ) {
+		return qfalse;
+	}
+
+	return ( path[0] == '/' );
+}
