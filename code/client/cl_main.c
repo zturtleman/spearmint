@@ -1258,6 +1258,7 @@ void CL_PlayDemo( const char *demoName ) {
 	clc.state = CA_CONNECTED;
 	clc.demoplaying = qtrue;
 	Q_strncpyz( clc.servername, Sys_Basename( clc.demoName ), sizeof( clc.servername ) );
+	COM_StripExtension( clc.servername, clc.servername, sizeof( clc.servername ) );
 
 	SCR_UpdateScreen();
 
