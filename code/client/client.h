@@ -379,16 +379,17 @@ extern	qboolean	cl_oldGameSet;
 
 //=============================================================================
 
+// note: there is implicitly another null byte added to the string literal
 #define DEMO_MAGIC "SPEARMINT_DEMO\0"
 
 typedef struct {
-	char	magic[15];
+	char	magic[16];
 	int		headerSize;
 	int		protocol;
 
 	// treated as optional, assumed to exist based on headerSize
-	char	startTime[20]; // "YYYY-MM-DD HH:MM:SS\0"
-	char	endTime[20]; // "YYYY-MM-DD HH:MM:SS\0"
+	char	startTime[20]; // "YYYY-MM-DD HH:MM:SS" with null byte
+	char	endTime[20]; // "YYYY-MM-DD HH:MM:SS" with null byte
 	int		runTime; // Run time in milliseconds. Note: assumed to be directly after endTime when saving demo
 
 } demoHeader_t;
