@@ -118,10 +118,6 @@ cvar_t	*com_renderer;
 static void	*rendererLib = NULL;
 #endif
 
-#ifndef DEDICATED
-cvar_t	*con_autochat;
-#endif
-
 #if idx64
 	int (*Q_VMftol)(void);
 #elif id386
