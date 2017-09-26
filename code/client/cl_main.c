@@ -1079,7 +1079,7 @@ void CL_ReadDemoMessage( void ) {
 ====================
 CL_ValidDemoFile
 
-if demoName has demo extension checks OS path, otherwise checks game filesystem path.
+if demoName is an absolute path checks OS path, otherwise checks game filesystem path.
 
 if returns true, header looks ok and can probably play it (assuming correct cgame and pk3s).
 if returns false, can't play it.
@@ -1090,6 +1090,7 @@ if returns false and protocol > 0, it's a unsupported protocol.
 qboolean CL_ValidDemoFile( const char *demoName, int *pProtocol, int *pLength, fileHandle_t *pHandle, char *pStartTime, char *pEndTime, int *pRunTime ) {
 	demoHeader_t	header;
 	char			name[MAX_OSPATH];
+	char			dotdemoext[MAX_QPATH];
 	int				r, i;
 	int				length;
 	int				protocol;
@@ -1110,14 +1111,16 @@ qboolean CL_ValidDemoFile( const char *demoName, int *pProtocol, int *pLength, f
 		*pRunTime = 0;
 
 	// try OS path if has demo extension
-	// ZTM: TODO: Check for absolute path: drive letter on Windows or leading slash on Linux/macOS (update function header comment too).
-	// ZTM: TODO: Open file and check for DEMO_MAGIC so it work with any demo extension?
-	if ( FS_IsDemoExt( demoName, strlen( demoName ) ) ) {
+	if ( Sys_PathIsAbsolute( demoName ) ) {
 		length = FS_System_FOpenFileRead( demoName, &f );
 	} else {
 		// try game filesystem path
-		// ZTM: TODO: Allow any file extension
-		Com_sprintf( name, sizeof(name), "demos/%s.%s", demoName, com_demoext->string );
+		Com_sprintf( name, sizeof(name), "demos/%s", demoName );
+
+		// add demo extension if none was specified
+		Com_sprintf( dotdemoext, sizeof(dotdemoext), ".%s", com_demoext->string );
+		COM_DefaultExtension( name, sizeof(name), dotdemoext );
+
 		length = FS_FOpenFileRead( name, &f, qtrue );
 	}
 
