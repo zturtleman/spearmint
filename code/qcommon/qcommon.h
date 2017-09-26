@@ -39,7 +39,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // Keep this in-sync with VERSION in Makefile.
 #ifndef PRODUCT_VERSION
-	#define PRODUCT_VERSION			"0.4"
+	#define PRODUCT_VERSION			"0.5-devil"
 #endif
 
 #define Q3_VERSION PRODUCT_NAME " " PRODUCT_VERSION
@@ -323,7 +323,7 @@ PROTOCOL
 ==============================================================
 */
 
-#define	PROTOCOL_VERSION	10
+#define	PROTOCOL_VERSION	11
 #define PROTOCOL_LEGACY_VERSION	0
 
 // maintain a list of compatible protocols for demo playing

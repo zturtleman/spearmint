@@ -92,7 +92,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=0.4
+VERSION=0.5-devil
 endif
 
 ifndef CLIENTBIN
