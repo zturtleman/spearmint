@@ -808,14 +808,14 @@ void CL_Record_f( void ) {
 	if ( Cmd_Argc() == 2 ) {
 		s = Cmd_Argv(1);
 		Q_strncpyz( demoName, s, sizeof( demoName ) );
-		Com_sprintf(name, sizeof(name), "demos/%s.%s", demoName, DEMOEXT);
+		Com_sprintf(name, sizeof(name), "demos/%s.%s", demoName, com_demoext->string);
 	} else {
 		int		number;
 
 		// scan for a free demo name
 		for ( number = 0 ; number <= 9999 ; number++ ) {
 			CL_DemoFilename( number, demoName, sizeof( demoName ) );
-			Com_sprintf(name, sizeof(name), "demos/%s.%s", demoName, DEMOEXT);
+			Com_sprintf(name, sizeof(name), "demos/%s.%s", demoName, com_demoext->string);
 
 			if (!FS_FileExists(name))
 				break;	// file doesn't exist
@@ -1110,11 +1110,14 @@ qboolean CL_ValidDemoFile( const char *demoName, int *pProtocol, int *pLength, f
 		*pRunTime = 0;
 
 	// try OS path if has demo extension
-	if ( COM_CompareExtension( demoName, "." DEMOEXT ) ) {
+	// ZTM: TODO: Check for absolute path: drive letter on Windows or leading slash on Linux/macOS (update function header comment too).
+	// ZTM: TODO: Open file and check for DEMO_MAGIC so it work with any demo extension?
+	if ( FS_IsDemoExt( demoName, strlen( demoName ) ) ) {
 		length = FS_System_FOpenFileRead( demoName, &f );
 	} else {
 		// try game filesystem path
-		Com_sprintf( name, sizeof(name), "demos/%s." DEMOEXT, demoName );
+		// ZTM: TODO: Allow any file extension
+		Com_sprintf( name, sizeof(name), "demos/%s.%s", demoName, com_demoext->string );
 		length = FS_FOpenFileRead( name, &f, qtrue );
 	}
 
@@ -1200,7 +1203,11 @@ static void CL_CompleteDemoName( char *args, int argNum )
 {
 	if( argNum == 2 )
 	{
-		Field_CompleteFilename( "demos", "." DEMOEXT, qtrue, qtrue );
+		char dotdemoext[MAX_QPATH];
+
+		Com_sprintf( dotdemoext, sizeof (dotdemoext), ".%s", com_demoext->string );
+
+		Field_CompleteFilename( "demos", dotdemoext, qtrue, qtrue );
 	}
 }
 

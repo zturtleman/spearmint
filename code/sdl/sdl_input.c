@@ -1139,7 +1139,8 @@ static void IN_ProcessEvents( void )
 				{
 					char *filename = e.drop.file;
 
-					if ( COM_CompareExtension( filename, "." DEMOEXT ) ) {
+					// ZTM: TODO: Open file and check for DEMO_MAGIC so it work with any demo extension?
+					if ( FS_IsDemoExt( filename, strlen( filename ) ) ) {
 						CL_PlayDemo( filename );
 					} else {
 						Com_Printf( "Ignoring unknown file: %s\n", filename );

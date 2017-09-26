@@ -831,6 +831,8 @@ void	FS_FilenameCompletion( const char *dir, const char *ext,
 const char *FS_GetCurrentGameDir(void);
 qboolean FS_Which(const char *filename, void *searchPath);
 
+qboolean FS_IsDemoExt(const char *filename, int namelen);
+
 /*
 ==============================================================
 
@@ -1008,6 +1010,8 @@ extern	cvar_t	*com_legacyprotocol;
 #ifndef DEDICATED
 extern  cvar_t  *con_autochat;
 #endif
+
+extern	cvar_t	*com_demoext;
 
 #ifdef USE_RENDERER_DLOPEN
 extern	cvar_t	*com_renderer;

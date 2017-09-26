@@ -1199,7 +1199,11 @@ Return qtrue if filename has a demo extension
 
 qboolean FS_IsDemoExt(const char *filename, int namelen)
 {
-	return FS_IsExt( filename, "." DEMOEXT, namelen );
+	char dotdemoext[MAX_QPATH];
+
+	Com_sprintf( dotdemoext, sizeof (dotdemoext), ".%s", com_demoext->string );
+
+	return FS_IsExt( filename, dotdemoext, namelen );
 }
 
 /*
@@ -2710,10 +2714,14 @@ int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int
 	}
 
 	if (Q_stricmp(extension, "$demos") == 0) {
-		// strip extension from list items
-		int extLength = strlen(DEMOEXT)+1;
-		pFiles = FS_ListFiles(path, DEMOEXT, &nFiles);
+		char dotdemoext[MAX_QPATH];
+		int extLength;
 
+		Com_sprintf( dotdemoext, sizeof ( dotdemoext ), ".%s", com_demoext->string );
+		extLength = strlen(dotdemoext);
+		pFiles = FS_ListFiles(path, dotdemoext, &nFiles);
+
+		// strip extension from list items
 		for (i =0; i < nFiles; i++) {
 			nLen = strlen(pFiles[i]) + 1 - extLength;
 			if (nTotal + nLen + 1 < bufsize) {

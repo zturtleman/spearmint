@@ -112,6 +112,7 @@ cvar_t	*com_busyWait;
 #ifndef DEDICATED
 cvar_t  *con_autochat;
 #endif
+cvar_t	*com_demoext;
 
 #ifdef USE_RENDERER_DLOPEN
 cvar_t	*com_renderer;
@@ -546,7 +547,8 @@ qboolean Com_AddStartupCommands( void ) {
 		}
 
 		// if passed a demo filename without a command, try to play the demo
-		if ( COM_CompareExtension( Cmd_Argv(0), "." DEMOEXT ) ) {
+		// ZTM: TODO: Check for absolute path then open file and check for DEMO_MAGIC so it works with any demo extension?
+		if ( FS_IsDemoExt( Cmd_Argv(0), strlen( Cmd_Argv(0) ) ) ) {
 			Cbuf_AddText( "demo " );
 		}
 
@@ -3010,6 +3012,8 @@ void Com_Init( char *commandLine ) {
 	else
 #endif
 		Cvar_Get("protocol", com_protocol->string, CVAR_ROM);
+
+	com_demoext = Cvar_Get("com_demoext", DEMOEXT, 0);
 
 #ifndef DEDICATED
 	con_autochat = Cvar_Get("con_autochat", "0", CVAR_ARCHIVE);
