@@ -341,6 +341,7 @@ typedef enum {
 	CG_S_QUEUESTREAMINGSOUND,
 	CG_S_GETSTREAMPLAYCOUNT,
 	CG_S_SETSTREAMVOLUME,
+	CG_S_STOPALLSOUNDS,
 
 	// note: these were not originally available in ui
 	CG_S_STARTSOUND = 450,

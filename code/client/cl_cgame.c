@@ -1136,7 +1136,6 @@ void CL_ShutdownCGame( void ) {
 	Mouse_ClearStates();
 	cls.cgameStarted = qfalse;
 	cls.printToCgame = qfalse;
-	cls.enteredMenu = qfalse;
 	if ( !cgvm ) {
 		return;
 	}
@@ -1340,6 +1339,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return S_GetStreamPlayCount( args[1] );
 	case CG_S_SETSTREAMVOLUME:
 		S_SetStreamVolume( args[1], VMF(2) );
+		return 0;
+	case CG_S_STOPALLSOUNDS:
+		S_StopAllSounds();
 		return 0;
 	case CG_R_LOADWORLDMAP:
 		CL_LoadWorldMap( VMA(1) );
@@ -1907,7 +1909,6 @@ void CL_ShowMainMenu( void ) {
 		return;
 	}
 
-	cls.enteredMenu = qtrue;
 	VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_NONE );
 }
 

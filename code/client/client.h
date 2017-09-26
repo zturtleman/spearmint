@@ -335,7 +335,6 @@ typedef struct {
 	qboolean	soundRegistered;
 	qboolean	cgameStarted;
 
-	qboolean	enteredMenu;
 	qboolean	printToCgame;			// enabled after restoring console text to cgame
 	bspFile_t	*cgameBsp;
 
