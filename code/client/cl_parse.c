@@ -433,7 +433,9 @@ void CL_SystemInfoChanged( void ) {
 	const char		*s, *t;
 	char			key[BIG_INFO_KEY];
 	char			value[BIG_INFO_VALUE];
-	qboolean		gameSet;
+	char			gamedir[BIG_INFO_VALUE];
+	char			*gameTitle;
+	char			filename[MAX_QPATH];
 
 	systemInfo = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SYSTEMINFO ];
 	// NOTE TTimo:
@@ -446,6 +448,16 @@ void CL_SystemInfoChanged( void ) {
 	s = Info_ValueForKey( systemInfo, "sv_voipProtocol" );
 	clc.voipEnabled = !Q_stricmp(s, "opus");
 #endif
+
+	// set game directory
+	Q_strncpyz( gamedir, Info_ValueForKey( systemInfo, "fs_game" ), sizeof ( gamedir ) );
+	if ( !*gamedir ) {
+		Com_Error( ERR_DROP, "fs_game not set on server" );
+	}
+	if ( FS_CheckDirTraversal( gamedir ) ) {
+		Com_Error( ERR_DROP, "Invalid fs_game value '%s' on server", gamedir );
+	}
+	Cvar_Server_Set( "fs_game", gamedir );
 
 	// don't set any vars when playing a demo
 	if ( clc.demoplaying ) {
@@ -467,7 +479,15 @@ void CL_SystemInfoChanged( void ) {
 	t = Info_ValueForKey( systemInfo, "sv_referencedPakNames" );
 	FS_PureServerSetReferencedPaks( s, t );
 
-	gameSet = qfalse;
+	// create game title file if does not exist
+	gameTitle = Info_ValueForKey( systemInfo, "sv_gameTitle" );
+	Com_sprintf( filename, sizeof ( filename ), "%s/description.txt", gamedir );
+	if ( ( cl_allowDownload->integer & DLF_ENABLE ) && *gameTitle && !FS_SV_RW_FileExists( filename ) ) {
+		fileHandle_t f = FS_SV_FOpenFileWrite( filename );
+		FS_Write( gameTitle, strlen( gameTitle ), f );
+		FS_FCloseFile( f );
+	}
+
 	// scan through all the variables in the systeminfo and locally set cvars to match
 	s = systemInfo;
 	while ( s ) {
@@ -476,38 +496,12 @@ void CL_SystemInfoChanged( void ) {
 			break;
 		}
 		
-		// ehw!
-		if (!Q_stricmp(key, "fs_game"))
-		{
-			char filename[MAX_QPATH];
-			char *title;
-
-			if ( gameSet )
-				continue;
-
-			if(FS_CheckDirTraversal(value))
-			{
-				Com_Printf(S_COLOR_YELLOW "WARNING: Server sent invalid fs_game value %s\n", value);
-				continue;
-			}
-
-			// create game title file if does not exist
-			title = Info_ValueForKey( systemInfo, "sv_gameTitle" );
-			Com_sprintf( filename, sizeof ( filename ), "%s/description.txt", value );
-			if ( ( cl_allowDownload->integer & DLF_ENABLE ) && *title && !FS_SV_RW_FileExists( filename ) ) {
-				fileHandle_t f = FS_SV_FOpenFileWrite( filename );
-				FS_Write( s, strlen( title ), f );
-				FS_FCloseFile( f );
-			}
-
-			gameSet = qtrue;
+		// gamedir is already set
+		if (!Q_stricmp(key, "fs_game")) {
+			continue;
 		}
 
 		Cvar_Server_Set(key, value);
-	}
-	// game folder must be set
-	if ( !gameSet ) {
-		Com_Error( ERR_DROP, "fs_game not set on server" );
 	}
 }
 
