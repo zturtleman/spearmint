@@ -613,7 +613,7 @@ vm_t *VM_Restart(vm_t *vm, qboolean unpure)
 {
 	vmHeader_t	*header;
 
-	Com_Printf("VM_Restart()\n");
+	Com_DPrintf("VM_Restart()\n");
 
 	if ( vm->dllHandle ) {
 		Sys_UnloadDll( vm->dllHandle );
