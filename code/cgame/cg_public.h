@@ -233,6 +233,10 @@ typedef enum {
 	CG_HEAP_AVAILABLE,	// ( void );
 	CG_HEAP_FREE,		// ( void *data );
 
+	CG_FIELD_COMPLETEFILENAME, // ( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk );
+	CG_FIELD_COMPLETECOMMAND, // ( const char *cmd, qboolean doCommands, qboolean doCvars );
+	CG_FIELD_COMPLETELIST, // ( const char *list );
+
 	//=========== client game specific functionality =============
 
 	CG_GETCLIPBOARDDATA = 100,
@@ -508,8 +512,11 @@ typedef enum {
 	CG_CREATE_USER_CMD,
 //	usercmd_t *CG_CreateUserCmd( int localPlayerNum, int frameTime, int frameMsec, float mx, float my, qboolean anykeydown );
 
-	CG_UPDATE_GLCONFIG
+	CG_UPDATE_GLCONFIG,
 //	void	CG_UpdateGLConfig( void );
+
+	CG_CONSOLE_COMPLETEARGUMENT,
+//	qboolean (*CG_ConsoleCompleteArgument)( connstate_t state, int realTime, int completeArgument );
 
 } cgameExport_t;
 

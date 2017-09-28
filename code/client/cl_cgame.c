@@ -43,6 +43,9 @@ extern qboolean loadCamera(const char *name);
 extern void startCamera(int time);
 extern qboolean getCameraInfo(int time, vec3_t *origin, vec3_t *angles);
 
+void CL_GameCommand( void );
+void CL_GameCompleteArgument( char *args, int argNum );
+
 /*
 ====================
 CL_GetGameState
@@ -1223,7 +1226,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		FS_FCloseFile( args[1] );
 		return 0;
 	case CG_FS_GETFILELIST:
-		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
+		return FS_GetFileListBuffer( VMA(1), VMA(2), VMA(3), args[4] );
 	case CG_FS_DELETE:
 		return FS_Delete( VMA(1) );
 	case CG_FS_RENAME:
@@ -1232,7 +1235,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		Cbuf_ExecuteTextSafe( args[1], VMA(2) );
 		return 0;
 	case CG_ADDCOMMAND:
-		Cmd_AddCommandSafe( VMA(1), CL_GameCommand );
+		Cmd_AddCommandSafe( VMA(1), CL_GameCommand, CL_GameCompleteArgument );
 		return 0;
 	case CG_REMOVECOMMAND:
 		Cmd_RemoveCommandSafe( VMA(1), CL_GameCommand );
@@ -1242,6 +1245,15 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 	case CG_CMD_AUTOCOMPLETE:
 		CL_Cmd_AutoComplete( VMA(1), VMA(2), args[3] );
+		return 0;
+	case CG_FIELD_COMPLETEFILENAME:
+		Field_CompleteFilename( VMA(1), VMA(2), args[3], args[4] );
+		return 0;
+	case CG_FIELD_COMPLETECOMMAND:
+		Field_CompleteCommand( VMA(1), args[2], args[3] );
+		return 0;
+	case CG_FIELD_COMPLETELIST:
+		Field_CompleteList( VMA(1) );
 		return 0;
 	case CG_SV_SHUTDOWN:
 		SV_Shutdown( VMA(1) );
@@ -1869,6 +1881,21 @@ void CL_GameCommand( void ) {
 	}
 
 	VM_Call( cgvm, CG_CONSOLE_COMMAND, clc.state, cls.realtime );
+}
+
+/*
+====================
+CL_GameCompleteArgument
+
+Pass the current console command to cgame
+====================
+*/
+void CL_GameCompleteArgument( char *args, int argNum ) {
+	if ( !cgvm ) {
+		return;
+	}
+
+	VM_Call( cgvm, CG_CONSOLE_COMPLETEARGUMENT, clc.state, cls.realtime, argNum );
 }
 
 /*

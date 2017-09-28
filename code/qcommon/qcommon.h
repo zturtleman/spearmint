@@ -492,10 +492,12 @@ then searches for a command or variable that matches the first token.
 */
 
 typedef void (*xcommand_t) (void);
+typedef void (*completionFunc_t)( char *args, int argNum );
 
 void	Cmd_Init (void);
 
 void	Cmd_AddCommand( const char *cmd_name, xcommand_t function );
+void	Cmd_AddCommandWithCompletion( const char *cmd_name, xcommand_t function, completionFunc_t complete );
 // called by the init functions of other parts of the program to
 // register commands and functions to call for them.
 // The cmd_name is referenced later, so it should not be in temp memory
@@ -505,10 +507,8 @@ void	Cmd_AddCommand( const char *cmd_name, xcommand_t function );
 void	Cmd_RemoveCommand( const char *cmd_name );
 void	Cmd_RemoveCommandsByFunc( xcommand_t function );
 
-typedef void (*completionFunc_t)( char *args, int argNum );
-
 // don't allow VMs to remove system commands
-void	Cmd_AddCommandSafe( const char *cmd_name, xcommand_t function );
+void	Cmd_AddCommandSafe( const char *cmd_name, xcommand_t function, completionFunc_t complete );
 void	Cmd_RemoveCommandSafe( const char *cmd_name, xcommand_t function );
 
 void	Cmd_CommandCompletion( void(*callback)(const char *s) );
@@ -727,7 +727,8 @@ qboolean FS_CompareZipChecksum(const char *zipfile);
 
 int		FS_LoadStack( void );
 
-int		FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
+char		**FS_GetFileList( const char *path, const char *extension, int *numfiles, qboolean allowNonPureFilesOnDisk );
+int		FS_GetFileListBuffer( const char *path, const char *extension, char *listbuf, int bufsize );
 int		FS_GetModList(  char *listbuf, int bufsize );
 
 void	FS_GetModDescription( const char *modDir, char *description, int descriptionLen );
@@ -825,7 +826,7 @@ qboolean FS_Rename( const char *from, const char *to );
 int FS_Remove( const char *osPath );
 int FS_HomeRemove( const char *homePath );
 
-void	FS_FilenameCompletion( const char *dir, const char *ext,
+void	FS_FilenameCompletion( char **filenames, int nfiles,
 		qboolean stripExt, void(*callback)(const char *s), qboolean allowNonPureFilesOnDisk );
 
 const char *FS_GetCurrentGameDir(void);
@@ -885,8 +886,9 @@ void Field_AutoComplete( field_t *edit );
 void Field_CompleteKeyname( void );
 void Field_CompleteFilename( const char *dir,
 		const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk );
-void Field_CompleteCommand( char *cmd,
+void Field_CompleteCommand( const char *cmd,
 		qboolean doCommands, qboolean doCvars );
+void Field_CompleteList( const char *list );
 
 /*
 ==============================================================

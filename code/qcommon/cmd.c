@@ -695,10 +695,10 @@ cmd_function_t *Cmd_FindCommand( const char *cmd_name )
 
 /*
 ============
-Cmd_AddCommand
+Cmd_AddCommandWithCompletion
 ============
 */
-void	Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
+void	Cmd_AddCommandWithCompletion( const char *cmd_name, xcommand_t function, completionFunc_t complete ) {
 	cmd_function_t	*cmd;
 	
 	// fail if the command already exists
@@ -712,9 +712,18 @@ void	Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
 	cmd = S_Malloc (sizeof(cmd_function_t));
 	cmd->name = CopyString( cmd_name );
 	cmd->function = function;
-	cmd->complete = NULL;
+	cmd->complete = complete;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
+}
+
+/*
+============
+Cmd_AddCommand
+============
+*/
+void	Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
+	Cmd_AddCommandWithCompletion( cmd_name, function, NULL );
 }
 
 /*
@@ -724,7 +733,7 @@ Cmd_AddCommandSafe
 Only add command if there isn't a system cvar with the same name
 ============
 */
-void	Cmd_AddCommandSafe( const char *cmd_name, xcommand_t function )
+void	Cmd_AddCommandSafe( const char *cmd_name, xcommand_t function, completionFunc_t complete )
 {
 	if( !( Cvar_Flags( cmd_name ) & ( CVAR_NONEXISTENT | CVAR_VM_CREATED | CVAR_USER_CREATED ) ) )
 	{
@@ -733,7 +742,7 @@ void	Cmd_AddCommandSafe( const char *cmd_name, xcommand_t function )
 		return;
 	}
 
-	Cmd_AddCommand( cmd_name, function );
+	Cmd_AddCommandWithCompletion( cmd_name, function, complete );
 }
 
 /*

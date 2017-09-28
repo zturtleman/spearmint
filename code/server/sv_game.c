@@ -35,6 +35,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 botlib_export_t	*botlib_export;
 
+void		SV_GameCommand( void );
+void		SV_GameCompleteArgument( char *args, int argNum );
+
 // these functions must be used instead of pointer arithmetic, because
 // the game allocates gentities with private information after the server shared part
 int	SV_NumForGentity( sharedEntity_t *ent ) {
@@ -315,7 +318,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 
 	case G_ADDCOMMAND:
-		Cmd_AddCommandSafe( VMA(1), SV_GameCommand );
+		Cmd_AddCommandSafe( VMA(1), SV_GameCommand, SV_GameCompleteArgument );
 		return 0;
 	case G_REMOVECOMMAND:
 		Cmd_RemoveCommandSafe( VMA(1), SV_GameCommand );
@@ -382,7 +385,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		FS_FCloseFile( args[1] );
 		return 0;
 	case G_FS_GETFILELIST:
-		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
+		return FS_GetFileListBuffer( VMA(1), VMA(2), VMA(3), args[4] );
 	case G_FS_DELETE:
 		return FS_Delete( VMA(1) );
 	case G_FS_RENAME:
@@ -411,6 +414,16 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return VM_HeapAvailable();
 	case G_HEAP_FREE:
 		VM_HeapFree( VMA(1) );
+		return 0;
+
+	case G_FIELD_COMPLETEFILENAME:
+		Field_CompleteFilename( VMA(1), VMA(2), args[3], args[4] );
+		return 0;
+	case G_FIELD_COMPLETECOMMAND:
+		Field_CompleteCommand( VMA(1), args[2], args[3] );
+		return 0;
+	case G_FIELD_COMPLETELIST:
+		Field_CompleteList( VMA(1) );
 		return 0;
 
 		//====================================
@@ -811,6 +824,19 @@ void SV_GameCommand( void ) {
 	}
 
 	VM_Call( gvm, GAME_CONSOLE_COMMAND );
+}
+
+/*
+====================
+CL_GameCompleteArgument
+====================
+*/
+void SV_GameCompleteArgument( char *args, int argNum ) {
+	if ( sv.state != SS_GAME ) {
+		return;
+	}
+
+	VM_Call( gvm, GAME_CONSOLE_COMPLETEARGUMENT, argNum );
 }
 
 /*
