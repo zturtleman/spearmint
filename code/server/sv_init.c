@@ -633,7 +633,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 				if ( denied && player != NULL ) {
 					// this generally shouldn't happen, because the client
 					// was connected before the level change
-					SV_DropPlayer( player, denied );
+					SV_DropPlayer( player, denied, qtrue );
 				}
 			}
 

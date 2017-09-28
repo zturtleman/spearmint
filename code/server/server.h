@@ -390,7 +390,7 @@ void SV_UserinfoChanged( player_t *cl );
 void SV_SetupPlayerEntity( player_t *player );
 void SV_PlayerEnterWorld( player_t *player, usercmd_t *cmd );
 void SV_FreePlayer( player_t *player );
-void SV_DropPlayer( player_t *drop, const char *reason );
+void SV_DropPlayer( player_t *drop, const char *reason, qboolean force );
 void SV_FreeClient( client_t *client );
 void SV_DropClient( client_t *drop, const char *reason );
 

@@ -116,7 +116,7 @@ void SV_GameDropPlayer( int playerNum, const char *reason ) {
 	if ( playerNum < 0 || playerNum >= sv_maxclients->integer ) {
 		return;
 	}
-	SV_DropPlayer( svs.players + playerNum, reason );	
+	SV_DropPlayer( svs.players + playerNum, reason, qtrue );
 }
 
 

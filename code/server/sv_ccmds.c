@@ -323,7 +323,7 @@ static void SV_MapRestart_f( void ) {
 				// this generally shouldn't happen, because the player
 				// was connected before the level change
 				if ( player != NULL ) {
-					SV_DropPlayer( player, denied );
+					SV_DropPlayer( player, denied, qtrue );
 				}
 				Com_Printf( "SV_MapRestart_f: dropped client %i - denied!\n", i );
 				continue;
@@ -383,7 +383,7 @@ static void SV_Kick_f( void ) {
 		return;
 	}
 
-	SV_DropPlayer( player, "was kicked" );
+	SV_DropPlayer( player, "was kicked", qtrue );
 
 	client->lastPacketTime = svs.time;	// in case there is a funny zombie
 }
@@ -483,7 +483,7 @@ static void SV_KickNum_f( void ) {
 		return;
 	}
 
-	SV_DropPlayer( player, "was kicked" );
+	SV_DropPlayer( player, "was kicked", qtrue );
 
 	client->lastPacketTime = svs.time;	// in case there is a funny zombie
 }

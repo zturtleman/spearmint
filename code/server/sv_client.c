@@ -691,7 +691,7 @@ or unwillingly.  This is NOT called if the entire server is quiting
 or crashing -- SV_FinalMessage() will handle that
 =====================
 */
-void SV_DropPlayer( player_t *drop, const char *reason ) {
+void SV_DropPlayer( player_t *drop, const char *reason, qboolean force ) {
 	int			i;
 	challenge_t	*challenge;
 	int			numLocalPlayers;
@@ -707,6 +707,13 @@ void SV_DropPlayer( player_t *drop, const char *reason ) {
 
 	if ( NET_IsLocalAddress( client->netchan.remoteAddress ) && numLocalPlayers == 1 ) {
 		// allowing tthis would cause the server to keep running with disconnected local players that cannot rejoin
+		return;
+	}
+
+	// call the game vm function for removing a player
+	// it will remove the body, among other things
+	// allow the game to reject splitscreen player disconnect
+	if ( !VM_Call( gvm, GAME_PLAYER_DISCONNECT, playerNum, force || numLocalPlayers == 1 ) && !( force || numLocalPlayers == 1 ) ) {
 		return;
 	}
 
@@ -731,10 +738,6 @@ void SV_DropPlayer( player_t *drop, const char *reason ) {
 	if ( reason ) {
 		SV_SendServerCommand( NULL, -1, "print \"%s" S_COLOR_WHITE " %s\n\"", drop->name, reason );
 	}
-
-	// call the prog function for removing a client
-	// this will remove the body, among other things
-	VM_Call( gvm, GAME_PLAYER_DISCONNECT, playerNum );
 
 	// Check if player is a extra local player
 	if ( numLocalPlayers > 1 ) {
@@ -797,7 +800,7 @@ void SV_DropClient( client_t *cl, const char *reason ) {
 			continue;
 		}
 
-		SV_DropPlayer( cl->localPlayers[i], reason );
+		SV_DropPlayer( cl->localPlayers[i], reason, qtrue );
 	}
 }
 
@@ -1394,7 +1397,7 @@ void SV_UserinfoChanged( player_t *player ) {
 		len = strlen( ip ) + 4 + strlen( player->userinfo );
 
 	if( len >= MAX_INFO_STRING )
-		SV_DropPlayer( player, "userinfo string length exceeded" );
+		SV_DropPlayer( player, "userinfo string length exceeded", qtrue );
 	else
 		Info_SetValueForKey( player->userinfo, "ip", ip );
 
@@ -1441,7 +1444,7 @@ void SV_DropOut_f( client_t *client, int localPlayerNum ) {
 		return;
 	}
 
-	SV_DropPlayer( player, "dropped out" );
+	SV_DropPlayer( player, "dropped out", qfalse );
 }
 
 /*
