@@ -596,10 +596,10 @@ void SV_BotInitBotLib(void) {
 
 /*
 ==================
-SV_BotGetConsoleMessage
+SV_BotGetServerCommand
 ==================
 */
-int SV_BotGetConsoleMessage( int playerNum, char *buf, int size )
+int SV_BotGetServerCommand( int playerNum, char *buf, int size )
 {
 	client_t	*cl;
 	int			index;

@@ -448,7 +448,7 @@ void		SV_BotInitCvars(void);
 int			SV_BotLibSetup( void );
 int			SV_BotLibShutdown( void );
 int			SV_BotGetSnapshotEntity( int playerNum, int ent );
-int			SV_BotGetConsoleMessage( int playerNum, char *buf, int size );
+int			SV_BotGetServerCommand( int playerNum, char *buf, int size );
 
 int BotImport_DebugPolygonCreate(int color, int numPoints, vec3_t *points);
 void BotImport_DebugPolygonShow(int id, int color, int numPoints, vec3_t *points);
