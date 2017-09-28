@@ -31,13 +31,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "client.h"
 
-#include "../botlib/botlib.h"
+#include "../botlib/l_script.h"
+#include "../botlib/l_precomp.h"
 
 #ifdef USE_MUMBLE
 #include "libmumblelink.h"
 #endif
-
-extern	botlib_export_t	*botlib_export;
 
 extern qboolean loadCamera(const char *name);
 extern void startCamera(int time);
@@ -1648,21 +1647,21 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 
 
 	case CG_PC_ADD_GLOBAL_DEFINE:
-		return botlib_export->PC_AddGlobalDefine( VMA(1) );
+		return PC_AddGlobalDefine( VMA(1) );
 	case CG_PC_REMOVE_ALL_GLOBAL_DEFINES:
-		botlib_export->PC_RemoveAllGlobalDefines();
+		PC_RemoveAllGlobalDefines();
 		return 0;
 	case CG_PC_LOAD_SOURCE:
-		return botlib_export->PC_LoadSourceHandle( VMA(1), VMA(2) );
+		return PC_LoadSourceHandle( VMA(1), VMA(2) );
 	case CG_PC_FREE_SOURCE:
-		return botlib_export->PC_FreeSourceHandle( args[1] );
+		return PC_FreeSourceHandle( args[1] );
 	case CG_PC_READ_TOKEN:
-		return botlib_export->PC_ReadTokenHandle( args[1], VMA(2) );
+		return PC_ReadTokenHandle( args[1], VMA(2) );
 	case CG_PC_UNREAD_TOKEN:
-		botlib_export->PC_UnreadLastTokenHandle( args[1] );
+		PC_UnreadLastTokenHandle( args[1] );
 		return 0;
 	case CG_PC_SOURCE_FILE_AND_LINE:
-		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
+		return PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
 
 	case CG_HEAP_MALLOC:
 		return VM_HeapMalloc( args[1] );

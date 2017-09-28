@@ -57,6 +57,7 @@ typedef enum {qfalse, qtrue}	qboolean;
 #ifdef BOTLIB
 //include files for usage in the bot library
 #include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
 #include "botlib.h"
 #include "be_interface.h"
 #include "l_script.h"
@@ -232,7 +233,7 @@ void QDECL ScriptError(script_t *script, char *str, ...)
 	Q_vsnprintf(text, sizeof(text), str, ap);
 	va_end(ap);
 #ifdef BOTLIB
-	botimport.Print(PRT_ERROR, "file %s, line %d: %s\n", script->filename, script->line, text);
+	Com_Printf(S_COLOR_RED "Error: file %s, line %d: %s\n", script->filename, script->line, text);
 #endif //BOTLIB
 #ifdef BSPC
 	Log_Print("error: file %s, line %d: %s\n", script->filename, script->line, text);
@@ -255,7 +256,7 @@ void QDECL ScriptWarning(script_t *script, char *str, ...)
 	Q_vsnprintf(text, sizeof(text), str, ap);
 	va_end(ap);
 #ifdef BOTLIB
-	botimport.Print(PRT_WARNING, "file %s, line %d: %s\n", script->filename, script->line, text);
+	Com_Printf(S_COLOR_YELLOW "Warning: file %s, line %d: %s\n", script->filename, script->line, text);
 #endif //BOTLIB
 #ifdef BSPC
 	Log_Print("warning: file %s, line %d: %s\n", script->filename, script->line, text);
@@ -1327,7 +1328,7 @@ script_t *LoadScriptFile(const char *filename)
 		Com_sprintf(pathname, sizeof(pathname), "%s/%s", basefolder, filename);
 	else
 		Com_sprintf(pathname, sizeof(pathname), "%s", filename);
-	length = botimport.FS_FOpenFile( pathname, &fp, FS_READ );
+	length = FS_FOpenFileByMode( pathname, &fp, FS_READ );
 	if (!fp) return NULL;
 #else
 	fp = fopen(filename, "rb");
@@ -1358,8 +1359,8 @@ script_t *LoadScriptFile(const char *filename)
 	SetScriptPunctuations(script, NULL);
 	//
 #ifdef BOTLIB
-	botimport.FS_Read(script->buffer, length, fp);
-	botimport.FS_FCloseFile(fp);
+	FS_Read(script->buffer, length, fp);
+	FS_FCloseFile(fp);
 #else
 	if (fread(script->buffer, length, 1, fp) != 1)
 	{

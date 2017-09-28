@@ -59,6 +59,7 @@ typedef enum {qfalse, qtrue}	qboolean;
 
 #ifdef BOTLIB
 #include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
 #include "botlib.h"
 #include "be_interface.h"
 #include "l_memory.h"
@@ -117,7 +118,7 @@ void QDECL SourceError(source_t *source, char *str, ...)
 	Q_vsnprintf(text, sizeof(text), str, ap);
 	va_end(ap);
 #ifdef BOTLIB
-	botimport.Print(PRT_ERROR, "file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text);
+	Com_Printf(S_COLOR_RED "Error: file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text);
 #endif	//BOTLIB
 #ifdef BSPC
 	Log_Print("error: file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text);
@@ -138,7 +139,7 @@ void QDECL SourceWarning(source_t *source, char *str, ...)
 	Q_vsnprintf(text, sizeof(text), str, ap);
 	va_end(ap);
 #ifdef BOTLIB
-	botimport.Print(PRT_WARNING, "file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text);
+	Com_Printf(S_COLOR_YELLOW "Warning: file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text);
 #endif //BOTLIB
 #ifdef BSPC
 	Log_Print("warning: file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text);
@@ -494,6 +495,7 @@ void PC_PrintDefine(define_t *define)
 //	struct define_s *next;			//next defined macro in a list
 } //end of the function PC_PrintDefine*/
 #if DEFINEHASHING
+#if 0
 //============================================================================
 //
 // Parameter:				-
@@ -515,6 +517,7 @@ void PC_PrintDefineHashTable(define_t **definehash)
 		Log_Write("\n");
 	} //end for
 } //end of the function PC_PrintDefineHashTable
+#endif
 //============================================================================
 //
 // Parameter:				-
@@ -3153,7 +3156,7 @@ void PC_CheckOpenSourceHandles(void)
 		if (sourceFiles[i])
 		{
 #ifdef BOTLIB
-			botimport.Print(PRT_ERROR, "file %s still open in precompiler\n", sourceFiles[i]->scriptstack->filename);
+			Com_Printf(S_COLOR_RED "Error: file %s still open in precompiler\n", sourceFiles[i]->scriptstack->filename);
 #endif	//BOTLIB
 		} //end if
 	} //end for
