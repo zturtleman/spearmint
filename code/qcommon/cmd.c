@@ -522,31 +522,6 @@ char *Cmd_Cmd(void)
 }
 
 /*
-   Replace command separators with space to prevent interpretation
-   This is a hack to protect buggy qvms
-   https://bugzilla.icculus.org/show_bug.cgi?id=3593
-   https://bugzilla.icculus.org/show_bug.cgi?id=4769
-*/
-
-void Cmd_Args_Sanitize(void)
-{
-	int i;
-
-	for(i = 1; i < cmd.argc; i++)
-	{
-		char *c = cmd.argv[i];
-		
-		if(strlen(c) > MAX_CVAR_VALUE_STRING - 1)
-			c[MAX_CVAR_VALUE_STRING - 1] = '\0';
-		
-		while ((c = strpbrk(c, "\n\r;"))) {
-			*c = ' ';
-			++c;
-		}
-	}
-}
-
-/*
 ============
 Cmd_TokenizeString
 
