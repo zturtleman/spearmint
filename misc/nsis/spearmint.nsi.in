@@ -11,6 +11,7 @@
 !define GAMENAME "Spearmint"
 !define CLIENT "spearmint_x86.exe"
 !define SERVER "spearmint-server_x86.exe"
+!define RENDERER_PREFIX "spearmint-renderer-"
 !define GAMEDIR "Spearmint"
 !define GAMEKEY "spearmint"
 
@@ -100,8 +101,8 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
   File "../../build/release-mingw32-x86/${SERVER}"
   File "../../build/release-mingw32-x86/${CLIENT}"
 !ifdef USE_RENDERER_DLOPEN
-  File "../../build/release-mingw32-x86/mint-renderer-opengl1_x86.dll"
-  File "../../build/release-mingw32-x86/mint-renderer-opengl2_x86.dll"
+  File "../../build/release-mingw32-x86/${RENDERER_PREFIX}opengl1_x86.dll"
+  File "../../build/release-mingw32-x86/${RENDERER_PREFIX}opengl2_x86.dll"
 !endif
 
   File "../../COPYING.txt"
@@ -168,8 +169,8 @@ Section "Uninstall"
   Delete $INSTDIR\${CLIENT}
   Delete $INSTDIR\${SERVER}
 !ifdef USE_RENDERER_DLOPEN
-  Delete $INSTDIR\mint-renderer-opengl1_x86.dll
-  Delete $INSTDIR\mint-renderer-opengl2_x86.dll
+  Delete $INSTDIR\${RENDERER_PREFIX}opengl1_x86.dll
+  Delete $INSTDIR\${RENDERER_PREFIX}opengl2_x86.dll
 !endif
 
   Delete $INSTDIR\COPYING.txt

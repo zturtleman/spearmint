@@ -70,7 +70,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 // Prefix for renderer native libraries. Example: PREFIXopengl1_x86.dll
 // Change this if you break renderer compatibility with Spearmint.
 // You'll also need to change RENDERER_PREFIX in Makefile.
-#define RENDERER_PREFIX				"mint-renderer-"
+#ifndef RENDERER_PREFIX
+	#define RENDERER_PREFIX			"spearmint-renderer-"
+#endif
 
 // Default game to load (default fs_game value).
 // You can change this and it won't break network compatiblity.

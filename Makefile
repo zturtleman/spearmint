@@ -109,7 +109,7 @@ APPBUNDLE=Spearmint.app
 endif
 
 ifndef RENDERER_PREFIX
-RENDERER_PREFIX=mint-renderer-
+RENDERER_PREFIX=spearmint-renderer-
 endif
 
 ifndef BASEGAME
@@ -1123,6 +1123,7 @@ endif
 
 BASE_CFLAGS += -DPRODUCT_VERSION=\\\"$(VERSION)\\\"
 BASE_CFLAGS += -DBASEGAME=\\\"$(BASEGAME)\\\"
+BASE_CFLAGS += -DRENDERER_PREFIX=\\\"$(RENDERER_PREFIX)\\\"
 BASE_CFLAGS += -Wformat=2 -Wno-format-zero-length -Wformat-security -Wno-format-nonliteral
 BASE_CFLAGS += -Wstrict-aliasing=2 -Wmissing-format-attribute
 BASE_CFLAGS += -Wdisabled-optimization
