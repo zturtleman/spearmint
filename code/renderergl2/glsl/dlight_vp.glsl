@@ -129,7 +129,7 @@ void main()
 		// Q3 cylinder dlight with texture
 		var_Tex1 = dist.xy * u_DlightInfo.a + vec2(0.5);
 
-		float dlightmod = step(0.0, dot(dist, normal));
+		dlightmod = step(0.0, dot(dist, normal));
 		dlightmod *= clamp(u_Intensity * 2.0 * (1.0 - abs(dist.z) * u_DlightInfo.a), 0.0, 1.0);
 	}
 
