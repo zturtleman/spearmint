@@ -86,6 +86,8 @@ extern void (APIENTRYP qglCompressedTexImage2DARB) (GLenum target, GLint level,
 	GLE(void, DrawElements, GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) \
 	GLE(void, EnableClientState, GLenum cap) \
 	GLE(void, Enable, GLenum cap) \
+	GLE(void, Fogf, GLenum pname, GLfloat param) \
+	GLE(void, Fogfv, GLenum pname, const GLfloat *params ) \
 	GLE(void, Finish, void) \
 	GLE(void, Flush, void) \
 	GLE(void, GenTextures, GLsizei n, GLuint *textures ) \
@@ -93,10 +95,12 @@ extern void (APIENTRYP qglCompressedTexImage2DARB) (GLenum target, GLint level,
 	GLE(GLenum, GetError, void) \
 	GLE(void, GetIntegerv, GLenum pname, GLint *params) \
 	GLE(const GLubyte *, GetString, GLenum name) \
+	GLE(void, Hint, GLenum target, GLenum mode ) \
 	GLE(void, LineWidth, GLfloat width) \
 	GLE(void, LoadIdentity, void) \
 	GLE(void, LoadMatrixf, const GLfloat *m) \
 	GLE(void, MatrixMode, GLenum mode) \
+	GLE(void, PointSize, GLfloat size) \
 	GLE(void, PolygonOffset, GLfloat factor, GLfloat units) \
 	GLE(void, PopMatrix, void) \
 	GLE(void, PushMatrix, void) \
@@ -123,11 +127,14 @@ extern void (APIENTRYP qglCompressedTexImage2DARB) (GLenum target, GLint level,
 	GLE(void, ClearDepth, GLclampd depth) \
 	GLE(void, ClipPlane, GLenum plane, const GLdouble *equation) \
 	GLE(void, Color3f, GLfloat red, GLfloat green, GLfloat blue) \
+	GLE(void, Color3fv, const GLfloat *v) \
 	GLE(void, Color4ubv, const GLubyte *v) \
 	GLE(void, DepthRange, GLclampd near_val, GLclampd far_val) \
 	GLE(void, DrawBuffer, GLenum mode) \
 	GLE(void, End, void) \
+	GLE(void, Fogi, GLenum pname, GLint param ); \
 	GLE(void, Frustum, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) \
+	GLE(void, GetTexLevelParameteriv, GLenum target, GLint level, GLenum pname, GLint *params) \
 	GLE(void, Ortho, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) \
 	GLE(void, PolygonMode, GLenum face, GLenum mode) \
 	GLE(void, TexCoord2f, GLfloat s, GLfloat t) \
