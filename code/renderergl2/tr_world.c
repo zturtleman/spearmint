@@ -253,10 +253,18 @@ static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 		case SF_FACE:
 		case SF_GRID:
 		case SF_TRIANGLES:
+			// shadows shouldn't change surface data
+			if ( tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW) )
+				break;
+
 			((srfBspSurface_t *)surf->data)->dlightBits = dlightBits;
 			break;
 
 		case SF_FOLIAGE:
+			// shadows shouldn't change surface data
+			if ( tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW) )
+				break;
+
 			((srfFoliage_t *)surf->data)->dlightBits = dlightBits;
 			break;
 
@@ -342,10 +350,18 @@ static int R_PshadowSurface( msurface_t *surf, int pshadowBits ) {
 		case SF_FACE:
 		case SF_GRID:
 		case SF_TRIANGLES:
+			// sun shadows shouldn't change surface data
+			if ( tr.viewParms.flags & VPF_DEPTHSHADOW )
+				break;
+
 			((srfBspSurface_t *)surf->data)->pshadowBits = pshadowBits;
 			break;
 
 		case SF_FOLIAGE:
+			// sun shadows shouldn't change surface data
+			if ( tr.viewParms.flags & VPF_DEPTHSHADOW )
+				break;
+
 			((srfFoliage_t *)surf->data)->pshadowBits = pshadowBits;
 			break;
 
