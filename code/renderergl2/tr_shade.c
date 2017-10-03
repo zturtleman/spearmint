@@ -430,9 +430,6 @@ static void ProjectDlightTexture( void ) {
 		vector[3] = scale;
 		GLSL_SetUniformVec4(sp, UNIFORM_DLIGHTINFO, vector);
 
-		GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_EQUAL);
-		GLSL_SetUniformFloat(sp, UNIFORM_ALPHATESTREF, 0.0f);
-		
 		GLSL_SetUniformFloat(sp, UNIFORM_INTENSITY, intensity);
 
 		if ( dl->dlshader ) {
@@ -443,6 +440,35 @@ static void ProjectDlightTexture( void ) {
 				shaderStage_t *stage = dls->stages[i];
 				R_BindAnimatedImageToTMU( &dls->stages[i]->bundle[0], TB_COLORMAP );
 				GL_State( stage->stateBits | GLS_DEPTHFUNC_EQUAL );
+
+				// alpha test function
+				switch ( stage->stateBits & GLS_ATEST_FUNC_BITS )
+				{
+					case GLS_ATEST_GREATER:
+						GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_GREATER);
+						break;
+					case GLS_ATEST_LESS:
+						GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_LESS);
+						break;
+					case GLS_ATEST_GREATEREQUAL:
+						GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_GREATEREQUAL);
+						break;
+					case GLS_ATEST_LESSEQUAL:
+						GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_LESSEQUAL);
+						break;
+					case GLS_ATEST_EQUAL:
+						GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_EQUAL);
+						break;
+					case GLS_ATEST_NOTEQUAL:
+						GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_NOTEQUAL);
+						break;
+					default:
+						GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_NONE);
+						break;
+				}
+
+				// alpha test reference value
+				GLSL_SetUniformFloat(sp, UNIFORM_ALPHATESTREF, ( ( stage->stateBits & GLS_ATEST_REF_BITS ) >> GLS_ATEST_REF_SHIFT ) / 100.0f);
 
 				R_DrawElements(tess.numIndexes, tess.firstIndex);
 
@@ -464,6 +490,35 @@ static void ProjectDlightTexture( void ) {
 			else {
 				GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
 			}
+
+			// alpha test function
+			switch ( glState.glStateBits & GLS_ATEST_FUNC_BITS )
+			{
+				case GLS_ATEST_GREATER:
+					GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_GREATER);
+					break;
+				case GLS_ATEST_LESS:
+					GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_LESS);
+					break;
+				case GLS_ATEST_GREATEREQUAL:
+					GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_GREATEREQUAL);
+					break;
+				case GLS_ATEST_LESSEQUAL:
+					GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_LESSEQUAL);
+					break;
+				case GLS_ATEST_EQUAL:
+					GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_EQUAL);
+					break;
+				case GLS_ATEST_NOTEQUAL:
+					GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_NOTEQUAL);
+					break;
+				default:
+					GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, U_ATEST_NONE);
+					break;
+			}
+
+			// alpha test reference value
+			GLSL_SetUniformFloat(sp, UNIFORM_ALPHATESTREF, ( ( glState.glStateBits & GLS_ATEST_REF_BITS ) >> GLS_ATEST_REF_SHIFT ) / 100.0f);
 
 			R_DrawElements(tess.numIndexes, tess.firstIndex);
 
