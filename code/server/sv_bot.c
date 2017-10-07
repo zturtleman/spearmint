@@ -277,6 +277,7 @@ void SV_BotInitBotLib(void) {
 		debugpolygons = Z_Malloc(sizeof(bot_debugpoly_t) * bot_maxdebugpolys->integer);
 		bot_maxdebugpolys->modified = qfalse;
 	}
+	Com_Memset( debugpolygons, 0, sizeof(bot_debugpoly_t) * bot_maxdebugpolys->integer );
 }
 
 
