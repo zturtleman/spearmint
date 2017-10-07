@@ -3096,6 +3096,21 @@ int PC_FreeSourceHandle(int handle)
 // Returns:				-
 // Changes Globals:		-
 //============================================================================
+int PC_AddDefineHandle(int handle, const char *define)
+{
+	if (handle < 1 || handle >= MAX_SOURCEFILES)
+		return qfalse;
+	if (!sourceFiles[handle])
+		return qfalse;
+
+	return PC_AddDefine(sourceFiles[handle], define);
+} //end of the function PC_FreeSourceHandle
+//============================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//============================================================================
 int PC_ReadTokenHandle(int handle, pc_token_t *pc_token)
 {
 	token_t token;

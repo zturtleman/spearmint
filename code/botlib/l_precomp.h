@@ -163,6 +163,7 @@ void QDECL SourceWarning(source_t *source, char *str, ...)  __attribute__ ((form
 //
 int PC_LoadSourceHandle(const char *filename, const char *basepath, const define_t *globaldefines);
 int PC_FreeSourceHandle(int handle);
+int PC_AddDefineHandle(int handle, const char *define);
 int PC_ReadTokenHandle(int handle, pc_token_t *pc_token);
 void PC_UnreadLastTokenHandle( int handle );
 int PC_SourceFileAndLine(int handle, char *filename, int *line);

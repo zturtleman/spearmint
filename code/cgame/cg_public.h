@@ -221,13 +221,15 @@ typedef enum {
 	CG_FS_DELETE,
 	CG_FS_RENAME,
 
-	CG_PC_ADD_GLOBAL_DEFINE,
-	CG_PC_REMOVE_ALL_GLOBAL_DEFINES,
-	CG_PC_LOAD_SOURCE,
-	CG_PC_FREE_SOURCE,
-	CG_PC_READ_TOKEN,
-	CG_PC_UNREAD_TOKEN,
-	CG_PC_SOURCE_FILE_AND_LINE,
+	CG_PC_ADD_GLOBAL_DEFINE,			// ( const char *define );
+	CG_PC_REMOVE_GLOBAL_DEFINE,			// ( const char *define );
+	CG_PC_REMOVE_ALL_GLOBAL_DEFINES,	// ( void );
+	CG_PC_LOAD_SOURCE,					// ( const char *filename, const char *basepath );
+	CG_PC_FREE_SOURCE,					// ( int handle );
+	CG_PC_ADD_DEFINE,					// ( int handle, const char *define );
+	CG_PC_READ_TOKEN,					// ( int handle, pc_token_t *pc_token );
+	CG_PC_UNREAD_TOKEN,					// ( int handle );
+	CG_PC_SOURCE_FILE_AND_LINE,			// ( int handle, char *filename, int *line );
 
 	CG_HEAP_MALLOC,		// ( int size );
 	CG_HEAP_AVAILABLE,	// ( void );

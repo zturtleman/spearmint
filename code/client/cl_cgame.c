@@ -1656,6 +1656,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 
 	case CG_PC_ADD_GLOBAL_DEFINE:
 		return PC_AddGlobalDefine( &cgame_globaldefines, VMA(1) );
+	case CG_PC_REMOVE_GLOBAL_DEFINE:
+		PC_RemoveGlobalDefine( &cgame_globaldefines, VMA(1) );
+		return 0;
 	case CG_PC_REMOVE_ALL_GLOBAL_DEFINES:
 		PC_RemoveAllGlobalDefines( &cgame_globaldefines );
 		return 0;
@@ -1663,6 +1666,8 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return PC_LoadSourceHandle( VMA(1), VMA(2), cgame_globaldefines );
 	case CG_PC_FREE_SOURCE:
 		return PC_FreeSourceHandle( args[1] );
+	case CG_PC_ADD_DEFINE:
+		return PC_AddDefineHandle( args[1], VMA(2) );
 	case CG_PC_READ_TOKEN:
 		return PC_ReadTokenHandle( args[1], VMA(2) );
 	case CG_PC_UNREAD_TOKEN:
