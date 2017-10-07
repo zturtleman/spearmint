@@ -250,15 +250,6 @@ typedef struct botlib_export_s
 	//gets a library variable returns BLERR_
 	int (*BotLibVarGet)(const char *var_name, char *value, int size);
 
-	//sets a C-like define returns BLERR_
-	int (*PC_AddGlobalDefine)(char *string);
-	void (*PC_RemoveAllGlobalDefines)(void);
-	int (*PC_LoadSourceHandle)(const char *filename, const char *basepath);
-	int (*PC_FreeSourceHandle)(int handle);
-	int (*PC_ReadTokenHandle)(int handle, pc_token_t *pc_token);
-	void (*PC_UnreadLastTokenHandle)(int handle);
-	int (*PC_SourceFileAndLine)(int handle, char *filename, int *line);
-
 	//start a frame in the bot library
 	int (*BotLibStartFrame)(float time);
 	//load a new map in the bot library
