@@ -2106,7 +2106,7 @@ void R_DebugGraphics( void ) {
 		ri.CM_DrawDebugSurface( R_DebugPolygon );
 	} else {
 		GL_Cull( CT_TWO_SIDED );
-		ri.BotDrawDebugPolygons( R_DebugPolygon );
+		ri.SV_BotDrawDebugPolygons( R_DebugPolygon );
 	}
 }
 

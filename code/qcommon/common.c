@@ -3206,7 +3206,7 @@ void Com_ShutdownRef( void ) {
 Com_InitRef
 ============
 */
-void BotDrawDebugPolygons( void (*drawPoly)(int color, int numPoints, float *points) );
+void SV_BotDrawDebugPolygons( void (*drawPoly)(int color, int numPoints, float *points) );
 
 void Com_InitRef( refimport_t *ri ) {
 	refexport_t	*ret;
@@ -3275,7 +3275,7 @@ void Com_InitRef( refimport_t *ri ) {
 
 	ri->CM_ClusterPVS = CM_ClusterPVS;
 	ri->CM_DrawDebugSurface = CM_DrawDebugSurface;
-	ri->BotDrawDebugPolygons = BotDrawDebugPolygons;
+	ri->SV_BotDrawDebugPolygons = SV_BotDrawDebugPolygons;
 
 	ri->FS_ReadFile = FS_ReadFile;
 	ri->FS_FreeFile = FS_FreeFile;
