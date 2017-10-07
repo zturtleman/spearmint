@@ -2104,7 +2104,7 @@ void R_DebugGraphics( void ) {
 	if ( r_debugSurface->integer == 1 ) {
 		GL_Cull( CT_FRONT_SIDED );
 		ri.CM_DrawDebugSurface( R_DebugPolygon );
-	} else {
+	} else if ( r_debugSurface->integer == 2 ) {
 		GL_Cull( CT_TWO_SIDED );
 		ri.SV_BotDrawDebugPolygons( R_DebugPolygon );
 	}
