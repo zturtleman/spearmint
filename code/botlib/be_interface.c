@@ -659,6 +659,25 @@ static void Init_AAS_Export( aas_export_t *aas ) {
 	aas->AAS_PresenceTypeBoundingBox = AAS_PresenceTypeBoundingBox;
 	aas->AAS_Time = AAS_Time;
 	//--------------------------------------------
+	// be_aas_debug.c
+	//--------------------------------------------
+	aas->AAS_ClearShownDebugLines = AAS_ClearShownDebugLines;
+	aas->AAS_ClearShownPolygons = AAS_ClearShownPolygons;
+	aas->AAS_DebugLine = AAS_DebugLine;
+	aas->AAS_PermanentLine = AAS_PermanentLine;
+	aas->AAS_DrawPermanentCross = AAS_DrawPermanentCross;
+	aas->AAS_DrawPlaneCross = AAS_DrawPlaneCross;
+	aas->AAS_ShowBoundingBox = AAS_ShowBoundingBox;
+	aas->AAS_ShowFace = AAS_ShowFace;
+	aas->AAS_ShowArea = AAS_ShowArea;
+	aas->AAS_ShowAreaPolygons = AAS_ShowAreaPolygons;
+	aas->AAS_DrawCross = AAS_DrawCross;
+	aas->AAS_PrintTravelType = AAS_PrintTravelType;
+	aas->AAS_DrawArrow = AAS_DrawArrow;
+	aas->AAS_ShowReachability = AAS_ShowReachability;
+	aas->AAS_ShowReachableAreas = AAS_ShowReachableAreas;
+	aas->AAS_FloodAreas = AAS_FloodAreas;
+	//--------------------------------------------
 	// be_aas_sample.c
 	//--------------------------------------------
 	aas->AAS_PointAreaNum = AAS_PointAreaNum;

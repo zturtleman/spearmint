@@ -38,7 +38,6 @@ Suite 120, Rockville, Maryland 20850 USA.
  *****************************************************************************/
 
 #include "../qcommon/q_shared.h"
-#include "../qcommon/surfaceflags.h" // for CONTENTS_* used by BOTMASK_SOLID
 #include "l_memory.h"
 #include "aasfile.h"
 #include "botlib.h"
@@ -547,6 +546,43 @@ void AAS_DrawCross(vec3_t origin, float size, int color)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
+void AAS_PrintTravelType(int traveltype)
+{
+	char *str;
+	//
+	switch(traveltype & TRAVELTYPE_MASK)
+	{
+		case TRAVEL_INVALID: str = "TRAVEL_INVALID"; break;
+		case TRAVEL_WALK: str = "TRAVEL_WALK"; break;
+		case TRAVEL_CROUCH: str = "TRAVEL_CROUCH"; break;
+		case TRAVEL_BARRIERJUMP: str = "TRAVEL_BARRIERJUMP"; break;
+		case TRAVEL_JUMP: str = "TRAVEL_JUMP"; break;
+		case TRAVEL_LADDER: str = "TRAVEL_LADDER"; break;
+		case TRAVEL_WALKOFFLEDGE: str = "TRAVEL_WALKOFFLEDGE"; break;
+		case TRAVEL_SWIM: str = "TRAVEL_SWIM"; break;
+		case TRAVEL_WATERJUMP: str = "TRAVEL_WATERJUMP"; break;
+		case TRAVEL_TELEPORT: str = "TRAVEL_TELEPORT"; break;
+		case TRAVEL_ELEVATOR: str = "TRAVEL_ELEVATOR"; break;
+		case TRAVEL_ROCKETJUMP: str = "TRAVEL_ROCKETJUMP"; break;
+		case TRAVEL_BFGJUMP: str = "TRAVEL_BFGJUMP"; break;
+		case TRAVEL_GRAPPLEHOOK: str = "TRAVEL_GRAPPLEHOOK"; break;
+		case TRAVEL_DOUBLEJUMP: str = "TRAVEL_DOUBLEJUMP"; break;
+		case TRAVEL_RAMPJUMP: str = "TRAVEL_RAMPJUMP"; break;
+		case TRAVEL_STRAFEJUMP: str = "TRAVEL_STRAFEJUMP"; break;
+		case TRAVEL_JUMPPAD: str = "TRAVEL_JUMPPAD"; break;
+		case TRAVEL_FUNCBOB: str = "TRAVEL_FUNCBOB"; break;
+		default:
+			botimport.Print(PRT_MESSAGE, S_COLOR_RED "UNKNOWN TRAVEL TYPE (%d)" S_COLOR_WHITE, (traveltype & TRAVELTYPE_MASK));
+			return;
+	} //end switch
+	botimport.Print(PRT_MESSAGE, "%s", str);
+} //end of the function AAS_PrintTravelType
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
 void AAS_DrawArrow(vec3_t start, vec3_t end, int linecolor, int arrowcolor)
 {
 	vec3_t dir, cross, p1, p2, up = {0, 0, 1};
@@ -573,12 +609,11 @@ void AAS_DrawArrow(vec3_t start, vec3_t end, int linecolor, int arrowcolor)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void AAS_ShowReachability(aas_reachability_t *reach)
+void AAS_ShowReachability(aas_reachability_t *reach, int contentmask)
 {
 	vec3_t dir, cmdmove, velocity;
 	float speed, zvel;
 	aas_clientmove_t move;
-	int contentmask = BOTMASK_SOLID; // ZTM: FIXME: Get contentmask from Game VM!
 
 	AAS_ShowAreaPolygons(reach->areanum, 5, qtrue);
 	//AAS_ShowArea(reach->areanum, qtrue);
@@ -656,8 +691,7 @@ void AAS_ShowReachability(aas_reachability_t *reach)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-#ifdef DEBUG
-void AAS_ShowReachableAreas(int areanum)
+void AAS_ShowReachableAreas(int areanum, int contentmask)
 {
 	aas_areasettings_t *settings;
 	static aas_reachability_t reach;
@@ -680,13 +714,11 @@ void AAS_ShowReachableAreas(int areanum)
 		Com_Memcpy(&reach, &aasworld.reachability[settings->firstreachablearea + index], sizeof(aas_reachability_t));
 		index++;
 		lasttime = AAS_Time();
-		// ZTM: FIXME: Moved AAS_PrintTravelType to game/ai_move.c as BotPrintTravelType
-		//AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
-		//botimport.Print(PRT_MESSAGE, "\n");
+		AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
+		botimport.Print(PRT_MESSAGE, "\n");
 	} //end if
-	AAS_ShowReachability(&reach);
-} //end of the function ShowReachableAreas
-#endif
+	AAS_ShowReachability(&reach, contentmask);
+} //end of the function AAS_ShowReachableAreas
 
 void AAS_FloodAreas_r(int areanum, int cluster, int *done)
 {
