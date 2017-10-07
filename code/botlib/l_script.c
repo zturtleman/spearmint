@@ -153,9 +153,7 @@ punctuation_t default_punctuations[] =
 	{NULL, 0, NULL}
 };
 
-#ifdef BSPC
-char basefolder[MAX_PATH];
-#else
+#ifdef BOTLIB
 char basefolder[MAX_QPATH];
 #endif
 
@@ -1428,8 +1426,10 @@ void FreeScript(script_t *script)
 //============================================================================
 void PS_SetBaseFolder(const char *path)
 {
+#ifdef BOTLIB
 	if (path)
 		Com_sprintf(basefolder, sizeof(basefolder), "%s", path);
 	else
 		basefolder[0] = '\0';
+#endif
 } //end of the function PS_SetBaseFolder

@@ -752,4 +752,5 @@ void AAS_FloodAreas(vec3_t origin)
 	areanum = AAS_PointAreaNum(origin);
 	cluster = AAS_AreaCluster(areanum);
 	AAS_FloodAreas_r(areanum, cluster, done);
+	FreeMemory(done);
 }
