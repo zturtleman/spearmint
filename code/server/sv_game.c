@@ -660,18 +660,6 @@ Called on a normal map change, not on a map_restart
 ===============
 */
 void SV_InitGameProgs( void ) {
-	cvar_t	*var;
-	//FIXME these are temp while I make bots run in vm
-	extern int	bot_enable;
-
-	var = Cvar_Get( "bot_enable", "1", CVAR_LATCH );
-	if ( var ) {
-		bot_enable = var->integer;
-	}
-	else {
-		bot_enable = 0;
-	}
-
 	// load the dll or bytecode
 	gvm = VM_Create( VM_PREFIX "game", SV_GameSystemCalls, Cvar_VariableValue( "vm_game" ),
 			TAG_GAME, Cvar_VariableValue( "vm_gameHeapMegs" ) * 1024 * 1024 );

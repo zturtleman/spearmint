@@ -40,9 +40,9 @@ typedef struct bot_debugpoly_s
 } bot_debugpoly_t;
 
 static bot_debugpoly_t *debugpolygons;
-int bot_maxdebugpolys;
+cvar_t *bot_maxdebugpolys;
 
-int	bot_enable;
+cvar_t *bot_enable;
 
 
 /*
@@ -154,7 +154,7 @@ void BotDrawDebugPolygons( void (*drawPoly)(int color, int numPoints, float *poi
 	} //end if
 #endif
 	//draw all debug polys
-	for (i = 0; i < bot_maxdebugpolys; i++) {
+	for (i = 0; i < bot_maxdebugpolys->integer; i++) {
 		poly = &debugpolygons[i];
 		if (!poly->inuse) continue;
 		drawPoly(poly->color, poly->numPoints, (float *) poly->points);
@@ -174,11 +174,11 @@ int BotImport_DebugPolygonCreate(int color, int numPoints, vec3_t *points) {
 	if (!debugpolygons)
 		return 0;
 
-	for (i = 1; i < bot_maxdebugpolys; i++) 	{
+	for (i = 1; i < bot_maxdebugpolys->integer; i++) {
 		if (!debugpolygons[i].inuse)
 			break;
 	}
-	if (i >= bot_maxdebugpolys)
+	if (i >= bot_maxdebugpolys->integer)
 		return 0;
 	poly = &debugpolygons[i];
 	poly->inuse = qtrue;
@@ -203,7 +203,7 @@ void BotImport_DebugPolygonShow(int id, int color, int numPoints, vec3_t *points
 
 	if (!debugpolygons)
 		return;
-	if (id < 0 || id >= bot_maxdebugpolys)
+	if (id < 0 || id >= bot_maxdebugpolys->integer)
 		return;
 
 	poly = &debugpolygons[id];
@@ -226,7 +226,7 @@ void BotImport_DebugPolygonDelete(int id)
 {
 	if (!debugpolygons)
 		return;
-	if (id < 0 || id >= bot_maxdebugpolys)
+	if (id < 0 || id >= bot_maxdebugpolys->integer)
 		return;
 
 	debugpolygons[id].inuse = qfalse;
@@ -268,7 +268,7 @@ SV_BotFrame
 ==================
 */
 void SV_BotFrame( int time ) {
-	if (!bot_enable) return;
+	if (!bot_enable->integer) return;
 	//NOTE: maybe the game is already shutdown
 	if (!gvm) return;
 	VM_Call( gvm, BOTAI_START_FRAME, time );
@@ -277,32 +277,28 @@ void SV_BotFrame( int time ) {
 /*
 ==================
 SV_BotInitCvars
+
+Called at start up and map change
 ==================
 */
 void SV_BotInitCvars(void) {
-
-	Cvar_Get("bot_enable", "1", 0);						//enable the bot
-	Cvar_Get("bot_developer", "0", CVAR_CHEAT);			//bot developer mode
-	Cvar_Get("bot_debug", "0", CVAR_CHEAT);				//enable bot debugging
-	Cvar_Get("bot_maxdebugpolys", "2", 0);				//maximum number of debug polys
-	Cvar_Get("bot_groundonly", "1", 0);					//only show ground faces of areas
-	Cvar_Get("bot_reachability", "0", 0);				//show all reachabilities to other areas
-	Cvar_Get("bot_visualizejumppads", "0", CVAR_CHEAT);	//show jumppads
-	Cvar_Get("bot_forceclustering", "0", 0);			//force cluster calculations
-	Cvar_Get("bot_forcereachability", "0", 0);			//force reachability calculations
-	Cvar_Get("bot_forcewrite", "0", 0);					//force writing aas file
-	Cvar_Get("bot_aasoptimize", "0", 0);				//no aas file optimisation
+	bot_enable = Cvar_Get( "bot_enable", "1", CVAR_LATCH );
+	bot_maxdebugpolys = Cvar_Get( "bot_maxdebugpolys", "2", CVAR_LATCH );
 }
 
 /*
 ==================
 SV_BotInitBotLib
+
+Called at map change
 ==================
 */
 void SV_BotInitBotLib(void) {
-	if (debugpolygons) Z_Free(debugpolygons);
-	bot_maxdebugpolys = Cvar_VariableIntegerValue("bot_maxdebugpolys");
-	debugpolygons = Z_Malloc(sizeof(bot_debugpoly_t) * bot_maxdebugpolys);
+	if ( !debugpolygons || bot_maxdebugpolys->modified ) {
+		if (debugpolygons) Z_Free(debugpolygons);
+		debugpolygons = Z_Malloc(sizeof(bot_debugpoly_t) * bot_maxdebugpolys->integer);
+		bot_maxdebugpolys->modified = qfalse;
+	}
 }
 
 
