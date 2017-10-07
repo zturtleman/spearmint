@@ -1110,15 +1110,15 @@ void GfxInfo_f( void )
 	ri.Printf( PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string );
 	ri.Printf( PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string );
 	ri.Printf( PRINT_ALL, "GL_EXTENSIONS: " );
-	if (glRefConfig.openglMajorVersion >= 3)
+	if ( qglGetStringi )
 	{
 		GLint numExtensions;
 		int i;
 
-		glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
-		for (i = 0; i < numExtensions; i++)
+		qglGetIntegerv( GL_NUM_EXTENSIONS, &numExtensions );
+		for ( i = 0; i < numExtensions; i++ )
 		{
-			ri.Printf(PRINT_ALL, "%s ", qglGetStringi(GL_EXTENSIONS, i));
+			ri.Printf( PRINT_ALL, "%s ", qglGetStringi( GL_EXTENSIONS, i ) );
 		}
 	}
 	else
@@ -1298,7 +1298,7 @@ void R_Register( void )
 	r_forceAutoExposureMin = ri.Cvar_Get( "r_forceAutoExposureMin", "-2.0", CVAR_CHEAT );
 	r_forceAutoExposureMax = ri.Cvar_Get( "r_forceAutoExposureMax", "2.0", CVAR_CHEAT );
 
-	r_cameraExposure = ri.Cvar_Get( "r_cameraExposure", "0", CVAR_CHEAT );
+	r_cameraExposure = ri.Cvar_Get( "r_cameraExposure", "1", CVAR_CHEAT );
 
 	r_depthPrepass = ri.Cvar_Get( "r_depthPrepass", "1", CVAR_ARCHIVE );
 	r_ssao = ri.Cvar_Get( "r_ssao", "0", CVAR_LATCH | CVAR_ARCHIVE );

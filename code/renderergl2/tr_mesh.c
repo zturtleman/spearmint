@@ -351,12 +351,9 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 				surface++;
 				continue;
 			}
-		//} else if ( surface->numShaders <= 0 ) {
-			//shader = tr.defaultShader;
+		} else if ( surface->numShaderIndexes <= 0 ) {
+			shader = tr.defaultShader;
 		} else {
-			//md3Shader = (md3Shader_t *) ( (byte *)surface + surface->ofsShaders );
-			//md3Shader += ent->e.skinNum % surface->numShaders;
-			//shader = tr.shaders[ md3Shader->shaderIndex ];
 			shader = tr.shaders[ surface->shaderIndexes[ ent->e.skinNum % surface->numShaderIndexes ] ];
 		}
 

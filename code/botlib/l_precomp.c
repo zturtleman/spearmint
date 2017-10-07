@@ -951,7 +951,7 @@ int PC_Directive_include(source_t *source)
 {
 	script_t *script;
 	token_t token;
-	char path[MAX_PATH];
+	char path[MAX_QPATH];
 
 	if (source->skip > 0) return qtrue;
 	//

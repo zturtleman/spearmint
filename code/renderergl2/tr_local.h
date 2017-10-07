@@ -750,11 +750,11 @@ typedef enum
 // values for UNIFORM_ALPHATEST. 0-3 match ioquake3's opengl2 renderer.
 enum {
 	U_ATEST_NONE = 0,
-	U_ATEST_EQUAL = 1,
-	U_ATEST_GREATEREQUAL = 2,
-	U_ATEST_LESS = 3,
+	U_ATEST_NOTEQUAL = 1,
+	U_ATEST_LESS = 2,
+	U_ATEST_GREATEREQUAL = 3,
+	U_ATEST_EQUAL,
 	U_ATEST_LESSEQUAL,
-	U_ATEST_NOTEQUAL,
 	U_ATEST_GREATER,
 };
 
@@ -1515,9 +1515,6 @@ typedef enum {
 // We can't change glConfig_t without breaking DLL/vms compatibility, so
 // store extensions we have here.
 typedef struct {
-	int openglMajorVersion;
-	int openglMinorVersion;
-
 	qboolean    intelGraphics;
 
 	qboolean	occlusionQuery;

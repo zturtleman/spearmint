@@ -37,8 +37,5 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  *****************************************************************************/
 
-#ifndef MAX_PATH
-#define MAX_PATH				MAX_QPATH
-#endif
 #define Maximum(x,y)			(x > y ? x : y)
 #define Minimum(x,y)			(x < y ? x : y)
