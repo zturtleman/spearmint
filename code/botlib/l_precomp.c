@@ -101,7 +101,7 @@ token_t *freetokens;					//free tokens from the heap
 */
 
 //list with global defines added to every source loaded
-define_t *globaldefines;
+define_t *globaldefines_implicit;
 
 //============================================================================
 //
@@ -1279,7 +1279,7 @@ int PC_Directive_define(source_t *source)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-define_t *PC_DefineFromString(char *string)
+define_t *PC_DefineFromString(const char *string)
 {
 	script_t *script;
 	source_t src;
@@ -1337,7 +1337,7 @@ define_t *PC_DefineFromString(char *string)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-int PC_AddDefine(source_t *source, char *string)
+int PC_AddDefine(source_t *source, const char *string)
 {
 	define_t *define;
 
@@ -1358,14 +1358,17 @@ int PC_AddDefine(source_t *source, char *string)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-int PC_AddGlobalDefine(char *string)
+int PC_AddGlobalDefine(define_t **globaldefines, const char *string)
 {
 	define_t *define;
 
+	if ( !globaldefines )
+		globaldefines = &globaldefines_implicit;
+
 	define = PC_DefineFromString(string);
 	if (!define) return qfalse;
-	define->next = globaldefines;
-	globaldefines = define;
+	define->next = *globaldefines;
+	*globaldefines = define;
 	return qtrue;
 } //end of the function PC_AddGlobalDefine
 //============================================================================
@@ -1375,16 +1378,28 @@ int PC_AddGlobalDefine(char *string)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-int PC_RemoveGlobalDefine(char *name)
+int PC_RemoveGlobalDefine(define_t **globaldefines, const char *name)
 {
-	define_t *define;
+	define_t *define, *previous, *next;
 
-	define = PC_FindDefine(globaldefines, name);
-	if (define)
+	if ( !globaldefines )
+		globaldefines = &globaldefines_implicit;
+
+	previous = NULL;
+	for (define = *globaldefines; define; define = next)
 	{
-		PC_FreeDefine(define);
-		return qtrue;
-	} //end if
+		next = define->next;
+		if (!strcmp(define->name, name)) {
+			if (previous) {
+				previous->next = next;
+			} else {
+				*globaldefines = next;
+			}
+			PC_FreeDefine(define);
+			return qtrue;
+		}
+		previous = define;
+	} //end for
 	return qfalse;
 } //end of the function PC_RemoveGlobalDefine
 //============================================================================
@@ -1394,15 +1409,19 @@ int PC_RemoveGlobalDefine(char *name)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-void PC_RemoveAllGlobalDefines(void)
+void PC_RemoveAllGlobalDefines(define_t **globaldefines)
 {
 	define_t *define;
 
-	for (define = globaldefines; define; define = globaldefines)
+	if ( !globaldefines )
+		globaldefines = &globaldefines_implicit;
+
+	for (define = *globaldefines; define; define = *globaldefines)
 	{
-		globaldefines = globaldefines->next;
+		*globaldefines = (*globaldefines)->next;
 		PC_FreeDefine(define);
 	} //end for
+	*globaldefines = NULL;
 } //end of the function PC_RemoveAllGlobalDefines
 //============================================================================
 //
@@ -1410,7 +1429,7 @@ void PC_RemoveAllGlobalDefines(void)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-define_t *PC_CopyDefine(source_t *source, define_t *define)
+define_t *PC_CopyDefine(source_t *source, const define_t *define)
 {
 	define_t *newdefine;
 	token_t *token, *newtoken, *lasttoken;
@@ -1453,9 +1472,13 @@ define_t *PC_CopyDefine(source_t *source, define_t *define)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-void PC_AddGlobalDefinesToSource(source_t *source)
+void PC_AddGlobalDefinesToSource(source_t *source, const define_t *globaldefines)
 {
-	define_t *define, *newdefine;
+	const define_t *define;
+	define_t *newdefine;
+
+	if (!globaldefines)
+		globaldefines = globaldefines_implicit;
 
 	for (define = globaldefines; define; define = define->next)
 	{
@@ -2897,7 +2920,7 @@ void PC_SetPunctuations(source_t *source, punctuation_t *p)
 // Returns:				-
 // Changes Globals:		-
 //============================================================================
-source_t *LoadSourceFile(const char *filename)
+source_t *LoadSourceFile(const char *filename, const define_t *globaldefines)
 {
 	source_t *source;
 	script_t *script;
@@ -2922,7 +2945,7 @@ source_t *LoadSourceFile(const char *filename)
 #if DEFINEHASHING
 	source->definehash = GetClearedMemory(DEFINEHASHSIZE * sizeof(define_t *));
 #endif //DEFINEHASHING
-	PC_AddGlobalDefinesToSource(source);
+	PC_AddGlobalDefinesToSource(source, globaldefines);
 	return source;
 } //end of the function LoadSourceFile
 //============================================================================
@@ -2931,7 +2954,7 @@ source_t *LoadSourceFile(const char *filename)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-source_t *LoadSourceMemory(char *ptr, int length, char *name)
+source_t *LoadSourceMemory(const char *ptr, int length, const char *name, const define_t *globaldefines)
 {
 	source_t *source;
 	script_t *script;
@@ -2955,7 +2978,7 @@ source_t *LoadSourceMemory(char *ptr, int length, char *name)
 #if DEFINEHASHING
 	source->definehash = GetClearedMemory(DEFINEHASHSIZE * sizeof(define_t *));
 #endif //DEFINEHASHING
-	PC_AddGlobalDefinesToSource(source);
+	PC_AddGlobalDefinesToSource(source, globaldefines);
 	return source;
 } //end of the function LoadSourceMemory
 //============================================================================
@@ -3031,7 +3054,7 @@ void FreeSource(source_t *source)
 
 source_t *sourceFiles[MAX_SOURCEFILES];
 
-int PC_LoadSourceHandle(const char *filename, const char *basepath)
+int PC_LoadSourceHandle(const char *filename, const char *basepath, const define_t *globaldefines)
 {
 	source_t *source;
 	int i;
@@ -3044,7 +3067,7 @@ int PC_LoadSourceHandle(const char *filename, const char *basepath)
 	if (i >= MAX_SOURCEFILES)
 		return 0;
 	PS_SetBaseFolder(basepath);
-	source = LoadSourceFile(filename);
+	source = LoadSourceFile(filename, globaldefines);
 	if (!source)
 		return 0;
 	sourceFiles[i] = source;

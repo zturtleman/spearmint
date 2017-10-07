@@ -40,9 +40,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/q_shared.h"
 #include "l_log.h"
 #include "l_libvar.h"
-#include "l_script.h"
-#include "l_precomp.h"
-#include "l_struct.h"
+#include "l_memory.h"
 #include "aasfile.h"
 #include "botlib.h"
 #include "be_aas.h"
@@ -175,8 +173,6 @@ int Export_BotLibShutdown(void)
 	AAS_Shutdown();
 	//free all libvars
 	LibVarDeAllocAll();
-	//remove all global defines from the pre compiler
-	PC_RemoveAllGlobalDefines();
 
 	//dump all allocated memory
 //	DumpMemory();
@@ -188,8 +184,6 @@ int Export_BotLibShutdown(void)
 	//
 	botlibsetup = qfalse;
 	botlibglobals.botlibsetup = qfalse;
-	// print any files still open
-	PC_CheckOpenSourceHandles();
 	//
 	return BLERR_NOERROR;
 } //end of the function Export_BotLibShutdown

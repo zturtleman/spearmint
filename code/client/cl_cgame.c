@@ -38,6 +38,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "libmumblelink.h"
 #endif
 
+define_t *cgame_globaldefines;
+
 extern qboolean loadCamera(const char *name);
 extern void startCamera(int time);
 extern qboolean getCameraInfo(int time, vec3_t *origin, vec3_t *angles);
@@ -1148,6 +1150,12 @@ void CL_ShutdownCGame( void ) {
 
 	Cmd_RemoveCommandsByFunc( CL_GameCommand );
 
+	//remove all global defines from the pre compiler
+	PC_RemoveAllGlobalDefines( &cgame_globaldefines );
+
+	// print any files still open
+	PC_CheckOpenSourceHandles();
+
 	BSP_Free( cls.cgameBsp );
 	cls.cgameBsp = NULL;
 }
@@ -1647,12 +1655,12 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 
 
 	case CG_PC_ADD_GLOBAL_DEFINE:
-		return PC_AddGlobalDefine( VMA(1) );
+		return PC_AddGlobalDefine( &cgame_globaldefines, VMA(1) );
 	case CG_PC_REMOVE_ALL_GLOBAL_DEFINES:
-		PC_RemoveAllGlobalDefines();
+		PC_RemoveAllGlobalDefines( &cgame_globaldefines );
 		return 0;
 	case CG_PC_LOAD_SOURCE:
-		return PC_LoadSourceHandle( VMA(1), VMA(2) );
+		return PC_LoadSourceHandle( VMA(1), VMA(2), cgame_globaldefines );
 	case CG_PC_FREE_SOURCE:
 		return PC_FreeSourceHandle( args[1] );
 	case CG_PC_READ_TOKEN:

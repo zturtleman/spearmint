@@ -34,6 +34,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../botlib/l_script.h"
 #include "../botlib/l_precomp.h"
 
+define_t	*game_globaldefines;
+
 void		SV_GameCommand( void );
 void		SV_GameCompleteArgument( char *args, int argNum );
 
@@ -391,12 +393,12 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return FS_Rename( VMA(1), VMA(2) );
 
 	case G_PC_ADD_GLOBAL_DEFINE:
-		return PC_AddGlobalDefine( VMA(1) );
+		return PC_AddGlobalDefine( &game_globaldefines, VMA(1) );
 	case G_PC_REMOVE_ALL_GLOBAL_DEFINES:
-		PC_RemoveAllGlobalDefines();
+		PC_RemoveAllGlobalDefines( &game_globaldefines );
 		return 0;
 	case G_PC_LOAD_SOURCE:
-		return PC_LoadSourceHandle( VMA(1), VMA(2) );
+		return PC_LoadSourceHandle( VMA(1), VMA(2), game_globaldefines );
 	case G_PC_FREE_SOURCE:
 		return PC_FreeSourceHandle( args[1] );
 	case G_PC_READ_TOKEN:
@@ -580,6 +582,12 @@ void SV_ShutdownGameProgs( void ) {
 	SV_GameInternalShutdown( qfalse );
 	VM_Free( gvm );
 	gvm = NULL;
+
+	//remove all global defines from the pre compiler
+	PC_RemoveAllGlobalDefines( &game_globaldefines );
+
+	// print any files still open
+	PC_CheckOpenSourceHandles();
 }
 
 /*
