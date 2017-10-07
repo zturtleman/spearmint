@@ -125,34 +125,12 @@ Set r_debugSurface to 2 to enable
 ==================
 */
 void BotDrawDebugPolygons( void (*drawPoly)(int color, int numPoints, float *points) ) {
-	//static cvar_t *bot_debug, *bot_groundonly, *bot_reachability, *bot_highlightarea;
 	bot_debugpoly_t *poly;
-	int i;//, parm0;
+	int i;
 
 	if (!debugpolygons)
 		return;
-#if 0
-	//bot debugging
-	if (!bot_debug) bot_debug = Cvar_Get("bot_debug", "0", 0);
-	//
-	if (bot_enable && bot_debug->integer) {
-		//show reachabilities
-		if (!bot_reachability) bot_reachability = Cvar_Get("bot_reachability", "0", 0);
-		//show ground faces only
-		if (!bot_groundonly) bot_groundonly = Cvar_Get("bot_groundonly", "1", 0);
-		//get the hightlight area
-		if (!bot_highlightarea) bot_highlightarea = Cvar_Get("bot_highlightarea", "0", 0);
-		//
-		parm0 = 0;
-		// ZTM: FIXME: Moved BUTTONS_GENERATED from engine to bg_misc.h, the Test function it self should move to game VM.
-		//if (svs.players[0].lastUsercmd.buttons & ~BUTTONS_GENERATED) parm0 |= 1;
-		if (bot_reachability->integer) parm0 |= 2;
-		if (bot_groundonly->integer) parm0 |= 4;
-		botlib_export->BotLibVarSet("bot_highlightarea", bot_highlightarea->string);
-		botlib_export->Test(parm0, NULL, svs.players[0].gentity->r.currentOrigin, 
-			svs.players[0].gentity->r.currentAngles);
-	} //end if
-#endif
+
 	//draw all debug polys
 	for (i = 0; i < bot_maxdebugpolys->integer; i++) {
 		poly = &debugpolygons[i];
