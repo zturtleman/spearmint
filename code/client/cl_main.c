@@ -841,6 +841,7 @@ void CL_Record_f( void ) {
 	clc.demoRecordStartTime = Sys_Milliseconds();
 
 	// setup demo header
+	Com_Memset( &header, 0, sizeof ( header ) );
 	Com_Memcpy( header.magic, DEMO_MAGIC, sizeof ( header.magic ) );
 	header.headerSize = LittleLong( sizeof( header ) );
 

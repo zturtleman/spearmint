@@ -379,11 +379,12 @@ extern	qboolean	cl_oldGameSet;
 
 //=============================================================================
 
-// note: there is implicitly another null byte added to the string literal
-#define DEMO_MAGIC "SPEARMINT_DEMO\0"
+// note: there is implicitly a '\0' byte added to the string literal
+#define DEMO_MAGIC "SPEARMINT_DEMO"
 
 typedef struct {
-	char	magic[16];
+	char	magic[15];
+	byte	padding; // align to 4-byte boundary, this in uninitialized data in older demos
 	int		headerSize;
 	int		protocol;
 
