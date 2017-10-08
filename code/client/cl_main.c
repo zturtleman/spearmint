@@ -1238,16 +1238,14 @@ void CL_PlayDemo( const char *demoName ) {
 
 	// open the demo file
 	if ( !CL_ValidDemoFile( demoName, &protocol, &clc.demoLength, &clc.demofile, startTime, endTime, &runTime ) ) {
-		if ( clc.demoLength <= 0 || clc.demofile == 0 ) {
-			Com_Printf( S_COLOR_YELLOW "WARNING: Couldn't open demo %s\n", demoName );
-			return;
+		if ( clc.demoLength <= 0 ) {
+			Com_Printf( "Couldn't open demo '%s'\n", demoName );
+		} else if ( protocol > 0 ) {
+			Com_Printf( "Demo '%s' uses unsupported protocol %d\n", demoName, protocol );
+		} else {
+			Com_Printf( "Invalid demo header in '%s'\n", demoName );
 		}
-		else if ( protocol > 0 ) {
-			Com_Error( ERR_DROP, "Demo %s uses unsupported protocol %d", demoName, protocol );
-		}
-		else {
-			Com_Error( ERR_DROP, "Invalid demo %s", demoName );
-		}
+		return;
 	}
 
 	Com_Printf( "Loading demo '%s' recorded from %s to %s (%d seconds)\n", demoName, startTime, endTime, runTime / 1000 );
