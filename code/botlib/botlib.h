@@ -144,6 +144,25 @@ typedef struct aas_export_s
 	int			(*AAS_Initialized)(void);
 	void		(*AAS_PresenceTypeBoundingBox)(int presencetype, vec3_t mins, vec3_t maxs);
 	float		(*AAS_Time)(void);
+	//-----------------------------------
+	// be_aas_debug.c
+	//-----------------------------------
+	void		(*AAS_ClearShownDebugLines)(void);
+	void		(*AAS_ClearShownPolygons)(void);
+	void		(*AAS_DebugLine)(vec3_t start, vec3_t end, int color);
+	void		(*AAS_PermanentLine)(vec3_t start, vec3_t end, int color);
+	void		(*AAS_DrawPermanentCross)(vec3_t origin, float size, int color);
+	void		(*AAS_DrawPlaneCross)(vec3_t point, vec3_t normal, float dist, int type, int color);
+	void		(*AAS_ShowBoundingBox)(vec3_t origin, vec3_t mins, vec3_t maxs);
+	void		(*AAS_ShowFace)(int facenum);
+	void		(*AAS_ShowArea)(int areanum, int groundfacesonly);
+	void		(*AAS_ShowAreaPolygons)(int areanum, int color, int groundfacesonly);
+	void		(*AAS_DrawCross)(vec3_t origin, float size, int color);
+	void		(*AAS_PrintTravelType)(int traveltype);
+	void		(*AAS_DrawArrow)(vec3_t start, vec3_t end, int linecolor, int arrowcolor);
+	void		(*AAS_ShowReachability)(struct aas_reachability_s *reach, int contentmask);
+	void		(*AAS_ShowReachableAreas)(int areanum, int contentmask);
+	void		(*AAS_FloodAreas)(vec3_t origin);
 	//--------------------------------------------
 	// be_aas_sample.c
 	//--------------------------------------------
@@ -231,23 +250,12 @@ typedef struct botlib_export_s
 	//gets a library variable returns BLERR_
 	int (*BotLibVarGet)(const char *var_name, char *value, int size);
 
-	//sets a C-like define returns BLERR_
-	int (*PC_AddGlobalDefine)(char *string);
-	void (*PC_RemoveAllGlobalDefines)(void);
-	int (*PC_LoadSourceHandle)(const char *filename, const char *basepath);
-	int (*PC_FreeSourceHandle)(int handle);
-	int (*PC_ReadTokenHandle)(int handle, pc_token_t *pc_token);
-	void (*PC_UnreadLastTokenHandle)(int handle);
-	int (*PC_SourceFileAndLine)(int handle, char *filename, int *line);
-
 	//start a frame in the bot library
 	int (*BotLibStartFrame)(float time);
 	//load a new map in the bot library
 	int (*BotLibLoadMap)(const char *mapname);
 	//entity updates
 	int (*BotLibUpdateEntity)(int ent, bot_entitystate_t *state);
-	//just for testing
-	int (*Test)(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
 } botlib_export_t;
 
 //linking of bot library

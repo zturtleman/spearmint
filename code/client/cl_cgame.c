@@ -31,17 +31,21 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "client.h"
 
-#include "../botlib/botlib.h"
+#include "../botlib/l_script.h"
+#include "../botlib/l_precomp.h"
 
 #ifdef USE_MUMBLE
 #include "libmumblelink.h"
 #endif
 
-extern	botlib_export_t	*botlib_export;
+define_t *cgame_globaldefines;
 
 extern qboolean loadCamera(const char *name);
 extern void startCamera(int time);
 extern qboolean getCameraInfo(int time, vec3_t *origin, vec3_t *angles);
+
+void CL_GameCommand( void );
+void CL_GameCompleteArgument( char *args, int argNum );
 
 /*
 ====================
@@ -1136,7 +1140,6 @@ void CL_ShutdownCGame( void ) {
 	Mouse_ClearStates();
 	cls.cgameStarted = qfalse;
 	cls.printToCgame = qfalse;
-	cls.enteredMenu = qfalse;
 	if ( !cgvm ) {
 		return;
 	}
@@ -1146,6 +1149,12 @@ void CL_ShutdownCGame( void ) {
 	cgvm = NULL;
 
 	Cmd_RemoveCommandsByFunc( CL_GameCommand );
+
+	//remove all global defines from the pre compiler
+	PC_RemoveAllGlobalDefines( &cgame_globaldefines );
+
+	// print any files still open
+	PC_CheckOpenSourceHandles();
 
 	BSP_Free( cls.cgameBsp );
 	cls.cgameBsp = NULL;
@@ -1224,7 +1233,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		FS_FCloseFile( args[1] );
 		return 0;
 	case CG_FS_GETFILELIST:
-		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
+		return FS_GetFileListBuffer( VMA(1), VMA(2), VMA(3), args[4] );
 	case CG_FS_DELETE:
 		return FS_Delete( VMA(1) );
 	case CG_FS_RENAME:
@@ -1233,7 +1242,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		Cbuf_ExecuteTextSafe( args[1], VMA(2) );
 		return 0;
 	case CG_ADDCOMMAND:
-		Cmd_AddCommandSafe( VMA(1), CL_GameCommand );
+		Cmd_AddCommandSafe( VMA(1), CL_GameCommand, CL_GameCompleteArgument );
 		return 0;
 	case CG_REMOVECOMMAND:
 		Cmd_RemoveCommandSafe( VMA(1), CL_GameCommand );
@@ -1243,6 +1252,15 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 	case CG_CMD_AUTOCOMPLETE:
 		CL_Cmd_AutoComplete( VMA(1), VMA(2), args[3] );
+		return 0;
+	case CG_FIELD_COMPLETEFILENAME:
+		Field_CompleteFilename( VMA(1), VMA(2), args[3], args[4] );
+		return 0;
+	case CG_FIELD_COMPLETECOMMAND:
+		Field_CompleteCommand( VMA(1), args[2], args[3] );
+		return 0;
+	case CG_FIELD_COMPLETELIST:
+		Field_CompleteList( VMA(1) );
 		return 0;
 	case CG_SV_SHUTDOWN:
 		SV_Shutdown( VMA(1) );
@@ -1340,6 +1358,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return S_GetStreamPlayCount( args[1] );
 	case CG_S_SETSTREAMVOLUME:
 		S_SetStreamVolume( args[1], VMF(2) );
+		return 0;
+	case CG_S_STOPALLSOUNDS:
+		S_StopAllSounds();
 		return 0;
 	case CG_R_LOADWORLDMAP:
 		CL_LoadWorldMap( VMA(1) );
@@ -1634,21 +1655,26 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 
 
 	case CG_PC_ADD_GLOBAL_DEFINE:
-		return botlib_export->PC_AddGlobalDefine( VMA(1) );
+		return PC_AddGlobalDefine( &cgame_globaldefines, VMA(1) );
+	case CG_PC_REMOVE_GLOBAL_DEFINE:
+		PC_RemoveGlobalDefine( &cgame_globaldefines, VMA(1) );
+		return 0;
 	case CG_PC_REMOVE_ALL_GLOBAL_DEFINES:
-		botlib_export->PC_RemoveAllGlobalDefines();
+		PC_RemoveAllGlobalDefines( &cgame_globaldefines );
 		return 0;
 	case CG_PC_LOAD_SOURCE:
-		return botlib_export->PC_LoadSourceHandle( VMA(1), VMA(2) );
+		return PC_LoadSourceHandle( VMA(1), VMA(2), cgame_globaldefines );
 	case CG_PC_FREE_SOURCE:
-		return botlib_export->PC_FreeSourceHandle( args[1] );
+		return PC_FreeSourceHandle( args[1] );
+	case CG_PC_ADD_DEFINE:
+		return PC_AddDefineHandle( args[1], VMA(2) );
 	case CG_PC_READ_TOKEN:
-		return botlib_export->PC_ReadTokenHandle( args[1], VMA(2) );
+		return PC_ReadTokenHandle( args[1], VMA(2) );
 	case CG_PC_UNREAD_TOKEN:
-		botlib_export->PC_UnreadLastTokenHandle( args[1] );
+		PC_UnreadLastTokenHandle( args[1] );
 		return 0;
 	case CG_PC_SOURCE_FILE_AND_LINE:
-		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
+		return PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
 
 	case CG_HEAP_MALLOC:
 		return VM_HeapMalloc( args[1] );
@@ -1871,6 +1897,21 @@ void CL_GameCommand( void ) {
 
 /*
 ====================
+CL_GameCompleteArgument
+
+Pass the current console command to cgame
+====================
+*/
+void CL_GameCompleteArgument( char *args, int argNum ) {
+	if ( !cgvm ) {
+		return;
+	}
+
+	VM_Call( cgvm, CG_CONSOLE_COMPLETEARGUMENT, clc.state, cls.realtime, argNum );
+}
+
+/*
+====================
 CL_GameConsoleText
 ====================
 */
@@ -1907,7 +1948,6 @@ void CL_ShowMainMenu( void ) {
 		return;
 	}
 
-	cls.enteredMenu = qtrue;
 	VM_Call( cgvm, CG_SET_ACTIVE_MENU, UIMENU_NONE );
 }
 

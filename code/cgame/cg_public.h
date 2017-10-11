@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
 #define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	37
+#define CG_API_MINOR_VERSION	38
 
 
 #define	CMD_BACKUP			64	
@@ -221,17 +221,23 @@ typedef enum {
 	CG_FS_DELETE,
 	CG_FS_RENAME,
 
-	CG_PC_ADD_GLOBAL_DEFINE,
-	CG_PC_REMOVE_ALL_GLOBAL_DEFINES,
-	CG_PC_LOAD_SOURCE,
-	CG_PC_FREE_SOURCE,
-	CG_PC_READ_TOKEN,
-	CG_PC_UNREAD_TOKEN,
-	CG_PC_SOURCE_FILE_AND_LINE,
+	CG_PC_ADD_GLOBAL_DEFINE,			// ( const char *define );
+	CG_PC_REMOVE_GLOBAL_DEFINE,			// ( const char *define );
+	CG_PC_REMOVE_ALL_GLOBAL_DEFINES,	// ( void );
+	CG_PC_LOAD_SOURCE,					// ( const char *filename, const char *basepath );
+	CG_PC_FREE_SOURCE,					// ( int handle );
+	CG_PC_ADD_DEFINE,					// ( int handle, const char *define );
+	CG_PC_READ_TOKEN,					// ( int handle, pc_token_t *pc_token );
+	CG_PC_UNREAD_TOKEN,					// ( int handle );
+	CG_PC_SOURCE_FILE_AND_LINE,			// ( int handle, char *filename, int *line );
 
 	CG_HEAP_MALLOC,		// ( int size );
 	CG_HEAP_AVAILABLE,	// ( void );
 	CG_HEAP_FREE,		// ( void *data );
+
+	CG_FIELD_COMPLETEFILENAME, // ( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk );
+	CG_FIELD_COMPLETECOMMAND, // ( const char *cmd, qboolean doCommands, qboolean doCvars );
+	CG_FIELD_COMPLETELIST, // ( const char *list );
 
 	//=========== client game specific functionality =============
 
@@ -341,6 +347,7 @@ typedef enum {
 	CG_S_QUEUESTREAMINGSOUND,
 	CG_S_GETSTREAMPLAYCOUNT,
 	CG_S_SETSTREAMVOLUME,
+	CG_S_STOPALLSOUNDS,
 
 	// note: these were not originally available in ui
 	CG_S_STARTSOUND = 450,
@@ -507,8 +514,11 @@ typedef enum {
 	CG_CREATE_USER_CMD,
 //	usercmd_t *CG_CreateUserCmd( int localPlayerNum, int frameTime, int frameMsec, float mx, float my, qboolean anykeydown );
 
-	CG_UPDATE_GLCONFIG
+	CG_UPDATE_GLCONFIG,
 //	void	CG_UpdateGLConfig( void );
+
+	CG_CONSOLE_COMPLETEARGUMENT,
+//	qboolean (*CG_ConsoleCompleteArgument)( connstate_t state, int realTime, int completeArgument );
 
 } cgameExport_t;
 

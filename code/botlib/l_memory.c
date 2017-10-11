@@ -38,6 +38,7 @@ Suite 120, Rockville, Maryland 20850 USA.
  *****************************************************************************/
 
 #include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
 #include "botlib.h"
 #include "l_log.h"
 #include "l_memory.h"
@@ -52,6 +53,48 @@ Suite 120, Rockville, Maryland 20850 USA.
 int allocatedmemory;
 int totalmemorysize;
 int numblocks;
+
+/*
+==================
+BotImport_GetMemory
+==================
+*/
+static void *BotImport_GetMemory(int size) {
+	void *ptr;
+
+	ptr = Z_TagMalloc( size, TAG_BOTLIB );
+	return ptr;
+}
+
+/*
+==================
+BotImport_FreeMemory
+==================
+*/
+static void BotImport_FreeMemory(void *ptr) {
+	Z_Free(ptr);
+}
+
+/*
+=================
+BotImport_HunkAlloc
+=================
+*/
+static void *BotImport_HunkAlloc( int size ) {
+	if( Hunk_CheckMark() ) {
+		Com_Error( ERR_DROP, "SV_Bot_HunkAlloc: Alloc with marks already set" );
+	}
+	return Hunk_Alloc( size, h_high );
+}
+
+/*
+=================
+BotImport_AvailableMemory
+=================
+*/
+static int BotImport_AvailableMemory( void ) {
+	return Z_AvailableMemory();
+}
 
 #ifdef MEMORYMANEGER
 
@@ -109,8 +152,8 @@ void *GetMemory(unsigned long size)
 {
 	void *ptr;
 	memoryblock_t *block;
-	assert(botimport.GetMemory);
-	ptr = botimport.GetMemory(size + sizeof(memoryblock_t));
+	//assert(BotImport_GetMemory);
+	ptr = BotImport_GetMemory(size + sizeof(memoryblock_t));
 	block = (memoryblock_t *) ptr;
 	block->id = MEM_ID;
 	block->ptr = (char *) ptr + sizeof(memoryblock_t);
@@ -162,7 +205,7 @@ void *GetHunkMemory(unsigned long size)
 	void *ptr;
 	memoryblock_t *block;
 
-	ptr = botimport.HunkAlloc(size + sizeof(memoryblock_t));
+	ptr = BotImport_HunkAlloc(size + sizeof(memoryblock_t));
 	block = (memoryblock_t *) ptr;
 	block->id = HUNK_ID;
 	block->ptr = (char *) ptr + sizeof(memoryblock_t);
@@ -214,19 +257,19 @@ memoryblock_t *BlockFromPointer(void *ptr, char *str)
 #ifdef MEMDEBUG
 		//char *crash = (char *) NULL;
 		//crash[0] = 1;
-		botimport.Print(PRT_FATAL, "%s: NULL pointer\n", str);
+		BotImport_Print(PRT_FATAL, "%s: NULL pointer\n", str);
 #endif // MEMDEBUG
 		return NULL;
 	} //end if
 	block = (memoryblock_t *) ((char *) ptr - sizeof(memoryblock_t));
 	if (block->id != MEM_ID && block->id != HUNK_ID)
 	{
-		botimport.Print(PRT_FATAL, "%s: invalid memory block\n", str);
+		BotImport_Print(PRT_FATAL, "%s: invalid memory block\n", str);
 		return NULL;
 	} //end if
 	if (block->ptr != ptr)
 	{
-		botimport.Print(PRT_FATAL, "%s: memory block pointer invalid\n", str);
+		BotImport_Print(PRT_FATAL, "%s: memory block pointer invalid\n", str);
 		return NULL;
 	} //end if
 	return block;
@@ -250,7 +293,7 @@ void FreeMemory(void *ptr)
 	//
 	if (block->id == MEM_ID)
 	{
-		botimport.FreeMemory(block);
+		BotImport_FreeMemory(block);
 	} //end if
 } //end of the function FreeMemory
 //===========================================================================
@@ -261,7 +304,7 @@ void FreeMemory(void *ptr)
 //===========================================================================
 int AvailableMemory(void)
 {
-	return botimport.AvailableMemory();
+	return BotImport_AvailableMemory();
 } //end of the function AvailableMemory
 //===========================================================================
 //
@@ -285,9 +328,9 @@ int MemoryByteSize(void *ptr)
 //===========================================================================
 void PrintUsedMemorySize(void)
 {
-	botimport.Print(PRT_MESSAGE, "total allocated memory: %d KB\n", allocatedmemory >> 10);
-	botimport.Print(PRT_MESSAGE, "total botlib memory: %d KB\n", totalmemorysize >> 10);
-	botimport.Print(PRT_MESSAGE, "total memory blocks: %d\n", numblocks);
+	BotImport_Print(PRT_MESSAGE, "total allocated memory: %d KB\n", allocatedmemory >> 10);
+	BotImport_Print(PRT_MESSAGE, "total botlib memory: %d KB\n", totalmemorysize >> 10);
+	BotImport_Print(PRT_MESSAGE, "total memory blocks: %d\n", numblocks);
 } //end of the function PrintUsedMemorySize
 //===========================================================================
 //
@@ -354,7 +397,7 @@ void *GetMemory(unsigned long size)
 	void *ptr;
 	unsigned long int *memid;
 
-	ptr = botimport.GetMemory(size + sizeof(unsigned long int));
+	ptr = BotImport_GetMemory(size + sizeof(unsigned long int));
 	if (!ptr) return NULL;
 	memid = (unsigned long int *) ptr;
 	*memid = MEM_ID;
@@ -396,7 +439,7 @@ void *GetHunkMemory(unsigned long size)
 	void *ptr;
 	unsigned long int *memid;
 
-	ptr = botimport.HunkAlloc(size + sizeof(unsigned long int));
+	ptr = BotImport_HunkAlloc(size + sizeof(unsigned long int));
 	if (!ptr) return NULL;
 	memid = (unsigned long int *) ptr;
 	*memid = HUNK_ID;
@@ -437,7 +480,7 @@ void FreeMemory(void *ptr)
 
 	if (*memid == MEM_ID)
 	{
-		botimport.FreeMemory(memid);
+		BotImport_FreeMemory(memid);
 	} //end if
 } //end of the function FreeMemory
 //===========================================================================
@@ -448,7 +491,7 @@ void FreeMemory(void *ptr)
 //===========================================================================
 int AvailableMemory(void)
 {
-	return botimport.AvailableMemory();
+	return BotImport_AvailableMemory();
 } //end of the function AvailableMemory
 //===========================================================================
 //

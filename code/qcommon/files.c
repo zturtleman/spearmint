@@ -2693,63 +2693,38 @@ void FS_FreeFileList( char **list ) {
 FS_GetFileList
 ================
 */
-int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize ) {
-	int		nFiles, i, nTotal, nLen;
+char **FS_GetFileList( const char *path, const char *extension, int *numfiles, qboolean allowNonPureFilesOnDisk ) {
+	int		nFiles;
 	char **pFiles = NULL;
 
-	if ( !path || !listbuf || bufsize < 1 ) {
-		return 0;
+	if ( !path ) {
+		if ( numfiles ) {
+			*numfiles = 0;
+		}
+		return NULL;
 	}
 
 	if ( !extension ) {
 		extension = "";
 	}
 
-	*listbuf = 0;
-	nFiles = 0;
-	nTotal = 0;
-
-	if (Q_stricmp(path, "$modlist") == 0) {
-		return FS_GetModList(listbuf, bufsize);
-	}
-
-	if (Q_stricmp(extension, "$demos") == 0) {
+	if (Q_stricmp(extension, "$demos") == 0)
+	{
 		char dotdemoext[MAX_QPATH];
-		int extLength;
-
 		Com_sprintf( dotdemoext, sizeof ( dotdemoext ), ".%s", com_demoext->string );
-		extLength = strlen(dotdemoext);
-		pFiles = FS_ListFiles(path, dotdemoext, &nFiles);
-
-		// strip extension from list items
-		for (i =0; i < nFiles; i++) {
-			nLen = strlen(pFiles[i]) + 1 - extLength;
-			if (nTotal + nLen + 1 < bufsize) {
-				Q_strncpyz(listbuf, pFiles[i], nLen);
-				listbuf += nLen;
-				nTotal += nLen;
-			}
-			else {
-				nFiles = i;
-				break;
-			}
-		}
-
-		FS_FreeFileList(pFiles);
-		return nFiles;
+		pFiles = FS_ListFilteredFiles(path, dotdemoext, NULL, &nFiles, allowNonPureFilesOnDisk);
 	}
-
-	if (Q_stricmp(extension, "$videos") == 0)
+	else if (Q_stricmp(extension, "$videos") == 0)
 	{
 		const char *extensions[] = { "RoQ", "roq" };
 		int extNamesSize = ARRAY_LEN(extensions);
-		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, qfalse);
+		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, allowNonPureFilesOnDisk);
 	}
 	else if (Q_stricmp(extension, "$images") == 0)
 	{
 		const char *extensions[] = { "png", "tga", "jpg", "jpeg", "ftx", "dds", "pcx", "bmp" };
 		int extNamesSize = ARRAY_LEN(extensions);
-		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, qfalse);
+		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, allowNonPureFilesOnDisk);
 	}
 	else if (Q_stricmp(extension, "$sounds") == 0)
 	{
@@ -2762,13 +2737,19 @@ int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int
 #endif
 			};
 		int extNamesSize = ARRAY_LEN(extensions);
-		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, qfalse);
+		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, allowNonPureFilesOnDisk);
 	}
 	else if (Q_stricmp(extension, "$fonts") == 0)
 	{
 		const char *extensions[] = { "ttf", "otf", "ttc", "otc", "fon" };
 		int extNamesSize = ARRAY_LEN(extensions);
-		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, qfalse);
+		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, allowNonPureFilesOnDisk);
+	}
+	else if (Q_stricmp(extension, "$models") == 0)
+	{
+		const char *extensions[] = { "md3", "mdr", "mdc", "mds", "mdx", "mdm", "tan", "iqm" };
+		int extNamesSize = ARRAY_LEN(extensions);
+		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, allowNonPureFilesOnDisk);
 	}
 	// Allow extension to be a list
 	// Example "RoQ;roq;jpg;wav"
@@ -2822,13 +2803,73 @@ int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int
 			}
 		}
 
-		pFiles = FS_ListFilesEx(path, extensions, numExts, &nFiles, qfalse);
+		pFiles = FS_ListFilesEx(path, extensions, numExts, &nFiles, allowNonPureFilesOnDisk);
 		#undef MAX_FILE_LIST_EXTS
 	}
 	else
 	{
-		pFiles = FS_ListFiles(path, extension, &nFiles);
+		pFiles = FS_ListFilteredFiles(path, extension, NULL, &nFiles, allowNonPureFilesOnDisk);
 	}
+
+	if ( numfiles ) {
+		*numfiles = nFiles;
+	}
+	return pFiles;
+}
+
+/*
+================
+FS_GetFileListBuffer
+================
+*/
+int	FS_GetFileListBuffer( const char *path, const char *extension, char *listbuf, int bufsize ) {
+	int		nFiles, i, nTotal, nLen;
+	char **pFiles = NULL;
+
+	if ( !path || !listbuf || bufsize < 1 ) {
+		return 0;
+	}
+
+	if ( !extension ) {
+		extension = "";
+	}
+
+	*listbuf = 0;
+	nFiles = 0;
+	nTotal = 0;
+
+	if (Q_stricmp(path, "$modlist") == 0) {
+		return FS_GetModList(listbuf, bufsize);
+	}
+
+	// ZTM: TODO: merging removing extension with general block as this list code is duplicate.
+	if (Q_stricmp(extension, "$demos") == 0) {
+		char dotdemoext[MAX_QPATH];
+		int extLength;
+
+		Com_sprintf( dotdemoext, sizeof ( dotdemoext ), ".%s", com_demoext->string );
+		extLength = strlen(dotdemoext);
+		pFiles = FS_ListFiles(path, dotdemoext, &nFiles);
+
+		// strip extension from list items
+		for (i =0; i < nFiles; i++) {
+			nLen = strlen(pFiles[i]) + 1 - extLength;
+			if (nTotal + nLen + 1 < bufsize) {
+				Q_strncpyz(listbuf, pFiles[i], nLen);
+				listbuf += nLen;
+				nTotal += nLen;
+			}
+			else {
+				nFiles = i;
+				break;
+			}
+		}
+
+		FS_FreeFileList(pFiles);
+		return nFiles;
+	}
+
+	pFiles = FS_GetFileList( path, extension, &nFiles, qfalse );
 
 	for (i =0; i < nFiles; i++) {
 		nLen = strlen(pFiles[i]) + 1;
@@ -3134,7 +3175,7 @@ void FS_Dir_f( void ) {
 	Com_Printf( "Directory of %s %s\n", path, extension );
 	Com_Printf( "---------------\n" );
 
-	dirnames = FS_ListFiles( path, extension, &ndirs );
+	dirnames = FS_GetFileList( path, extension, &ndirs, qfalse );
 
 	for ( i = 0; i < ndirs; i++ ) {
 		Com_Printf( "%s\n", dirnames[i] );
@@ -5162,14 +5203,10 @@ void	FS_Flush( fileHandle_t f ) {
 	fflush(fsh[f].handleFiles.file.o);
 }
 
-void	FS_FilenameCompletion( const char *dir, const char *ext,
+void	FS_FilenameCompletion( char **filenames, int nfiles,
 		qboolean stripExt, void(*callback)(const char *s), qboolean allowNonPureFilesOnDisk ) {
-	char	**filenames;
-	int		nfiles;
 	int		i;
 	char	filename[ MAX_STRING_CHARS ];
-
-	filenames = FS_ListFilteredFiles( dir, ext, NULL, &nfiles, allowNonPureFilesOnDisk );
 
 	for( i = 0; i < nfiles; i++ ) {
 		FS_ConvertPath( filenames[ i ] );
@@ -5181,7 +5218,6 @@ void	FS_FilenameCompletion( const char *dir, const char *ext,
 
 		callback( filename );
 	}
-	FS_FreeFileList( filenames );
 }
 
 const char *FS_GetCurrentGameDir(void)

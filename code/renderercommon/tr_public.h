@@ -196,7 +196,7 @@ typedef struct {
 
 	// visualization for debugging collision detection
 	void	(*CM_DrawDebugSurface)( void (*drawPoly)(int color, int numPoints, float *points) );
-	void	(*BotDrawDebugPolygons)( void (*drawPoly)(int color, int numPoints, float *points) );
+	void	(*SV_BotDrawDebugPolygons)( void (*drawPoly)(int color, int numPoints, float *points) );
 
 	// a -1 return means the file does not exist
 	// NULL can be passed for buf to just determine existance

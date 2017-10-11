@@ -3070,18 +3070,6 @@ void CL_Frame ( int msec ) {
 	}
 #endif
 
-	if ( clc.state == CA_DISCONNECTED && !cls.enteredMenu
-		&& !com_sv_running->integer && cgvm ) {
-		// if disconnected, bring up the menu
-		S_StopAllSounds();
-
-		// ZTM: Forcing main menu prevents displaying Team Arena Single Player postgame menu.
-		//      CGame will load main menu if needed anyway.
-		// ZTM: TODO: Add trap_S_StopAllSounds to CGame so this block of code can be removed.
-		//CL_ShowMainMenu();
-		cls.enteredMenu = qtrue;
-	}
-
 	// if recording an avi, lock to a fixed fps
 	if ( CL_VideoRecording( ) && cl_aviFrameRate->integer && msec) {
 		// save the current screen

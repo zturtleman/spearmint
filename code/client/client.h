@@ -335,7 +335,6 @@ typedef struct {
 	qboolean	soundRegistered;
 	qboolean	cgameStarted;
 
-	qboolean	enteredMenu;
 	qboolean	printToCgame;			// enabled after restoring console text to cgame
 	bspFile_t	*cgameBsp;
 
@@ -591,7 +590,6 @@ void CIN_CloseAllVideos(void);
 //
 void CL_InitCGame( void );
 void CL_ShutdownCGame( void );
-void CL_GameCommand( void );
 void CL_CGameRendering( stereoFrame_t stereo );
 void CL_ShowMainMenu( void );
 void CL_UpdateGlconfig( void );

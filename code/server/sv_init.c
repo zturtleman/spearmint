@@ -580,6 +580,10 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	// to load during actual gameplay
 	sv.state = SS_LOADING;
 
+	// update latched bot cvars
+	SV_BotInitCvars();
+	SV_BotInitBotLib();
+
 	// load and spawn all other entities
 	SV_InitGameProgs();
 
@@ -633,7 +637,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 				if ( denied && player != NULL ) {
 					// this generally shouldn't happen, because the client
 					// was connected before the level change
-					SV_DropPlayer( player, denied );
+					SV_DropPlayer( player, denied, qtrue );
 				}
 			}
 
@@ -816,9 +820,6 @@ void SV_Init (void)
 	// initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();
 
-	// init the botlib here because we need the pre-compiler in the UI
-	SV_BotInitBotLib();
-	
 	// Load saved bans
 	Cbuf_AddText("rehashbans\n");
 }

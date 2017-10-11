@@ -92,7 +92,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=0.4
+VERSION=0.5
 endif
 
 ifndef CLIENTBIN
@@ -109,7 +109,7 @@ APPBUNDLE=Spearmint.app
 endif
 
 ifndef RENDERER_PREFIX
-RENDERER_PREFIX=mint-renderer-
+RENDERER_PREFIX=spearmint-renderer-
 endif
 
 ifndef BASEGAME
@@ -1123,6 +1123,7 @@ endif
 
 BASE_CFLAGS += -DPRODUCT_VERSION=\\\"$(VERSION)\\\"
 BASE_CFLAGS += -DBASEGAME=\\\"$(BASEGAME)\\\"
+BASE_CFLAGS += -DRENDERER_PREFIX=\\\"$(RENDERER_PREFIX)\\\"
 BASE_CFLAGS += -Wformat=2 -Wno-format-zero-length -Wformat-security -Wno-format-nonliteral
 BASE_CFLAGS += -Wstrict-aliasing=2 -Wmissing-format-attribute
 BASE_CFLAGS += -Wdisabled-optimization
@@ -1406,22 +1407,6 @@ Q3OBJ = \
   $(B)/client/vm.o \
   $(B)/client/vm_interpreted.o \
   \
-  $(B)/client/be_aas_bspq3.o \
-  $(B)/client/be_aas_cluster.o \
-  $(B)/client/be_aas_debug.o \
-  $(B)/client/be_aas_entity.o \
-  $(B)/client/be_aas_file.o \
-  $(B)/client/be_aas_main.o \
-  $(B)/client/be_aas_move.o \
-  $(B)/client/be_aas_optimize.o \
-  $(B)/client/be_aas_reach.o \
-  $(B)/client/be_aas_route.o \
-  $(B)/client/be_aas_routealt.o \
-  $(B)/client/be_aas_sample.o \
-  $(B)/client/be_interface.o \
-  $(B)/client/l_crc.o \
-  $(B)/client/l_libvar.o \
-  $(B)/client/l_log.o \
   $(B)/client/l_memory.o \
   $(B)/client/l_precomp.o \
   $(B)/client/l_script.o \
@@ -1987,22 +1972,6 @@ Q3DOBJ = \
   $(B)/ded/vm.o \
   $(B)/ded/vm_interpreted.o \
   \
-  $(B)/ded/be_aas_bspq3.o \
-  $(B)/ded/be_aas_cluster.o \
-  $(B)/ded/be_aas_debug.o \
-  $(B)/ded/be_aas_entity.o \
-  $(B)/ded/be_aas_file.o \
-  $(B)/ded/be_aas_main.o \
-  $(B)/ded/be_aas_move.o \
-  $(B)/ded/be_aas_optimize.o \
-  $(B)/ded/be_aas_reach.o \
-  $(B)/ded/be_aas_route.o \
-  $(B)/ded/be_aas_routealt.o \
-  $(B)/ded/be_aas_sample.o \
-  $(B)/ded/be_interface.o \
-  $(B)/ded/l_crc.o \
-  $(B)/ded/l_libvar.o \
-  $(B)/ded/l_log.o \
   $(B)/ded/l_memory.o \
   $(B)/ded/l_precomp.o \
   $(B)/ded/l_script.o \

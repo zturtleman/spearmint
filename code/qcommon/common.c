@@ -44,7 +44,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // List of demo protocols that are supported for playback.
 // Also plays protocol com_protocol
 int demo_protocols[] =
-{ PROTOCOL_VERSION, 5, 4, 3, 2, 0 };
+{ PROTOCOL_VERSION, 10, /* 6,7,8,9 were skipped */ 5, 4, 3, 2, 0 };
 
 #define MAX_NUM_ARGVS	50
 
@@ -3206,7 +3206,7 @@ void Com_ShutdownRef( void ) {
 Com_InitRef
 ============
 */
-void BotDrawDebugPolygons( void (*drawPoly)(int color, int numPoints, float *points) );
+void SV_BotDrawDebugPolygons( void (*drawPoly)(int color, int numPoints, float *points) );
 
 void Com_InitRef( refimport_t *ri ) {
 	refexport_t	*ret;
@@ -3275,7 +3275,7 @@ void Com_InitRef( refimport_t *ri ) {
 
 	ri->CM_ClusterPVS = CM_ClusterPVS;
 	ri->CM_DrawDebugSurface = CM_DrawDebugSurface;
-	ri->BotDrawDebugPolygons = BotDrawDebugPolygons;
+	ri->SV_BotDrawDebugPolygons = SV_BotDrawDebugPolygons;
 
 	ri->FS_ReadFile = FS_ReadFile;
 	ri->FS_FreeFile = FS_FreeFile;
@@ -3839,13 +3839,20 @@ Field_CompleteFilename
 void Field_CompleteFilename( const char *dir,
 		const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk )
 {
+	char **pFiles;
+	int nFiles;
+
 	matchCount = 0;
 	shortestMatch[ 0 ] = 0;
 
-	FS_FilenameCompletion( dir, ext, stripExt, FindMatches, allowNonPureFilesOnDisk );
+	pFiles = FS_GetFileList( dir, ext, &nFiles, allowNonPureFilesOnDisk );
+
+	FS_FilenameCompletion( pFiles, nFiles, stripExt, FindMatches, allowNonPureFilesOnDisk );
 
 	if( !Field_Complete( ) )
-		FS_FilenameCompletion( dir, ext, stripExt, PrintMatches, allowNonPureFilesOnDisk );
+		FS_FilenameCompletion( pFiles, nFiles, stripExt, PrintMatches, allowNonPureFilesOnDisk );
+
+	FS_FreeFileList( pFiles );
 }
 
 /*
@@ -3853,10 +3860,16 @@ void Field_CompleteFilename( const char *dir,
 Field_CompleteCommand
 ===============
 */
-void Field_CompleteCommand( char *cmd,
+void Field_CompleteCommand( const char *_cmd,
 		qboolean doCommands, qboolean doCvars )
 {
+	char	buffer[ BIG_INFO_STRING ], *cmd;
 	int		completionArgument = 0;
+
+	// _cmd shouldn't ever be changed but it's too much work to const-ify
+	// every where it goes so make a local copy
+	Q_strncpyz( buffer, _cmd, sizeof ( buffer ) );
+	cmd = buffer;
 
 	// Skip leading whitespace and quotes
 	cmd = Com_SkipCharset( cmd, " \"" );
@@ -3938,6 +3951,50 @@ void Field_CompleteCommand( char *cmd,
 				Cvar_CommandCompletion( PrintCvarMatches );
 		}
 	}
+}
+
+/*
+============
+Field_ListCompletion
+============
+*/
+static void Field_ListCompletion( const char *list, void(*callback)(const char *s) ) {
+	const char *itemname;
+
+	itemname = list;
+
+	while ( 1 ) {
+		if (itemname[0] == '\0')
+			break;
+
+		callback(itemname);
+
+		itemname += strlen(itemname) + 1;
+	}
+}
+
+/*
+===============
+Field_CompleteList
+
+List items are 0-byte terminated with an additonal 0-byte at the end of the list
+
+Example: "hello\0world\0"
+C-strings have an implicit trailing 0-byte so the memory is actually hello\0world\0\0
+===============
+*/
+void Field_CompleteList( const char *list )
+{
+	matchCount = 0;
+	shortestMatch[ 0 ] = 0;
+
+	if ( !list )
+		return;
+
+	Field_ListCompletion( list, FindMatches );
+
+	if( !Field_Complete( ) )
+		Field_ListCompletion( list, PrintMatches );
 }
 
 /*

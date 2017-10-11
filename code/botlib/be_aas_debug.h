@@ -59,10 +59,14 @@ void AAS_ShowArea(int areanum, int groundfacesonly);
 void AAS_ShowAreaPolygons(int areanum, int color, int groundfacesonly);
 //draw a cros
 void AAS_DrawCross(vec3_t origin, float size, int color);
+//print the travel type
+void AAS_PrintTravelType(int traveltype);
 //draw an arrow
 void AAS_DrawArrow(vec3_t start, vec3_t end, int linecolor, int arrowcolor);
 //visualize the given reachability
-void AAS_ShowReachability(struct aas_reachability_s *reach);
+void AAS_ShowReachability(struct aas_reachability_s *reach, int contentmask);
 //show the reachable areas from the given area
-void AAS_ShowReachableAreas(int areanum);
+void AAS_ShowReachableAreas(int areanum, int contentmask);
+//
+void AAS_FloodAreas(vec3_t origin);
 
