@@ -122,14 +122,16 @@ h1, h2, h3, h4, h5, h6 {
 
 			<span>Some of the new features / changes:</span>
 			<ul>
-				<li>Four player splitscreen support.</li>
+				<li>Aspect correct wide screen.</li>
+				<li>High resolution font support.</li>
 				<li>Bullet marks on doors and moving platforms.</li>
+				<li>Smooth corpse sinking.</li>
+				<li>Higher resolution dynamic light texture.</li>
 				<!--<li>Gibs and bullet shells ride moving platforms.</li>-->
-				<li>Aspect correct wide screen FOV and HUD in Q3A.</li>
+				<li>Four player splitscreen support.</li>
 				<li>Improved Bot AI.</li>
 				<li>Improved gamepad support.</li>
 				<!--<li>Improved third person view.</li>
-				<li>Smooth corpse sinking.</li>
 				<li>Player shadow moves with animations.</li>
 				<li>PNG screenshots (with ext data containing map name and player origin, etc).</li>
 				<li>In multiplayer with gibs disabled, bodies no longer become invisible when gibbed.</li>
@@ -166,12 +168,24 @@ h1, h2, h3, h4, h5, h6 {
 		</div>
 
 		<div class="sectionContent">
-			<p>Each download contains a spearmint-0.x-platform directory containing the Spearmint client/server for the specific platform and bundled <a href="http://libsdl.org">SDL 2.0.3</a>.</p>
-			<p>To play Spearmint Quake 3, after extracting the archive you need to copy your Quake 3 pak[0-8].pk3 files into spearmint-0.x-platform/baseq3/.</p>
+			<p>Each download contains a <span style="font-style: italic">spearmint-0.x-platform</span> directory containing the Spearmint client and dedicated server for the specific platform.</p>
+			<p>To play Spearmint Quake 3, after extracting the archive you need to copy the Quake 3 pak[0-8].pk3 files into <span style="font-style: italic">spearmint-0.x-platform/baseq3/</span>.</p>
 			<p>See the included readme for more details.</p>
 
-			<h2>Spearmint 0.4</h2>
-			<p>Spearmint 0.4 (July 13 2016) with Quake 3 support files. It is not compatible previous versions. <a href="https://clover.moe/2016/07/13/spearmint-0-4-released/">Announcement post</a>.</p>
+			<h2>Spearmint 0.5</h2>
+			<p>Spearmint 0.5 (October 13 2017) with support files for Quake 3 and Team Arena (full and demo versions) and <a href="http://openarena.ws">OpenArena 0.8.8</a> without the new game modes. It is not compatible previous versions. <a href="https://clover.moe/2017/10/13/spearmint-0-5-released/">Announcement post</a>.</p>
+			<ul>
+				<li><a href="docs/spearmint-0.5-readme.txt">Spearmint 0.5 &mdash; Readme</a></li>
+				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.5/spearmint-0.5-windows.zip">Spearmint 0.5 &mdash; Windows XP or later (32 and 64 bit)</a></li>
+				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.5/spearmint-0.5-macosx.dmg">Spearmint 0.5 &mdash; OS X 10.5 or later (PPC, Intel 32/64 bit)</a></li>
+				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.5/spearmint-0.5-linux.tar.xz">Spearmint 0.5 &mdash; GNU/Linux glibc 2.13 or later (x86 and x86_64)</a></li>
+			</ul>
+
+			<h2><a href="#pastreleases" onclick="toggleReleases(event);">Past Releases</a></h2>
+
+			<div id="pastreleases">
+			<h3>Spearmint 0.4</h3>
+			<p>Spearmint 0.4 (July 13 2016) with support files for Quake 3 and Team Arena. It is not compatible previous versions. <a href="https://clover.moe/2016/07/13/spearmint-0-4-released/">Announcement post</a>.</p>
 			<ul>
 				<li><a href="docs/spearmint-0.4-readme.txt">Spearmint 0.4 &mdash; Readme</a></li>
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.4/spearmint-0.4-windows.zip">Spearmint 0.4 &mdash; Windows XP or later (32 and 64 bit)</a></li>
@@ -179,11 +193,8 @@ h1, h2, h3, h4, h5, h6 {
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.4/spearmint-0.4-linux.tar.xz">Spearmint 0.4 &mdash; GNU/Linux glibc 2.13 or later (x86 and x86_64)</a></li>
 			</ul>
 
-			<h2><a href="#pastreleases" onclick="toggleReleases(event);">Past Releases</a></h2>
-
-			<div id="pastreleases">
 			<h3>Spearmint 0.3</h3>
-			<p>Spearmint 0.3 (May 13 2016) with Quake 3 support files. It is not compatible previous versions. <a href="https://clover.moe/2016/05/13/spearmint-0-3-released/">Announcement post</a>.</p>
+			<p>Spearmint 0.3 (May 13 2016) with support files for Quake 3 and Team Arena. It is not compatible previous versions. <a href="https://clover.moe/2016/05/13/spearmint-0-3-released/">Announcement post</a>.</p>
 			<ul>
 				<li><a href="docs/spearmint-0.3-readme.txt">Spearmint 0.3 &mdash; Readme</a></li>
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.3/spearmint-0.3-windows.zip">Spearmint 0.3 &mdash; Windows XP or later (32 and 64 bit)</a></li>
@@ -192,7 +203,7 @@ h1, h2, h3, h4, h5, h6 {
 			</ul>
 
 			<h3>Spearmint 0.2</h3>
-			<p>Spearmint 0.2 (November 13 2015) with Quake 3 support files. It is not compatible previous versions. <a href="https://clover.moe/2015/11/13/spearmint-0-2-released/">Announcement post</a>.</p>
+			<p>Spearmint 0.2 (November 13 2015) with support files for Quake 3 and Team Arena. It is not compatible previous versions. <a href="https://clover.moe/2015/11/13/spearmint-0-2-released/">Announcement post</a>.</p>
 			<ul>
 				<li><a href="docs/spearmint-0.2-readme.txt">Spearmint 0.2 &mdash; Readme</a></li>
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.2/spearmint-0.2-windows.zip">Spearmint 0.2 &mdash; Windows XP or later (32 and 64 bit)</a></li>
@@ -201,7 +212,7 @@ h1, h2, h3, h4, h5, h6 {
 			</ul>
 
 			<h3>Spearmint 0.1.1</h3>
-			<p>Spearmint 0.1.1 (November 11 2015) with Quake 3 support files. It's compatible with 0.1. <a href="https://clover.moe/2015/11/11/spearmint-0-1-1-released/">Announcement post</a>.</p>
+			<p>Spearmint 0.1.1 (November 11 2015) with support files for Quake 3 and Team Arena. It's compatible with 0.1. <a href="https://clover.moe/2015/11/11/spearmint-0-1-1-released/">Announcement post</a>.</p>
 			<ul>
 				<li><a href="docs/spearmint-0.1.1-readme.txt">Spearmint 0.1.1 &mdash; Readme</a></li>
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.1.1/spearmint-0.1.1-windows.zip">Spearmint 0.1.1 &mdash; Windows XP or later (32 and 64 bit)</a></li>
@@ -210,7 +221,7 @@ h1, h2, h3, h4, h5, h6 {
 			</ul>
 
 			<h3>Spearmint 0.1</h3>
-			<p>Spearmint 0.1 (March 13 2015) with Quake 3 support files. <a href="https://clover.moe/2015/03/13/spearmint-0-1-released/">Announcement post</a>.</p>
+			<p>Spearmint 0.1 (March 13 2015) with support files for Quake 3 and Team Arena. <a href="https://clover.moe/2015/03/13/spearmint-0-1-released/">Announcement post</a>.</p>
 			<ul>
 				<li><a href="docs/spearmint-0.1-readme.txt">Spearmint 0.1 &mdash; Readme</a></li>
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.1/spearmint-0.1-windows.zip">Spearmint 0.1 &mdash; Windows XP or later (32 and 64 bit)</a></li>
@@ -239,22 +250,22 @@ h1, h2, h3, h4, h5, h6 {
 	</div>
 	<!-- end source code section -->
 
-	<!-- begin community section -->
+	<!-- begin resources section -->
 	<div id="doc">
 		<div class="sectionHeader">
-			<h2 style="font-size:2em">Community</h2>
+			<h2 style="font-size:2em">Resources</h2>
 		</div>
 
 		<div class="sectionContent">
-			<p>Discuss Spearmint on the Magical Clover Forum or the IRC channel.</p>
+			<p>Discuss Spearmint on the Magical Clover Forum or check out the largely incomplete development documentation.</p>
 
 			<ul>
-				<li><a href="https://forum.clover.moe">Magical Clover Forum</a> (supports GitHub login)</li>
-				<li><a href="irc://chat.freenode.net/#spearmint">#spearmint on chat.freenode.net</a></li>
+				<li><a href="https://forum.clover.moe">Magical Clover Forum</a> &mdash; You can create an account or login using a GitHub account.</li>
+				<li><a href="https://github.com/zturtleman/spearmint/wiki/">Development documentation</a></li>
 			</ul>
 		</div>
 	</div>
-	<!-- end community section -->
+	<!-- end resources section -->
 
 	<!-- begin misc section -->
 	<div id="misc">
