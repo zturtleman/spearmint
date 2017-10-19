@@ -20,13 +20,6 @@ env:
 
 script: ./travis-ci-build.sh
 
-notifications:
-  irc:
-    channels:
-      - "irc.freenode.org#spearmint"
-    on_success: change
-    on_failure: always
-
 addons:
   apt:
     packages:

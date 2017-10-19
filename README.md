@@ -13,15 +13,12 @@ The source code for the Spearmint Quake 3 game, cgame, and ui code and QVM compi
 Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Spearmint website](http://spearmint.pw).
 
 
-## Discuss
+## Resources
 
-  * [Magical Clover Forum](https://forum.clover.moe) (supports GitHub login)
-  * [#spearmint on chat.freenode.net](irc://chat.freenode.net/#spearmint)
+Discuss Spearmint on the Magical Clover Forum or check out the largely incomplete development documentation.
 
-
-## Documentation
-
-  * [Spearmint wiki](https://github.com/zturtleman/spearmint/wiki)
+  * [Magical Clover Forum](https://forum.clover.moe) &mdash; You can create an account or login using a GitHub account.
+  * [Development documentation](https://github.com/zturtleman/spearmint/wiki)
 
 
 ## Git branches
