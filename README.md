@@ -17,7 +17,7 @@ Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Sp
 
 Discuss Spearmint on the Magical Clover Forum or check out the largely incomplete development documentation.
 
-  * [Magical Clover Forum](https://forum.clover.moe) &mdash; You can create an account or login using a GitHub account.
+  * [Magical Clover Forum](https://forum.clover.moe) &mdash; You can create an account or log in using a GitHub account.
   * [Development documentation](https://github.com/zturtleman/spearmint/wiki)
 
 
