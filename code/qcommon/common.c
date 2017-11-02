@@ -3001,6 +3001,14 @@ void Com_Init( char *commandLine ) {
 
 	s = va("%s %s %s", Q3_VERSION, PLATFORM_STRING, PRODUCT_DATE );
 	com_version = Cvar_Get ("version", s, CVAR_ROM | CVAR_SERVERINFO );
+
+	// version string without platform and no compile date if version includes git commit date and hash
+#ifdef PRODUCT_VERSION_HAS_DATE
+	Cvar_Get ("versionshort", PRODUCT_NAME " " PRODUCT_VERSION, CVAR_ROM );
+#else
+	Cvar_Get ("versionshort", PRODUCT_NAME " " PRODUCT_VERSION " " PRODUCT_DATE, CVAR_ROM );
+#endif
+
 	com_gamename = Cvar_Get("com_gamename", GAMENAME_FOR_MASTER, CVAR_SERVERINFO);
 	com_protocol = Cvar_Get("com_protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_INIT);
 #ifdef LEGACY_PROTOCOL
