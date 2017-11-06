@@ -418,10 +418,10 @@ static void RB_SurfaceFoliage( srfFoliage_t *srf ) {
 
 			// set color
 			a = alpha > 1.0f ? 255 : alpha * 255;
-#if __MACOS__ // LBO 3/15/05. Byte-swap fix for Mac - alpha is in the LSB.
-			srcColor = ( *( (int*) instance->color ) & 0xFFFFFF00 ) | ( a & 0xff );
+#ifdef Q3_BIG_ENDIAN // LBO 3/15/05. Byte-swap fix for Mac - alpha is in the LSB.
+			srcColor = ( *( (int*) instance->color ) & 0xFFFFFF00 ) | ( a & 0xFF );
 #else
-			srcColor = ( *( (int*) instance->color ) & 0xFFFFFF ) | ( a << 24 );
+			srcColor = ( *( (int*) instance->color ) & 0x00FFFFFF ) | ( a << 24 );
 #endif
 		} else
 		{
