@@ -237,7 +237,7 @@ void R_GetBmodelInfo( int bmodelNum, int *pEntityNum, vec3_t origin, vec3_t axis
 
 		// not added this scene, use last valid data
 		// this is bad, mark might not be on brush
-		//Com_Printf( "DEBUG: bmodel %d not added this scene\n", bmodelNum );
+		//ri.Printf( PRINT_ALL, "DEBUG: bmodel %d not added this scene\n", bmodelNum );
 
 		VectorCopy( bmodel->orientation.origin, origin );
 		VectorCopy( bmodel->orientation.axis[0], axis[0] );

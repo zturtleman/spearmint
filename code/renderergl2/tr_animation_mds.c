@@ -1452,7 +1452,7 @@ static void R_CalcBones( const refEntity_t *refent, int *boneList, int numBones 
 }
 
 #ifdef DBG_PROFILE_BONES
-#define DBG_SHOWTIME    Com_Printf( "%i: %i, ", di++, ( dt = ri.Milliseconds() ) - ldt ); ldt = dt;
+#define DBG_SHOWTIME    ri.Printf( PRINT_ALL, "%i: %i, ", di++, ( dt = ri.Milliseconds() ) - ldt ); ldt = dt;
 #else
 #define DBG_SHOWTIME    ;
 #endif
@@ -1837,7 +1837,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 	}
 
 #ifdef DBG_PROFILE_BONES
-	Com_Printf( "\n" );
+	ri.Printf( PRINT_ALL, "\n" );
 #endif
 
 }

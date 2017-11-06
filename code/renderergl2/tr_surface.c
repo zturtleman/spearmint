@@ -297,7 +297,7 @@ static void RB_SurfaceSprite( void ) {
 			break;
 
 		default:
-			Com_Error( ERR_DROP, "Unhandled spriteGen %d", tess.shader->spriteGen );
+			ri.Error( ERR_DROP, "Unhandled spriteGen %d", tess.shader->spriteGen );
 			break;
 	}
 
@@ -608,7 +608,7 @@ static void RB_SurfaceFoliage( srfFoliage_t *srf ) {
 		Vector4Copy( instance->color, srcColor );
 		srcColor[3] = alpha * 257;
 
-		// Com_Printf( "Color: %f %f %f %f\n", instance->color[ 0 ], instance->color[ 1 ], instance->color[ 2 ], alpha );
+		// ri.Printf( PRINT_ALL, "Color: %f %f %f %f\n", instance->color[ 0 ], instance->color[ 1 ], instance->color[ 2 ], alpha );
 
 		RB_SurfaceVertsAndIndexes(srf->numVerts, srf->verts, srf->numIndexes,
 								  srf->indexes, srf->dlightBits, srf->pshadowBits);

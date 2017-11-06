@@ -177,7 +177,7 @@ static int R_DlightSurface( msurface_t *surface, int dlightBits ) {
 		}
 	}
 
-	// Com_Printf( "Surf: 0x%08X dlightBits: 0x%08X\n", srf, dlightBits );
+	// ri.Printf( PRINT_ALL, "Surf: 0x%08X dlightBits: 0x%08X\n", srf, dlightBits );
 
 	// set counters
 	if ( dlightBits == 0 ) {
