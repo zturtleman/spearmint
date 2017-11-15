@@ -1452,6 +1452,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			// ditch this stage if it's detail and detail textures are disabled
 			if ( !r_detailTextures->integer ) {
 				stage_ignore = qtrue;
+			} else if ( r_detailTextures->integer >= 2 ) {
+				stage_noPicMip = qtrue;
 			}
 		}
 		//
@@ -1851,7 +1853,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		{
 			imgFlags_t flags = IMGFLAG_NONE;
 
-			// don't load the images if the stage is isn't going to be used
+			// don't load the images if the stage isn't going to be used
 			if ( stage_ignore ) {
 				bundle->image[i] = tr.defaultImage;
 				continue;
