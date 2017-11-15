@@ -1478,23 +1478,15 @@ RawImage_ScaleToPower2
 
 ===============
 */
-static qboolean RawImage_ScaleToPower2( const textureLevel_t *pic, int baseLevel, int *inout_width, int *inout_height, imgType_t type, imgFlags_t flags, byte **resampledBuffer)
+static qboolean RawImage_ScaleToPower2( const textureLevel_t *pic, int baseLevel, int *inout_width, int *inout_height, imgType_t type, imgFlags_t flags, int picmip, byte **resampledBuffer)
 {
 	int width =         *inout_width;
 	int height =        *inout_height;
 	int scaled_width;
 	int scaled_height;
-	int picmip;
 	qboolean mipmap = flags & IMGFLAG_MIPMAP;
 	qboolean clampToEdge = flags & IMGFLAG_CLAMPTOEDGE;
 	qboolean scaled;
-
-	if ( flags & IMGFLAG_PICMIP2 )
-		picmip = r_picmip2->integer;
-	else if ( flags & IMGFLAG_PICMIP )
-		picmip = r_picmip->integer;
-	else
-		picmip = 0;
 
 	//
 	// convert to exact power of 2 sizes
@@ -1580,7 +1572,7 @@ static qboolean RawImage_ScaleToPower2( const textureLevel_t *pic, int baseLevel
 	//
 	// perform optional picmip operation
 	//
-	if ( picmip ) {
+	if ( picmip - baseLevel > 0 ) {
 		scaled_width >>= picmip - baseLevel;
 		scaled_height >>= picmip - baseLevel;
 	}
@@ -2073,7 +2065,7 @@ Upload32
 
 ===============
 */
-static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y, int width, int height, GLenum picFormat, image_t *image, qboolean scaled)
+static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y, int width, int height, GLenum picFormat, image_t *image, qboolean scaled, int picmip)
 {
 	int			i, c;
 	byte		*scan;
@@ -2094,8 +2086,8 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 		data = pics ? pics[baseLevel].data : NULL;
 	} else {
 		// we may skip some textureLevels, if r_picmip is set
-		if ( flags & IMGFLAG_PICMIP ) {
-			baseLevel = Com_Clamp( 0, numTexLevels - 1, r_picmip->integer );
+		if ( picmip ) {
+			baseLevel = Com_Clamp( 0, numTexLevels - 1, picmip );
 		} else {
 			baseLevel = 0;
 		}
@@ -2221,7 +2213,7 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 	qboolean    rgba8 = picFormat == GL_RGBA8 || picFormat == GL_SRGB8_ALPHA8_EXT;
 	qboolean    mipmap = !!(flags & IMGFLAG_MIPMAP);
 	qboolean    cubemap = !!(flags & IMGFLAG_CUBEMAP);
-	qboolean    picmip = !!(flags & IMGFLAG_PICMIP);
+	int         picmip;
 	qboolean    lastMip;
 	GLenum textureTarget = cubemap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
 	GLenum dataFormat;
@@ -2253,6 +2245,13 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 	else
 		glWrapClampMode = GL_REPEAT;
 
+	if ( image->flags & IMGFLAG_PICMIP2 )
+		picmip = r_picmip2->integer;
+	else if ( image->flags & IMGFLAG_PICMIP )
+		picmip = r_picmip->integer;
+	else
+		picmip = 0;
+
 	if (!internalFormat)
 		internalFormat = RawImage_GetFormat(&pics[0], width * height, isLightmap, image->type, image->flags);
 
@@ -2263,13 +2262,12 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 	if (!cubemap)
 	{
 		if (rgba8 && numTexLevels == 1)
-			scaled = RawImage_ScaleToPower2(&pics[0], 0, &width, &height, type, flags, &resampledBuffer);
+			scaled = RawImage_ScaleToPower2(&pics[0], 0, &width, &height, type, flags, picmip, &resampledBuffer);
 		else if (pics[0].data && picmip)
 		{
 #if 0
 			// ZTM: Used by ioq3 dds code which stores all mip maps in a continuous data block, Spearmint keeps them as separate texture levels.
-			// ZTM: FIXME: ### Support PICMIP2 ???
-			for (miplevel = r_picmip->integer; miplevel > 0 && numMips > 1; miplevel--, numMips--)
+			for (miplevel = picmip; miplevel > 0 && numMips > 1; miplevel--, numMips--)
 			{
 				int size = CalculateMipSize(width, height, picFormat);
 				width = MAX(1, width >> 1);
@@ -2318,12 +2316,12 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 		texLevel.height = height;
 		texLevel.size = width * height * 4;
 		texLevel.data = resampledBuffer;
-		Upload32(1, &texLevel, 0, 0, width, height, picFormat, image, scaled);
+		Upload32(1, &texLevel, 0, 0, width, height, picFormat, image, scaled, picmip);
 
 		ri.Hunk_FreeTempMemory(resampledBuffer);
 	}
 	else if (pics[0].data) {
-		Upload32(numTexLevels, pics, 0, 0, width, height, picFormat, image, scaled);
+		Upload32(numTexLevels, pics, 0, 0, width, height, picFormat, image, scaled, picmip);
 	}
 
 	// Set all necessary texture parameters.
@@ -2374,7 +2372,7 @@ void R_UpdateSubImage( image_t *image, byte *pic, int x, int y, int width, int h
 	texLevel.size = width * height * 4;
 	texLevel.data = pic;
 
-	Upload32(1, &texLevel, x, y, width, height, picFormat, image, qfalse);
+	Upload32(1, &texLevel, x, y, width, height, picFormat, image, qfalse, 0);
 }
 
 //===================================================================
