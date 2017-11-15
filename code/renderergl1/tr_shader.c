@@ -55,6 +55,8 @@ static	shader_t*		hashTable[FILE_HASH_SIZE];
 #define MAX_SHADERTEXT_HASH		2048
 static char **shaderTextHashTable[MAX_SHADERTEXT_HASH];
 
+static void ClearShaderStage( int num );
+
 /*
 ================
 return a hash value for the filename
@@ -1446,6 +1448,11 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		else if ( !Q_stricmp( token, "detail" ) )
 		{
 			stage->isDetail = qtrue;
+
+			// ditch this stage if it's detail and detail textures are disabled
+			if ( !r_detailTextures->integer ) {
+				stage_ignore = qtrue;
+			}
 		}
 		//
 		// fog
@@ -1843,6 +1850,12 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 		for ( i = 0; i < num; i++ )
 		{
 			imgFlags_t flags = IMGFLAG_NONE;
+
+			// don't load the images if the stage is isn't going to be used
+			if ( stage_ignore ) {
+				bundle->image[i] = tr.defaultImage;
+				continue;
+			}
 
 			if (!stage_noMipMaps)
 				flags |= IMGFLAG_MIPMAP;
@@ -2345,8 +2358,13 @@ static qboolean ParseShader( char **text )
 			{
 				return qfalse;
 			}
-			stages[s].active = !stage_ignore;
-			s++;
+
+			if ( stage_ignore ) {
+				ClearShaderStage( s );
+			} else {
+				stages[s].active = qtrue;
+				s++;
+			}
 
 			// Don't skip data after the }
 			skipRestOfLine = qfalse;
@@ -3627,6 +3645,23 @@ static void InitShader( const char *name, int lightmapIndex ) {
 }
 
 /*
+===============
+ClearShaderStage
+===============
+*/
+static void ClearShaderStage( int num ) {
+	int b;
+
+	Com_Memset( &stages[num], 0, sizeof( stages[0] ) );
+
+	for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
+		stages[num].bundle[b].texMods = texMods[num][b];
+		stages[num].bundle[b].image = imageAnimations[num][b];
+		stages[num].bundle[b].image[0] = NULL;
+	}
+}
+
+/*
 =========================
 FinishShader
 
@@ -3686,32 +3721,6 @@ static shader_t *FinishShader( void ) {
 			ri.Printf( PRINT_WARNING, "Shader %s has a stage with no image\n", shader.name );
 			pStage->active = qfalse;
 			stage++;
-			continue;
-		}
-
-		//
-		// ditch this stage if it's detail and detail textures are disabled
-		//
-		if ( pStage->isDetail && !r_detailTextures->integer )
-		{
-			int index;
-			
-			for(index = stage + 1; index < MAX_SHADER_STAGES; index++)
-			{
-				if(!stages[index].active)
-					break;
-			}
-			
-			if(index < MAX_SHADER_STAGES)
-				memmove(pStage, pStage + 1, sizeof(*pStage) * (index - stage));
-			else
-			{
-				if(stage + 1 < MAX_SHADER_STAGES)
-					memmove(pStage, pStage + 1, sizeof(*pStage) * (index - stage - 1));
-				
-				Com_Memset(&stages[index - 1], 0, sizeof(*stages));
-			}
-			
 			continue;
 		}
 
