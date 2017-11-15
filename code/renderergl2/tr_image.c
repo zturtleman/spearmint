@@ -1575,6 +1575,11 @@ static qboolean RawImage_ScaleToPower2( const textureLevel_t *pic, int baseLevel
 	if ( picmip - baseLevel > 0 ) {
 		scaled_width >>= picmip - baseLevel;
 		scaled_height >>= picmip - baseLevel;
+
+		if ( pic && pic->data && resampledBuffer && !*resampledBuffer ) {
+			*resampledBuffer = ri.Hunk_AllocateTempMemory( width * height * 4 );
+			Com_Memcpy(*resampledBuffer, pic->data, width * height * 4);
+		}
 	}
 
 	//
