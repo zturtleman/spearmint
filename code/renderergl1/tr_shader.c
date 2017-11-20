@@ -4402,12 +4402,12 @@ void	R_ShaderList_f (void) {
 		} else {
 			ri.Printf (PRINT_ALL, "  ");
 		}
-		// ZTM: TODO? Report MT if any state uses multitexture?
-		if ( shader->numUnfoggedPasses > 0 && shader->stages[0]->multitextureEnv == GL_ADD ) {
+		// ZTM: TODO? Report MT if any stage uses multitexture?
+		if ( shader->stages[0] && shader->stages[0]->multitextureEnv == GL_ADD ) {
 			ri.Printf( PRINT_ALL, "MT(a) " );
-		} else if ( shader->numUnfoggedPasses > 0 && shader->stages[0]->multitextureEnv == GL_MODULATE ) {
+		} else if ( shader->stages[0] && shader->stages[0]->multitextureEnv == GL_MODULATE ) {
 			ri.Printf( PRINT_ALL, "MT(m) " );
-		} else if ( shader->numUnfoggedPasses > 0 && shader->stages[0]->multitextureEnv == GL_DECAL ) {
+		} else if ( shader->stages[0] && shader->stages[0]->multitextureEnv == GL_DECAL ) {
 			ri.Printf( PRINT_ALL, "MT(d) " );
 		} else {
 			ri.Printf( PRINT_ALL, "      " );
