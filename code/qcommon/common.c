@@ -868,6 +868,27 @@ const char *Z_NameForZone( memzone_t *zone ) {
 
 /*
 ========================
+Z_CvarNameForZone
+========================
+*/
+const char *Z_CvarNameForZone( memzone_t *zone ) {
+	if ( !zone ) {
+		return NULL;
+	} else if ( zone == mainzone ) {
+		return "com_zoneMegs";
+	} else if ( zone == smallzone ) {
+		return NULL;
+	} else if ( zone == vm_gamezone ) {
+		return "vm_gameHeapMegs";
+	} else if ( zone == vm_cgamezone ) {
+		return "vm_cgameHeapMegs";
+	} else {
+		return NULL;
+	}
+}
+
+/*
+========================
 Z_ClearZone
 ========================
 */
@@ -1058,14 +1079,25 @@ void *Z_TagMalloc( int size, int tag ) {
 	do {
 		if (rover == start)	{
 			// scaned all the way around the list
+			char cvarMessage[128];
+			const char *cvarName;
+
+			// display user friendly message for overly common error
+			cvarName = Z_CvarNameForZone(zone);
+			if (cvarName) {
+				Com_sprintf(cvarMessage, sizeof(cvarMessage), " (increase %s cvar value, current value %s)", cvarName, Cvar_VariableString(cvarName));
+			} else {
+				cvarMessage[0] = '\0';
+			}
+
 #ifdef ZONE_DEBUG
 			Z_LogHeap();
 
-			Com_Error(ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes from the %s zone: %s, line: %d (%s)",
-								size, Z_NameForZone(zone), file, line, label);
+			Com_Error(ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes from the %s zone%s: %s, line: %d (%s)",
+								size, Z_NameForZone(zone), cvarMessage, file, line, label);
 #else
-			Com_Error(ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes from the %s zone",
-								size, Z_NameForZone(zone));
+			Com_Error(ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes from the %s zone%s",
+								size, Z_NameForZone(zone), cvarMessage);
 #endif
 			return NULL;
 		}
@@ -1822,9 +1854,9 @@ void *Hunk_Alloc( int size, ha_pref preference ) {
 		Hunk_Log();
 		Hunk_SmallLog();
 
-		Com_Error(ERR_DROP, "Hunk_Alloc failed on %i: %s, line: %d (%s)", size, file, line, label);
+		Com_Error(ERR_DROP, "Hunk_Alloc failed on %i bytes (increase com_hunkMegs cvar value, current value %d): %s, line: %d (%s)", size, Cvar_VariableIntegerValue("com_hunkMegs"), file, line, label);
 #else
-		Com_Error(ERR_DROP, "Hunk_Alloc failed on %i", size);
+		Com_Error(ERR_DROP, "Hunk_Alloc failed on %i bytes (increase com_hunkMegs cvar value, current value %d)", size, Cvar_VariableIntegerValue("com_hunkMegs"));
 #endif
 	}
 
@@ -1884,7 +1916,7 @@ void *Hunk_AllocateTempMemory( int size ) {
 	size = PAD(size, sizeof(intptr_t)) + sizeof( hunkHeader_t );
 
 	if ( hunk_temp->temp + hunk_permanent->permanent + size > s_hunkTotal ) {
-		Com_Error( ERR_DROP, "Hunk_AllocateTempMemory: failed on %i", size );
+		Com_Error( ERR_DROP, "Hunk_AllocateTempMemory: failed on %i bytes (increase com_hunkMegs cvar value, current value %d)", size, Cvar_VariableIntegerValue( "com_hunkMegs" ) );
 	}
 
 	if ( hunk_temp == &hunk_low ) {
