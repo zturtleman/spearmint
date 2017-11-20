@@ -40,6 +40,7 @@ static	shader_t		shader;
 static	texModInfo_t	texMods[MAX_SHADER_STAGES][NUM_TEXTURE_BUNDLES][TR_MAX_TEXMODS];
 static	image_t			*imageAnimations[MAX_SHADER_STAGES][NUM_TEXTURE_BUNDLES][MAX_IMAGE_ANIMATIONS];
 static	imgFlags_t		shader_picmipFlag;
+static	qboolean		shader_novlcollapse;
 static	qboolean		shader_allowCompress;
 static	qboolean		stage_ignore;
 
@@ -2091,6 +2092,29 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			continue;
 		}
 		//
+		// depthTest disable
+		//
+		else if ( !Q_stricmp( token, "depthTest" ) )
+		{
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing depthTest parameter in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			if ( !Q_stricmp( token, "disable" ) )
+			{
+				depthTestBits = GLS_DEPTHTEST_DISABLE;
+			}
+			else
+			{
+				depthTestBits = 0;
+				ri.Printf( PRINT_WARNING, "WARNING: unknown depthTest parameter '%s' in shader '%s'\n", token, shader.name );
+			}
+			continue;
+		}
+		//
 		// nextbundle
 		//
 		else if ( !Q_stricmp( token, "nextbundle" ) )
@@ -3316,6 +3340,11 @@ static qboolean ParseShader( char **text )
 			}
 
 			ri.Printf( PRINT_WARNING, "WARNING: hitMaterial keyword is unsupported, '%s' in '%s'\n", token, shader.name );
+		}
+		// novlcollapse
+		else if ( !Q_stricmp( token, "novlcollapse" ) ) {
+			shader_novlcollapse = qtrue;
+			continue;
 		}
 		// unknown directive
 		else
@@ -4767,7 +4796,7 @@ static shader_t *FinishShader( void ) {
 	//
 	// if we are in r_vertexLight mode, never use a lightmap texture
 	//
-	if ( stage > 1 && r_vertexLight->integer && hasLightmapStage ) {
+	if ( stage > 1 && r_vertexLight->integer && hasLightmapStage && !shader_novlcollapse ) {
 		VertexLightingCollapse();
 		hasLightmapStage = qfalse;
 	}
@@ -5028,6 +5057,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, imgFlags_t rawImage
 	InitShader( strippedName, lightmapIndex );
 
 	shader_picmipFlag = IMGFLAG_PICMIP;
+	shader_novlcollapse = qfalse;
 
 	if ( r_ext_compressed_textures->integer == 2 ) {
 		// if the shader hasn't specifically asked for it, don't allow compression
