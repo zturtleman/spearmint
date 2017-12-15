@@ -1,30 +1,53 @@
 #!/bin/bash
-localPATH=`pwd`
-export BUILD_CLIENT="0"
-export BUILD_SERVER="1"
-export USE_CURL="1"
-export USE_CODEC_OPUS="1"
-export USE_VOIP="1"
-export COPYDIR="~/spearmint"
-ENGINEREMOTE="https://github.com/zturtleman/spearmint.git"
-ENGINELOCAL="/tmp/spearmintcompile"
-JOPTS="-j2" 
-echo "This process requires you to have the following installed through your distribution:
- make
- git
- and all of the dependencies necessary for the Spearmint server.
- If you do not have the necessary dependencies this script will bail out.
- Please post a message to https://forum.clover.moe/ asking for help and include whatever error messages you received during the compile phase.
- Please edit this script. Inside you will find a COPYDIR variable you can alter to change where Spearmint will be installed to."
-while true; do
-        read -p "Are you ready to compile Spearmint in the $ENGINELOCAL directory, and have it installed into $COPYDIR? " yn
-case $yn in
-        [Yy]* )
-if  [ -x "$(command -v git)" ] && [ -x "$(command -v make)" ] ; then
-        git clone $ENGINEREMOTE $ENGINELOCAL && cd $ENGINELOCAL && make $JOPTS && make copyfiles && cd $localPATH && rm -rf $ENGINELOCAL
+
+set -e
+
+export BUILD_CLIENT="${BUILD_CLIENT:-0}"
+export BUILD_SERVER="${BUILD_SERVER:-1}"
+export USE_CURL="${USE_CURL:-1}"
+export USE_CODEC_OPUS="${USE_CODEC_OPUS:-1}"
+export USE_VOIP="${USE_VOIP:-1}"
+export COPYDIR="${COPYDIR:-~/spearmint}"
+ENGINEREMOTE="${ENGINEREMOTE:-https://github.com/zturtleman/spearmint.git}"
+MAKE_OPTS="${MAKE_OPTS:--j2}"
+
+if ! [ -x "$(command -v git)" ] || ! [ -x "$(command -v make)" ]; then
+        echo "This build script requires 'git' and 'make' to be installed." >&2
+        echo "Please install them through your normal package installation system." >&2
+        exit 1
 fi
-        exit;;
-        [Nn]* ) exit;;
-        * ) echo "Please answer yes or no.";;
-esac
+
+echo " This build process requires all of the Spearmint dependencies necessary for a Spearmint server.
+ If you do not have the necessary dependencies the build will fail.
+
+ Please post a message to http://forum.clover.moe/ asking for help and include whatever error messages you received during the compile phase.
+
+ We will be building from the git repo at ${ENGINEREMOTE}
+ The resulting binary will be installed to ${COPYDIR}
+
+ If you need to change these, please set variables as follows:
+
+ ENGINEREMOTE=https://github.com/something/something.git COPYDIR=~/somewhere $0"
+
+BUILD_DIR="$(mktemp -d)"
+trap "rm -rf $BUILD_DIR" EXIT
+
+while true; do
+        read -p "Are you ready to compile Spearmint from ${ENGINEREMOTE}, and have it installed into $COPYDIR? " yn
+        case $yn in
+                [Yy]*)
+                        git clone $ENGINEREMOTE $BUILD_DIR/spearmint
+                        cd $BUILD_DIR/spearmint
+                        make $MAKE_OPTS
+                        make copyfiles
+                        exit
+                        ;;
+                [Nn]*)
+                        echo "aborting installation."
+                        exit
+                        ;;
+                *)
+                        echo "Please answer yes or no."
+                        ;;
+        esac
 done

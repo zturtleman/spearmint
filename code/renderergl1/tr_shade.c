@@ -464,7 +464,7 @@ static void ProjectDlightTexture_altivec( void ) {
 		dlight_t	*dl;
 
 		if ( !( tess.dlightBits & ( 1 << l ) ) ) {
-			continue;	// this surface definately doesn't have any of this light
+			continue;	// this surface definitely doesn't have any of this light
 		}
 
 		// clear colors
@@ -720,7 +720,7 @@ static void ProjectDlightTexture_scalar( void ) {
 		dlight_t	*dl;
 
 		if ( !( tess.dlightBits & ( 1 << l ) ) ) {
-			continue;	// this surface definately doesn't have any of this light
+			continue;	// this surface definitely doesn't have any of this light
 		}
 
 		// clear colors
@@ -938,7 +938,7 @@ static void ProjectDlightTexture_scalar( void ) {
 static void ProjectDlightTexture( void ) {
 #if idppc_altivec
 	if (com_altivec->integer) {
-		// must be in a seperate function or G3 systems will crash.
+		// must be in a separate function or G3 systems will crash.
 		ProjectDlightTexture_altivec();
 		return;
 	}

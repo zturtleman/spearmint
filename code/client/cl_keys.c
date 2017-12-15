@@ -265,7 +265,7 @@ keyname_t keynames[] =
 
 	{"PAUSE", K_PAUSE},
 	
-	{"SEMICOLON", ';'},	// because a raw semicolon seperates commands
+	{"SEMICOLON", ';'},	// because a raw semicolon separates commands
 
 	{"WORLD_0", K_WORLD_0},
 	{"WORLD_1", K_WORLD_1},
@@ -515,7 +515,7 @@ void Key_SetBinding( int keynum, const char *binding ) {
 	keys[keynum].binding = CopyString( binding );
 
 	// consider this like modifying an archived cvar, so the
-	// file write will be triggered at the next oportunity
+	// file write will be triggered at the next opportunity
 	cvar_modifiedFlags |= CVAR_ARCHIVE;
 }
 

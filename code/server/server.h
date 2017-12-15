@@ -158,9 +158,9 @@ typedef struct client_s {
 	player_t		*localPlayers[MAX_SPLITVIEW];
 
 	char			reliableCommands[MAX_RELIABLE_COMMANDS][MAX_STRING_CHARS];
-	int				reliableSequence;		// last added reliable message, not necesarily sent or acknowledged yet
+	int				reliableSequence;		// last added reliable message, not necessarily sent or acknowledged yet
 	int				reliableAcknowledge;	// last acknowledged reliable message
-	int				reliableSent;			// last sent reliable message, not necesarily acknowledged yet
+	int				reliableSent;			// last sent reliable message, not necessarily acknowledged yet
 	int				messageAcknowledge;
 
 	int				gamestateMessageNum;	// netchan->outgoingSequence of gamestate

@@ -45,7 +45,7 @@ qboolean R_CheckFBO(const FBO_t * fbo)
 	if(code == GL_FRAMEBUFFER_COMPLETE)
 		return qtrue;
 
-	// an error occured
+	// an error occurred
 	switch (code)
 	{
 		case GL_FRAMEBUFFER_UNSUPPORTED:

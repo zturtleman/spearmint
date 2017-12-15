@@ -199,7 +199,7 @@ typedef struct {
 	void	(*SV_BotDrawDebugPolygons)( void (*drawPoly)(int color, int numPoints, float *points) );
 
 	// a -1 return means the file does not exist
-	// NULL can be passed for buf to just determine existance
+	// NULL can be passed for buf to just determine existence
 	long	(*FS_ReadFile)( const char *name, void **buf );
 	void	(*FS_FreeFile)( void *buf );
 	char **	(*FS_ListFiles)( const char *name, const char *extension, int *numfilesfound );

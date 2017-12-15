@@ -466,7 +466,7 @@ void S_SpatializeOrigin (vec3_t origin, int master_vol, int *left_vol, int *righ
 		if (!listeners[i].valid || !listeners[i].updated)
 			continue;
 
-		// calculate stereo seperation and distance attenuation
+		// calculate stereo separation and distance attenuation
 		VectorSubtract(origin, listeners[i].origin, source_vec);
 
 		dist = VectorNormalize(source_vec);
