@@ -84,7 +84,7 @@ void VM_Init( void ) {
 	Cvar_Get( "vm_game", "0", CVAR_ARCHIVE );
 
 	vm_cgameHeapMegs = Cvar_Get( "vm_cgameHeapMegs", "2", CVAR_ARCHIVE );
-	vm_gameHeapMegs = Cvar_Get( "vm_gameHeapMegs", "8", CVAR_ARCHIVE );
+	vm_gameHeapMegs = Cvar_Get( "vm_gameHeapMegs", "24", CVAR_ARCHIVE );
 	Cvar_CheckRange( vm_cgameHeapMegs, 0, 128, qtrue );
 	Cvar_CheckRange( vm_gameHeapMegs, 0, 128, qtrue );
 
