@@ -130,18 +130,7 @@ int Export_BotLibSetup(void)
 
 	if(botDeveloper)
 	{
-		char *homedir, *gamedir;
-		char logfilename[MAX_OSPATH];
-
-		homedir = LibVarGetString("homedir");
-		gamedir = LibVarGetString("gamedir");
-
-		if (*homedir && *gamedir)
-			Com_sprintf(logfilename, sizeof(logfilename), "%s%c%s%cbotlib.log", homedir, PATH_SEP, gamedir, PATH_SEP);
-		else
-			Com_sprintf(logfilename, sizeof(logfilename), "botlib.log");
-	
-		Log_Open(logfilename);
+		Log_Open("botlib.log");
 	}
 
 	botimport.Print(PRT_DEVELOPER, "------- BotLib Initialization -------\n");
