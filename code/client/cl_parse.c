@@ -454,7 +454,7 @@ void CL_SystemInfoChanged( void ) {
 	if ( !*gamedir ) {
 		Com_Error( ERR_DROP, "fs_game not set on server" );
 	}
-	if ( FS_CheckDirTraversal( gamedir ) ) {
+	if ( FS_InvalidGameDir( gamedir ) ) {
 		Com_Error( ERR_DROP, "Invalid fs_game value '%s' on server", gamedir );
 	}
 	Cvar_Server_Set( "fs_game", gamedir );

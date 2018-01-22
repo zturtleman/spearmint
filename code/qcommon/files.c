@@ -3639,6 +3639,24 @@ qboolean FS_CheckDirTraversal(const char *checkdir)
 
 /*
 ================
+FS_InvalidGameDir
+
+return true if path is a reference to current directory or directory traversal
+================
+*/
+qboolean FS_InvalidGameDir( const char *gamedir ) {
+	if ( !strcmp( gamedir, "." ) || !strcmp( gamedir, ".." )
+		|| !strcmp( gamedir, "/" ) || !strcmp( gamedir, "\\" )
+		|| strstr( gamedir, "/.." ) || strstr( gamedir, "\\.." )
+		|| FS_CheckDirTraversal( gamedir ) ) {
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
+================
 FS_ComparePaks
 
 ----------------
@@ -4323,6 +4341,10 @@ static void FS_Startup( qboolean quiet )
 
 	if(!fs_gamedirvar->string[0])
 		Cvar_ForceReset("fs_game");
+
+	if (FS_InvalidGameDir(fs_gamedirvar->string)) {
+		Com_Error( ERR_DROP, "Invalid fs_game '%s'", fs_gamedirvar->string );
+	}
 
 	FS_ClearPakChecksums();
 	Com_Memset( &com_gameConfig, 0, sizeof (com_gameConfig) );
