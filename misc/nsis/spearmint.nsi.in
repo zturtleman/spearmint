@@ -6,7 +6,7 @@
 !define RELEASE "XXXRELEASEXXX"
 
 !define PUBLISHER "The Spearmint Team"
-!define URL "http://spearmint.pw"
+!define URL "https://clover.moe/spearmint"
 
 !define GAMENAME "Spearmint"
 !define CLIENT "spearmint_x86.exe"

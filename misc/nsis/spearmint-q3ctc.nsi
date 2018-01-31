@@ -6,7 +6,7 @@
 !define RELEASE "1"
 !define MODDIR "q3ctc"
 !define PUBLISHER "The Spearmint Team"
-!define URL "http://spearmint.pw"
+!define URL "https://clover.moe/spearmint"
 
 !define MUI_ICON "../quake3.ico"
 

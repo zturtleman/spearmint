@@ -10,7 +10,7 @@ The source code for the Spearmint Quake 3 game, cgame, and ui code and QVM compi
 
 ## Download
 
-Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Spearmint website](http://spearmint.pw).
+Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Spearmint website](https://clover.moe/spearmint).
 
 
 ## Resources
@@ -26,7 +26,7 @@ Discuss Spearmint on the Magical Clover Forum or check out the largely incomplet
 * `master` branch is compatible with Spearmint 0.5.
 * `devil` branch is for development (devil-op-mint) that is not compatible with the current release &mdash; it may be out of date compared to master.
 * `coverity_scan` branch is for automatically running [Coverity Scan](https://scan.coverity.com/) on [Travis CI](https://travis-ci.org).
-* `gh-pages` branch is the [Spearmint website](http://spearmint.pw).
+* `gh-pages` branch is the Spearmint website.
 
 
 ## License

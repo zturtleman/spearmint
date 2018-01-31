@@ -267,7 +267,7 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
             <string>Owner</string>
             <key>LSItemContentTypes</key>
             <array>
-                <string>pw.spearmint.mintdemo</string>
+                <string>moe.clover.spearmintdemo</string>
             </array>
         </dict>
     </array>
@@ -279,13 +279,13 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                 <string>public.data</string>
             </array>
             <key>UTTypeIdentifier</key>
-            <string>pw.spearmint.mintdemo</string>
+            <string>moe.clover.spearmintdemo</string>
             <key>UTTypeDescription</key>
             <string>Spearmint Demo</string>
             <key>UTTypeIconFile</key>
             <string>spearmint</string>
             <key>UTTypeReferenceURL</key>
-            <string>http://spearmint.pw/</string>
+            <string>https://clover.moe/spearmint</string>
             <key>UTTypeTagSpecification</key>
             <dict>
                 <key>public.filename-extension</key>
@@ -298,7 +298,7 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
     <key>CFBundleIconFile</key>
     <string>spearmint</string>
     <key>CFBundleIdentifier</key>
-    <string>pw.spearmint.${PRODUCT_NAME}</string>
+    <string>moe.clover.${PRODUCT_NAME}</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
