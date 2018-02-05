@@ -2660,9 +2660,9 @@ void RE_SavePNG(const char *filename, int width, int height, byte *data, int pad
 	Q_strncpyz(tEXt[numtEXt].key, "Title", sizeof (tEXt[numtEXt].key));
 	ri.Cvar_VariableStringBuffer("version", tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
 	numtEXt++;
-	Q_strncpyz(tEXt[numtEXt].key, "Author", sizeof (tEXt[numtEXt].key));
-	ri.Cvar_VariableStringBuffer("username", tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
-	numtEXt++;
+	//Q_strncpyz(tEXt[numtEXt].key, "Author", sizeof (tEXt[numtEXt].key));
+	//ri.Cvar_VariableStringBuffer("username", tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
+	//numtEXt++;
 	Q_strncpyz(tEXt[numtEXt].key, "Description", sizeof (tEXt[numtEXt].key));
 	ri.Cvar_VariableStringBuffer("com_productName", tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
 	numtEXt++;
