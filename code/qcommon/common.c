@@ -817,15 +817,15 @@ typedef struct {
 } memzone_t;
 
 // main zone for all "dynamic" memory allocation
-memzone_t	*mainzone;
+static memzone_t	*mainzone;
 // we also have a small zone for small allocations that would only
 // fragment the main zone (think of cvar and cmd strings)
-memzone_t	*smallzone;
+static memzone_t	*smallzone;
 // zones for Game / CGame VM "dynamic" memory allocation
-memzone_t	*vm_gamezone;
-memzone_t	*vm_cgamezone;
+static memzone_t	*vm_gamezone;
+static memzone_t	*vm_cgamezone;
 
-void Z_CheckHeap( void );
+static void Z_CheckHeap( void );
 
 /*
 ========================
@@ -892,7 +892,7 @@ const char *Z_CvarNameForZone( memzone_t *zone ) {
 Z_ClearZone
 ========================
 */
-void Z_ClearZone( memzone_t *zone, int size ) {
+static void Z_ClearZone( memzone_t *zone, int size ) {
 	memblock_t	*block;
 	
 	// set the entire zone to one free block
@@ -917,7 +917,7 @@ void Z_ClearZone( memzone_t *zone, int size ) {
 Z_AvailableZoneMemory
 ========================
 */
-int Z_AvailableZoneMemory( memzone_t *zone ) {
+static int Z_AvailableZoneMemory( memzone_t *zone ) {
 	return zone->size - zone->used;
 }
 
@@ -1184,7 +1184,7 @@ void *S_Malloc( int size ) {
 Z_CheckHeap
 ========================
 */
-void Z_CheckHeap( void ) {
+static void Z_CheckHeap( void ) {
 	memblock_t	*block;
 	
 	for (block = mainzone->blocklist.next ; ; block = block->next) {
