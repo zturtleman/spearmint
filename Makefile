@@ -176,7 +176,7 @@ ifndef USE_CURL_DLOPEN
 endif
 
 ifndef USE_CODEC_MP3
-USE_CODEC_MP3=0
+USE_CODEC_MP3=1
 endif
 
 ifndef USE_CODEC_VORBIS
@@ -201,6 +201,10 @@ endif
 
 ifndef USE_INTERNAL_LIBS
 USE_INTERNAL_LIBS=1
+endif
+
+ifndef USE_INTERNAL_MP3
+USE_INTERNAL_MP3=$(USE_INTERNAL_LIBS)
 endif
 
 ifndef USE_INTERNAL_OGG
@@ -267,6 +271,7 @@ OGGDIR=$(MOUNT_DIR)/libogg-1.3.2
 VORBISDIR=$(MOUNT_DIR)/libvorbis-1.3.5
 OPUSDIR=$(MOUNT_DIR)/opus-1.1.4
 OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.8
+MADDIR=$(MOUNT_DIR)/libmad-0.15.1b
 ZDIR=$(MOUNT_DIR)/zlib
 Q3ASMDIR=$(MOUNT_DIR)/tools/asm
 LBURGDIR=$(MOUNT_DIR)/tools/lcc/lburg
@@ -1039,8 +1044,37 @@ endif
 ifeq ($(USE_CODEC_MP3),1)
   CLIENT_CFLAGS += -DUSE_CODEC_MP3
 
-  MAD_CFLAGS ?= $(shell pkg-config --silence-errors --cflags mad || true)
-  MAD_LIBS ?= $(shell pkg-config --silence-errors --libs mad || echo -lmad)
+  ifeq ($(USE_INTERNAL_MP3),1)
+    MAD_CFLAGS = -DUSE_INTERNAL_MP3 -I$(MADDIR)/include
+    ifeq ($(ARCH),x86)
+      MAD_CFLAGS += -DFPM_INTEL
+    else
+    ifeq ($(ARCH),x86_64)
+      MAD_CFLAGS += -DFPM_64BIT
+    else
+    ifeq ($(ARCH),ppc)
+      MAD_CFLAGS += -DFPM_PPC
+    else
+    ifeq ($(ARCH),arm)
+      MAD_CFLAGS += -DFPM_ARM
+    else
+    ifeq ($(ARCH),mips)
+      MAD_CFLAGS += -DFPM_MIPS
+    else
+    ifeq ($(ARCH),sparc)
+      MAD_CFLAGS += -DFPM_SPARC
+    else
+      MAD_CFLAGS += -DFPM_DEFAULT
+    endif
+    endif
+    endif
+    endif
+    endif
+    endif
+  else
+    MAD_CFLAGS ?= $(shell pkg-config --silence-errors --cflags mad || true)
+    MAD_LIBS ?= $(shell pkg-config --silence-errors --libs mad || echo -lmad)
+  endif
 
   CLIENT_CFLAGS += $(MAD_CFLAGS)
   CLIENT_LIBS += $(MAD_LIBS)
@@ -1399,6 +1433,7 @@ endif
 
 makedirs:
 	@$(MKDIR) $(B)/autoupdater
+	@$(MKDIR) $(B)/client/libmad
 	@$(MKDIR) $(B)/client/opus
 	@$(MKDIR) $(B)/client/vorbis
 	@$(MKDIR) $(B)/renderergl1
@@ -1930,6 +1965,23 @@ ifeq ($(ARCH),x86_64)
   Q3OBJ += \
     $(B)/client/snapvector.o \
     $(B)/client/ftola.o
+endif
+
+ifeq ($(USE_CODEC_MP3),1)
+ifeq ($(USE_INTERNAL_MP3),1)
+Q3OBJ += \
+  $(B)/client/libmad/bit.o \
+  $(B)/client/libmad/decoder.o \
+  $(B)/client/libmad/fixed.o \
+  $(B)/client/libmad/frame.o \
+  $(B)/client/libmad/huffman.o \
+  $(B)/client/libmad/layer3.o \
+  $(B)/client/libmad/layer12.o \
+  $(B)/client/libmad/stream.o \
+  $(B)/client/libmad/synth.o \
+  $(B)/client/libmad/timer.o \
+  $(B)/client/libmad/version.o
+endif
 endif
 
 ifeq ($(NEED_OPUS),1)
@@ -2647,6 +2699,9 @@ $(B)/client/%.o: $(BLIBDIR)/%.c
 	$(DO_BOT_CC)
 
 $(B)/client/%.o: $(OGGDIR)/src/%.c
+	$(DO_CC)
+
+$(B)/client/libmad/%.o: $(MADDIR)/%.c
 	$(DO_CC)
 
 $(B)/client/vorbis/%.o: $(VORBISDIR)/lib/%.c
