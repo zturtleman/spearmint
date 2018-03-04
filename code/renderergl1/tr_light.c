@@ -134,7 +134,7 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent ) {
 	float	totalFactor;
 
 	if ( ent->e.renderfx & RF_LIGHTING_ORIGIN ) {
-		// seperate lightOrigins are needed so an object that is
+		// separate lightOrigins are needed so an object that is
 		// sinking into the ground can still be lit, and so
 		// multi-part models can be lit identically
 		VectorCopy( ent->e.lightingOrigin, lightOrigin );
@@ -151,7 +151,7 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent ) {
 		frac[i] = v - pos[i];
 		if ( pos[i] < 0 ) {
 			pos[i] = 0;
-		} else if ( pos[i] >= tr.world->lightGridBounds[i] - 1 ) {
+		} else if ( pos[i] > tr.world->lightGridBounds[i] - 1 ) {
 			pos[i] = tr.world->lightGridBounds[i] - 1;
 		}
 	}
@@ -182,6 +182,9 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent ) {
 		data = gridData;
 		for ( j = 0 ; j < 3 ; j++ ) {
 			if ( i & (1<<j) ) {
+				if ( pos[j] + 1 > tr.world->lightGridBounds[j] - 1 ) {
+					break; // ignore values outside lightgrid
+				}
 				factor *= frac[j];
 				data += gridStep[j];
 			} else {
@@ -189,6 +192,9 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent ) {
 			}
 		}
 
+		if ( j != 3 ) {
+			continue;
+		}
 		if ( !(data[0]+data[1]+data[2]) ) {
 			continue;	// ignore samples in walls
 		}
@@ -298,7 +304,7 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 	// trace a sample point down to find ambient light
 	//
 	if ( ent->e.renderfx & RF_LIGHTING_ORIGIN ) {
-		// seperate lightOrigins are needed so an object that is
+		// separate lightOrigins are needed so an object that is
 		// sinking into the ground can still be lit, and so
 		// multi-part models can be lit identically
 		VectorCopy( ent->e.lightingOrigin, lightOrigin );

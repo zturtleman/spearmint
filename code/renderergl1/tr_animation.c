@@ -263,9 +263,9 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 			
 			for(j = 0; j < skin->numSurfaces; j++)
 			{
-				if (!strcmp(skin->surfaces[j]->name, surface->name))
+				if (!strcmp(skin->surfaces[j].name, surface->name))
 				{
-					shader = skin->surfaces[j]->shader;
+					shader = skin->surfaces[j].shader;
 					break;
 				}
 			}
@@ -346,7 +346,7 @@ void RB_MDRSurfaceAnim( mdrSurface_t *surface )
 	oldFrame = (mdrFrame_t *)((byte *)header + header->ofsFrames +
 		backEnd.currentEntity->e.oldframe * frameSize );
 
-	RB_CheckOverflow( surface->numVerts, surface->numTriangles );
+	RB_CHECKOVERFLOW( surface->numVerts, surface->numTriangles * 3 );
 
 	triangles	= (int *) ((byte *)surface + surface->ofsTriangles);
 	indexes		= surface->numTriangles * 3;

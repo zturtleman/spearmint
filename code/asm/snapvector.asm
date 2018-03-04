@@ -24,10 +24,9 @@
 ; function prototype:
 ; void qsnapvector(vec3_t vec)
 
+IFNDEF idx64
 .686p
 .xmm
-
-IFNDEF idx64
 .model flat, c
 ENDIF
 
@@ -37,17 +36,12 @@ ENDIF
   ssemask DWORD 0FFFFFFFFh, 0FFFFFFFFh, 0FFFFFFFFh, 00000000h
   ssecw DWORD 00001F80h
 
-IFNDEF idx64
-  fpucw WORD 037Fh
-ENDIF
-
 .code
 
 IFDEF idx64
 ; qsnapvector using SSE
 
   qsnapvectorsse PROC
-    sub rsp, 8
 	movaps xmm1, ssemask		; initialize the mask register
 	movups xmm0, [rcx]			; here is stored our vector. Read 4 values in one go
 	movaps xmm2, xmm0			; keep a copy of the original data

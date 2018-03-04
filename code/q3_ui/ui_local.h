@@ -221,7 +221,7 @@ typedef struct
 	int width;
 	int height;
 	int	columns;
-	int	seperation;
+	int	separation;
 } menulist_s;
 
 typedef struct
@@ -485,6 +485,9 @@ typedef struct {
 	qhandle_t		headSkin;
 
 	animation_t		animations[MAX_ANIMATIONS];
+
+	qboolean		fixedlegs;		// true if legs yaw is always the same as torso yaw
+	qboolean		fixedtorso;		// true if torso never changes yaw
 
 	qhandle_t		weaponModel;
 	qhandle_t		barrelModel;

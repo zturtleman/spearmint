@@ -44,7 +44,7 @@ typedef struct voipServerPacket_s
 	int len;
 	int sender;
 	int flags;
-	byte data[1024];
+	byte data[4000];
 } voipServerPacket_t;
 #endif
 
@@ -135,9 +135,9 @@ typedef struct client_s {
 	char			userinfo[MAX_INFO_STRING];		// name, etc
 
 	char			reliableCommands[MAX_RELIABLE_COMMANDS][MAX_STRING_CHARS];
-	int				reliableSequence;		// last added reliable message, not necesarily sent or acknowledged yet
+	int				reliableSequence;		// last added reliable message, not necessarily sent or acknowledged yet
 	int				reliableAcknowledge;	// last acknowledged reliable message
-	int				reliableSent;			// last sent reliable message, not necesarily acknowledged yet
+	int				reliableSent;			// last sent reliable message, not necessarily acknowledged yet
 	int				messageAcknowledge;
 
 	int				gamestateMessageNum;	// netchan->outgoingSequence of gamestate
@@ -241,8 +241,10 @@ typedef struct {
 	int			nextHeartbeatTime;
 	challenge_t	challenges[MAX_CHALLENGES];	// to prevent invalid IPs from connecting
 	netadr_t	redirectAddress;			// for rcon return messages
-
-	netadr_t	authorizeAddress;			// for rcon return messages
+#ifndef STANDALONE
+	netadr_t	authorizeAddress;			// authorize server address
+#endif
+	int			masterResolveTime[MAX_MASTER_SERVERS]; // next svs.time that server should do dns lookup for master server
 } serverStatic_t;
 
 #define SERVER_MAXBANS	1024
@@ -299,6 +301,7 @@ extern	int serverBansCount;
 
 #ifdef USE_VOIP
 extern	cvar_t	*sv_voip;
+extern	cvar_t	*sv_voipProtocol;
 #endif
 
 

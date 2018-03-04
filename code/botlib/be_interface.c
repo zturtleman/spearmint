@@ -144,26 +144,7 @@ int Export_BotLibSetup(void)
 
 	if(botDeveloper)
 	{
-		char *homedir, *gamedir, *basegame;
-		char logfilename[MAX_OSPATH];
-
-		homedir = LibVarGetString("homedir");
-		gamedir = LibVarGetString("gamedir");
-		basegame = LibVarGetString("basegame");
-
-		if (*homedir)
-		{
-			if(*gamedir)
-				Com_sprintf(logfilename, sizeof(logfilename), "%s%c%s%cbotlib.log", homedir, PATH_SEP, gamedir, PATH_SEP);
-			else if(*basegame)
-				Com_sprintf(logfilename, sizeof(logfilename), "%s%c%s%cbotlib.log", homedir, PATH_SEP, basegame, PATH_SEP);
-			else
-				Com_sprintf(logfilename, sizeof(logfilename), "%s%c" BASEGAME "%cbotlib.log", homedir, PATH_SEP, PATH_SEP);
-		}
-		else
-			Com_sprintf(logfilename, sizeof(logfilename), "botlib.log");
-	
-		Log_Open(logfilename);
+		Log_Open("botlib.log");
 	}
 
 	botimport.Print(PRT_MESSAGE, "------- BotLib Initialization -------\n");
@@ -238,7 +219,7 @@ int Export_BotLibShutdown(void)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int Export_BotLibVarSet(char *var_name, char *value)
+int Export_BotLibVarSet(const char *var_name, const char *value)
 {
 	LibVarSet(var_name, value);
 	return BLERR_NOERROR;
@@ -249,7 +230,7 @@ int Export_BotLibVarSet(char *var_name, char *value)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int Export_BotLibVarGet(char *var_name, char *value, int size)
+int Export_BotLibVarGet(const char *var_name, char *value, int size)
 {
 	char *varvalue;
 

@@ -7,7 +7,7 @@ if [ ! -f Makefile ]; then
 	exit 1
 fi
 
-# we want to use the oldest available SDK for max compatiblity. However 10.4 and older
+# we want to use the oldest available SDK for max compatibility. However 10.4 and older
 # can not build 64bit binaries, making 10.5 the minimum version.   This has been tested 
 # with xcode 3.1 (xcode31_2199_developerdvd.dmg).  It contains the 10.5 SDK and a decent
 # enough gcc to actually compile ioquake3
@@ -15,29 +15,26 @@ fi
 
 unset X86_64_SDK
 unset X86_64_CFLAGS
-unset X86_64_LDFLAGS
+unset X86_64_MACOSX_VERSION_MIN
 unset X86_SDK
 unset X86_CFLAGS
-unset X86_LDFLAGS
-unset PPC_64_SDK
+unset X86_MACOSX_VERSION_MIN
+unset PPC_SDK
 unset PPC_CFLAGS
-unset PPC_LDFLAGS
+unset PPC_MACOSX_VERSION_MIN
 
 if [ -d /Developer/SDKs/MacOSX10.5.sdk ]; then
 	X86_64_SDK=/Developer/SDKs/MacOSX10.5.sdk
-	X86_64_CFLAGS="-arch x86_64 -isysroot /Developer/SDKs/MacOSX10.5.sdk \
-			-DMAC_OS_X_VERSION_MIN_REQUIRED=1050"
-	X86_64_LDFLAGS=" -mmacosx-version-min=10.5"
+	X86_64_CFLAGS="-isysroot /Developer/SDKs/MacOSX10.5.sdk"
+	X86_64_MACOSX_VERSION_MIN="10.5"
 
 	X86_SDK=/Developer/SDKs/MacOSX10.5.sdk
-	X86_CFLAGS="-arch i386 -isysroot /Developer/SDKs/MacOSX10.5.sdk \
-			-DMAC_OS_X_VERSION_MIN_REQUIRED=1050"
-	X86_LDFLAGS=" -mmacosx-version-min=10.5"
+	X86_CFLAGS="-isysroot /Developer/SDKs/MacOSX10.5.sdk"
+	X86_MACOSX_VERSION_MIN="10.5"
 
 	PPC_SDK=/Developer/SDKs/MacOSX10.5.sdk
-	PPC_CFLAGS="-arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk \
-			-DMAC_OS_X_VERSION_MIN_REQUIRED=1050"
-	PPC_LDFLAGS=" -mmacosx-version-min=10.5"
+	PPC_CFLAGS="-isysroot /Developer/SDKs/MacOSX10.5.sdk"
+	PPC_MACOSX_VERSION_MIN="10.5"
 fi
 
 if [ -z $X86_64_SDK ] || [ -z $X86_SDK ] || [ -z $PPC_SDK ]; then
@@ -70,7 +67,7 @@ NCPU=`sysctl -n hw.ncpu`
 #if [ -d build/release-release-x86_64 ]; then
 #	rm -r build/release-darwin-x86_64
 #fi
-(ARCH=x86_64 CC=gcc-4.0 CFLAGS=$X86_64_CFLAGS LDFLAGS=$X86_64_LDFLAGS make -j$NCPU) || exit 1;
+(ARCH=x86_64 CC=gcc-4.0 CFLAGS=$X86_64_CFLAGS MACOSX_VERSION_MIN=$X86_64_MACOSX_VERSION_MIN make -j$NCPU) || exit 1;
 
 echo;echo
 
@@ -78,7 +75,7 @@ echo;echo
 #if [ -d build/release-darwin-x86 ]; then
 #	rm -r build/release-darwin-x86
 #fi
-(ARCH=x86 CC=gcc-4.0 CFLAGS=$X86_CFLAGS LDFLAGS=$X86_LDFLAGS make -j$NCPU) || exit 1;
+(ARCH=x86 CC=gcc-4.0 CFLAGS=$X86_CFLAGS MACOSX_VERSION_MIN=$X86_MACOSX_VERSION_MIN make -j$NCPU) || exit 1;
 
 echo;echo
 
@@ -86,9 +83,10 @@ echo;echo
 #if [ -d build/release-darwin-ppc ]; then
 #	rm -r build/release-darwin-ppc
 #fi
-(ARCH=ppc CC=gcc-4.0 CFLAGS=$PPC_CFLAGS LDFLAGS=$PPC_LDFLAGS make -j$NCPU) || exit 1;
+(ARCH=ppc CC=gcc-4.0 CFLAGS=$PPC_CFLAGS MACOSX_VERSION_MIN=$PPC_MACOSX_VERSION_MIN make -j$NCPU) || exit 1;
 
 echo
 
 # use the following shell script to build a universal application bundle
+export MACOSX_DEPLOYMENT_TARGET="10.5"
 "./make-macosx-app.sh" release

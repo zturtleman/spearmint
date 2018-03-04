@@ -168,7 +168,7 @@ int AAS_AgainstLadder(vec3_t origin)
 		//get the plane the face is in
 		plane = &aasworld.planes[face->planenum ^ side];
 		//if the origin is pretty close to the plane
-		if (abs(DotProduct(plane->normal, origin) - plane->dist) < 3)
+		if (fabsf(DotProduct(plane->normal, origin) - plane->dist) < 3)
 		{
 			if (AAS_PointInsideFace(abs(facenum), origin, 0.1f)) return qtrue;
 		} //end if
@@ -553,7 +553,7 @@ int AAS_ClientMovementPrediction(struct aas_clientmove_s *move,
 		//if on the ground or swimming
 		if (onground || swimming)
 		{
-			friction = swimming ? phys_friction : phys_waterfriction;
+			friction = swimming ? phys_waterfriction : phys_friction;
 			//apply friction
 			VectorScale(frame_test_vel, 1/frametime, frame_test_vel);
 			AAS_ApplyFriction(frame_test_vel, friction, phys_stopspeed, frametime);

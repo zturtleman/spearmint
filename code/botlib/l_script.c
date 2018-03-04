@@ -160,9 +160,7 @@ punctuation_t default_punctuations[] =
 	{NULL, 0}
 };
 
-#ifdef BSPC
-char basefolder[MAX_PATH];
-#else
+#ifdef BOTLIB
 char basefolder[MAX_QPATH];
 #endif
 
@@ -220,7 +218,7 @@ char *PunctuationFromNum(script_t *script, int num)
 	{
 		if (script->punctuations[i].n == num) return script->punctuations[i].p;
 	} //end for
-	return "unkown punctuation";
+	return "unknown punctuation";
 } //end of the function PunctuationFromNum
 //===========================================================================
 //
@@ -804,7 +802,7 @@ int PS_ReadPunctuation(script_t *script, token_t *token)
 			//if the script contains the punctuation
 			if (!strncmp(script->script_p, p, len))
 			{
-				strncpy(token->string, p, MAX_TOKEN);
+				Q_strncpyz(token->string, p, MAX_TOKEN);
 				script->script_p += len;
 				token->type = TT_PUNCTUATION;
 				//sub type is the number of the punctuation
@@ -838,7 +836,7 @@ int PS_ReadPrimitive(script_t *script, token_t *token)
 	token->string[len] = 0;
 	//copy the token into the script structure
 	Com_Memcpy(&script->token, token, sizeof(token_t));
-	//primitive reading successfull
+	//primitive reading successful
 	return 1;
 } //end of the function PS_ReadPrimitive
 //============================================================================
@@ -1441,9 +1439,7 @@ void FreeScript(script_t *script)
 //============================================================================
 void PS_SetBaseFolder(char *path)
 {
-#ifdef BSPC
-	sprintf(basefolder, path);
-#else
+#ifdef BOTLIB
 	Com_sprintf(basefolder, sizeof(basefolder), "%s", path);
 #endif
 } //end of the function PS_SetBaseFolder

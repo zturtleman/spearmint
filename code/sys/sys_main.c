@@ -167,14 +167,27 @@ char *Sys_GetClipboardData(void)
 Sys_PIDFileName
 =================
 */
-static char *Sys_PIDFileName( void )
+static char *Sys_PIDFileName( const char *gamedir )
 {
 	const char *homePath = Cvar_VariableString( "fs_homepath" );
 
 	if( *homePath != '\0' )
-		return va( "%s/%s", homePath, PID_FILENAME );
+		return va( "%s/%s/%s", homePath, gamedir, PID_FILENAME );
 
 	return NULL;
+}
+
+/*
+=================
+Sys_RemovePIDFile
+=================
+*/
+void Sys_RemovePIDFile( const char *gamedir )
+{
+	char *pidFile = Sys_PIDFileName( gamedir );
+
+	if( pidFile != NULL )
+		remove( pidFile );
 }
 
 /*
@@ -184,9 +197,9 @@ Sys_WritePIDFile
 Return qtrue if there is an existing stale PID file
 =================
 */
-qboolean Sys_WritePIDFile( void )
+static qboolean Sys_WritePIDFile( const char *gamedir )
 {
-	char      *pidFile = Sys_PIDFileName( );
+	char      *pidFile = Sys_PIDFileName( gamedir );
 	FILE      *f;
 	qboolean  stale = qfalse;
 
@@ -212,6 +225,10 @@ qboolean Sys_WritePIDFile( void )
 			stale = qtrue;
 	}
 
+	if( FS_CreatePath( pidFile ) ) {
+		return 0;
+	}
+
 	if( ( f = fopen( pidFile, "w" ) ) != NULL )
 	{
 		fprintf( f, "%d", Sys_PID( ) );
@@ -221,6 +238,31 @@ qboolean Sys_WritePIDFile( void )
 		Com_Printf( S_COLOR_YELLOW "Couldn't write %s.\n", pidFile );
 
 	return stale;
+}
+
+/*
+=================
+Sys_InitPIDFile
+=================
+*/
+void Sys_InitPIDFile( const char *gamedir ) {
+	if( Sys_WritePIDFile( gamedir ) ) {
+#ifndef DEDICATED
+		char message[1024];
+		char modName[MAX_OSPATH];
+
+		FS_GetModDescription( gamedir, modName, sizeof ( modName ) );
+		Q_CleanStr( modName );
+
+		Com_sprintf( message, sizeof (message), "The last time %s ran, "
+			"it didn't exit properly. This may be due to inappropriate video "
+			"settings. Would you like to start with \"safe\" video settings?", modName );
+
+		if( Sys_Dialog( DT_YES_NO, message, "Abnormal Exit" ) == DR_YES ) {
+			Cvar_Set( "com_abnormalExit", "1" );
+		}
+#endif
+	}
 }
 
 /*
@@ -238,13 +280,10 @@ static __attribute__ ((noreturn)) void Sys_Exit( int exitCode )
 	SDL_Quit( );
 #endif
 
-	if( exitCode < 2 )
+	if( exitCode < 2 && com_fullyInitialized )
 	{
 		// Normal exit
-		char *pidFile = Sys_PIDFileName( );
-
-		if( pidFile != NULL )
-			remove( pidFile );
+		Sys_RemovePIDFile( FS_GetCurrentGameDir() );
 	}
 
 	NET_Shutdown( );
@@ -274,10 +313,12 @@ cpuFeatures_t Sys_GetProcessorFeatures( void )
 	cpuFeatures_t features = 0;
 
 #ifndef DEDICATED
-	if( SDL_HasRDTSC( ) )    features |= CF_RDTSC;
-	if( SDL_HasMMX( ) )      features |= CF_MMX;
-	if( SDL_HasSSE( ) )      features |= CF_SSE;
-	if( SDL_HasSSE2( ) )     features |= CF_SSE2;
+	if( SDL_HasRDTSC( ) )      features |= CF_RDTSC;
+	if( SDL_Has3DNow( ) )      features |= CF_3DNOW;
+	if( SDL_HasMMX( ) )        features |= CF_MMX;
+	if( SDL_HasSSE( ) )        features |= CF_SSE;
+	if( SDL_HasSSE2( ) )       features |= CF_SSE2;
+	if( SDL_HasAltiVec( ) )    features |= CF_ALTIVEC;
 #endif
 
 	return features;
@@ -457,25 +498,43 @@ from executable path, then fs_basepath.
 
 void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 {
-	void *dllhandle;
-	
+	void *dllhandle = NULL;
+
+	if(!Sys_DllExtension(name))
+	{
+		Com_Printf("Refusing to attempt to load library \"%s\": Extension not allowed.\n", name);
+		return NULL;
+	}
+
 	if(useSystemLib)
+	{
 		Com_Printf("Trying to load \"%s\"...\n", name);
+		dllhandle = Sys_LoadLibrary(name);
+	}
 	
-	if(!useSystemLib || !(dllhandle = Sys_LoadLibrary(name)))
+	if(!dllhandle)
 	{
 		const char *topDir;
 		char libPath[MAX_OSPATH];
+		int len;
 
 		topDir = Sys_BinaryPath();
 
 		if(!*topDir)
 			topDir = ".";
 
-		Com_Printf("Trying to load \"%s\" from \"%s\"...\n", name, topDir);
-		Com_sprintf(libPath, sizeof(libPath), "%s%c%s", topDir, PATH_SEP, name);
+		len = Com_sprintf(libPath, sizeof(libPath), "%s%c%s", topDir, PATH_SEP, name);
+		if(len < sizeof(libPath))
+		{
+			Com_Printf("Trying to load \"%s\" from \"%s\"...\n", name, topDir);
+			dllhandle = Sys_LoadLibrary(libPath);
+		}
+		else
+		{
+			Com_Printf("Skipping trying to load \"%s\" from \"%s\", file name is too long.\n", name, topDir);
+		}
 
-		if(!(dllhandle = Sys_LoadLibrary(libPath)))
+		if(!dllhandle)
 		{
 			const char *basePath = Cvar_VariableString("fs_basepath");
 			
@@ -484,9 +543,16 @@ void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 			
 			if(FS_FilenameCompare(topDir, basePath))
 			{
-				Com_Printf("Trying to load \"%s\" from \"%s\"...\n", name, basePath);
-				Com_sprintf(libPath, sizeof(libPath), "%s%c%s", basePath, PATH_SEP, name);
-				dllhandle = Sys_LoadLibrary(libPath);
+				len = Com_sprintf(libPath, sizeof(libPath), "%s%c%s", basePath, PATH_SEP, name);
+				if(len < sizeof(libPath))
+				{
+					Com_Printf("Trying to load \"%s\" from \"%s\"...\n", name, basePath);
+					dllhandle = Sys_LoadLibrary(libPath);
+				}
+				else
+				{
+					Com_Printf("Skipping trying to load \"%s\" from \"%s\", file name is too long.\n", name, basePath);
+				}
 			}
 			
 			if(!dllhandle)
@@ -512,6 +578,12 @@ void *Sys_LoadGameDll(const char *name,
 	void (*dllEntry)(intptr_t (*syscallptr)(intptr_t, ...));
 
 	assert(name);
+
+	if(!Sys_DllExtension(name))
+	{
+		Com_Printf("Refusing to attempt to load library \"%s\": Extension not allowed.\n", name);
+		return NULL;
+	}
 
 	Com_Printf( "Loading DLL file: %s\n", name);
 	libHandle = Sys_LoadLibrary(name);
@@ -551,7 +623,7 @@ void Sys_ParseArgs( int argc, char **argv )
 		if( !strcmp( argv[1], "--version" ) ||
 				!strcmp( argv[1], "-v" ) )
 		{
-			const char* date = __DATE__;
+			const char* date = PRODUCT_DATE;
 #ifdef DEDICATED
 			fprintf( stdout, Q3_VERSION " dedicated server (%s)\n", date );
 #else
@@ -563,7 +635,7 @@ void Sys_ParseArgs( int argc, char **argv )
 }
 
 #ifndef DEFAULT_BASEDIR
-#	ifdef MACOS_X
+#	ifdef __APPLE__
 #		define DEFAULT_BASEDIR Sys_StripAppBundle(Sys_BinaryPath())
 #	else
 #		define DEFAULT_BASEDIR Sys_BinaryPath()
@@ -611,6 +683,9 @@ int main( int argc, char **argv )
 	int   i;
 	char  commandLine[ MAX_STRING_CHARS ] = { 0 };
 
+	extern void Sys_LaunchAutoupdater(int argc, char **argv);
+	Sys_LaunchAutoupdater(argc, argv);
+
 #ifndef DEDICATED
 	// SDL version check
 
@@ -644,7 +719,7 @@ int main( int argc, char **argv )
 	// Set the initial time base
 	Sys_Milliseconds( );
 
-#ifdef MACOS_X
+#ifdef __APPLE__
 	// This is passed if we are launched by double-clicking
 	if ( argc >= 2 && Q_strncmp ( argv[1], "-psn", 4 ) == 0 )
 		argc = 1;
@@ -669,10 +744,9 @@ int main( int argc, char **argv )
 		Q_strcat( commandLine, sizeof( commandLine ), " " );
 	}
 
+	CON_Init( );
 	Com_Init( commandLine );
 	NET_Init( );
-
-	CON_Init( );
 
 	signal( SIGILL, Sys_SigHandler );
 	signal( SIGFPE, Sys_SigHandler );
@@ -682,7 +756,6 @@ int main( int argc, char **argv )
 
 	while( 1 )
 	{
-		IN_Frame( );
 		Com_Frame( );
 	}
 

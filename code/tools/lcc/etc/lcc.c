@@ -11,7 +11,12 @@ static char rcsid[] = "Id: dummy rcsid";
 #include <assert.h>
 #include <ctype.h>
 #include <signal.h>
+#ifdef WIN32
+#include <process.h> /* getpid() */
+#include <io.h> /* access() */
+#else
 #include <unistd.h>
+#endif
 
 #ifndef TEMPDIR
 #define TEMPDIR "/tmp"
@@ -631,7 +636,7 @@ static void opt(char *arg) {
 					clist = append(&arg[3], clist);
 					return;
 				}
-				break; /* and fall thru */
+				break; /* and fall through */
 			case 'a':
 				alist = append(&arg[3], alist);
 				return;

@@ -103,7 +103,7 @@ static int isu8(uint32_t v)
 
 static int NextConstant4(void)
 {
-	return (code[pc] | (code[pc+1]<<8) | (code[pc+2]<<16) | (code[pc+3]<<24));
+	return ((unsigned int)code[pc] | ((unsigned int)code[pc+1]<<8) | ((unsigned int)code[pc+2]<<16) | ((unsigned int)code[pc+3]<<24));
 }
 
 static int	Constant4( void ) {
@@ -203,19 +203,25 @@ static void EmitRexString(byte rex, const char *string)
 
 
 #define MASK_REG(modrm, mask) \
-	EmitString("81"); \
-	EmitString((modrm)); \
-	Emit4((mask))
+	do { \
+		EmitString("81"); \
+		EmitString((modrm)); \
+		Emit4((mask)); \
+	} while(0)
 
 // add bl, bytes
 #define STACK_PUSH(bytes) \
-	EmitString("80 C3"); \
-	Emit1(bytes)
+	do { \
+		EmitString("80 C3"); \
+		Emit1(bytes); \
+	} while(0)
 
 // sub bl, bytes
 #define STACK_POP(bytes) \
-	EmitString("80 EB"); \
-	Emit1(bytes)
+	do { \
+		EmitString("80 EB"); \
+		Emit1(bytes); \
+	} while(0)
 
 static void EmitCommand(ELastCommand command)
 {
@@ -412,23 +418,24 @@ static void DoSyscall(void)
 
 	if(vm_syscallNum < 0)
 	{
-		int *data;
+		int *data, *ret;
 #if idx64
 		int index;
 		intptr_t args[MAX_VMSYSCALL_ARGS];
 #endif
 		
 		data = (int *) (savedVM->dataBase + vm_programStack + 4);
+		ret = &vm_opStackBase[vm_opStackOfs + 1];
 
 #if idx64
 		args[0] = ~vm_syscallNum;
 		for(index = 1; index < ARRAY_LEN(args); index++)
 			args[index] = data[index];
 			
-		vm_opStackBase[vm_opStackOfs + 1] = savedVM->systemCall(args);
+		*ret = savedVM->systemCall(args);
 #else
 		data[0] = ~vm_syscallNum;
-		vm_opStackBase[vm_opStackOfs + 1] = savedVM->systemCall((intptr_t *) data);
+		*ret = savedVM->systemCall((intptr_t *) data);
 #endif
 	}
 	else
@@ -783,7 +790,7 @@ qboolean ConstOptimize(vm_t *vm, int callProcOfsSyscall)
 		return qtrue;
 
 	case OP_STORE4:
-		EmitMovEAXStack(vm, (vm->dataMask & ~3));
+		EmitMovEAXStack(vm, vm->dataMask);
 #if idx64
 		EmitRexString(0x41, "C7 04 01");		// mov dword ptr [r9 + eax], 0x12345678
 		Emit4(Constant4());
@@ -798,7 +805,7 @@ qboolean ConstOptimize(vm_t *vm, int callProcOfsSyscall)
 		return qtrue;
 
 	case OP_STORE2:
-		EmitMovEAXStack(vm, (vm->dataMask & ~1));
+		EmitMovEAXStack(vm, vm->dataMask);
 #if idx64
 		Emit1(0x66);					// mov word ptr [r9 + eax], 0x1234
 		EmitRexString(0x41, "C7 04 01");
@@ -1370,7 +1377,7 @@ void VM_Compile(vm_t *vm, vmHeader_t *header)
 		case OP_STORE4:
 			EmitMovEAXStack(vm, 0);	
 			EmitString("8B 54 9F FC");			// mov edx, dword ptr -4[edi + ebx * 4]
-			MASK_REG("E2", vm->dataMask & ~3);		// and edx, 0x12345678
+			MASK_REG("E2", vm->dataMask);		// and edx, 0x12345678
 #if idx64
 			EmitRexString(0x41, "89 04 11");		// mov dword ptr [r9 + edx], eax
 #else
@@ -1382,7 +1389,7 @@ void VM_Compile(vm_t *vm, vmHeader_t *header)
 		case OP_STORE2:
 			EmitMovEAXStack(vm, 0);	
 			EmitString("8B 54 9F FC");			// mov edx, dword ptr -4[edi + ebx * 4]
-			MASK_REG("E2", vm->dataMask & ~1);		// and edx, 0x12345678
+			MASK_REG("E2", vm->dataMask);		// and edx, 0x12345678
 #if idx64
 			Emit1(0x66);					// mov word ptr [r9 + edx], eax
 			EmitRexString(0x41, "89 04 11");

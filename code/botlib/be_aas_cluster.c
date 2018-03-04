@@ -152,7 +152,7 @@ int AAS_UpdatePortal(int areanum, int clusternum)
 	{
 		//remove the cluster portal flag contents
 		aasworld.areasettings[areanum].contents &= ~AREACONTENTS_CLUSTERPORTAL;
-		Log_Write("portal area %d is seperating more than two clusters\r\n", areanum);
+		Log_Write("portal area %d is separating more than two clusters\r\n", areanum);
 		return qfalse;
 	} //end else
 	if (aasworld.portalindexsize >= AAS_MAX_PORTALINDEXSIZE)
@@ -1168,7 +1168,7 @@ void AAS_RemoveNotClusterClosingPortals(void)
 			if (aasworld.areasettings[otherareanum].contents & AREACONTENTS_CLUSTERPORTAL) continue;
 			//if the area already has a cluster set
 			if (aasworld.areasettings[otherareanum].cluster) continue;
-			//another cluster is seperated by this portal
+			//another cluster is separated by this portal
 			numseperatedclusters++;
 			//flood the cluster
 			AAS_FloodCluster_r(otherareanum, numseperatedclusters);
@@ -1185,13 +1185,13 @@ void AAS_RemoveNotClusterClosingPortals(void)
 			if (aasworld.areasettings[otherareanum].contents & AREACONTENTS_CLUSTERPORTAL) continue;
 			//if the area already has a cluster set
 			if (aasworld.areasettings[otherareanum].cluster) continue;
-			//another cluster is seperated by this portal
+			//another cluster is separated by this portal
 			numseperatedclusters++;
 			//flood the cluster
 			AAS_FloodCluster_r(otherareanum, numseperatedclusters);
 			AAS_FloodClusterReachabilities(numseperatedclusters);
 		} //end for
-		//a portal must seperate no more and no less than 2 clusters
+		//a portal must separate no more and no less than 2 clusters
 		if (numseperatedclusters != 2)
 		{
 			aasworld.areasettings[i].contents &= ~AREACONTENTS_CLUSTERPORTAL;

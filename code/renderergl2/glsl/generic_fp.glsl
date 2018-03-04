@@ -1,16 +1,8 @@
 uniform sampler2D u_DiffuseMap;
 
-#if defined(USE_LIGHTMAP)
-uniform sampler2D u_LightMap;
-
-uniform int       u_Texture1Env;
-#endif
+uniform int       u_AlphaTest;
 
 varying vec2      var_DiffuseTex;
-
-#if defined(USE_LIGHTMAP)
-varying vec2      var_LightTex;
-#endif
 
 varying vec4      var_Color;
 
@@ -18,28 +10,24 @@ varying vec4      var_Color;
 void main()
 {
 	vec4 color  = texture2D(u_DiffuseMap, var_DiffuseTex);
-#if defined(USE_LIGHTMAP)
-	vec4 color2 = texture2D(u_LightMap, var_LightTex);
-  #if defined(RGBM_LIGHTMAP)
-	color2.rgb *= color2.a;
-	color2.a = 1.0;
-  #endif
 
-	if (u_Texture1Env == TEXENV_MODULATE)
+	float alpha = color.a * var_Color.a;
+	if (u_AlphaTest == 1)
 	{
-		color *= color2;
+		if (alpha == 0.0)
+			discard;
 	}
-	else if (u_Texture1Env == TEXENV_ADD)
+	else if (u_AlphaTest == 2)
 	{
-		color += color2;
+		if (alpha >= 0.5)
+			discard;
 	}
-	else if (u_Texture1Env == TEXENV_REPLACE)
+	else if (u_AlphaTest == 3)
 	{
-		color = color2;
+		if (alpha < 0.5)
+			discard;
 	}
 	
-	//color = color * (u_Texture1Env.xxxx + color2 * u_Texture1Env.z) + color2 * u_Texture1Env.y;
-#endif
-
-	gl_FragColor = color * var_Color;
+	gl_FragColor.rgb = color.rgb * var_Color.rgb;
+	gl_FragColor.a = alpha;
 }
