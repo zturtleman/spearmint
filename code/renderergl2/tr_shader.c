@@ -3755,7 +3755,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		defs |= LIGHTDEF_USE_LIGHT_VERTEX;
 	}
 
-	if (r_deluxeMapping->integer && tr.worldDeluxeMapping && lightmap)
+	if (r_deluxeMapping->integer && tr.worldDeluxeMapping && lightmap && shader.lightmapIndex >= 0)
 	{
 		//ri.Printf(PRINT_ALL, ", deluxemap");
 		CopyBundle( &lightmap->bundle[0], &diffuse->bundle[TB_DELUXEMAP] );
