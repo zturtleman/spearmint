@@ -1446,8 +1446,8 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 			   !FS_IsExt(filename, ".menu", len) &&		// menu files
 			   !FS_IsExt(filename, ".game", len) &&		// menu files
 			   !FS_IsExt(filename, ".dat", len) &&		// for journal files
-			   !strstr(filename, "fonts") &&
-			   !strstr(filename, "music") &&
+			   strncmp(filename, "fonts", 5) != 0 &&
+			   strncmp(filename, "music", 5) != 0 &&
 			   !FS_IsDemoExt(filename, len))			// demos
 			{
 				*file = 0;
