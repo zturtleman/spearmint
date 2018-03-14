@@ -381,7 +381,7 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu" "gnu")
   RENDERER_LIBS = $(SDL_LIBS)
 
   ifeq ($(USE_PORTABLE_RPATH),1)
-    # $ is escaped using two, so this is litterly $ORIGIN
+    # $ is escaped using two, so this is literally $ORIGIN
     CLIENT_LIBS+=-Wl,-rpath,'$$ORIGIN/lib/$(ARCH)'
     RENDERER_LIBS+=-Wl,-rpath,'$$ORIGIN/lib/$(ARCH)'
   endif
