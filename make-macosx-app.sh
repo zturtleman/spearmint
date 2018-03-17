@@ -229,17 +229,17 @@ done
 echo ""
 
 # make the application bundle directories
-if [ ! -d ${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH} ]; then
-	mkdir -p ${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH} || exit 1;
+if [ ! -d "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}" ]; then
+	mkdir -p "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}" || exit 1;
 fi
-if [ ! -d ${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH} ]; then
-	mkdir -p ${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH} || exit 1;
+if [ ! -d "${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}" ]; then
+	mkdir -p "${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}" || exit 1;
 fi
 
 # copy and generate some application bundle resources
-cp code/libs/macosx/*.dylib ${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}
-cp ${ICNSDIR}/${ICNS} ${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/$ICNS || exit 1;
-echo -n ${PKGINFO} > ${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/PkgInfo || exit 1;
+cp code/libs/macosx/*.dylib "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}"
+cp ${ICNSDIR}/${ICNS} "${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/$ICNS" || exit 1;
+echo -n ${PKGINFO} > "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/PkgInfo" || exit 1;
 echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
 <plist version=\"1.0\">
@@ -321,7 +321,7 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
     <string>NSApplication</string>
 </dict>
 </plist>
-" > ${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Info.plist
+" > "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Info.plist"
 
 # action takes care of generating universal binaries if lipo is available
 # otherwise, it falls back to using a simple copy, expecting the first item in
@@ -353,12 +353,12 @@ function action()
 #
 
 # executables
-action ${BUNDLEBINDIR}/${EXECUTABLE_NAME}				"${IOQ3_CLIENT_ARCHS}"
-action ${BUNDLEBINDIR}/${DEDICATED_NAME}				"${IOQ3_SERVER_ARCHS}"
+action "${BUNDLEBINDIR}/${EXECUTABLE_NAME}"				"${IOQ3_CLIENT_ARCHS}"
+action "${BUNDLEBINDIR}/${DEDICATED_NAME}"				"${IOQ3_SERVER_ARCHS}"
 
 # renderers
-action ${BUNDLEBINDIR}/${RENDERER_OPENGL1_NAME}		"${IOQ3_RENDERER_GL1_ARCHS}"
-action ${BUNDLEBINDIR}/${RENDERER_OPENGL2_NAME}		"${IOQ3_RENDERER_GL2_ARCHS}"
+action "${BUNDLEBINDIR}/${RENDERER_OPENGL1_NAME}"		"${IOQ3_RENDERER_GL1_ARCHS}"
+action "${BUNDLEBINDIR}/${RENDERER_OPENGL2_NAME}"		"${IOQ3_RENDERER_GL2_ARCHS}"
 symlinkArch "${RENDERER_OPENGL}1" "${RENDERER_OPENGL}1" "_" "${BUNDLEBINDIR}"
 symlinkArch "${RENDERER_OPENGL}2" "${RENDERER_OPENGL}2" "_" "${BUNDLEBINDIR}"
 
