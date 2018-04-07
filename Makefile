@@ -1126,8 +1126,7 @@ endif
 
 ifeq ($(USE_FREETYPE),1)
   ifeq ($(USE_INTERNAL_FREETYPE),1)
-    FREETYPE_CFLAGS += -I$(FTDIR)/include \
-					-DFT2_BUILD_LIBRARY
+    FREETYPE_CFLAGS += -I$(FTDIR)/include -DFT2_BUILD_LIBRARY
   else
     FREETYPE_CFLAGS ?= $(shell pkg-config --silence-errors --cflags freetype2 || true)
     FREETYPE_LIBS ?= $(shell pkg-config --silence-errors --libs freetype2 || echo -lfreetype)
