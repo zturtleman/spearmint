@@ -759,8 +759,10 @@ void SV_DropPlayer( player_t *drop, const char *reason, qboolean force ) {
 	drop->inUse = qfalse;
 
 	if ( isBot ) {
-		// bots shouldn't go zombie, as there's no real net connection.
 		SV_BotFreeClient( playerNum );
+
+		// bots shouldn't go zombie, as there's no real net connection.
+		client->state = CS_FREE;
 	} else if ( numLocalPlayers == 1 ) {
 		Com_DPrintf( "Going to CS_ZOMBIE for %s\n", drop->name );
 		client->state = CS_ZOMBIE;		// become free in a few seconds
@@ -2038,7 +2040,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		}
 		// if we can tell that the client has dropped the last
 		// gamestate we sent them, resend it
-		if ( cl->messageAcknowledge > cl->gamestateMessageNum ) {
+		if ( cl->state != CS_ACTIVE && cl->messageAcknowledge > cl->gamestateMessageNum ) {
 			Com_DPrintf( "%s : dropped gamestate, resending\n", SV_ClientName( cl ) );
 			SV_SendClientGameState( cl );
 		}
