@@ -1039,7 +1039,6 @@ extern	fileHandle_t	com_journalDataFile;
 typedef enum {
 	TAG_FREE,
 	TAG_GENERAL,
-	TAG_BOTLIB,
 	TAG_RENDERER,
 	TAG_SMALL,
 	TAG_STATIC,
