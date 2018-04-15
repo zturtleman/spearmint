@@ -62,7 +62,7 @@ BotImport_GetMemory
 static void *BotImport_GetMemory(int size) {
 	void *ptr;
 
-	ptr = Z_TagMalloc( size, TAG_BOTLIB );
+	ptr = Z_Malloc( size );
 	return ptr;
 }
 
