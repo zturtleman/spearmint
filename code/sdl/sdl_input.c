@@ -706,30 +706,34 @@ static void IN_InitJoystick( void )
 		}
 		else
 		{
-			static qboolean firstTime = qtrue;
-			const char *homePath = Cvar_VariableString("fs_homepath");
-			const char *basePath = Cvar_VariableString("fs_basepath");
-			char *testpath;
-			int numMappings;
-
 			Com_DPrintf("SDL_Init(SDL_INIT_GAMECONTROLLER) passed.\n");
 
-			// check if mappings file is in home path, else try basepath
-			testpath = FS_BuildOSPath( homePath, "gamecontrollerdb.txt", "");
-			testpath[strlen(testpath)-1] = '\0';
+#if SDL_VERSION_ATLEAST( 2, 0, 2 )
+			{
+				static qboolean firstTime = qtrue;
+				const char *homePath = Cvar_VariableString("fs_homepath");
+				const char *basePath = Cvar_VariableString("fs_basepath");
+				char *testpath;
+				int numMappings;
 
-			if ( !FS_FileInPathExists(testpath) ) {
-				testpath = FS_BuildOSPath( basePath, "gamecontrollerdb.txt", "");
+				// check if mappings file is in home path, else try basepath
+				testpath = FS_BuildOSPath( homePath, "gamecontrollerdb.txt", "");
 				testpath[strlen(testpath)-1] = '\0';
-			}
 
-			numMappings = SDL_GameControllerAddMappingsFromFile(testpath);
-			if ( numMappings < 0 ) {
-				Com_DPrintf("WARNING: Couldn't load gamecontrollerdb.txt\n" );
-			} else if ( firstTime || com_developer->integer ) {
-				firstTime = qfalse;
-				Com_Printf("Loaded %d controller mappings from %s\n", numMappings, testpath );
+				if ( !FS_FileInPathExists(testpath) ) {
+					testpath = FS_BuildOSPath( basePath, "gamecontrollerdb.txt", "");
+					testpath[strlen(testpath)-1] = '\0';
+				}
+
+				numMappings = SDL_GameControllerAddMappingsFromFile(testpath);
+				if ( numMappings < 0 ) {
+					Com_DPrintf("WARNING: Couldn't load gamecontrollerdb.txt\n" );
+				} else if ( firstTime || com_developer->integer ) {
+					firstTime = qfalse;
+					Com_Printf("Loaded %d controller mappings from %s\n", numMappings, testpath );
+				}
 			}
+#endif
 		}
 	}
 
