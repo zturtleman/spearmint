@@ -16,7 +16,7 @@ Some of the many changes from ioquake3:
 
 For updates visit
 
-  * http://spearmint.pw
+  * https://clover.moe/spearmint
 
 Source files:
 

@@ -19,7 +19,7 @@ Some of the many features:
 
 For updates visit:
 
-  * http://spearmint.pw
+  * https://clover.moe/spearmint
 
 Source files:
 
