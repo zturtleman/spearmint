@@ -1931,6 +1931,7 @@ void RB_FogOn( void );
 void RB_Fog( int fogNum );
 
 void R_DrawElements( int numIndexes, const glIndex_t *indexes );
+void R_BindAnimatedImage( textureBundle_t *bundle );
 void VectorArrayNormalize( vec4_t *normals, unsigned int count );
 
 #ifdef idppc_altivec
