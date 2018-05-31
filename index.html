@@ -54,7 +54,8 @@ img.screenshot { width: 100%; max-width: 480px; height: auto; }
 @media screen and (min-width: 1500px) {
 	div.screenshot { float: right; }
 	img.screenshot { width: 460px; height: 259px; }
-	.whatisContent { padding-left: 2em; padding-right: 470px; padding-bottom: 2em; }
+	.whatisContent { padding-left: 2em; padding-right: 2em; padding-bottom: 2em; }
+	.whatisContentTop { padding-right: 470px; }
 }
 
 /* Header sizes */
@@ -82,6 +83,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .title {
   font-family: mplus-1mn-regular;
+  font-weight: bold;
 }
 </style>
 </head>
@@ -95,7 +97,7 @@ h1, h2, h3, h4, h5, h6 {
 		<img class="logoarea" src="images/icon_256_text.png" width="256" height="256" alt="Spearmint" />
 		<!-- NOTE: Had padding-top:20% when using <h1 style="font-size:4em">Spearmint</h1> instead of logo image -->
 		<p>A video game engine based on Quake 3.</p>
-		<!--<span>Skip to: <a href="#download">Download</a> &bull; <a href="#source">Source Code</a> &bull; <a href="#doc">Documentation</a></span>-->
+		<!--<span>Skip to: <a href="#modding">Modding</a> &bull; <a href="#download">Download</a> &bull; <a href="#source">Source Code</a></span>-->
 	</div>
 	<!-- end of header -->
 
@@ -112,54 +114,73 @@ h1, h2, h3, h4, h5, h6 {
 		</div>
 
 		<div class="whatisContent">
-			<p><span class="title">Spearmint</span> is a heavily modified version of the <a href="https://en.wikipedia.org/wiki/id_Tech_3">Quake III Arena engine</a>. Spearmint is directly based on <a href="http://ioquake3.org">ioquake3</a>.</p>
+			<!-- whatisContentTop has smaller width if screenshot is displayed at right side -->
+			<div class="whatisContentTop">
 
-			<!-- TODO: should probably talk about it's focused on standalone games and extending the hell out of it -->
+			<p><span class="title">Spearmint</span> is a heavily modified version of the <a href="https://en.wikipedia.org/wiki/id_Tech_3">Quake III Arena engine</a>. It is directly based on <a href="http://ioquake3.org">ioquake3</a>. It was originally intented to be used exclusively for creating new games but it kept the ability to play the Quake 3 data.</p>
 
-			<!-- FIXME: this isn't explained or backed up as to how it's different than ioq3
-			<p>It's possible to create new cross-platform games without modifying the engine or having multiple operating systems.</p>
-			 -->
-
-			<span>Some of the new features / changes:</span>
+			<span>Most interesting features for players:</span>
 			<ul>
-				<li>Aspect correct wide screen.</li>
-				<li>High resolution font support.</li>
+				<li>Aspect correct widescreen.</li>
+				<li>High resolution font support (TrueType).</li>
 				<li>Bullet marks on doors and moving platforms.</li>
-				<li>Smooth corpse sinking.</li>
-				<li>Higher resolution dynamic light texture.</li>
-				<!--<li>Gibs and bullet shells ride moving platforms.</li>-->
+				<li>Dynamic lights have smoother edges.</li>
 				<li>Four player splitscreen support.</li>
 				<li>Improved Bot AI.</li>
 				<li>Improved gamepad support.</li>
-				<!--<li>Improved third person view.</li>
-				<li>Player shadow moves with animations.</li>
-				<li>PNG screenshots (with ext data containing map name and player origin, etc).</li>
-				<li>In multiplayer with gibs disabled, bodies no longer become invisible when gibbed.</li>
-				<li>Option to fade out explosion lights instead of shrinking them (set cg_fadeExplosions cvar to 1).</li>-->
+				<li>Instagib mode.</li>
+				<li>Unlagged instant hit weapons (optional).</li>
 			</ul>
 
-			<span>Many modding improvements:</span>
-			<p>It's possible to do a lot more without modifying the engine. New networked variables can be added to players and game objects<!-- (playerState_t and entityState_t)-->. A lot of code has been moved from the engine to the VMs such as setting up the player input sent to the server<!-- (usercmd_t)-->, the bot AI, and miscellaneous drawing for the console, chat input, etc. The UI VM has been merged into CGame for greater flexibility. There are new system calls for CGame and Game VMs and new shader keywords. The engine and gamecode have been split into separate repositories.</p>
+			</div> <!-- whatisContentTop -->
 
-			<span>Spearmint is not compatible with Quake 3 mods (QVMs/DLLs) or replay demos.</span>
-<!--
-			<span>Modding differences from ioquake3:</span>
+			<span>More eye candy:</span>
 			<ul>
-				<li>It is possible to do a lot more without modifying the engine.</li>
-				<li>New features for the modding APIs and shader files.</li>
-				<li>Split engine and game code into separate projects.</li>
-				<li>Not compatible with Quake 3 mods (QVMs/DLLs) or replay demos.</il>
-				<li>It's possible to extend the entityState_t and playerState_t data structures without changing the engine.</li>
-				<li>Merged UI VM into CGame VM so the CGame&lt;-&gt;UI communication is more flexible.</li>
-				<li>Moved a lot of code from server and client to Game and CGame VMs;</li>
-				<ul>
-					<li>including the console, chat input overlay, usercmd_t creation, and a lot of bot AI code.</li>
-				</ul>
+				<li>Smooth corpse sinking.</li>
+				<li>Gibs and bullet shells ride on moving platforms.</li>
+				<!--<li>Improved third person view.</li>-->
+				<li>Player shadow moves with model animations.</li>
+				<li>In multiplayer with gibs disabled, bodies no longer become invisible when gibbed.</li>
+				<li>Option to fade out explosion lights instead of shrinking them (set cg_fadeExplosions cvar to 1).</li>
+				<!--<li>PNG screenshots (with ext data containing map name and player origin, etc).</li>-->
 			</ul>
--->
+
+			<p>Spearmint is not compatible with Quake III Arena servers, mods (the QVM/DLL files), or demos (game recordings).</p>
+
+			<p>If you want to play on Quake III Arena servers I would recommend using ioquake3 and my <a href="https://clover.moe/flexible-hud-for-ioq3/">widescreen HUD mod</a>.</p>
+
+			<!-- span so it doesn't pad bottom :eyeroll: -->
+			<span>You can discuss Spearmint on the <a href="https://forum.clover.moe">Magical Clover Forum</a> &mdash; Create an account or log in using a GitHub account.</span>
 		</div>
 	</div>
 	<!-- end section -->
+
+	<!-- begin modding section -->
+	<div id="modding">
+		<div class="sectionHeader">
+			<h2 style="font-size:2em">Modding Improvements</h2>
+		</div>
+
+		<div class="sectionContent">
+			<p>Spearmint has many new modding features and moved a lot of the engine functionality into the gamecode. It's possible to create new cross-platform games without modifying the engine.</p>
+			<ul>
+				<li>New shader keywords and game objects.</li>
+				<li>New networked variables can be added to players and game objects (playerState_t and entityState_t).</li>
+				<li>New system calls for CGame and Game VMs.</li>
+				<li>Merged UI VM into CGame VM so the CGame&lt;-&gt;UI communication is more flexible.</li>
+				<li>Moved a lot of code from the server and client to Game and CGame VMs including;</li>
+				<ul>
+					<li>Setting up the player input sent to the server (usercmd_t)</li>
+					<li>All of the bot AI</li>
+					<li>Drawing the console, chat input overlay, demo recording message, etc</li>
+				</ul>
+				<li>The engine and gamecode have been split into separate repositories so it's easy to fork gamecode for mods.</li>
+			</ul>
+
+			<span>See the <a href="https://github.com/zturtleman/spearmint/wiki/">Spearmint documentation</a>.</span>
+		</div>
+	</div>
+	<!-- end modding section -->
 
 	<!-- begin download section -->
 	<div id="download">
@@ -258,23 +279,6 @@ h1, h2, h3, h4, h5, h6 {
 		</div>
 	</div>
 	<!-- end source code section -->
-
-	<!-- begin resources section -->
-	<div id="doc">
-		<div class="sectionHeader">
-			<h2 style="font-size:2em">Resources</h2>
-		</div>
-
-		<div class="sectionContent">
-			<p>Discuss Spearmint on the Magical Clover Forum or check out the largely incomplete development documentation.</p>
-
-			<ul>
-				<li><a href="https://forum.clover.moe">Magical Clover Forum</a> &mdash; You can create an account or log in using a GitHub account.</li>
-				<li><a href="https://github.com/zturtleman/spearmint/wiki/">Development documentation</a></li>
-			</ul>
-		</div>
-	</div>
-	<!-- end resources section -->
 
 	<!-- begin misc section -->
 	<div id="misc">
