@@ -2,7 +2,7 @@
 
 **Spearmint** is a fork of [ioquake3](https://github.com/ioquake/ioq3) with two main goals; 1) provide a flexible engine for creating new games and mods, 2) support features from (and running) various id Tech 3-based games.
 
-Spearmint can be used to play Quake III Arena, Quake III: Team Arena, and Turtle Arena. Progress has been made toward running Return to Castle Wolfenstein (MP) and Wolfenstein: Enemy Territory, there is still quite a bit left before it's possible though. Spearmint is not compatible with existing mods (the QVM/DLL files) or demos (game recordings) for any game.
+Spearmint can be used to play Quake III Arena, Quake III: Team Arena, and Turtle Arena. Progress has been made toward running Return to Castle Wolfenstein (MP) and Wolfenstein: Enemy Territory but there is still quite a bit left before it's possible. Spearmint is not compatible with existing mods (the QVM/DLL files) or demos (game recordings) for any game.
 
 New Spearmint *0.X* releases will likely break VM and demo compatibility with previous releases.
 
