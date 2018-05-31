@@ -181,7 +181,7 @@ h1, h2, h3, h4, h5, h6 {
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-0.6/spearmint-0.6-linux.tar.xz">Spearmint 0.6 &mdash; GNU/Linux glibc 2.7 or later (x86 and x86_64)</a></li>
 			</ul>
 
-			<h2><a href="#pastreleases" onclick="toggleReleases(event);">Past Releases</a></h2>
+			<h2 id="pastreleasesheader">Past Releases</h2>
 
 			<div id="pastreleases">
 			<h3>Spearmint 0.5</h3>
@@ -304,6 +304,27 @@ h1, h2, h3, h4, h5, h6 {
 
 </div>
 <!-- end outer -->
+
+<script type="text/javascript">
+// hide releases by default if javascript is supported
+var ent  = document.getElementById( "pastreleasesheader" );
+ent.innerHTML = '<a href="#pastreleases" onclick="toggleReleases(event);">' + ent.innerHTML + '</a>';
+
+ent = document.getElementById( "pastreleases" );
+ent.style.display = 'none';
+
+function toggleReleases(e) {
+	// prevent going to the page
+	e.preventDefault();
+
+	var ent = document.getElementById( "pastreleases" );
+
+	if (ent.style.display == 'block')
+		ent.style.display = 'none';
+	else
+		ent.style.display = 'block';
+}
+</script>
 
 </body>
 </html>
