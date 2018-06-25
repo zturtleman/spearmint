@@ -3737,6 +3737,7 @@ void Field_Clear( field_t *edit ) {
 }
 
 static const char *completionString;
+static char matchDisplayPrefix[MAX_TOKEN_CHARS];
 static char shortestMatch[MAX_TOKEN_CHARS];
 static int	matchCount;
 // field we are working on, passed to Field_AutoComplete(&g_consoleCommand for instance)
@@ -3748,8 +3749,12 @@ FindMatches
 
 ===============
 */
-static void FindMatches( const char *s ) {
+static void FindMatches( const char *match ) {
 	int		i;
+	char	s[MAX_TOKEN_CHARS];
+
+	Q_strncpyz( s, matchDisplayPrefix, sizeof( s ) );
+	Q_strcat( s, sizeof( s ), match );
 
 	if ( Q_stricmpn( s, completionString, strlen( completionString ) ) ) {
 		return;
@@ -3779,7 +3784,12 @@ PrintMatches
 
 ===============
 */
-static void PrintMatches( const char *s ) {
+static void PrintMatches( const char *match ) {
+	char s[MAX_TOKEN_CHARS];
+
+	Q_strncpyz( s, matchDisplayPrefix, sizeof( s ) );
+	Q_strcat( s, sizeof( s ), match );
+
 	if ( !Q_stricmpn( s, shortestMatch, strlen( shortestMatch ) ) ) {
 		Com_Printf( "    %s\n", s );
 	}
@@ -3791,8 +3801,12 @@ PrintCvarMatches
 
 ===============
 */
-static void PrintCvarMatches( const char *s ) {
+static void PrintCvarMatches( const char *match ) {
 	char value[ TRUNCATE_LENGTH ];
+	char s[MAX_TOKEN_CHARS];
+
+	Q_strncpyz( s, matchDisplayPrefix, sizeof( s ) );
+	Q_strcat( s, sizeof( s ), match );
 
 	if ( !Q_stricmpn( s, shortestMatch, strlen( shortestMatch ) ) ) {
 		Com_TruncateLongString( value, Cvar_VariableString( s ) );
@@ -3859,6 +3873,7 @@ void Field_CompleteKeyname( void )
 {
 	matchCount = 0;
 	shortestMatch[ 0 ] = 0;
+	matchDisplayPrefix[ 0 ] = 0;
 
 	Key_KeynameCompletion( FindMatches );
 
@@ -3872,14 +3887,40 @@ void Field_CompleteKeyname( void )
 Field_CompleteFilename
 ===============
 */
-void Field_CompleteFilename( const char *dir,
+void Field_CompleteFilename( const char *basedir,
 		const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk )
 {
+	char dir[MAX_TOKEN_CHARS];
 	char **pFiles;
-	int nFiles;
+	int nFiles, i, length;
 
 	matchCount = 0;
 	shortestMatch[ 0 ] = 0;
+	matchDisplayPrefix[ 0 ] = 0;
+
+	// search in basedir + / + directory typed so far but always have
+	// completion display directory typed so far
+	Q_strncpyz( dir, basedir, sizeof( dir ) );
+
+	if ( strchr( completionString, '/' ) != NULL ) {
+		Q_strncpyz( matchDisplayPrefix, completionString, sizeof( matchDisplayPrefix ) );
+
+		// get dirname with trailing slash
+		for ( i = strlen( matchDisplayPrefix ) - 1; i >= 0; i-- ) {
+			if ( matchDisplayPrefix[i] == '/' ) {
+				matchDisplayPrefix[i+1] = '\0';
+				break;
+			}
+		}
+	}
+
+	if ( matchDisplayPrefix[0] ) {
+		length = strlen( dir );
+		if ( length == 0 || ( length > 0 && dir[length-1] != '/' ) ) {
+			Q_strcat( dir, sizeof( dir ), "/" );
+		}
+		Q_strcat( dir, sizeof( dir ), matchDisplayPrefix );
+	}
 
 	pFiles = FS_GetFileList( dir, ext, &nFiles, allowNonPureFilesOnDisk );
 
@@ -3967,6 +4008,7 @@ void Field_CompleteCommand( const char *_cmd,
 
 		matchCount = 0;
 		shortestMatch[ 0 ] = 0;
+		matchDisplayPrefix[ 0 ] = 0;
 
 		if( strlen( completionString ) == 0 )
 			return;
@@ -4023,6 +4065,7 @@ void Field_CompleteList( const char *list )
 {
 	matchCount = 0;
 	shortestMatch[ 0 ] = 0;
+	matchDisplayPrefix[ 0 ] = 0;
 
 	if ( !list )
 		return;
