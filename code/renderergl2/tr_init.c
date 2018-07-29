@@ -36,9 +36,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 qboolean	refHeadless;
 glconfig_t  glConfig;
 glRefConfig_t glRefConfig;
-qboolean    textureFilterAnisotropic = qfalse;
-int         maxAnisotropy = 0;
-float       displayAspect = 0.0f;
 
 glstate_t	glState;
 
@@ -1674,10 +1671,6 @@ void RE_Shutdown( qboolean destroyWindow ) {
 
 		Com_Memset( &glConfig, 0, sizeof( glConfig ) );
 		Com_Memset( &glRefConfig, 0, sizeof( glRefConfig ) );
-		textureFilterAnisotropic = qfalse;
-		maxAnisotropy = 0;
-		displayAspect = 0.0f;
-
 		Com_Memset( &glState, 0, sizeof( glState ) );
 	}
 
