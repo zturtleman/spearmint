@@ -208,6 +208,7 @@ RB_Fog
 =================
 */
 void RB_Fog( int fogNum ) {
+#if 0 // fixed function fog isn't part of OpenGL 3.2 core profile
 	//static int			lastFogMode = 0;
 	//static vec3_t		lastColor = { -1, -1, -1 };
 	//static float		lastDensity = -1;
@@ -324,17 +325,21 @@ void RB_Fog( int fogNum ) {
 #endif
 
 	//qglClearColor( color[0], color[1], color[2], 1.0f );
+#endif
 }
 
 void R_FogOff( void ) {
+#if 0
 	if ( !fogIsOn ) {
 		return;
 	}
 	qglDisable( GL_FOG );
 	fogIsOn = qfalse;
+#endif
 }
 
 void RB_FogOn( void ) {
+#if 0
 	if ( fogIsOn ) {
 		return;
 	}
@@ -349,6 +354,7 @@ void RB_FogOn( void ) {
 
 	qglEnable( GL_FOG );
 	fogIsOn = qtrue;
+#endif
 }
 
 /*

@@ -1639,6 +1639,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 
 	DBG_SHOWTIME
 
+#if 0 // FIXME: implement
 	if ( r_bonesDebug->integer ) {
 		GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE );
 		if ( r_bonesDebug->integer < 3 || r_bonesDebug->integer == 5 || r_bonesDebug->integer == 8 || r_bonesDebug->integer == 9 ) {
@@ -1828,6 +1829,7 @@ void RB_MDSSurfaceAnim( mdsSurface_t *surface ) {
 			qglEnd();
 		}
 	}
+#endif
 
 	if ( r_bonesDebug->integer > 1 ) {
 		// dont draw the actual surface

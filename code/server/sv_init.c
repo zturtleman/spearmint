@@ -441,8 +441,6 @@ static void SV_ClearServer(void) {
 /*
 ================
 SV_TouchCGame
-
-  touch the cgame.vm so that a pure client can load it if it's in a separate pk3
 ================
 */
 static void SV_TouchCGame(void) {
@@ -691,11 +689,10 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 		Cvar_Set( "sv_pakNames", "" );
 	}
 
-	// if a dedicated pure server we need to touch the cgame because it could be in a
-	// separate pk3 file and the client will need to load the latest cgame.qvm
-	if ( com_dedicated->integer ) {
-		SV_TouchCGame();
-	}
+	// we need to touch the cgame because it could be in a
+	// separate pk3 file and it needs to be referenced for the
+	// client to download the latest cgame or use it if pure server is enabled
+	SV_TouchCGame();
 
 	// the server sends these to the clients so they can figure
 	// out which pk3s should be auto-downloaded
