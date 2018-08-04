@@ -15,8 +15,7 @@ Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Sp
 
 ## Resources
 
-Discuss Spearmint on the Magical Clover Forum or check out the largely incomplete development documentation.
-
+  * [Discord (Fragmint★Wonderland)](https://discord.gg/7J2pjGD)
   * [Magical Clover Forum](https://forum.clover.moe) &mdash; You can create an account or log in using a GitHub account.
   * [Development documentation](https://github.com/zturtleman/spearmint/wiki)
 
