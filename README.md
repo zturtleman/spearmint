@@ -17,9 +17,9 @@ Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Sp
 
 ## Resources
 
-  * [Discord (Fragmint★Wonderland)](https://discord.gg/7J2pjGD)
-  * [Magical Clover Forum](https://forum.clover.moe) &mdash; You can create an account or log in using a GitHub account.
   * [Development documentation](https://github.com/zturtleman/spearmint/wiki)
+  * [Discord (Fragmint★Wonderland)](https://discord.gg/7J2pjGD)
+  * [Magical Clover Forum (archived)](https://forum.clover.moe)
 
 
 ## Git branches
@@ -59,8 +59,7 @@ Spearmint contains code from;
 
 ## Contributing
 
-Please submit all patches at the [Magical Clover Forum](https://forum.clover.moe)
-or as a GitHub pull request.
+Please submit all patches as a GitHub pull request.
 
 The focus for Spearmint is to develop a stable base suitable for further
 development and provide players with the same Quake 3 game play experience
