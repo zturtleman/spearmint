@@ -135,8 +135,9 @@ static qboolean IN_IsConsoleKey( keyNum_t key, int character )
 
 		while( numConsoleKeys < MAX_CONSOLE_KEYS )
 		{
-			consoleKey_t *c = &consoleKeys[ numConsoleKeys ];
+			consoleKey_t *c;
 			int charCode = 0;
+			int keynums[KEYNUMS_PER_STRING];
 
 			token = COM_Parse( &text_p );
 			if( !token[ 0 ] )
@@ -146,20 +147,27 @@ static qboolean IN_IsConsoleKey( keyNum_t key, int character )
 
 			if( charCode > 0 )
 			{
+				c = &consoleKeys[ numConsoleKeys ];
 				c->type = CHARACTER;
 				c->u.character = charCode;
+				numConsoleKeys++;
 			}
-			else
+			else if( Key_StringToKeynum( token, keynums ) )
 			{
-				c->type = QUAKE_KEY;
-				c->u.key = Key_StringToKeynum( token );
+				for ( i = 0; i < KEYNUMS_PER_STRING; i++ )
+				{
+					if ( keynums[i] == -1 )
+						break;
+	
+					c = &consoleKeys[ numConsoleKeys ];
+					c->type = QUAKE_KEY;
+					c->u.key = keynums[i];
+					numConsoleKeys++;
 
-				// 0 isn't a key
-				if( c->u.key <= 0 )
-					continue;
+					if ( numConsoleKeys == MAX_CONSOLE_KEYS )
+						break;
+				}
 			}
-
-			numConsoleKeys++;
 		}
 	}
 
@@ -258,22 +266,24 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 			case SDLK_DELETE:       key = K_DEL;           break;
 			case SDLK_PAUSE:        key = K_PAUSE;         break;
 
-			case SDLK_LSHIFT:
-			case SDLK_RSHIFT:       key = K_SHIFT;         break;
+			case SDLK_LSHIFT:       key = K_LEFTSHIFT;     break;
+			case SDLK_RSHIFT:       key = K_RIGHTSHIFT;    break;
 
-			case SDLK_LCTRL:
-			case SDLK_RCTRL:        key = K_CTRL;          break;
+			case SDLK_LCTRL:        key = K_LEFTCTRL;      break;
+			case SDLK_RCTRL:        key = K_RIGHTCTRL;     break;
 
 #ifdef __APPLE__
-			case SDLK_RGUI:
-			case SDLK_LGUI:         key = K_COMMAND;       break;
+
+			case SDLK_LGUI:         key = K_LEFTCOMMAND;   break;
+			case SDLK_RGUI:         key = K_RIGHTCOMMAND;  break;
 #else
-			case SDLK_RGUI:
-			case SDLK_LGUI:         key = K_SUPER;         break;
+
+			case SDLK_LGUI:         key = K_LEFTSUPER;     break;
+			case SDLK_RGUI:         key = K_RIGHTSUPER;    break;
 #endif
 
-			case SDLK_RALT:
-			case SDLK_LALT:         key = K_ALT;           break;
+			case SDLK_LALT:         key = K_LEFTALT;       break;
+			case SDLK_RALT:         key = K_RIGHTALT;      break;
 
 			case SDLK_KP_5:         key = K_KP_5;          break;
 			case SDLK_INSERT:       key = K_INS;           break;
@@ -296,11 +306,10 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 			case SDLK_CAPSLOCK:     key = K_CAPSLOCK;      break;
 
 			default:
-				if( !( keysym->sym & SDLK_SCANCODE_MASK ) && keysym->scancode <= 95 )
+				if( !( keysym->sym & SDLK_SCANCODE_MASK ) && keysym->scancode <= 255 )
 				{
-					// Map Unicode characters to 95 world keys using the key's scan code.
-					// FIXME: There aren't enough world keys to cover all the scancodes.
-					// Maybe create a map of scancode to quake key at start up and on
+					// Map Unicode characters to 255 world keys using the key's scan code.
+					// TODO: Maybe create a map of scancode to quake key at start up and on
 					// key map change; allocate world key numbers as needed similar
 					// to SDL 1.2.
 					key = K_WORLD_0 + (int)keysym->scancode;
@@ -984,7 +993,7 @@ static void IN_ProcessEvents( void )
 
 				if( key == K_BACKSPACE )
 					Com_QueueEvent( in_eventTime, SE_CHAR, CTRL('h'), 0, 0, NULL );
-				else if( keys[K_CTRL].down && key >= 'a' && key <= 'z' )
+				else if( ( keys[K_LEFTCTRL].down || keys[K_RIGHTCTRL].down ) && key >= 'a' && key <= 'z' )
 					Com_QueueEvent( in_eventTime, SE_CHAR, CTRL(key), 0, 0, NULL );
 
 				lastKeyDown = key;
@@ -1091,6 +1100,17 @@ static void IN_ProcessEvents( void )
 				{
 					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELDOWN, qtrue, 0, NULL );
 					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELDOWN, qfalse, 0, NULL );
+				}
+
+				if( e.wheel.x > 0 )
+				{
+					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELRIGHT, qtrue, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELRIGHT, qfalse, 0, NULL );
+				}
+				else if( e.wheel.x < 0 )
+				{
+					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELLEFT, qtrue, 0, NULL );
+					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELLEFT, qfalse, 0, NULL );
 				}
 				break;
 

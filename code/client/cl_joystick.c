@@ -380,7 +380,7 @@ Cmd_JoyRemap_f
 */
 void Cmd_JoyRemap_f (void)
 {
-	int			c, key;
+	int			c, keynums[KEYNUMS_PER_STRING];
 	joyevent_t	joyevent;
 	int			localPlayerNum;
 
@@ -407,7 +407,7 @@ void Cmd_JoyRemap_f (void)
 
 	if (c == 2)
 	{
-		key = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
+		int key = CL_GetKeyForJoyEvent( localPlayerNum, &joyevent );
 		if ( key != -1 )
 			Com_Printf ("\"%s\" = \"%s\"\n", CL_JoyEventToString( &joyevent ), Key_KeynumToString( key ) );
 		else
@@ -415,14 +415,19 @@ void Cmd_JoyRemap_f (void)
 		return;
 	}
 
-	key = Key_StringToKeynum (Cmd_Argv(2));
-	if (key==-1)
+	if ( !Key_StringToKeynum( Cmd_Argv(2), keynums ) )
 	{
 		Com_Printf ("\"%s\" isn't a valid key\n", Cmd_Argv(2));
 		return;
 	}
 
-	if ( !CL_SetKeyForJoyEvent( localPlayerNum, &joyevent, key ) ) {
+	// Binding to ALT maps to both LEFTALT and RIGHTALT but joystick only supports one key.
+	if ( keynums[1] != -1 )
+	{
+		Com_Printf( "WARNING: %s only maps to %s for joystick event\n", Cmd_Argv(2), Key_KeynumToString( keynums[0] ) );
+	}
+
+	if ( !CL_SetKeyForJoyEvent( localPlayerNum, &joyevent, keynums[0] ) ) {
 		Com_Printf ("Max joystick remaps reached (%d), cannot add remap for %s.\n", MAX_JOY_REMAPS, CL_JoyEventToString( &joyevent ) );
 	}
 }
@@ -613,7 +618,7 @@ qboolean CL_OpenJoystickRemap( int localPlayerNum, const char *joystickName, con
 	char		*buffer, *text, *token;
 	int			len, i;
 	joyevent_t	joyevent;
-	int			key;
+	int			keynums[KEYNUMS_PER_STRING];
 
 	if ( !joystickName ) {
 		return qfalse;
@@ -692,14 +697,19 @@ qboolean CL_OpenJoystickRemap( int localPlayerNum, const char *joystickName, con
 			continue;
 		}
 
-		key = Key_StringToKeynum( token );
-		if ( key == -1 )
+		if ( !Key_StringToKeynum( token, keynums ) )
 		{
 			Com_Printf( "\"%s\" isn't a valid key in %s\n", token, filename );
 			continue;
 		}
 
-		if ( !CL_SetKeyForJoyEvent( localPlayerNum, &joyevent, key ) ) {
+		// Binding to ALT maps to both LEFTALT and RIGHTALT but joystick only supports one key.
+		if ( keynums[1] != -1 )
+		{
+			Com_Printf( "WARNING: %s only maps to %s for joystick event\n", token, Key_KeynumToString( keynums[0] ) );
+		}
+
+		if ( !CL_SetKeyForJoyEvent( localPlayerNum, &joyevent, keynums[0] ) ) {
 			Com_Printf ("Max joystick remaps reached (%d), cannot add remap for %s.\n", MAX_JOY_REMAPS, CL_JoyEventToString( &joyevent ) );
 			break;
 		}

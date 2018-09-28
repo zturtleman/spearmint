@@ -38,6 +38,7 @@ qkey_t		keys[MAX_KEYS];
 typedef struct {
 	char	*name;
 	int		keynum;
+	int		keynum2;
 } keyname_t;
 
 
@@ -54,11 +55,23 @@ keyname_t keynames[] =
 	{"LEFTARROW", K_LEFTARROW},
 	{"RIGHTARROW", K_RIGHTARROW},
 
-	{"ALT", K_ALT},
-	{"CTRL", K_CTRL},
-	{"SHIFT", K_SHIFT},
+	{"LEFTALT", K_LEFTALT},
+	{"RIGHTALT", K_RIGHTALT},
+	{"LEFTCTRL", K_LEFTCTRL},
+	{"RIGHTCTRL", K_RIGHTCTRL},
+	{"LEFTSHIFT", K_LEFTSHIFT},
+	{"RIGHTSHIFT", K_RIGHTSHIFT},
+	{"LEFTWINDOWS", K_LEFTSUPER},
+	{"RIGHTWINDOWS", K_RIGHTSUPER},
+	{"LEFTCOMMAND", K_LEFTCOMMAND},
+	{"RIGHTCOMMAND", K_RIGHTCOMMAND},
 
-	{"COMMAND", K_COMMAND},
+	// These are after LEFTALT, etc so Key_KeynumToString() returns correct name.
+	{"ALT", K_LEFTALT, K_RIGHTALT},
+	{"CTRL", K_LEFTCTRL, K_RIGHTCTRL},
+	{"SHIFT", K_LEFTSHIFT, K_RIGHTSHIFT},
+	{"WINDOWS", K_LEFTSUPER, K_RIGHTSUPER},
+	{"COMMAND", K_LEFTCOMMAND, K_RIGHTCOMMAND},
 
 	{"CAPSLOCK", K_CAPSLOCK},
 
@@ -94,6 +107,8 @@ keyname_t keynames[] =
 
 	{"MWHEELUP",	K_MWHEELUP },
 	{"MWHEELDOWN",	K_MWHEELDOWN },
+	{"MWHEELLEFT",	K_MWHEELLEFT },
+	{"MWHEELRIGHT",	K_MWHEELRIGHT },
 
 	// player 1
 	{"JOY_A", K_JOY_A},
@@ -363,8 +378,167 @@ keyname_t keynames[] =
 	{"WORLD_93", K_WORLD_93},
 	{"WORLD_94", K_WORLD_94},
 	{"WORLD_95", K_WORLD_95},
+	{"WORLD_96", K_WORLD_96},
+	{"WORLD_97", K_WORLD_97},
+	{"WORLD_98", K_WORLD_98},
+	{"WORLD_99", K_WORLD_99},
+	{"WORLD_100", K_WORLD_100},
+	{"WORLD_101", K_WORLD_101},
+	{"WORLD_102", K_WORLD_102},
+	{"WORLD_103", K_WORLD_103},
+	{"WORLD_104", K_WORLD_104},
+	{"WORLD_105", K_WORLD_105},
+	{"WORLD_106", K_WORLD_106},
+	{"WORLD_107", K_WORLD_107},
+	{"WORLD_108", K_WORLD_108},
+	{"WORLD_109", K_WORLD_109},
+	{"WORLD_110", K_WORLD_110},
+	{"WORLD_111", K_WORLD_111},
+	{"WORLD_112", K_WORLD_112},
+	{"WORLD_113", K_WORLD_113},
+	{"WORLD_114", K_WORLD_114},
+	{"WORLD_115", K_WORLD_115},
+	{"WORLD_116", K_WORLD_116},
+	{"WORLD_117", K_WORLD_117},
+	{"WORLD_118", K_WORLD_118},
+	{"WORLD_119", K_WORLD_119},
+	{"WORLD_120", K_WORLD_120},
+	{"WORLD_121", K_WORLD_121},
+	{"WORLD_122", K_WORLD_122},
+	{"WORLD_123", K_WORLD_123},
+	{"WORLD_124", K_WORLD_124},
+	{"WORLD_125", K_WORLD_125},
+	{"WORLD_126", K_WORLD_126},
+	{"WORLD_127", K_WORLD_127},
+	{"WORLD_128", K_WORLD_128},
+	{"WORLD_129", K_WORLD_129},
+	{"WORLD_130", K_WORLD_130},
+	{"WORLD_131", K_WORLD_131},
+	{"WORLD_132", K_WORLD_132},
+	{"WORLD_133", K_WORLD_133},
+	{"WORLD_134", K_WORLD_134},
+	{"WORLD_135", K_WORLD_135},
+	{"WORLD_136", K_WORLD_136},
+	{"WORLD_137", K_WORLD_137},
+	{"WORLD_138", K_WORLD_138},
+	{"WORLD_139", K_WORLD_139},
+	{"WORLD_140", K_WORLD_140},
+	{"WORLD_141", K_WORLD_141},
+	{"WORLD_142", K_WORLD_142},
+	{"WORLD_143", K_WORLD_143},
+	{"WORLD_144", K_WORLD_144},
+	{"WORLD_145", K_WORLD_145},
+	{"WORLD_146", K_WORLD_146},
+	{"WORLD_147", K_WORLD_147},
+	{"WORLD_148", K_WORLD_148},
+	{"WORLD_149", K_WORLD_149},
+	{"WORLD_150", K_WORLD_150},
+	{"WORLD_151", K_WORLD_151},
+	{"WORLD_152", K_WORLD_152},
+	{"WORLD_153", K_WORLD_153},
+	{"WORLD_154", K_WORLD_154},
+	{"WORLD_155", K_WORLD_155},
+	{"WORLD_156", K_WORLD_156},
+	{"WORLD_157", K_WORLD_157},
+	{"WORLD_158", K_WORLD_158},
+	{"WORLD_159", K_WORLD_159},
+	{"WORLD_160", K_WORLD_160},
+	{"WORLD_161", K_WORLD_161},
+	{"WORLD_162", K_WORLD_162},
+	{"WORLD_163", K_WORLD_163},
+	{"WORLD_164", K_WORLD_164},
+	{"WORLD_165", K_WORLD_165},
+	{"WORLD_166", K_WORLD_166},
+	{"WORLD_167", K_WORLD_167},
+	{"WORLD_168", K_WORLD_168},
+	{"WORLD_169", K_WORLD_169},
+	{"WORLD_170", K_WORLD_170},
+	{"WORLD_171", K_WORLD_171},
+	{"WORLD_172", K_WORLD_172},
+	{"WORLD_173", K_WORLD_173},
+	{"WORLD_174", K_WORLD_174},
+	{"WORLD_175", K_WORLD_175},
+	{"WORLD_176", K_WORLD_176},
+	{"WORLD_177", K_WORLD_177},
+	{"WORLD_178", K_WORLD_178},
+	{"WORLD_179", K_WORLD_179},
+	{"WORLD_180", K_WORLD_180},
+	{"WORLD_181", K_WORLD_181},
+	{"WORLD_182", K_WORLD_182},
+	{"WORLD_183", K_WORLD_183},
+	{"WORLD_184", K_WORLD_184},
+	{"WORLD_185", K_WORLD_185},
+	{"WORLD_186", K_WORLD_186},
+	{"WORLD_187", K_WORLD_187},
+	{"WORLD_188", K_WORLD_188},
+	{"WORLD_189", K_WORLD_189},
+	{"WORLD_190", K_WORLD_190},
+	{"WORLD_191", K_WORLD_191},
+	{"WORLD_192", K_WORLD_192},
+	{"WORLD_193", K_WORLD_193},
+	{"WORLD_194", K_WORLD_194},
+	{"WORLD_195", K_WORLD_195},
+	{"WORLD_196", K_WORLD_196},
+	{"WORLD_197", K_WORLD_197},
+	{"WORLD_198", K_WORLD_198},
+	{"WORLD_199", K_WORLD_199},
+	{"WORLD_200", K_WORLD_200},
+	{"WORLD_201", K_WORLD_201},
+	{"WORLD_202", K_WORLD_202},
+	{"WORLD_203", K_WORLD_203},
+	{"WORLD_204", K_WORLD_204},
+	{"WORLD_205", K_WORLD_205},
+	{"WORLD_206", K_WORLD_206},
+	{"WORLD_207", K_WORLD_207},
+	{"WORLD_208", K_WORLD_208},
+	{"WORLD_209", K_WORLD_209},
+	{"WORLD_210", K_WORLD_210},
+	{"WORLD_211", K_WORLD_211},
+	{"WORLD_212", K_WORLD_212},
+	{"WORLD_213", K_WORLD_213},
+	{"WORLD_214", K_WORLD_214},
+	{"WORLD_215", K_WORLD_215},
+	{"WORLD_216", K_WORLD_216},
+	{"WORLD_217", K_WORLD_217},
+	{"WORLD_218", K_WORLD_218},
+	{"WORLD_219", K_WORLD_219},
+	{"WORLD_220", K_WORLD_220},
+	{"WORLD_221", K_WORLD_221},
+	{"WORLD_222", K_WORLD_222},
+	{"WORLD_223", K_WORLD_223},
+	{"WORLD_224", K_WORLD_224},
+	{"WORLD_225", K_WORLD_225},
+	{"WORLD_226", K_WORLD_226},
+	{"WORLD_227", K_WORLD_227},
+	{"WORLD_228", K_WORLD_228},
+	{"WORLD_229", K_WORLD_229},
+	{"WORLD_230", K_WORLD_230},
+	{"WORLD_231", K_WORLD_231},
+	{"WORLD_232", K_WORLD_232},
+	{"WORLD_233", K_WORLD_233},
+	{"WORLD_234", K_WORLD_234},
+	{"WORLD_235", K_WORLD_235},
+	{"WORLD_236", K_WORLD_236},
+	{"WORLD_237", K_WORLD_237},
+	{"WORLD_238", K_WORLD_238},
+	{"WORLD_239", K_WORLD_239},
+	{"WORLD_240", K_WORLD_240},
+	{"WORLD_241", K_WORLD_241},
+	{"WORLD_242", K_WORLD_242},
+	{"WORLD_243", K_WORLD_243},
+	{"WORLD_244", K_WORLD_244},
+	{"WORLD_245", K_WORLD_245},
+	{"WORLD_246", K_WORLD_246},
+	{"WORLD_247", K_WORLD_247},
+	{"WORLD_248", K_WORLD_248},
+	{"WORLD_249", K_WORLD_249},
+	{"WORLD_250", K_WORLD_250},
+	{"WORLD_251", K_WORLD_251},
+	{"WORLD_252", K_WORLD_252},
+	{"WORLD_253", K_WORLD_253},
+	{"WORLD_254", K_WORLD_254},
+	{"WORLD_255", K_WORLD_255},
 
-	{"WINDOWS", K_SUPER},
 	{"COMPOSE", K_COMPOSE},
 	{"MODE", K_MODE},
 	{"HELP", K_HELP},
@@ -419,32 +593,39 @@ the K_* names are matched up.
 to be configured even if they don't have defined names.
 ===================
 */
-int Key_StringToKeynum( char *str ) {
+qboolean Key_StringToKeynum( char *str, int keynums[KEYNUMS_PER_STRING] ) {
 	keyname_t	*kn;
+	int			n;
 	
 	if ( !str || !str[0] ) {
-		return -1;
+		keynums[0] = keynums[1] = -1;
+		return qfalse;
 	}
 	if ( !str[1] ) {
-		return tolower( str[0] );
+		keynums[0] = tolower( str[0] );
+		keynums[1] = -1;
+		return qtrue;
 	}
 
 	// check for hex code
-	if ( strlen( str ) == 4 ) {
-		int n = Com_HexStrToInt( str );
-
-		if ( n >= 0 ) {
-			return n;
-		}
+	n = Com_HexStrToInt( str );
+	if ( n >= 0 && n < MAX_KEYS ) {
+		keynums[0] = n;
+		keynums[1] = -1;
+		return qtrue;
 	}
 
 	// scan for a text match
 	for ( kn=keynames ; kn->name ; kn++ ) {
-		if ( !Q_stricmp( str,kn->name ) )
-			return kn->keynum;
+		if ( !Q_stricmp( str,kn->name ) ) {
+			keynums[0] = kn->keynum;
+			keynums[1] = kn->keynum2 ? kn->keynum2 : -1;
+			return qtrue;
+		}
 	}
 
-	return -1;
+	keynums[0] = keynums[1] = -1;
+	return qfalse;
 }
 
 /*
@@ -559,7 +740,7 @@ Key_Unbind_f
 */
 void Key_Unbind_f (void)
 {
-	int		b;
+	int		i, b[KEYNUMS_PER_STRING];
 
 	if (Cmd_Argc() != 2)
 	{
@@ -567,14 +748,18 @@ void Key_Unbind_f (void)
 		return;
 	}
 	
-	b = Key_StringToKeynum (Cmd_Argv(1));
-	if (b==-1)
+	if (!Key_StringToKeynum(Cmd_Argv(1), b))
 	{
 		Com_Printf ("\"%s\" isn't a valid key\n", Cmd_Argv(1));
 		return;
 	}
 
-	Key_SetBinding (b, "");
+	for (i=0; i < KEYNUMS_PER_STRING; i++ )
+	{
+		if ( b[i] == -1 )
+			break;
+		Key_SetBinding (b[i], "");
+	}
 }
 
 /*
@@ -599,7 +784,7 @@ Key_Bind_f
 */
 void Key_Bind_f (void)
 {
-	int			i, c, b;
+	int			i, c, b[KEYNUMS_PER_STRING];
 	char		cmd[1024];
 	
 	c = Cmd_Argc();
@@ -609,8 +794,7 @@ void Key_Bind_f (void)
 		Com_Printf ("bind <key> [command] : attach a command to a key\n");
 		return;
 	}
-	b = Key_StringToKeynum (Cmd_Argv(1));
-	if (b==-1)
+	if (!Key_StringToKeynum(Cmd_Argv(1), b))
 	{
 		Com_Printf ("\"%s\" isn't a valid key\n", Cmd_Argv(1));
 		return;
@@ -618,10 +802,16 @@ void Key_Bind_f (void)
 
 	if (c == 2)
 	{
-		if (keys[b].binding && keys[b].binding[0])
-			Com_Printf ("\"%s\" = \"%s\"\n", Key_KeynumToString(b), keys[b].binding );
-		else
-			Com_Printf ("\"%s\" is not bound\n", Key_KeynumToString(b) );
+		for (i=0 ; i < KEYNUMS_PER_STRING ; i++)
+		{
+			if ( b[i] == -1 )
+				break;
+
+			if (keys[b[i]].binding && keys[b[i]].binding[0])
+				Com_Printf ("\"%s\" = \"%s\"\n", Key_KeynumToString(b[i]), keys[b[i]].binding );
+			else
+				Com_Printf ("\"%s\" is not bound\n", Key_KeynumToString(b[i]) );
+		}
 		return;
 	}
 	
@@ -634,7 +824,12 @@ void Key_Bind_f (void)
 			strcat (cmd, " ");
 	}
 
-	Key_SetBinding (b, cmd);
+	for (i=0 ; i < KEYNUMS_PER_STRING ; i++)
+	{
+		if ( b[i] == -1 )
+			break;
+		Key_SetBinding (b[i], cmd);
+	}
 }
 
 /*
@@ -760,7 +955,7 @@ void CL_KeyDownEvent( int key, unsigned time )
 	if( keys[key].repeats == 1 )
 		anykeydown++;
 
-	if( keys[K_ALT].down && key == K_ENTER )
+	if( ( keys[K_LEFTALT].down || keys[K_RIGHTALT].down ) && key == K_ENTER )
 	{
 		// don't repeat fullscreen toggle when keys are held down
 		if ( keys[K_ENTER].repeats > 1 ) {

@@ -519,7 +519,8 @@ void CL_WritePacket( void );
 
 void CL_VerifyCode( void );
 
-int Key_StringToKeynum( char *str );
+#define KEYNUMS_PER_STRING 2
+qboolean Key_StringToKeynum( char *str, int keynums[KEYNUMS_PER_STRING] );
 char *Key_KeynumToString (int keynum);
 
 int Mouse_GetState( int localPlayerNum );
