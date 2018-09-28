@@ -211,12 +211,9 @@ void QDECL SV_SendServerCommand(client_t *cl, int localPlayerNum, const char *fm
 	Q_vsnprintf ((char *)message, sizeof(message), fmt,argptr);
 	va_end (argptr);
 
-	// Fix to http://aluigi.altervista.org/adv/q3msgboom-adv.txt
-	// The actual cause of the bug is probably further downstream
-	// and should maybe be addressed later, but this certainly
-	// fixes the problem for now
-	if ( strlen ((char *)message) > 1022 ) {
-		Com_DPrintf( S_COLOR_YELLOW "WARNING: Dropped long reliable command for client %d: %s\n", (int)( cl - svs.clients ), message );
+	// reserve 4 bytes for splitscreen prefix: "lc%d "
+	if ( strlen ((char *)message) >= sizeof( ((client_t*)NULL)->reliableCommands[0] ) - 4 ) {
+		Com_Printf( S_COLOR_YELLOW "WARNING: Dropped long reliable command for client %d: %s\n", (int)( cl - svs.clients ), message );
 		return;
 	}
 
