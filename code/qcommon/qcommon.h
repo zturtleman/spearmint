@@ -618,6 +618,8 @@ void	Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize 
 // returns an empty string if not defined
 void	Cvar_LatchedVariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 // returns the latched value if there is one, else the normal one, empty string if not defined
+void	Cvar_DefaultVariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+// returns the default value or empty string if not defined
 
 int	Cvar_Flags(const char *var_name);
 // returns CVAR_NONEXISTENT if cvar doesn't exist or the flags of that particular CVAR.

@@ -189,6 +189,22 @@ void Cvar_LatchedVariableStringBuffer( const char *var_name, char *buffer, int b
 
 /*
 ============
+Cvar_DefaultVariableStringBuffer
+============
+*/
+void Cvar_DefaultVariableStringBuffer( const char *var_name, char *buffer, int bufsize ) {
+	cvar_t *var;
+
+	var = Cvar_FindVar( var_name );
+	if ( !var ) {
+		*buffer = 0;
+	} else {
+		Q_strncpyz( buffer, var->resetString, bufsize );
+	}
+}
+
+/*
+============
 Cvar_Flags
 ============
 */

@@ -154,6 +154,7 @@ typedef enum {
 	G_CVAR_VARIABLE_INTEGER_VALUE,			// ( const char *var_name );
 	G_CVAR_VARIABLE_STRING_BUFFER,			// ( const char *var_name, char *buffer, int bufsize );
 	G_CVAR_LATCHED_VARIABLE_STRING_BUFFER,	// ( const char *var_name, char *buffer, int bufsize );
+	G_CVAR_DEFAULT_VARIABLE_STRING_BUFFER,	// ( const char *var_name, char *buffer, int bufsize );
 	G_CVAR_INFO_STRING_BUFFER,				// ( int bit, char *buffer, int bufsize );
 	G_CVAR_CHECK_RANGE,						// (  const char *var_name, float min, float max, qboolean integral );
 
