@@ -2,7 +2,7 @@ ifndef FSNAME
 FSNAME=spearmint
 endif
 ifndef VERSION
-VERSION=1.0-devil
+VERSION=1.0.0
 endif
 ifndef RELEASE
 RELEASE=0

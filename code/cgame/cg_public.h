@@ -35,8 +35,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
-#define CG_API_MAJOR_VERSION	0
-#define CG_API_MINOR_VERSION	39
+// ZTM: FIXME: There is no way for the VM to know what the engine support API is
+//             so there is no way to add more system calls.
+#define CG_API_MAJOR_VERSION	1
+#define CG_API_MINOR_VERSION	0
 
 
 #define	CMD_BACKUP			64	
