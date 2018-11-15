@@ -798,9 +798,10 @@ void SV_SendClientSnapshot( client_t *client ) {
 	// (re)send any reliable server commands
 	SV_UpdateServerCommandsToClient( client, &msg );
 
-	// client is awaiting gamestate (or downloading a pk3), hold off sending snapshot as it
-	// can't be loaded until after cgame is loaded
-	if ( client->state != CS_ACTIVE ) {
+	// if client is awaiting gamestate (or downloading a pk3), hold off sending snapshot as it
+	// can't be loaded until after cgame is loaded.
+	// must send snapshot to kicked (zombie) clients for them to process disconnect.
+	if ( client->state != CS_ACTIVE && client->state != CS_ZOMBIE ) {
 		client->needBaseline = qtrue;
 	} else {
 		// entities delta baseline
