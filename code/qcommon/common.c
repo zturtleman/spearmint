@@ -3916,7 +3916,7 @@ void Field_CompleteFilename( const char *basedir,
 
 	if ( matchDisplayPrefix[0] ) {
 		length = strlen( dir );
-		if ( length == 0 || ( length > 0 && dir[length-1] != '/' ) ) {
+		if ( length > 0 && dir[length-1] != '/' ) {
 			Q_strcat( dir, sizeof( dir ), "/" );
 		}
 		Q_strcat( dir, sizeof( dir ), matchDisplayPrefix );
