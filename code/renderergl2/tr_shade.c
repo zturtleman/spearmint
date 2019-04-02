@@ -858,6 +858,7 @@ static void ForwardDlight( void ) {
 	//vec3_t	origin;
 	//float	scale;
 	float	radius;
+	float	intensity;
 
 	int deformGen;
 	vec5_t deformParams;
@@ -891,6 +892,7 @@ static void ForwardDlight( void ) {
 		//VectorCopy( dl->transformed, origin );
 		radius = dl->radius;
 		//scale = 1.0f / radius;
+		intensity = dl->intensity;
 
 		//if (pStage->glslShaderGroup == tr.lightallShader)
 		{
@@ -994,7 +996,9 @@ static void ForwardDlight( void ) {
 			GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
 		}
 
-		GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, dl->color);
+		intensity = Com_Clamp(0.0f, 1.0f, intensity);
+		VectorScale(dl->color, intensity, vector);
+		GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, vector);
 
 		VectorSet(vector, 0, 0, 0);
 		GLSL_SetUniformVec3(sp, UNIFORM_AMBIENTLIGHT, vector);
