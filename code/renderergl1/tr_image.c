@@ -964,7 +964,7 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 	image->width = pic[0].width;
 	image->height = pic[0].height;
 	if (flags & IMGFLAG_CLAMPTOEDGE)
-		glWrapClampMode = GL_CLAMP_TO_EDGE;
+		glWrapClampMode = haveClampToEdge ? GL_CLAMP_TO_EDGE : GL_CLAMP;
 	else
 		glWrapClampMode = GL_REPEAT;
 
