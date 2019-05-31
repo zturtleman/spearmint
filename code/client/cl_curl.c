@@ -326,6 +326,10 @@ void CL_cURL_BeginDownload( const char *localName, const char *remoteURL )
 		return;
 	}
 
+#if 0
+	// ZTM: FIXME: This causes the server to send entity baseline and snapshot
+	// so client can process "disconnect" server command but client can't process
+	// snapshot until after downloads are finished and CGame is reloaded.
 	if(!(clc.sv_allowDownload & DLF_NO_DISCONNECT) &&
 		!clc.cURLDisconnected) {
 
@@ -335,6 +339,7 @@ void CL_cURL_BeginDownload( const char *localName, const char *remoteURL )
 		CL_WritePacket();
 		clc.cURLDisconnected = qtrue;
 	}
+#endif
 }
 
 void CL_cURL_PerformDownload(void)
