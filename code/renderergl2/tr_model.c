@@ -3131,6 +3131,12 @@ int R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, i
 
 		if(iqmData->bounds)
 		{
+			if(iqmData->num_frames == 0) {
+				VectorCopy( iqmData->bounds, mins );
+				VectorCopy( iqmData->bounds+3, maxs );
+				return qtrue;
+			}
+
 			startBounds = iqmData->bounds + 6*(startFrame % iqmData->num_frames);
 			endBounds = iqmData->bounds + 6*(endFrame % iqmData->num_frames);
 
