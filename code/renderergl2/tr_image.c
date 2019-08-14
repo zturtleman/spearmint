@@ -2014,45 +2014,16 @@ static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int
 }
 
 
-static qboolean UploadOneTexLevel( int level, const textureLevel_t *pic )
+static qboolean UploadOneTexLevel( GLuint texture, int level, const textureLevel_t *pic )
 {
-	GLsizei w;
 	if ( pic->format != GL_RGBA8 ) {
-		if ( !qglCompressedTexImage2DARB ) {
-			return qfalse;
-		}
-
-		qglCompressedTexImage2DARB( GL_PROXY_TEXTURE_2D, level,
-						pic->format,
-						pic->width, pic->height, 0,
-						pic->size, NULL);
-
-		qglGetTexLevelParameteriv( GL_PROXY_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &w);
-		if ( !w ) {
-			return qfalse;
-		}
-
-		qglCompressedTexImage2DARB( GL_TEXTURE_2D, level,
-						pic->format,
-						pic->width, pic->height, 0,
-						pic->size, pic->data);
+		qglCompressedTextureSubImage2DEXT( texture, GL_TEXTURE_2D, level,
+						0, 0, pic->width, pic->height,
+						pic->format, pic->size, pic->data );
 	} else {
-		qglTexImage2D( GL_PROXY_TEXTURE_2D, level,
-						pic->format,
-						pic->width, pic->height, 0,
-						GL_RGBA, GL_UNSIGNED_BYTE,
-						NULL );
-
-		qglGetTexLevelParameteriv( GL_PROXY_TEXTURE_2D, level, GL_TEXTURE_WIDTH, &w);
-		if ( !w ) {
-			return qfalse;
-		}
-
-		qglTexImage2D( GL_TEXTURE_2D, level,
-						pic->format,
-						pic->width, pic->height, 0,
-						GL_RGBA, GL_UNSIGNED_BYTE,
-						pic->data );
+		qglTextureSubImage2DEXT( texture, GL_TEXTURE_2D, level,
+						0, 0, pic->width, pic->height,
+						GL_RGBA, GL_UNSIGNED_BYTE, pic->data );
 	}
 
 	return qtrue;
@@ -2075,7 +2046,7 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 	imgType_t type = image->type;
 	imgFlags_t flags = image->flags;
 	GLenum internalFormat = image->internalFormat;
-	qboolean subtexture = (x != 0) || (y != 0) || (width != image->width) || (height != image->height);
+	qboolean subtexture = (x != 0) || (y != 0) || (width != image->uploadWidth) || (height != image->uploadHeight);
 	qboolean rgba8 = picFormat == GL_RGBA8 || picFormat == GL_SRGB8_ALPHA8_EXT;
 	qboolean mipmap = !!(flags & IMGFLAG_MIPMAP) && (rgba8 || numMips > 1);
 	qboolean cubemap = !!(flags & IMGFLAG_CUBEMAP);
@@ -2098,7 +2069,7 @@ static void Upload32(int numTexLevels, const textureLevel_t *pics, int x, int y,
 		if ( !rgba8 && !cubemap ) {
 			// compressed texture
 			for( i = baseLevel; i < numTexLevels; i++ ) {
-				if( !UploadOneTexLevel( i - baseLevel, &pics[i] ) )
+				if( !UploadOneTexLevel( image->texnum, i - baseLevel, &pics[i] ) )
 					break;
 			}
 			if( i >= numTexLevels )
@@ -2264,16 +2235,9 @@ image_t *R_CreateImage2( const char *name, int numTexLevels, const textureLevel_
 			scaled = RawImage_ScaleToPower2(&pics[0], 0, &width, &height, type, flags, picmip, &resampledBuffer);
 		else if (pics[0].data && picmip)
 		{
-#if 0
-			// ZTM: Used by ioq3 dds code which stores all mip maps in a continuous data block, Spearmint keeps them as separate texture levels.
-			for (miplevel = picmip; miplevel > 0 && numMips > 1; miplevel--, numMips--)
-			{
-				int size = CalculateMipSize(width, height, picFormat);
-				width = MAX(1, width >> 1);
-				height = MAX(1, height >> 1);
-				pic += size;
-			}
-#endif
+			int baseLevel = Com_Clamp( 0, numTexLevels - 1, picmip );
+			width = pics[baseLevel].width;
+			height = pics[baseLevel].height;
 		}
 	}
 
