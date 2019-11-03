@@ -203,9 +203,23 @@ h1, h2, h3, h4, h5, h6 {
 
 			<p>If you extract Spearmint 1.0.0 or later over a previous Spearmint version, you need to manually remove spearmint-patch-0.x.pk3 files from the baseq3 and missionpack directories. They were renamed to spearmint-baseq3-1.0.x.pk3 and spearmint-missionpack-1.0.x.pk3.</p>
 
-			<h2>Spearmint 1.0.1</h2>
+			<h2>Spearmint 1.0.2</h2>
+			<p>Spearmint 1.0.2 (November 3 2019) with support files for Quake 3 and Team Arena (full and demo versions) and OpenArena 0.8.8 without the new game modes. It is compatible with Spearmint 1.0.0. <a href="https://clover.moe/2019/11/03/spearmint-1-0-2-released/">Announcement post</a>.</p>
+			<p>Known issues; On Windows the keypad 5 key doesn't work without numlock enabled and on macOS 10.6+ the client only executes mouse wheel control binds if wheel is turned multiple notches (SDL 2.0.8 bugs). Servers using sv_dlUrl for HTTP downloads need to set sv_allowDownload to 9 for UDP/HTTP or 8 for HTTP only to <a href="https://github.com/zturtleman/spearmint/issues/298">avoid a Spearmint 1.0.0/1.0.1 client error</a>.</p>
+			<ul>
+				<li><a href="docs/spearmint-1.0.2-readme.txt">Spearmint 1.0.2 &mdash; Readme</a></li>
+				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-1.0.2/spearmint-1.0.2-windows.zip">Spearmint 1.0.2 &mdash; Windows XP or later (32 and 64 bit)</a></li>
+				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-1.0.2/spearmint-1.0.2-macosx.dmg">Spearmint 1.0.2 &mdash; macOS 10.5 or later (PPC, Intel 32/64 bit)</a></li>
+				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-1.0.2/spearmint-1.0.2-linux.tar.xz">Spearmint 1.0.2 &mdash; GNU/Linux glibc 2.7 or later (x86 and x86_64)</a></li>
+			</ul>
+
+			<h2 id="pastreleasesheader">Past Releases</h2>
+
+			<div id="pastreleases">
+
+			<h3>Spearmint 1.0.1</h3>
 			<p>Spearmint 1.0.1 (November 15 2018) with support files for Quake 3 and Team Arena (full and demo versions) and OpenArena 0.8.8 without the new game modes. It is compatible with Spearmint 1.0.0. <a href="https://clover.moe/2018/11/15/spearmint-1-0-1-released/">Announcement post</a>.</p>
-			<p>Known issues; Windows keypad 5 key without numlock doesn't work and macOS 10.6+ only execute mouse wheel control binds if wheel is turned multiple notches (SDL 2.0.8 bugs). Servers using sv_dlUrl for HTTP downloads need to set sv_allowDownload to 9 for UDP/HTTP or 8 for HTTP only to <a href="https://github.com/zturtleman/spearmint/issues/298">avoid a client error</a>.</p>
+			<p>Known issues; On Windows the keypad 5 key doesn't work without numlock enabled and on macOS 10.6+ the client only executes mouse wheel control binds if wheel is turned multiple notches (SDL 2.0.8 bugs). Servers using sv_dlUrl for HTTP downloads need to set sv_allowDownload to 9 for UDP/HTTP or 8 for HTTP only to <a href="https://github.com/zturtleman/spearmint/issues/298">avoid a client error</a>.</p>
 			<ul>
 				<li><a href="docs/spearmint-1.0.1-readme.txt">Spearmint 1.0.1 &mdash; Readme</a></li>
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-1.0.1/spearmint-1.0.1-windows.zip">Spearmint 1.0.1 &mdash; Windows XP or later (32 and 64 bit)</a></li>
@@ -213,13 +227,9 @@ h1, h2, h3, h4, h5, h6 {
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-1.0.1/spearmint-1.0.1-linux.tar.xz">Spearmint 1.0.1 &mdash; GNU/Linux glibc 2.7 or later (x86 and x86_64)</a></li>
 			</ul>
 
-			<h2 id="pastreleasesheader">Past Releases</h2>
-
-			<div id="pastreleases">
-
 			<h3>Spearmint 1.0.0</h3>
 			<p>Spearmint 1.0.0 (October 10 2018) with support files for Quake 3 and Team Arena (full and demo versions) and OpenArena 0.8.8 without the new game modes. It is not compatible previous versions. <a href="https://clover.moe/2018/10/10/spearmint-1-0-0-released/">Announcement post</a>.</p>
-			<p>Known issues; Windows keypad 5 key without numlock doesn't work and macOS 10.6+ only execute mouse wheel control binds if wheel is turned multiple notches (SDL 2.0.8 bugs). Servers using sv_dlUrl for HTTP downloads need to set sv_allowDownload to 9 for UDP/HTTP or 8 for HTTP only to <a href="https://github.com/zturtleman/spearmint/issues/298">avoid a client error</a>.</p>
+			<p>Known issues; On Windows the keypad 5 key doesn't work without numlock enabled and on macOS 10.6+ the client only executes mouse wheel control binds if wheel is turned multiple notches (SDL 2.0.8 bugs). Servers using sv_dlUrl for HTTP downloads need to set sv_allowDownload to 9 for UDP/HTTP or 8 for HTTP only to <a href="https://github.com/zturtleman/spearmint/issues/298">avoid a client error</a>.</p>
 			<ul>
 				<li><a href="docs/spearmint-1.0.0-readme.txt">Spearmint 1.0.0 &mdash; Readme</a></li>
 				<li><a href="https://github.com/zturtleman/spearmint/releases/download/release-1.0.0/spearmint-1.0.0-windows.zip">Spearmint 1.0.0 &mdash; Windows XP or later (32 and 64 bit)</a></li>
