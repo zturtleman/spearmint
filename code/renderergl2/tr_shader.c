@@ -5583,12 +5583,7 @@ static void CreateInternalShaders( void ) {
 static void CreateExternalShaders( void ) {
 	tr.projectionShadowShader = R_FindShader( "projectionShadow", LIGHTMAP_NONE, MIP_RAW_IMAGE );
 	tr.flareShader = R_FindShader( "flareShader", LIGHTMAP_NONE, MIP_RAW_IMAGE );
-
-	if ( !tr.sunShaderName[0] ) {
-		Q_strncpyz( tr.sunShaderName, "sun", sizeof ( tr.sunShaderName ) );
-	}
-
-	tr.sunShader = R_FindShader( tr.sunShaderName, LIGHTMAP_NONE, MIP_RAW_IMAGE );
+	tr.sunShader = NULL;
 
 	tr.sunFlareShader = R_FindShader( "gfx/2d/sunflare", LIGHTMAP_NONE, MIP_RAW_IMAGE );
 
@@ -5624,6 +5619,8 @@ void R_InitShaders( void ) {
 	CreateInternalShaders();
 
 	ScanAndLoadShaderFiles();
+
+	CreateExternalShaders();
 }
 
 /*
@@ -5632,5 +5629,9 @@ R_InitExternalShaders
 ==================
 */
 void R_InitExternalShaders( void ) {
-	CreateExternalShaders();
+	if ( !tr.sunShaderName[0] ) {
+		Q_strncpyz( tr.sunShaderName, "sun", sizeof ( tr.sunShaderName ) );
+	}
+
+	tr.sunShader = R_FindShader( tr.sunShaderName, LIGHTMAP_NONE, MIP_RAW_IMAGE );
 }
