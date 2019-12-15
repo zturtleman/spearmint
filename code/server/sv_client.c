@@ -473,7 +473,7 @@ void SV_DirectConnect( netadr_t from ) {
 		startIndex = sv_privateClients->integer;
 	}
 
-	// find a client slot
+	newcl = NULL;
 	for ( i = startIndex, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ ) {
 		if ( cl->state == CS_FREE ) {
 			newcl = cl;
