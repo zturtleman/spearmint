@@ -2240,7 +2240,7 @@ ParseSort
 =================
 */
 void ParseSort( char **text ) {
-	char	*token;
+	char	*token, *end;
 
 	token = COM_ParseExt( text, qfalse );
 	if ( token[0] == 0 ) {
@@ -2267,9 +2267,15 @@ void ParseSort( char **text ) {
 	} else if ( !Q_stricmp( token, "underwater" ) ) {
 		shader.sort = SS_UNDERWATER;
 	} else {
-		shader.sort = atof( token );
+		shader.sort = strtof( token, &end );
 
-		if ( floor( shader.sort ) < 1 || floor( shader.sort ) >= SS_MAX_SORT ) {
+		if ( end == token ) {
+			// Unknown text keyword. Fallback to automatic sort value.
+			ri.Printf( PRINT_WARNING, "WARNING: unknown sort parameter '%s' in shader '%s'\n", token, shader.name );
+			shader.sort = 0;
+		} else if ( shader.sort == 0 ) {
+			// Automatically calculate sort value. This is the default and shouldn't be specified.
+		} else if ( floor( shader.sort ) < 1 || floor( shader.sort ) >= SS_MAX_SORT ) {
 			ri.Printf( PRINT_WARNING, "WARNING: sort parameter %f in shader '%s' is out of range (min 1, max %d)\n", shader.sort, shader.name, SS_MAX_SORT - 1 );
 			shader.sort = Com_Clamp( 1, SS_MAX_SORT - 1, shader.sort );
 		}
