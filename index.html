@@ -302,6 +302,25 @@ h1, h2, h3, h4, h5, h6 {
 			</div>
 			<br />
 
+			<h2>macOS</h2>
+			<p>The macOS app is not code-signed so you may need to workaround the <a href="https://en.wikipedia.org/wiki/Gatekeeper_(macOS)">gatekeeper</a>.</p>
+
+			<p>1) Give Spearmint permission to read files.</p>
+
+			<p>&nbsp;&nbsp;&nbsp;&nbsp;Open Terminal and run:</p>
+
+			<pre>    xattr -dr com.apple.quarantine /Applications/spearmint-1.0.2-macosx</pre>
+
+			<p>&nbsp;&nbsp;&nbsp;&nbsp;"/Applications/spearmint-1.0.2-macosx" should be where ever you have extracted the directory from the Spearmint DMG.</p>
+
+			<p>&nbsp;&nbsp;&nbsp;&nbsp;Solves: Unable to locate data files. You need to install baseq3 in order to play.</p>
+
+			<p>2) Give Spearmint permission to run.</p>
+
+			<p>&nbsp;&nbsp;&nbsp;&nbsp;Open Finder and locate Spearmint app. Hold Control key and click Spearmint to open context menu and then click Open in the context menu.</p>
+
+			<p>&nbsp;&nbsp;&nbsp;&nbsp;Solves: "Spearmint" can't be opened because it's from an unidentified developer.</p>
+
 			<h2>Addons</h2>
 			<p>You can download additional Quake 3 levels at <a href="https://lvlworld.com/">lvlworld</a>. They are not recommened for use with the Quake 3 or Team Arena demos. You can download additional Quake 3 player models and skins at <a href="https://ws.q3df.org/models/">WorldSpawn</a> and <a href="https://ioquake3.org/extras/models/">ioquake3</a>. Place the pk3 files into the folder for the games use you using (baseq3, demoq3, tademo, baseoa).</a>
 		</div>
