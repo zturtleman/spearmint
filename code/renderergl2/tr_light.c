@@ -72,7 +72,7 @@ void R_CullDlights( void ) {
 		tr.refdef.num_dlights = MAX_DLIGHTS;
 	}
 
-	tr.refdef.dlightBits = ( 1 << tr.refdef.num_dlights ) - 1;
+	tr.refdef.dlightBits = ( 1ULL << tr.refdef.num_dlights ) - 1;
 #else
 	int i, numDlights, dlightBits;
 	dlight_t    *dl;
