@@ -1,0 +1,216 @@
+Spearmint 1.0.3
+July 10, 2020
+---------------
+
+Spearmint is a engine based on ioquake3 that is not compatible with Quake 3 mods, servers, or demo replays.
+
+Some of the many features:
+
+  * Aspect correct wide screen
+  * High resolution font support
+  * Bullet marks on doors and moving platforms
+  * Smooth sinking corpses
+  * Higher resolution dynamic light texture
+  * Four player splitscreen support
+  * Improved Bot AI
+  * Improved gamepad support
+  * PNG screenshots
+  * Many modding improvements
+
+For updates visit:
+
+  * https://clover.moe/spearmint
+
+Source files:
+
+  * https://github.com/zturtleman/spearmint
+  * https://github.com/zturtleman/mint-arena
+  * https://github.com/zturtleman/spearmint-patch-data
+
+
+# Known issues
+
+On Windows the keypad 5 key doesn't work without numlock enabled and on macOS 10.6+ the client only executes mouse wheel control binds if wheel is turned multiple notches (SDL 2.0.8 bugs).
+
+
+# How to play
+
+To play Spearmint Quake 3, copy Quake 3's baseq3/pak[0-8].pk3 into the local baseq3 directory.
+To play the Team Arena expansion, copy Quake 3 Team Arena's missionpack/pak[0-3].pk3 into the local missionpack directory.
+
+If you don't own Quake 3 or Team Arena, they can be purchased on Steam or GOG.com. Team Arena is not required to play Quake 3.
+
+  * http://store.steampowered.com/sub/433/
+  * https://www.gog.com/game/quake_iii_gold
+
+If you're missing some of the Quake 3 or Team Arena patch pk3s (pak1 or higher), they are available at http://ioquake3.org/extras/patch-data/
+
+After copying the data, run spearmint_x86 or if using a 64-bit OS run spearmint_x86_64. On macOS, run the universal App Bundle.
+
+
+# Additional games
+
+To use OpenArena data with Spearmint Quake 3 game logic, copy OpenArena 0.8.8's baseoa/*.pk3 into the local baseoa directory.
+To use The Mission Pack expansion data, copy OpenArena 0.8.8's missionpack/*.pk3 into the local missionpackoa directory (not missionpack!).
+Note that none of the additional OpenArena game modes are available. Debian's repackaged OpenArena data files have a checksum mismatch warning.
+
+To play the Quake 3 demo, copy demoq3/pak0.pk3 into the local demoq3 directory.
+
+To play the Team Arena demo, copy tademo/pak0.pk3 into the local tademo directory.
+
+If you only install one game, it will automatically load by default.
+
+The default game selection order is baseq3, baseoa, demoq3, tademo.
+You can choose which game is loaded from the command line using "spearmint_x86.exe +set fs_game baseoa"
+or by changing the load priority by editing spearmint-gamelist.txt.
+
+
+# Splitscreen in Quake 3 / OpenArena
+
+When starting a server or skirmish, the first four player slots can be set to "Human" to enable the corresponding splitscreen player.
+
+Players can be added and removed while in-game. Open the in-game menu using Escape, click Local Players, then click “Player #” to add or remove the player.
+
+Splitscreen is not available in Single Player mode.
+
+
+# Splitscreen in Team Arena / The Mission Pack
+
+Team Arena does not have splitscreen support in the menu.
+
+To add a splitscreen player, start or join a server then open the console using "~" or shift+escape.
+Type "2dropin" to add second player and "2dropout" to remove second player. "3dropin", "4dropin" etc for players 3 and 4.
+Type "2" or "+2" and then press the tab key to see commands and console variables for splitscreen player 2.
+
+It's not possible to configure the splitscreen controls in the Team Arena menu.
+It's probably easiest to configure the controls in Quake 3 and then copy the binds from settings/baseq3/config.cfg to settings/missionpack/config.cfg.
+
+
+# Game controllers
+
+To enable a controller in Quake 3 / OpenArena, go to Setup -> Controls -> Player # -> Joy -> Select Joystick.
+The controller must be connected before starting Spearmint.
+
+Team Arena / The Mission Pack menu does not support selecting a controller.
+
+Spearmint supports various controller mappings by default, but requires binding them in the controls menu (like keyboard keys).
+If a controller's buttons cannot be bound in controls menu, it means that the controller mapping must be manually configured.
+See gamepad-controls.txt for details.
+
+gamecontrollerdb.txt is a read-only file with additional controller mappings.
+For details/updates, see https://github.com/gabomdq/SDL_GameControllerDB
+
+
+# Where do the saved files go?
+
+All files are saved into the "settings" directory if it exists. It has been included so that this is a portable installation.
+
+If the "settings" directory is deleted then a system path will be used.
+
+  * Windows: %APPDATA%\Spearmint\
+  * GNU/Linux: /home/username/.local/share/spearmint/
+  * macOS: /Users/username/Library/Application Support/Spearmint/
+
+
+# How to run a server
+
+You can start a server in the menu using the Spearmint client. There are no notable issues compared to running a
+dedicated server other than if the host changes their video settings the game will stall for a moment.
+
+To run a dedicated server, open a terminal or command prompt and change to the directory containing Spearmint
+and run "spearmint-server_x86.exe +set net_port 27960 +set sv_public 1 +set sv_pure 0 +set fs_game baseq3 +map q3dm17".
+For Internet servers, forward port 27960 (UDP) in your router to the IP of the computer running the Spearmint server.
+
+  * net_port defines the UDP-port used for connections to the server (default: 27960)
+  * sv_public 0 is LAN, 1 is Internet (default: 0)
+  * sv_pure 0 allows clients to use pk3-files not present on the server (default: 1)
+  * fs_game should be the game/mod you want to play (default: first installed game found in mint-gamelist.txt or baseq3)
+  * You must load a level using the map command before players can connect.
+
+
+# Fonts
+
+Spearmint supports using TrueType (.ttf, .ttc), OpenType (.otf, .otc), and Windows (.fon) fonts are all text drawing.
+The fonts are rendered to the game window resolution for high quality text at any resolution.
+
+By default Quake 3 and Team Arena's main fonts Arial Bold and Impact are replaced with Liberation Sans Bold (similar to Arial Bold).
+By default the monospaced Arial Bold console text uses Liberation Mono Regular.
+The fonts license/attribution is included in LIBERATION_LICENSE.txt.
+
+You can use different fonts by copying them into the top-level fonts directory and setting the following console variables to "fonts/example.ttf".
+To use the original game's fonts, set the console variables to "".
+Custom fonts are allowed when connected to pure multiplayer servers.
+
+Common Fonts
+  * cg_consoleFont -- Recommend using a monospaced font for the console -- default: "fonts/LiberationMono-Regular.ttf"
+  * cg_consoleFontSize -- Size of the console font (default: 8)
+  * cg_hudFont -- Used for both Q3 (Arial Bold) and Team Arena (Impact) HUD text -- default: "fonts/LiberationSans-Bold.ttf"
+  * cg_hudFontBorder -- Black outline border width for HUD font (default: 2)
+  * cg_numberFont -- Used for Q3 status bar numbers and score plums (similar to Impact Wide) -- default: ""
+  * cg_numberFontBorder -- Black outline border width for number font (default: 0)
+
+Quake 3 Fonts
+  * ui_menuFont -- Small text (Arial Bold) -- default: "fonts/LiberationSans-Bold.ttf"
+  * ui_menuFontProp -- Large 'proportional width' text (similar to Impact Wide) -- default: ""
+    * The original Q3 prop font has a glow outline effect that isn't available when using a replacement font.
+  * ui_menuFontBanner -- Menu title text with circuits -- default: ""
+
+Team Arena Fonts
+  * ui_menuFont -- Used for all menu text (Impact) -- default: "fonts/LiberationSans-Bold.ttf"
+    * Recommend using Impact font. You can get it from Microsoft Windows at C:\Windows\Fonts\Impact.ttf.
+
+Additional font related console variables
+  * r_fontBorderWidth <pixels> -- Minimum text black border width in pixels for better visibility. Affects all ttf, otf, etc fonts.
+  * r_saveFontData 1 -- Save the rendered fonts to "settings/<gamedir>/fonts/" directory. Note that they are not compatible with Vanilla Team Arena.
+  * cg_forceBitmapFonts 1 -- When enabled, original game fonts are used instead of ttf, otf, etc.
+    * However, it also prevents loading Team Arena's default pre-rendered ttf fonts resulting in Team Arena using Q3's Arial Bold font.
+
+
+# Colorize Crosshair based on Health
+
+Spearmint Quake 3 includes fixed crosshair shaders to support colorizing crosshair with health value.
+Set the cg_crosshairHealth console variable to 1 to enable it.
+
+
+# Renderer
+
+Spearmint includes two renderers, opengl1 and opengl2. The default is opengl1.
+
+The opengl2 renderer uses newer OpenGL features (OpenGL 2+).
+It's mostly on-par with opengl1, but may have some issues. There are various new features though.
+See opengl2-readme.txt for details.
+
+Open the in-game console by pressing "~" (the key left of 1 on US QWERTY layout) or shift+escape.
+Type "com_renderer opengl2; vid_restart" and press enter. Switch back using
+"com_renderer opengl1; vid_restart".
+
+
+# What version of SDL is included?
+
+Windows and GNU/Linux releases include SDL 2.0.8.
+macOS x86/x86_64 uses SDL 2.0.8.
+macOS PPC uses SDL 2.0.1.
+
+
+# Credits
+
+Zack Middleton (main developer)
+Tobias Kuehnhammer (feedback / bug reports / Bot AI fixes)
+And other contributors
+
+Spearmint contains code from;
+
+Quake 3 - id Software
+ioquake3 - ioquake3 contributors
+RTCW SP - Gray Matter Interactive
+RTCW MP - Nerve Software
+Wolfenstein: Enemy Territory - Splash Damage
+Tremulous - Dark Legion Development
+World of Padman - Padworld Entertainment
+ioEF - Thilo Schulz
+NetRadiant's q3map2 - Rudolf Polzer
+OpenArena - OpenArena contributors
+OpenMoHAA - OpenMoHAA contributors
+Xreal (triangle mesh collision) - Robert Beckebans
+
+
