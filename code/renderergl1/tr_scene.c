@@ -471,7 +471,7 @@ RE_AddLightToScene
 =====================
 */
 void RE_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b, qhandle_t hShader ) {
-	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT | REF_SURFACE_DLIGHT, hShader );
+	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT | REF_SURFACE_DLIGHT | REF_FLARE_DLIGHT, hShader );
 }
 
 /*
@@ -481,7 +481,7 @@ RE_AddAdditiveLightToScene
 =====================
 */
 void RE_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b ) {
-	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT | REF_SURFACE_DLIGHT | REF_ADDITIVE_DLIGHT, 0 );
+	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT | REF_SURFACE_DLIGHT | REF_FLARE_DLIGHT | REF_ADDITIVE_DLIGHT, 0 );
 }
 
 /*
@@ -491,7 +491,7 @@ RE_AddVertexLightToScene
 =====================
 */
 void RE_AddVertexLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b ) {
-	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT | REF_SURFACE_DLIGHT | REF_VERTEX_DLIGHT, 0 );
+	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT | REF_SURFACE_DLIGHT | REF_FLARE_DLIGHT | REF_VERTEX_DLIGHT, 0 );
 }
 
 /*
@@ -501,7 +501,7 @@ RE_AddJuniorLightToScene
 =====================
 */
 void RE_AddJuniorLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b ) {
-	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT, 0 );
+	RE_AddDynamicLightToScene( org, radius, intensity, r, g, b, REF_GRID_DLIGHT | REF_FLARE_DLIGHT, 0 );
 }
 
 /*

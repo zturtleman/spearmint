@@ -250,6 +250,10 @@ void RB_AddDlightFlares( void ) {
 	l = backEnd.refdef.dlights;
 
 	for (i=0 ; i<backEnd.refdef.num_dlights ; i++, l++) {
+		if ( !( l->flags & REF_FLARE_DLIGHT ) ) {
+			continue;
+		}
+
 		RB_AddFlare( (void *)l, R_PointFogNum( &backEnd.refdef, l->origin, 0 ), l->origin, l->color, 1.0f, NULL, id++, qtrue, tr.flareShader );
 	}
 }
