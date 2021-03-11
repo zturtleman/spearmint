@@ -1443,6 +1443,8 @@ Q3OBJ = \
   \
   $(B)/client/bsp.o \
   $(B)/client/bsp_q3.o \
+  $(B)/client/bsp_q3ihv.o \
+  $(B)/client/bsp_q3test103.o \
   $(B)/client/bsp_q3test106.o \
   $(B)/client/bsp_fakk.o \
   $(B)/client/bsp_sof2.o \
@@ -2058,6 +2060,8 @@ Q3DOBJ = \
   \
   $(B)/ded/bsp.o \
   $(B)/ded/bsp_q3.o \
+  $(B)/ded/bsp_q3ihv.o \
+  $(B)/ded/bsp_q3test103.o \
   $(B)/ded/bsp_q3test106.o \
   $(B)/ded/bsp_fakk.o \
   $(B)/ded/bsp_sof2.o \
