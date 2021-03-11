@@ -513,23 +513,34 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 
 // convert internal BSP format to BSP for saving to disk
 // ZTM: TODO: convert ET foliage surfaces if Q3 format? how to check if Q3 or RTCW and not ET?
-// ZTM: TODO: handle different default light grid sizes?
 int BSP_SaveQ3( const bspFormat_t *format, const char *name, const bspFile_t *bsp, void **dataOut ) {
 	int				i, j, k;
 	dheader_t		header;
 	byte			*data;
 	int				dataLength;
 	int				numGridPoints;
+	char			worldspawnExtra[1024];
+	size_t			worldspawnExtraLength;
 
 	*dataOut = NULL;
 
 #if 0
 	// ...
 	bsp->checksum = LittleLong (Com_BlockChecksum (data, length));
-	bsp->defaultLightGridSize[0] = LIGHTING_GRIDSIZE_X;
-	bsp->defaultLightGridSize[1] = LIGHTING_GRIDSIZE_Y;
-	bsp->defaultLightGridSize[2] = LIGHTING_GRIDSIZE_Z;
 #endif
+
+	// ZTM: TODO: This isn't needed if worldspawn already has "gridsize".
+	if ( bsp->defaultLightGridSize[0] != LIGHTING_GRIDSIZE_X
+	  || bsp->defaultLightGridSize[1] != LIGHTING_GRIDSIZE_Y
+	  || bsp->defaultLightGridSize[2] != LIGHTING_GRIDSIZE_Z ) {
+		snprintf( worldspawnExtra, sizeof(worldspawnExtra), "\"gridsize\" \"%f %f %f\"\n",
+		             bsp->defaultLightGridSize[0],
+		             bsp->defaultLightGridSize[1],
+		             bsp->defaultLightGridSize[2] );
+	} else {
+		worldspawnExtra[0] = '\0';
+	}
+	worldspawnExtraLength = strlen( worldspawnExtra );
 
 	if ( bsp->numGridArrayPoints ) {
 		numGridPoints = bsp->numGridArrayPoints;
@@ -546,7 +557,7 @@ int BSP_SaveQ3( const bspFormat_t *format, const char *name, const bspFile_t *bs
 
 	dataLength = sizeof( dheader_t );
 
-	AddLump( &header, &dataLength, LUMP_ENTITIES, bsp->entityStringLength, 1 );
+	AddLump( &header, &dataLength, LUMP_ENTITIES, bsp->entityStringLength + worldspawnExtraLength, 1 );
 	AddLump( &header, &dataLength, LUMP_SHADERS, bsp->numShaders, sizeof ( realDshader_t ) );
 	AddLump( &header, &dataLength, LUMP_PLANES, bsp->numPlanes, sizeof ( realDplane_t ) );
 	AddLump( &header, &dataLength, LUMP_NODES, bsp->numNodes, sizeof ( realDnode_t ) );
@@ -571,7 +582,21 @@ int BSP_SaveQ3( const bspFormat_t *format, const char *name, const bspFile_t *bs
 	//
 	// copy and swap and convert data
 	//
-	WriteLump( &header, LUMP_ENTITIES, data, (void *) bsp->entityString, sizeof ( *bsp->entityString ), qfalse ); /* NO SWAP */
+	if ( worldspawnExtraLength && bsp->entityString[0] == '{' && bsp->entityString[1] == '\n' ) {
+		char *out = GetLump( &header, data, LUMP_ENTITIES );
+
+		*out++ = '{';
+		*out++ = '\n';
+
+		strcpy( out, worldspawnExtra );
+		out += worldspawnExtraLength;
+
+		strcpy( out, bsp->entityString+2 );
+	} else if ( worldspawnExtraLength ) {
+		Com_Printf( "ERROR: Unable to add light grid size override. Entity data doesn't start with '{<newline>'!\n" );
+	} else {
+		WriteLump( &header, LUMP_ENTITIES, data, (void *) bsp->entityString, sizeof ( *bsp->entityString ), qfalse ); /* NO SWAP */
+	}
 
 	{
 		realDshader_t *out = GetLump( &header, data, LUMP_SHADERS );
