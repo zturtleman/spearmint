@@ -33,7 +33,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 // Compared to Q3 1.03 BSP format, Q3 IHV format is missing support for misc_model triangle surfaces (LUMP_DRAWINDEXES and firstIndex, numIndexes in surface).
 // TODO: Missing support for foggen and cloudparms shader keywords (and maybe others).
 
-
 // TODO: De-duplicate bsp->shaders. I made a separate one for each brush, brushside, and surface...
 // TODO: Fix cg_drawShaderInfo 1? Shouldn't it work since I set brushSide surfaceNum? Ah, it wants the same shaderNum for brushSide and surface...
 // FIXME: Portal rendering doesn't work. No idea.
@@ -41,6 +40,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "q_shared.h"
 #include "qcommon.h"
 #include "bsp.h"
+
+//#define BSP_DEBUG
 
 #define BSP_IDENT	(('P'<<24)+('S'<<16)+('B'<<8)+'I')
 		// little-endian "IBSP"
@@ -51,7 +52,6 @@ typedef struct {
 	int		fileofs, filelen;
 } lump_t;
 
-                               // 1.03 -> IHV
 #define	LUMP_ENTITIES		0
 #define	LUMP_PLANES			1
 #define	LUMP_NODES			2
@@ -68,10 +68,6 @@ typedef struct {
 #define	LUMP_FOGS			13
 #define	HEADER_LUMPS		14
 
-#define	LUMP_LIGHTGRID		-1
-#define	LUMP_SHADERS		-2
-#define	LUMP_DRAWINDEXES	-3 // 14 -> gone?
-
 typedef struct {
 	int			ident;
 	int			version;
@@ -81,27 +77,17 @@ typedef struct {
 
 typedef struct {
 	float		mins[3], maxs[3];
-	int			unknownZeros[3]; // ZTM: These are always 0
-	int			unknownNegative; // ZTM: In model 0 this is 0. model 1 starts at some negative number (I do not know what it means). After model 1, it goes down 1 for each model.
-	//int			headNode;
-	int			firstSurface, numSurfaces; // FIXME: This goes past end of surfaces in q3test1.bsp (BAD) but in q3test2.bsp it goes up to number of surfaces (OK).
-	//int			firstBrush, numBrushes; // ZTM: Did I see a comment somewhere that this is used for attaching fog?
+	int			origin[3]; // ZTM: Always 0,0,0.
+	int			nodeNum; // ZTM: In model 0 this is 0. model 1 starts at some negative number (a leaf). After model 1, it goes down 1 for each model.
+	int			firstSurface, numSurfaces; // ZTM: NOTE: This goes past end of surfaces in q3test 1.05 q3test1.bsp (BAD) but in q3test2.bsp it goes up to number of surfaces (OK). It's correct in all IHV and q3test 1.03 maps.
 } realDmodel_t;
-
-#if 0
-typedef struct {
-	char		shader[MAX_QPATH];
-	int			surfaceFlags;
-	int			contentFlags;
-} realDshader_t;
-#endif
 
 // planes x^1 is allways the opposite of plane x
 
 typedef struct {
 	float		normal[3];
 	float		dist;
-	int			unknown; // ZTM: this might be 'type' like in q2 bsp -- I haven't tried to check
+	int			type; // ZTM: FIXME: Confirm this is type like in Q2 BSP.
 } realDplane_t;
 
 typedef struct {
@@ -127,21 +113,18 @@ typedef struct {
 
 typedef struct {
 	int			planeNum;			// positive plane side faces out of the leaf
-	//int			shaderNum;
-	int			surfaceFlags; // ZTM: looks right
+	int			surfaceFlags;
 } realDbrushside_t;
 
 typedef struct {
 	int			firstSide;
 	int			numSides;
-	//int			shaderNum;		// the shader that determines the contents flags
-	int			contentFlags; // ZTM: looks right
+	int			contentFlags;
 } realDbrush_t;
 
 typedef struct {
 	char		shader[MAX_QPATH];
 	int			brushNum;
-	//int			visibleSide;	// the brush side that ray tests need to clip against (-1 == none)
 } realDfog_t;
 
 typedef struct {
@@ -165,25 +148,16 @@ typedef enum {
 #endif
 
 typedef struct {
-	//int			shaderNum;
 	char		shader[MAX_QPATH];
 	int			fogNum;
 
-	//int			surfaceType;	// ZTM: FIXME: This is wrong. Is it shaderNum? -- everything else seems to be correct.
-	int			brushSideNum; // ZTM: FIXME: unverified
+	int			brushSideNum;
 
 	int			firstVert;
 	int			numVerts; // ydnar: num verts + foliage origins (for cleaner lighting code in q3map)
 
-#if 0
-	int			firstIndex;
-	int			numIndexes; // ZTM: 0 = planar triangle fan in q3test 1.03/1.05
-#endif
-
-#if 1
 	int			patchWidth; // ydnar: num foliage instances
 	int			patchHeight; // ydnar: num foliage mesh verts
-#endif
 
 	int			lightmapNum;
 	int			lightmapX, lightmapY;
@@ -191,11 +165,6 @@ typedef struct {
 
 	vec3_t		lightmapOrigin;
 	vec3_t		lightmapVecs[3];	// for patches, [0] and [1] are lodbounds -- ZTM: This comment does not appear to be true for q3test 1.03/1.05
-
-#if 0
-	int			patchWidth; // ydnar: num foliage instances
-	int			patchHeight; // ydnar: num foliage mesh verts
-#endif
 } realDsurface_t;
 
 #define VIS_HEADER 8
@@ -210,6 +179,7 @@ typedef struct {
 */
 
 static int GetLumpElements( dheader_t *header, int lump, int size ) {
+#ifdef BSP_DEBUG
 	int i;
 
 	if ( 0 && size > 1 && ( lump < 0 || ( header->lumps[ lump ].filelen % size ) ) ) {
@@ -227,6 +197,7 @@ static int GetLumpElements( dheader_t *header, int lump, int size ) {
 
 	if ( lump < 0 )
 		return 0;
+#endif
 
 	/* check for odd size */
 	if ( header->lumps[ lump ].filelen % size ) {
@@ -234,7 +205,9 @@ static int GetLumpElements( dheader_t *header, int lump, int size ) {
 		return 0;
 	}
 
-	//Com_Printf( "GetLumpElements: lump %d has %d elements\n", lump, header->lumps[ lump ].filelen / size );
+#ifdef BSP_DEBUG
+	Com_Printf( "GetLumpElements: lump %d has %d elements\n", lump, header->lumps[ lump ].filelen / size );
+#endif
 
 	/* return element count */
 	return header->lumps[ lump ].filelen / size;
@@ -261,91 +234,6 @@ static void *GetLump( dheader_t *header, const void *src, int lump ) {
 	return (void*)( (byte*) src + header->lumps[ lump ].fileofs );
 }
 
-#define MAX_LUMPS 64
-static void BSP_Unknown( const char *name, const void *data, int length ) {
-	const byte *data_p;
-	int		headerSize;
-	lump_t	lumps[MAX_LUMPS];
-	int		numLumps = 0;
-	int		bestAsciiLump = 0, bestAsciiDist = 99999;
-	int		i, j, k;
-
-	//if ( !com_developer->integer )
-	//	return;
-
-	// all BSP formats are assumed to have ident and version
-	data_p = (const byte*)data;
-	data_p += 4; // ident
-	data_p += 4; // version
-	//data_p += 4; // fakk/alice/ef2 have a checksum.
-
-	headerSize = (int)(data_p - (const byte*)data);
-
-	for ( i = 0; i < MAX_LUMPS; i++ ) {
-#if 0 // NOTE: call of duty as flipped length and offset
-		lumps[i].filelen = LittleLong( *(int*)data_p ); data_p += 4;
-		lumps[i].fileofs = LittleLong( *(int*)data_p ); data_p += 4;
-#else
-		lumps[i].fileofs = LittleLong( *(int*)data_p ); data_p += 4;
-		lumps[i].filelen = LittleLong( *(int*)data_p ); data_p += 4;
-#endif
-
-		// if lump starts in header, has negative size, goes beyond end of data, or off+len causes int overflow
-		if ( lumps[i].fileofs < headerSize || lumps[i].filelen < 0 || lumps[i].fileofs + lumps[i].filelen > length
-			|| lumps[i].fileofs + lumps[i].filelen < lumps[i].fileofs ) {
-			// BAD LUMP
-			Com_Printf("DEBUG: Bad Lump %d: off: %d, len: %d\n", i, lumps[i].fileofs, lumps[i].filelen );
-			data_p -= 8;
-			break;
-		}
-
-		// if this lump over lap any perious lumps, it's invalid
-		for ( j = 0; j < i; j++ ) {
-			if ( ( lumps[i].fileofs > lumps[j].fileofs && lumps[i].fileofs < lumps[j].fileofs + lumps[j].filelen )
-				|| ( lumps[j].fileofs > lumps[i].fileofs && lumps[j].fileofs < lumps[i].fileofs + lumps[i].filelen ) ) {
-				Com_Printf("DEBUG: Bad Lump %d: off: %d, len: %d (over laps lump %d)\n", i, lumps[i].fileofs, lumps[i].filelen, j );
-				break;
-			}
-		}
-
-		if ( j != i )
-			break;
-
-		if ( i > 0 && lumps[i].fileofs < lumps[i-1].fileofs+lumps[i-1].filelen ) {
-			// not an error, might be useful to know?
-			Com_Printf("DEBUG: Lump %d before lump %d\n", i, i-1 );
-		}
-		Com_Printf("DEBUG: Lump %d: off: %d, len: %d\n", i, lumps[i].fileofs, lumps[i].filelen );
-		numLumps++;
-	}
-
-	Com_Printf("DEBUG: %s appears to have %d lumps\n", name, numLumps );
-
-	// find entity lump
-	for ( i = 0; i < HEADER_LUMPS; i++ ) {
-		char *lumpdata = (void*)( (byte*) data + lumps[ i ].fileofs ); // GetLump( &header, data, i );
-
-		if ( lumps[ i ].filelen <= 0 )
-			continue;
-
-		k = 0;
-		for ( j = 0; j < lumps[ i ].filelen; j++ ) {
-			if ( isprint( lumpdata[j] ) ) {
-				k++;
-			}
-		}
-
-		if ( k > lumps[ i ].filelen * 0.75f && lumps[ i ].filelen - k < bestAsciiDist ) {
-			bestAsciiLump = i;
-			bestAsciiDist = lumps[ i ].filelen - k;
-		}
-
-		Com_Printf("DEBUG: Lump %d is %d / %d ASCII\n", i, k, lumps[ i ].filelen );
-	}
-
-	Com_Printf("DEBUG: Best Entities Guess: Lump %d is %d / %d ASCII\n", bestAsciiLump, lumps[ bestAsciiLump ].filelen - bestAsciiDist, lumps[ bestAsciiLump ].filelen );
-}
-
 bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const void *data, int length ) {
 	int				i, j, k;
 	dheader_t		header;
@@ -356,8 +244,6 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 	if ( header.ident != format->ident || header.version != format->version ) {
 		return NULL;
 	}
-
-	BSP_Unknown( name, data, length );
 
 	bsp = malloc( sizeof ( bspFile_t ) );
 	Com_Memset( bsp, 0, sizeof ( bspFile_t ) );
@@ -375,8 +261,8 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 	bsp->entityStringLength = GetLumpElements( &header, LUMP_ENTITIES, 1 );
 	bsp->entityString = malloc( bsp->entityStringLength );
 
-	bsp->numShaders = 0; //GetLumpElements( &header, LUMP_SHADERS, sizeof ( realDshader_t ) );
-	bsp->shaders = NULL; //malloc( bsp->numShaders * sizeof ( *bsp->shaders ) );
+	bsp->numShaders = 0;
+	bsp->shaders = NULL;
 
 	bsp->numPlanes = GetLumpElements( &header, LUMP_PLANES, sizeof ( realDplane_t ) );
 	bsp->planes = malloc( bsp->numPlanes * sizeof ( *bsp->planes ) );
@@ -405,8 +291,9 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 	bsp->numDrawVerts = GetLumpElements( &header, LUMP_DRAWVERTS, sizeof ( realDrawVert_t ) );
 	bsp->drawVerts = malloc( bsp->numDrawVerts * sizeof ( *bsp->drawVerts ) );
 
-	bsp->numDrawIndexes = GetLumpElements( &header, LUMP_DRAWINDEXES, sizeof ( int ) );
-	bsp->drawIndexes = malloc( bsp->numDrawIndexes * sizeof ( *bsp->drawIndexes ) );
+	// These are increased / realloced to handle generated triangle fans for MST_PLANAR.
+	bsp->numDrawIndexes = 0;
+	bsp->drawIndexes = NULL;
 
 	bsp->numFogs = GetLumpElements( &header, LUMP_FOGS, sizeof ( realDfog_t ) );
 	bsp->fogs = malloc( bsp->numFogs * sizeof ( *bsp->fogs ) );
@@ -417,8 +304,8 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 	bsp->numLightmaps = GetLumpElements( &header, LUMP_LIGHTMAPS, 128 * 128 * 3 );
 	bsp->lightmapData = malloc( bsp->numLightmaps * 128 * 128 * 3 );
 
-	bsp->numGridPoints = GetLumpElements( &header, LUMP_LIGHTGRID, 8 );
-	bsp->lightGridData = malloc( bsp->numGridPoints * 8 );
+	bsp->numGridPoints = 0;
+	bsp->lightGridData = NULL;
 
 	bsp->visibilityLength = GetLumpElements( &header, LUMP_VISIBILITY, 1 ) - VIS_HEADER;
 	if ( bsp->visibilityLength > 0 )
@@ -448,10 +335,13 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 			}
 
 			out->dist = LittleFloat (in->dist);
+			//out->type = LittleLong (in->type);
 
+#ifdef BSP_DEBUG
 			if ( i < 3 || i > bsp->numPlanes - 4 ) {
 				Com_Printf( "DEBUG: Plane %d, normal %f, %f, %f, dist %f\n", i, out->normal[0], out->normal[1], out->normal[2], out->dist );
 			}
+#endif
 		}
 	}
 
@@ -471,24 +361,30 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 				out->maxs[j] = LittleLong( in->maxs[j] );
 			}
 
+#ifdef BSP_DEBUG
 			if ( i < 3 || i > bsp->numNodes - 4 ) {
 				Com_Printf( "DEBUG: Node %d, plane %d, children %d, %d, mins %d, %d, %d, maxs %d, %d, %d\n",
 					i, out->planeNum, out->children[0], out->children[1], out->mins[0], out->mins[1], out->mins[2],
 					out->maxs[0], out->maxs[1], out->maxs[2] );
 			}
+#endif
 		}
 	}
 
 	CopyLump( &header, LUMP_LEAFSURFACES, data, (void *) bsp->leafSurfaces, sizeof ( *bsp->leafSurfaces ), qtrue );
 	CopyLump( &header, LUMP_LEAFBRUSHES, data, (void *) bsp->leafBrushes, sizeof ( *bsp->leafBrushes ), qtrue );
 
+#ifdef BSP_DEBUG
 	int maxUsedCluster = 0;
+#endif
 	{
 		realDleaf_t *in = GetLump( &header, data, LUMP_LEAFS );
 		dleaf_t *out = bsp->leafs;
+#ifdef BSP_DEBUG
 		int maxUsedLeafBrush = 0, maxUsedLeafSurface = 0;
 
 		Com_Printf("DEBUG: Num leafs %d, leaf brushes %d, leaf surfaces %d\n", bsp->numLeafs, bsp->numLeafBrushes, bsp->numLeafSurfaces );
+#endif
 
 		for ( i = 0; i < bsp->numLeafs; i++, in++, out++ ) {
 			out->cluster = LittleLong (in->cluster);
@@ -504,6 +400,7 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 			out->firstLeafSurface = LittleLong (in->firstLeafSurface);
 			out->numLeafSurfaces = LittleLong (in->numLeafSurfaces);
 
+#ifdef BSP_DEBUG
 			if ( i < 3 || i > bsp->numLeafs - 4 ) {
 				Com_Printf( "DEBUG: Leaf %d, mins %d, %d, %d, maxs %d, %d, %d, cluster %d, area %d, leaf brush first %d (brushNum %d), count %d, leaf surface first %d (surfaceNum %d), count %d\n",
 					i, out->mins[0], out->mins[1], out->mins[2],
@@ -525,8 +422,10 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 			if ( maxUsedLeafSurface < out->firstLeafSurface + out->numLeafSurfaces ) {
 				maxUsedLeafSurface = out->firstLeafSurface + out->numLeafSurfaces;
 			}
+#endif
 		}
 
+#ifdef BSP_DEBUG
 		if ( maxUsedLeafBrush != bsp->numLeafBrushes ) {
 			Com_Printf("WARNING: highest used leaf brush %d, max %d\n", maxUsedLeafBrush, bsp->numLeafBrushes );
 		}
@@ -534,35 +433,52 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 		if ( maxUsedLeafSurface != bsp->numLeafSurfaces ) {
 			Com_Printf("WARNING: highest used leaf surface %d, max %d\n", maxUsedLeafSurface, bsp->numLeafSurfaces );
 		}
+#endif
 	}
 
 	{
 		realDmodel_t *in = GetLump( &header, data, LUMP_MODELS );
 		dmodel_t *out = bsp->submodels;
+#ifdef BSP_DEBUG
 		int maxUsedSurface = 0, maxUsedBrush = 0;
 
 		Com_Printf("DEBUG: Num BSP models %d\n", bsp->numSubmodels );
+#endif
 		for ( i = 0; i < bsp->numSubmodels; i++, in++, out++ ) {
 			for ( j = 0; j < 3; j++ ) {
 				out->mins[j] = LittleFloat( in->mins[j] );
 				out->maxs[j] = LittleFloat( in->maxs[j] );
 			}
 
-			// FIXME: this goes past end of surfaces list in q3test1.bsp and causes crashes.
-			//out->firstSurface = LittleLong (in->firstSurface);
-			//out->numSurfaces = LittleLong (in->numSurfaces);
+			// ZTM: NOTE: This goes past end of surfaces list in q3test 1.05 q3test1.bsp so ignore it and determine another way (need to do it for brushes anyway).
+			out->firstSurface = LittleLong (in->firstSurface);
+			out->numSurfaces = LittleLong (in->numSurfaces);
 
-			// FIXME: How do I set these for submodel[0] (world)? Lazy ass way is probably to use submodel[1].first - 1
+#ifdef BSP_DEBUG
+			Com_Printf("DEBUG: Model %d: file firstSurface %d, numSurfaces %d\n", i, out->firstSurface, out->numSurfaces );
+#endif
+
 			out->firstSurface = 0;
 			out->numSurfaces = 0;
 			out->firstBrush = 0;
-			out->numBrushes =  0;
+			out->numBrushes = 0;
 
-			int nodeNum = LittleLong (in->unknownNegative);
+			// Set world to all surfaces/brushes and reduce it later to exclude sub-models.
+			if ( i == 0 ) {
+				out->firstSurface = 0;
+				out->numSurfaces = bsp->numSurfaces;
+				out->firstBrush = 0;
+				out->numBrushes = bsp->numBrushes;
+			}
+
+			int nodeNum = LittleLong (in->nodeNum);
 			int leafNum = -1-nodeNum;
 			if ( nodeNum < 0 && leafNum >= 0 && leafNum < bsp->numLeafs ) {
 				// Assume contiguous brushNums. They may be in reverse order though.
-				int first, last, order;
+				int first, last;
+#ifdef BSP_DEBUG
+				int order;
+#endif
 
 				first = bsp->leafBrushes[bsp->leafs[leafNum].firstLeafBrush];
 				last = bsp->leafBrushes[bsp->leafs[leafNum].firstLeafBrush + bsp->leafs[leafNum].numLeafBrushes - 1];
@@ -570,6 +486,12 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 				out->firstBrush = MIN( first, last );
 				out->numBrushes = bsp->leafs[leafNum].numLeafBrushes;
 
+				// Assume world comes first instead of checking all leafs of node 0.
+				if ( out->numBrushes > 0 && out->firstBrush < bsp->submodels[0].numBrushes ) {
+					bsp->submodels[0].numBrushes = out->firstBrush;
+				}
+
+#ifdef BSP_DEBUG
 				order = ( first < last ) ? 1 : -1;
 				for ( k = 1; k < bsp->leafs[leafNum].numLeafBrushes; k++ ) {
 					int index = bsp->leafBrushes[bsp->leafs[leafNum].firstLeafBrush + k];
@@ -579,6 +501,7 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 						Com_Printf( "WARNING: Submodel %d has non-contiguous brush nums (first brushNum %d, found %d but expected %d)\n", i, out->firstBrush, index, lastIndex + order );
 					}
 				}
+#endif
 
 				// Assume contiguous surfaceNums. They are in reverse order for whatever reason.
 				first = bsp->leafSurfaces[bsp->leafs[leafNum].firstLeafSurface];
@@ -587,6 +510,12 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 				out->firstSurface = MIN( first, last );
 				out->numSurfaces = bsp->leafs[leafNum].numLeafSurfaces;
 
+				// Assume world comes first instead of checking all leafs of node 0.
+				if ( out->numSurfaces > 0 && out->firstSurface < bsp->submodels[0].numSurfaces ) {
+					bsp->submodels[0].numSurfaces = out->firstSurface;
+				}
+
+#ifdef BSP_DEBUG
 				order = ( first < last ) ? 1 : -1;
 				for ( k = 1; k < bsp->leafs[leafNum].numLeafSurfaces; k++ ) {
 					int index = bsp->leafSurfaces[bsp->leafs[leafNum].firstLeafSurface + k];
@@ -596,8 +525,10 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 						Com_Printf( "WARNING: Submodel %d has non-contiguous surface nums (first surfaceNum %d, found %d but expected %d)\n", i, out->firstSurface, index, lastIndex + order );
 					}
 				}
+#endif
 			}
 
+#ifdef BSP_DEBUG
 			if ( i < 3 || i > bsp->numSubmodels - 4 ) {
 				Com_Printf( "DEBUG: Model %d, mins %f, %f, %f, maxs %f, %f, %f, node %d, surfaces first %d, count %d, brushes first %d, count %d\n",
 					i, out->mins[0], out->mins[1], out->mins[2],
@@ -612,7 +543,11 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 
 			if ( maxUsedBrush < out->firstBrush + out->numBrushes )
 				maxUsedBrush = out->firstBrush + out->numBrushes;
+#endif
 		}
+
+#ifdef BSP_DEBUG
+		Com_Printf("DEBUG: Model 0: updated surfaces first %d, count %d, brushes first %d, count %d\n", bsp->submodels[0].firstSurface, bsp->submodels[0].numSurfaces, bsp->submodels[0].firstBrush, bsp->submodels[0].numBrushes );
 
 		if ( maxUsedSurface != bsp->numSurfaces ) {
 			Com_Printf("WARNING: highest used model surface %d, max %d\n", maxUsedSurface, bsp->numSurfaces );
@@ -621,14 +556,17 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 		if ( maxUsedBrush != bsp->numBrushes ) {
 			Com_Printf("WARNING: highest used model brush %d, max %d\n", maxUsedBrush, bsp->numBrushes );
 		}
+#endif
 	}
 
 	{
 		realDbrush_t *in = GetLump( &header, data, LUMP_BRUSHES );
 		dbrush_t *out = bsp->brushes;
+#ifdef BSP_DEBUG
 		int maxUsedSide = 0;
 
 		Com_Printf("DEBUG: Num BSP brushes %d\n", bsp->numBrushes );
+#endif
 
 		for ( i = 0; i < bsp->numBrushes; i++, in++, out++ )
 		{
@@ -645,11 +583,12 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 			for ( j = 0; j < out->numSides; j++ ) {
 				int shaderNum = bsp->numBrushes + out->firstSide + j; // TODO: less shaders please
 
-				// could XOR all side surface flags to brush surfaceFlags? I'm not sure what q3map2 does.
+				// TODO: could XOR all side surface flags to brush surfaceFlags? I'm not sure what q3map2 does.
 
 				bsp->shaders[shaderNum].contentFlags = contentFlags;
 			}
 
+#ifdef BSP_DEBUG
 			if ( maxUsedSide < out->firstSide + out->numSides )
 				maxUsedSide = out->firstSide + out->numSides;
 
@@ -657,19 +596,24 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 				Com_Printf( "DEBUG: Brush %d, first side %d, num sides %d, contentFlags 0x%x\n",
 					i, out->firstSide, out->numSides, contentFlags );
 			}
+#endif
 		}
 
+#ifdef BSP_DEBUG
 		if ( maxUsedSide != bsp->numBrushSides ) {
 			Com_Printf("WARNING: highest used brush side %d, max %d\n", maxUsedSide, bsp->numBrushSides );
 		}
+#endif
 	}
 
 	{
 		realDbrushside_t *in = GetLump( &header, data, LUMP_BRUSHSIDES );
 		dbrushside_t *out = bsp->brushSides;
+#ifdef BSP_DEBUG
 		int maxUsedPlane = 0;
 
 		Com_Printf("DEBUG: Num BSP brush sides %d\n", bsp->numBrushSides );
+#endif
 
 		for ( i = 0; i < bsp->numBrushSides; i++, in++, out++ ) {
 			out->planeNum = LittleLong (in->planeNum);
@@ -682,6 +626,7 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 			bsp->shaders[out->shaderNum].surfaceFlags = surfaceFlags;
 			// contentFlags is already set
 
+#ifdef BSP_DEBUG
 			if ( maxUsedPlane < out->planeNum )
 				maxUsedPlane = out->planeNum;
 
@@ -689,18 +634,23 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 				Com_Printf( "DEBUG: Brush side %d, plane num %d, surfaceFlags 0x%x\n",
 					i, out->planeNum, surfaceFlags );
 			}
+#endif
 		}
 
+#ifdef BSP_DEBUG
 		if ( maxUsedPlane != bsp->numPlanes ) {
 			Com_Printf("WARNING: highest used brush side planenum %d, max %d\n", maxUsedPlane, bsp->numPlanes );
 		}
+#endif
 	}
 
 	{
 		realDrawVert_t *in = GetLump( &header, data, LUMP_DRAWVERTS );
 		drawVert_t *out = bsp->drawVerts;
 
+#ifdef BSP_DEBUG
 		Com_Printf("DEBUG: Num BSP draw verts %d\n", bsp->numDrawVerts );
+#endif
 
 		for ( i = 0; i < bsp->numDrawVerts; i++, in++, out++ ) {
 			for ( j = 0 ; j < 3 ; j++ ) {
@@ -717,55 +667,56 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 				out->color[j] = in->color[j];
 			}
 
+#ifdef BSP_DEBUG
 			if ( i < 3 || i > bsp->numDrawVerts - 4 ) {
 				Com_Printf( "DEBUG: Draw vert %d, xyz %f %f %f, normal %f %f %f, st %f %f\n",
 					i, out->xyz[0], out->xyz[1], out->xyz[2], out->normal[0], out->normal[1], out->normal[2], out->st[0], out->st[1] );
 			}
+#endif
 		}
 	}
-
-	CopyLump( &header, LUMP_DRAWINDEXES, data, (void *) bsp->drawIndexes, sizeof ( *bsp->drawIndexes ), qtrue );
 
 	{
 		realDfog_t *in = GetLump( &header, data, LUMP_FOGS );
 		dfog_t *out = bsp->fogs;
 
+#ifdef BSP_DEBUG
 		Com_Printf("DEBUG: Num BSP fogs %d\n", bsp->numFogs );
+#endif
 
 		for ( i = 0; i < bsp->numFogs; i++, in++, out++ ) {
 			Q_strncpyz( out->shader, in->shader, sizeof ( out->shader ) );
 			out->brushNum = LittleLong (in->brushNum);
-			// ZTM: Hard code visibleSide to top. I'm unsure if this is the correct handling.
+			// ZTM: FIXME: Hard code visibleSide to top. I'm unsure if this is the correct handling.
 			out->visibleSide = 5; //LittleLong (in->visibleSide);
 
+#ifdef BSP_DEBUG
 			if ( i < 3 ) {
 				Com_Printf( "DEBUG: Fog %d, shader %s, brush num %d\n",
 					i, out->shader, out->brushNum );
 			}
+#endif
 		}
 	}
 
 	{
 		realDsurface_t *in = GetLump( &header, data, LUMP_SURFACES );
 		dsurface_t *out = bsp->surfaces;
+#ifdef BSP_DEBUG
 		int maxUsedSide = 0;
 
 		Com_Printf("DEBUG: Num BSP surfaces %d, num lightmaps %d\n", bsp->numSurfaces, bsp->numLightmaps );
+#endif
 
 		for ( i = 0; i < bsp->numSurfaces; i++, in++, out++ ) {
-			out->shaderNum = 0; //LittleLong (in->shaderNum);	// ZTM: FIXME
+			//out->shaderNum = 0;
 			out->fogNum = LittleLong (in->fogNum);
-			//out->surfaceType = LittleLong (in->surfaceType);
+			//out->surfaceType = MST_BAD;
 			int brushSideNum = LittleLong (in->brushSideNum);
 			out->firstVert = LittleLong (in->firstVert);
 			out->numVerts = LittleLong (in->numVerts);
-#if 1
 			out->firstIndex = 0;
 			out->numIndexes = 0;
-#else
-			out->firstIndex = LittleLong (in->firstIndex);
-			out->numIndexes = LittleLong (in->numIndexes);
-#endif
 			out->lightmapNum = LittleLong (in->lightmapNum);
 			out->lightmapX = LittleLong (in->lightmapX);
 			out->lightmapY = LittleLong (in->lightmapY);
@@ -825,11 +776,8 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 						maxs[2] = point[2];
 					}
 				}
-			} else if ( out->numIndexes != 0 ) {
-				out->surfaceType = MST_TRIANGLE_SOUP;
 			} else {
 				// Implicit triangle fan.
-				// TODO: Add the indexes in this file instead of requiring changes to tr_bsp.c
 				out->surfaceType = MST_PLANAR;
 			}
 
@@ -837,6 +785,7 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 			strncpy( bsp->shaders[out->shaderNum].shader, in->shader, 64 );
 
 			if ( brushSideNum >= 0 && brushSideNum <= bsp->numBrushSides ) {
+				// HACK
 				// FIXME: Assuming that brushSides contains surfaceFlags, it should be correct to set it here.
 				//        However it prevents drawing some curve patches. Did q3test-1.03/1.05 use different SURF_NODRAW value?
 				//        Q2 and Q3 final use the same SURF_NODRAW (0x80) value though.
@@ -848,25 +797,27 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 				bsp->shaders[out->shaderNum].surfaceFlags = bsp->shaders[bsp->brushSides[brushSideNum].shaderNum].surfaceFlags;
 				bsp->shaders[out->shaderNum].contentFlags = bsp->shaders[bsp->brushSides[brushSideNum].shaderNum].contentFlags;
 
-				// misc_models all share the same brush side(?), even with separate shaders.
+				// misc_models all share the same brush side, even with separate shaders.
 				if ( out->surfaceType != MST_TRIANGLE_SOUP ) {
 					if ( bsp->brushSides[brushSideNum].surfaceNum == -1 ) {
 						bsp->brushSides[brushSideNum].surfaceNum = i;
 						strncpy( bsp->shaders[bsp->brushSides[brushSideNum].shaderNum].shader, in->shader, 64 );
-						out->shaderNum = bsp->brushSides[brushSideNum].shaderNum; // TMP: use the same shader num so that cg_drawShaderInfo 1 works?
+						out->shaderNum = bsp->brushSides[brushSideNum].shaderNum; // FIXME: TMP: use the same shader num so that cg_drawShaderInfo 1 works?
 					} else {
 						strcpy( bsp->shaders[bsp->brushSides[brushSideNum].shaderNum].shader, "*default" );
+#ifdef BSP_DEBUG
 						Com_Printf( "DEBUG: Surface %d: Uses the same brush side num (%d) as surface %d\n", i, brushSideNum, bsp->brushSides[brushSideNum].surfaceNum );
+#endif
 					}
 				}
 			} else {
-				Com_Printf( "DEBUG: Surface %d: Invalid brush side num %d\n", i, brushSideNum );
+				Com_Printf( "WARNING: BSP surface %d: Invalid brush side num %d of %d\n", i, brushSideNum, bsp->numBrushSides );
 			}
 
+#ifdef BSP_DEBUG
 			if ( maxUsedSide < brushSideNum )
 				maxUsedSide = brushSideNum;
 
-#if 1
 			if ( i < 20/*3*/ || i > bsp->numSurfaces - 4 /*|| out->numIndexes != 0*/ ) {
 				Com_Printf( "DEBUG: Surface %d, shader %s, fogNum %d, surfaceType %d, firstVert %d, numVerts %d, firstIndex %d, numIndexes %d, lightmapNum %d, X %d, Y %d, W %d, H %d\n",
 					i, in->shader, out->fogNum, out->surfaceType, out->firstVert, out->numVerts, out->firstIndex, out->numIndexes, out->lightmapNum, out->lightmapX, out->lightmapY, out->lightmapWidth, out->lightmapHeight );
@@ -876,7 +827,7 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 				Com_Printf( "    lightmapVecs[2]: %f, %f, %f\n", out->lightmapVecs[2][0], out->lightmapVecs[2][1], out->lightmapVecs[2][2] );
 				Com_Printf( "    patchWidth %d, patchHeight %d\n", out->patchWidth, out->patchHeight );
 
-#if 0 // these don't make sense, though that assumes q3test even used the same surface flag values
+#if 0
 				Com_Printf("    surfacetype is flags?" );
 				if ( out->surfaceType & SURF_NODAMAGE ) {
 					Com_Printf( " NODAMAGE" );
@@ -948,22 +899,20 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 			if ( out->fogNum < -1 || out->fogNum >= bsp->numFogs ) {
 				Com_Printf( "DEBUG: Surface %d: Invalid fog num: fogNum %d, max fogs %d\n", i, out->fogNum, bsp->numFogs );
 			}
-#if 0
-			// ZTM: Surface type points to wrong data. Maybe it's brush side number?
 			if ( out->surfaceType < 0 || out->surfaceType >= MST_FOLIAGE ) {
 				Com_Printf( "DEBUG: Surface %d: Invalid surface type %d\n", i, out->surfaceType );
 			}
 #endif
-#endif
 		}
 
+#ifdef BSP_DEBUG
 		if ( maxUsedSide != bsp->numBrushSides ) {
 			Com_Printf("WARNING: highest used surface brushside? %d, max %d\n", maxUsedSide, bsp->numBrushSides );
 		}
+#endif
 	}
 
 	CopyLump( &header, LUMP_LIGHTMAPS, data, (void *) bsp->lightmapData, sizeof ( *bsp->lightmapData ), qfalse ); /* NO SWAP */
-	CopyLump( &header, LUMP_LIGHTGRID, data, (void *) bsp->lightGridData, sizeof ( *bsp->lightGridData ), qfalse ); /* NO SWAP */
 
 	if ( bsp->visibilityLength )
 	{
@@ -972,9 +921,45 @@ bspFile_t *BSP_LoadQ3IHV( const bspFormat_t *format, const char *name, const voi
 		bsp->numClusters = LittleLong( ((int *)in)[0] );
 		bsp->clusterBytes = LittleLong( ((int *)in)[1] );
 
-		//Com_Printf( "DEBUG: visability numClusters %d, clusterBytes %d, length %d (max leaf cluster %d)\n", bsp->numClusters, bsp->clusterBytes, bsp->visibilityLength, maxUsedCluster );
+#ifdef BSP_DEBUG
+		Com_Printf( "DEBUG: visability numClusters %d, clusterBytes %d, length %d (max leaf cluster %d)\n", bsp->numClusters, bsp->clusterBytes, bsp->visibilityLength, maxUsedCluster );
+#endif
 
 		Com_Memcpy( bsp->visibility, in + VIS_HEADER, bsp->visibilityLength ); /* NO SWAP */
+	}
+
+	// Generate triangle fan indexes.
+	int extraIndexes = 0;
+	for ( i = 0; i < bsp->numSurfaces; i++ ) {
+		if ( bsp->surfaces[i].surfaceType == MST_PLANAR && bsp->surfaces[i].numIndexes == 0 ) {
+			int numTris = bsp->surfaces[i].numVerts - 2;
+
+			extraIndexes += numTris * 3;
+		}
+	}
+
+	if ( extraIndexes ) {
+		int firstIndex = bsp->numDrawIndexes;
+		int *newIndexes = realloc( bsp->drawIndexes, ( bsp->numDrawIndexes + extraIndexes ) * sizeof( int ) );
+
+		bsp->drawIndexes = newIndexes;
+		bsp->numDrawIndexes += extraIndexes;
+
+		for ( i = 0; i < bsp->numSurfaces; i++ ) {
+			if ( bsp->surfaces[i].surfaceType == MST_PLANAR && bsp->surfaces[i].numIndexes == 0 ) {
+				int numTris = bsp->surfaces[i].numVerts - 2;
+				int *faceIndexes = &bsp->drawIndexes[firstIndex];
+
+				bsp->surfaces[i].firstIndex = firstIndex;
+				bsp->surfaces[i].numIndexes = numTris * 3;
+
+				for ( j = 0 ; j < numTris; j++ ) {
+					faceIndexes[j*3 + 0] = 0;
+					faceIndexes[j*3 + 1] = j+1;
+					faceIndexes[j*3 + 2] = j+2;
+				}
+			}
+		}
 	}
 
 	return bsp;
