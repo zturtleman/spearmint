@@ -232,6 +232,7 @@ extern bspFormat_t darksBspFormat;
 
 // bsp_q3test106.c
 extern bspFormat_t q3Test106BspFormat;
+extern bspFormat_t s3quake3BspFormat;
 
 // bsp_fakk.c
 extern bspFormat_t fakkBspFormat;
