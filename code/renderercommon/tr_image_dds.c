@@ -514,8 +514,10 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 	LL(hdr->dwSurfaceFlags);
 	LL(hdr->dwCubemapFlags);
 
-	if( hdr->dwSize != sizeof( DDS_HEADER ) ||
-	    hdr->ddspf.dwSize != sizeof( DDS_PIXELFORMAT ) ) {
+	// Iron Grip: Warlord incorrectly set size as the file length.
+	if( ( hdr->dwSize != sizeof( DDS_HEADER ) &&
+	      !( hdr->dwSize == length && length >= sizeof( DDS_HEADER ) ) )
+	  || hdr->ddspf.dwSize != sizeof( DDS_PIXELFORMAT ) ) {
 		ri.Error( ERR_DROP, "LoadDDS: DDS header missing (%s)", name );
 	}
 
