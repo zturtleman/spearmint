@@ -49,7 +49,7 @@ Spearmint contains code from;
 * Wolfenstein: Enemy Territory - Splash Damage
 * Tremulous - Dark Legion Development
 * World of Padman - Padworld Entertainment
-* [ioquake3 Elite Force MP patch](http://thilo.kickchat.com/efport-progress/) - Thilo Schulz
+* [ioEF engine](http://thilo.tjps.eu/efport-progress/) - Thilo Schulz
 * NetRadiant's q3map2 - Rudolf Polzer
 * OpenArena - OpenArena contributors
 * OpenMoHAA - OpenMoHAA contributors
