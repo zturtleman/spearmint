@@ -229,6 +229,7 @@ typedef struct bspFormat_s {
 extern bspFormat_t quake3BspFormat;
 extern bspFormat_t wolfBspFormat;
 extern bspFormat_t darksBspFormat;
+extern bspFormat_t warlordBspFormat;
 
 // bsp_q3test106.c
 extern bspFormat_t q3Test106BspFormat;

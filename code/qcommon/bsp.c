@@ -49,6 +49,7 @@ bspFormat_t *bspFormats[] = {
 	&s3quake3BspFormat,
 	&q3Test103BspFormat,
 	&q3IHVBspFormat,
+	&warlordBspFormat,
 };
 
 const int numBspFormats = ARRAY_LEN( bspFormats );

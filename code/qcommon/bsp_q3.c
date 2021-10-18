@@ -38,6 +38,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define Q3_BSP_VERSION			46 // Quake III / Team Arena
 #define WOLF_BSP_VERSION		47 // RTCW / WolfET
+#define WARLORD_BSP_VERSION		48 // Iron Grip: Warlord
 #define DARKS_BSP_VERSION		666 // Dark Salvation
 
 typedef struct {
@@ -114,6 +115,12 @@ typedef struct {
 	int			planeNum;			// positive plane side faces out of the leaf
 	int			shaderNum;
 } realDbrushside_t;
+
+typedef struct {
+	int			planeNum;			// positive plane side faces out of the leaf
+	int			shaderNum;
+	int			unknown; // unknown bitflags? mainly 0x0, 0x8000001, 0x8000101
+} realDbrushside_warlord_t;
 
 typedef struct {
 	int			firstSide;
@@ -292,7 +299,11 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 	bsp->numBrushes = GetLumpElements( &header, LUMP_BRUSHES, sizeof ( realDbrush_t ) );
 	bsp->brushes = malloc( bsp->numBrushes * sizeof ( *bsp->brushes ) );
 
-	bsp->numBrushSides = GetLumpElements( &header, LUMP_BRUSHSIDES, sizeof ( realDbrushside_t ) );
+	if ( format->version == WARLORD_BSP_VERSION ) {
+		bsp->numBrushSides = GetLumpElements( &header, LUMP_BRUSHSIDES, sizeof ( realDbrushside_warlord_t ) );
+	} else {
+		bsp->numBrushSides = GetLumpElements( &header, LUMP_BRUSHSIDES, sizeof ( realDbrushside_t ) );
+	}
 	bsp->brushSides = malloc( bsp->numBrushSides * sizeof ( *bsp->brushSides ) );
 
 	bsp->numDrawVerts = GetLumpElements( &header, LUMP_DRAWVERTS, sizeof ( realDrawVert_t ) );
@@ -418,7 +429,16 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 		}
 	}
 
-	{
+	if ( format->version == WARLORD_BSP_VERSION ) {
+		realDbrushside_warlord_t *in = GetLump( &header, data, LUMP_BRUSHSIDES );
+		dbrushside_t *out = bsp->brushSides;
+
+		for ( i = 0; i < bsp->numBrushSides; i++, in++, out++ ) {
+			out->planeNum = LittleLong (in->planeNum);
+			out->shaderNum = LittleLong (in->shaderNum);
+			out->surfaceNum = -1;
+		}
+	} else {
 		realDbrushside_t *in = GetLump( &header, data, LUMP_BRUSHSIDES );
 		dbrushside_t *out = bsp->brushSides;
 
@@ -831,5 +851,15 @@ bspFormat_t darksBspFormat = {
 	DARKS_BSP_VERSION,
 	BSP_LoadQ3,
 	BSP_SaveQ3,
+};
+
+// Iron Grip: Warlord
+// Saving as Warlord format is not supported because I don't know what the extra value in realDbrushside_warlord_t is.
+bspFormat_t warlordBspFormat = {
+	"IronGripWarlord",
+	BSP_IDENT,
+	WARLORD_BSP_VERSION,
+	BSP_LoadQ3,
+	NULL,
 };
 
