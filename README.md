@@ -18,7 +18,7 @@ Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Sp
 ## Resources
 
   * [Development documentation](https://github.com/zturtleman/spearmint/wiki)
-  * [Discord (Fragmint★Wonderland #spearmint)](https://discord.gg/RAdK2yv)
+  * [Discord (Clover.moe Community)](https://discord.gg/7J2pjGD)
   * [Magical Clover Forum (archived)](https://forum.clover.moe)
 
 
@@ -32,7 +32,9 @@ Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Sp
 
 ## License
 
-Spearmint is licensed under a [modified version of the GNU GPLv3](COPYING.txt#L625) (or at your option, any later version). The license is also used by Return to Castle Wolfenstein, Wolfenstein: Enemy Territory, and Doom 3.
+Spearmint is licensed under a [modified version of the GNU GPLv3](COPYING.txt#L625) (or at your option, any later version). This is due to including code from Return to Castle Wolfenstein and Wolfenstein: Enemy Territory.
+
+Submitted contributions must be given with permission to use as GPLv**2** (two) and any later version; unless the file is under a license besides the GPL, in which case that license applies. This allows me to potentially change the license to GPLv2 or later in the future.
 
 
 ## Credits
