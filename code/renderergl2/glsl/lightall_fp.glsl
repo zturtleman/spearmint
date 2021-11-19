@@ -90,6 +90,9 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 	// current size of search window
 	float size = 1.0 / float(linearSearchSteps);
 
+	// adjust position if offset above surface
+	dp -= ds * r_parallaxMapOffset;
+
 	// current depth position
 	float depth = 0.0;
 
@@ -142,7 +145,36 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 	}
 #endif
 
-	return bestDepth;
+	return bestDepth - r_parallaxMapOffset;
+}
+
+float LightRay(vec2 dp, vec2 ds, sampler2D normalMap)
+{
+	const int linearSearchSteps = 16;
+
+	// current size of search window
+	float size = 1.0 / float(linearSearchSteps);
+
+	// current height from initial texel depth
+	float height = 0.0;
+
+	float startDepth = SampleDepth(normalMap, dp);
+
+	// find a collision or escape
+	for(int i = 0; i < linearSearchSteps - 1; ++i)
+	{
+		height += size;
+
+		if (startDepth < height)
+			return 1.0;
+		
+		float t = SampleDepth(normalMap, dp + ds * height);
+
+		if (startDepth > t + height)
+			return 0.0;
+	}
+
+	return 1.0;
 }
 #endif
 
@@ -173,7 +205,7 @@ vec3 CalcSpecular(vec3 specular, float NH, float EH, float roughness)
 	float rr = roughness*roughness;
 	float rrrr = rr*rr;
 	float d = (NH * NH) * (rrrr - 1.0) + 1.0;
-	float v = (EH * EH) * (roughness + 0.5);
+	float v = (EH * EH) * (roughness + 0.5) + EPSILON;
 	return specular * (rrrr / (4.0 * d * d * v));
 }
 
@@ -194,6 +226,37 @@ float CalcLightAttenuation(float point, float normDist)
 	return attenuation;
 }
 
+#if defined(USE_BOX_CUBEMAP_PARALLAX)
+vec4 hitCube(vec3 ray, vec3 pos, vec3 invSize, float lod, samplerCube tex)
+{
+	// find any hits on cubemap faces facing the camera
+	vec3 scale = (sign(ray) - pos) / ray;
+
+	// find the nearest hit
+	float minScale = min(min(scale.x, scale.y), scale.z);
+
+	// if the nearest hit is behind the camera, ignore
+	// should not be necessary as long as pos is inside the cube
+	//if (minScale < 0.0)
+		//return vec4(0.0);
+
+	// calculate the hit position, that's our texture coordinates
+	vec3 tc = pos + ray * minScale;
+
+	// if the texture coordinates are outside the cube, ignore
+	// necessary since we're not fading out outside the cube
+	if (any(greaterThan(abs(tc), vec3(1.00001))))
+		return vec4(0.0);
+
+	// fade out when approaching the cubemap edges
+	//vec3 fade3 = abs(pos);
+	//float fade = max(max(fade3.x, fade3.y), fade3.z);
+	//fade = clamp(1.0 - fade, 0.0, 1.0);
+			
+	//return vec4(textureCubeLod(tex, tc, lod).rgb * fade, fade);
+	return vec4(textureCubeLod(tex, tc, lod).rgb, 1.0);
+}
+#endif
 
 void main()
 {
@@ -202,7 +265,8 @@ void main()
 	float NL, NH, NE, EH, attenuation;
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
+	vec3 surfNormal = (!gl_FrontFacing ? var_Normal : -var_Normal).xyz;
+	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, surfNormal);
 	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
 	E = normalize(viewDir);
 #endif
@@ -223,7 +287,7 @@ void main()
 	vec2 texCoords = var_TexCoords.xy;
 
 #if defined(USE_PARALLAXMAP)
-	vec3 offsetDir = viewDir * tangentToWorld;
+	vec3 offsetDir = E * tangentToWorld;
 
 	offsetDir.xy *= -u_NormalScale.a / offsetDir.z;
 
@@ -288,7 +352,7 @@ void main()
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = tangentToWorld * N;
   #else
-	N = var_Normal.xyz;
+	N = surfNormal;
   #endif
 
 	N = normalize(N);
@@ -305,9 +369,16 @@ void main()
     #endif
   #endif
 
+  #if defined(USE_PARALLAXMAP) && defined(USE_PARALLAXMAP_SHADOWS)
+	offsetDir = L * tangentToWorld;
+	offsetDir.xy *= u_NormalScale.a / offsetDir.z;
+	lightColor *= LightRay(texCoords, offsetDir.xy, u_NormalMap);
+  #endif
+
+
   #if !defined(USE_LIGHT_VECTOR)
 	ambientColor = lightColor;
-	float surfNL = clamp(dot(var_Normal.xyz, L), 0.0, 1.0);
+	float surfNL = clamp(dot(surfNormal, L), 0.0, 1.0);
 
 	// reserve 25% ambient to avoid black areas on normalmaps
 	lightColor *= 0.75;
@@ -390,7 +461,11 @@ void main()
 	// from http://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
 	vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 
+  #if defined(USE_BOX_CUBEMAP_PARALLAX)
+	vec3 cubeLightColor = hitCube(R * u_CubeMapInfo.w, parallax, u_CubeMapInfo.www, ROUGHNESS_MIPS * roughness, u_CubeMap).rgb * u_EnableTextures.w;
+  #else
 	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, ROUGHNESS_MIPS * roughness).rgb * u_EnableTextures.w;
+  #endif
 
 	// normalize cubemap based on last roughness mip (~diffuse)
 	// multiplying cubemap values by lighting below depends on either this or the cubemap being normalized at generation
@@ -438,6 +513,12 @@ void main()
 
 	// enable when point lights are supported as primary lights
 	//lightColor *= CalcLightAttenuation(float(u_PrimaryLightDir.w > 0.0), u_PrimaryLightDir.w / sqrLightDist);
+
+  #if defined(USE_PARALLAXMAP) && defined(USE_PARALLAXMAP_SHADOWS)
+	offsetDir = L2 * tangentToWorld;
+	offsetDir.xy *= u_NormalScale.a / offsetDir.z;
+	lightColor *= LightRay(texCoords, offsetDir.xy, u_NormalMap);
+  #endif
 
 	gl_FragColor.rgb += lightColor * reflectance * NL2;
   #endif

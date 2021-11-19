@@ -264,6 +264,7 @@ OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.9
 MADDIR=$(MOUNT_DIR)/libmad-0.15.1b
 ZDIR=$(MOUNT_DIR)/zlib
 FTDIR=$(MOUNT_DIR)/freetype-2.9
+TOOLSDIR=$(MOUNT_DIR)/tools
 AUTOUPDATERSRCDIR=$(MOUNT_DIR)/autoupdater
 LIBTOMCRYPTSRCDIR=$(AUTOUPDATERSRCDIR)/rsa_tools/libtomcrypt-1.17
 TOMSFASTMATHSRCDIR=$(AUTOUPDATERSRCDIR)/rsa_tools/tomsfastmath-0.13.1
@@ -637,7 +638,19 @@ ifdef MINGW
 
   ifeq ($(COMPILE_PLATFORM),cygwin)
     TOOLS_BINEXT=.exe
-    TOOLS_CC=$(CC)
+
+    # Under cygwin the default of using gcc for TOOLS_CC won't work, so
+    # we need to figure out the appropriate compiler to use, based on the
+    # host architecture that we're running under (as tools run on the host)
+    ifeq ($(COMPILE_ARCH),x86_64)
+      TOOLS_MINGW_PREFIXES=x86_64-w64-mingw32 amd64-mingw32msvc
+    endif
+    ifeq ($(COMPILE_ARCH),x86)
+      TOOLS_MINGW_PREFIXES=i686-w64-mingw32 i586-mingw32msvc i686-pc-mingw32
+    endif
+
+    TOOLS_CC=$(firstword $(strip $(foreach TOOLS_MINGW_PREFIX, $(TOOLS_MINGW_PREFIXES), \
+      $(call bin_path, $(TOOLS_MINGW_PREFIX)-gcc))))
   endif
 
   LIBS= -lws2_32 -lwinmm -lpsapi -lshlwapi
@@ -1246,9 +1259,7 @@ endef
 define DO_REF_STR
 $(echo_cmd) "REF_STR $<"
 $(Q)rm -f $@
-$(Q)echo "const char *fallbackShader_$(notdir $(basename $<)) =" >> $@
-$(Q)cat $< | sed -e 's/^/\"/;s/$$/\\n\"/' | tr -d '\r' >> $@
-$(Q)echo ";" >> $@
+$(Q)$(STRINGIFY) $< $@
 endef
 
 define DO_BOT_CC
@@ -1359,6 +1370,9 @@ endif
 	@echo "  SERVER_CFLAGS:"
 	$(call print_wrapped, $(SERVER_CFLAGS))
 	@echo ""
+	@echo "  TOOLS_CFLAGS:"
+	$(call print_wrapped, $(TOOLS_CFLAGS))
+	@echo ""
 	@echo "  LDFLAGS:"
 	$(call print_wrapped, $(LDFLAGS))
 	@echo ""
@@ -1402,6 +1416,40 @@ makedirs:
 	@$(MKDIR) $(B)/renderergl2
 	@$(MKDIR) $(B)/renderergl2/glsl
 	@$(MKDIR) $(B)/ded
+	@$(MKDIR) $(B)/tools
+
+
+#############################################################################
+# BUILD TOOLS
+#############################################################################
+
+ifndef TOOLS_CC
+  # A compiler which probably produces native binaries
+  TOOLS_CC = gcc
+endif
+
+TOOLS_OPTIMIZE = -g -Wall -fno-strict-aliasing
+TOOLS_CFLAGS += $(TOOLS_OPTIMIZE) \
+                -DTEMPDIR=\"$(TEMPDIR)\" -DSYSTEM=\"\" \
+                -I$(Q3LCCSRCDIR) \
+                -I$(LBURGDIR)
+TOOLS_LIBS =
+TOOLS_LDFLAGS =
+
+ifeq ($(GENERATE_DEPENDENCIES),1)
+  TOOLS_CFLAGS += -MMD
+endif
+
+define DO_TOOLS_CC
+$(echo_cmd) "TOOLS_CC $<"
+$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) -o $@ -c $<
+endef
+
+STRINGIFY   = $(B)/tools/stringify$(TOOLS_BINEXT)
+
+$(STRINGIFY): $(TOOLSDIR)/stringify.c
+	$(echo_cmd) "TOOLS_CC $@"
+	$(Q)$(TOOLS_CC) $(TOOLS_CFLAGS) $(TOOLS_LDFLAGS) -o $@ $(TOOLSDIR)/stringify.c $(TOOLS_LIBS)
 
 
 #############################################################################
@@ -2257,7 +2305,7 @@ $(B)/renderergl1/%.o: $(RGL1DIR)/%.c
 $(B)/renderergl1/tr_altivec.o: $(RGL1DIR)/tr_altivec.c
 	$(DO_REF_CC_ALTIVEC)
 
-$(B)/renderergl2/glsl/%.c: $(RGL2DIR)/glsl/%.glsl
+$(B)/renderergl2/glsl/%.c: $(RGL2DIR)/glsl/%.glsl $(STRINGIFY)
 	$(DO_REF_STR)
 
 $(B)/renderergl2/glsl/%.o: $(B)/renderergl2/glsl/%.c
@@ -2419,7 +2467,21 @@ clean2:
 	@rm -f $(STRINGOBJ)
 	@rm -f $(TARGETS)
 
-distclean: clean
+toolsclean: toolsclean-debug toolsclean-release
+
+toolsclean-debug:
+	@$(MAKE) toolsclean2 B=$(BD)
+
+toolsclean-release:
+	@$(MAKE) toolsclean2 B=$(BR)
+
+toolsclean2:
+	@echo "TOOLS_CLEAN $(B)"
+	@rm -f $(TOOLSOBJ)
+	@rm -f $(TOOLSOBJ_D_FILES)
+	@rm -f $(STRINGIFY)
+
+distclean: clean toolsclean
 	@rm -rf $(BUILD_DIR)
 
 installer: release

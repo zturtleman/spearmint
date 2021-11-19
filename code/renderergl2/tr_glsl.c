@@ -1192,6 +1192,11 @@ void GLSL_InitGPUShaders(void)
 					Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 					if (r_parallaxMapping->integer > 1)
 						Q_strcat(extradefines, 1024, "#define USE_RELIEFMAP\n");
+
+					if (r_parallaxMapShadows->integer)
+						Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_SHADOWS\n");
+
+					Q_strcat(extradefines, 1024, va("#define r_parallaxMapOffset %f\n", r_parallaxMapOffset->value));
 				}
 			}
 
@@ -1199,9 +1204,15 @@ void GLSL_InitGPUShaders(void)
 				Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
 
 			if (r_cubeMapping->integer)
+			{
 				Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
+				if (r_cubeMapping->integer == 2)
+					Q_strcat(extradefines, 1024, "#define USE_BOX_CUBEMAP_PARALLAX\n");
+			}
 			else if (r_deluxeSpecular->value > 0.000001f)
+			{
 				Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
+			}
 
 			switch (r_glossType->integer)
 			{

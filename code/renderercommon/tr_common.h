@@ -89,6 +89,12 @@ typedef struct textureLevel_s {
 extern	refimport_t		ri;
 extern glconfig_t	glConfig;		// outside of TR since it shouldn't be cleared during ref re-init
 
+// These variables should live inside glConfig but can't because of
+// compatibility issues to the original ID vms.  If you release a stand-alone
+// game and your mod uses tr_types.h from this build you can safely move them
+// to the glconfig_t struct.
+extern qboolean  haveClampToEdge;
+
 // used by shader functions, including noise in renderercommon
 #define	FOG_TABLE_SIZE		256
 #define FUNCTABLE_SIZE		1024

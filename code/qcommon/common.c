@@ -3202,8 +3202,10 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL Com_RefPrintf( int pri
 		Com_Printf ("%s", msg);
 	} else if ( print_level == PRINT_WARNING ) {
 		Com_Printf (S_COLOR_YELLOW "%s", msg);		// yellow
+	} else if ( print_level == PRINT_ERROR ) {
+		Com_Printf (S_COLOR_RED "%s", msg);			// red
 	} else if ( print_level == PRINT_DEVELOPER ) {
-		Com_DPrintf (S_COLOR_RED "%s", msg);		// red
+		Com_DPrintf (S_COLOR_RED "%s", msg);		// red - developer only
 	}
 }
 

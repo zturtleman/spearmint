@@ -82,7 +82,7 @@ void (APIENTRYP qglCompressedTexImage2DARB) (GLenum target, GLint level,
 						const GLvoid *data);
 
 
-#define GLE(ret, name, ...) name##proc * qgl##name;
+#define GLE(ret, name, ...) name##proc * qgl##name = NULL;
 QGL_1_1_PROCS;
 QGL_1_1_FIXED_FUNCTION_PROCS;
 QGL_DESKTOP_1_1_PROCS;
@@ -280,7 +280,7 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 	version = (const char *)qglGetString( GL_VERSION );
 
 	if ( !version ) {
-		Com_Error( ERR_FATAL, "GL_VERSION is NULL\n" );
+		Com_Error( ERR_FATAL, "GL_VERSION is NULL" );
 	}
 
 	if ( Q_stricmpn( "OpenGL ES", version, 9 ) == 0 ) {
@@ -296,7 +296,7 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 	}
 
 	if ( fixedFunction ) {
-		if ( QGL_VERSION_ATLEAST( 1, 2 ) ) {
+		if ( QGL_VERSION_ATLEAST( 1, 1 ) ) {
 			QGL_1_1_PROCS;
 			QGL_1_1_FIXED_FUNCTION_PROCS;
 			QGL_DESKTOP_1_1_PROCS;
@@ -308,9 +308,9 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 			QGL_ES_1_1_PROCS;
 			QGL_ES_1_1_FIXED_FUNCTION_PROCS;
 			// error so this doesn't segfault due to NULL desktop GL functions being used
-			Com_Error( ERR_FATAL, "Unsupported OpenGL Version: %s\n", version );
+			Com_Error( ERR_FATAL, "Unsupported OpenGL Version: %s", version );
 		} else {
-			Com_Error( ERR_FATAL, "Unsupported OpenGL Version (%s), OpenGL 1.2 is required\n", version );
+			Com_Error( ERR_FATAL, "Unsupported OpenGL Version (%s), OpenGL 1.1 is required", version );
 		}
 	} else {
 		if ( QGL_VERSION_ATLEAST( 2, 0 ) ) {
@@ -326,9 +326,9 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 			QGL_1_5_PROCS;
 			QGL_2_0_PROCS;
 			// error so this doesn't segfault due to NULL desktop GL functions being used
-			Com_Error( ERR_FATAL, "Unsupported OpenGL Version: %s\n", version );
+			Com_Error( ERR_FATAL, "Unsupported OpenGL Version: %s", version );
 		} else {
-			Com_Error( ERR_FATAL, "Unsupported OpenGL Version (%s), OpenGL 2.0 is required\n", version );
+			Com_Error( ERR_FATAL, "Unsupported OpenGL Version (%s), OpenGL 2.0 is required", version );
 		}
 	}
 
@@ -1057,6 +1057,17 @@ static void GLimp_InitExtensions( qboolean fixedFunction )
 	else
 	{
 		ri.Printf( PRINT_ALL, "...GL_EXT_texture_filter_anisotropic not found\n" );
+	}
+
+	haveClampToEdge = qfalse;
+	if ( QGL_VERSION_ATLEAST( 1, 2 ) || QGLES_VERSION_ATLEAST( 1, 0 ) || SDL_GL_ExtensionSupported( "GL_SGIS_texture_edge_clamp" ) )
+	{
+		ri.Printf( PRINT_ALL, "...using GL_SGIS_texture_edge_clamp\n" );
+		haveClampToEdge = qtrue;
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, "...GL_SGIS_texture_edge_clamp not found\n" );
 	}
 }
 
