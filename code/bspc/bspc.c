@@ -57,7 +57,6 @@ char			name[1024];
 vec_t			microvolume = 1.0;
 char			outbase[32];
 int				entity_num;
-aas_settings_t	aassettings;
 
 qboolean	noprune;			//don't prune nodes (bspc.c)
 qboolean	nodetail;			//don't use detail brushes (map.c)
