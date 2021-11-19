@@ -514,8 +514,10 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 	LL(hdr->dwSurfaceFlags);
 	LL(hdr->dwCubemapFlags);
 
-	if( hdr->dwSize != sizeof( DDS_HEADER ) ||
-	    hdr->ddspf.dwSize != sizeof( DDS_PIXELFORMAT ) ) {
+	// Iron Grip: Warlord incorrectly set size as the file length.
+	if( ( hdr->dwSize != sizeof( DDS_HEADER ) &&
+	      !( hdr->dwSize == length && length >= sizeof( DDS_HEADER ) ) )
+	  || hdr->ddspf.dwSize != sizeof( DDS_PIXELFORMAT ) ) {
 		ri.Error( ERR_DROP, "LoadDDS: DDS header missing (%s)", name );
 	}
 
@@ -786,6 +788,32 @@ void R_LoadDDS( const char *name, int *numTexLevels, textureLevel_t **pic )
 			glFormat == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT ) ) {
 		ri.Printf( PRINT_WARNING, "LoadDDS: DXTn decompression is not supported by GPU driver (%s)\n", name );
 	} else {
+		// HACK: S3Quake3 DDS files have wrong mipMapCount on non-square images (stopped counting when mip's width _or_ height was 1) but the data exists in the file.
+		if ( glFormat != GL_RGBA8 && hdr->ddspf.dwFourCC != D3DFMT_DX10 ) {
+			unsigned int height = hdr->dwHeight;
+			unsigned int width = hdr->dwWidth;
+			unsigned int requiredMipmaps = 0;
+			unsigned int requiredImageDataLength = 0;
+			unsigned int blockSize = ( glFormat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ) ? 8 : 16;
+
+			while ( 1 ) {
+				requiredImageDataLength += ( ( height + 3 ) / 4 ) * ( ( width + 3 ) / 4 ) * blockSize;
+				requiredMipmaps++;
+
+				if ( height == 1 && width == 1 ) {
+					break;
+				}
+
+				height = MAX( 1, height >> 1 );
+				width = MAX( 1, width >> 1 );
+			}
+
+			if ( mipmaps < requiredMipmaps && length == 4 + sizeof(DDS_HEADER) + requiredImageDataLength ) {
+				ri.Printf( PRINT_DEVELOPER, "WARNING: '%s' specifies partial mipmap pyramid (%d of %d mip levels) but has data for all mip levels, using all mip levels\n", name, mipmaps, requiredMipmaps );
+				mipmaps = requiredMipmaps;
+			}
+		}
+
 		switch( glFormat ) {
 		case GL_RGBA8:
 			SetupLinear( pic, hdr->dwWidth, hdr->dwHeight, depth,

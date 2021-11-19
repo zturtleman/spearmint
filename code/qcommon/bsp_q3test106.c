@@ -37,6 +37,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 		// little-endian "IBSP"
 
 #define BSP_VERSION			45
+#define S3Q3_BSP_VERSION	-46
 
 typedef struct {
 	int		fileofs, filelen;
@@ -70,8 +71,8 @@ typedef struct {
 
 typedef struct {
 	float		mins[3], maxs[3];
-	int			unknownZeros[3]; // ZTM: These are always 0
-	int			unknownNegative; // ZTM: In model 0 this is 0. model 1 starts at some negative number (I do not know what it means). After model 1, it goes down 1 for each model.
+	int			origin[3]; // ZTM: Always 0,0,0.
+	int			nodeNum; // ZTM: In model 0 this is 0. model 1 starts at some negative number (a leaf). After model 1, it goes down 1 for each model.
 	int			firstSurface, numSurfaces;
 	int			firstBrush, numBrushes;
 } realDmodel_t;
@@ -87,7 +88,7 @@ typedef struct {
 typedef struct {
 	float		normal[3];
 	float		dist;
-	int			unknown; // ZTM: this might be 'type' like in q2 bsp -- I haven't tried to check
+	int			type; // ZTM: FIXME: Confirm this is type like in Q2 BSP.
 } realDplane_t;
 
 typedef struct {
@@ -492,6 +493,14 @@ bspFormat_t q3Test106BspFormat = {
 	"Q3Test 1.06/1.07/1.08",
 	BSP_IDENT,
 	BSP_VERSION,
+	BSP_LoadQ3Test106,
+};
+
+// S3Quake3, a version of Q3Test utilizing S3TC included with Diamond Viper II Z200 graphics card.
+bspFormat_t s3quake3BspFormat = {
+	"S3Quake3",
+	BSP_IDENT,
+	S3Q3_BSP_VERSION,
 	BSP_LoadQ3Test106,
 };
 

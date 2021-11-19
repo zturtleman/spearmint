@@ -38,6 +38,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define Q3_BSP_VERSION			46 // Quake III / Team Arena
 #define WOLF_BSP_VERSION		47 // RTCW / WolfET
+#define WARLORD_BSP_VERSION		48 // Iron Grip: Warlord
 #define DARKS_BSP_VERSION		666 // Dark Salvation
 
 typedef struct {
@@ -114,6 +115,12 @@ typedef struct {
 	int			planeNum;			// positive plane side faces out of the leaf
 	int			shaderNum;
 } realDbrushside_t;
+
+typedef struct {
+	int			planeNum;			// positive plane side faces out of the leaf
+	int			shaderNum;
+	int			unknown; // unknown bitflags? mainly 0x0, 0x8000001, 0x8000101
+} realDbrushside_warlord_t;
 
 typedef struct {
 	int			firstSide;
@@ -292,7 +299,11 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 	bsp->numBrushes = GetLumpElements( &header, LUMP_BRUSHES, sizeof ( realDbrush_t ) );
 	bsp->brushes = malloc( bsp->numBrushes * sizeof ( *bsp->brushes ) );
 
-	bsp->numBrushSides = GetLumpElements( &header, LUMP_BRUSHSIDES, sizeof ( realDbrushside_t ) );
+	if ( format->version == WARLORD_BSP_VERSION ) {
+		bsp->numBrushSides = GetLumpElements( &header, LUMP_BRUSHSIDES, sizeof ( realDbrushside_warlord_t ) );
+	} else {
+		bsp->numBrushSides = GetLumpElements( &header, LUMP_BRUSHSIDES, sizeof ( realDbrushside_t ) );
+	}
 	bsp->brushSides = malloc( bsp->numBrushSides * sizeof ( *bsp->brushSides ) );
 
 	bsp->numDrawVerts = GetLumpElements( &header, LUMP_DRAWVERTS, sizeof ( realDrawVert_t ) );
@@ -418,7 +429,16 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 		}
 	}
 
-	{
+	if ( format->version == WARLORD_BSP_VERSION ) {
+		realDbrushside_warlord_t *in = GetLump( &header, data, LUMP_BRUSHSIDES );
+		dbrushside_t *out = bsp->brushSides;
+
+		for ( i = 0; i < bsp->numBrushSides; i++, in++, out++ ) {
+			out->planeNum = LittleLong (in->planeNum);
+			out->shaderNum = LittleLong (in->shaderNum);
+			out->surfaceNum = -1;
+		}
+	} else {
 		realDbrushside_t *in = GetLump( &header, data, LUMP_BRUSHSIDES );
 		dbrushside_t *out = bsp->brushSides;
 
@@ -513,23 +533,34 @@ bspFile_t *BSP_LoadQ3( const bspFormat_t *format, const char *name, const void *
 
 // convert internal BSP format to BSP for saving to disk
 // ZTM: TODO: convert ET foliage surfaces if Q3 format? how to check if Q3 or RTCW and not ET?
-// ZTM: TODO: handle different default light grid sizes?
 int BSP_SaveQ3( const bspFormat_t *format, const char *name, const bspFile_t *bsp, void **dataOut ) {
 	int				i, j, k;
 	dheader_t		header;
 	byte			*data;
 	int				dataLength;
 	int				numGridPoints;
+	char			worldspawnExtra[1024];
+	size_t			worldspawnExtraLength;
 
 	*dataOut = NULL;
 
 #if 0
 	// ...
 	bsp->checksum = LittleLong (Com_BlockChecksum (data, length));
-	bsp->defaultLightGridSize[0] = LIGHTING_GRIDSIZE_X;
-	bsp->defaultLightGridSize[1] = LIGHTING_GRIDSIZE_Y;
-	bsp->defaultLightGridSize[2] = LIGHTING_GRIDSIZE_Z;
 #endif
+
+	// ZTM: TODO: This isn't needed if worldspawn already has "gridsize".
+	if ( bsp->defaultLightGridSize[0] != LIGHTING_GRIDSIZE_X
+	  || bsp->defaultLightGridSize[1] != LIGHTING_GRIDSIZE_Y
+	  || bsp->defaultLightGridSize[2] != LIGHTING_GRIDSIZE_Z ) {
+		snprintf( worldspawnExtra, sizeof(worldspawnExtra), "\"gridsize\" \"%f %f %f\"\n",
+		             bsp->defaultLightGridSize[0],
+		             bsp->defaultLightGridSize[1],
+		             bsp->defaultLightGridSize[2] );
+	} else {
+		worldspawnExtra[0] = '\0';
+	}
+	worldspawnExtraLength = strlen( worldspawnExtra );
 
 	if ( bsp->numGridArrayPoints ) {
 		numGridPoints = bsp->numGridArrayPoints;
@@ -546,7 +577,7 @@ int BSP_SaveQ3( const bspFormat_t *format, const char *name, const bspFile_t *bs
 
 	dataLength = sizeof( dheader_t );
 
-	AddLump( &header, &dataLength, LUMP_ENTITIES, bsp->entityStringLength, 1 );
+	AddLump( &header, &dataLength, LUMP_ENTITIES, bsp->entityStringLength + worldspawnExtraLength, 1 );
 	AddLump( &header, &dataLength, LUMP_SHADERS, bsp->numShaders, sizeof ( realDshader_t ) );
 	AddLump( &header, &dataLength, LUMP_PLANES, bsp->numPlanes, sizeof ( realDplane_t ) );
 	AddLump( &header, &dataLength, LUMP_NODES, bsp->numNodes, sizeof ( realDnode_t ) );
@@ -571,7 +602,21 @@ int BSP_SaveQ3( const bspFormat_t *format, const char *name, const bspFile_t *bs
 	//
 	// copy and swap and convert data
 	//
-	WriteLump( &header, LUMP_ENTITIES, data, (void *) bsp->entityString, sizeof ( *bsp->entityString ), qfalse ); /* NO SWAP */
+	if ( worldspawnExtraLength && bsp->entityString[0] == '{' && bsp->entityString[1] == '\n' ) {
+		char *out = GetLump( &header, data, LUMP_ENTITIES );
+
+		*out++ = '{';
+		*out++ = '\n';
+
+		strcpy( out, worldspawnExtra );
+		out += worldspawnExtraLength;
+
+		strcpy( out, bsp->entityString+2 );
+	} else if ( worldspawnExtraLength ) {
+		Com_Printf( "ERROR: Unable to add light grid size override. Entity data doesn't start with '{<newline>'!\n" );
+	} else {
+		WriteLump( &header, LUMP_ENTITIES, data, (void *) bsp->entityString, sizeof ( *bsp->entityString ), qfalse ); /* NO SWAP */
+	}
 
 	{
 		realDshader_t *out = GetLump( &header, data, LUMP_SHADERS );
@@ -806,5 +851,15 @@ bspFormat_t darksBspFormat = {
 	DARKS_BSP_VERSION,
 	BSP_LoadQ3,
 	BSP_SaveQ3,
+};
+
+// Iron Grip: Warlord
+// Saving as Warlord format is not supported because I don't know what the extra value in realDbrushside_warlord_t is.
+bspFormat_t warlordBspFormat = {
+	"IronGripWarlord",
+	BSP_IDENT,
+	WARLORD_BSP_VERSION,
+	BSP_LoadQ3,
+	NULL,
 };
 
