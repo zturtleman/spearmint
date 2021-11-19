@@ -24,9 +24,8 @@ Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Sp
 
 ## Git branches
 
-* `master` branch is compatible with Spearmint 1.0.0.
-* `devil` branch is for development (devil-op-mint) that is not compatible with the current release &mdash; it may be out of date compared to master.
-* `coverity_scan` branch is for automatically running [Coverity Scan](https://scan.coverity.com/) on [Travis CI](https://travis-ci.org).
+* `master` branch is for Spearmint 1.1 development.
+* `1.0` branch is for Spearmint 1.0.x bug fix releases.
 * `gh-pages` branch is the Spearmint website.
 
 
