@@ -177,6 +177,10 @@ ifndef USE_CODEC_OPUS
 USE_CODEC_OPUS=1
 endif
 
+ifndef USE_CODEC_THEORA
+USE_CODEC_THEORA=1
+endif
+
 ifndef USE_MUMBLE
 USE_MUMBLE=1
 endif
@@ -207,6 +211,10 @@ endif
 
 ifndef USE_INTERNAL_OPUS
 USE_INTERNAL_OPUS=$(USE_INTERNAL_LIBS)
+endif
+
+ifndef USE_INTERNAL_THEORA
+USE_INTERNAL_THEORA=$(USE_INTERNAL_LIBS)
 endif
 
 ifndef USE_INTERNAL_ZLIB
@@ -262,6 +270,7 @@ VORBISDIR=$(MOUNT_DIR)/libvorbis-1.3.6
 OPUSDIR=$(MOUNT_DIR)/opus-1.2.1
 OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.9
 MADDIR=$(MOUNT_DIR)/libmad-0.15.1b
+THEORADIR=$(MOUNT_DIR)/libtheora-1.1.1
 ZDIR=$(MOUNT_DIR)/zlib
 FTDIR=$(MOUNT_DIR)/freetype-2.9
 TOOLSDIR=$(MOUNT_DIR)/tools
@@ -1084,6 +1093,19 @@ ifeq ($(USE_CODEC_MP3),1)
   CLIENT_LIBS += $(MAD_LIBS)
 endif
 
+ifeq ($(USE_CODEC_THEORA),1)
+  CLIENT_CFLAGS += -DUSE_CODEC_THEORA
+  ifeq ($(USE_INTERNAL_THEORA),1)
+    THEORA_CFLAGS=-I$(THEORADIR)/include
+  else
+    THEORA_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags theoradec || true)
+    THEORA_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs theoradec || echo -ltheoradec)
+  endif
+  CLIENT_CFLAGS += $(THEORA_CFLAGS)
+  CLIENT_LIBS += $(THEORA_LIBS)
+  NEED_OGG=1
+endif
+
 ifeq ($(USE_VOIP),1)
   CLIENT_CFLAGS += -DUSE_VOIP
   SERVER_CFLAGS += -DUSE_VOIP
@@ -1411,6 +1433,7 @@ makedirs:
 	@$(MKDIR) $(B)/autoupdater
 	@$(MKDIR) $(B)/client/libmad
 	@$(MKDIR) $(B)/client/opus
+	@$(MKDIR) $(B)/client/theora
 	@$(MKDIR) $(B)/client/vorbis
 	@$(MKDIR) $(B)/renderergl1
 	@$(MKDIR) $(B)/renderergl2
@@ -1816,6 +1839,38 @@ Q3OBJ += \
   $(B)/client/libmad/synth.o \
   $(B)/client/libmad/timer.o \
   $(B)/client/libmad/version.o
+endif
+endif
+
+ifeq ($(USE_CODEC_THEORA),1)
+ifeq ($(USE_INTERNAL_THEORA),1)
+Q3OBJ += \
+  $(B)/client/theora/apiwrapper.o \
+  $(B)/client/theora/bitpack.o \
+  $(B)/client/theora/decapiwrapper.o \
+  $(B)/client/theora/decinfo.o \
+  $(B)/client/theora/decode.o \
+  $(B)/client/theora/dequant.o \
+  $(B)/client/theora/fragment.o \
+  $(B)/client/theora/huffdec.o \
+  $(B)/client/theora/idct.o \
+  $(B)/client/theora/info.o \
+  $(B)/client/theora/internal.o \
+  $(B)/client/theora/quant.o \
+  $(B)/client/theora/state.o
+
+THEORA_OBJ_X86 = \
+  $(B)/client/theora/mmxidct.o \
+  $(B)/client/theora/mmxfrag.o \
+  $(B)/client/theora/mmxstate.o \
+  $(B)/client/theora/x86state.o
+
+ifeq ($(ARCH),x86)
+  Q3OBJ += $(THEORA_OBJ_X86)
+endif
+ifeq ($(ARCH),x86_64)
+  Q3OBJ += $(THEORA_OBJ_X86)
+endif
 endif
 endif
 
@@ -2254,6 +2309,12 @@ $(B)/client/libmad/%.o: $(MADDIR)/%.c
 	$(DO_CC)
 
 $(B)/client/vorbis/%.o: $(VORBISDIR)/lib/%.c
+	$(DO_CC)
+
+$(B)/client/theora/%.o: $(THEORADIR)/lib/%.c
+	$(DO_CC)
+
+$(B)/client/theora/%.o: $(THEORADIR)/lib/x86/%.c
 	$(DO_CC)
 
 $(B)/client/opus/%.o: $(OPUSDIR)/src/%.c
