@@ -1094,7 +1094,7 @@ ifeq ($(USE_CODEC_MP3),1)
 endif
 
 ifeq ($(USE_CODEC_THEORA),1)
-  CLIENT_CFLAGS += -DUSE_CODEC_THEORA
+  CLIENT_CFLAGS += -DUSE_CIN_THEORA
   ifeq ($(USE_INTERNAL_THEORA),1)
     THEORA_CFLAGS=-I$(THEORADIR)/include
   else
@@ -1502,6 +1502,7 @@ $(B)/$(AUTOUPDATER_BIN): $(Q3AUTOUPDATEROBJ)
 Q3OBJ = \
   $(B)/client/cl_cgame.o \
   $(B)/client/cl_cin.o \
+  $(B)/client/cl_cin_ogm.o \
   $(B)/client/cl_console.o \
   $(B)/client/cl_input.o \
   $(B)/client/cl_joystick.o \

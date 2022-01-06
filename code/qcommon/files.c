@@ -2717,7 +2717,11 @@ char **FS_GetFileList( const char *path, const char *extension, int *numfiles, q
 	}
 	else if (Q_stricmp(extension, "$videos") == 0)
 	{
-		const char *extensions[] = { "RoQ", "roq" };
+		const char *extensions[] = { "RoQ", "roq"
+#if defined(USE_CODEC_VORBIS) && (defined(USE_CIN_XVID) || defined(USE_CIN_THEORA))
+			, "ogm", "ogv"
+#endif
+			};
 		int extNamesSize = ARRAY_LEN(extensions);
 		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, allowNonPureFilesOnDisk);
 	}
