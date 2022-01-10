@@ -191,6 +191,7 @@ static void SV_Map_f( void ) {
 	Q_strncpyz(mapname, map, sizeof(mapname));
 
 	killBots = Com_GameIsSinglePlayer();
+
 	// start up the map
 	SV_SpawnServer( mapname, killBots );
 
