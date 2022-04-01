@@ -39,6 +39,8 @@ static qboolean R_LoadMDR(model_t *mod, void *buffer, int filesize, const char *
 static qboolean R_LoadMDS( model_t *mod, void *buffer, const char *name );
 static qboolean R_LoadMDM( model_t *mod, void *buffer, const char *mod_name );
 static qboolean R_LoadMDX( model_t *mod, void *buffer, const char *mod_name );
+static qboolean R_LoadSKB( model_t *mod, void *buffer, const char *mod_name );
+static qboolean R_LoadSKA( model_t *mod, void *buffer, const char *mod_name );
 static qboolean R_LoadTAN( model_t *mod, void *buffer, const char *mod_name );
 
 /*
@@ -207,6 +209,45 @@ qhandle_t R_RegisterMDS(const char *name, model_t *mod)
 
 /*
 ====================
+R_RegisterSKB
+====================
+*/
+qhandle_t R_RegisterSKB(const char *name, model_t *mod)
+{
+	union {
+		unsigned *u;
+		void *v;
+	} buf;
+	int	ident;
+	qboolean loaded = qfalse;
+
+	ri.FS_ReadFile(name, (void **) &buf.v);
+	if(!buf.u)
+	{
+		mod->type = MOD_BAD;
+		return 0;
+	}
+	
+	ident = LittleLong(*(unsigned *)buf.u);
+	if(ident == SKA_IDENT)
+		loaded = R_LoadSKA(mod, buf.u, name);
+	else if(ident == SKB_IDENT)
+		loaded = R_LoadSKB(mod, buf.u, name);
+
+	ri.FS_FreeFile (buf.v);
+	
+	if(!loaded)
+	{
+		ri.Printf(PRINT_WARNING,"R_RegisterSKB: couldn't load file %s\n", name);
+		mod->type = MOD_BAD;
+		return 0;
+	}
+	
+	return mod->index;
+}
+
+/*
+====================
 R_RegisterIQM
 ====================
 */
@@ -292,6 +333,8 @@ static modelExtToLoaderMap_t modelLoaders[ ] =
 	{ "mds", R_RegisterMDS },
 	{ "mdm", R_RegisterMDS },
 	{ "mdx", R_RegisterMDS },
+	{ "skb", R_RegisterSKB },
+	{ "ska", R_RegisterSKB },
 	{ "tan", R_RegisterTAN },
 };
 
@@ -353,18 +396,18 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	qboolean	orgNameFailed = qfalse;
 	int			orgLoader = -1;
 	int			i;
-	char		localName[ MAX_QPATH ];
+	char		localName[ MAX_QPATH*2 ];
 	const char	*ext;
-	char		altName[ MAX_QPATH ];
+	char		altName[ MAX_QPATH*2 ];
 
 	if ( !name || !name[0] ) {
 		ri.Printf( PRINT_ALL, "RE_RegisterModel: NULL name\n" );
 		return 0;
 	}
 
+	// American McGee's Alice has model names that are 68 characters (64 + extension).
 	if ( strlen( name ) >= MAX_QPATH ) {
-		ri.Printf( PRINT_ALL, "Model name exceeds MAX_QPATH\n" );
-		return 0;
+		ri.Printf( PRINT_DEVELOPER, "WARNING: Model name '%s' exceeds MAX_QPATH\n", name );
 	}
 
 	//
@@ -399,7 +442,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	//
 	// load the files
 	//
-	Q_strncpyz( localName, name, MAX_QPATH );
+	Q_strncpyz( localName, name, sizeof( localName ) );
 
 	ext = COM_GetExtension( localName );
 
@@ -425,7 +468,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 				// try again without the extension
 				orgNameFailed = qtrue;
 				orgLoader = i;
-				COM_StripExtension( name, localName, MAX_QPATH );
+				COM_StripExtension( name, localName, sizeof( localName ) );
 			}
 			else
 			{
@@ -1809,6 +1852,257 @@ static qboolean R_LoadMDX( model_t *mod, void *buffer, const char *mod_name ) {
 			bi->parentDist = LittleFloat( bi->parentDist );
 			LL( bi->flags );
 		}
+	}
+
+	return qtrue;
+}
+
+
+/*
+=================
+R_LoadSKB
+=================
+*/
+static qboolean R_LoadSKB( model_t *mod, void *buffer, const char *mod_name ) {
+	int i, j, k;
+	skbHeader_t         *pinmodel, *skb;
+	skbSurface_t        *surf;
+	skbTriangle_t       *tri;
+	skbVertex_t         *v;
+	skbBoneInfo_t       *boneInfo;
+	int version;
+	int size;
+	int                 *collapseMap;
+
+	pinmodel = (skbHeader_t *)buffer;
+
+	version = LittleLong( pinmodel->version );
+	if ( version != SKB_VERSION ) {
+		ri.Printf( PRINT_WARNING, "R_LoadSKB: %s has wrong version (%i should be %i)\n",
+				   mod_name, version, SKB_VERSION );
+		return qfalse;
+	}
+
+	mod->type = MOD_SKB;
+	size = LittleLong( pinmodel->ofsEnd );
+	mod->dataSize += size;
+	skb = mod->modelData = ri.Hunk_Alloc( size, h_low );
+
+	memcpy( skb, buffer, LittleLong( pinmodel->ofsEnd ) );
+
+	LL( skb->ident );
+	LL( skb->version );
+	LL( skb->numSurfaces );
+	LL( skb->numBones );
+	LL( skb->ofsBones );
+	LL( skb->ofsSurfaces );
+	LL( skb->ofsEnd );
+
+	// swap all the bones
+	boneInfo = ( skbBoneInfo_t * )( (byte *)skb + skb->ofsBones );
+	for ( i = 0 ; i < skb->numBones ; i++, boneInfo++ ) {
+		LL( boneInfo->parent );
+		LL( boneInfo->flags );
+	}
+
+	// swap all the surfaces
+	surf = ( skbSurface_t * )( (byte *)skb + skb->ofsSurfaces );
+	for ( i = 0 ; i < skb->numSurfaces ; i++ ) {
+		if ( LittleLong( 1 ) != 1 ) {
+			//LL(surf->ident);
+			LL( surf->numTriangles );
+			LL( surf->numVerts );
+			LL( surf->minLod );
+			LL( surf->ofsVerts );
+			LL( surf->ofsTriangles );
+			LL( surf->ofsCollapseMap );
+			LL( surf->ofsEnd );
+		}
+
+		// change to surface identifier
+		surf->ident = SF_SKB;
+
+		if ( surf->numVerts >= SHADER_MAX_VERTEXES ) {
+			ri.Printf(PRINT_WARNING, "R_LoadSKB: %s has more than %i verts on %s (%i).\n",
+					mod_name, SHADER_MAX_VERTEXES - 1, surf->name[0] ? surf->name : "a surface",
+					surf->numVerts );
+			return qfalse;
+		}
+		if ( surf->numTriangles * 3 >=  SHADER_MAX_INDEXES ) {
+			ri.Printf(PRINT_WARNING, "R_LoadSKB: %s has more than %i triangles on %s (%i).\n",
+					mod_name, ( SHADER_MAX_INDEXES / 3 ) - 1, surf->name[0] ? surf->name : "a surface",
+					surf->numTriangles );
+			return qfalse;
+		}
+
+		if ( LittleLong( 1 ) != 1 ) {
+			// swap all the triangles
+			tri = ( skbTriangle_t * )( (byte *)surf + surf->ofsTriangles );
+			for ( j = 0 ; j < surf->numTriangles ; j++, tri++ ) {
+				LL( tri->indexes[0] );
+				LL( tri->indexes[1] );
+				LL( tri->indexes[2] );
+			}
+
+			// swap all the vertexes
+			v = ( skbVertex_t * )( (byte *)surf + surf->ofsVerts );
+			for ( j = 0 ; j < surf->numVerts ; j++ ) {
+				v->normal[0] = LittleFloat( v->normal[0] );
+				v->normal[1] = LittleFloat( v->normal[1] );
+				v->normal[2] = LittleFloat( v->normal[2] );
+
+				v->texCoords[0] = LittleFloat( v->texCoords[0] );
+				v->texCoords[1] = LittleFloat( v->texCoords[1] );
+
+				v->numWeights = LittleLong( v->numWeights );
+
+				for ( k = 0 ; k < v->numWeights ; k++ ) {
+					v->weights[k].boneIndex = LittleLong( v->weights[k].boneIndex );
+					v->weights[k].boneWeight = LittleFloat( v->weights[k].boneWeight );
+					v->weights[k].offset[0] = LittleFloat( v->weights[k].offset[0] );
+					v->weights[k].offset[1] = LittleFloat( v->weights[k].offset[1] );
+					v->weights[k].offset[2] = LittleFloat( v->weights[k].offset[2] );
+				}
+
+				v = (skbVertex_t *)&v->weights[v->numWeights];
+			}
+
+			// swap the collapse map
+			collapseMap = ( int * )( (byte *)surf + surf->ofsCollapseMap );
+			for ( j = 0; j < surf->numVerts; j++, collapseMap++ ) {
+				*collapseMap = LittleLong( *collapseMap );
+			}
+		}
+
+		// find the next surface
+		surf = ( skbSurface_t * )( (byte *)surf + surf->ofsEnd );
+	}
+
+	return qtrue;
+}
+
+// FIXME: Copied math functions from tr_model_iqm.c
+static void JointToMatrix( const quat_t rot, const vec3_t scale, const vec3_t trans,
+			   float mat[3][4] ) {
+	float xx = 2.0f * rot[0] * rot[0];
+	float yy = 2.0f * rot[1] * rot[1];
+	float zz = 2.0f * rot[2] * rot[2];
+	float xy = 2.0f * rot[0] * rot[1];
+	float xz = 2.0f * rot[0] * rot[2];
+	float yz = 2.0f * rot[1] * rot[2];
+	float wx = 2.0f * rot[3] * rot[0];
+	float wy = 2.0f * rot[3] * rot[1];
+	float wz = 2.0f * rot[3] * rot[2];
+
+	mat[0][0] = scale[0] * (1.0f - (yy + zz));
+	mat[0][1] = scale[0] * (xy - wz);
+	mat[0][2] = scale[0] * (xz + wy);
+	mat[0][3] = trans[0];
+	mat[1][0] = scale[1] * (xy + wz);
+	mat[1][1] = scale[1] * (1.0f - (xx + zz));
+	mat[1][2] = scale[1] * (yz - wx);
+	mat[1][3] = trans[1];
+	mat[2][0] = scale[2] * (xz - wy);
+	mat[2][1] = scale[2] * (yz + wx);
+	mat[2][2] = scale[2] * (1.0f - (xx + yy));
+	mat[2][3] = trans[2];
+}
+
+/*
+=================
+R_LoadSKA
+=================
+*/
+static qboolean R_LoadSKA( model_t *mod, void *buffer, const char *mod_name ) {
+	int i, j;
+	skaHeader_t                 *pinmodel, *ska;
+	skaCompFrame_t              *cframe;
+	skaFrame_t                  *frame;
+	int version;
+	int size;
+	int numFrames;
+	int numBones;
+
+	pinmodel = (skaHeader_t *)buffer;
+
+	version = LittleLong( pinmodel->version );
+	if ( version != SKA_VERSION ) {
+		ri.Printf( PRINT_WARNING, "R_LoadSKA: %s has wrong version (%i should be %i)\n",
+				   mod_name, version, SKA_VERSION );
+		return qfalse;
+	}
+
+	numFrames = LittleLong( pinmodel->numFrames );
+	numBones = LittleLong( pinmodel->numBones );
+
+	mod->type = MOD_SKA;
+	size = sizeof( skaHeader_t ) + numFrames * (size_t)( &((skaFrame_t *)0)->bones[ numBones ] );
+	
+	mod->dataSize += size;
+	ska = mod->modelData = ri.Hunk_Alloc( size, h_low );
+
+	ska->ident = LittleLong( pinmodel->ident );
+	ska->version = LittleLong( pinmodel->version );
+
+	ska->flags = LittleLong( pinmodel->flags );
+	ska->numFrames = numFrames; //LittleLong( pinmodel->numFrames );
+	ska->numBones = numBones; //LittleLong( pinmodel->numFrames );
+
+	ska->totaltime = LittleFloat( pinmodel->totaltime );
+	ska->frametime = LittleFloat( pinmodel->frametime );
+	ska->totaldelta[0] = LittleFloat( pinmodel->totaldelta[0] );
+	ska->totaldelta[1] = LittleFloat( pinmodel->totaldelta[1] );
+	ska->totaldelta[2] = LittleFloat( pinmodel->totaldelta[2] );
+
+	ska->ofsFrames = sizeof( skaHeader_t );
+
+	// decompress model
+	frame = (skaFrame_t *)((byte*) ska + ska->ofsFrames );
+	cframe = (skaCompFrame_t *)((byte *) pinmodel + pinmodel->ofsFrames);
+
+	for(i = 0; i < ska->numFrames; i++)
+	{
+		for(j = 0; j < 3; j++)
+		{
+			frame->bounds[0][j] = LittleFloat(cframe->bounds[0][j]);
+			frame->bounds[1][j] = LittleFloat(cframe->bounds[1][j]);
+			frame->localOrigin[j] = frame->bounds[0][j] + 0.5f * frame->bounds[1][j];
+			frame->delta[j] = LittleFloat(cframe->delta[j]);
+		}
+
+		frame->radius = LittleFloat(cframe->radius);
+		
+		for(j = 0; j < ska->numBones; j++)
+		{
+			quat_t rotate;
+			vec3_t scale = { 1.0f, 1.0f, 1.0f };
+			vec3_t translate;
+			short packed;
+
+			rotate[0] = LittleShort( cframe->bones[j].rotate[0] ) / 32767.0f;
+			rotate[1] = LittleShort( cframe->bones[j].rotate[1] ) / 32767.0f;
+			rotate[2] = LittleShort( cframe->bones[j].rotate[2] ) / 32767.0f;
+			rotate[3] = LittleShort( cframe->bones[j].rotate[3] ) / 32767.0f;
+
+			rotate[3] = -rotate[3];
+
+			// 9.6 fixed point
+			packed = LittleShort( cframe->bones[j].offset[0] );
+			translate[0] = ( packed >> 6 ) + ( ( packed & ((1<<6)-1) ) / (float)((1<<6)-1) );
+
+			packed = LittleShort( cframe->bones[j].offset[1] );
+			translate[1] = ( packed >> 6 ) + ( ( packed & ((1<<6)-1) ) / (float)((1<<6)-1) );
+
+			packed = LittleShort( cframe->bones[j].offset[2] );
+			translate[2] = ( packed >> 6 ) + ( ( packed & ((1<<6)-1) ) / (float)((1<<6)-1) );
+
+			JointToMatrix( rotate, scale, translate, frame->bones[j].matrix );
+
+		}
+		
+		// Next Frame...
+		cframe = (skaCompFrame_t *) &cframe->bones[j];
+		frame = (skaFrame_t *) &frame->bones[j];
 	}
 
 	return qtrue;

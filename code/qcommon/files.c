@@ -2748,7 +2748,7 @@ char **FS_GetFileList( const char *path, const char *extension, int *numfiles, q
 	}
 	else if (Q_stricmp(extension, "$models") == 0)
 	{
-		const char *extensions[] = { "md3", "mdr", "mdc", "mds", "mdx", "mdm", "tan", "iqm" };
+		const char *extensions[] = { "md3", "mdr", "mdc", "mds", "mdx", "mdm", "skb", "ska", "tan", "iqm" };
 		int extNamesSize = ARRAY_LEN(extensions);
 		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, allowNonPureFilesOnDisk);
 	}

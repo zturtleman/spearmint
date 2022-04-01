@@ -1654,6 +1654,7 @@ Q3ROBJ = \
   $(B)/renderergl1/tr_animation.o \
   $(B)/renderergl1/tr_animation_mds.o \
   $(B)/renderergl1/tr_animation_mdm.o \
+  $(B)/renderergl1/tr_animation_skb.o \
   $(B)/renderergl1/tr_backend.o \
   $(B)/renderergl1/tr_bsp.o \
   $(B)/renderergl1/tr_cmds.o \
@@ -2157,6 +2158,7 @@ ifneq ($(SERVER_USE_RENDERER_DLOPEN),1)
     $(B)/ded/sv_ref.o \
     $(B)/ded/tr_animation_mds.o \
     $(B)/ded/tr_animation_mdm.o \
+    $(B)/ded/tr_animation_skb.o \
     $(B)/ded/tr_model.o \
     $(B)/ded/tr_model_iqm.o
 endif

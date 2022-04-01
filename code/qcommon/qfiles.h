@@ -749,6 +749,134 @@ typedef struct {
 /*
 ==============================================================================
 
+SKB file format (Heavy Metal FAKK2 Skeletal Mesh)
+
+Ritual's modified version of MD4, split into separate base (mesh) and animation files.
+
+==============================================================================
+*/
+
+#define SKB_IDENT           ( ( ' ' << 24 ) + ( 'L' << 16 ) + ( 'K' << 8 ) + 'S' )
+#define SKB_VERSION         3
+
+// Max verts for collapse map. I set it the same as RTCW/ET limits. --zturtleman
+#define SKB_MAX_VERTS 6000
+
+#define SKB_BONEFLAG_LEG        1
+
+typedef struct {
+	int boneIndex;
+	float boneWeight;
+	vec3_t offset;
+} skbWeight_t;
+
+typedef struct {
+	vec3_t normal;
+	vec2_t texCoords;
+	int numWeights;
+	skbWeight_t weights[1];     // variable sized
+} skbVertex_t;
+
+typedef struct {
+	int indexes[3];
+} skbTriangle_t;
+
+typedef struct {
+	int ident;
+
+	char name[MAX_QPATH];           // polyset name
+
+	int numTriangles;
+	int numVerts;
+	int minLod;
+
+	int ofsTriangles;
+	int ofsVerts;
+	int ofsCollapseMap;           // numVerts * int
+	int ofsEnd;                     // next surface follows
+} skbSurface_t;
+
+typedef struct {
+	int parent;
+	int flags;
+	char name[MAX_QPATH];           // name of bone
+} skbBoneInfo_t;
+
+typedef struct {
+	int ident;
+	int version;
+
+	char name[MAX_QPATH];           // model name
+
+	int numSurfaces;
+	int numBones;
+
+	int ofsBones;
+	int ofsSurfaces;
+
+	int ofsEnd;                     // end of file
+} skbHeader_t;
+
+/*
+==============================================================================
+
+SKA file format (Heavy Metal FAKK2 Skeletal Data)
+
+==============================================================================
+*/
+
+#define SKA_IDENT           ( ( 'N' << 24 ) + ( 'A' << 16 ) + ( 'K' << 8 ) + 'S' )
+#define SKA_VERSION         3
+#define SKA_MAX_BONES       256 // FIXME: Alice model has 131 bones but I haven't checked all models
+
+// NOTE: uncompressed bone/frame is only used at run-time
+typedef struct {
+	float		matrix[3][4];
+} skaBone_t;
+
+typedef struct {
+	vec3_t bounds[2];               // bounds of this frame
+	vec3_t localOrigin;
+	float radius;                   // dist from localOrigin to corner
+	vec3_t delta;                   // game movement delta
+	skaBone_t bones[1]; // [numBones]
+} skaFrame_t;
+
+typedef struct {
+	short rotate[4];
+	short offset[3];
+	short zero;
+} skaCompBone_t;
+
+typedef struct {
+	vec3_t bounds[2];       // bounds of this frame
+	float radius;           // dist from localOrigin to corner
+	vec3_t delta;           // game movement delta
+	skaCompBone_t bones[1]; // [numBones]
+} skaCompFrame_t;
+
+typedef struct {
+	int ident;
+	int version;
+
+	char name[MAX_QPATH];           // model name
+
+	int flags;
+
+	int numFrames;
+	int numBones;
+
+	float totaltime;
+	float frametime;
+	float totaldelta[3];
+
+	int ofsFrames;                  // (skaCompFrame_t + skaCompBone_t[numBones-1]) * numframes
+} skaHeader_t;
+
+
+/*
+==============================================================================
+
 .TAN model format (Tiki ANimated model?)
 
 Ritual's modified version of MD3

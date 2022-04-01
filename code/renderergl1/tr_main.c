@@ -1630,6 +1630,13 @@ void R_AddEntitySurfaces (void) {
 					ri.Printf( PRINT_WARNING, "WARNING: Cannot draw MDX '%s', needs MDM for meshes\n",
 							tr.currentModel->name );
 					break;
+				case MOD_SKB:
+					R_SKBAddAnimSurfaces( ent );
+					break;
+				case MOD_SKA:
+					ri.Printf( PRINT_WARNING, "WARNING: Cannot draw SKA '%s', needs SKB for meshes\n",
+							tr.currentModel->name );
+					break;
 				case MOD_IQM:
 					R_AddIQMSurfaces( ent );
 					break;
