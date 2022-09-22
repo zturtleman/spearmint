@@ -200,6 +200,16 @@ qboolean CL_SetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent, i
 	else if ( keynum >= K_FIRST_4JOY && keynum <= K_LAST_4JOY ) {
 		keynum = K_FIRST_JOY + keynum - K_FIRST_4JOY;
 	}
+	// check second range of keys
+	else if ( keynum >= K_FIRST_2JOY_PART2 && keynum <= K_LAST_2JOY_PART2 ) {
+		keynum = K_FIRST_JOY_PART2 + keynum - K_FIRST_2JOY_PART2;
+	}
+	else if ( keynum >= K_FIRST_3JOY_PART2 && keynum <= K_LAST_3JOY_PART2 ) {
+		keynum = K_FIRST_JOY_PART2 + keynum - K_FIRST_3JOY_PART2;
+	}
+	else if ( keynum >= K_FIRST_4JOY_PART2 && keynum <= K_LAST_4JOY_PART2 ) {
+		keynum = K_FIRST_JOY_PART2 + keynum - K_FIRST_4JOY_PART2;
+	}
 
 	for ( i = 0; i < MAX_JOY_REMAPS; i++ ) {
 		if ( device->remap[i].event.type == JOYEVENT_NONE ) {
@@ -271,6 +281,16 @@ int CL_GetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent ) {
 			keynum = K_FIRST_4JOY + keynum - K_FIRST_JOY;
 		}
 	}
+	// check second range of keys
+	else if ( keynum >= K_FIRST_JOY_PART2 && keynum <= K_LAST_JOY_PART2 ) {
+		if ( localPlayerNum == 1 ) {
+			keynum = K_FIRST_2JOY_PART2 + keynum - K_FIRST_JOY_PART2;
+		} else if ( localPlayerNum == 2 ) {
+			keynum = K_FIRST_3JOY_PART2 + keynum - K_FIRST_JOY_PART2;
+		} else if (  localPlayerNum == 3 ) {
+			keynum = K_FIRST_4JOY_PART2 + keynum - K_FIRST_JOY_PART2;
+		}
+	}
 
 	return keynum;
 }
@@ -302,6 +322,16 @@ int CL_GetJoyEventForKey( int localPlayerNum, int keynum, int startIndex, joyeve
 	}
 	else if ( keynum >= K_FIRST_4JOY && keynum <= K_LAST_4JOY ) {
 		keynum = K_FIRST_JOY + keynum - K_FIRST_4JOY;
+	}
+	// check second range of keys
+	else if ( keynum >= K_FIRST_2JOY_PART2 && keynum <= K_LAST_2JOY_PART2 ) {
+		keynum = K_FIRST_JOY_PART2 + keynum - K_FIRST_2JOY_PART2;
+	}
+	else if ( keynum >= K_FIRST_3JOY_PART2 && keynum <= K_LAST_3JOY_PART2 ) {
+		keynum = K_FIRST_JOY_PART2 + keynum - K_FIRST_3JOY_PART2;
+	}
+	else if ( keynum >= K_FIRST_4JOY_PART2 && keynum <= K_LAST_4JOY_PART2 ) {
+		keynum = K_FIRST_JOY_PART2 + keynum - K_FIRST_4JOY_PART2;
 	}
 
 	for ( i = startIndex; i < MAX_JOY_REMAPS; i++ ) {
