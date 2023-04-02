@@ -14,6 +14,7 @@ misc/code_blocks/*.layout
 .DS_Store
 .LSOverride
 Icon?
+make-macosx-values.local
 
 # Xcode
 ####################

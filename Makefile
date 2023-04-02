@@ -6,6 +6,14 @@
 COMPILE_PLATFORM=$(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' | sed -e 's/\//_/g')
 COMPILE_ARCH=$(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
 
+#arm64 hack!
+ifeq ($(shell uname -m), arm64)
+  COMPILE_ARCH=arm64
+endif
+ifeq ($(shell uname -m), aarch64)
+  COMPILE_ARCH=arm64
+endif
+
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
   COMPILE_ARCH=$(shell uname -p | sed -e 's/i.86/x86/')
@@ -440,7 +448,34 @@ ifeq ($(PLATFORM),darwin)
 
   # Default minimum Mac OS X version
   ifeq ($(MACOSX_VERSION_MIN),)
-    MACOSX_VERSION_MIN=10.7
+    MACOSX_VERSION_MIN=10.9
+    ifneq ($(findstring $(ARCH),ppc ppc64),)
+      MACOSX_VERSION_MIN=10.5
+    endif
+    ifeq ($(ARCH),x86)
+      MACOSX_VERSION_MIN=10.6
+    endif
+    ifeq ($(ARCH),x86_64)
+      # trying to find default SDK version is hard
+      # macOS 10.15 requires -sdk macosx but 10.11 doesn't support it
+      # macOS 10.6 doesn't have -show-sdk-version
+      DEFAULT_SDK=$(shell xcrun -sdk macosx -show-sdk-version 2> /dev/null)
+      ifeq ($(DEFAULT_SDK),)
+        DEFAULT_SDK=$(shell xcrun -show-sdk-version 2> /dev/null)
+      endif
+      ifeq ($(DEFAULT_SDK),)
+        $(error Error: Unable to determine macOS SDK version.  On macOS 10.6 to 10.8 run: make MACOSX_VERSION_MIN=10.6  On macOS 10.9 or later run: make MACOSX_VERSION_MIN=10.9 );
+      endif
+
+      ifneq ($(findstring $(DEFAULT_SDK),10.6 10.7 10.8),)
+        MACOSX_VERSION_MIN=10.6
+      else
+        MACOSX_VERSION_MIN=10.9
+      endif
+    endif
+    ifeq ($(ARCH),arm64)
+      MACOSX_VERSION_MIN=11.0
+    endif
   endif
 
   MACOSX_MAJOR=$(shell echo $(MACOSX_VERSION_MIN) | cut -d. -f1)
@@ -456,6 +491,11 @@ ifeq ($(PLATFORM),darwin)
   LDFLAGS += -mmacosx-version-min=$(MACOSX_VERSION_MIN)
   BASE_CFLAGS += -mmacosx-version-min=$(MACOSX_VERSION_MIN) \
                  -DMAC_OS_X_VERSION_MIN_REQUIRED=$(MAC_OS_X_VERSION_MIN_REQUIRED)
+
+  MACOSX_ARCH=$(ARCH)
+  ifeq ($(ARCH),x86)
+    MACOSX_ARCH=i386
+  endif
 
   ifeq ($(ARCH),ppc)
     BASE_CFLAGS += -arch ppc
@@ -475,6 +515,10 @@ ifeq ($(PLATFORM),darwin)
     OPTIMIZEVM += -mfpmath=sse
     BASE_CFLAGS += -arch x86_64
   endif
+  ifeq ($(ARCH),arm64)
+    # HAVE_VM_COMPILED=false # TODO: implement compiled vm
+    BASE_CFLAGS += -arch arm64
+  endif
 
   # When compiling on OSX for OSX, we're not cross compiling as far as the
   # Makefile is concerned, as target architecture is specified as a compiler
@@ -484,17 +528,38 @@ ifeq ($(PLATFORM),darwin)
   endif
 
   ifeq ($(CROSS_COMPILING),1)
-    ifeq ($(ARCH),x86_64)
-      CC=x86_64-apple-darwin13-cc
-      RANLIB=x86_64-apple-darwin13-ranlib
-    else
-      ifeq ($(ARCH),x86)
-        CC=i386-apple-darwin13-cc
-        RANLIB=i386-apple-darwin13-ranlib
-      else
-        $(error Architecture $(ARCH) is not supported when cross compiling)
+    # If CC is already set to something generic, we probably want to use
+    # something more specific
+    ifneq ($(findstring $(strip $(CC)),cc gcc),)
+      CC=
+    endif
+
+    ifndef CC
+      ifndef DARWIN
+        # macOS 10.9 SDK
+        DARWIN=13
+        ifneq ($(findstring $(ARCH),ppc ppc64),)
+          # macOS 10.5 SDK, though as of writing osxcross doesn't support ppc/ppc64
+          DARWIN=9
+        endif
+        ifeq ($(ARCH),arm64)
+          # macOS 11.3 SDK
+          DARWIN=20.4
+        endif
+      endif
+
+      CC=$(MACOSX_ARCH)-apple-darwin$(DARWIN)-cc
+      RANLIB=$(MACOSX_ARCH)-apple-darwin$(DARWIN)-ranlib
+      LIPO=$(MACOSX_ARCH)-apple-darwin$(DARWIN)-lipo
+
+      ifeq ($(call bin_path, $(CC)),)
+        $(error Unable to find osxcross $(CC))
       endif
     endif
+  endif
+
+  ifndef LIPO
+    LIPO=lipo
   endif
 
   BASE_CFLAGS += -fno-strict-aliasing -fno-common -pipe -DUSE_ICON
@@ -521,20 +586,39 @@ ifeq ($(PLATFORM),darwin)
   RENDERER_LIBS += -framework OpenGL
 
   ifeq ($(USE_LOCAL_HEADERS),1)
-    # libSDL2-2.0.0.dylib for PPC is SDL 2.0.1 + changes to compile
-    ifneq ($(findstring $(ARCH),ppc ppc64),)
-      BASE_CFLAGS += -I$(SDLHDIR)/include-macppc
-    else
+    ifeq ($(shell test $(MAC_OS_X_VERSION_MIN_REQUIRED) -ge 1090; echo $$?),0)
+      # Universal Binary 2 - for running on macOS 10.9 or later
+      # x86_64 (10.9 or later), arm64 (11.0 or later)
+      MACLIBSDIR=$(LIBSDIR)/macosx-ub2
       BASE_CFLAGS += -I$(SDLHDIR)/include
+    else
+      # Universal Binary - for running on Mac OS X 10.5 or later
+      # ppc (10.5/10.6), x86 (10.6 or later), x86_64 (10.6 or later)
+      #
+      # x86/x86_64 on 10.5 will run the ppc build.
+      #
+      # SDL 2.0.1,  last with Mac OS X PowerPC
+      # SDL 2.0.4,  last with Mac OS X 10.5 (x86/x86_64)
+      # SDL 2.0.22, last with Mac OS X 10.6 (x86/x86_64)
+      #
+      # code/libs/macosx-ub/libSDL2-2.0.0.dylib contents
+      # - ppc build is SDL 2.0.1 with a header change so it compiles
+      # - x86/x86_64 build are SDL 2.0.22
+      MACLIBSDIR=$(LIBSDIR)/macosx-ub
+      ifneq ($(findstring $(ARCH),ppc ppc64),)
+        BASE_CFLAGS += -I$(SDLHDIR)/include-macppc
+      else
+        BASE_CFLAGS += -I$(SDLHDIR)/include-2.0.22
+      endif
     endif
 
     # We copy sdlmain before ranlib'ing it so that subversion doesn't think
     #  the file has been modified by each build.
     LIBSDLMAIN=$(B)/libSDL2main.a
-    LIBSDLMAINSRC=$(LIBSDIR)/macosx/libSDL2main.a
-    CLIENT_LIBS += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
-    RENDERER_LIBS += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
-    CLIENT_EXTRA_FILES += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
+    LIBSDLMAINSRC=$(MACLIBSDIR)/libSDL2main.a
+    CLIENT_LIBS += $(MACLIBSDIR)/libSDL2-2.0.0.dylib
+    RENDERER_LIBS += $(MACLIBSDIR)/libSDL2-2.0.0.dylib
+    CLIENT_EXTRA_FILES += $(MACLIBSDIR)/libSDL2-2.0.0.dylib
   else
     BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
     CLIENT_LIBS += -framework SDL2
@@ -2084,7 +2168,11 @@ endif
 ifneq ($(strip $(LIBSDLMAIN)),)
 ifneq ($(strip $(LIBSDLMAINSRC)),)
 $(LIBSDLMAIN) : $(LIBSDLMAINSRC)
+ifeq ($(PLATFORM),darwin)
+	$(LIPO) -extract $(MACOSX_ARCH) $< -o $@
+else
 	cp $< $@
+endif
 	$(RANLIB) $@
 endif
 endif

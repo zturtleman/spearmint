@@ -50,6 +50,7 @@ Suite 120, Rockville, Maryland 20850 USA.
   #endif
 #endif
 
+#if defined (__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
 static void VM_Destroy_Compiled(vm_t* self);
 
 /*
@@ -1815,3 +1816,4 @@ int VM_CallCompiled(vm_t *vm, int *args)
 
 	return opStack[opStackOfs];
 }
+#endif
