@@ -26,7 +26,7 @@ Some of the major Spearmint features are:
 
 Some of the major ioquake3 features currently implemented are:
 
-  * SDL backend
+  * SDL 2 backend
   * OpenAL sound API support (multiple speaker support and better sound
     quality)
   * Full x86_64 support on Linux
@@ -51,10 +51,7 @@ use a modern copy from http://icculus.org/gtkradiant/.
 
 The original id software readme that accompanied the Q3 source release has been
 renamed to id-readme.txt so as to prevent confusion. Please refer to the
-web-site for updated status.
-
-More documentation is on:
-http://wiki.ioquake3.org/
+website for updated status.
 
 # Game Code
 
@@ -72,13 +69,21 @@ For Windows
   2. Change to the directory containing this readme.
   3. Run 'make'.
 
-For Mac OS X, building a Universal Binary
+For macOS, building a Universal Binary (macOS 10.5 to 10.8, x86_64, x86, ppc)
   1. Install MacOSX SDK packages from XCode.  For maximum compatibility,
-     install MacOSX10.4u.sdk and MacOSX10.3.9.sdk, and MacOSX10.2.8.sdk.
+     install MacOSX10.5.sdk and MacOSX10.6.sdk.
   2. Change to the directory containing this README file.
   3. Run './make-macosx-ub.sh'
-  4. Copy the resulting ioquake3.app in /build/release-darwin-ub to your
-     /Applications/ioquake3 folder.
+  4. Copy the resulting ioquake3.app in /build/release-darwin-universal
+     to your /Applications/ioquake3 folder.
+
+For macOS, building a Universal Binary 2 (macOS 10.9+, arm64, x86_64)
+  1. Install MacOSX SDK packages from XCode.  Building for arm64 requires
+     MacOSX11.sdk or later.
+  2. Change to the directory containing this README file.
+  3. Run './make-macosx-ub2.sh'
+  4. Copy the resulting ioquake3.app in /build/release-darwin-universal2
+     to your /Applications/ioquake3 folder.
 
 Installation, for *nix
   1. Set the COPYDIR variable in the shell to be where you installed Quake 3
@@ -117,10 +122,8 @@ Makefile.local:
   USE_FREETYPE         - enable FreeType support for rendering fonts
   USE_INTERNAL_LIBS    - build internal libraries instead of dynamically
                          linking against system libraries; this just sets
-                         the default for USE_INTERNAL_SPEEX etc.
+                         the default for USE_INTERNAL_ZLIB etc.
                          and USE_LOCAL_HEADERS
-  USE_INTERNAL_SPEEX   - build internal speex library instead of dynamically
-                         linking against system libspeex
   USE_INTERNAL_FREETYPE - build and link against internal FreeType library
   USE_INTERNAL_ZLIB    - build and link against internal zlib
   USE_INTERNAL_JPEG    - build and link against internal JPEG library
@@ -236,7 +239,7 @@ The defaults for these variables differ depending on the target platform.
                                       ipv6 servers on the local network
   net_mcastiface                    - outgoing interface to use for scan
 
-  r_allowResize                     - make window resizable (SDL only)
+  r_allowResize                     - make window resizable
   r_ext_texture_filter_anisotropic  - anisotropic texture filtering
   r_zProj                           - distance of observer camera to projection
                                       plane in quake3 standard units
@@ -712,8 +715,7 @@ directory, this restriction is lifted.
 
 # Contributing
 
-Please sumbit all patches at the [Magical Clover Forum](https://forum.clover.moe)
-or as a GitHub pull request.
+Please submit all patches as a GitHub pull request.
 
 The focus for Spearmint is to develop a stable base suitable for further
 development and provide players with the same Quake 3 game play experience
@@ -733,7 +735,7 @@ ioquake3 Maintainers
   * Thilo Schulz <arny@ats.s.bawue.de>
   * Tim Angus <tim@ngus.net>
   * Tony J. White <tjw@tjw.org>
-  * Zachary J. Slater <zachary@ioquake.org>
+  * Jack Slater <jack@ioquake.org>
   * Zack Middleton <zturtleman@gmail.com>
 
 Significant contributions from
