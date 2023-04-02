@@ -52,15 +52,6 @@ qboolean stdinIsATTY;
 // Used to determine where to store user-specific files
 static char homePath[ MAX_OSPATH ] = { 0 };
 
-// Used to store the Steam Quake 3 installation path
-static char steamPath[ MAX_OSPATH ] = { 0 };
-
-// Used to store the GOG Quake 3 installation path
-static char gogPath[ MAX_OSPATH ] = { 0 };
-
-// Used to store the Microsoft Store Quake 3 installation path
-static char microsoftStorePath[MAX_OSPATH] = { 0 };
-
 /*
 ==================
 Sys_DefaultHomePath
@@ -117,54 +108,6 @@ char *Sys_DefaultHomePath(void)
 
 	return homePath;
 }
-
-/*
-================
-Sys_SteamPath
-================
-*/
-char *Sys_SteamPath( void )
-{
-	// Disabled since Steam doesn't let you install Quake 3 on Mac/Linux
-#if 0 //#ifdef STEAMPATH_NAME
-	char *p;
-
-	if( ( p = getenv( "HOME" ) ) != NULL )
-	{
-#ifdef __APPLE__
-		char *steamPathEnd = "/Library/Application Support/Steam/SteamApps/common/" STEAMPATH_NAME;
-#else
-		char *steamPathEnd = "/.steam/steam/SteamApps/common/" STEAMPATH_NAME;
-#endif
-		Com_sprintf(steamPath, sizeof(steamPath), "%s%s", p, steamPathEnd);
-	}
-#endif
-
-	return steamPath;
-}
-
-/*
-================
-Sys_GogPath
-================
-*/
-char *Sys_GogPath( void )
-{
-	// GOG also doesn't let you install Quake 3 on Mac/Linux
-	return gogPath;
-}
-
-/*
-================
-Sys_MicrosoftStorePath
-================
-*/
-char* Sys_MicrosoftStorePath(void)
-{
-	// Microsoft Store doesn't exist on Mac/Linux
-	return microsoftStorePath;
-}
-
 
 /*
 ================
