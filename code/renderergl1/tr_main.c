@@ -1667,8 +1667,11 @@ void R_GenerateDrawSurfs( void ) {
 		VectorSet( tr.viewParms.visBounds[ 0 ], MIN_WORLD_COORD, MIN_WORLD_COORD, MIN_WORLD_COORD );
 		VectorSet( tr.viewParms.visBounds[ 1 ], MAX_WORLD_COORD, MAX_WORLD_COORD, MAX_WORLD_COORD );
 	} else {
-		VectorCopy( tr.world->nodes->mins, tr.viewParms.visBounds[ 0 ] );
-		VectorCopy( tr.world->nodes->maxs, tr.viewParms.visBounds[ 1 ] );
+		// q3map2 _skybox entity generates surfaces outside of the node
+		// bounds so use surfMins/surfMaxs instead of mins/maxs so farplane
+		// is set up far enough.
+		VectorCopy( tr.world->nodes->surfMins, tr.viewParms.visBounds[ 0 ] );
+		VectorCopy( tr.world->nodes->surfMaxs, tr.viewParms.visBounds[ 1 ] );
 	}
 
 	R_SetupProjection(&tr.viewParms, r_zproj->value, qtrue);
