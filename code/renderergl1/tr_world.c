@@ -102,7 +102,12 @@ static qboolean R_CullSurface( surfaceType_t *surface, shader_t *shader/*, int *
 		//tr.pc.c_plane_cull_in++;
 	}
 
-	{
+	// Strictly speaking this is a good test for two-sided MST_PLANAR
+	// but Quake 3 didn't cull them. In rgoer_seasons map it causes sprites
+	// with "vertexDeform move" to be culled based on their origin even
+	// though they move far from the origin.
+	// TODO: Culling should consider vertexDeforms.
+	if ( !( gen->plane.type != PLANE_NON_PLANAR && shader->cullType == CT_TWO_SIDED ) ) {
 		// try sphere cull
 		if ( tr.currentEntityNum != ENTITYNUM_WORLD ) {
 			cull = R_CullLocalPointAndRadius( gen->origin, gen->radius );
