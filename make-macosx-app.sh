@@ -180,6 +180,7 @@ WRAPPER_NAME="${PRODUCT_NAME}.${WRAPPER_EXTENSION}"
 CONTENTS_FOLDER_PATH="${WRAPPER_NAME}/Contents"
 UNLOCALIZED_RESOURCES_FOLDER_PATH="${CONTENTS_FOLDER_PATH}/Resources"
 EXECUTABLE_FOLDER_PATH="${CONTENTS_FOLDER_PATH}/MacOS"
+PROTOCOL_HANDLER="quake3"
 
 # loop through the architectures to build string lists for each universal binary
 for ARCH in $SEARCH_ARCHS; do
@@ -382,6 +383,21 @@ if [ -n "${MACOSX_DEPLOYMENT_TARGET_PPC}" ] || [ -n "${MACOSX_DEPLOYMENT_TARGET_
 	PLIST="${PLIST}
     </dict>"
 fi
+
+	if [ -n "${PROTOCOL_HANDLER}" ]; then
+	PLIST="${PLIST}
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>${PRODUCT_NAME}</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>${PROTOCOL_HANDLER}</string>
+        </array>
+      </dict>
+    </array>"
+	fi
 
 PLIST="${PLIST}
     <key>NSHumanReadableCopyright</key>
