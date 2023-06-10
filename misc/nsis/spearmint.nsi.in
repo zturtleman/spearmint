@@ -14,6 +14,7 @@
 !define RENDERER_PREFIX "spearmint-renderer-"
 !define GAMEDIR "Spearmint"
 !define GAMEKEY "spearmint"
+!define PROTOCOL_HANDLER "spearmint"
 
 !define MULTIUSER_MUI
 !define MULTIUSER_EXECUTIONLEVEL Highest
@@ -137,11 +138,11 @@ SectionEnd
 
 Section "Protocol Handler" ProtocolHandler
 
-  WriteRegStr SHCTX "Software\Classes\quake3" "CustomUrlApplication" "$INSTDIR\${CLIENT}"
-  WriteRegStr SHCTX "Software\Classes\quake3" "CustomUrlArguments" '"%1"'
-  WriteRegStr SHCTX "Software\Classes\quake3" "URL Protocol" ""
-  WriteRegStr SHCTX "Software\Classes\quake3\DefaultIcon" "" "$INSTDIR\${CLIENT},0"
-  WriteRegStr SHCTX "Software\Classes\quake3\shell\open\command" "" '"$INSTDIR\${CLIENT}" --uri "%1"'
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_HANDLER}" "CustomUrlApplication" "$INSTDIR\${CLIENT}"
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_HANDLER}" "CustomUrlArguments" '"%1"'
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_HANDLER}" "URL Protocol" ""
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_HANDLER}\DefaultIcon" "" "$INSTDIR\${CLIENT},0"
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_HANDLER}\shell\open\command" "" '"$INSTDIR\${CLIENT}" --uri "%1"'
 
 SectionEnd
 
@@ -174,7 +175,7 @@ Section "Uninstall"
   ; Remove registry keys
   DeleteRegKey SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${GAMEKEY}"
   DeleteRegKey SHCTX "Software\${GAMEKEY}"
-  DeleteRegKey SHCTX "Software\Classes\quake3"
+  DeleteRegKey SHCTX "Software\Classes\${PROTOCOL_HANDLER}"
 
   ; Remove files and uninstaller
   Delete $INSTDIR\${CLIENT}

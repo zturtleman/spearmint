@@ -83,7 +83,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 // In the future if the client-server protocol is modified, this may allow old and new engines to play together
 //#define LEGACY_PROTOCOL
 
-#define PROTOCOL_HANDLER			"quake3"
+// URL protocol scheme. "quake3://connect/127.0.0.1"
+#define PROTOCOL_HANDLER			"spearmint"
 
 // Heartbeat for dpmaster protocol. You shouldn't change this unless you know what you're doing
 #define HEARTBEAT_FOR_MASTER		"DarkPlaces"
