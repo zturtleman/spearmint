@@ -19,6 +19,7 @@ jobs:
       with:
         name: Linux
         path: build/*.zip
+  # opengl2 glsl to c doesn't work with sed in Windows CI image.
   windows:
     name: Windows
     runs-on: windows-2019
@@ -27,7 +28,7 @@ jobs:
     - name: Compile
       run: |
         choco install zip
-        make release
+        make release BUILD_RENDERER_OPENGL2=0
       env:
         ARCHIVE: 1
     - uses: actions/upload-artifact@v3
