@@ -1294,9 +1294,7 @@ void IN_Init( void *windowData )
 		Cvar_CheckRange(in_joystickThreshold[i], 0, 0.9f, qfalse);
 	}
 
-#if defined(PROTOCOL_HANDLER) && defined(__APPLE__)
 	SDL_EventState( SDL_DROPFILE, SDL_ENABLE );
-#endif
 
 	SDL_StartTextInput( );
 
