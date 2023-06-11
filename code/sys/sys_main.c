@@ -682,20 +682,6 @@ void Sys_ParseArgs( int argc, char **argv )
 #ifdef PROTOCOL_HANDLER
 /*
 =================
-Sys_InitProtocolHandler
-
-See sys_osx.m for macOS implementation.
-=================
-*/
-#ifndef __APPLE__
-char *Sys_InitProtocolHandler( void )
-{
-	return NULL;
-}
-#endif
-
-/*
-=================
 Sys_ParseProtocolUri
 
 This parses a protocol URI, e.g. "quake3://connect/example.com:27950"
@@ -753,9 +739,9 @@ char *Sys_ParseProtocolUri( const char *uri )
 			}
 		}
 
-		bufsize = strlen( "+connect " ) + i + 1;
+		bufsize = strlen( "connect " ) + i + 1;
 		out = malloc( bufsize );
-		strcpy( out, "+connect " );
+		strcpy( out, "connect " );
 		strncat( out, uri, i );
 		return out;
 	}
@@ -854,10 +840,6 @@ int main( int argc, char **argv )
 
 	Sys_PlatformInit( );
 
-#ifdef PROTOCOL_HANDLER
-	protocolCommand = Sys_InitProtocolHandler( );
-#endif
-
 	// Set the initial time base
 	Sys_Milliseconds( );
 
@@ -904,6 +886,7 @@ int main( int argc, char **argv )
 #ifdef PROTOCOL_HANDLER
 	if ( protocolCommand != NULL )
 	{
+		Q_strcat( commandLine, sizeof( commandLine ), "+" );
 		Q_strcat( commandLine, sizeof( commandLine ), protocolCommand );
 		free( protocolCommand );
 	}

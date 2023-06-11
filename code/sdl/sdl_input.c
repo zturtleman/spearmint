@@ -1177,6 +1177,20 @@ static void IN_ProcessEvents( void )
 				{
 					char *filename = e.drop.file;
 
+#if defined(PROTOCOL_HANDLER) && defined(__APPLE__)
+					// Handle macOS open URL event. URL protocol scheme must be set in Info.plist.
+					if( !Q_strncmp( filename, PROTOCOL_HANDLER ":", strlen( PROTOCOL_HANDLER ":" ) ) )
+					{
+						char *protocolCommand = Sys_ParseProtocolUri( filename );
+
+						if( protocolCommand )
+						{
+							Cbuf_ExecuteText( EXEC_APPEND, va( "%s\n", protocolCommand ) );
+							free( protocolCommand );
+						}
+					}
+					else
+#endif
 					// ZTM: TODO: Open file and check for DEMO_MAGIC so it work with any demo extension?
 					if ( FS_IsDemoExt( filename, strlen( filename ) ) ) {
 						CL_PlayDemo( filename );
@@ -1279,6 +1293,10 @@ void IN_Init( void *windowData )
 		in_joystickThreshold[i] = Cvar_Get( Com_LocalPlayerCvarName(i, "in_joystickThreshold"), "0.15", CVAR_ARCHIVE );
 		Cvar_CheckRange(in_joystickThreshold[i], 0, 0.9f, qfalse);
 	}
+
+#if defined(PROTOCOL_HANDLER) && defined(__APPLE__)
+	SDL_EventState( SDL_DROPFILE, SDL_ENABLE );
+#endif
 
 	SDL_StartTextInput( );
 
