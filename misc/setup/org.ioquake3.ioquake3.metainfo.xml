@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component type="desktop-application">
-  <id>org.ioquake3.IOQuake3</id>
+  <id>org.ioquake3.ioquake3</id>
   <launchable type="desktop-id">ioquake3.desktop</launchable>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-2.0</project_license>
@@ -19,10 +19,10 @@
   <url type="bugtracker">https://github.com/ioquake/ioq3/issues</url>
   <screenshots>
     <screenshot type="default">
-      <image type="source">https://media.indiedb.com/images/engines/1/1/91/6l2hb3o.jpg</image>
+      <image type="source">TK</image>
     </screenshot>
     <screenshot>
-      <image type="source">https://media.indiedb.com/images/engines/1/1/91/ioquake3.jpg</image>
+      <image type="source">TK</image>
     </screenshot>
   </screenshots>
   <developer_name>The ioquake Group</developer_name>
