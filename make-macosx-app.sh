@@ -14,6 +14,7 @@ if [ $# == 0 ] || [ $# -gt 2 ]; then
 	echo " x86"
 	echo " x86_64"
 	echo " ppc"
+	echo " arm64"
 	echo
 	exit 1
 fi
@@ -41,12 +42,15 @@ if [ "$2" != "" ]; then
 		CURRENT_ARCH="x86_64"
 	elif [ "$2" == "ppc" ]; then
 		CURRENT_ARCH="ppc"
+	elif [ "$2" == "arm64" ]; then
+		CURRENT_ARCH="arm64"
 	else
 		echo "Invalid architecture: $2"
 		echo "Valid architectures are:"
 		echo " x86"
 		echo " x86_64"
 		echo " ppc"
+		echo " arm64"
 		echo
 		exit 1
 	fi
@@ -78,6 +82,7 @@ function symlinkArch()
     IS32=`file "${SRCFILE}.${EXT}" | grep "i386"`
     IS64=`file "${SRCFILE}.${EXT}" | grep "x86_64"`
     ISPPC=`file "${SRCFILE}.${EXT}" | grep "ppc"`
+    ISARM=`file "${SRCFILE}.${EXT}" | grep "arm64"`
 
     if [ "${IS32}" != "" ]; then
         if [ ! -L "${DSTFILE}x86.${EXT}" ]; then
@@ -103,6 +108,14 @@ function symlinkArch()
         rm "${DSTFILE}ppc.${EXT}"
     fi
 
+    if [ "${ISARM}" != "" ]; then
+        if [ ! -L "${DSTFILE}arm64.${EXT}" ]; then
+            ln -s "${SRCFILE}.${EXT}" "${DSTFILE}arm64.${EXT}"
+        fi
+    elif [ -L "${DSTFILE}arm64.${EXT}" ]; then
+        rm "${DSTFILE}arm64.${EXT}"
+    fi
+
     popd > /dev/null
 }
 
@@ -110,6 +123,7 @@ SEARCH_ARCHS="																	\
 	x86																			\
 	x86_64																		\
 	ppc																			\
+	arm64																		\
 "
 
 HAS_LIPO=`command -v lipo`
@@ -125,6 +139,16 @@ fi
 # if the optional arch parameter is used, replace SEARCH_ARCHS to only work with one
 if [ "${CURRENT_ARCH}" != "" ]; then
 	SEARCH_ARCHS="${CURRENT_ARCH}"
+fi
+
+# select SDL run-time dylib
+if [ "${MACOSX_DEPLOYMENT_TARGET}" = "10.5" ] \
+  || [ "${MACOSX_DEPLOYMENT_TARGET}" = "10.6" ] \
+  || [ "${MACOSX_DEPLOYMENT_TARGET}" = "10.7" ] \
+  || [ "${MACOSX_DEPLOYMENT_TARGET}" = "10.8" ]; then
+  UNIVERSAL_BINARY=1
+else
+  UNIVERSAL_BINARY=2
 fi
 
 AVAILABLE_ARCHS=""
@@ -172,6 +196,7 @@ CONTENTS_FOLDER_PATH="${WRAPPER_NAME}/Contents"
 UNLOCALIZED_RESOURCES_FOLDER_PATH="${CONTENTS_FOLDER_PATH}/Resources"
 EXECUTABLE_FOLDER_PATH="${CONTENTS_FOLDER_PATH}/MacOS"
 EXECUTABLE_NAME="${PRODUCT_NAME}"
+PROTOCOL_HANDLER="quake3"
 
 # loop through the architectures to build string lists for each universal binary
 for ARCH in $SEARCH_ARCHS; do
@@ -249,7 +274,11 @@ fi
 
 # set the final application bundle output directory
 if [ "${2}" == "" ]; then
-	BUILT_PRODUCTS_DIR="${OBJROOT}/${TARGET_NAME}-darwin-universal"
+	if [ -n "${MACOSX_DEPLOYMENT_TARGET_ARM64}" ]; then
+		BUILT_PRODUCTS_DIR="${OBJROOT}/${TARGET_NAME}-darwin-universal2"
+	else
+		BUILT_PRODUCTS_DIR="${OBJROOT}/${TARGET_NAME}-darwin-universal"
+	fi
 	if [ ! -d ${BUILT_PRODUCTS_DIR} ]; then
 		mkdir -p ${BUILT_PRODUCTS_DIR} || exit 1;
 	fi
@@ -280,7 +309,11 @@ if [ ! -d "${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}" ]; then
 fi
 
 # copy and generate some application bundle resources
-cp code/libs/macosx/*.dylib "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}"
+if [ $UNIVERSAL_BINARY -eq 2 ]; then
+	cp code/libs/macosx-ub2/*.dylib "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}"
+else
+	cp code/libs/macosx-ub/*.dylib "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}"
+fi
 cp ${ICNSDIR}/${ICNS} "${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/$ICNS" || exit 1;
 echo -n ${PKGINFO} > "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/PkgInfo" || exit 1;
 
@@ -314,7 +347,7 @@ PLIST="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
     <key>LSMinimumSystemVersion</key>
     <string>${MACOSX_DEPLOYMENT_TARGET}</string>"
 
-if [ -n "${MACOSX_DEPLOYMENT_TARGET_PPC}" ] || [ -n "${MACOSX_DEPLOYMENT_TARGET_X86}" ] || [ -n "${MACOSX_DEPLOYMENT_TARGET_X86_64}" ]; then
+if [ -n "${MACOSX_DEPLOYMENT_TARGET_PPC}" ] || [ -n "${MACOSX_DEPLOYMENT_TARGET_X86}" ] || [ -n "${MACOSX_DEPLOYMENT_TARGET_X86_64}" ] || [ -n "${MACOSX_DEPLOYMENT_TARGET_ARM64}" ]; then
 	PLIST="${PLIST}
     <key>LSMinimumSystemVersionByArchitecture</key>
     <dict>"
@@ -336,16 +369,41 @@ if [ -n "${MACOSX_DEPLOYMENT_TARGET_PPC}" ] || [ -n "${MACOSX_DEPLOYMENT_TARGET_
         <key>x86_64</key>
         <string>${MACOSX_DEPLOYMENT_TARGET_X86_64}</string>"
 	fi
+	
+	if [ -n "${MACOSX_DEPLOYMENT_TARGET_ARM64}" ]; then
+	PLIST="${PLIST}
+        <key>arm64</key>
+        <string>${MACOSX_DEPLOYMENT_TARGET_ARM64}</string>"
+	fi
 
 	PLIST="${PLIST}
     </dict>"
 fi
+
+	if [ -n "${PROTOCOL_HANDLER}" ]; then
+	PLIST="${PLIST}
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>${PRODUCT_NAME}</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>${PROTOCOL_HANDLER}</string>
+        </array>
+      </dict>
+    </array>"
+	fi
 
 PLIST="${PLIST}
     <key>NSHumanReadableCopyright</key>
     <string>QUAKE III ARENA Copyright © 1999-2000 id Software, Inc. All rights reserved.</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+    <key>NSHighResolutionCapable</key>
+    <false/>
+    <key>NSRequiresAquaSystemAppearance</key>
+    <false/>
 </dict>
 </plist>
 "

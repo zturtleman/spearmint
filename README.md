@@ -1,3 +1,5 @@
+![Build](https://github.com/ioquake/ioq3/workflows/Build/badge.svg)
+
                    ,---------------------------------------.
                    |   _                     _       ____  |
                    |  (_)___  __ _ _  _ __ _| |_____|__ /  |
@@ -5,7 +7,7 @@
                    |  |_\___/\__, |\_,_\__,_|_\_\___|___/  |
                    |            |_|                        |
                    |                                       |
-                   `---------- http://ioquake3.org --------'
+                   `--------- https://ioquake3.org --------'
 
 The intent of this project is to provide a baseline Quake 3 which may be used
 for further development and baseq3 fun.
@@ -38,12 +40,37 @@ The original id software readme that accompanied the Q3 source release has been
 renamed to id-readme.txt so as to prevent confusion. Please refer to the
 website for updated status.
 
-More documentation including a Player's Guide and Sysadmin Guide is on:
-http://wiki.ioquake3.org/
+More documentation including a Player's Guide and Sysadmin Guide are on:
+https://ioquake3.org/help/
 
 If you've got issues that you aren't sure are worth filing as bugs, or just
 want to chat, please visit our forums:
-http://discourse.ioquake.org
+https://discourse.ioquake.org
+
+# Thank You:
+
+<p>
+  <a href="https://www.digitalocean.com/">Digital Ocean<br/>
+    <img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/PoweredByDO/DO_Powered_by_Badge_blue.svg" width="201px">
+  </a>
+</p>
+---
+<p>
+<a href="https://www.discourse.org/">Discourse<br/>
+<img src=
+"https://user-images.githubusercontent.com/1681963/52239617-e2683480-289c-11e9-922b-5da55472e5b4.png"
+ width="300px"></a>
+</p>
+---
+<p>
+<a href="https://icculus.org/">icculus dot org<br/>
+<img src="http://icculus.org/icculus-org-now.png" width="300px"></a>
+</p>
+---
+<p>
+<a href="https://nuclearmonster.com/">Nuclear Monster<br/>
+<img src="https://user-images.githubusercontent.com/903791/152968830-dd08737b-55c6-4ac6-9610-31121ea0e8c6.png" width="300px"></a>
+</p>
 
 # Compilation and installation
 
@@ -53,15 +80,23 @@ For *nix
 
 For Windows,
   1. Please refer to the excellent instructions here:
-     http://wiki.ioquake3.org/Building_ioquake3
+     https://ioquake3.org/help/building-ioquake3/
 
-For Mac OS X, building a Universal Binary
+For macOS, building a Universal Binary (macOS 10.5 to 10.8, x86_64, x86, ppc)
   1. Install MacOSX SDK packages from XCode.  For maximum compatibility,
-     install MacOSX10.4u.sdk and MacOSX10.3.9.sdk, and MacOSX10.2.8.sdk.
+     install MacOSX10.5.sdk and MacOSX10.6.sdk.
   2. Change to the directory containing this README file.
   3. Run './make-macosx-ub.sh'
-  4. Copy the resulting ioquake3.app in /build/release-darwin-ub to your
-     /Applications/ioquake3 folder.
+  4. Copy the resulting ioquake3.app in /build/release-darwin-universal
+     to your /Applications/ioquake3 folder.
+
+For macOS, building a Universal Binary 2 (macOS 10.9+, arm64, x86_64)
+  1. Install MacOSX SDK packages from XCode.  Building for arm64 requires
+     MacOSX11.sdk or later.
+  2. Change to the directory containing this README file.
+  3. Run './make-macosx-ub2.sh'
+  4. Copy the resulting ioquake3.app in /build/release-darwin-universal2
+     to your /Applications/ioquake3 folder.
 
 Installation, for *nix
   1. Set the COPYDIR variable in the shell to be where you installed Quake 3
@@ -115,6 +150,7 @@ Makefile.local:
   USE_INTERNAL_JPEG    - build and link against internal JPEG library
   USE_INTERNAL_OGG     - build and link against internal ogg library
   USE_INTERNAL_OPUS    - build and link against internal opus/opusfile libraries
+  USE_INTERNAL_VORBIS  - build and link against internal Vorbis library
   USE_LOCAL_HEADERS    - use headers local to ioq3 instead of system ones
   DEBUG_CFLAGS         - C compiler flags to use for building debug version
   COPYDIR              - the target installation directory
@@ -359,11 +395,13 @@ value in the prototype with intptr_t (arg0, arg1, ...stay int).
 
 Add the following code snippet to q_shared.h:
 
-    #ifdef Q3_VM
-    typedef int intptr_t;
-    #else
-    #include <stdint.h>
-    #endif
+```c
+#ifdef Q3_VM
+typedef int intptr_t;
+#else
+#include <stdint.h>
+#endif
+```
 
 Note if you simply wish to run mods on a 64bit platform you do not need to
 recompile anything since by default Q3 uses a virtual machine system.
@@ -493,38 +531,6 @@ and provide players with the same Quake 3 experience they've had for years.
 We do have graphical improvements with the new renderer, but they are off by default.
 See opengl2-readme.md for more information.
 
-# Building Official Installers
-
-We need help getting automated installers on all the platforms that ioquake3
-supports. We don't necessarily care about all the installers being identical,
-but we have some general guidelines:
-
-  * Please include the id patch pk3s in your installer, which are available
-    from http://ioquake3.org/patch-data/ subject to agreement to the id
-    EULA. Your installer shall also ask the user to agree to this EULA (which
-    is in the /web/include directory for your convenience) and subsequently
-    refuse to continue the installation of the patch pk3s and pak0.pk3 if they
-    do not.
-
-  * Please don't require pak0.pk3, since not everyone using the engine
-    plans on playing Quake 3 Arena on it. It's fine to (optionally) assist the
-    user in copying the file or tell them how.
-
-  * It is fine to just install the binaries without requiring id EULA agreement,
-    providing pak0.pk3 and the patch pk3s are not referred to or included in the
-    installer.
-
-  * Please include at least a libSDL2 so/dylib/dll on every platform.
-
-  * Please include an OpenAL so/dylib/dll, since every platform should be using
-    it by now.
-
-  * Please be prepared to alter your installer on the whim of the maintainers.
-
-  * Your installer will be mirrored to an "official" directory, thus making it
-    a done deal.
-
-
 # Credits
 
 Maintainers
@@ -534,7 +540,7 @@ Maintainers
   * Thilo Schulz <arny@ats.s.bawue.de>
   * Tim Angus <tim@ngus.net>
   * Tony J. White <tjw@tjw.org>
-  * Zachary J. Slater <zachary@ioquake.org>
+  * Jack Slater <jack@ioquake.org>
   * Zack Middleton <zturtleman@gmail.com>
 
 Significant contributions from

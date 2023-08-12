@@ -254,6 +254,7 @@ static  cvar_t          *fs_apppath;
 #endif
 static	cvar_t		*fs_steampath;
 static	cvar_t		*fs_gogpath;
+static	cvar_t		*fs_microsoftstorepath;
 
 static	cvar_t		*fs_basepath;
 static	cvar_t		*fs_basegame;
@@ -2932,7 +2933,9 @@ void FS_AddGameDirectory( const char *path, const char *dir ) {
 	// Get .pk3 files
 	pakfiles = Sys_ListFiles(curpath, ".pk3", NULL, &numfiles, qfalse);
 
-	qsort( pakfiles, numfiles, sizeof(char*), paksort );
+	if ( pakfiles ) {
+		qsort( pakfiles, numfiles, sizeof(char*), paksort );
+	}
 
 	if ( fs_numServerPaks ) {
 		numdirs = 0;
@@ -3351,6 +3354,10 @@ static void FS_Startup( const char *gameName )
 	}
 
 	// add search path elements in reverse priority order
+	fs_microsoftstorepath = Cvar_Get("fs_microsoftstorepath", Sys_MicrosoftStorePath(), CVAR_INIT | CVAR_PROTECTED);
+	if (fs_microsoftstorepath->string[0]) {
+		FS_AddGameDirectory(fs_microsoftstorepath->string, gameName);
+	}
 	fs_gogpath = Cvar_Get ("fs_gogpath", Sys_GogPath(), CVAR_INIT|CVAR_PROTECTED );
 	if (fs_gogpath->string[0]) {
 		FS_AddGameDirectory( fs_gogpath->string, gameName );
