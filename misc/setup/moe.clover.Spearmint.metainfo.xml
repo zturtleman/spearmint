@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>moe.clover.Spearmint</id>
+  <launchable type="desktop-id">spearmint.desktop</launchable>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0-or-later</project_license>
+  <name>Spearmint</name>
+  <summary>Free and open-source Quake 3 based engine</summary>
+  <description>
+    <p>
+      Spearmint is a heavily modified version of the Quake III Arena engine. It has various visual enhancements, bug fixes, and local splitscreen multiplayer.
+    </p>
+    <p>
+      Spearmint is not compatible with Quake III Arena servers, mods (the QVM/DLL files), or demos (game recordings).
+    </p>
+  </description>
+  <url type="homepage">https://clover.org/spearmint</url>
+  <url type="bugtracker">https://github.com/zturtleman/spearmint/issues</url>
+  <url type="vcs-browser">https://github.com/zturtleman/spearmint</url>
+  <developer_name>zturtleman</developer_name>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-realistic">intense</content_attribute>
+    <content_attribute id="violence-bloodshed">intense</content_attribute>
+    <content_attribute id="social-chat">intense</content_attribute>
+    <content_attribute id="social-audio">intense</content_attribute>
+  </content_rating>
+</component>
