@@ -1650,7 +1650,6 @@ typedef struct {
 
 	FBO_t *last2DFBO;
 	qboolean    colorMask[4];
-	qboolean    framePostProcessed;
 	qboolean    depthFill;
 } backEndState_t;
 

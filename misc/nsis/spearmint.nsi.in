@@ -29,6 +29,8 @@
 !include "MUI2.nsh"
 !define MUI_ICON "../spearmint.ico"
 
+!include LogicLib.nsh
+
 ; The name of the installer
 Name "${GAMENAME} ${VERSION}"
 
@@ -88,9 +90,6 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)" ioquake3
   SetOutPath $INSTDIR
 
   File "../../build/release-mingw32-x86/SDL2.dll"
-!ifndef USE_INTERNAL_SPEEX
-  File "libspeex.dll"
-!endif
 !ifndef USE_INTERNAL_ZLIB
   File "zlib1.dll"
 !endif
@@ -139,7 +138,7 @@ SectionEnd
 Section "Protocol Handler" ProtocolHandler
 
   WriteRegStr SHCTX "Software\Classes\${PROTOCOL_HANDLER}" "CustomUrlApplication" "$INSTDIR\${CLIENT}"
-  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_HANDLER}" "CustomUrlArguments" '"%1"'
+  WriteRegStr SHCTX "Software\Classes\${PROTOCOL_HANDLER}" "CustomUrlArguments" '--uri "%1"'
   WriteRegStr SHCTX "Software\Classes\${PROTOCOL_HANDLER}" "URL Protocol" ""
   WriteRegStr SHCTX "Software\Classes\${PROTOCOL_HANDLER}\DefaultIcon" "" "$INSTDIR\${CLIENT},0"
   WriteRegStr SHCTX "Software\Classes\${PROTOCOL_HANDLER}\shell\open\command" "" '"$INSTDIR\${CLIENT}" --uri "%1"'
@@ -175,7 +174,12 @@ Section "Uninstall"
   ; Remove registry keys
   DeleteRegKey SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${GAMEKEY}"
   DeleteRegKey SHCTX "Software\${GAMEKEY}"
+
+  ReadRegStr $0 SHCTX "Software\Classes\${PROTOCOL_HANDLER}\shell\open\command" ""
+  ${If} $0 == '"$INSTDIR\${CLIENT}" --uri "%1"'
   DeleteRegKey SHCTX "Software\Classes\${PROTOCOL_HANDLER}"
+  ${EndIf}
+
 
   ; Remove files and uninstaller
   Delete $INSTDIR\${CLIENT}
@@ -191,9 +195,6 @@ Section "Uninstall"
   Delete $INSTDIR\voip-readme.txt
 
   Delete $INSTDIR\SDL2.dll
-!ifndef USE_INTERNAL_SPEEX
-  Delete $INSTDIR\libspeex.dll
-!endif
 !ifndef USE_INTERNAL_ZLIB
   Delete $INSTDIR\zlib1.dll
 !endif
@@ -225,9 +226,9 @@ SectionEnd
   !insertmacro MUI_DESCRIPTION_TEXT ${StartMenuShortcuts} "Create shortcuts in the start menu."
   !insertmacro MUI_DESCRIPTION_TEXT ${ProtocolHandler} "The protocol handler lets you connect to a game by clicking a link in a web browser."
 !ifdef USE_OPENAL_DLOPEN
-  !insertmacro MUI_DESCRIPTION_TEXT ${OpenAL} "OpenAL files."
+  !insertmacro MUI_DESCRIPTION_TEXT ${OpenAL} "Advanced audio mixer that supports surround sound."
 !endif
 !ifdef USE_CURL_DLOPEN
-  !insertmacro MUI_DESCRIPTION_TEXT ${libcurl} "libcurl files."
+  !insertmacro MUI_DESCRIPTION_TEXT ${libcurl} "Used for HTTP file downloads."
 !endif
 !insertmacro MUI_FUNCTION_DESCRIPTION_END

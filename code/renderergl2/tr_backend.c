@@ -350,9 +350,7 @@ void RB_BeginDrawingView (void) {
 	{
 		FBO_t *fbo = backEnd.viewParms.targetFbo;
 
-		// FIXME: HUGE HACK: render to the screen fbo if we've already postprocessed the frame and aren't drawing more world
-		// drawing more world check is in case of double renders, such as skyportals
-		if (fbo == NULL && !(backEnd.framePostProcessed && (backEnd.refdef.rdflags & RDF_NOWORLDMODEL)))
+		if (fbo == NULL && (!r_postProcess->integer || !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL)))
 			fbo = tr.renderFbo;
 
 		if (tr.renderCubeFbo && fbo == tr.renderCubeFbo)
@@ -748,10 +746,9 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 		ri.Printf( PRINT_ALL, "qglTexSubImage2D %i, %i: %i msec\n", cols, rows, end - start );
 	}
 
-	// FIXME: HUGE hack
 	if (glRefConfig.framebufferObject)
 	{
-		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
+		FBO_Bind(r_postProcess->integer ? NULL : tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -835,9 +832,8 @@ const void *RB_StretchPic ( const void *data ) {
 
 	cmd = (const stretchPicCommand_t *)data;
 
-	// FIXME: HUGE hack
 	if (glRefConfig.framebufferObject)
-		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
+		FBO_Bind(r_postProcess->integer ? NULL : tr.renderFbo);
 
 	RB_SetGL2D();
 
@@ -918,9 +914,8 @@ const void* RB_Draw2dPolys( const void* data ) {
 
 	cmd = (const poly2dCommand_t* )data;
 
-	// FIXME: HUGE hack
 	if (glRefConfig.framebufferObject) {
-		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
+		FBO_Bind(r_postProcess->integer ? NULL : tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -978,9 +973,8 @@ const void *RB_RotatedPic( const void *data ) {
 
 	cmd = (const stretchPicCommand_t *)data;
 
-	// FIXME: HUGE hack
 	if (glRefConfig.framebufferObject) {
-		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
+		FBO_Bind(r_postProcess->integer ? NULL : tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -1066,9 +1060,8 @@ const void *RB_StretchPicGradient( const void *data ) {
 
 	cmd = (const stretchPicCommand_t *)data;
 
-	// FIXME: HUGE hack
 	if (glRefConfig.framebufferObject) {
-		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
+		FBO_Bind(r_postProcess->integer ? NULL : tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -1456,6 +1449,13 @@ const void	*RB_DrawSurfs( const void *data ) {
 			qglGenerateTextureMipmapEXT(cubemap->image->texnum, GL_TEXTURE_CUBE_MAP);
 	}
 
+	// FIXME? backEnd.viewParms doesn't get properly initialized for 2D drawing.
+	// r_cubeMapping 1 generates cubemaps with R_RenderCubemapSide()
+	// and sets isMirror = qtrue. Clear it here to prevent it from leaking
+	// to 2D drawing and causing the loading screen to be culled.
+	backEnd.viewParms.isMirror = qfalse;
+	backEnd.viewParms.flags = 0;
+
 	return (const void *)(cmd + 1);
 }
 
@@ -1484,6 +1484,13 @@ const void	*RB_DrawBuffer( const void *data ) {
 	if ( r_clear->integer ) {
 		qglClearColor( 1, 0, 0.5, 1 );
 		qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+		if (glRefConfig.framebufferObject && tr.renderFbo) {
+			FBO_Bind(tr.renderFbo);
+
+			qglClearColor( 1, 0, 0.5, 1 );
+			qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		}
 	}
 
 	return (const void *)(cmd + 1);
@@ -1596,14 +1603,7 @@ const void *RB_ClearDepth(const void *data)
 
 	if (glRefConfig.framebufferObject)
 	{
-		if (!tr.renderFbo || backEnd.framePostProcessed)
-		{
-			FBO_Bind(NULL);
-		}
-		else
-		{
-			FBO_Bind(tr.renderFbo);
-		}
+		FBO_Bind(tr.renderFbo);
 	}
 
 	qglClear(GL_DEPTH_BUFFER_BIT);
@@ -1661,7 +1661,7 @@ const void	*RB_SwapBuffers( const void *data ) {
 
 	if (glRefConfig.framebufferObject)
 	{
-		if (!backEnd.framePostProcessed)
+		if (!r_postProcess->integer)
 		{
 			if (tr.msaaResolveFbo && r_hdr->integer)
 			{
@@ -1684,7 +1684,6 @@ const void	*RB_SwapBuffers( const void *data ) {
 
 	GLimp_EndFrame();
 
-	backEnd.framePostProcessed = qfalse;
 	backEnd.projection2D = qfalse;
 
 	return (const void *)(cmd + 1);
@@ -1937,8 +1936,6 @@ const void *RB_PostProcess(const void *data)
 		}
 	}
 #endif
-
-	backEnd.framePostProcessed = qtrue;
 
 	return (const void *)(cmd + 1);
 }
