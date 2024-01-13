@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 
 // surface geometry should not exceed these limits
-#define	SHADER_MAX_VERTEXES	1201 // 1200 + 1 buffer for RB_EndSurface overflow check
+#define	SHADER_MAX_VERTEXES	1201000 // 1200 + 1 buffer for RB_EndSurface overflow check
 #define	SHADER_MAX_INDEXES	(6*SHADER_MAX_VERTEXES)
 #define	SHADER_MAX_TRIANGLES	(SHADER_MAX_INDEXES/3)
 
@@ -102,13 +102,13 @@ typedef struct _TargaHeader {
 #define MD3_VERSION			15
 
 // limits
-#define MD3_MAX_LODS		4
-#define	MD3_MAX_TRIANGLES	8192	// per surface
-#define MD3_MAX_VERTS		4096	// per surface
-#define MD3_MAX_SHADERS		256		// per surface
-#define MD3_MAX_FRAMES		1024	// per model
-#define	MD3_MAX_SURFACES	32		// per model
-#define MD3_MAX_TAGS		16		// per frame
+#define MD3_MAX_LODS		400
+#define	MD3_MAX_TRIANGLES	819200	// per surface
+#define MD3_MAX_VERTS		409600	// per surface
+#define MD3_MAX_SHADERS		25600		// per surface
+#define MD3_MAX_FRAMES		102400	// per model
+#define	MD3_MAX_SURFACES	3200		// per model
+#define MD3_MAX_TAGS		1600		// per frame
 
 // vertex scales
 #define	MD3_XYZ_SCALE		(1.0/64)
