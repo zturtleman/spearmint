@@ -559,6 +559,7 @@ static	void R_LoadLightmaps( const bspFile_t *bsp ) {
 }
 
 
+// If FatPackU() or FatPackV() changes, update FixFatLightmapTexCoords()
 static float FatPackU(float input, int lightmapnum)
 {
 	if (lightmapnum < 0)
@@ -669,7 +670,7 @@ static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 		lightmapNum = LIGHTMAP_WHITEIMAGE;
 	}
 
-	shader = R_FindShader( dsh->shader, lightmapNum, MIP_RAW_IMAGE );
+	shader = R_FindShaderEx( dsh->shader, FatLightmap( lightmapNum ), MIP_RAW_IMAGE, lightmapNum );
 
 	// if the shader had errors, just use default shader
 	if ( shader->defaultShader ) {
@@ -813,7 +814,7 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	surf->fogIndex = ConvertBSPFogNum( ds->fogNum );
 
 	// get shader value
-	surf->shader = ShaderForShaderNum( ds->shaderNum, FatLightmap(realLightmapNum) );
+	surf->shader = ShaderForShaderNum( ds->shaderNum, realLightmapNum );
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
@@ -921,7 +922,7 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 	surf->fogIndex = ConvertBSPFogNum( ds->fogNum );
 
 	// get shader value
-	surf->shader = ShaderForShaderNum( ds->shaderNum, FatLightmap(realLightmapNum) );
+	surf->shader = ShaderForShaderNum( ds->shaderNum, realLightmapNum );
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}

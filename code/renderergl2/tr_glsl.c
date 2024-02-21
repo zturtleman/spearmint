@@ -96,8 +96,15 @@ static uniformInfo_t uniformsInfo[] =
 
 	{ "u_EnableTextures", GLSL_VEC4 },
 
-	{ "u_DiffuseTexMatrix",  GLSL_VEC4 },
-	{ "u_DiffuseTexOffTurb", GLSL_VEC4 },
+	{ "u_DiffuseTexMatrix0",  GLSL_VEC4 },
+	{ "u_DiffuseTexMatrix1",  GLSL_VEC4 },
+	{ "u_DiffuseTexMatrix2",  GLSL_VEC4 },
+	{ "u_DiffuseTexMatrix3",  GLSL_VEC4 },
+	{ "u_DiffuseTexMatrix4",  GLSL_VEC4 },
+	{ "u_DiffuseTexMatrix5",  GLSL_VEC4 },
+	{ "u_DiffuseTexMatrix6",  GLSL_VEC4 },
+	{ "u_DiffuseTexMatrix7",  GLSL_VEC4 },
+
 	{ "u_Texture1Env",       GLSL_INT },
 
 	{ "u_TCGen0",        GLSL_INT },
