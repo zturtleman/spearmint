@@ -1482,6 +1482,7 @@ static qboolean RawImage_ScaleToPower2( const textureLevel_t *pic, int baseLevel
 	int height =        *inout_height;
 	int scaled_width;
 	int scaled_height;
+	qboolean picmipEnabled = flags & ( IMGFLAG_PICMIP | IMGFLAG_PICMIP2 );
 	qboolean mipmap = flags & IMGFLAG_MIPMAP;
 	qboolean clampToEdge = flags & IMGFLAG_CLAMPTOEDGE;
 	qboolean scaled;
@@ -1505,7 +1506,7 @@ static qboolean RawImage_ScaleToPower2( const textureLevel_t *pic, int baseLevel
 	if ( r_roundImagesDown->integer && scaled_height > height )
 		scaled_height >>= 1;
 
-	if ( picmip && pic && pic->data && resampledBuffer && r_imageUpsample->integer && 
+	if ( picmipEnabled && pic && pic->data && resampledBuffer && r_imageUpsample->integer && 
 	     scaled_width < r_imageUpsampleMaxSize->integer && scaled_height < r_imageUpsampleMaxSize->integer)
 	{
 		int finalwidth, finalheight;
