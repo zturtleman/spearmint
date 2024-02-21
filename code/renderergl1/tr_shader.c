@@ -3672,6 +3672,28 @@ static void InitShader( const char *name, int lightmapIndex ) {
 	Q_strncpyz( shader.name, name, sizeof( shader.name ) );
 	shader.lightmapIndex = lightmapIndex;
 
+	shader_picmipFlag = IMGFLAG_PICMIP;
+	shader_novlcollapse = qfalse;
+
+	if ( r_ext_compressed_textures->integer == 2 ) {
+		// if the shader hasn't specifically asked for it, don't allow compression
+		shader_allowCompress = qfalse;
+	} else {
+		shader_allowCompress = qtrue;
+	}
+
+	// FIXME: set these "need" values appropriately
+	shader.needsNormal = qtrue;
+	shader.needsST1 = qtrue;
+	shader.needsST2 = qtrue;
+	shader.needsColor = qtrue;
+
+	// default to no implicit mappings
+	implicitMap[ 0 ] = '\0';
+	implicitStateBits = GLS_DEFAULT;
+	implicitCullType = CT_FRONT_SIDED;
+	aliasShader[ 0 ] = '\0';
+
 	for ( i = 0 ; i < MAX_SHADER_STAGES ; i++ ) {
 		for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
 			stages[i].bundle[b].texMods = texMods[i][b];
@@ -4116,28 +4138,6 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, imgFlags_t rawImage
 
 	InitShader( strippedName, lightmapIndex );
 
-	shader_picmipFlag = IMGFLAG_PICMIP;
-	shader_novlcollapse = qfalse;
-
-	if ( r_ext_compressed_textures->integer == 2 ) {
-		// if the shader hasn't specifically asked for it, don't allow compression
-		shader_allowCompress = qfalse;
-	} else {
-		shader_allowCompress = qtrue;
-	}
-
-	// FIXME: set these "need" values appropriately
-	shader.needsNormal = qtrue;
-	shader.needsST1 = qtrue;
-	shader.needsST2 = qtrue;
-	shader.needsColor = qtrue;
-
-	// default to no implicit mappings
-	implicitMap[ 0 ] = '\0';
-	implicitStateBits = GLS_DEFAULT;
-	implicitCullType = CT_FRONT_SIDED;
-	aliasShader[ 0 ] = '\0';
-
 	//
 	// attempt to define shader from an explicit parameter file
 	//
@@ -4248,12 +4248,6 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 	}
 
 	InitShader( name, lightmapIndex );
-
-	// FIXME: set these "need" values appropriately
-	shader.needsNormal = qtrue;
-	shader.needsST1 = qtrue;
-	shader.needsST2 = qtrue;
-	shader.needsColor = qtrue;
 
 	// set default stages
 	SetImplicitShaderStages( image );
