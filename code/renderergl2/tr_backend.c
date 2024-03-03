@@ -915,7 +915,7 @@ const void* RB_Draw2dPolys( const void* data ) {
 	cmd = (const poly2dCommand_t* )data;
 
 	if (glRefConfig.framebufferObject) {
-		FBO_Bind(r_postProcess->integer ? NULL : tr.renderFbo);
+		FBO_Bind(tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -974,7 +974,7 @@ const void *RB_RotatedPic( const void *data ) {
 	cmd = (const stretchPicCommand_t *)data;
 
 	if (glRefConfig.framebufferObject) {
-		FBO_Bind(r_postProcess->integer ? NULL : tr.renderFbo);
+		FBO_Bind(tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -1061,7 +1061,7 @@ const void *RB_StretchPicGradient( const void *data ) {
 	cmd = (const stretchPicCommand_t *)data;
 
 	if (glRefConfig.framebufferObject) {
-		FBO_Bind(r_postProcess->integer ? NULL : tr.renderFbo);
+		FBO_Bind(tr.renderFbo);
 	}
 
 	RB_SetGL2D();
