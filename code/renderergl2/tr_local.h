@@ -696,8 +696,15 @@ typedef enum
 
 	UNIFORM_ENABLETEXTURES,
 
-	UNIFORM_DIFFUSETEXMATRIX,
-	UNIFORM_DIFFUSETEXOFFTURB,
+	UNIFORM_DIFFUSETEXMATRIX0,
+	UNIFORM_DIFFUSETEXMATRIX1,
+	UNIFORM_DIFFUSETEXMATRIX2,
+	UNIFORM_DIFFUSETEXMATRIX3,
+	UNIFORM_DIFFUSETEXMATRIX4,
+	UNIFORM_DIFFUSETEXMATRIX5,
+	UNIFORM_DIFFUSETEXMATRIX6,
+	UNIFORM_DIFFUSETEXMATRIX7,
+
 	UNIFORM_TEXTURE1ENV,
 
 	UNIFORM_TCGEN0,
@@ -2246,6 +2253,7 @@ const void *RB_TakeVideoFrameCmd( const void *data );
 // tr_shader.c
 //
 shader_t	*R_FindShader( const char *name, int lightmapIndex, imgFlags_t rawImageFlags );
+shader_t	*R_FindShaderEx( const char *name, int lightmapIndex, imgFlags_t rawImageFlags, int realLightmapIndex );
 shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
 shader_t *R_FindShaderByName( const char *name );

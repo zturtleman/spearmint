@@ -28,6 +28,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
+// Use EnumProcesses() with Windows XP compatibility
+#define PSAPI_VERSION 1
+
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 #include "sys_local.h"
