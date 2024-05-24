@@ -46,6 +46,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include <fcntl.h>
 #include <fenv.h>
 #include <sys/wait.h>
+#include <time.h>
 
 qboolean stdinIsATTY;
 
@@ -558,11 +559,15 @@ void Sys_Sleep( int msec )
 	}
 	else
 	{
+		struct timespec req;
+
 		// With nothing to select() on, we can't wait indefinitely
 		if( msec < 0 )
 			msec = 10;
 
-		usleep( msec * 1000 );
+		req.tv_sec = msec/1000;
+		req.tv_nsec = (msec%1000)*1000000;
+		nanosleep(&req, NULL);
 	}
 }
 
