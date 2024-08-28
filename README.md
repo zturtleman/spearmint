@@ -18,8 +18,7 @@ Pre-built packages for Windows, GNU/Linux, and Mac OS X are available at the [Sp
 ## Resources
 
   * [Development documentation](https://github.com/zturtleman/spearmint/wiki)
-  * [Discord (Clover.moe Community)](https://discord.gg/7J2pjGD)
-  * [Magical Clover Forum (archived)](https://forum.clover.moe)
+  * [Discussion / Technical support](https://clover.moe/open-source)
 
 
 ## Git branches
