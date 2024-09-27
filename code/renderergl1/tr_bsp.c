@@ -1985,10 +1985,12 @@ void R_LoadLightGrid( const bspFile_t *bsp ) {
 		return;
 	}
 
-	w->lightGridData = bsp->lightGridData;
+	w->lightGridData = ri.Hunk_Alloc( bsp->numGridPoints * 8, h_low );
 	w->numGridPoints = bsp->numGridPoints;
 	w->lightGridArray = bsp->lightGridArray;
 	w->numGridArrayPoints = bsp->numGridArrayPoints;
+
+	Com_Memcpy( w->lightGridData, bsp->lightGridData, bsp->numGridPoints * 8 );
 
 	// deal with overbright bits
 	for ( i = 0 ; i < bsp->numGridPoints ; i++ ) {
